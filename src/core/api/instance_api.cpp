@@ -116,7 +116,7 @@ void otInstanceGetUptimeAsString(otInstance *aInstance, char *aBuffer, uint16_t 
     {
         StringWriter writer(aBuffer, aSize);
 
-        UptimeToString(AsCoreType(aInstance).Get<UptimeTracker>().GetUptime(), writer, /* aIncludeMsec */ true);
+        UptimeToString(AsCoreType(aInstance).Get<UptimeTracker>().GetUptime(), writer, kUptimeStringIncludeMsec);
     }
 }
 #endif

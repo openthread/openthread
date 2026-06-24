@@ -185,8 +185,6 @@ void Test_1_3_DPR_TC_1(const char *aJsonFileName)
      * - Pass Criteria: N/A
      */
 
-    eth1.mInfraIf.Init(eth1);
-
     ed1.Join(br1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);
     VerifyOrQuit(ed1.Get<Mle::Mle>().IsAttached());

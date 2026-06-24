@@ -122,18 +122,10 @@ void Test7_1_7(const char *aJsonFile)
      * - Pass Criteria: N/A.
      */
 
-    /** Use AllowList to specify links between nodes. */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    leader.AllowList(router2);
-    router2.AllowList(leader);
-
-    leader.AllowList(med1);
-    med1.AllowList(leader);
-
-    leader.AllowList(sed1);
-    sed1.AllowList(leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, router2);
+    AllowLinkBetween(leader, med1);
+    AllowLinkBetween(leader, sed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -282,8 +274,7 @@ void Test7_1_7(const char *aJsonFile)
 
     nexus.AdvanceTime(kStabilizationTime);
 
-    router2.UnallowList(leader);
-    leader.UnallowList(router2);
+    UnallowLinkBetween(router2, leader);
 
     nexus.AdvanceTime(kPartitionStartWaitTime);
 
@@ -327,8 +318,7 @@ void Test7_1_7(const char *aJsonFile)
      * - Pass Criteria: N/A.
      */
 
-    router2.AllowList(leader);
-    leader.AllowList(router2);
+    AllowLinkBetween(router2, leader);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 10: Router_2");

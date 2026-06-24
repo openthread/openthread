@@ -40,11 +40,13 @@
 
 #include <openthread/backbone_router_ftd.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/time.hpp"
+#include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -56,66 +58,17 @@ namespace BackboneRouter {
  */
 class MulticastListenersTable : public InstanceLocator, private NonCopyable
 {
-    class IteratorBuilder;
-
 public:
-    /**
-     * Represents a Multicast Listener entry.
-     */
-    class Listener : public Clearable<Listener>
-    {
-        friend class MulticastListenersTable;
-
-    public:
-        typedef otBackboneRouterMulticastListenerCallback Callback; ///< Listener callback.
-        typedef otBackboneRouterMulticastListenerIterator Iterator; ///< Iterator to go over Listener entries.
-        typedef otBackboneRouterMulticastListenerInfo     Info;     ///< Listener info.
-
-        enum Event : uint8_t ///< Listener Event
-        {
-            kEventAdded   = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED,   ///< Listener was added.
-            kEventRemoved = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, ///< Listener was removed.
-        };
-
-        /**
-         * Initializes the `Listener` object.
-         */
-        Listener(void) { Clear(); }
-
-        /**
-         * Returns the Multicast Listener address.
-         *
-         * @returns The Multicast Listener address.
-         */
-        const Ip6::Address &GetAddress(void) const { return mAddress; }
-
-        /**
-         * Returns the expire time of the Multicast Listener.
-         *
-         * @returns The Multicast Listener expire time.
-         */
-        const TimeMilli GetExpireTime(void) const { return mExpireTime; }
-
-    private:
-        void SetAddress(const Ip6::Address &aAddress) { mAddress = aAddress; }
-        void SetExpireTime(TimeMilli aExpireTime) { mExpireTime = aExpireTime; }
-
-        bool operator<(const Listener &aOther) const { return GetExpireTime() < aOther.GetExpireTime(); }
-
-        Ip6::Address mAddress;
-        TimeMilli    mExpireTime;
-    };
+    typedef otBackboneRouterMulticastListenerCallback ListenerCallback; ///< Listener Callback.
+    typedef otBackboneRouterMulticastListenerInfo     ListenerInfo;     ///< Listener info.
+    typedef otBackboneRouterMulticastListenerIterator ListenerIterator; ///< Iterator to go over entries.
 
     /**
      * Initializes the Multicast Listeners Table.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
      */
-    explicit MulticastListenersTable(Instance &aInstance)
-        : InstanceLocator(aInstance)
-        , mNumValidListeners(0)
-    {
-    }
+    explicit MulticastListenersTable(Instance &aInstance);
 
     /**
      * Adds a Multicast Listener with given address and expire time.
@@ -137,16 +90,11 @@ public:
     void Remove(const Ip6::Address &aAddress);
 
     /**
-     * Removes expired Multicast Listeners.
-     */
-    void Expire(void);
-
-    /**
      * Counts the number of valid Multicast Listeners.
      *
      * @returns The number of valid Multicast Listeners.
      */
-    uint16_t Count(void) const { return mNumValidListeners; }
+    uint16_t Count(void) const { return mListeners.GetLength(); }
 
     /**
      * Indicates whether or not the Multicast Listeners Table contains the given address.
@@ -159,17 +107,6 @@ public:
     bool Has(const Ip6::Address &aAddress) const;
 
     /**
-     * Enables range-based `for` loop iteration over all Multicast Listeners.
-     *
-     * Should be used as follows:
-     *
-     *     for (MulticastListenersTable::Listener &listener : Get<MulticastListenersTable>().Iterate())
-     *
-     * @returns An IteratorBuilder instance.
-     */
-    IteratorBuilder Iterate(void) { return IteratorBuilder(GetInstance()); }
-
-    /**
      * Removes all the Multicast Listeners.
      */
     void Clear(void);
@@ -180,7 +117,7 @@ public:
      * @param[in] aCallback  The callback function.
      * @param[in] aContext   A user context pointer.
      */
-    void SetCallback(Listener::Callback aCallback, void *aContext);
+    void SetCallback(ListenerCallback aCallback, void *aContext);
 
     /**
      * Gets the next Multicast Listener.
@@ -191,24 +128,17 @@ public:
      * @retval kErrorNone         Successfully found the next Multicast Listener info.
      * @retval kErrorNotFound     No subsequent Multicast Listener was found.
      */
-    Error GetNext(Listener::Iterator &aIterator, Listener::Info &aInfo);
+    Error GetNext(ListenerIterator &aIterator, ListenerInfo &aInfo);
 
 private:
     static constexpr uint16_t kTableSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS;
 
     static_assert(kTableSize >= 75, "Thread 1.2 Conformance requires table size of at least 75 listeners.");
 
-    class IteratorBuilder : InstanceLocator
-    {
-    public:
-        explicit IteratorBuilder(Instance &aInstance)
-            : InstanceLocator(aInstance)
-        {
-        }
+    typedef otBackboneRouterMulticastListenerEvent Event;
 
-        Listener *begin(void);
-        Listener *end(void);
-    };
+    static constexpr Event kEventAdded   = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED;
+    static constexpr Event kEventRemoved = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED;
 
     enum Action : uint8_t
     {
@@ -217,21 +147,27 @@ private:
         kExpire,
     };
 
+    struct Listener
+    {
+        bool Matches(const Ip6::Address &aAddress) const { return mAddress == aAddress; }
+
+        Ip6::Address mAddress;
+        TimeMilli    mExpireTime;
+    };
+
+    void InvokeCallback(Event aEvent, const Ip6::Address &aAddress) const;
+    void HandleTimer(void);
     void Log(Action aAction, const Ip6::Address &aAddress, TimeMilli aExpireTime, Error aError) const;
 
-    void FixHeap(uint16_t aIndex);
-    bool SiftHeapElemDown(uint16_t aIndex);
-    void SiftHeapElemUp(uint16_t aIndex);
-    void CheckInvariants(void) const;
+    using ListenerArray = Array<Listener, kTableSize, uint16_t>;
+    using ExpireTimer   = TimerMilliIn<MulticastListenersTable, &MulticastListenersTable::HandleTimer>;
 
-    Listener                     mListeners[kTableSize];
-    uint16_t                     mNumValidListeners;
-    Callback<Listener::Callback> mCallback;
+    ListenerArray              mListeners;
+    ExpireTimer                mTimer;
+    Callback<ListenerCallback> mCallback;
 };
 
 } // namespace BackboneRouter
-
-DefineMapEnum(otBackboneRouterMulticastListenerEvent, BackboneRouter::MulticastListenersTable::Listener::Event);
 
 /**
  * @}

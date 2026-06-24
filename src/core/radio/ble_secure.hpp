@@ -35,6 +35,7 @@
 
 #include <openthread/ble_secure.h>
 
+#include "common/notifier.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/secure_transport.hpp"
 #include "meshcop/tcat_agent.hpp"
@@ -54,6 +55,8 @@ namespace Ble {
 
 class BleSecure : public InstanceLocator, public MeshCoP::Tls::Extension, private NonCopyable
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * Pointer to call when the secure BLE connection state changes.
@@ -346,6 +349,8 @@ private:
         kNotAdvertising = 3, // Ble secure is started but not advertising.
     };
 
+    typedef otBleRadioPacket RadioPacket;
+
     static constexpr uint8_t  kInitialMtuSize   = OT_BLE_ATT_MTU_DEFAULT;
     static constexpr uint8_t  kMinMtuSize       = OT_BLE_ATT_MTU_MIN;
     static constexpr uint8_t  kMaxMtuSize       = OT_BLE_ATT_MTU_MAX;
@@ -353,6 +358,8 @@ private:
     static constexpr uint8_t  kPacketBufferSize = OT_BLE_ATT_MTU_MAX - kGattOverhead;
     static constexpr uint16_t kTxBleHandle      = 0;   // Characteristics Handle for TX (not used)
     static constexpr uint16_t kTlsDataMaxSize   = 800; // Maximum size of data chunks sent with mTls.Send(..)
+
+    void HandleNotifierEvents(Events aEvents);
 
     static void HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent, void *aContext);
     void        HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent);
@@ -379,7 +386,7 @@ private:
     TxTask                    mTransmitTask;
     uint8_t                   mPacketBuffer[kPacketBufferSize];
     BleState                  mBleState;
-    BleState                  mBleAdvRequestedState;
+    bool                      mIsBleAdvRequested;
     uint16_t                  mMtuSize;
 };
 

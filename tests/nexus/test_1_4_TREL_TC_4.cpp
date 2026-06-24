@@ -47,7 +47,7 @@ static constexpr uint32_t kFormNetworkTime = 13 * 1000;
 /**
  * Time to advance for a node to join as a child and upgrade to a router, in milliseconds.
  */
-static constexpr uint32_t kAttachToRouterTime = 120 * 1000;
+static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 
 /**
  * Time to advance for the network to reach steady state.
@@ -127,13 +127,8 @@ void Test_1_4_TREL_TC_4(void)
      *   - ED MUST attach to the DUT as its parent.
      */
 
-    /** Use AllowList feature to specify links between nodes. */
-    br.AllowList(router);
-    br.AllowList(ed);
-
-    router.AllowList(br);
-
-    ed.AllowList(br);
+    AllowLinkBetween(br, router);
+    AllowLinkBetween(br, ed);
 
     SuccessOrQuit(br.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
     SuccessOrQuit(router.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));

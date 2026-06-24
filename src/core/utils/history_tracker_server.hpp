@@ -43,11 +43,13 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
+#include "thread/net_diag_types.hpp"
 #include "thread/tmf.hpp"
 #include "utils/history_tracker.hpp"
 #include "utils/history_tracker_tlvs.hpp"
 
 namespace ot {
+
 namespace HistoryTracker {
 
 /**
@@ -56,46 +58,20 @@ namespace HistoryTracker {
 class Server : public InstanceLocator
 {
     friend class Tmf::Agent;
+    friend class NetDiag::AnswerSender;
 
 public:
     explicit Server(Instance &aInstance);
 
 private:
-    static constexpr uint16_t kAnswerMessageLengthThreshold = 800;
+    typedef NetDiag::AnswerBuilder AnswerBuilder;
 
-    struct AnswerInfo
-    {
-        AnswerInfo(void)
-            : mNow(TimerMilli::GetNow())
-            , mAnswerIndex(0)
-            , mQueryId(0)
-            , mHasQueryId(false)
-            , mFirstAnswer(nullptr)
-        {
-        }
-
-        TimeMilli         mNow;
-        uint16_t          mAnswerIndex;
-        uint16_t          mQueryId;
-        bool              mHasQueryId;
-        Message::Priority mPriority;
-        Coap::Message    *mFirstAnswer;
-    };
-
-    Error AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    bool  IsLastAnswer(const Coap::Message &aAnswer) const;
-    void  FreeAllRelatedAnswers(Coap::Message &aFirstAnswer);
-    void  PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest);
-    Error CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    void  SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
-    Error AppendNetworkInfo(Coap::Message *&aAnswer, AnswerInfo &aInfo, const RequestTlv &aRequestTlv);
-
-    static void HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult);
-    void        HandleAnswerResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult);
+    void  PrepareAndSendAnswers(const Ip6::Address &aDestination, const Coap::Message &aRequest);
+    Error AppendNetworkInfo(AnswerBuilder &aAnswerBuilder, const RequestTlv &aRequestTlv, TimeMilli aNow);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    Coap::MessageQueue mAnswerQueue;
+    NetDiag::AnswerSender mAnswerSender;
 };
 
 DeclareTmfHandler(Server, kUriHistoryQuery);

@@ -57,8 +57,8 @@ Leader::Leader(Instance &aInstance)
 
 void Leader::Reset(void)
 {
-    mVersion       = Random::NonCrypto::GetUint8();
-    mStableVersion = Random::NonCrypto::GetUint8();
+    mVersion       = Random::NonCrypto::Generate<uint8_t>();
+    mStableVersion = Random::NonCrypto::Generate<uint8_t>();
     SetLength(0);
     SignalNetDataChanged();
 
@@ -586,8 +586,7 @@ Coap::Message *Leader::ProcessCommissionerGetRequest(const Coap::Message &aMessa
             uint8_t             type;
             const MeshCoP::Tlv *subTlv;
 
-            IgnoreError(aMessage.Read(offsetRange, type));
-            offsetRange.AdvanceOffset(sizeof(type));
+            IgnoreError(aMessage.ReadAndAdvance(offsetRange, type));
 
             subTlv = FindCommissioningDataSubTlv(type);
 

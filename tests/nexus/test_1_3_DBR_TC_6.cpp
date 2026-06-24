@@ -127,8 +127,6 @@ void Test_1_3_DBR_TC_6(void)
     Log("Step 0: Device: Eth 1 Description (DBR-1.6): Harness configures Ethernet link with an on-link IPv6 GUA prefix "
         "GUA 1. Eth 1 is configured to multicast ND RAS.");
 
-    eth1.mInfraIf.Init(eth1);
-
     {
         Ip6::Address eth1Gua;
         SuccessOrQuit(eth1Gua.FromString(kEth1Gua));
@@ -147,7 +145,6 @@ void Test_1_3_DBR_TC_6(void)
     Log("Step 1: Device: Eth 1, BR 2 Description (DBR-1.6): Form topology. Wait for BR_2 to: 1. Register as border "
         "router in Thread Network Data with an OMR prefix OMR_1 2. Send multicast ND RAS");
 
-    br2.mInfraIf.Init(br2);
     br2.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
 
     br2.Get<BorderRouter::RoutingManager>().Init();
@@ -167,11 +164,9 @@ void Test_1_3_DBR_TC_6(void)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 2: Device: BR 1 (DUT) Description (DBR-1.6): Enable: switch on.");
 
-    br1.mInfraIf.Init(br1);
     br1.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
 
-    br1.AllowList(br2);
-    br2.AllowList(br1);
+    AllowLinkBetween(br1, br2);
 
     br1.Join(br2);
     nexus.AdvanceTime(kJoinNetworkTime);
@@ -184,8 +179,7 @@ void Test_1_3_DBR_TC_6(void)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 2b: Device: ED 1 Description (DBR-1.6): Harness enables device.");
 
-    ed1.AllowList(br1);
-    br1.AllowList(ed1);
+    AllowLinkBetween(ed1, br1);
 
     ed1.Join(br1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);

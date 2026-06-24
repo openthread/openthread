@@ -30,7 +30,7 @@
 
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
-#include "thread/network_diagnostic.hpp"
+#include "thread/net_diag.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -74,17 +74,15 @@ static constexpr uint8_t kNumRouters = 15;
  * Base diagnostic TLV types used in Steps 2 and 8.
  */
 static constexpr uint8_t kBaseDiagGetTlvs[] = {
-    NetworkDiagnostic::Tlv::kExtMacAddress, NetworkDiagnostic::Tlv::kAddress16,
-    NetworkDiagnostic::Tlv::kMode,          NetworkDiagnostic::Tlv::kConnectivity,
-    NetworkDiagnostic::Tlv::kRoute,         NetworkDiagnostic::Tlv::kLeaderData,
-    NetworkDiagnostic::Tlv::kNetworkData,   NetworkDiagnostic::Tlv::kIp6AddressList,
-    NetworkDiagnostic::Tlv::kChannelPages,
+    NetDiag::Tlv::kExtMacAddress, NetDiag::Tlv::kAddress16,      NetDiag::Tlv::kMode,
+    NetDiag::Tlv::kConnectivity,  NetDiag::Tlv::kRoute,          NetDiag::Tlv::kLeaderData,
+    NetDiag::Tlv::kNetworkData,   NetDiag::Tlv::kIp6AddressList, NetDiag::Tlv::kChannelPages,
 };
 
 /**
  * MAC Counters diagnostic TLV type used in Steps 3, 6, and 7.
  */
-static constexpr uint8_t kMacCountersTlv[] = {NetworkDiagnostic::Tlv::kMacCounters};
+static constexpr uint8_t kMacCountersTlv[] = {NetDiag::Tlv::kMacCounters};
 
 void Test5_7_2(void)
 {
@@ -134,15 +132,12 @@ void Test5_7_2(void)
      * - Pass Criteria: N/A
      */
 
-    /** Use AllowList to specify links between nodes. */
     for (uint8_t i = 0; i < kNumRouters; i++)
     {
-        leader.AllowList(*routers[i]);
-        routers[i]->AllowList(leader);
+        AllowLinkBetween(leader, *routers[i]);
     }
 
-    reed1.AllowList(*routers[0]);
-    routers[0]->AllowList(reed1);
+    AllowLinkBetween(reed1, *routers[0]);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -199,8 +194,8 @@ void Test5_7_2(void)
      *   - The presence of each TLV MUST be validated. Where possible, the value of the TLVs MUST be validated.
      */
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(
-        reedRloc, kBaseDiagGetTlvs, sizeof(kBaseDiagGetTlvs), nullptr, nullptr));
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticGet(reedRloc, kBaseDiagGetTlvs, sizeof(kBaseDiagGetTlvs),
+                                                                  nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -219,8 +214,8 @@ void Test5_7_2(void)
      *   - TLV Type 9 - MAC Counters MUST contain a list of MAC Counters.
      */
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(reedRloc, kMacCountersTlv,
-                                                                            sizeof(kMacCountersTlv), nullptr, nullptr));
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticGet(reedRloc, kMacCountersTlv, sizeof(kMacCountersTlv),
+                                                                  nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -239,10 +234,10 @@ void Test5_7_2(void)
      *     - The Timeout TLV MUST NOT be present.
      */
 
-    uint8_t tlvTypes4[] = {NetworkDiagnostic::Tlv::kTimeout, NetworkDiagnostic::Tlv::kChildTable};
+    uint8_t tlvTypes4[] = {NetDiag::Tlv::kTimeout, NetDiag::Tlv::kChildTable};
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(reedRloc, tlvTypes4, sizeof(tlvTypes4),
-                                                                            nullptr, nullptr));
+    SuccessOrQuit(
+        leader.Get<NetDiag::Client>().SendDiagnosticGet(reedRloc, tlvTypes4, sizeof(tlvTypes4), nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -262,10 +257,10 @@ void Test5_7_2(void)
      *     - TLV Type 15 – Supply Voltage (optional)
      */
 
-    uint8_t tlvTypes5[] = {NetworkDiagnostic::Tlv::kBatteryLevel, NetworkDiagnostic::Tlv::kSupplyVoltage};
+    uint8_t tlvTypes5[] = {NetDiag::Tlv::kBatteryLevel, NetDiag::Tlv::kSupplyVoltage};
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(reedRloc, tlvTypes5, sizeof(tlvTypes5),
-                                                                            nullptr, nullptr));
+    SuccessOrQuit(
+        leader.Get<NetDiag::Client>().SendDiagnosticGet(reedRloc, tlvTypes5, sizeof(tlvTypes5), nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -292,8 +287,8 @@ void Test5_7_2(void)
      *   - CoAP Response Code: 2.04 Changed
      */
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticReset(reedRloc, kMacCountersTlv,
-                                                                              sizeof(kMacCountersTlv)));
+    SuccessOrQuit(
+        leader.Get<NetDiag::Client>().SendDiagnosticReset(reedRloc, kMacCountersTlv, sizeof(kMacCountersTlv)));
     nexus.AdvanceTime(kDiagResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -324,8 +319,8 @@ void Test5_7_2(void)
      *     step 3.
      */
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(reedRloc, kMacCountersTlv,
-                                                                            sizeof(kMacCountersTlv), nullptr, nullptr));
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticGet(reedRloc, kMacCountersTlv, sizeof(kMacCountersTlv),
+                                                                  nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -359,7 +354,7 @@ void Test5_7_2(void)
      *   - The presence of each TLV MUST be validated. Where possible, the value of the TLVs MUST be validated.
      */
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticGet(
         Ip6::Address::GetRealmLocalAllNodesMulticast(), kBaseDiagGetTlvs, sizeof(kBaseDiagGetTlvs), nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 

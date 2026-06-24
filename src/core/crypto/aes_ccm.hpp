@@ -63,143 +63,228 @@ class AesCcm
 public:
     static constexpr uint8_t kMinTagLength = 4;                  ///< Minimum tag length (in bytes).
     static constexpr uint8_t kMaxTagLength = AesEcb::kBlockSize; ///< Maximum tag length (in bytes).
-    static constexpr uint8_t kNonceSize    = 13;                 ///< Size of IEEE 802.15.4 Nonce (in bytes).
 
     /**
-     * Type represent the encryption vs decryption mode.
+     * Initializes the AES-CCM object.
      */
-    enum Mode : uint8_t
+    AesCcm(void);
+
+    /**
+     * Represents the operation to perform (encryption or decryption)
+     */
+    enum Operation : uint8_t
     {
-        kEncrypt, // Encryption mode.
-        kDecrypt, // Decryption mode.
+        kEncrypt, ///< Encrypt.
+        kDecrypt, ///< Decrypt.
     };
+
+    /**
+     * Represents an IEEE 802.15.4 nonce byte sequence.
+     */
+    OT_TOOL_PACKED_BEGIN
+    class Nonce : public Clearable<Nonce>
+    {
+    public:
+        /**
+         * Initializes the nonce from a given extended address, frame counter, and security level.
+         *
+         * @param[in]  aExtAddress     An extended address.
+         * @param[in]  aFrameCounter   A frame counter.
+         * @param[in]  aSecurityLevel  A security level.
+         */
+        void InitFrom(const Mac::ExtAddress &aExtAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel);
+
+    private:
+        Mac::ExtAddress mExtAddress;
+        uint32_t        mFrameCounter;
+        uint8_t         mSecurityLevel;
+    } OT_TOOL_PACKED_END;
+
+    static_assert(sizeof(Nonce) == 13, "Nonce format is not valid");
 
     /**
      * Sets the key.
      *
-     * @param[in]  aKey    Crypto Key used in AES operation
+     * The passed-in @p aKey and its underlying buffer must remain valid during the lifecycle of the `AesCcm` object.
+     *
+     * @param[in]  aKey    Crypto Key used in AES operation.
      */
-    void SetKey(const Key &aKey) { mEcb.SetKey(aKey); }
+    void SetKey(const Key &aKey) { mConfig.mKey = aKey; }
 
     /**
      * Sets the key.
+     *
+     * The passed-in @p aKey buffer must remain valid during the lifecycle of the `AesCcm` object.
      *
      * @param[in]  aKey        A pointer to the key.
      * @param[in]  aKeyLength  Length of the key in bytes.
      */
-    void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
+    void SetKey(const uint8_t *aKey, uint16_t aKeyLength) { mConfig.mKey.Set(aKey, aKeyLength); }
 
     /**
      * Sets the key.
      *
+     * The passed-in @p aMacKey and its underlying buffer must remain valid during the lifecycle of the `AesCcm` object.
+     *
      * @param[in]  aMacKey        Key Material for AES operation.
      */
-    void SetKey(const Mac::KeyMaterial &aMacKey);
+    void SetKey(const Mac::KeyMaterial &aMacKey) { aMacKey.ConvertToCryptoKey(mConfig.mKey); }
 
     /**
-     * Initializes the AES CCM computation.
+     * Sets the Nonce.
      *
-     * @param[in]  aHeaderLength     Length of header in bytes.
-     * @param[in]  aPlainTextLength  Length of plaintext in bytes.
-     * @param[in]  aTagLength        Length of tag in bytes (must be even and in `[kMinTagLength, kMaxTagLength]`).
-     * @param[in]  aNonce            A pointer to the nonce.
-     * @param[in]  aNonceLength      Length of nonce in bytes.
+     * The passed-in @p aNonce must remain valid during the lifecycle of the `AesCcm` object.
+     *
+     * @param[in]  aNonce  A reference to the Nonce object.
      */
-    void Init(uint32_t    aHeaderLength,
-              uint32_t    aPlainTextLength,
-              uint8_t     aTagLength,
-              const void *aNonce,
-              uint8_t     aNonceLength);
+    void SetNonce(const Nonce &aNonce) { SetNonce(&aNonce, sizeof(Nonce)); }
 
     /**
-     * Processes the header.
+     * Sets the Nonce.
      *
-     * @param[in]  aHeader        A pointer to the header.
-     * @param[in]  aHeaderLength  Length of header in bytes.
+     * The passed-in @p aNonce buffer must remain valid during the lifecycle of the `AesCcm` object.
+     *
+     * @param[in]  aNonce   A pointer to the buffer containing the nonce.
+     * @param[in]  aLength  The length of the nonce in bytes.
      */
-    void Header(const void *aHeader, uint32_t aHeaderLength);
+    void SetNonce(const void *aNonce, uint8_t aLength);
 
     /**
-     * Processes the header.
+     * Sets the Additional Authenticated Data.
      *
-     * @tparam    ObjectType   The object type.
+     * The passed-in @p aAuthData buffer must remain valid during the lifecycle of the `AesCcm` object.
      *
-     * @param[in] aObject      A reference to the object to add to header.
+     * @param[in]  aAuthData  A pointer to the buffer containing the data.
+     * @param[in]  aLength    The length of data in bytes.
      */
-    template <typename ObjectType> void Header(const ObjectType &aObject)
-    {
-        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
-
-        Header(&aObject, sizeof(ObjectType));
-    }
+    void SetAuthData(const void *aAuthData, uint32_t aLength);
 
     /**
-     * Processes the payload.
+     * Sets the AES-CCM tag (MIC) length.
      *
-     * When decrypting (`kDecrypt`), @p aPlainText can be `nullptr` if the decrypted plaintext is not needed.
-     * Similarly, when encrypting (`kEncrypt`), @p aCipherText can be `nullptr` if the ciphertext is not needed.
-     *
-     * @param[in,out]  aPlainText   A pointer to the plaintext.
-     * @param[in,out]  aCipherText  A pointer to the ciphertext.
-     * @param[in]      aLength      Payload length in bytes.
-     * @param[in]      aMode        Mode to indicate whether to encrypt (`kEncrypt`) or decrypt (`kDecrypt`).
+     * @param[in]  aTagLength  The tag length in bytes (must be even and in [kMinTagLength, kMaxTagLength]).
      */
-    void Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode aMode);
+    void SetTagLength(uint8_t aTagLength);
+
+    /**
+     * Performs in-place AES-CCM computation (encryption or decryption) on a contiguous buffer.
+     *
+     * Before calling this method, the `AesCcm` object must be fully configured by calling `SetKey()`, `SetNonce()`,
+     * `SetAuthData()`, and `SetTagLength()`. Otherwise, the behavior of this method is undefined.
+     *
+     * The buffer @p aData must have sufficient space. For encryption, it must be large enough to hold the plaintext
+     * plus the tag. The tag will be appended immediately after the payload bytes. For decryption, the tag must be
+     * present immediately after the ciphertext bytes.
+     *
+     * @param[in]      aOperation   The operation (kEncrypt or kDecrypt).
+     * @param[in,out]  aData        A pointer to the data buffer.
+     * @param[in]      aLength      The length of the payload in bytes (excluding the tag).
+     *
+     * @retval kErrorNone      Operation succeeded (for decryption, this means the tag matched).
+     * @retval kErrorSecurity  Decryption failed because the tag did not match.
+     */
+    Error Process(Operation aOperation, uint8_t *aData, uint32_t aLength);
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
-     * Processes the payload within a given message.
+     * Performs in-place AES-CCM computation (encryption or decryption) on a `Message`
      *
-     * Encrypts/decrypts the payload content in place within the @p aMessage.
+     * Before calling this method, the `AesCcm` object must be fully configured by calling `SetKey()`, `SetNonce()`,
+     * `SetAuthData()`, and `SetTagLength()`. Otherwise, the behavior of this method is undefined.
      *
-     * @param[in,out]  aMessage     The message to read from and update.
-     * @param[in]      aOffset      The offset in @p aMessage to start of payload.
-     * @param[in]      aLength      Payload length in bytes.
-     * @param[in]      aMode        Mode to indicate whether to encrypt (`kEncrypt`) or decrypt (`kDecrypt`).
+     * The operation starts at @p aOffset in the message.
+     *
+     * For encryption, the payload is from @p aOffset to the end of the message. The calculated tag is appended to the
+     * end of the message.
+     *
+     * For decryption, the tag is assumed to be the last bytes of the message. The payload is from @p aOffset up to the
+     * tag (tag length bytes before the end). If decryption succeeds (tag matches), the tag is removed from the
+     * message.
+     *
+     * @param[in]      aOperation   The operation (kEncrypt or kDecrypt).
+     * @param[in,out]  aMessage     The Message.
+     * @param[in]      aOffset      The offset in the message where the payload starts.
+     *
+     * @retval kErrorNone         Operation succeeded.
+     * @retval kErrorSecurity     Decryption failed because the tag did not match.
+     * @retval kErrorNoBufs       Failed to grow the message to append the tag (during encryption).
+     * @retval kErrorInvalidArgs  The @p aOffset is invalid (larger than message length).
      */
-    void Payload(Message &aMessage, uint16_t aOffset, uint16_t aLength, Mode aMode);
+    Error Process(Operation aOperation, Message &aMessage, uint16_t aOffset);
 #endif
 
     /**
-     * Returns the tag length in bytes.
+     * Performs a complete AES-CCM computation (encryption or decryption).
      *
-     * @returns The tag length in bytes.
-     */
-    uint8_t GetTagLength(void) const { return mTagLength; }
-
-    /**
-     * Generates the tag.
+     * @deprecated This method is provided to support the public `otCrypto` API and should not be used
+     *             within the OpenThread core. Core modules should instantiate an `AesCcm` object and use
+     *             the `Process()` methods instead.
      *
-     * @param[out]  aTag        A pointer to the tag (must have `GetTagLength()` bytes).
+     * @param[in]      aOperation       The operation (kEncrypt or kDecrypt).
+     * @param[in]      aKey             The crypto key to use.
+     * @param[in]      aTagLength       The tag length in bytes.
+     * @param[in]      aNonce           A pointer to the nonce.
+     * @param[in]      aNonceLength     The length of the nonce in bytes.
+     * @param[in]      aAuthData        A pointer to the additional authentication data.
+     * @param[in]      aAuthDataLength  The length of the authentication data in bytes.
+     * @param[in,out]  aPlainText       A pointer to the plaintext buffer.
+     * @param[in,out]  aCipherText      A pointer to the ciphertext buffer.
+     * @param[in]      aLength          The length of the payload (plaintext/ciphertext) in bytes.
+     * @param[out]     aTag             A pointer to a buffer to output the calculated tag.
      */
-    void Finalize(void *aTag);
-
-    /**
-     * Generates IEEE 802.15.4 nonce byte sequence.
-     *
-     * @param[in]  aAddress        An extended address.
-     * @param[in]  aFrameCounter   A frame counter.
-     * @param[in]  aSecurityLevel  A security level.
-     * @param[out] aNonce          A buffer (with `kNonceSize` bytes) to place the generated nonce.
-     */
-    static void GenerateNonce(const Mac::ExtAddress &aAddress,
-                              uint32_t               aFrameCounter,
-                              uint8_t                aSecurityLevel,
-                              uint8_t               *aNonce);
+    static void Perform(Operation   aOperation,
+                        const Key  &aKey,
+                        uint8_t     aTagLength,
+                        const void *aNonce,
+                        uint8_t     aNonceLength,
+                        const void *aAuthData,
+                        uint32_t    aAuthDataLength,
+                        void       *aPlainText,
+                        void       *aCipherText,
+                        uint32_t    aLength,
+                        void       *aTag);
 
 private:
-    AesEcb   mEcb;
-    uint8_t  mBlock[AesEcb::kBlockSize];
-    uint8_t  mCtr[AesEcb::kBlockSize];
-    uint8_t  mCtrPad[AesEcb::kBlockSize];
-    uint32_t mHeaderLength;
-    uint32_t mHeaderCur;
-    uint32_t mPlainTextLength;
-    uint32_t mPlainTextCur;
-    uint16_t mBlockLength;
-    uint16_t mCtrLength;
-    uint8_t  mNonceLength;
-    uint8_t  mTagLength;
+    struct Config : public Clearable<Config>
+    {
+        bool IsValid(void) const;
+
+        Key            mKey;
+        uint8_t        mNonceLength;
+        uint8_t        mTagLength;
+        uint32_t       mHeaderLength;
+        uint32_t       mPlainTextLength;
+        const uint8_t *mNonce;
+    };
+
+    class Engine
+    {
+    public:
+        Error ProcessOneShot(Operation aOperation, const Config &aConfig, const uint8_t *aHeader, uint8_t *aData);
+
+        // Multi-part
+        void Start(const Config &aConfig);
+        void AddHeader(const void *aHeader, uint32_t aHeaderLength);
+        void AddPayload(void *aPlainText, void *aCipherText, uint32_t aLength, Operation aOperation);
+        void Finalize(void *aTag);
+
+    private:
+        AesEcb   mEcb;
+        uint8_t  mBlock[AesEcb::kBlockSize];
+        uint8_t  mCtr[AesEcb::kBlockSize];
+        uint8_t  mCtrPad[AesEcb::kBlockSize];
+        uint32_t mHeaderLength;
+        uint32_t mHeaderCur;
+        uint32_t mPlainTextLength;
+        uint32_t mPlainTextCur;
+        uint16_t mBlockLength;
+        uint16_t mCtrLength;
+        uint8_t  mNonceLength;
+        uint8_t  mTagLength;
+    };
+
+    Config         mConfig;
+    const uint8_t *mAuthData;
 };
 
 /**

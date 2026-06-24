@@ -302,8 +302,8 @@ otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
-    Icmp6Packet        packet;
-    Ip6::Icmp::Header *header;
+    Icmp6Packet       packet;
+    Ip6::Icmp6Header *header;
 
     Log("otPlatInfraIfSendIcmp6Nd(aDestAddr: %s, aBufferLength:%u)", AsCoreType(aDestAddress).ToString().AsCString(),
         aBufferLength);
@@ -313,19 +313,19 @@ otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
 
     packet.Init(aBuffer, aBufferLength);
 
-    VerifyOrQuit(aBufferLength >= sizeof(Ip6::Icmp::Header));
+    VerifyOrQuit(aBufferLength >= sizeof(Ip6::Icmp6Header));
 
-    header = reinterpret_cast<Ip6::Icmp::Header *>(const_cast<uint8_t *>(aBuffer));
+    header = reinterpret_cast<Ip6::Icmp6Header *>(const_cast<uint8_t *>(aBuffer));
 
     switch (header->GetType())
     {
-    case Ip6::Icmp::Header::kTypeRouterSolicit:
+    case Ip6::Icmp6Header::kTypeRouterSolicit:
         Log("  Router Solicit message");
         sRsEmitted = true;
         otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &sInfraIfAddress, aBuffer, aBufferLength);
         break;
 
-    case Ip6::Icmp::Header::kTypeRouterAdvert:
+    case Ip6::Icmp6Header::kTypeRouterAdvert:
         Log("  Router Advertisement message");
         LogRouterAdvert(packet);
         ValidateRouterAdvert(packet);
@@ -335,7 +335,7 @@ otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
         otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &sInfraIfAddress, aBuffer, aBufferLength);
         break;
 
-    case Ip6::Icmp::Header::kTypeNeighborSolicit:
+    case Ip6::Icmp6Header::kTypeNeighborSolicit:
     {
         const Ip6::Nd::NeighborSolicitHeader *nsMsg =
             reinterpret_cast<const Ip6::Nd::NeighborSolicitHeader *>(packet.GetBytes());
@@ -1386,19 +1386,23 @@ void VerifyFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix)
     VerifyOrQuit(favoredPrefix == aPrefix);
 }
 
-void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
+void InitTest(bool aEnablBorderRouting = false, bool aResetInstance = false)
 {
     uint32_t delay = 10000;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Initialize OT instance.
 
-    sNow      = 0;
-    sAlarmOn  = false;
-    sInstance = static_cast<Instance *>(testInitInstance());
+    sNow     = 0;
+    sAlarmOn = false;
 
-    if (aAfterReset)
+    if (!aResetInstance)
     {
+        sInstance = testInitInstance();
+    }
+    else
+    {
+        sInstance = testResetInstance(sInstance);
         delay += 26000; // leader reset sync delay
     }
 
@@ -2749,164 +2753,6 @@ void TestLocalOnLinkPrefixDeprecation(void)
 
     FinalizeTest();
 }
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-void TestDomainPrefixAsOmr(void)
-{
-    Ip6::Prefix                     localOnLink;
-    Ip6::Prefix                     localOmr;
-    Ip6::Prefix                     domainPrefix = PrefixFromString("2000:0000:1111:4444::", 64);
-    NetworkData::OnMeshPrefixConfig prefixConfig;
-    uint16_t                        heapAllocations;
-
-    Log("--------------------------------------------------------------------------------------------");
-    Log("TestDomainPrefixAsOmr");
-
-    InitTest();
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Start Routing Manager. Check emitted RS and RA messages.
-
-    sRsEmitted   = false;
-    sRaValidated = false;
-    sExpectedPio = kPioAdvertisingLocalOnLink;
-    sExpectedRios.Clear();
-
-    heapAllocations = sHeapAllocatedPtrs.GetLength();
-    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
-
-    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
-    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
-
-    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
-    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
-
-    sExpectedRios.Add(localOmr);
-
-    AdvanceTime(30000);
-
-    VerifyOrQuit(sRsEmitted);
-    VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sExpectedRios.SawAll());
-    Log("Received RA was validated");
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Check Network Data to include the local OMR and on-link prefix.
-
-    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Add a domain prefix directly into net data. The new prefix should
-    // be favored over the local OMR prefix.
-
-    otBackboneRouterSetEnabled(sInstance, true);
-
-    prefixConfig.Clear();
-    prefixConfig.mPrefix       = domainPrefix;
-    prefixConfig.mStable       = true;
-    prefixConfig.mSlaac        = true;
-    prefixConfig.mPreferred    = true;
-    prefixConfig.mOnMesh       = true;
-    prefixConfig.mDefaultRoute = false;
-    prefixConfig.mDp           = true;
-    prefixConfig.mPreference   = NetworkData::kRoutePreferenceMedium;
-
-    SuccessOrQuit(otBorderRouterAddOnMeshPrefix(sInstance, &prefixConfig));
-    SuccessOrQuit(otBorderRouterRegister(sInstance));
-
-    AdvanceTime(100);
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Make sure BR emits RA without domain prefix or previous local OMR.
-
-    sRaValidated = false;
-    sExpectedPio = kPioAdvertisingLocalOnLink;
-    sExpectedRios.Clear();
-    sExpectedRios.Add(domainPrefix);
-    sExpectedRios.Add(localOmr);
-
-    AdvanceTime(20000);
-
-    VerifyOrQuit(sRaValidated);
-
-    // We should see RIO removing the local OMR prefix with lifetime zero
-    // and should not see the domain prefix as RIO.
-
-    VerifyOrQuit(sExpectedRios[0].mPrefix == domainPrefix);
-    VerifyOrQuit(!sExpectedRios[0].mSawInRa);
-
-    VerifyOrQuit(sExpectedRios[1].mPrefix == localOmr);
-    VerifyOrQuit(sExpectedRios[1].mSawInRa);
-    VerifyOrQuit(sExpectedRios[1].mLifetime <= kRioDeprecatingLifetime);
-    VerifyOrQuit(sExpectedRios[1].mPreference == NetworkData::kRoutePreferenceLow);
-
-    // Wait long enough for deprecating RIO prefix to expire
-    AdvanceTime(3200000);
-
-    sRaValidated = false;
-    sExpectedPio = kPioAdvertisingLocalOnLink;
-    sExpectedRios.Clear();
-    sExpectedRios.Add(domainPrefix);
-    sExpectedRios.Add(localOmr);
-
-    // Wait for next RA (650 seconds).
-
-    AdvanceTime(650000);
-
-    VerifyOrQuit(sRaValidated);
-
-    // We should not see either domain prefix or local OMR
-    // as RIO.
-
-    VerifyOrQuit(!sExpectedRios[0].mSawInRa);
-    VerifyOrQuit(!sExpectedRios[1].mSawInRa);
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Check Network Data. We should now see that the local OMR prefix
-    // is removed.
-
-    VerifyOmrPrefixInNetData(domainPrefix, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Remove the domain prefix from net data.
-
-    SuccessOrQuit(otBorderRouterRemoveOnMeshPrefix(sInstance, &domainPrefix));
-    SuccessOrQuit(otBorderRouterRegister(sInstance));
-
-    AdvanceTime(100);
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Make sure BR emits RA with local OMR prefix again.
-
-    sRaValidated = false;
-    sExpectedRios.Clear();
-    sExpectedRios.Add(localOmr);
-
-    AdvanceTime(20000);
-
-    VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sExpectedRios.SawAll());
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Check Network Data. We should see that the local OMR prefix is
-    // added again.
-
-    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
-    AdvanceTime(3000);
-
-    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
-
-    Log("End of TestDomainPrefixAsOmr");
-    FinalizeTest();
-}
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 void TestExtPanIdChange(void)
 {
@@ -4285,9 +4131,7 @@ void TestSavedOnLinkPrefixes(void)
 
     Log("Disabling and re-enabling OT Instance");
 
-    testFreeInstance(sInstance);
-
-    InitTest(/* aEnablBorderRouting */ true, /* aAfterReset */ true);
+    InitTest(/* aEnablBorderRouting */ true, /* aResetInstance */ true);
 
     sExpectedPio = kPioAdvertisingLocalOnLink;
 
@@ -4331,9 +4175,7 @@ void TestSavedOnLinkPrefixes(void)
 
     Log("Disabling and re-enabling OT Instance");
 
-    testFreeInstance(sInstance);
-
-    InitTest(/* aEnablBorderRouting */ false, /* aAfterReset */ true);
+    InitTest(/* aEnablBorderRouting */ false, /* aResetInstance */ true);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start Routing Manager.
@@ -4381,8 +4223,7 @@ void TestSavedOnLinkPrefixes(void)
 
     Log("Disabling and re-enabling OT Instance again");
 
-    testFreeInstance(sInstance);
-    InitTest(/* aEnablBorderRouting */ false, /* aAfterReset */ true);
+    InitTest(/* aEnablBorderRouting */ false, /* aResetInstance */ true);
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
     AdvanceTime(100);
@@ -4998,7 +4839,7 @@ void TestDhcp6Pd(void)
 
     prefix = PrefixFromString("2001:db8:cafe:0::", 64);
 
-    shortPrefix.Set(prefix.GetBytes(), 48);
+    shortPrefix.InitFrom(prefix.GetBytes(), 48);
     ReportPdPrefixesAsRa({Pio(shortPrefix, kValidLitime, kPreferredLifetime)});
 
     sExpectedRios.Add(prefix);
@@ -5595,9 +5436,6 @@ int main(void)
     ot::TestAdvNonUlaRoute();
     ot::TestFavoredOnLinkPrefix();
     ot::TestLocalOnLinkPrefixDeprecation();
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    ot::TestDomainPrefixAsOmr();
-#endif
     ot::TestExtPanIdChange();
     ot::TestConflictingPrefix();
     ot::TestPrefixStaleTime();

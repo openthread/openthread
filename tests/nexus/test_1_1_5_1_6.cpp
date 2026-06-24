@@ -72,9 +72,7 @@ void Test5_1_6(void)
     leader.SetName("LEADER");
     router.SetName("ROUTER");
 
-    // Use AllowList feature to restrict the topology
-    leader.AllowList(router);
-    router.AllowList(leader);
+    AllowLinkBetween(leader, router);
 
     nexus.AdvanceTime(0);
 

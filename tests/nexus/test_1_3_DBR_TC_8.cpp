@@ -250,7 +250,6 @@ void Test_1_3_DBR_TC_8(void)
      */
     Log("Step 0: Eth_1 configured with GUA_1.");
 
-    eth1.mInfraIf.Init(eth1);
     Ip6::Address eth1Gua;
     SuccessOrQuit(eth1Gua.FromString(kEth1GuaAddrStr));
     eth1.mInfraIf.AddAddress(eth1Gua);
@@ -282,10 +281,8 @@ void Test_1_3_DBR_TC_8(void)
      */
     Log("Step 1: BR_2 becomes Leader and registers OMR_1.");
 
-    br1.AllowList(br2);
-    br1.AllowList(ed1);
-    br2.AllowList(br1);
-    ed1.AllowList(br1);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(br1, ed1);
 
     br2.Form();
     nexus.AdvanceTime(kFormNetworkTime);

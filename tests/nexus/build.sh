@@ -27,6 +27,21 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+display_usage()
+{
+    echo ""
+    echo "Nexus Build script"
+    echo ""
+    echo "Usage: $(basename "$0") [config]"
+    echo "    <config> can be:"
+    echo "        (no arg)        : Build OpenThread Nexus platform with default config"
+    echo "        trel            : Build OpenThread Nexus platform with TREL radio (no 15.4)"
+    echo "        wasm            : Build OpenThread Nexus platform for WebAssembly"
+    echo "        long_routes     : Build OpenThread Nexus platform with LONG_ROUTES feature enabled"
+    echo "        no_tests        : Build OpenThread Nexus platform without test executables"
+    echo ""
+}
+
 die()
 {
     echo " *** ERROR: " "$*"
@@ -44,18 +59,45 @@ else
     top_builddir=.
 fi
 
+if [ "$#" -gt 1 ]; then
+    display_usage
+    exit 1
+fi
+
+long_routes=OFF
+build_tests=ON
+
 case $1 in
     trel)
-        trel=ON
         fifteenfour=OFF
+        wasm=OFF
         ;;
-    multi-radio)
-        trel=ON
+    wasm)
         fifteenfour=ON
+        wasm=ON
+        ;;
+    long_routes)
+        fifteenfour=ON
+        wasm=OFF
+        long_routes=ON
+        ;;
+    no_tests)
+        fifteenfour=ON
+        wasm=OFF
+        build_tests=OFF
+        ;;
+    "")
+        fifteenfour=ON
+        wasm=OFF
+        ;;
+    help | --help | -h)
+        display_usage
+        exit 0
         ;;
     *)
-        trel=ON
-        fifteenfour=ON
+        echo "Error: Unknown configuration \"$1\""
+        display_usage
+        exit 1
         ;;
 esac
 
@@ -63,12 +105,27 @@ echo "==========================================================================
 echo "Building OpenThread Nexus test platform"
 echo "===================================================================================================="
 cd "${top_builddir}" || die "cd failed"
-cmake -GNinja -DOT_PLATFORM=nexus -DOT_COMPILE_WARNING_AS_ERROR=ON \
-    -DOT_MULTIPLE_INSTANCE=ON \
-    -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
-    -DOT_15_4=${fifteenfour} -DOT_TREL=${trel} \
-    -DOT_PROJECT_CONFIG="${top_srcdir}/tests/nexus/openthread-core-nexus-config.h" \
-    "${top_srcdir}" || die
+
+CMAKE_ARGS=(
+    -GNinja
+    -DOT_PLATFORM=nexus
+    -DOT_COMPILE_WARNING_AS_ERROR=ON
+    -DOT_THREAD_VERSION=1.4
+    -DOT_APP_CLI=OFF
+    -DOT_APP_NCP=OFF
+    -DOT_APP_RCP=OFF
+    -DOT_15_4="${fifteenfour}"
+    -DOT_MLE_LONG_ROUTES="${long_routes}"
+    -DOT_NEXUS_BUILD_TESTS="${build_tests}"
+    -DOT_PROJECT_CONFIG="${top_srcdir}/tests/nexus/openthread-core-nexus-config.h"
+)
+
+if [ "${wasm}" = "ON" ]; then
+    emcmake cmake "${CMAKE_ARGS[@]}" "${top_srcdir}" || die
+else
+    cmake "${CMAKE_ARGS[@]}" -DOT_NEXUS_GRPC="${OT_NEXUS_GRPC:-OFF}" "${top_srcdir}" || die
+fi
+
 ninja || die
 
 exit 0

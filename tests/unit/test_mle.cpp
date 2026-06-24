@@ -32,7 +32,11 @@
 #include "test_util.hpp"
 
 #include "common/num_utils.hpp"
+#include "thread/lowpan.hpp"
+#include "thread/mle.hpp"
+#include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/network_data_leader.hpp"
 
 namespace ot {
 
@@ -188,6 +192,287 @@ void TestDeviceMode(void)
     printf("TestDeviceMode passed\n");
 }
 
+namespace {
+
+constexpr uint16_t kOldParentRloc16 = 0x5400;
+constexpr uint16_t kOldChildRloc16  = 0x5401;
+constexpr uint16_t kNewParentRloc16 = 0x5c00;
+constexpr uint16_t kNewChildRloc16  = 0x5c01;
+
+constexpr uint8_t kOldDataVersion   = 4;
+constexpr uint8_t kOldStableVersion = 3;
+constexpr uint8_t kNewDataVersion   = 8;
+constexpr uint8_t kNewStableVersion = 7;
+constexpr uint8_t kMalformedDataLen = 31;
+
+const uint8_t kOldNetworkData[] = {
+    0x03, 0x0e, 0x00, 0x40, 0x20, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01, 0x07, 0x02, 0x11, 0x40,
+    0x03, 0x0e, 0x00, 0x40, 0x20, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x07, 0x02, 0x02, 0x40,
+};
+
+const uint8_t kNewNetworkData[] = {
+    0x03, 0x0e, 0x00, 0x40, 0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x03, 0x07, 0x02, 0x13, 0x40,
+    0x03, 0x0e, 0x00, 0x40, 0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x04, 0x07, 0x02, 0x04, 0x40,
+};
+
+Ip6::Prefix PrefixFromString(const char *aString, uint8_t aLength)
+{
+    Ip6::Prefix prefix;
+
+    SuccessOrQuit(AsCoreType(&prefix.mPrefix).FromString(aString));
+    prefix.mLength = aLength;
+
+    return prefix;
+}
+
+Mac::ExtAddress ExtAddressFromSeed(uint8_t aSeed)
+{
+    Mac::ExtAddress extAddress;
+
+    for (size_t index = 0; index < sizeof(extAddress.m8); index++)
+    {
+        extAddress.m8[index] = static_cast<uint8_t>(aSeed + index);
+    }
+
+    return extAddress;
+}
+
+void VerifyContext(Instance &aInstance, uint8_t aContextId, const Ip6::Prefix &aExpectedPrefix, bool aShouldBeValid)
+{
+    Lowpan::Context context;
+
+    aInstance.Get<NetworkData::Leader>().FindContextForId(aContextId, context);
+    VerifyOrQuit(context.IsValid() == aShouldBeValid);
+
+    if (aShouldBeValid)
+    {
+        VerifyOrQuit(context.GetContextId() == aContextId);
+        VerifyOrQuit(context.GetPrefix() == aExpectedPrefix);
+    }
+}
+
+} // namespace
+
+class UnitTester
+{
+public:
+    static void TestChildIdResponseNetworkDataHandling(void)
+    {
+        TestValidNetworkDataControl();
+        TestMissingNetworkDataControl();
+        TestMalformedNetworkDataControl();
+
+        printf("TestChildIdResponseNetworkDataHandling passed\n");
+    }
+
+private:
+    static void SetNetworkData(Instance      &aInstance,
+                               uint8_t        aDataVersion,
+                               uint8_t        aStableVersion,
+                               const uint8_t *aNetworkData,
+                               uint8_t        aNetworkDataLength)
+    {
+        Message    *message = aInstance.Get<MessagePool>().Allocate(Message::kTypeIp6);
+        OffsetRange offsetRange;
+
+        VerifyOrQuit(message != nullptr);
+
+        SuccessOrQuit(message->AppendBytes(aNetworkData, aNetworkDataLength));
+        offsetRange.Init(0, aNetworkDataLength);
+
+        SuccessOrQuit(aInstance.Get<NetworkData::Leader>().SetNetworkData(
+            aDataVersion, aStableVersion, NetworkData::kFullSet, *message, offsetRange));
+
+        message->Free();
+    }
+
+    static Message *NewChildIdResponseMessage(Instance              &aInstance,
+                                              uint16_t               aSourceAddress,
+                                              uint16_t               aChildAddress,
+                                              const Mle::LeaderData &aLeaderData,
+                                              const uint8_t         *aNetworkData,
+                                              uint8_t                aNetworkDataLength,
+                                              bool                   aIncludeNetworkData)
+    {
+        Message                      *message = aInstance.Get<MessagePool>().Allocate(Message::kTypeIp6);
+        const Mle::LeaderDataTlvValue leaderDataTlv(aLeaderData);
+
+        VerifyOrQuit(message != nullptr);
+        message->SetSubType(Message::kSubTypeMle);
+
+        SuccessOrQuit(Tlv::Append<Mle::SourceAddressTlv>(*message, aSourceAddress));
+        SuccessOrQuit(Tlv::Append<Mle::Address16Tlv>(*message, aChildAddress));
+        SuccessOrQuit(Tlv::Append<Mle::LeaderDataTlv>(*message, leaderDataTlv));
+
+        if (aIncludeNetworkData)
+        {
+            SuccessOrQuit(Tlv::Append<Mle::NetworkDataTlv>(*message, aNetworkData, aNetworkDataLength));
+        }
+
+        return message;
+    }
+
+    static void PrepareChildIdResponse(Mle::Mle &aMle, const Mac::ExtAddress &aParentExtAddress, uint16_t aParentRloc16)
+    {
+        Parent &parentCandidate = aMle.GetParentCandidate();
+
+        aMle.SetStateDetached();
+        aMle.mParent.SetState(Neighbor::kStateInvalid);
+        aMle.SetRloc16(Mle::kInvalidRloc16);
+        aMle.Get<ThreadNetif>().Up();
+        aMle.Get<ThreadNetif>().AddUnicastAddress(aMle.mMeshLocalEid);
+
+        parentCandidate.Clear();
+        parentCandidate.GetExtAddress() = aParentExtAddress;
+        parentCandidate.SetRloc16(aParentRloc16);
+        parentCandidate.SetVersion(kThreadVersion);
+        parentCandidate.SetDeviceMode(Mle::DeviceMode(Mle::DeviceMode::kModeFullThreadDevice |
+                                                      Mle::DeviceMode::kModeRxOnWhenIdle |
+                                                      Mle::DeviceMode::kModeFullNetworkData));
+        parentCandidate.SetState(Neighbor::kStateValid);
+        aMle.mAttacher.mState = Mle::Mle::Attacher::kStateChildIdRequest;
+    }
+
+    static void HandleChildIdResponse(Mle::Mle &aMle, Message &aMessage, const Mac::ExtAddress &aParentExtAddress)
+    {
+        Ip6::Address     peerAddress;
+        Ip6::MessageInfo messageInfo;
+        Mle::Mle::RxInfo rxInfo(aMessage, messageInfo);
+
+        peerAddress.InitAsLinkLocalAddress(aParentExtAddress);
+        messageInfo.SetPeerAddr(peerAddress);
+        messageInfo.SetSockAddr(aMle.GetLinkLocalAddress());
+
+        aMessage.SetOffset(0);
+        rxInfo.mNeighbor = &aMle.mAttacher.mParentCandidate;
+
+        aMle.mAttacher.HandleChildIdResponse(rxInfo);
+    }
+
+    static void VerifyDataVersions(Instance &aInstance, uint8_t aDataVersion, uint8_t aStableVersion)
+    {
+        VerifyOrQuit(aInstance.Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet) == aDataVersion);
+        VerifyOrQuit(aInstance.Get<NetworkData::Leader>().GetVersion(NetworkData::kStableSubset) == aStableVersion);
+    }
+
+    static Mle::LeaderData NewLeaderData(uint32_t aPartitionId,
+                                         uint8_t  aWeighting,
+                                         uint8_t  aLeaderRouterId,
+                                         uint8_t  aDataVersion,
+                                         uint8_t  aStableVersion)
+    {
+        Mle::LeaderData leaderData;
+
+        leaderData.SetPartitionId(aPartitionId);
+        leaderData.SetWeighting(aWeighting);
+        leaderData.SetLeaderRouterId(aLeaderRouterId);
+        leaderData.SetDataVersion(aDataVersion);
+        leaderData.SetStableDataVersion(aStableVersion);
+
+        return leaderData;
+    }
+
+    static void TestValidNetworkDataControl(void)
+    {
+        Instance             *instance         = static_cast<Instance *>(testInitInstance());
+        Mle::Mle             &mle              = instance->Get<Mle::Mle>();
+        const Mac::ExtAddress parentExtAddress = ExtAddressFromSeed(0x30);
+        const Ip6::Prefix     oldPrefix1       = PrefixFromString("2001:2:0:1::", 64);
+        const Ip6::Prefix     oldPrefix2       = PrefixFromString("2001:2:0:2::", 64);
+        const Ip6::Prefix     newPrefix1       = PrefixFromString("2001:db8:0:3::", 64);
+        const Ip6::Prefix     newPrefix2       = PrefixFromString("2001:db8:0:4::", 64);
+        Message              *message;
+        Mle::LeaderData       leaderData = NewLeaderData(0x11111111, 64, Mle::RouterIdFromRloc16(kNewParentRloc16),
+                                                         kNewDataVersion, kNewStableVersion);
+
+        printf("valid-network-data-control\n");
+
+        SetNetworkData(*instance, kOldDataVersion, kOldStableVersion, kOldNetworkData, sizeof(kOldNetworkData));
+        PrepareChildIdResponse(mle, parentExtAddress, kNewParentRloc16);
+
+        message = NewChildIdResponseMessage(*instance, kNewParentRloc16, kNewChildRloc16, leaderData, kNewNetworkData,
+                                            sizeof(kNewNetworkData), true);
+
+        HandleChildIdResponse(mle, *message, parentExtAddress);
+
+        VerifyOrQuit(mle.IsChild());
+        VerifyOrQuit(mle.GetRloc16() == kNewChildRloc16);
+        VerifyOrQuit(mle.GetParent().GetRloc16() == kNewParentRloc16);
+        VerifyDataVersions(*instance, kNewDataVersion, kNewStableVersion);
+        VerifyContext(*instance, 1, oldPrefix1, false);
+        VerifyContext(*instance, 2, oldPrefix2, false);
+        VerifyContext(*instance, 3, newPrefix1, true);
+        VerifyContext(*instance, 4, newPrefix2, true);
+
+        message->Free();
+        testFreeInstance(instance);
+    }
+
+    static void TestMissingNetworkDataControl(void)
+    {
+        Instance             *instance         = static_cast<Instance *>(testInitInstance());
+        Mle::Mle             &mle              = instance->Get<Mle::Mle>();
+        const Mac::ExtAddress parentExtAddress = ExtAddressFromSeed(0x40);
+        const Ip6::Prefix     oldPrefix1       = PrefixFromString("2001:2:0:1::", 64);
+        const Ip6::Prefix     oldPrefix2       = PrefixFromString("2001:2:0:2::", 64);
+        Message              *message;
+        Mle::LeaderData leaderData = NewLeaderData(0x22222222, 64, Mle::RouterIdFromRloc16(kOldParentRloc16), 9, 9);
+
+        printf("missing-network-data-control\n");
+
+        SetNetworkData(*instance, kOldDataVersion, kOldStableVersion, kOldNetworkData, sizeof(kOldNetworkData));
+        PrepareChildIdResponse(mle, parentExtAddress, kOldParentRloc16);
+
+        message =
+            NewChildIdResponseMessage(*instance, kOldParentRloc16, kOldChildRloc16, leaderData, nullptr, 0, false);
+
+        HandleChildIdResponse(mle, *message, parentExtAddress);
+
+        VerifyOrQuit(!mle.IsChild());
+        VerifyDataVersions(*instance, kOldDataVersion, kOldStableVersion);
+        VerifyContext(*instance, 1, oldPrefix1, true);
+        VerifyContext(*instance, 2, oldPrefix2, true);
+
+        message->Free();
+        testFreeInstance(instance);
+    }
+
+    static void TestMalformedNetworkDataControl(void)
+    {
+        Instance             *instance         = static_cast<Instance *>(testInitInstance());
+        Mle::Mle             &mle              = instance->Get<Mle::Mle>();
+        const Mac::ExtAddress parentExtAddress = ExtAddressFromSeed(0x50);
+        const Ip6::Prefix     oldPrefix1       = PrefixFromString("2001:2:0:1::", 64);
+        const Ip6::Prefix     oldPrefix2       = PrefixFromString("2001:2:0:2::", 64);
+        const Ip6::Prefix     newPrefix1       = PrefixFromString("2001:db8:0:3::", 64);
+        Message              *message;
+        Mle::LeaderData       leaderData = NewLeaderData(0x33333333, 64, Mle::RouterIdFromRloc16(kNewParentRloc16),
+                                                         kNewDataVersion, kNewStableVersion);
+
+        printf("malformed-network-data-control\n");
+
+        SetNetworkData(*instance, kOldDataVersion, kOldStableVersion, kOldNetworkData, sizeof(kOldNetworkData));
+        PrepareChildIdResponse(mle, parentExtAddress, kNewParentRloc16);
+
+        message = NewChildIdResponseMessage(*instance, kNewParentRloc16, kNewChildRloc16, leaderData, kNewNetworkData,
+                                            kMalformedDataLen, true);
+
+        HandleChildIdResponse(mle, *message, parentExtAddress);
+
+        VerifyOrQuit(mle.IsDetached());
+        VerifyOrQuit(mle.GetParent().IsStateInvalid());
+        VerifyOrQuit(mle.mAttacher.mState == Mle::Mle::Attacher::kStateStart);
+        VerifyOrQuit(mle.mAttacher.mTimer.IsRunning());
+        VerifyDataVersions(*instance, kOldDataVersion, kOldStableVersion);
+        VerifyContext(*instance, 1, oldPrefix1, true);
+        VerifyContext(*instance, 2, oldPrefix2, true);
+        VerifyContext(*instance, 3, newPrefix1, false);
+
+        message->Free();
+        testFreeInstance(instance);
+    }
+};
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 void TestDefaultDeviceProperties(void)
@@ -329,6 +614,7 @@ void TestLeaderWeightCalculation(void)
 int main(void)
 {
     ot::TestDeviceMode();
+    ot::UnitTester::TestChildIdResponseNetworkDataHandling();
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     ot::TestDefaultDeviceProperties();

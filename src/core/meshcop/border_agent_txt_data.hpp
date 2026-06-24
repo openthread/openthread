@@ -125,6 +125,7 @@ public:
         static bool ReadValue(const Dns::TxtEntry &aEntry, void *aBuffer, uint16_t aSize);
         static void ReadStringValue(const Dns::TxtEntry &aEntry, char *aString, uint16_t aStringSize);
         static bool ReadOmrPrefix(const Dns::TxtEntry &aEntry, Ip6::Prefix &aPrefix);
+        static bool ReadVendorOui(const Dns::TxtEntry &aEntry, VendorInfo::Oui &aOui);
 
         template <typename ObjectType> bool ReadValue(const Dns::TxtEntry &aEntry, ObjectType &aObject)
         {
@@ -300,6 +301,7 @@ private:
         static const char kExtAddress[];
         static const char kVendorName[];
         static const char kModelName[];
+        static const char kVendorOui[];
     };
 
     struct StateBitmap
@@ -357,7 +359,12 @@ private:
 #endif
     };
 
-    Error Prepare(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength, bool aAddVendorName, bool aAddVendorModel);
+    Error Prepare(uint8_t  *aBuffer,
+                  uint16_t  aBufferSize,
+                  uint16_t &aLength,
+                  bool      aAddVendorName,
+                  bool      aAddVendorModel,
+                  bool      aAddVendorOui);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     // Callback from Notifier
@@ -365,6 +372,7 @@ private:
     // Callbacks from VendorInfo
     void HandleVendorNameChange(void);
     void HandleVendorModelChange(void);
+    void HandleVendorOuiChange(void);
 
     void HandleChangedTask(void);
 
@@ -376,6 +384,7 @@ private:
     Heap::Data mVendorData;
     bool       mShouldAddVendorName;
     bool       mShouldAddVendorModel;
+    bool       mShouldAddVendorOui;
 #endif
 #endif
 };

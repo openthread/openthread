@@ -619,7 +619,7 @@ public:
      *
      * If the name is empty (not specified), then root "." is appended to @p aMessage. If the name is from a C string
      * then the string is checked and appended (similar to static `AppendName(const char *aName, Message &)` method).
-     * If the the name is from a message, then it is read from the message and appended to @p aMessage. Note that in
+     * If the name is from a message, then it is read from the message and appended to @p aMessage. Note that in
      * this case independent of whether the name is compressed or not in its original message, the name is appended
      * as full (uncompressed) in @p aMessage.
      *
@@ -814,7 +814,7 @@ public:
      * Can be used to compare labels one by one. It checks whether the label read from @p aMessage matches
      * @p aLabel string (case-insensitive comparison).
      *
-     * Unlike `CompareName()` which requires the labels in the the name string to contain no dot '.' character, this
+     * Unlike `CompareName()` which requires the labels in the name string to contain no dot '.' character, this
      * method allows @p aLabel to include any character.
      *
      * @param[in]     aMessage        The message to read the label from to compare. `aMessage.GetOffset()` MUST point

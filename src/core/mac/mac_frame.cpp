@@ -41,7 +41,8 @@
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "radio/trel_link.hpp"
-#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE || \
+    (OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE)
 #include "crypto/aes_ccm.hpp"
 #endif
 
@@ -184,7 +185,7 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 #endif
 
     builder.Init(aTxFrame.mPsdu, aTxFrame.GetMtu());
-    IgnoreError(builder.AppendLittleEndianUint16(fcf));
+    IgnoreError(builder.AppendUint<kLittleEndian>(fcf));
 
     if (IsSequencePresent(fcf))
     {
@@ -193,14 +194,14 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 
     if (IsDstPanIdPresent(fcf))
     {
-        IgnoreError(builder.AppendLittleEndianUint16(mPanIds.GetDestination()));
+        IgnoreError(builder.AppendUint<kLittleEndian>(mPanIds.GetDestination()));
     }
 
     IgnoreError(builder.AppendMacAddress(mAddrs.mDestination));
 
     if (IsSrcPanIdPresent(fcf))
     {
-        IgnoreError(builder.AppendLittleEndianUint16(mPanIds.GetSource()));
+        IgnoreError(builder.AppendUint<kLittleEndian>(mPanIds.GetSource()));
     }
 
     IgnoreError(builder.AppendMacAddress(mAddrs.mSource));
@@ -222,7 +223,6 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (mAppendTimeIe)
     {
-        builder.Append<HeaderIe>()->Init(TimeIe::kHeaderIeId, sizeof(TimeIe));
         builder.Append<TimeIe>()->Init();
     }
 #endif
@@ -230,15 +230,14 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (mAppendCslIe)
     {
-        builder.Append<HeaderIe>()->Init(CslIe::kHeaderIeId, sizeof(CslIe));
-        builder.Append<CslIe>();
+        builder.Append<CslIe>()->Init();
         aTxFrame.SetCslIePresent(true);
     }
 #endif
 
     if ((fcf & kFcfIePresent) && ((mType == kTypeMacCmd) || !mEmptyPayload))
     {
-        builder.Append<HeaderIe>()->Init(Termination2Ie::kHeaderIeId, Termination2Ie::kIeContentSize);
+        builder.Append<Termination2Ie>()->Init();
     }
 
 #endif //  OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -319,14 +318,12 @@ bool Frame::IsWakeupFrame(void) const
     VerifyOrExit(keyIdMode == kKeyIdMode2);
 
     // ... that has Rendezvous Time IE and Connection IE...
-    VerifyOrExit(GetRendezvousTimeIe() != nullptr);
-    VerifyOrExit((connectionIe = GetConnectionIe()) != nullptr);
+    VerifyOrExit(Has<RendezvousTimeIe>());
+    VerifyOrExit((connectionIe = Find<ConnectionIe>()) != nullptr);
 
     // ... but no other IEs nor payload.
     firstIeIndex = FindHeaderIeIndex();
-    VerifyOrExit(mPsdu + firstIeIndex + sizeof(HeaderIe) + RendezvousTimeIe::kIeContentSize + sizeof(HeaderIe) +
-                     connectionIe->GetHeaderIe()->GetLength() ==
-                 GetFooter());
+    VerifyOrExit(mPsdu + firstIeIndex + sizeof(RendezvousTimeIe) + connectionIe->GetSize() == GetFooter());
 
     result = true;
 
@@ -1080,15 +1077,16 @@ uint8_t Frame::FindPayloadIndex(void) const
 
         do
         {
-            const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
+            const HeaderIe *ie;
 
-            index += sizeof(HeaderIe);
+            VerifyOrExit(index + footerLength + sizeof(HeaderIe) <= mLength, index = kInvalidIndex);
+
+            ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
+            index += ie->GetSize();
+
             VerifyOrExit(index + footerLength <= mLength, index = kInvalidIndex);
 
-            index += ie->GetLength();
-            VerifyOrExit(index + footerLength <= mLength, index = kInvalidIndex);
-
-            if (ie->GetId() == Termination2Ie::kHeaderIeId)
+            if (ie->GetId() == Termination2Ie::kId)
             {
                 break;
             }
@@ -1139,6 +1137,7 @@ exit:
 const uint8_t *Frame::GetFooter(void) const { return mPsdu + mLength - GetFooterLength(); }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
 uint8_t Frame::FindHeaderIeIndex(void) const
 {
     uint8_t index;
@@ -1151,11 +1150,11 @@ exit:
     return index;
 }
 
-const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
+const HeaderIe *Frame::FindHeaderIe(HeaderIeMatcher aMatcher) const
 {
-    uint16_t       index        = FindHeaderIeIndex();
-    uint16_t       payloadIndex = FindPayloadIndex();
-    const uint8_t *header       = nullptr;
+    uint16_t        index        = FindHeaderIeIndex();
+    uint16_t        payloadIndex = FindPayloadIndex();
+    const HeaderIe *matchedIe    = nullptr;
 
     // `FindPayloadIndex()` verifies that Header IE(s) in frame (if present)
     // are well-formed.
@@ -1166,120 +1165,50 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
     {
         const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
 
-        if (ie->GetId() == aIeId)
+        if (aMatcher(*ie))
         {
-            header = &mPsdu[index];
+            matchedIe = ie;
             ExitNow();
         }
 
-        index += sizeof(HeaderIe) + ie->GetLength();
+        index += ie->GetSize();
     }
 
 exit:
-    return header;
+    return matchedIe;
 }
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE || \
-    OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
-{
-    uint16_t       index        = FindHeaderIeIndex();
-    uint16_t       payloadIndex = FindPayloadIndex();
-    const uint8_t *header       = nullptr;
-
-    // `FindPayloadIndex()` verifies that Header IE(s) in frame (if present)
-    // are well-formed.
-    VerifyOrExit((index != kInvalidIndex) && (payloadIndex != kInvalidIndex));
-
-    while (index < payloadIndex)
-    {
-        const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
-
-        if (ie->GetId() == VendorIeHeader::kHeaderIeId)
-        {
-            const VendorIeHeader *vendorIe =
-                reinterpret_cast<const VendorIeHeader *>(reinterpret_cast<const uint8_t *>(ie) + sizeof(HeaderIe));
-            if (vendorIe->GetVendorOui() == ThreadIe::kVendorOuiThreadCompanyId && vendorIe->GetSubType() == aSubType)
-            {
-                header = &mPsdu[index];
-                ExitNow();
-            }
-        }
-
-        index += sizeof(HeaderIe) + ie->GetLength();
-    }
-
-exit:
-    return header;
-}
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE ||
-       // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
+void Frame::UpdateCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
 {
-    CslIe *csl = GetCslIe();
+    CslIe *csl = Find<CslIe>();
 
     VerifyOrExit(csl != nullptr);
+
     csl->SetPeriod(aCslPeriod);
     csl->SetPhase(aCslPhase);
 
 exit:
     return;
 }
-
-bool Frame::HasCslIe(void) const { return GetHeaderIe(CslIe::kHeaderIeId) != nullptr; }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-const CslIe *Frame::GetCslIe(void) const
-{
-    const uint8_t *cur;
-    const CslIe   *csl = nullptr;
-
-    cur = GetHeaderIe(CslIe::kHeaderIeId);
-    VerifyOrExit(cur != nullptr);
-    csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
-
-exit:
-    return csl;
-}
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
+void Frame::UpdateEnhAckProbingIe(const uint8_t *aData, uint8_t aLen)
 {
-    uint8_t *cur = GetThreadIe(ThreadIe::kEnhAckProbingIe);
+    LinkMetricsProbingIe *probingIe = Find<LinkMetricsProbingIe>();
 
-    VerifyOrExit(cur != nullptr);
-    memcpy(cur + sizeof(HeaderIe) + sizeof(VendorIeHeader), aValue, aLen);
+    VerifyOrExit(probingIe != nullptr);
+
+    VerifyOrExit(aLen >= probingIe->GetMetricsDataLen());
+    probingIe->WriteMetricsDataFrom(aData);
 
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#endif
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-const TimeIe *Frame::GetTimeIe(void) const
-{
-    const TimeIe  *timeIe = nullptr;
-    const uint8_t *cur    = nullptr;
-
-    cur = GetHeaderIe(VendorIeHeader::kHeaderIeId);
-    VerifyOrExit(cur != nullptr);
-
-    cur += sizeof(HeaderIe);
-
-    timeIe = reinterpret_cast<const TimeIe *>(cur);
-    VerifyOrExit(timeIe->GetVendorOui() == TimeIe::kVendorOuiNest, timeIe = nullptr);
-    VerifyOrExit(timeIe->GetSubType() == TimeIe::kVendorIeTime, timeIe = nullptr);
-
-exit:
-    return timeIe;
-}
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 uint16_t Frame::GetMtu(void) const
@@ -1374,26 +1303,24 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
-    uint32_t       frameCounter = 0;
-    uint8_t        securityLevel;
-    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t        tagLength;
-    Crypto::AesCcm aesCcm;
+    uint32_t              frameCounter = 0;
+    uint8_t               securityLevel;
+    Crypto::AesCcm        aesCcm;
+    Crypto::AesCcm::Nonce nonce;
 
     VerifyOrExit(GetSecurityEnabled());
 
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
 
-    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
 
     aesCcm.SetKey(GetAesKey());
-    tagLength = GetFooterLength() - GetFcsSize();
+    aesCcm.SetNonce(nonce);
+    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
+    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
 
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    aesCcm.Header(GetHeader(), GetHeaderLength());
-    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kEncrypt);
-    aesCcm.Finalize(GetFooter());
+    SuccessOrExit(aesCcm.Process(Crypto::AesCcm::kEncrypt, GetPayload(), GetPayloadLength()));
 
     SetIsSecurityProcessed(true);
 
@@ -1403,6 +1330,38 @@ exit:
     OT_UNUSED_VARIABLE(aExtAddress);
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 }
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+void TxFrame::DecryptTransmitAesCcm(const ExtAddress &aExtAddress)
+{
+    uint32_t              frameCounter = 0;
+    uint8_t               securityLevel;
+    Crypto::AesCcm        aesCcm;
+    Crypto::AesCcm::Nonce nonce;
+
+    VerifyOrExit(GetSecurityEnabled() && IsSecurityProcessed());
+
+    SuccessOrExit(GetSecurityLevel(securityLevel));
+    SuccessOrExit(GetFrameCounter(frameCounter));
+
+    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
+
+    aesCcm.SetKey(GetAesKey());
+    aesCcm.SetNonce(nonce);
+    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
+    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
+
+    // We expect success because we are only decrypting back to plaintext,
+    // and we know the ciphertext was generated correctly by us previously.
+    IgnoreError(aesCcm.Process(Crypto::AesCcm::kDecrypt, GetPayload(), GetPayloadLength()));
+
+    SetIsSecurityProcessed(false);
+    SetIsHeaderUpdated(false);
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 {
@@ -1536,8 +1495,8 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupReq
 
     builder.Init(mPsdu, GetMtu());
 
-    IgnoreError(builder.AppendLittleEndianUint16(fcf));
-    IgnoreError(builder.AppendLittleEndianUint16(aPanId));
+    IgnoreError(builder.AppendUint<kLittleEndian>(fcf));
+    IgnoreError(builder.AppendUint<kLittleEndian>(aPanId));
     IgnoreError(builder.AppendMacAddress(dest));
     IgnoreError(builder.AppendMacAddress(aSource));
 
@@ -1545,11 +1504,9 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupReq
     IgnoreError(builder.AppendUint8(secCtl));
     builder.AppendLength(CalculateSecurityHeaderSize(secCtl) - sizeof(secCtl));
 
-    builder.Append<HeaderIe>()->Init(RendezvousTimeIe::kHeaderIeId, sizeof(RendezvousTimeIe));
-    builder.Append<RendezvousTimeIe>();
+    builder.Append<RendezvousTimeIe>()->Init();
 
-    builder.Append<HeaderIe>()->Init(ConnectionIe::kHeaderIeId, sizeof(ConnectionIe) + wakeupIdLength);
-    builder.Append<ConnectionIe>()->Init();
+    builder.Append<ConnectionIe>()->Init(wakeupIdLength);
     builder.AppendLength(wakeupIdLength);
 
     builder.AppendLength(CalculateMicSize(secCtl) + GetFcsSize());
@@ -1561,42 +1518,59 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
+bool RxFrame::IsSecuredWith(KeyIdModeFlags aFlags) const
+{
+    bool    isSecure = false;
+    uint8_t keyIdMode;
+
+    VerifyOrExit(GetSecurityEnabled());
+    SuccessOrExit(GetKeyIdMode(keyIdMode));
+
+    switch (keyIdMode)
+    {
+    case kKeyIdMode0:
+        VerifyOrExit(aFlags & kAllowKeyIdMode0);
+        break;
+    case kKeyIdMode1:
+        VerifyOrExit(aFlags & kAllowKeyIdMode1);
+        break;
+    default:
+        ExitNow();
+    }
+
+    isSecure = true;
+
+exit:
+    return isSecure;
+}
+
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-    Error          error        = kErrorSecurity;
-    uint32_t       frameCounter = 0;
-    uint8_t        securityLevel;
-    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t        tag[kMaxMicSize];
-    uint8_t        tagLength;
-    Crypto::AesCcm aesCcm;
+    Error                 error        = kErrorSecurity;
+    uint32_t              frameCounter = 0;
+    uint8_t               securityLevel;
+    Crypto::AesCcm        aesCcm;
+    Crypto::AesCcm::Nonce nonce;
 
     VerifyOrExit(GetSecurityEnabled(), error = kErrorNone);
 
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
 
-    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
 
     aesCcm.SetKey(aMacKey);
-    tagLength = GetFooterLength() - GetFcsSize();
+    aesCcm.SetNonce(nonce);
+    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
+    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
 
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    aesCcm.Header(GetHeader(), GetHeaderLength());
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#else
-    // For fuzz tests, execute AES but do not alter the payload. A large
-    aesCcm.Payload(nullptr, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#endif
-    aesCcm.Finalize(tag);
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, GetFooter(), tagLength) == 0);
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    // Do not decrypt when fuzzing
+    ExitNow(error = kErrorNone);
 #endif
 
-    error = kErrorNone;
+    error = aesCcm.Process(Crypto::AesCcm::kDecrypt, GetPayload(), GetPayloadLength());
 
 exit:
     return error;

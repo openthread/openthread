@@ -45,55 +45,51 @@ namespace ot {
  */
 enum Uri : uint8_t
 {
-    kUriAddressError,           ///< Address Error ("a/ae")
-    kUriAddressNotify,          ///< Address Notify ("a/an")
-    kUriAddressQuery,           ///< Address Query ("a/aq")
-    kUriAddressRelease,         ///< Address Release ("a/ar")
-    kUriAddressSolicit,         ///< Address Solicit ("a/as")
-    kUriServerData,             ///< Server Data Registration ("a/sd")
-    kUriAnycastLocate,          ///< Anycast Locate ("a/yl")
-    kUriBackboneAnswer,         ///< Backbone Answer / Backbone Notification ("b/ba")
-    kUriBackboneMlr,            ///< Backbone Multicast Listener Report ("b/bmr")
-    kUriBackboneQuery,          ///< Backbone Query ("b/bq")
-    kUriAnnounceBegin,          ///< Announce Begin ("c/ab")
-    kUriActiveGet,              ///< MGMT_ACTIVE_GET "c/ag"
-    kUriActiveReplace,          ///< MGMT_ACTIVE_REPLACE ("c/ar")
-    kUriActiveSet,              ///< MGMT_ACTIVE_SET ("c/as")
-    kUriCommissionerKeepAlive,  ///< Commissioner Keep Alive ("c/ca")
-    kUriCommissionerGet,        ///< MGMT_COMMISSIONER_GET ("c/cg")
-    kUriCommissionerPetition,   ///< Commissioner Petition ("c/cp")
-    kUriCommissionerSet,        ///< MGMT_COMMISSIONER_SET ("c/cs")
-    kUriDatasetChanged,         ///< MGMT_DATASET_CHANGED ("c/dc")
-    kUriEnergyReport,           ///< Energy Report ("c/er")
-    kUriEnergyScan,             ///< Energy Scan ("c/es")
-    kUriJoinerEntrust,          ///< Joiner Entrust  ("c/je")
-    kUriJoinerFinalize,         ///< Joiner Finalize ("c/jf")
-    kUriLeaderKeepAlive,        ///< Leader Keep Alive ("c/la")
-    kUriLeaderPetition,         ///< Leader Petition ("c/lp")
-    kUriEnrollerJoinerAccept,   ///< Enroller Joiner Accept ("c/nj")
-    kUriEnrollerKeepAlive,      ///< Enroller KeepAlive ("c/nk")
-    kUriEnrollerJoinerRelease,  ///< Enroller Joiner Release ("c/nl")
-    kUriEnrollerRegister,       ///< Enroller Register ("c/nr")
-    kUriEnrollerReportState,    ///< Report Admitter State (to enroller) ("c/ns")
-    kUriPanIdConflict,          ///< PAN ID Conflict ("c/pc")
-    kUriPendingGet,             ///< MGMT_PENDING_GET ("c/pg")
-    kUriPanIdQuery,             ///< PAN ID Query ("c/pq")
-    kUriPendingSet,             ///< MGMT_PENDING_SET ("c/ps")
-    kUriRelayRx,                ///< Relay RX ("c/rx")
-    kUriTcatEnable,             ///< TCAT Enable ("c/te")
-    kUriRelayTx,                ///< Relay TX ("c/tx")
-    kUriProxyRx,                ///< Proxy RX ("c/ur")
-    kUriProxyTx,                ///< Proxy TX ("c/ut")
-    kUriDiagnosticGetAnswer,    ///< Network Diagnostic Get Answer ("d/da")
-    kUriDiagnosticGetRequest,   ///< Network Diagnostic Get Request ("d/dg")
-    kUriDiagnosticGetQuery,     ///< Network Diagnostic Get Query ("d/dq")
-    kUriDiagnosticReset,        ///< Network Diagnostic Reset ("d/dr")
-    kUriHistoryAnswer,          ///< History Answer ("h/an")
-    kUriHistoryQuery,           ///< History Query ("h/qy")
-    kUriDuaRegistrationNotify,  ///< DUA Registration Notification ("n/dn")
-    kUriDuaRegistrationRequest, ///< DUA Registration Request ("n/dr")
-    kUriMlr,                    ///< Multicast Listener Registration ("n/mr")
-    kUriUnknown,                ///< Unknown URI
+    kUriAddressError,          ///< Address Error ("a/ae")
+    kUriAddressNotify,         ///< Address Notify ("a/an")
+    kUriAddressQuery,          ///< Address Query ("a/aq")
+    kUriAddressRelease,        ///< Address Release ("a/ar")
+    kUriAddressSolicit,        ///< Address Solicit ("a/as")
+    kUriServerData,            ///< Server Data Registration ("a/sd")
+    kUriAnycastLocate,         ///< Anycast Locate ("a/yl")
+    kUriBackboneMlr,           ///< Backbone Multicast Listener Report ("b/bmr")
+    kUriAnnounceBegin,         ///< Announce Begin ("c/ab")
+    kUriActiveGet,             ///< MGMT_ACTIVE_GET "c/ag"
+    kUriActiveReplace,         ///< MGMT_ACTIVE_REPLACE ("c/ar")
+    kUriActiveSet,             ///< MGMT_ACTIVE_SET ("c/as")
+    kUriCommissionerKeepAlive, ///< Commissioner Keep Alive ("c/ca")
+    kUriCommissionerGet,       ///< MGMT_COMMISSIONER_GET ("c/cg")
+    kUriCommissionerPetition,  ///< Commissioner Petition ("c/cp")
+    kUriCommissionerSet,       ///< MGMT_COMMISSIONER_SET ("c/cs")
+    kUriDatasetChanged,        ///< MGMT_DATASET_CHANGED ("c/dc")
+    kUriEnergyReport,          ///< Energy Report ("c/er")
+    kUriEnergyScan,            ///< Energy Scan ("c/es")
+    kUriJoinerEntrust,         ///< Joiner Entrust  ("c/je")
+    kUriJoinerFinalize,        ///< Joiner Finalize ("c/jf")
+    kUriLeaderKeepAlive,       ///< Leader Keep Alive ("c/la")
+    kUriLeaderPetition,        ///< Leader Petition ("c/lp")
+    kUriEnrollerJoinerAccept,  ///< Enroller Joiner Accept ("c/nj")
+    kUriEnrollerKeepAlive,     ///< Enroller KeepAlive ("c/nk")
+    kUriEnrollerJoinerRelease, ///< Enroller Joiner Release ("c/nl")
+    kUriEnrollerRegister,      ///< Enroller Register ("c/nr")
+    kUriEnrollerReportState,   ///< Report Admitter State (to enroller) ("c/ns")
+    kUriPanIdConflict,         ///< PAN ID Conflict ("c/pc")
+    kUriPendingGet,            ///< MGMT_PENDING_GET ("c/pg")
+    kUriPanIdQuery,            ///< PAN ID Query ("c/pq")
+    kUriPendingSet,            ///< MGMT_PENDING_SET ("c/ps")
+    kUriRelayRx,               ///< Relay RX ("c/rx")
+    kUriTcatEnable,            ///< TCAT Enable ("c/te")
+    kUriRelayTx,               ///< Relay TX ("c/tx")
+    kUriProxyRx,               ///< Proxy RX ("c/ur")
+    kUriProxyTx,               ///< Proxy TX ("c/ut")
+    kUriDiagnosticGetAnswer,   ///< Network Diagnostic Get Answer ("d/da")
+    kUriDiagnosticGetRequest,  ///< Network Diagnostic Get Request ("d/dg")
+    kUriDiagnosticGetQuery,    ///< Network Diagnostic Get Query ("d/dq")
+    kUriDiagnosticReset,       ///< Network Diagnostic Reset ("d/dr")
+    kUriHistoryAnswer,         ///< History Answer ("h/an")
+    kUriHistoryQuery,          ///< History Query ("h/qy")
+    kUriMlr,                   ///< Multicast Listener Registration ("n/mr")
+    kUriUnknown,               ///< Unknown URI
 };
 
 /**
@@ -131,9 +127,7 @@ template <> const char *UriToString<kUriAddressRelease>(void);
 template <> const char *UriToString<kUriAddressSolicit>(void);
 template <> const char *UriToString<kUriServerData>(void);
 template <> const char *UriToString<kUriAnycastLocate>(void);
-template <> const char *UriToString<kUriBackboneAnswer>(void);
 template <> const char *UriToString<kUriBackboneMlr>(void);
-template <> const char *UriToString<kUriBackboneQuery>(void);
 template <> const char *UriToString<kUriAnnounceBegin>(void);
 template <> const char *UriToString<kUriActiveGet>(void);
 template <> const char *UriToString<kUriActiveReplace>(void);
@@ -167,8 +161,6 @@ template <> const char *UriToString<kUriDiagnosticGetAnswer>(void);
 template <> const char *UriToString<kUriDiagnosticGetRequest>(void);
 template <> const char *UriToString<kUriDiagnosticGetQuery>(void);
 template <> const char *UriToString<kUriDiagnosticReset>(void);
-template <> const char *UriToString<kUriDuaRegistrationNotify>(void);
-template <> const char *UriToString<kUriDuaRegistrationRequest>(void);
 template <> const char *UriToString<kUriMlr>(void);
 
 } // namespace ot

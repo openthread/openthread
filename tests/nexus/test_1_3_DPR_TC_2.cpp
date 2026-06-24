@@ -130,7 +130,7 @@ void Test_1_3_DPR_TC_2(void)
         Ip6::NetworkPrefix networkPrefix;
 
         SuccessOrQuit(prefix.FromString("fd00:db8::/64"));
-        SuccessOrQuit(networkPrefix.SetFrom(prefix));
+        SuccessOrQuit(networkPrefix.InitFrom(prefix));
         br1.Get<Mle::Mle>().SetMeshLocalPrefix(networkPrefix);
         br2.Get<Mle::Mle>().SetMeshLocalPrefix(networkPrefix);
     }
@@ -146,8 +146,7 @@ void Test_1_3_DPR_TC_2(void)
      *   - N/A
      */
 
-    br1.AllowList(ed1);
-    ed1.AllowList(br1);
+    AllowLinkBetween(br1, ed1);
 
     br1.Form();
 
@@ -240,11 +239,9 @@ void Test_1_3_DPR_TC_2(void)
      *   - N/A
      */
 
-    br2.AllowList(ed2);
-    ed2.AllowList(br2);
+    AllowLinkBetween(br2, ed2);
 
-    br1.UnallowList(br2);
-    br2.UnallowList(br1);
+    UnallowLinkBetween(br1, br2);
     br1.UnallowList(ed2);
     ed1.UnallowList(br2);
     ed1.UnallowList(ed2);

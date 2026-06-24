@@ -123,20 +123,16 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
         Case(kUriRelayRx, Agent);
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-        Case(kUriDuaRegistrationNotify, DuaManager);
-#endif
-
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
         Case(kUriAnycastLocate, AnycastLocator);
 #endif
 
-        Case(kUriDiagnosticGetRequest, NetworkDiagnostic::Server);
-        Case(kUriDiagnosticGetQuery, NetworkDiagnostic::Server);
-        Case(kUriDiagnosticReset, NetworkDiagnostic::Server);
+        Case(kUriDiagnosticGetRequest, NetDiag::Server);
+        Case(kUriDiagnosticGetQuery, NetDiag::Server);
+        Case(kUriDiagnosticReset, NetDiag::Server);
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-        Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::Client);
+        Case(kUriDiagnosticGetAnswer, NetDiag::Client);
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
@@ -149,9 +145,6 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
         Case(kUriMlr, BackboneRouter::Manager);
-#endif
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-        Case(kUriDuaRegistrationRequest, BackboneRouter::Manager);
 #endif
 #endif
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -173,10 +166,16 @@ Error Agent::Filter(void *aContext, const Msg &aRxMsg) { return static_cast<Agen
 
 Error Agent::Filter(const Msg &aRxMsg) const
 {
-    return IsTmfMessage(aRxMsg.mMessageInfo.GetPeerAddr(), aRxMsg.mMessageInfo.GetSockAddr(),
-                        aRxMsg.mMessageInfo.GetSockPort())
-               ? kErrorNone
-               : kErrorNotTmf;
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsTmfMessage(aRxMsg.mMessageInfo.GetPeerAddr(), aRxMsg.mMessageInfo.GetSockAddr(),
+                              aRxMsg.mMessageInfo.GetSockPort()),
+                 error = kErrorNotTmf);
+
+    VerifyOrExit(aRxMsg.mMessage.IsLinkSecurityEnabled(), error = kErrorSecurity);
+
+exit:
+    return error;
 }
 
 bool Agent::IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address &aDestAddress, uint16_t aDestPort) const
@@ -248,7 +247,7 @@ Error Agent::SendMessageToRloc(Message &aMessage, uint16_t aRloc16, ResponseHand
 {
     Ip6::MessageInfo messageInfo;
 
-    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
+    Get<Mle::Mle>().ComposeRloc(aRloc16, messageInfo.GetPeerAddr());
     PrepareMessageInfo(messageInfo);
 
     return SendMessage(aMessage, messageInfo, aHandler, aContext);
@@ -260,7 +259,7 @@ Error Agent::SendMessageToLeaderAloc(Message &aMessage, ResponseHandler aHandler
 {
     Ip6::MessageInfo messageInfo;
 
-    Get<Mle::Mle>().GetLeaderAloc(messageInfo.GetPeerAddr());
+    Get<Mle::Mle>().ComposeLeaderAloc(messageInfo.GetPeerAddr());
     PrepareMessageInfo(messageInfo);
 
     return SendMessage(aMessage, messageInfo, aHandler, aContext);
@@ -274,6 +273,22 @@ void Agent::PrepareMessageInfo(Ip6::MessageInfo &aMessageInfo) const
     aMessageInfo.SetSockAddr(aMessageInfo.GetPeerAddr().IsLinkLocalUnicastOrMulticast()
                                  ? Get<Mle::Mle>().GetLinkLocalAddress()
                                  : Get<Mle::Mle>().GetMeshLocalRloc());
+}
+
+Error Agent::SendResponseWithStateTlv(const Msg &aRequest, uint8_t aState)
+{
+    Error    error = kErrorNone;
+    Message *message;
+
+    message = AllocateAndInitPriorityResponseFor(aRequest.mMessage);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Append<MeshCoP::StateTlv>(*message, aState));
+    SuccessOrExit(error = SendMessage(*message, aRequest.mMessageInfo));
+
+exit:
+    FreeMessageOnError(message, error);
+    return error;
 }
 
 uint8_t Agent::PriorityToDscp(Message::Priority aPriority)

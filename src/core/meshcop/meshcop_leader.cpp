@@ -45,7 +45,7 @@ RegisterLogModule("MeshCoPLeader");
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance)
-    , mSessionId(Random::NonCrypto::GetUint16())
+    , mSessionId(Random::NonCrypto::Generate<uint16_t>())
 {
 }
 
@@ -158,20 +158,12 @@ exit:
 
 void Leader::SendKeepAliveResponse(const Coap::Msg &aMsg, StateTlv::State aState)
 {
-    Error          error = kErrorNone;
-    Coap::Message *message;
+    Error error;
 
-    message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMsg.mMessageInfo));
-
+    SuccessOrExit(error = Get<Tmf::Agent>().SendResponseWithStateTlv(aMsg, aState));
     LogInfo("Sent %s response", UriToString<kUriLeaderKeepAlive>());
 
 exit:
-    FreeMessageOnError(message, error);
     LogWarnOnError(error, "send keep alive response");
 }
 

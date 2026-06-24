@@ -100,7 +100,7 @@ namespace Spinel {
  *   This protocol can be used either unidirectionally or bidirectionally,
  *   determined by the behavior of the master and the slave.
  *
- *   If the the master notices "PATTERN" is not set correctly, the master
+ *   If the master notices "PATTERN" is not set correctly, the master
  *   should consider the transaction to have failed and try again after 10
  *   milliseconds, retrying up to 200 times.  After unsuccessfully trying
  *   200 times in a row, the master MAY take appropriate remedial action

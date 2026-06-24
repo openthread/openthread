@@ -111,21 +111,12 @@ void Test5_3_4(void)
      * - Pass Criteria: N/A
      */
 
-    /** Use AllowList feature to restrict the topology. */
-    leader.AllowList(router1);
-    for (Node *med : meds)
-    {
-        leader.AllowList(*med);
-    }
-
-    router1.AllowList(leader);
-    router1.AllowList(sed1);
-
-    sed1.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, sed1);
 
     for (Node *med : meds)
     {
-        med->AllowList(leader);
+        AllowLinkBetween(leader, *med);
     }
 
     leader.Form();

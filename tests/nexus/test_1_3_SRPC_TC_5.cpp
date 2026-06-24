@@ -326,8 +326,6 @@ void Test_1_3_SRPC_TC_5(const char *aJsonFileName)
     ed2.Join(br1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);
 
-    eth1.mInfraIf.Init(eth1);
-
     Log("---------------------------------------------------------------------------------------");
     Log("Step 2: Device: BR 1 Description (SRPC-3.5): Automatically adds its SRP Server information");
 

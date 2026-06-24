@@ -430,7 +430,6 @@ Peer BRs are other devices within the Thread mesh that provide external IP conne
 
 - It has added at least one external route entry.
 - It has added at least one prefix entry with both the default-route and on-mesh flags set.
-- It has added at least one domain prefix (with both the domain and on-mesh flags set).
 
 The list of peer BRs specifically excludes the current device, even if it is itself acting as a BR.
 

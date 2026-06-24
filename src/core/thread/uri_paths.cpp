@@ -59,9 +59,7 @@ struct Entry
     _("a/as", kUriAddressSolicit, "AddrSolicit")                  \
     _("a/sd", kUriServerData, "ServerData")                       \
     _("a/yl", kUriAnycastLocate, "AnycastLocate")                 \
-    _("b/ba", kUriBackboneAnswer, "BbAnswer")                     \
     _("b/bmr", kUriBackboneMlr, "BbMlr")                          \
-    _("b/bq", kUriBackboneQuery, "BbQuery")                       \
     _("c/ab", kUriAnnounceBegin, "AnnounceBegin")                 \
     _("c/ag", kUriActiveGet, "ActiveGet")                         \
     _("c/ar", kUriActiveReplace, "ActiveReplace")                 \
@@ -97,8 +95,6 @@ struct Entry
     _("d/dr", kUriDiagnosticReset, "DiagReset")                   \
     _("h/an", kUriHistoryAnswer, "HistAnswer")                    \
     _("h/qy", kUriHistoryQuery, "HistQuery")                      \
-    _("n/dn", kUriDuaRegistrationNotify, "DuaRegNotify")          \
-    _("n/dr", kUriDuaRegistrationRequest, "DuaRegRequest")        \
     _("n/mr", kUriMlr, "Mlr")
 
 // We use the X-Macro pattern here. The `UriEntryMapList` macro defines the

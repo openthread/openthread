@@ -180,7 +180,10 @@ public:
      *
      * @returns The size of the compressed header in bytes.
      */
-    Error Compress(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder);
+    Error Compress(Message              &aMessage,
+                   const Mac::Addresses &aMacAddrs,
+                   FrameBuilder         &aFrameBuilder,
+                   uint8_t               aRecursionDepth = 0);
 
     /**
      * Decompresses a LOWPAN_IPHC header.
@@ -231,7 +234,7 @@ public:
      * @retval kErrorNone    The header was decompressed successfully. @p aUdpHeader and @p aFrameData are updated.
      * @retval kErrorParse   Failed to parse the lowpan header.
      */
-    Error DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFrameData);
+    Error DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, FrameData &aFrameData);
 
     /**
      * Decompresses the IPv6 ECN field in a LOWPAN_IPHC header.
@@ -312,7 +315,8 @@ private:
     Error Compress(Message              &aMessage,
                    const Mac::Addresses &aMacAddrs,
                    FrameBuilder         &aFrameBuilder,
-                   uint8_t              &aHeaderDepth);
+                   uint8_t              &aHeaderDepth,
+                   uint8_t               aRecursionDepth);
 
     Error CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBuilder, uint8_t &aNextHeader);
     Error CompressSourceIid(const Mac::Address &aMacAddr,
@@ -412,7 +416,7 @@ public:
     Error ParseFrom(const Message &aMessage, uint16_t &aHeaderLength);
 
     /**
-     * Returns the the Mesh Header length when written to a frame.
+     * Returns the Mesh Header length when written to a frame.
      *
      * @note The returned value from this method gives the header length (number of bytes) when the header is written
      * to a frame or message. This should not be used to determine the parsed length (number of bytes read) when the

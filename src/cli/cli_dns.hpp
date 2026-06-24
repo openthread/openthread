@@ -101,7 +101,6 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    void        OutputResult(otError aError);
     otError     GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig);
     const char *DnsConfigServiceModeToString(otDnsServiceMode aMode) const;
     otError     ParseDnsServiceMode(const Arg &aArg, otDnsServiceMode &aMode) const;

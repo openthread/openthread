@@ -140,6 +140,8 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance) { return &AsNo
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
+    OT_UNUSED_VARIABLE(aFrame);
+
     Error  error = kErrorNone;
     Radio &radio = AsNode(aInstance).mRadio;
 

@@ -215,11 +215,8 @@ void Test9_2_15(void)
      * - Pass Criteria: N/A
      */
 
-    commissioner.AllowList(leader);
-    leader.AllowList(commissioner);
-
-    leader.AllowList(router1);
-    router1.AllowList(leader);
+    AllowLinkBetween(commissioner, leader);
+    AllowLinkBetween(leader, router1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -254,8 +251,7 @@ void Test9_2_15(void)
      * - Leader and Router 1
      * - Router 1 and Router 2
      */
-    dut.AllowList(router1);
-    router1.AllowList(dut);
+    AllowLinkBetween(dut, router1);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: Commissioner");

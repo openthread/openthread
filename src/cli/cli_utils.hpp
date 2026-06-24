@@ -42,6 +42,7 @@
 #include <openthread/border_routing.h>
 #include <openthread/cli.h>
 #include <openthread/joiner.h>
+#include <openthread/netdiag.h>
 #include <openthread/thread.h>
 
 #include "cli_config.h"
@@ -73,28 +74,24 @@ constexpr static CommandId Cmd(const char *aString)
 }
 
 class Utils;
+class Interpreter;
 
 /**
- * Implements the basic output functions.
+ * Implements the basic output functions acting as a base class for `Interpreter`.
  */
 class OutputImplementer
 {
     friend class Utils;
 
 public:
-    /**
-     * Initializes the `OutputImplementer` object.
-     *
-     * @param[in] aCallback           A pointer to an `otCliOutputCallback` to deliver strings to the CLI console.
-     * @param[in] aCallbackContext    An arbitrary context to pass in when invoking @p aCallback.
-     */
-    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
-
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void SetEmittingCommandOutput(bool aEmittingOutput) { mEmittingCommandOutput = aEmittingOutput; }
 #else
     void SetEmittingCommandOutput(bool) {}
 #endif
+
+protected:
+    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
 
 private:
     static constexpr uint16_t kInputOutputLogStringSize = OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE;
@@ -198,6 +195,13 @@ public:
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
+     * Returns the associated CLI `Interpreter`.
+     *
+     * @returns A reference to the associated CLI `Interpreter`.
+     */
+    Interpreter &GetInterpreter(void);
+
+    /**
      * Converts a boolean to "yes" or "no" string.
      *
      * @param[in] aBool  A boolean value to convert.
@@ -225,6 +229,16 @@ public:
      * @returns A pointer to the start of the string (null-terminated) representation of @p aUint64.
      */
     static const char *Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer);
+
+    /**
+     * Outputs the command result.
+     *
+     * This is called to end the current command. `OT_ERROR_PENDING` can be used to indicate command execution is
+     * continuing asynchronously.
+     *
+     * @param[in]  aError Error code value.
+     */
+    void OutputResult(otError aError);
 
     /**
      * Delivers a formatted output string to the CLI console.
@@ -417,6 +431,20 @@ public:
      * @param[in] aSockAddr   A reference to the IPv6 socket address.
      */
     void OutputSockAddrLine(const otSockAddr &aSockAddr);
+
+    /**
+     * Outputs the Vendor OUI to the CLI console.
+     *
+     * @param[in] aOui  A reference to the Vendor OUI.
+     */
+    void OutputVendorOui(const otThreadVendorOui &aOui);
+
+    /**
+     * Outputs the Vendor OUI to the CLI console and appends a newline.
+     *
+     * @param[in] aOui  A reference to the Vendor OUI.
+     */
+    void OutputVendorOuiLine(const otThreadVendorOui &aOui);
 
     /**
      * Outputs DNS TXT data to the CLI console.
@@ -661,24 +689,20 @@ public:
     static const char *PreferenceToString(signed int aPreference);
 
     /**
-     * Parses the argument as an IP address.
+     * Parses the argument as an IPv6 address or synthesizes it from an IPv4 address.
      *
      * If the argument string is an IPv4 address, this method will try to synthesize an IPv6 address using preferred
      * NAT64 prefix in the network data.
      *
-     * @param[in]  aInstance       A pointer to OpenThread instance.
      * @param[in]  aArg            The argument string to parse.
-     * @param[out] aAddress        A reference to an `otIp6Address` to output the parsed IPv6 address.
+     * @param[out] aAddress        A reference to an `otIp6Address` to output the parsed/synthesized IPv6 address.
      * @param[out] aSynthesized    Whether @p aAddress is synthesized from an IPv4 address.
      *
-     * @retval OT_ERROR_NONE           The argument was parsed successfully.
+     * @retval OT_ERROR_NONE           The argument was parsed/synthesized successfully.
      * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid IP address.
      * @retval OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
      */
-    static otError ParseToIp6Address(otInstance   *aInstance,
-                                     const Arg    &aArg,
-                                     otIp6Address &aAddress,
-                                     bool         &aSynthesized);
+    otError ParseOrSynthesizeIp6Address(const Arg &aArg, otIp6Address &aAddress, bool &aSynthesized);
 
     /**
      * Parses the argument as a Joiner Discerner.

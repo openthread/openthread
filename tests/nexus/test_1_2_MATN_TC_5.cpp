@@ -139,12 +139,9 @@ void TestMatnTc5(void)
      */
     Log("Step 0: Topology formation – BR_1 (DUT)");
 
-    br1.AllowList(br2);
-    br1.AllowList(router);
-    br2.AllowList(br1);
-    br2.AllowList(router);
-    router.AllowList(br1);
-    router.AllowList(br2);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(br1, router);
+    AllowLinkBetween(br2, router);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -182,9 +179,6 @@ void TestMatnTc5(void)
     br2.Get<BorderRouter::RoutingManager>().Init();
     SuccessOrQuit(br2.Get<BorderRouter::RoutingManager>().SetEnabled(true));
     br2.Get<BackboneRouter::Local>().SetEnabled(true);
-
-    host.mInfraIf.Init(host);
-    host.mInfraIf.AddAddress(host.mInfraIf.GetLinkLocalAddress());
 
     nexus.AdvanceTime(kStabilizationTime * 2);
 
@@ -265,7 +259,13 @@ void TestMatnTc5(void)
      *   - N/A
      */
     Log("Step 5: Host sends a UDP packet to the multicast address, MA1, port 5683.");
-    host.mInfraIf.SendUdp(*hostUla, ma1, kCoapPort, kCoapPort, kUdpPayloadSize);
+    {
+        Message *message = host.Get<Ip6::Ip6>().NewMessage();
+
+        VerifyOrQuit(message != nullptr);
+        SuccessOrQuit(message->SetLength(kUdpPayloadSize));
+        host.mInfraIf.SendUdp(*hostUla, ma1, kCoapPort, kCoapPort, *message);
+    }
     nexus.AdvanceTime(0);
 
     /**

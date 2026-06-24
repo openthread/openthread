@@ -32,8 +32,6 @@
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
 
-#include "common/clearable.hpp"
-
 namespace ot {
 namespace Nexus {
 

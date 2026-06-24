@@ -42,6 +42,7 @@
 #include <openthread/dataset.h>
 #include <openthread/error.h>
 #include <openthread/ip6.h>
+#include <openthread/netdiag.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -152,6 +153,7 @@ typedef struct otBorderAgentTxtDataInfo
     bool                     mHasExtAddress : 1;      ///< Indicates whether Extended Address is present.
     bool                     mHasVendorName : 1;      ///< Indicates whether Vendor Name is present.
     bool                     mHasModelName : 1;       ///< Indicates whether Model Name is present.
+    bool                     mHasVendorOui : 1;       ///< Indicates whether Vendor OUI is present.
     char                     mRecordVersion[OT_BORDER_AGENT_RECORD_VERSION_SIZE]; ///< Record Version string.
     otBorderAgentId          mAgentId;                                            ///< Agent ID.
     char                     mThreadVersion[OT_BORDER_AGENT_THREAD_VERSION_SIZE]; ///< Thread Version string.
@@ -167,6 +169,7 @@ typedef struct otBorderAgentTxtDataInfo
     otExtAddress             mExtAddress;                                         ///< Extended Address.
     char                     mVendorName[OT_BORDER_AGENT_VENDOR_NAME_SIZE];       ///< Vendor Name string.
     char                     mModelName[OT_BORDER_AGENT_MODEL_NAME_SIZE];         ///< Model Name string.
+    otThreadVendorOui        mVendorOui;                                          ///< Vendor OUI.
 } otBorderAgentTxtDataInfo;
 
 /**

@@ -83,7 +83,6 @@ enum NetifIdentifier : uint8_t
 class Udp : public InstanceLocator, public MessageAllocator<Udp, ReservedHeaderSize::kUdpMessage>, private NonCopyable
 {
 public:
-    typedef UdpHeader    Header;         ///< UDP header.
     typedef otUdpReceive ReceiveHandler; ///< Receive handler callback.
 
     /**
@@ -500,11 +499,11 @@ public:
     void HandlePayload(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
-     * Returns the head of UDP Sockets list.
+     * Returns the UDP Sockets linked list.
      *
-     * @returns A pointer to the head of UDP Socket linked list.
+     * @returns The UDP Sockets linked list.
      */
-    SocketHandle *GetUdpSockets(void) { return mSockets.GetHead(); }
+    LinkedList<SocketHandle> &GetUdpSockets(void) { return mSockets; }
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     /**
@@ -534,6 +533,8 @@ private:
     // Reserved range for use by SRP server
     static constexpr uint16_t kSrpServerPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN;
     static constexpr uint16_t kSrpServerPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX;
+
+    typedef UdpHeader Header;
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     struct Plat

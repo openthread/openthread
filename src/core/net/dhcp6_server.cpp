@@ -164,7 +164,8 @@ void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, uint8_t aContextId)
 
     VerifyOrExit(newEntry != nullptr, error = kErrorNoBufs);
 
-    newEntry->Set(aIp6Prefix, Get<Mle::Mle>().GetMeshLocalPrefix(), aContextId);
+    newEntry->SetPrefix(aIp6Prefix);
+    newEntry->ComposeAloc(GetInstance(), aContextId);
     Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
     mPrefixAgentsCount++;
 
@@ -243,11 +244,9 @@ Error Server::ProcessIaNaOption(const Message &aMessage, uint32_t &aIaid)
     Option::Iterator iterator;
 
     SuccessOrExit(error = Option::FindOption(aMessage, Option::kIaNa, offsetRange));
-    SuccessOrExit(error = aMessage.Read(offsetRange, iaNaOption));
+    SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, iaNaOption));
 
     aIaid = iaNaOption.GetIaid();
-
-    offsetRange.AdvanceOffset(sizeof(IaNaOption));
 
     mPrefixAgentsMask = 0;
 
@@ -404,13 +403,19 @@ Error Server::AppendIaAddressOption(Message               &aMessage,
 
     option.Init();
     option.GetAddress().SetPrefix(aPrefix.mFields.m8, OT_IP6_PREFIX_BITSIZE);
-    option.GetAddress().GetIid().SetFromExtAddress(aClientAddress);
+    option.GetAddress().GetIid().InitFromExtAddress(aClientAddress);
     option.SetPreferredLifetime(IaAddressOption::kDefaultPreferredLifetime);
     option.SetValidLifetime(IaAddressOption::kDefaultValidLifetime);
     SuccessOrExit(error = aMessage.Append(option));
 
 exit:
     return error;
+}
+
+void Server::PrefixAgent::ComposeAloc(Instance &aInstance, uint8_t aContextId)
+{
+    mAloc.InitAsThreadOriginMeshLocal();
+    aInstance.Get<Mle::Mle>().ComposeAloc((Ip6::Address::kAloc16Mask << 8) + aContextId, mAloc.GetAddress());
 }
 
 } // namespace Dhcp6

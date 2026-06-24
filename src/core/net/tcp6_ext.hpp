@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+
 #include <openthread/tcp_ext.h>
 
 #include "net/tcp6.hpp"
@@ -129,5 +131,7 @@ private:
 DefineCoreType(otTcpCircularSendBuffer, Ip6::TcpCircularSendBuffer);
 
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_TCP_ENABLE
 
 #endif // OT_CORE_NET_TCP6_EXT_HPP_

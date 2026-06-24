@@ -36,24 +36,25 @@
 namespace ot {
 namespace Mac {
 
-void HeaderIe::Init(uint16_t aId, uint8_t aLen)
+void HeaderIe::Init(uint8_t aId, uint8_t aLen)
 {
-    Init();
-    SetId(aId);
+    mLenIdType = 0;
     SetLength(aLen);
+    SetId(aId);
 }
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
 Error ConnectionIe::SetWakeupId(WakeupId aWakeupId)
 {
-    Error           error          = kErrorNone;
-    const HeaderIe *headerIe       = GetHeaderIe();
-    uint8_t         wakeupIdLength = GetWakeupIdLength(aWakeupId);
+    Error   error          = kErrorNone;
+    uint8_t wakeupIdLength = GetWakeupIdLength(aWakeupId);
 
-    VerifyOrExit(headerIe->GetLength() > sizeof(ConnectionIe), error = kErrorParse);
-    VerifyOrExit(headerIe->GetLength() - sizeof(ConnectionIe) == wakeupIdLength, error = kErrorParse);
+    VerifyOrExit(GetSize() >= sizeof(ConnectionIe), error = kErrorParse);
+    VerifyOrExit(GetSize() - sizeof(ConnectionIe) == wakeupIdLength, error = kErrorParse);
+
     aWakeupId = LittleEndian::HostSwap64(aWakeupId);
-    memcpy(GetWakeupIdData(), reinterpret_cast<uint8_t *>(&aWakeupId), wakeupIdLength);
+    memcpy(GetBytes() + sizeof(ConnectionIe), reinterpret_cast<uint8_t *>(&aWakeupId), wakeupIdLength);
 
 exit:
     return error;
@@ -61,22 +62,22 @@ exit:
 
 Error ConnectionIe::GetWakeupId(WakeupId &aWakeupId) const
 {
-    Error           error    = kErrorNone;
-    const HeaderIe *headerIe = GetHeaderIe();
-    uint8_t         wakeupIdLength;
+    Error   error = kErrorNone;
+    uint8_t wakeupIdLength;
 
-    VerifyOrExit(headerIe->GetLength() > sizeof(ConnectionIe), error = kErrorParse);
+    VerifyOrExit(GetSize() > sizeof(ConnectionIe), error = kErrorParse);
 
-    wakeupIdLength = headerIe->GetLength() - sizeof(ConnectionIe);
+    wakeupIdLength = GetSize() - sizeof(ConnectionIe);
     VerifyOrExit(wakeupIdLength <= sizeof(WakeupId), error = kErrorParse);
 
     aWakeupId = 0;
-    memcpy(reinterpret_cast<uint8_t *>(&aWakeupId), GetWakeupIdData(), wakeupIdLength);
+    memcpy(reinterpret_cast<uint8_t *>(&aWakeupId), GetBytes() + sizeof(ConnectionIe), wakeupIdLength);
     aWakeupId = LittleEndian::HostSwap64(aWakeupId);
 
 exit:
     return error;
 }
+
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 } // namespace Mac

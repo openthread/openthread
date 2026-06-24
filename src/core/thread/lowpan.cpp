@@ -46,7 +46,7 @@ void Context::InitForMeshLocalPrefix(Instance &aInstance)
     mIsValid      = true;
     mCompressFlag = true;
     mContextId    = Mle::kMeshLocalPrefixContextId;
-    mPrefix.Set(aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
+    mPrefix.InitFrom(aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
 }
 
 void Context::InitFrom(const NetworkData::PrefixTlv &aPrefixTlv, const NetworkData::ContextTlv &aContextTlv)
@@ -87,11 +87,11 @@ Error Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, 
     switch (aMacAddr.GetType())
     {
     case Mac::Address::kTypeShort:
-        aIid.SetToLocator(aMacAddr.GetShort());
+        aIid.InitAsLocator(aMacAddr.GetShort());
         break;
 
     case Mac::Address::kTypeExtended:
-        aIid.SetFromExtAddress(aMacAddr.GetExtended());
+        aIid.InitFromExtAddress(aMacAddr.GetExtended());
         break;
 
     default:
@@ -122,7 +122,7 @@ Error Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
     else if (aIpAddr.GetIid().IsLocator())
     {
         aHcCtl |= kHcSrcAddrMode2;
-        error = aFrameBuilder.AppendBigEndianUint16(aIpAddr.GetIid().GetLocator());
+        error = aFrameBuilder.AppendUint<kBigEndian>(aIpAddr.GetIid().GetLocator());
     }
     else
     {
@@ -151,7 +151,7 @@ Error Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
     else if (aIpAddr.GetIid().IsLocator())
     {
         aHcCtl |= kHcDstAddrMode2;
-        error = aFrameBuilder.AppendBigEndianUint16(aIpAddr.GetIid().GetLocator());
+        error = aFrameBuilder.AppendUint<kBigEndian>(aIpAddr.GetIid().GetLocator());
     }
     else
     {
@@ -219,16 +219,21 @@ exit:
     return error;
 }
 
-Error Lowpan::Compress(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder)
+Error Lowpan::Compress(Message              &aMessage,
+                       const Mac::Addresses &aMacAddrs,
+                       FrameBuilder         &aFrameBuilder,
+                       uint8_t               aRecursionDepth)
 {
     Error   error       = kErrorNone;
     uint8_t headerDepth = 0xff;
+
+    VerifyOrExit(aRecursionDepth <= kMaxRecursionDepth, error = kErrorParse);
 
     while (headerDepth > 0)
     {
         FrameBuilder frameBuilder = aFrameBuilder;
 
-        error = Compress(aMessage, aMacAddrs, aFrameBuilder, headerDepth);
+        error = Compress(aMessage, aMacAddrs, aFrameBuilder, headerDepth, aRecursionDepth);
 
         // We exit if `Compress()` is successful. Otherwise we reset
         // the `aFrameBuidler` to its earlier state (remove all
@@ -246,7 +251,8 @@ exit:
 Error Lowpan::Compress(Message              &aMessage,
                        const Mac::Addresses &aMacAddrs,
                        FrameBuilder         &aFrameBuilder,
-                       uint8_t              &aHeaderDepth)
+                       uint8_t              &aHeaderDepth,
+                       uint8_t               aRecursionDepth)
 {
     Error       error       = kErrorNone;
     uint16_t    startOffset = aMessage.GetOffset();
@@ -268,7 +274,7 @@ Error Lowpan::Compress(Message              &aMessage,
 
     // Lowpan HC Control Bits
     hcCtlOffset = aFrameBuilder.GetLength();
-    SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(hcCtl));
+    SuccessOrExit(error = aFrameBuilder.AppendUint<kBigEndian>(hcCtl));
 
     // Context Identifier
     if (srcContext.GetContextId() != 0 || dstContext.GetContextId() != 0)
@@ -413,7 +419,7 @@ Error Lowpan::Compress(Message              &aMessage,
             // For IP-in-IP the NH bit of the LOWPAN_NHC encoding MUST be set to zero.
             SuccessOrExit(error = aFrameBuilder.AppendUint8(kExtHdrDispatch | kExtHdrEidIp6));
 
-            error = Compress(aMessage, aMacAddrs, aFrameBuilder);
+            error = Compress(aMessage, aMacAddrs, aFrameBuilder, aRecursionDepth + 1);
 
             OT_FALL_THROUGH;
 
@@ -517,11 +523,11 @@ exit:
 
 Error Lowpan::CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder)
 {
-    Error            error       = kErrorNone;
-    uint16_t         startOffset = aMessage.GetOffset();
-    Ip6::Udp::Header udpHeader;
-    uint16_t         source;
-    uint16_t         destination;
+    Error          error       = kErrorNone;
+    uint16_t       startOffset = aMessage.GetOffset();
+    Ip6::UdpHeader udpHeader;
+    uint16_t       source;
+    uint16_t       destination;
 
     SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(udpHeader));
 
@@ -537,21 +543,21 @@ Error Lowpan::CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder)
     {
         SuccessOrExit(error = aFrameBuilder.AppendUint8(kUdpDispatch | 2));
         SuccessOrExit(error = aFrameBuilder.AppendUint8(source & 0xff));
-        SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(destination));
+        SuccessOrExit(error = aFrameBuilder.AppendUint<kBigEndian>(destination));
     }
     else if ((destination & 0xff00) == 0xf000)
     {
         SuccessOrExit(error = aFrameBuilder.AppendUint8(kUdpDispatch | 1));
-        SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(source));
+        SuccessOrExit(error = aFrameBuilder.AppendUint<kBigEndian>(source));
         SuccessOrExit(error = aFrameBuilder.AppendUint8(destination & 0xff));
     }
     else
     {
         SuccessOrExit(error = aFrameBuilder.AppendUint8(kUdpDispatch));
-        SuccessOrExit(error = aFrameBuilder.AppendBytes(&udpHeader, Ip6::Udp::Header::kLengthFieldOffset));
+        SuccessOrExit(error = aFrameBuilder.AppendBytes(&udpHeader, Ip6::UdpHeader::kLengthFieldOffset));
     }
 
-    SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(udpHeader.GetChecksum()));
+    SuccessOrExit(error = aFrameBuilder.AppendUint<kBigEndian>(udpHeader.GetChecksum()));
 
 exit:
     if (error != kErrorNone)
@@ -617,7 +623,7 @@ Error Lowpan::DecompressBaseHeader(Ip6::Header          &aIp6Header,
     Context  dstContext;
     uint8_t  nextHeader;
 
-    SuccessOrExit(aFrameData.ReadBigEndianUint16(hcCtl));
+    SuccessOrExit(aFrameData.ReadUint<kBigEndian>(hcCtl));
 
     // check Dispatch bits
     VerifyOrExit((hcCtl & kHcDispatchMask) == kHcDispatch);
@@ -889,7 +895,7 @@ exit:
     return error;
 }
 
-Error Lowpan::DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFrameData)
+Error Lowpan::DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, FrameData &aFrameData)
 {
     Error    error = kErrorParse;
     uint8_t  udpCtl;
@@ -906,12 +912,12 @@ Error Lowpan::DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFram
     switch (udpCtl & kUdpPortMask)
     {
     case 0:
-        SuccessOrExit(aFrameData.ReadBigEndianUint16(srcPort));
-        SuccessOrExit(aFrameData.ReadBigEndianUint16(dstPort));
+        SuccessOrExit(aFrameData.ReadUint<kBigEndian>(srcPort));
+        SuccessOrExit(aFrameData.ReadUint<kBigEndian>(dstPort));
         break;
 
     case 1:
-        SuccessOrExit(aFrameData.ReadBigEndianUint16(srcPort));
+        SuccessOrExit(aFrameData.ReadUint<kBigEndian>(srcPort));
         SuccessOrExit(aFrameData.ReadUint8(byte));
         dstPort = (0xf000 | byte);
         break;
@@ -919,7 +925,7 @@ Error Lowpan::DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFram
     case 2:
         SuccessOrExit(aFrameData.ReadUint8(byte));
         srcPort = (0xf000 | byte);
-        SuccessOrExit(aFrameData.ReadBigEndianUint16(dstPort));
+        SuccessOrExit(aFrameData.ReadUint<kBigEndian>(dstPort));
         break;
 
     case 3:
@@ -940,7 +946,7 @@ Error Lowpan::DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFram
     {
         uint16_t checksum;
 
-        SuccessOrExit(aFrameData.ReadBigEndianUint16(checksum));
+        SuccessOrExit(aFrameData.ReadUint<kBigEndian>(checksum));
         aUdpHeader.SetChecksum(checksum);
     }
 
@@ -952,8 +958,8 @@ exit:
 
 Error Lowpan::DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint16_t aDatagramLength)
 {
-    Error            error;
-    Ip6::Udp::Header udpHeader;
+    Error          error;
+    Ip6::UdpHeader udpHeader;
 
     SuccessOrExit(error = DecompressUdpHeader(udpHeader, aFrameData));
 
@@ -1189,8 +1195,8 @@ Error MeshHeader::AppendTo(FrameBuilder &aFrameBuilder) const
         SuccessOrExit(error = aFrameBuilder.AppendUint8(mHopsLeft));
     }
 
-    SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(mSource));
-    SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(mDestination));
+    SuccessOrExit(error = aFrameBuilder.AppendUint<kBigEndian>(mSource));
+    SuccessOrExit(error = aFrameBuilder.AppendUint<kBigEndian>(mDestination));
 
 exit:
     return error;

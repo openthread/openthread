@@ -30,7 +30,7 @@
 
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
-#include "thread/network_diagnostic.hpp"
+#include "thread/net_diag.hpp"
 #include "utils/mesh_diag.hpp"
 
 namespace ot {
@@ -109,28 +109,11 @@ void TestDiagTc1(const char *aJsonFileName)
 
     SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
-    /**
-     * In cpp, use AllowList to specify links between nodes. There is a link between the following node pairs:
-     * - Router_1 and Leader
-     * - Router_1 and FED_1
-     * - Router_1 and MED_1
-     * - Router_1 and SED_1
-     * - Router_1 and REED_1
-     */
-    router1.AllowList(leader);
-    leader.AllowList(router1);
-
-    router1.AllowList(fed1);
-    fed1.AllowList(router1);
-
-    router1.AllowList(med1);
-    med1.AllowList(router1);
-
-    router1.AllowList(sed1);
-    sed1.AllowList(router1);
-
-    router1.AllowList(reed1);
-    reed1.AllowList(router1);
+    AllowLinkBetween(router1, leader);
+    AllowLinkBetween(router1, fed1);
+    AllowLinkBetween(router1, med1);
+    AllowLinkBetween(router1, sed1);
+    AllowLinkBetween(router1, reed1);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Enable the devices in order. Leader configures its Network Data with an OMR prefix.");
@@ -178,20 +161,15 @@ void TestDiagTc1(const char *aJsonFileName)
      * - Pass Criteria:
      *   - N/A
      */
-    Ip6::Address dutRloc;
-    dutRloc.SetToRoutingLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), router1.Get<Mle::Mle>().GetRloc16());
+    Ip6::Address dutRloc = router1.Get<Mle::Mle>().GetMeshLocalRloc();
 
     uint8_t tlvTypesStep2[] = {
-        NetworkDiagnostic::Tlv::kMaxChildTimeout,
-        NetworkDiagnostic::Tlv::kEui64,
-        NetworkDiagnostic::Tlv::kVersion,
-        NetworkDiagnostic::Tlv::kVendorName,
-        NetworkDiagnostic::Tlv::kVendorModel,
-        NetworkDiagnostic::Tlv::kVendorSwVersion,
-        NetworkDiagnostic::Tlv::kThreadStackVersion,
+        NetDiag::Tlv::kMaxChildTimeout,    NetDiag::Tlv::kEui64,       NetDiag::Tlv::kVersion,
+        NetDiag::Tlv::kVendorName,         NetDiag::Tlv::kVendorModel, NetDiag::Tlv::kVendorSwVersion,
+        NetDiag::Tlv::kThreadStackVersion,
     };
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypesStep2,
-                                                                            sizeof(tlvTypesStep2), nullptr, nullptr));
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypesStep2, sizeof(tlvTypesStep2),
+                                                                  nullptr, nullptr));
 
     /**
      * Step 3
@@ -259,9 +237,9 @@ void TestDiagTc1(const char *aJsonFileName)
      * - Pass Criteria:
      *   - N/A
      */
-    uint8_t tlvTypesStep5[] = {NetworkDiagnostic::Tlv::kMaxChildTimeout, NetworkDiagnostic::Tlv::kMleCounters};
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypesStep5,
-                                                                            sizeof(tlvTypesStep5), nullptr, nullptr));
+    uint8_t tlvTypesStep5[] = {NetDiag::Tlv::kMaxChildTimeout, NetDiag::Tlv::kMleCounters};
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypesStep5, sizeof(tlvTypesStep5),
+                                                                  nullptr, nullptr));
 
     /**
      * Step 6

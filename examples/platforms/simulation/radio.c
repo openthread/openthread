@@ -645,7 +645,6 @@ void radioSendMessage(otInstance *aInstance)
     {
         uint64_t sfdTxTime = otPlatTimeGet();
 
-        sRadioContext.mCslPresent = sTransmitFrame.mInfo.mTxInfo.mCslPresent;
         otEXPECT(otMacFrameProcessTxSfd(&sTransmitFrame, sfdTxTime, &sRadioContext) == OT_ERROR_NONE);
     }
 
@@ -1061,10 +1060,7 @@ static uint8_t generateAckIeData(uint8_t                   *aLinkMetricsIeData,
     uint8_t offset = 0;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    sRadioContext.mCslPresent =
-        (sRadioContext.mCslPeriod > 0) && otMacFrameSrcAddrMatchCslReceiverPeer(aReceivedFrame, &sRadioContext);
-
-    if (sRadioContext.mCslPresent)
+    if ((sRadioContext.mCslPeriod > 0) && otMacFrameSrcAddrMatchCslReceiverPeer(aReceivedFrame, &sRadioContext))
     {
         offset += otMacFrameGenerateCslIeTemplate(sAckIeData);
     }

@@ -60,7 +60,11 @@ OutputImplementer::OutputImplementer(otCliOutputCallback aCallback, void *aCallb
 {
 }
 
+Interpreter &Utils::GetInterpreter(void) { return static_cast<Interpreter &>(mImplementer); }
+
 const char *Utils::ToYesNo(bool aBool) { return aBool ? "yes" : "no"; }
+
+void Utils::OutputResult(otError aError) { GetInterpreter().OutputResult(aError); }
 
 void Utils::OutputFormat(const char *aFormat, ...)
 {
@@ -224,6 +228,20 @@ void Utils::OutputSockAddr(const otSockAddr &aSockAddr)
 void Utils::OutputSockAddrLine(const otSockAddr &aSockAddr)
 {
     OutputSockAddr(aSockAddr);
+    OutputNewLine();
+}
+
+void Utils::OutputVendorOui(const otThreadVendorOui &aOui)
+{
+    char string[OT_THREAD_VENDOR_OUI_STRING_SIZE];
+
+    otThreadVendorOuiToString(&aOui, string, sizeof(string));
+    OutputFormat("%s", string);
+}
+
+void Utils::OutputVendorOuiLine(const otThreadVendorOui &aOui)
+{
+    OutputVendorOui(aOui);
     OutputNewLine();
 }
 
@@ -625,24 +643,26 @@ const char *Utils::PreferenceToString(signed int aPreference)
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-otError Utils::ParseToIp6Address(otInstance *aInstance, const Arg &aArg, otIp6Address &aAddress, bool &aSynthesized)
-{
-    Error error = OT_ERROR_NONE;
 
-    VerifyOrExit(!aArg.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    error        = aArg.ParseAsIp6Address(aAddress);
+otError Utils::ParseOrSynthesizeIp6Address(const Arg &aArg, otIp6Address &aAddress, bool &aSynthesized)
+{
+    Error        error;
+    otIp4Address ip4Address;
+
     aSynthesized = false;
 
-    if (error != OT_ERROR_NONE)
-    {
-        // It might be an IPv4 address, let's have a try.
-        otIp4Address ip4Address;
+    error = aArg.ParseAsIp6Address(aAddress);
 
-        // Do not touch the error value if we failed to parse it as an IPv4 address.
-        SuccessOrExit(aArg.ParseAsIp4Address(ip4Address));
-        SuccessOrExit(error = otNat64SynthesizeIp6Address(aInstance, &ip4Address, &aAddress));
-        aSynthesized = true;
+    if (error == OT_ERROR_NONE)
+    {
+        ExitNow();
     }
+
+    // Try to parse it as an IPv4 address and synthesize.
+
+    SuccessOrExit(error = aArg.ParseAsIp4Address(ip4Address));
+    SuccessOrExit(error = otNat64SynthesizeIp6Address(GetInstancePtr(), &ip4Address, &aAddress));
+    aSynthesized = true;
 
 exit:
     return error;
@@ -704,11 +724,6 @@ otError Utils::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
                     aConfig.mNdDns = true;
                     break;
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-                case 'D':
-                    aConfig.mDp = true;
-                    break;
-#endif
                 case '-':
                     break;
 

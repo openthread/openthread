@@ -242,22 +242,22 @@ public:
     const Router *FindRouterByRloc16(uint16_t aRloc16) const;
 
     /**
-     * Finds the router that is the next hop of a given router.
+     * Finds the router that is the next hop towards a given router.
      *
-     * @param[in]  aRouter  The router to find next hop of.
+     * @param[in]  aRouter  The destination router.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      */
-    Router *FindNextHopOf(const Router &aRouter) { return AsNonConst(AsConst(this)->FindNextHopOf(aRouter)); }
+    Router *FindNextHopTowards(const Router &aRouter) { return AsNonConst(AsConst(this)->FindNextHopTowards(aRouter)); }
 
     /**
-     * Finds the router that is the next hop of a given router.
+     * Finds the router that is the next hop towards a given router.
      *
-     * @param[in]  aRouter  The router to find next hop of.
+     * @param[in]  aRouter  The destination router.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      */
-    const Router *FindNextHopOf(const Router &aRouter) const;
+    const Router *FindNextHopTowards(const Router &aRouter) const;
 
     /**
      * Find the router for a given MAC Extended Address.
@@ -277,10 +277,7 @@ public:
      * @retval FALSE if @p aNeighbor is not a `Router` in the router table
      *               (i.e. it can be the parent or parent candidate, or a `Child` of the child table).
      */
-    bool Contains(const Neighbor &aNeighbor) const
-    {
-        return mRouters.IsInArrayBuffer(&static_cast<const Router &>(aNeighbor));
-    }
+    bool Contains(const Neighbor &aNeighbor) const { return mRouters.IsInArrayBuffer(&aNeighbor); }
 
     /**
      * Retains diagnostic information for a given router.
@@ -312,12 +309,12 @@ public:
      * Determines whether the Router ID Sequence in a received Route TLV is more recent than the current
      * Router ID Sequence being used by `RouterTable`.
      *
-     * @param[in] aRouteTlv   The Route TLV to compare.
+     * @param[in] aRouteTlvData   The Route TLV Data to compare.
      *
-     * @retval TRUE    The Router ID Sequence in @p aRouteTlv is more recent.
-     * @retval FALSE   The Router ID Sequence in @p aRouteTlv is not more recent.
+     * @retval TRUE    The Router ID Sequence in @p aRouteTlvData is more recent.
+     * @retval FALSE   The Router ID Sequence in @p aRouteTlvData is not more recent.
      */
-    bool IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv &aRouteTlv) const;
+    bool IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv::Data &aRouteTlvData) const;
 
     /**
      * Gets the number of router neighbors with `GetLinkQualityIn()` better than or equal to a given threshold.
@@ -339,49 +336,60 @@ public:
     bool IsAllocated(uint8_t aRouterId) const { return mRouterIdMap.IsAllocated(aRouterId); }
 
     /**
-     * Updates the Router ID allocation set.
+     * Updates the allocated Router ID mask.
      *
-     * @param[in]  aRouterIdSequence  The Router ID Sequence.
-     * @param[in]  aRouterIdSet       The Router ID Set.
+     * @param[in]  aRouterIdMask      The Router ID Mask.
      */
-    void UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
+    void UpdateRouterIdMask(const Mle::RouterIdMask &aRouterIdMask);
 
     /**
-     * Updates the routes based on a received `RouteTlv` from a neighboring router.
+     * Updates the allocated Router ID mask from a received `RouteTlv::Data`.
      *
-     * @param[in]  aRouteTlv    The received `RouteTlv`
-     * @param[in]  aNeighborId  The router ID of neighboring router from which @p aRouteTlv is received.
+     * @param[in]  aRouteTlvData      The received `RouteTlv::Data`.
      */
-    void UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId);
+    void UpdateRouterIdMask(const Mle::RouteTlv::Data &aRouteTlvData);
 
     /**
-     * Updates the routes on an FTD child based on a received `RouteTlv` from the parent.
+     * Updates the routes based on a received `RouteTlv::Data` from a neighboring router.
      *
-     * MUST be called when device is an FTD child and @p aRouteTlv is received from its current parent.
+     * @param[in]  aRouteTlvData    The received `RouteTlv::Data`
+     * @param[in]  aNeighborId  The router ID of neighboring router from which @p aRouteTlvData is received.
+     */
+    void UpdateRoutes(const Mle::RouteTlv::Data &aRouteTlvData, uint8_t aNeighborId);
+
+    /**
+     * Updates the routes on an FTD child based on a received `RouteTlv::Data` from the parent.
      *
-     * @param[in]  aRouteTlv    The received `RouteTlv` from parent.
+     * MUST be called when device is an FTD child and @p aRouteTlvData is received from its current parent.
+     *
+     * @param[in]  aRouteTlvData    The received `RouteTlvData` from parent.
      * @param[in]  aParentId    The Router ID of parent.
      */
-    void UpdateRouterOnFtdChild(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId);
+    void UpdateRouterOnFtdChild(const Mle::RouteTlv::Data &aRouteTlvData, uint8_t aParentId);
 
     /**
-     * Gets the allocated Router ID set.
+     * Gets the allocated Router ID Mask.
      *
-     * @param[out]  aRouterIdSet   A reference to output the allocated Router ID set.
+     * @param[out]  aRouterIdMask   A reference to output the allocated Router ID Mask.
      */
-    void GetRouterIdSet(Mle::RouterIdSet &aRouterIdSet) const { return mRouterIdMap.GetAsRouterIdSet(aRouterIdSet); }
+    void GetRouterIdMask(Mle::RouterIdMask &aRouterIdMask) const;
 
     /**
-     * Fills a Route TLV.
+     * Appends a Route TLV to a given message.
      *
-     * When @p aNeighbor is not `nullptr`, we limit the number of router entries to `kMaxRoutersInRouteTlvForLinkAccept`
-     * when populating `aRouteTlv`, so that the TLV can be appended in a Link Accept message. In this case, we ensure
-     * to include router entries associated with @p aNeighbor, leader, and this device itself.
+     * If @p aDestRloc16 is not `Mle::kInvalidRloc16`, a compact format is used for the Route TLV by limiting the
+     * number of router entries to `kMaxRoutersInRouteTlvForLinkAccept`. This is used for Link Accept messages. In this
+     * case, we ensure that entries for this device, the leader, and the destination router (itself or its parent if it
+     * is a child) are always included.
      *
-     * @param[out] aRouteTlv    A Route TLV to be filled.
-     * @param[in]  aNeighbor    A pointer to the receiver (in case TLV is for a Link Accept message).
+     * @param[in,out] aMessage      The message to append the Route TLV to.
+     * @param[in]     aTlvType      The TLV type to use (e.g., `Tlv::kRoute`).
+     * @param[in]     aDestRloc16   The destination RLOC16. Used to determine whether to use the compact format.
+     *
+     * @retval kErrorNone     Successfully appended the Route TLV.
+     * @retval kErrorNoBufs   Insufficient available buffers to append the TLV.
      */
-    void FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighbor = nullptr) const;
+    Error AppendRouteTlv(Message &aMessage, uint8_t aTlvType, uint16_t aDestRloc16 = Mle::kInvalidRloc16) const;
 
     /**
      * Updates the router table and must be called with a one second period.
@@ -462,7 +470,6 @@ private:
         void    SetIndex(uint8_t aRouterId, uint8_t aIndex) { mIndexes[aRouterId] = kAllocatedFlag | aIndex; }
         bool    CanAllocate(uint8_t aRouterId) const { return (mIndexes[aRouterId] == 0); }
         void    Release(uint8_t aRouterId) { mIndexes[aRouterId] = kReuseDelay; }
-        void    GetAsRouterIdSet(Mle::RouterIdSet &aRouterIdSet) const;
         void    HandleTimeTick(void);
 
     private:

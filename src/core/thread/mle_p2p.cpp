@@ -174,7 +174,7 @@ void Mle::P2p::SendP2pLinkRequest(Peer *aPeer)
 
     VerifyOrExit(aPeer != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit((message = Get<Mle>().NewMleMessage(kCommandP2pLinkRequest)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = message->AppendModeTlv(Get<Mle>().GetDeviceMode()));
+    SuccessOrExit(error = message->AppendModeTlv());
     SuccessOrExit(error = message->AppendVersionTlv());
 
     aPeer->GenerateChallenge();
@@ -225,7 +225,7 @@ Error Mle::P2p::SendP2pLinkAcceptVariant(const LinkAcceptInfo &aInfo, bool aIsLi
     VerifyOrExit((message = Get<Mle>().NewMleMessage(command)) != nullptr, error = kErrorNoBufs);
     if (command == kCommandP2pLinkAcceptAndRequest)
     {
-        SuccessOrExit(error = message->AppendModeTlv(Get<Mle>().GetDeviceMode()));
+        SuccessOrExit(error = message->AppendModeTlv());
         SuccessOrExit(error = message->AppendVersionTlv());
     }
 

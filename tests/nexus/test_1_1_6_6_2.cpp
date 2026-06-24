@@ -131,8 +131,7 @@ void RunTest6_6_2(Topology aTopology, const char *aJsonFile)
      * - Description: Harness instructs the device to form the network using thrKeySequenceCounter = 0x7F (127).
      * - Pass Criteria: N/A
      */
-    leader.AllowList(dut);
-    dut.AllowList(leader);
+    AllowLinkBetween(leader, dut);
 
     leader.Form();
     leader.Get<KeyManager>().SetCurrentKeySequence(kInitialKeySequence,

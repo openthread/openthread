@@ -135,8 +135,7 @@ void TestMatnTc1(void)
      * - Pass Criteria:
      *   - N/A
      */
-    br1.AllowList(router);
-    router.AllowList(br1);
+    AllowLinkBetween(br1, router);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -151,9 +150,6 @@ void TestMatnTc1(void)
     nexus.AdvanceTime(kAttachToRouterTime);
 
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
-
-    host.mInfraIf.Init(host);
-    host.mInfraIf.AddAddress(host.mInfraIf.GetLinkLocalAddress());
 
     nexus.AdvanceTime(kStabilizationTime);
 

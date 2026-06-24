@@ -640,6 +640,10 @@ def apply_patches():
     layer_fields._layer_containers.add('dns.opt')
     layer_fields._layer_containers.add('dns.count')
     layer_fields._LAYER_FIELDS['mdns.nsec'] = layer_fields._list(layer_fields._bytes)
+    layer_fields._LAYER_FIELDS['dns.a'] = layer_fields._list(layer_fields._str)
+    layer_fields._LAYER_FIELDS['mdns.a'] = layer_fields._list(layer_fields._str)
+    layer_fields._LAYER_FIELDS['dns.data'] = layer_fields._list(layer_fields._bytes)
+    layer_fields._LAYER_FIELDS['mdns.data'] = layer_fields._list(layer_fields._bytes)
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'

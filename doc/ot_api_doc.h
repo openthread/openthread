@@ -215,6 +215,7 @@
  * @defgroup plat-radio                  Radio
  * @defgroup plat-settings               Settings
  * @defgroup plat-spi-slave              SPI Slave
+ * @defgroup plat-tcp                    TCP - Platform
  * @defgroup plat-time                   Time Service
  * @defgroup plat-toolchain              Toolchain
  * @defgroup plat-trel                   TREL - Platform

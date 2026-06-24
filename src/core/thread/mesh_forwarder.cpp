@@ -766,7 +766,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aFrame.HasCslIe() && aIsDataPoll)
+    if (aFrame.Has<Mac::CslIe>() && aIsDataPoll)
     {
         failLimit = kFailedCslDataPollTransmissions;
     }
@@ -1091,7 +1091,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         }
 
         // Duplication suppression for a "next fragment" is handled
-        // by the code below where the the datagram offset is
+        // by the code below where the datagram offset is
         // checked against the offset of the corresponding message
         // (same datagram tag and size) in Reassembly List. Note
         // that if there is no matching message in the Reassembly
@@ -1199,6 +1199,27 @@ void MeshForwarder::ClearReassemblyList(void)
         mCounters.UpdateOnDrop(message);
         mReassemblyList.DequeueAndFree(message);
     }
+}
+
+Error MeshForwarder::RemoveUnsecureReassemblyMessage(EvictReason aEvictReason)
+{
+    Error error = kErrorNotFound;
+
+    VerifyOrExit(aEvictReason == kEvictReasonNoMessageBuffer);
+
+    for (Message &message : mReassemblyList)
+    {
+        if (!message.IsLinkSecurityEnabled())
+        {
+            LogMessage(kMessageReassemblyDrop, message, kErrorNoBufs);
+            mCounters.UpdateOnDrop(message);
+            mReassemblyList.DequeueAndFree(message);
+            ExitNow(error = kErrorNone);
+        }
+    }
+
+exit:
+    return error;
 }
 
 void MeshForwarder::HandleTimeTick(void)

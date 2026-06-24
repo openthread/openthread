@@ -92,6 +92,7 @@
 
 #define MAX_FRAME_SIZE 2048
 #define HEADER_LEN 5
+#define HDLC_MAX_FRAME_SIZE ((MAX_FRAME_SIZE - HEADER_LEN) * 2 + 5)
 #define SPI_HEADER_RESET_FLAG 0x80
 #define SPI_HEADER_CRC_FLAG 0x40
 #define SPI_HEADER_PATTERN_VALUE 0x02
@@ -531,8 +532,9 @@ static int push_pull_spi(void)
     spi_header_set_accept_len(sSpiTxFrameBuffer, 0);
     spi_header_set_data_len(sSpiTxFrameBuffer, 0);
 
-    // Sanity check.
-    if (slave_data_len > MAX_FRAME_SIZE)
+    // Sanity check. The header `data_len` carries the payload length only
+    // (it excludes HEADER_LEN), so the largest valid value is the MTU.
+    if (slave_data_len > MAX_FRAME_SIZE - HEADER_LEN)
     {
         slave_data_len = 0;
     }
@@ -630,8 +632,8 @@ static int push_pull_spi(void)
     slave_max_rx   = spi_header_get_accept_len(spiRxFrameBuffer);
     slave_data_len = spi_header_get_data_len(spiRxFrameBuffer);
 
-    if (((slave_header & SPI_HEADER_PATTERN_MASK) != SPI_HEADER_PATTERN_VALUE) || (slave_max_rx > MAX_FRAME_SIZE) ||
-        (slave_data_len > MAX_FRAME_SIZE))
+    if (((slave_header & SPI_HEADER_PATTERN_MASK) != SPI_HEADER_PATTERN_VALUE) ||
+        (slave_max_rx > MAX_FRAME_SIZE - HEADER_LEN) || (slave_data_len > MAX_FRAME_SIZE - HEADER_LEN))
     {
         sSpiGarbageFrameCount++;
         sSpiTxRefusedCount++;
@@ -802,7 +804,7 @@ static int push_hdlc(void)
 {
     int             ret              = 0;
     const uint8_t  *spiRxFrameBuffer = get_real_rx_frame_start();
-    static uint8_t  escaped_frame_buffer[MAX_FRAME_SIZE * 2];
+    static uint8_t  escaped_frame_buffer[HDLC_MAX_FRAME_SIZE];
     static uint16_t unescaped_frame_len;
     static uint16_t escaped_frame_len;
     static uint16_t escaped_frame_sent;

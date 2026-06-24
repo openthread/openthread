@@ -72,7 +72,7 @@ Error Address::ExtractFromIp4MappedIp6Address(const Ip6::Address &aIp6Address)
     Error error = kErrorNone;
 
     VerifyOrExit(aIp6Address.IsIp4Mapped(), error = kErrorParse);
-    SetBytes(&aIp6Address.GetBytes()[12]);
+    InitFrom(&aIp6Address.GetBytes()[12]);
 
 exit:
     return error;
@@ -234,8 +234,7 @@ bool Header::HasSourceRouteOption(const Message &aMessage) const
         uint8_t optionType;
         uint8_t optionLen;
 
-        SuccessOrExit(aMessage.Read(range, optionType));
-        range.AdvanceOffset(sizeof(uint8_t));
+        SuccessOrExit(aMessage.ReadAndAdvance(range, optionType));
 
         if (optionType == kOptionEnd)
         {

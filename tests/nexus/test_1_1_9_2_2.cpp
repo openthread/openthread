@@ -69,7 +69,7 @@ static void AppendSteeringDataTlv(Coap::Message &aMessage)
     MeshCoP::SteeringData steeringData;
 
     steeringData.SetToPermitAllJoiners();
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(aMessage, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(aMessage, steeringData));
 }
 
 void Test9_2_2(void)
@@ -108,8 +108,7 @@ void Test9_2_2(void)
      */
     Log("Step 1: All");
 
-    leader.AllowList(commissioner);
-    commissioner.AllowList(leader);
+    AllowLinkBetween(leader, commissioner);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

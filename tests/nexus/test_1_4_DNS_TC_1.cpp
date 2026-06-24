@@ -62,7 +62,7 @@ static constexpr uint16_t kServicePort       = 55556;
 void SendMultiQuestionQuery(Node &aNode, const Ip6::Address &aDest, const char *aName, uint16_t aType1, uint16_t aType2)
 {
     Ip6::Udp::Socket socket(aNode, nullptr, nullptr);
-    SuccessOrQuit(socket.Open(Ip6::kNetifUnspecified));
+    SuccessOrQuit(socket.Open(Ip6::kNetifThreadInternal));
 
     Message *message = socket.NewMessage();
     VerifyOrQuit(message != nullptr);
@@ -91,7 +91,7 @@ void SendMultiQuestionQuery(Node &aNode, const Ip6::Address &aDest, const char *
 void SendSingleQuestionQuery(Node &aNode, const Ip6::Address &aDest, const char *aName, uint16_t aType)
 {
     Ip6::Udp::Socket socket(aNode, nullptr, nullptr);
-    SuccessOrQuit(socket.Open(Ip6::kNetifUnspecified));
+    SuccessOrQuit(socket.Open(Ip6::kNetifThreadInternal));
 
     Message *message = socket.NewMessage();
     VerifyOrQuit(message != nullptr);
@@ -147,12 +147,10 @@ void Test_1_4_DNS_TC_1(const char *aJsonFileName)
     Log("Step 1: Topology: Start Eth_1, BR_1, Router_1, and ED_1.");
 
     // BR_1 and Router_1
-    br1.AllowList(r1);
-    r1.AllowList(br1);
+    AllowLinkBetween(br1, r1);
 
     // Router_1 and ED_1
-    r1.AllowList(ed1);
-    ed1.AllowList(r1);
+    AllowLinkBetween(r1, ed1);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -160,7 +158,7 @@ void Test_1_4_DNS_TC_1(const char *aJsonFileName)
     r1.Join(br1);
     nexus.AdvanceTime(kJoinNetworkTime);
 
-    ed1.Join(r1);
+    ed1.Join(r1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);
 
     // Setup BR_1 as Border Router

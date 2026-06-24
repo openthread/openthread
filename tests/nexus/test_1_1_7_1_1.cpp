@@ -83,14 +83,9 @@ void Test7_1_1(const char *aJsonFile)
     med1.SetName("MED_1");
     sed1.SetName("SED_1");
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    leader.AllowList(med1);
-    med1.AllowList(leader);
-
-    leader.AllowList(sed1);
-    sed1.AllowList(leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, med1);
+    AllowLinkBetween(leader, sed1);
 
     nexus.AdvanceTime(0);
 

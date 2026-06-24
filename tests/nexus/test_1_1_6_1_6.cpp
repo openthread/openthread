@@ -132,11 +132,8 @@ void RunTest6_1_6(Topology aTopology, const char *aJsonFile)
      */
     Log("Step 1: All");
 
-    leader.AllowList(router1);
-    leader.AllowList(reed1);
-
-    router1.AllowList(leader);
-    reed1.AllowList(leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, reed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -158,11 +155,8 @@ void RunTest6_1_6(Topology aTopology, const char *aJsonFile)
      */
     Log("Step 2: Router_1");
 
-    dut.AllowList(router1);
-    dut.AllowList(reed1);
-
-    router1.AllowList(dut);
-    reed1.AllowList(dut);
+    AllowLinkBetween(dut, router1);
+    AllowLinkBetween(dut, reed1);
 
     SuccessOrQuit(dut.Get<Mac::Filter>().AddRssIn(router1.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality1));
     SuccessOrQuit(router1.Get<Mac::Filter>().AddRssIn(dut.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality1));

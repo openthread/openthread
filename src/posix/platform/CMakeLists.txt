@@ -51,6 +51,7 @@ if(OT_MULTIPAN_RCP)
     )
 endif()
 
+ot_option(OT_POSIX_INFRA_NETIF_LOST_EXIT OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE "exit on infrastructure network interface lost")
 
 option(OT_POSIX_INSTALL_EXTERNAL_ROUTES "Install External Routes as IPv6 routes" ON)
 if(OT_POSIX_INSTALL_EXTERNAL_ROUTES)
@@ -151,6 +152,7 @@ add_library(openthread-posix
     spinel_manager.cpp
     spi_interface.cpp
     system.cpp
+    tcp.cpp
     tmp_storage.cpp
     trel.cpp
     udp.cpp

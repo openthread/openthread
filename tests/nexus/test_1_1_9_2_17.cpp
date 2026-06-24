@@ -152,18 +152,13 @@ void Test9_2_17(void)
      *   Advertisements on separate channels.
      */
 
-    leader1.AllowList(dut);
-    dut.AllowList(leader1);
-
-    leader2.AllowList(dut);
-    dut.AllowList(leader2);
+    AllowLinkBetween(leader1, dut);
 
     // Leader 1 <-> DUT is allowed.
     // Leader 2 <-> DUT is initially blocked by radio channel and different PAN ID, but here we also use AllowList.
     // We start with Leader 2 being reachable but on different channel.
     // Actually, to fully control connectivity as per spec, we'll unallow Leader 2 for now.
-    leader2.UnallowList(dut);
-    dut.UnallowList(leader2);
+    UnallowLinkBetween(leader2, dut);
 
     dut.Get<Mle::Mle>().SetTimeout(20);
 
@@ -237,8 +232,7 @@ void Test9_2_17(void)
     leader1.Get<Mle::Mle>().Stop();
     leader1.Get<ThreadNetif>().Down();
 
-    leader2.AllowList(dut);
-    dut.AllowList(leader2);
+    AllowLinkBetween(leader2, dut);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: DUT");

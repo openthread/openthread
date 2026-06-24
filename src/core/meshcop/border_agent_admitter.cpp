@@ -678,7 +678,7 @@ void Admitter::CommissionerPetitioner::AddAlocAndUdpReceiver(void)
 {
     Ip6::Address alocAddr;
 
-    Get<Mle::Mle>().GetCommissionerAloc(mSessionId, alocAddr);
+    Get<Mle::Mle>().ComposeCommissionerAloc(mSessionId, alocAddr);
 
     if (Get<ThreadNetif>().HasUnicastAddress(mAloc))
     {
@@ -813,7 +813,7 @@ void Admitter::CommissionerPetitioner::SendDataSet(void)
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, mSessionId));
-    SuccessOrExit(error = Tlv::Append<SteeringDataTlv>(*message, mSteeringData.GetData(), mSteeringData.GetLength()));
+    SuccessOrExit(error = SteeringDataTlv::AppendTo(*message, mSteeringData));
 
     if (mJoinerUdpPort != 0)
     {
@@ -1193,29 +1193,15 @@ exit:
 
 Error Manager::CoapDtlsSession::ReadSteeringDataTlv(const Message &aMessage, SteeringData &aSteeringData)
 {
-    Error       error;
-    OffsetRange offsetRange;
+    Error error;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kSteeringData, offsetRange));
+    SuccessOrExit(error = SteeringDataTlv::FindIn(aMessage, aSteeringData));
 
     // Ensure the read steering data has a valid length. A length of
     // one byte is only allowed to indicate `PermitsAllJoiners()`.
 
-    error = kErrorInvalidArgs;
-
-    for (uint8_t validLength : Admitter::kEnrollerValidSteeringDataLengths)
-    {
-        if (offsetRange.GetLength() == validLength)
-        {
-            error = kErrorNone;
-            break;
-        }
-    }
-
-    SuccessOrExit(error);
-
-    IgnoreError(aSteeringData.Init(static_cast<uint8_t>(offsetRange.GetLength())));
-    aMessage.ReadBytes(offsetRange, aSteeringData.GetData());
+    VerifyOrExit(DoesArrayContain(Admitter::kEnrollerValidSteeringDataLengths, aSteeringData.GetLength()),
+                 error = kErrorInvalidArgs);
 
     if (aSteeringData.GetLength() == 1)
     {

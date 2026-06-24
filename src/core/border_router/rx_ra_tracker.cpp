@@ -727,7 +727,7 @@ void RxRaTracker::RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold)
         {
             if (entry.GetLastUpdateTime() <= aTimeThreshold)
             {
-                entry.ClearPreferredLifetime();
+                entry.Deprecate();
             }
         }
 
@@ -1096,10 +1096,7 @@ void RxRaTracker::HandleRouterTimer(void)
 
             for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
             {
-                if (!entry.IsDeprecated())
-                {
-                    entry.ClearPreferredLifetime();
-                }
+                entry.Deprecate();
             }
 
             for (RoutePrefix &entry : router.mRoutePrefixes)
@@ -1809,7 +1806,7 @@ void RxRaTracker::RsSender::Start(void)
 
     VerifyOrExit(!IsInProgress());
 
-    delay = Random::NonCrypto::GetUint32InRange(0, kMaxStartDelay);
+    delay = Random::NonCrypto::GenerateUpToExcluding(kMaxStartDelay);
 
     LogInfo("RsSender: Starting - will send first RS in %lu msec", ToUlong(delay));
 

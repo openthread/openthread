@@ -145,16 +145,8 @@ void Test1_2_LP_5_3_3(void)
      */
     Log("Step 1: All");
 
-    /**
-     * Use AllowList to specify links between nodes. There is a link between the following node pairs:
-     * - Leader (DUT) and Router 1
-     * - Leader (DUT) and SSED 1
-     */
-    dut.AllowList(router1);
-    router1.AllowList(dut);
-
-    dut.AllowList(ssed1);
-    ssed1.AllowList(dut);
+    AllowLinkBetween(dut, router1);
+    AllowLinkBetween(dut, ssed1);
 
     dut.Form();
     nexus.AdvanceTime(kFormNetworkTime);

@@ -4337,7 +4337,7 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
 
     if (shouldDelay)
     {
-        delay = Random::NonCrypto::GetUint16InRange(kMinResponseDelay, kMaxResponseDelay);
+        delay = Random::NonCrypto::GenerateInClosedRange(kMinResponseDelay, kMaxResponseDelay);
     }
 
     for (const Question &question : mQuestions)
@@ -4963,6 +4963,8 @@ void Core::MultiPacketRxMessages::AddNew(OwnedPtr<RxMessage> &aRxMessagePtr)
 
     mRxMsgEntries.RemoveMatching(aRxMessagePtr->GetSenderAddress());
 
+    VerifyOrExit(mRxMsgEntries.CountAllEntries() < kMaxRxMsgEntries);
+
     newEntry = RxMsgEntry::Allocate(GetInstance());
     VerifyOrExit(newEntry != nullptr);
 
@@ -5022,26 +5024,18 @@ exit:
 
 void Core::MultiPacketRxMessages::RxMsgEntry::Add(OwnedPtr<RxMessage> &aRxMessagePtr)
 {
-    uint16_t numMsgs = 0;
+    // If a subsequent received `RxMessage` is also marked as
+    // truncated, we again delay the process time. To avoid
+    // continuous delay and piling up of messages in the list,
+    // we limit the number of messages.
 
-    for (const RxMessage &rxMsg : mRxMessages)
-    {
-        // If a subsequent received `RxMessage` is also marked as
-        // truncated, we again delay the process time. To avoid
-        // continuous delay and piling up of messages in the list,
-        // we limit the number of messages.
-
-        numMsgs++;
-        VerifyOrExit(numMsgs < kMaxNumMessages);
-
-        OT_UNUSED_VARIABLE(rxMsg);
-    }
+    VerifyOrExit(mRxMessages.CountAllEntries() < kMaxNumMessagesPerEntry);
 
     mProcessTime = TimerMilli::GetNow();
 
     if (aRxMessagePtr->IsTruncated())
     {
-        mProcessTime += Random::NonCrypto::GetUint32InRange(kMinProcessDelay, kMaxProcessDelay);
+        mProcessTime += Random::NonCrypto::GenerateInClosedRange(kMinProcessDelay, kMaxProcessDelay);
     }
 
     // We push the new `RxMessage` at tail of the list to keep the
@@ -5422,7 +5416,7 @@ TimeMilli Core::RandomizeFirstProbeTxTime(void)
 
     if ((mNextProbeTxTime - now) >= kMaxProbeDelay)
     {
-        mNextProbeTxTime = now + Random::NonCrypto::GetUint32InRange(kMinProbeDelay, kMaxProbeDelay);
+        mNextProbeTxTime = now + Random::NonCrypto::GenerateInClosedRange(kMinProbeDelay, kMaxProbeDelay);
     }
 
     return mNextProbeTxTime;
@@ -5434,7 +5428,7 @@ TimeMilli Core::RandomizeInitialQueryTxTime(void)
 
     if ((mNextQueryTxTime - now) >= kMaxInitialQueryDelay)
     {
-        mNextQueryTxTime = now + Random::NonCrypto::GetUint32InRange(kMinInitialQueryDelay, kMaxInitialQueryDelay);
+        mNextQueryTxTime = now + Random::NonCrypto::GenerateInClosedRange(kMinInitialQueryDelay, kMaxInitialQueryDelay);
     }
 
     return mNextQueryTxTime;
@@ -5556,7 +5550,7 @@ void Core::CacheRecordInfo::UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry)
 
         if (queryTime > now)
         {
-            queryTime += Random::NonCrypto::GetUint32InRange(0, GetClampedTtl() * kQueryTtlVariation);
+            queryTime += Random::NonCrypto::GenerateUpToExcluding(GetClampedTtl() * kQueryTtlVariation);
             aCacheEntry.ScheduleQuery(queryTime);
             break;
         }
@@ -7248,7 +7242,7 @@ void Core::Ip4AddrCache::ProcessResponseRecord(const Message &aMessage, uint16_t
     SuccessOrExit(aMessage.Read(aRecordOffset, aRecord));
     VerifyOrExit(aRecord.GetLength() >= sizeof(Ip4::Address));
 
-    address.SetToIp4Mapped(aRecord.GetAddress());
+    address.InitAsIp4Mapped(aRecord.GetAddress());
 
     AddNewResponseAddress(address, aRecord.GetTtl(), aRecord.GetClass() & kClassCacheFlushFlag);
 

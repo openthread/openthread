@@ -125,24 +125,10 @@ void Test1_2_LP_5_2_1(void)
     sed2.SetName("SED_2");
     sed3.SetName("SED_3");
 
-    /**
-     * - Use AllowList to specify links between nodes. There is a link between the following node pairs:
-     *   - Leader (DUT) and Router 1
-     *   - Leader (DUT) and SED 1
-     *   - Leader (DUT) and SED 2
-     *   - Leader (DUT) and SED 3
-     */
-    dut.AllowList(router1);
-    router1.AllowList(dut);
-
-    dut.AllowList(sed1);
-    sed1.AllowList(dut);
-
-    dut.AllowList(sed2);
-    sed2.AllowList(dut);
-
-    dut.AllowList(sed3);
-    sed3.AllowList(dut);
+    AllowLinkBetween(dut, router1);
+    AllowLinkBetween(dut, sed1);
+    AllowLinkBetween(dut, sed2);
+    AllowLinkBetween(dut, sed3);
 
     nexus.AdvanceTime(0);
 

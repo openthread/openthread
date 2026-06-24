@@ -124,12 +124,9 @@ void TestMatnTc2(void)
      * - Pass Criteria:
      *   - N/A
      */
-    br1.AllowList(br2);
-    br1.AllowList(td);
-    br2.AllowList(br1);
-    br2.AllowList(td);
-    td.AllowList(br1);
-    td.AllowList(br2);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(br1, td);
+    AllowLinkBetween(br2, td);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);

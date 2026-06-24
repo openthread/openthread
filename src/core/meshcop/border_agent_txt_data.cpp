@@ -59,6 +59,7 @@ const char TxtData::Key::kOmrPrefix[]       = "omr";
 const char TxtData::Key::kExtAddress[]      = "xa";
 const char TxtData::Key::kVendorName[]      = "vn";
 const char TxtData::Key::kModelName[]       = "mn";
+const char TxtData::Key::kVendorOui[]       = "vo";
 
 TxtData::TxtData(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -68,6 +69,7 @@ TxtData::TxtData(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     , mShouldAddVendorName(true)
     , mShouldAddVendorModel(true)
+    , mShouldAddVendorOui(true)
 #endif
 {
 }
@@ -78,7 +80,8 @@ Error TxtData::Prepare(uint8_t  *aBuffer,
                        uint16_t  aBufferSize,
                        uint16_t &aLength,
                        bool      aAddVendorName,
-                       bool      aAddVendorModel)
+                       bool      aAddVendorModel,
+                       bool      aAddVendorOui)
 {
     Error                  error = kErrorNone;
     Dns::TxtDataEncoder    encoder(aBuffer, aBufferSize);
@@ -168,6 +171,13 @@ Error TxtData::Prepare(uint8_t  *aBuffer,
         SuccessOrExit(error = encoder.AppendStringEntry(Key::kModelName, Get<VendorInfo>().GetModel()));
     }
 
+    if (aAddVendorOui && Get<VendorInfo>().GetOui().IsValid())
+    {
+        const VendorInfo::Oui &oui = Get<VendorInfo>().GetOui();
+
+        SuccessOrExit(error = encoder.AppendBytesEntry(Key::kVendorOui, oui.GetBytes(), oui.GetSize()));
+    }
+
     aLength = encoder.GetLength();
 
 exit:
@@ -177,7 +187,7 @@ exit:
 Error TxtData::Prepare(ServiceTxtData &aTxtData)
 {
     return Prepare(aTxtData.mData, sizeof(aTxtData.mData), aTxtData.mLength, /* aAddVendorName */ false,
-                   /* aAddVendorModel */ false);
+                   /* aAddVendorModel */ false, /* aAddVendorOui */ false);
 }
 
 void TxtData::SetChangedCallback(ChangedCallback aCallback, void *aContext)
@@ -235,11 +245,16 @@ void TxtData::PrepareWithVendorData(Heap::Data &aTxtData)
         size += Tlv::kMaxVendorModelLength + sizeof(Key::kModelName) + sizeof('=');
     }
 
+    if (mShouldAddVendorOui)
+    {
+        size += VendorInfo::Oui::kMaxSize + sizeof(Key::kVendorOui) + sizeof('=');
+    }
+
     buffer = reinterpret_cast<uint8_t *>(Heap::CAlloc(size, sizeof(uint8_t)));
 
     OT_ASSERT(buffer != nullptr);
 
-    SuccessOrAssert(Prepare(buffer, size, length, mShouldAddVendorName, mShouldAddVendorModel));
+    SuccessOrAssert(Prepare(buffer, size, length, mShouldAddVendorName, mShouldAddVendorModel, mShouldAddVendorOui));
 
     if (mVendorData.GetLength() != 0)
     {
@@ -265,6 +280,7 @@ void TxtData::SetVendorData(const uint8_t *aVendorData, uint16_t aVendorDataLeng
 
     mShouldAddVendorName  = true;
     mShouldAddVendorModel = true;
+    mShouldAddVendorOui   = true;
 
     iterator.Init(mVendorData.GetBytes(), mVendorData.GetLength());
 
@@ -277,6 +293,10 @@ void TxtData::SetVendorData(const uint8_t *aVendorData, uint16_t aVendorDataLeng
         else if (entry.MatchesKey(Key::kModelName))
         {
             mShouldAddVendorModel = false;
+        }
+        else if (entry.MatchesKey(Key::kVendorOui))
+        {
+            mShouldAddVendorOui = false;
         }
     }
 
@@ -297,6 +317,14 @@ void TxtData::HandleVendorNameChange(void)
 void TxtData::HandleVendorModelChange(void)
 {
     if (mShouldAddVendorModel)
+    {
+        Refresh();
+    }
+}
+
+void TxtData::HandleVendorOuiChange(void)
+{
+    if (mShouldAddVendorOui)
     {
         Refresh();
     }
@@ -478,6 +506,10 @@ void TxtData::Info::ProcessTxtEntry(const Dns::TxtEntry &aEntry)
         ReadStringValue(aEntry, mModelName);
         mHasModelName = true;
     }
+    else if (aEntry.MatchesKey(Key::kVendorOui))
+    {
+        mHasVendorOui = ReadVendorOui(aEntry, AsCoreType(&mVendorOui));
+    }
 }
 
 bool TxtData::Info::ReadValue(const Dns::TxtEntry &aEntry, void *aBuffer, uint16_t aSize)
@@ -511,11 +543,16 @@ bool TxtData::Info::ReadOmrPrefix(const Dns::TxtEntry &aEntry, Ip6::Prefix &aPre
     VerifyOrExit(length <= Ip6::Prefix::kMaxLength);
     VerifyOrExit(aEntry.mValueLength >= sizeof(uint8_t) + Ip6::Prefix::SizeForLength(length));
 
-    aPrefix.Set(&aEntry.mValue[1], length);
+    aPrefix.InitFrom(&aEntry.mValue[1], length);
     didRead = true;
 
 exit:
     return didRead;
+}
+
+bool TxtData::Info::ReadVendorOui(const Dns::TxtEntry &aEntry, VendorInfo::Oui &aOui)
+{
+    return (aOui.SetFrom(aEntry.mValue, aEntry.mValueLength) == kErrorNone);
 }
 
 void TxtData::StateBitmap::Parse(uint32_t aBitmap, Info &aInfo)

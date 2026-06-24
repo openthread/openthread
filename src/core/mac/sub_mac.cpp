@@ -63,6 +63,10 @@ SubMac::SubMac(Instance &aInstance)
     mCslParentAccuracy.Init();
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && !OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+    // Assuming the platform must deal with the retransmission security correctly.
+    OT_ASSERT(mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES);
+#endif
     Init();
 }
 
@@ -409,7 +413,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(mTransmitFrame.GetTimeIeOffset() == 0);
+    VerifyOrExit(!mTransmitFrame.Has<TimeIe>());
 #endif
 
     mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
@@ -469,7 +473,7 @@ void SubMac::StartTimerForBackoff(uint8_t aBackoffExponent)
 {
     uint32_t backoff;
 
-    backoff = Random::NonCrypto::GetUint32InRange(0, static_cast<uint32_t>(1UL << aBackoffExponent));
+    backoff = Random::NonCrypto::GenerateUpToExcluding(static_cast<uint32_t>(1UL << aBackoffExponent));
     backoff *= (kUnitBackoffPeriod * Radio::kSymbolTime);
 
     if (mRxOnWhenIdle)
@@ -600,6 +604,15 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     {
         mTransmitRetries++;
         aFrame.SetIsARetransmission(true);
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+        if (aFrame.GetSecurityEnabled() && aFrame.IsSecurityProcessed() && aFrame.HasAnyHeaderIe())
+        {
+            aFrame.DecryptTransmitAesCcm(GetExtAddress());
+        }
+
+        ProcessTransmitSecurity();
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
         if (aError == kErrorNoAck)

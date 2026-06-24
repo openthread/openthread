@@ -324,18 +324,11 @@ exit:
 
 void Leader::SendCommissioningSetResponse(const Coap::Msg &aMsg, MeshCoP::StateTlv::State aState)
 {
-    Coap::Message *message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
-
-    VerifyOrExit(message != nullptr);
-    SuccessOrExit(Tlv::Append<MeshCoP::StateTlv>(*message, aState));
-
-    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*message, aMsg.mMessageInfo));
-    message = nullptr; // `SendMessage` takes ownership on success
-
+    SuccessOrExit(Get<Tmf::Agent>().SendResponseWithStateTlv(aMsg, aState));
     LogInfo("Sent %s response", UriToString<kUriCommissionerSet>());
 
 exit:
-    FreeMessage(message);
+    return;
 }
 
 bool Leader::RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode)

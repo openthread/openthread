@@ -73,6 +73,7 @@
 #include "cli/cli_mesh_diag.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_ping.hpp"
+#include "cli/cli_plat_tcp.hpp"
 #include "cli/cli_srp_client.hpp"
 #include "cli/cli_srp_server.hpp"
 #include "cli/cli_tcat.hpp"
@@ -86,10 +87,13 @@
 #include "common/type_traits.hpp"
 #include "instance/instance.hpp"
 
+typedef struct otCliInterpreter
+{
+} otCliInterpreter;
+
 namespace ot {
 
 /**
- * @namespace ot::Cli
  *
  * @brief
  *   This namespace contains definitions for the CLI interpreter.
@@ -104,7 +108,7 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...);
 /**
  * Implements the CLI interpreter.
  */
-class Interpreter : public OutputImplementer, public Utils
+class Interpreter : public otCliInterpreter, public OutputImplementer, public Utils
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     friend class Ba;
@@ -122,6 +126,8 @@ class Interpreter : public OutputImplementer, public Utils
     friend class SrpClient;
     friend class SrpServer;
 #endif
+    friend class Utils;
+
     friend void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
     friend void otCliAppendResult(otError aError);
     friend void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
@@ -137,33 +143,64 @@ public:
      */
     explicit Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
+#if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
     /**
-     * Returns a reference to the interpreter object.
+     * Returns a reference to the static CLI interpreter.
      *
-     * @returns A reference to the interpreter object.
+     * @returns A reference to the static CLI interpreter.
      */
     static Interpreter &GetInterpreter(void)
     {
         OT_ASSERT(sInterpreter != nullptr);
-
         return *sInterpreter;
     }
 
     /**
-     * Initializes the Console interpreter.
+     * Initializes the static CLI interpreter.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      * @param[in]  aCallback  A pointer to a callback method.
      * @param[in]  aContext   A pointer to a user context.
      */
-    static void Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
+    static void Init(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
-     * Returns whether the interpreter is initialized.
+     * Returns whether the static CLI interpreter is initialized.
      *
      * @returns  Whether the interpreter is initialized.
      */
     static bool IsInitialized(void) { return sInterpreter != nullptr; }
+
+#endif // OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+
+    /**
+     * Gets the size of the CLI interpreter object.
+     *
+     * @returns The size of the CLI interpreter object in bytes.
+     */
+    static size_t GetSize(void);
+
+    /**
+     * Initializes a CLI interpreter.
+     *
+     * @param[in]  aBuffer    A pointer to a memory buffer for the CLI interpreter.
+     * @param[in]  aSize      The size of the memory buffer.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aCallback  A callback method called to process CLI output.
+     * @param[in]  aContext   A user context pointer.
+     *
+     * @returns A pointer to the initialized CLI interpreter, or `nullptr` if @p aSize is too small.
+     */
+    static Interpreter *Init(void               *aBuffer,
+                             size_t              aSize,
+                             otInstance         *aInstance,
+                             otCliOutputCallback aCallback,
+                             void               *aContext);
+
+    /**
+     * Finalizes the CLI interpreter.
+     */
+    void Finalize(void);
 
     /**
      * Interprets a CLI command.
@@ -177,15 +214,28 @@ public:
      *
      * @param[in]  aCommands  A pointer to an array with user commands.
      * @param[in]  aLength    @p aUserCommands length.
-     * @param[in]  aContext   @p aUserCommands length.
+     * @param[in]  aContext   Context to use when invoking the command handler.
      *
-     * @retval OT_ERROR_NONE    Successfully updated command table with commands from @p aCommands.
-     * @retval OT_ERROR_FAILED  No available UserCommandsEntry to register requested user commands.
+     * @retval OT_ERROR_NONE     Successfully updated command table with commands from @p aCommands.
+     * @retval OT_ERROR_NO_BUFS  No available `UserCommandsEntry` to register the requested user commands.
      */
     otError SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
 
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+    /**
+     * Configures whether or not the CLI interpreter outputs prompt string.
+     *
+     * It is enabled by default.
+     *
+     * @param[in] aEnabled  TRUE to enable outputting prompt, FALSE to disable.
+     */
+    void SetPromptConfig(bool aEnabled);
+#endif
+
 protected:
+#if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
     static Interpreter *sInterpreter;
+#endif
 
 private:
     static constexpr uint8_t  kIndentSize            = 4;
@@ -260,7 +310,7 @@ private:
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-    void HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const Ip6::MessageInfo *aMessageInfo);
+    void HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
     static void HandleDiagnosticGetResponse(otError              aError,
                                             otMessage           *aMessage,
                                             const otMessageInfo *aMessageInfo,
@@ -353,6 +403,9 @@ private:
     UserCommandsEntry mUserCommands[kMaxUserCommandEntries];
     bool              mCommandIsPending;
     bool              mInternalDebugCommand;
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+    bool mPromptEnabled;
+#endif
 
     TimerMilliContext mTimer;
 
@@ -391,6 +444,10 @@ private:
 
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
     TcpExample mTcp;
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE
+    PlatTcp mPlatTcp;
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE

@@ -178,14 +178,10 @@ void Test9_2_11(void)
      * - Pass Criteria: N/A
      */
 
-    leader.AllowList(commissioner);
-    leader.AllowList(router1);
-    commissioner.AllowList(leader);
-    router1.AllowList(leader);
-    router1.AllowList(med1);
-    router1.AllowList(sed1);
-    med1.AllowList(router1);
-    sed1.AllowList(router1);
+    AllowLinkBetween(leader, commissioner);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, med1);
+    AllowLinkBetween(router1, sed1);
 
     {
         MeshCoP::Dataset::Info datasetInfo;

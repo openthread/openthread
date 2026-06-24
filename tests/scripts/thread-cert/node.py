@@ -1608,40 +1608,6 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def set_domain_prefix(self, prefix, flags='prosD'):
-        self.add_prefix(prefix, flags)
-        self.register_netdata()
-
-    def remove_domain_prefix(self, prefix):
-        self.remove_prefix(prefix)
-        self.register_netdata()
-
-    def set_next_dua_response(self, status: Union[str, int], iid=None):
-        # Convert 5.00 to COAP CODE 160
-        if isinstance(status, str):
-            assert '.' in status
-            status = status.split('.')
-            status = (int(status[0]) << 5) + int(status[1])
-
-        cmd = 'bbr mgmt dua {}'.format(status)
-        if iid is not None:
-            cmd += ' ' + str(iid)
-        self.send_command(cmd)
-        self._expect_done()
-
-    def set_dua_iid(self, iid: str):
-        assert len(iid) == 16
-        int(iid, 16)
-
-        cmd = 'dua iid {}'.format(iid)
-        self.send_command(cmd)
-        self._expect_done()
-
-    def clear_dua_iid(self):
-        cmd = 'dua iid clear'
-        self.send_command(cmd)
-        self._expect_done()
-
     def multicast_listener_list(self) -> Dict[IPv6Address, int]:
         cmd = 'bbr mgmt mlr listener'
         self.send_command(cmd)
@@ -2153,7 +2119,7 @@ class NodeImpl:
         omr_addrs = []
         for addr in self.get_addrs():
             for prefix in prefixes:
-                if (addr.startswith(prefix)) and (addr != self.__getDua()):
+                if addr.startswith(prefix):
                     omr_addrs.append(addr)
                     break
 
@@ -2202,13 +2168,6 @@ class NodeImpl:
 
         return None
 
-    def __getDua(self) -> Optional[str]:
-        for ip6Addr in self.get_addrs():
-            if re.match(config.DOMAIN_PREFIX_REGEX_PATTERN, ip6Addr, re.I):
-                return ip6Addr
-
-        return None
-
     def get_ip6_address_by_prefix(self, prefix: Union[str, IPv6Network]) -> List[IPv6Address]:
         """Get addresses matched with given prefix.
 
@@ -2244,8 +2203,6 @@ class NodeImpl:
             return self.__getAloc()
         elif address_type == config.ADDRESS_TYPE.ML_EID:
             return self.__getMleid()
-        elif address_type == config.ADDRESS_TYPE.DUA:
-            return self.__getDua()
         elif address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
         elif address_type == config.ADDRESS_TYPE.OMR:

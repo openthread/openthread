@@ -126,9 +126,7 @@ void Test7_1_2(void)
      */
     Log("Step 2: Router_1 (DUT)");
 
-    /** Use AllowList feature to specify links between nodes. */
-    router1.AllowList(leader);
-    leader.AllowList(router1);
+    AllowLinkBetween(router1, leader);
 
     {
         NetworkData::OnMeshPrefixConfig config;
@@ -182,9 +180,7 @@ void Test7_1_2(void)
      */
     Log("Step 5: MED_1");
 
-    /** Use AllowList feature to specify links between nodes. */
-    med1.AllowList(router1);
-    router1.AllowList(med1);
+    AllowLinkBetween(med1, router1);
 
     /**
      * Step 6: Router_1 (DUT)
@@ -206,9 +202,7 @@ void Test7_1_2(void)
      */
     Log("Step 7: SED_1");
 
-    /** Use AllowList feature to specify links between nodes. */
-    sed1.AllowList(router1);
-    router1.AllowList(sed1);
+    AllowLinkBetween(sed1, router1);
 
     /**
      * Step 8: Router_1 (DUT)

@@ -51,19 +51,19 @@ otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildr
 
 uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().GetMaxChildIpAddresses();
+    return AsCoreType(aInstance).Get<ChildTable>().GetMaxChildIpAddresses();
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddresses)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().SetMaxChildIpAddresses(aMaxIpAddresses);
+    return AsCoreType(aInstance).Get<ChildTable>().OverrideMaxChildIpAddresses(aMaxIpAddresses);
 }
 #endif
 
 bool otThreadIsRouterEligible(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().IsRouterEligible();
+    return AsCoreType(aInstance).Get<Mle::Mle>().IsRouterRoleAllowed();
 }
 
 otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)
@@ -71,10 +71,12 @@ otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)
     return AsCoreType(aInstance).Get<Mle::Mle>().SetRouterEligible(aEligible);
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
     return AsCoreType(aInstance).Get<Mle::Mle>().SetPreferredRouterId(aRouterId);
 }
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 const otDeviceProperties *otThreadGetDeviceProperties(otInstance *aInstance)
@@ -150,6 +152,7 @@ uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance)
 void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold)
 {
     AsCoreType(aInstance).Get<Mle::Mle>().SetRouterUpgradeThreshold(aThreshold);
+    AsCoreType(aInstance).Get<Mle::Mle>().SetLeaderUpgradeThreshold(aThreshold);
 }
 
 uint8_t otThreadGetChildRouterLinks(otInstance *aInstance)
@@ -257,6 +260,8 @@ otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntr
                                                                           AsCoreType(aIterator));
 }
 
+void otThreadClearEidCache(otInstance *aInstance) { AsCoreType(aInstance).Get<AddressResolver>().Clear(); }
+
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
@@ -339,17 +344,6 @@ void otThreadSendAddressNotification(otInstance               *aInstance,
     AsCoreType(aInstance).Get<AddressResolver>().SendAddressQueryResponse(AsCoreType(aTarget), AsCoreType(aMlIid),
                                                                           nullptr, AsCoreType(aDestination));
 }
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-otError otThreadSendProactiveBackboneNotification(otInstance               *aInstance,
-                                                  otIp6Address             *aTarget,
-                                                  otIp6InterfaceIdentifier *aMlIid,
-                                                  uint32_t                  aTimeSinceLastTransaction)
-{
-    return AsCoreType(aInstance).Get<BackboneRouter::Manager>().SendProactiveBackboneNotification(
-        AsCoreType(aTarget), AsCoreType(aMlIid), aTimeSinceLastTransaction);
-}
-#endif
 
 void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled)
 {

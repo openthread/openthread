@@ -96,7 +96,7 @@ otError PingSender::Process(Arg aArgs[])
         aArgs++;
     }
 
-    SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64Synth));
+    SuccessOrExit(error = ParseOrSynthesizeIp6Address(aArgs[0], config.mDestination, nat64Synth));
 
     if (nat64Synth)
     {
@@ -248,8 +248,6 @@ void PingSender::HandlePingStatistics(const otPingSenderStatistics *aStatistics)
         OutputResult(OT_ERROR_NONE);
     }
 }
-
-void PingSender::OutputResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
 
 } // namespace Cli
 } // namespace ot

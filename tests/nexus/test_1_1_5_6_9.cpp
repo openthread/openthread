@@ -118,15 +118,11 @@ void Test5_6_9(void)
      * - Router 1 (DUT) and MED 1
      * - Router 1 (DUT) and SED 1
      */
-    leader.AllowList(router1);
-    leader.AllowList(router2);
-    router1.AllowList(leader);
-    router2.AllowList(leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, router2);
 
-    router1.AllowList(med1);
-    router1.AllowList(sed1);
-    med1.AllowList(router1);
-    sed1.AllowList(router1);
+    AllowLinkBetween(router1, med1);
+    AllowLinkBetween(router1, sed1);
 
     nexus.AdvanceTime(0);
 
@@ -325,7 +321,7 @@ void Test5_6_9(void)
     Log("---------------------------------------------------------------------------------------");
     /**
      * Step 10: Router_1 (DUT)
-     * - Description: Depending on the the DUT’s implementation, automatically sends new stable network data to SED_1
+     * - Description: Depending on the DUT’s implementation, automatically sends new stable network data to SED_1
      *   via a unicast MLE Child Update Request or MLE Data Response.
      * - Pass Criteria: The DUT MUST send EITHER a unicast MLE Child Update Request OR a unicast MLE Data Response to
      *   SED_1, which includes the following TLVs:

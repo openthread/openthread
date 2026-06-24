@@ -118,6 +118,7 @@ proc spawn_node {id {type ""} {args ""}} {
             # avoid the error: "bind(sTxFd): Address already in use"
             sleep 0.2
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_posix_apps/ot-cli $radio_url
+            sleep 0.1
             send "factoryreset\n"
             wait_for "state" "disabled"
             expect_line "Done"
@@ -127,6 +128,7 @@ proc spawn_node {id {type ""} {args ""}} {
         cli {
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_simulation_apps/cli/ot-cli-ftd \
                 -L$ot_simulation_local_host $id
+            sleep 0.1
             send "factoryreset\n"
             wait_for "state" "disabled"
             expect_line "Done"
@@ -136,6 +138,7 @@ proc spawn_node {id {type ""} {args ""}} {
         mtd {
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_simulation_apps/cli/ot-cli-mtd \
                 -L$ot_simulation_local_host $id
+            sleep 0.1
             send "factoryreset\n"
             wait_for "state" "disabled"
             expect_line "Done"
@@ -306,6 +309,8 @@ proc spawn_tcat_client_for_node {id {cert_path "tools/tcat_ble_client/auth"}} {
     switch_node $id
 
     send "tcat start\n"
+    expect_line "Done"
+    send "tcat active\n"
     expect_line "Done"
 
     spawn python "tools/tcat_ble_client/bbtc.py" --simulation $id --cert_path $cert_path

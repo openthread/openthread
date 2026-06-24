@@ -27,6 +27,7 @@
  */
 
 #include "nexus_pcap.hpp"
+
 #include "nexus_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
@@ -34,6 +35,8 @@
 
 namespace ot {
 namespace Nexus {
+
+#ifndef __EMSCRIPTEN__
 
 OT_TOOL_PACKED_BEGIN
 struct Epb
@@ -263,6 +266,28 @@ void Pcap::WritePacket(const InfraIf::LinkLayerAddress &aSrcAddr,
 exit:
     return;
 }
+
+#else // __EMSCRIPTEN__
+
+Pcap::Pcap(void) {}
+
+Pcap::~Pcap(void) {}
+
+void Pcap::Open(const char *) {}
+
+void Pcap::Close(void) {}
+
+void Pcap::WriteFrame(const otRadioFrame &, uint64_t) {}
+
+void Pcap::WritePacket(const InfraIf::LinkLayerAddress &,
+                       const InfraIf::LinkLayerAddress &,
+                       const uint8_t *,
+                       uint16_t,
+                       uint64_t)
+{
+}
+
+#endif // __EMSCRIPTEN__
 
 } // namespace Nexus
 } // namespace ot

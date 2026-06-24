@@ -1660,13 +1660,15 @@ private:
     private:
         static constexpr uint32_t kMinProcessDelay = 400; // msec
         static constexpr uint32_t kMaxProcessDelay = 500; // msec
-        static constexpr uint16_t kMaxNumMessages  = 10;
+        static constexpr uint16_t kMaxRxMsgEntries = 64;
 
         struct RxMsgEntry : public InstanceLocator,
                             public LinkedListEntry<RxMsgEntry>,
                             public Heap::Allocatable<RxMsgEntry>,
                             private NonCopyable
         {
+            static constexpr uint16_t kMaxNumMessagesPerEntry = 10;
+
             explicit RxMsgEntry(Instance &aInstance);
 
             bool Matches(const AddressInfo &aAddress) const;

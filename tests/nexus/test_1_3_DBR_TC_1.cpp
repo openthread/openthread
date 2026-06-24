@@ -116,8 +116,6 @@ void Test_1_3_DBR_TC_1(void)
      * - Pass Criteria: N/A
      */
 
-    eth1.mInfraIf.Init(eth1);
-
     Log("---------------------------------------------------------------------------------------");
     Log("Step 2: Device: BR 1 (DUT) Description (DBR-1.1): Enable.");
 

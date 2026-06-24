@@ -135,10 +135,10 @@ void Test5_3_10(void)
     nexus.AdvanceTime(kFormNetworkTime);
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
 
-    leader.AllowList(br);
-    br.AllowList(leader);
+    AllowLinkBetween(leader, br);
 
     br.Join(leader);
+
     nexus.AdvanceTime(kAttachToRouterTime);
     VerifyOrQuit(br.Get<Mle::Mle>().IsRouter());
 
@@ -167,17 +167,10 @@ void Test5_3_10(void)
      * - Pass Criteria: N/A
      */
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    leader.AllowList(dut);
-    dut.AllowList(leader);
-
-    router1.AllowList(dut);
-    dut.AllowList(router1);
-
-    dut.AllowList(med1);
-    med1.AllowList(dut);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, dut);
+    AllowLinkBetween(router1, dut);
+    AllowLinkBetween(dut, med1);
 
     router1.Join(leader);
     dut.Join(leader);

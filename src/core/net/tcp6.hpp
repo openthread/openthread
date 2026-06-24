@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+
 #include <openthread/tcp.h>
 
 #include "common/as_core_type.hpp"
@@ -86,8 +88,6 @@ namespace Ip6 {
 class Tcp : public InstanceLocator, private NonCopyable
 {
 public:
-    typedef TcpHeader Header; ///< TCP Header.
-
     /**
      * Represents an endpoint of a TCP/IPv6 connection.
      */
@@ -562,6 +562,8 @@ private:
     static constexpr uint8_t kReceiveAvailableCallbackFlag = (1 << 3);
     static constexpr uint8_t kDisconnectedCallbackFlag     = (1 << 4);
 
+    typedef TcpHeader Header;
+
     void ProcessSignals(Endpoint             &aEndpoint,
                         otLinkedBuffer       *aPriorHead,
                         size_t                aPriorBacklog,
@@ -591,5 +593,7 @@ DefineCoreType(otTcpEndpoint, Ip6::Tcp::Endpoint);
 DefineCoreType(otTcpListener, Ip6::Tcp::Listener);
 
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_TCP_ENABLE
 
 #endif // OT_CORE_NET_TCP6_HPP_

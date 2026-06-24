@@ -448,7 +448,7 @@ void Mpl::HandleRetransmissionTimer(void)
 void Mpl::Metadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)
 {
     // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
-    uint8_t t = (aInterval == 0) ? aInterval : Random::NonCrypto::GetUint8InRange(0, aInterval);
+    uint8_t t = (aInterval == 0) ? aInterval : Random::NonCrypto::GenerateUpToExcluding(aInterval);
 
     // Set transmission time at the beginning of the next interval.
     mTransmissionTime = aCurrentTime + static_cast<uint32_t>(mIntervalOffset + t);

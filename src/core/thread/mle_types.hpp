@@ -622,45 +622,99 @@ public:
     void SetLeaderRouterId(uint8_t aRouterId) { mLeaderRouterId = aRouterId; }
 };
 
+/**
+ * Represents a Router ID Sequence and Mask.
+ *
+ * This type is defined as packed and is used in `RouteTlv` and `ThreadRouterMaskTlv`.
+ */
 OT_TOOL_PACKED_BEGIN
-class RouterIdSet : public Equatable<RouterIdSet>, public Clearable<RouterIdSet>
+class RouterIdMask : public Clearable<RouterIdMask>
 {
 public:
     /**
-     * Indicates whether or not a Router ID bit is set.
+     * The size of the Router ID mask in bytes.
+     */
+    static constexpr uint8_t kMaskSize = BytesForBitSize(kMaxRouterId + 1);
+
+    /**
+     * Indicates whether or not the mask is valid (count of allocated Router IDs is within the limit).
+     *
+     * @retval TRUE   If the mask is valid.
+     * @retval FALSE  If the mask is not valid.
+     */
+    bool IsValid(void) const { return (DetermineAllocatedCount() <= kMaxRouters); }
+
+    /**
+     * Gets the Router ID Sequence number associated with the mask.
+     *
+     * @returns The Router ID Sequence number.
+     */
+    uint8_t GetSequence(void) const { return mSequence; }
+
+    /**
+     * Sets the Router ID Sequence value.
+     *
+     * @param[in]  aSequence  The Router ID Sequence value.
+     */
+    void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
+
+    /**
+     * Indicates whether or not a Router ID bit is set in the mask.
      *
      * @param[in]  aRouterId  The Router ID.
      *
-     * @retval TRUE   If the Router ID bit is set.
-     * @retval FALSE  If the Router ID bit is not set.
+     * @retval TRUE   If the Router ID bit is set in the mask.
+     * @retval FALSE  If the Router ID bit is not set in the mask.
      */
-    bool Contains(uint8_t aRouterId) const { return (mRouterIdSet[aRouterId / 8] & MaskFor(aRouterId)) != 0; }
+    bool IsAllocated(uint8_t aRouterId) const { return (mMask[aRouterId / 8] & MaskFor(aRouterId)) != 0; }
 
     /**
-     * Sets a given Router ID.
+     * Sets a given Router ID in the mask.
      *
      * @param[in]  aRouterId  The Router ID to set.
      */
-    void Add(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] |= MaskFor(aRouterId); }
+    void Add(uint8_t aRouterId) { mMask[aRouterId / 8] |= MaskFor(aRouterId); }
 
     /**
-     * Removes a given Router ID.
+     * Removes a given Router ID from the mask.
      *
      * @param[in]  aRouterId  The Router ID to remove.
      */
-    void Remove(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] &= ~MaskFor(aRouterId); }
+    void Remove(uint8_t aRouterId) { mMask[aRouterId / 8] &= ~MaskFor(aRouterId); }
 
     /**
-     * Calculates the number of allocated Router IDs in the set.
+     * Calculates the number of allocated Router IDs in the mask.
      *
-     * @returns The number of allocated Router IDs in the set.
+     * @returns The number of allocated Router IDs in the mask.
      */
-    uint8_t GetNumberOfAllocatedIds(void) const;
+    uint8_t DetermineAllocatedCount(void) const;
+
+    /**
+     * Appends the Router ID mask (excluding the sequence) to a message.
+     *
+     * @param[in]  aMessage  The message to append to.
+     *
+     * @retval kErrorNone    Successfully appended the mask.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     */
+    Error AppendMaskTo(Message &aMessage) const;
+
+    /**
+     * Reads the Router ID mask (excluding the sequence) from a message within a given offset range.
+     *
+     * @param[in]  aMessage      The message to read from.
+     * @param[in]  aOffsetRange  The offset range to read from.
+     *
+     * @retval kErrorNone   Successfully read the mask.
+     * @retval kErrorParse  Not enough bytes remaining in the message to read the mask.
+     */
+    Error ReadMaskFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
 private:
     static uint8_t MaskFor(uint8_t aRouterId) { return (0x80 >> (aRouterId % 8)); }
 
-    uint8_t mRouterIdSet[BytesForBitSize(kMaxRouterId + 1)];
+    uint8_t mSequence;
+    uint8_t mMask[kMaskSize];
 } OT_TOOL_PACKED_END;
 
 class TxChallenge;

@@ -124,7 +124,7 @@ CoapBase::CoapBase(Instance &aInstance, Transmitter aTransmitter)
     , mResponseCache(aInstance)
     , mResourceHandler(nullptr)
     , mTransmitter(aTransmitter)
-    , mMessageId(Random::NonCrypto::GetUint16())
+    , mMessageId(Random::NonCrypto::Generate<uint16_t>())
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     , mLastResponse(nullptr)
 #endif
@@ -618,7 +618,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
             if (shouldObserve)
             {
                 // This is a RFC7641 notification.  The request is *not* done!
-                request.InvokeResponseHandler(&aRxMsg, kErrorNone);
+                mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
 
                 request.MarkAsAcknowledged();
                 ExitNow();
@@ -648,7 +648,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         if (shouldObserve)
         {
-            request.InvokeResponseHandler(&aRxMsg, kErrorNone);
+            mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
 
             // When any Observe response is seen, consider a NON observe
             // request "acknowledged" at this point. This will keep the
@@ -669,7 +669,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
 
         if (request.HasResponseHandler() && request.GetDestinationAddress().IsMulticast())
         {
-            request.InvokeResponseHandler(&aRxMsg, kErrorNone);
+            mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
         }
         else
         {
@@ -978,10 +978,18 @@ Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStrin
             case 2:
                 if (resource.mTransmitHook != nullptr)
                 {
-                    if ((error = ProcessBlock2Request(aRxMsg, resource)) != kErrorNone)
+                    switch (ProcessBlock2Request(aRxMsg, resource))
                     {
+                    case kErrorNone:
+                        break;
+                    case kErrorNoFrameReceived:
+                        IgnoreError(SendResponse(kCodeRequestIncomplete, aRxMsg));
+                        error = kErrorDrop;
+                        break;
+                    default:
                         IgnoreError(SendResponse(kCodeInternalError, aRxMsg));
                         error = kErrorDrop;
+                        break;
                     }
                 }
                 break;
@@ -1268,6 +1276,8 @@ Error CoapBase::ProcessBlock2Request(Msg &aRxMsg, const ResourceBlockWise &aReso
         ExitNow();
     }
 
+    VerifyOrExit(mLastResponse != nullptr, error = kErrorNoFrameReceived);
+
     VerifyOrExit((response = NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = response->Init(kTypeAck, kCodeContent, aRxMsg.GetMessageId()));
@@ -1525,6 +1535,7 @@ bool CoapBase::Request::IsObserveSubscription(void) const
 
 CoapBase::PendingRequests::PendingRequests(Instance &aInstance, CoapBase &aCoapBase)
     : mCoapBase(aCoapBase)
+    , mDispatchingRequest(nullptr)
     , mTimer(aInstance, HandleTimer, this)
 {
 }
@@ -1622,11 +1633,46 @@ void CoapBase::PendingRequests::FinalizeRequest(Request &aRequest, Error aResult
 {
     VerifyOrExit(aRequest.HasMessage());
 
-    Remove(aRequest);
-    aRequest.InvokeResponseHandler(aResponse, aResult);
+    mRequestMessages.Dequeue(*aRequest.mMessage);
+
+    DispatchResponse(aRequest, aResult, aResponse);
+
+    aRequest.mMessage->Free();
+    aRequest.Clear();
 
 exit:
     return;
+}
+
+void CoapBase::PendingRequests::DispatchResponse(Request &aRequest, Error aResult)
+{
+    DispatchResponse(aRequest, aResult, /* aResponse */ nullptr);
+}
+
+void CoapBase::PendingRequests::DispatchResponse(Request &aRequest, Error aResult, Msg *aResponse)
+{
+    const Request *prev = mDispatchingRequest;
+
+    mDispatchingRequest = &aRequest;
+    aRequest.GetCallbacks().InvokeResponseHandler(aResponse, aResult);
+    mDispatchingRequest = prev;
+}
+
+Error CoapBase::PendingRequests::GetDispatchingRequest(OwnedPtr<Message> &aMessage) const
+{
+    Error error = kErrorNotFound;
+
+    VerifyOrExit(mDispatchingRequest != nullptr);
+    VerifyOrExit(mDispatchingRequest->IsConfirmable());
+    VerifyOrExit(mDispatchingRequest->HasMessage());
+
+    aMessage.Reset(mCoapBase.CloneMessageWithout<Request::Metadata>(mDispatchingRequest->GetMessage()));
+    VerifyOrExit(aMessage != nullptr, error = kErrorNoBufs);
+
+    error = kErrorNone;
+
+exit:
+    return error;
 }
 
 void CoapBase::PendingRequests::AbortAllRequests(void)
@@ -1676,7 +1722,7 @@ void CoapBase::PendingRequests::FinalizeRemovedRequestsIn(MessageQueue &aQueue, 
         Request request;
 
         request.InitFrom(message);
-        request.InvokeResponseHandler(/* aResponse */ nullptr, aResult);
+        DispatchResponse(request, aResult);
     }
 
     aQueue.DequeueAndFreeAll();
@@ -1999,8 +2045,8 @@ exit:
 
 uint32_t TxParameters::CalculateInitialRetransmissionTimeout(void) const
 {
-    return Random::NonCrypto::GetUint32InRange(
-        mAckTimeout, mAckTimeout * mAckRandomFactorNumerator / mAckRandomFactorDenominator + 1);
+    return Random::NonCrypto::GenerateInClosedRange<uint32_t>(mAckTimeout, mAckTimeout * mAckRandomFactorNumerator /
+                                                                               mAckRandomFactorDenominator);
 }
 
 uint32_t TxParameters::CalculateExchangeLifetime(void) const

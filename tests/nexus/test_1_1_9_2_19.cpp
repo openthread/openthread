@@ -130,8 +130,7 @@ void RunTest9_2_19(Topology aTopology, const char *aJsonFile)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");
 
-    leader.AllowList(commissioner);
-    commissioner.AllowList(leader);
+    AllowLinkBetween(leader, commissioner);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

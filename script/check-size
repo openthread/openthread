@@ -125,7 +125,7 @@ build_nrf52840()
     git archive "${sha}" | tar x -C "${OT_TMP_DIR}/${folder}/openthread"
 
     if [ ! -e "${OT_TMP_DIR}/${folder}/openthread/examples/config/${config_name}" ]; then
-        # Check if the the config headers are not present, copy from
+        # Check if the config headers are not present, copy from
         # the main sha.
         case "$1" in
             br)

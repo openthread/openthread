@@ -100,12 +100,7 @@ void RunTest6_3_2(Topology aTopology, const char *aJsonFile)
         break;
     }
 
-    /**
-     * Use AllowList to specify links between nodes. There is a link between the following node pairs:
-     * - Leader and SED 1 (DUT)
-     */
-    leader.AllowList(dut);
-    dut.AllowList(leader);
+    AllowLinkBetween(leader, dut);
 
     nexus.AdvanceTime(0);
 
@@ -259,8 +254,7 @@ void RunTest6_3_2(Topology aTopology, const char *aJsonFile)
      *   RF isolation, the test will fail because the DUT will go through re-attachment when it emerges.)
      * - Pass Criteria: N/A
      */
-    leader.AllowList(dut);
-    dut.AllowList(leader);
+    AllowLinkBetween(leader, dut);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 10: MED_1 (DUT)");

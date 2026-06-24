@@ -39,6 +39,7 @@ set(COMMON_COMPILE_OPTIONS
     -DOPENTHREAD_FTD=1
     -DOPENTHREAD_MTD=0
     -DOPENTHREAD_RADIO=0
+    -DOPENTHREAD_CONFIG_USE_STD_NEW=1
 )
 
 set(COMMON_LIBS
@@ -48,6 +49,7 @@ set(COMMON_LIBS
     ${OT_MBEDTLS}
     $ENV{LIB_FUZZING_ENGINE}
     ot-config
+    openthread-cli-ftd
 )
 
 target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")

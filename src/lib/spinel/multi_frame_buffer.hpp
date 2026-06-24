@@ -40,6 +40,7 @@
 
 #include <openthread/error.h>
 
+#include "common/code_utils.hpp"
 #include "lib/utils/endian.hpp"
 
 namespace ot {
@@ -179,6 +180,7 @@ public:
      */
     MultiFrameBuffer(void)
         : FrameWritePointer()
+        , mBufferCleared(true)
     {
         Clear();
     }
@@ -193,6 +195,7 @@ public:
         mWriteFrameStart = mBuffer;
         mWritePointer    = mBuffer + kHeaderSize;
         mRemainingLength = kSize - kHeaderSize;
+        mBufferCleared   = true;
 
         IgnoreError(SetSkipLength(0));
     }
@@ -348,6 +351,17 @@ public:
 
         assert(aFrame == nullptr || (mBuffer <= aFrame && aFrame < GetArrayEnd(mBuffer)));
 
+        if (aFrame == nullptr)
+        {
+            mBufferCleared = false;
+        }
+        else if (mBufferCleared)
+        {
+            aLength = 0;
+            aFrame  = nullptr;
+            ExitNow(error = OT_ERROR_NOT_FOUND);
+        }
+
         aFrame = (aFrame == nullptr) ? mBuffer : aFrame + aLength;
 
         if (HasSavedFrame() && (aFrame != mWriteFrameStart))
@@ -365,6 +379,7 @@ public:
             error   = OT_ERROR_NOT_FOUND;
         }
 
+    exit:
         return error;
     }
 
@@ -385,6 +400,7 @@ public:
             mWritePointer -= len;
             mWriteFrameStart -= len;
             mRemainingLength += len;
+            mBufferCleared = true;
         }
     }
 
@@ -443,6 +459,7 @@ private:
 
     uint8_t  mBuffer[kSize];
     uint8_t *mWriteFrameStart; // Pointer to start of current frame being written.
+    bool     mBufferCleared;   // Tracks if buffer was cleared during an active iteration.
 };
 
 } // namespace Spinel

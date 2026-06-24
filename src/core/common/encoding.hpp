@@ -427,6 +427,38 @@ template <> inline void Write(uint64_t aValue, uint8_t *aBuffer) { WriteUint64(a
 
 } // namespace LittleEndian
 
+/**
+ * Represents the byte ordering (endianness) encoding.
+ */
+enum Encoding : uint8_t
+{
+    kBigEndian,    ///< Big-endian.
+    kLittleEndian, ///< Little-endian.
+};
+
+/**
+ * Swaps the byte order of a given integer value from the host representation to the specified encoding,
+ * or vice-versa.
+ *
+ * @tparam  kEncoding  The target encoding (big or little endian).
+ * @tparam  UintType   The unsigned integer type.
+ *
+ * @param[in]  aValue  The value to swap.
+ *
+ * @returns The swapped value.
+ */
+template <Encoding kEncoding, typename UintType> UintType HostSwap(UintType aValue);
+
+template <> inline uint8_t  HostSwap<kBigEndian>(uint8_t aValue) { return aValue; }
+template <> inline uint16_t HostSwap<kBigEndian>(uint16_t aValue) { return BigEndian::HostSwap16(aValue); }
+template <> inline uint32_t HostSwap<kBigEndian>(uint32_t aValue) { return BigEndian::HostSwap32(aValue); }
+template <> inline uint64_t HostSwap<kBigEndian>(uint64_t aValue) { return BigEndian::HostSwap64(aValue); }
+
+template <> inline uint8_t  HostSwap<kLittleEndian>(uint8_t aValue) { return aValue; }
+template <> inline uint16_t HostSwap<kLittleEndian>(uint16_t aValue) { return LittleEndian::HostSwap16(aValue); }
+template <> inline uint32_t HostSwap<kLittleEndian>(uint32_t aValue) { return LittleEndian::HostSwap32(aValue); }
+template <> inline uint64_t HostSwap<kLittleEndian>(uint64_t aValue) { return LittleEndian::HostSwap64(aValue); }
+
 } // namespace ot
 
 #endif // OT_CORE_COMMON_ENCODING_HPP_

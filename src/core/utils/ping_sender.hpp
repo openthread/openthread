@@ -160,9 +160,9 @@ private:
                                   otMessage           *aMessage,
                                   const otMessageInfo *aMessageInfo,
                                   const otIcmp6Header *aIcmpHeader);
-    void        HandleIcmpReceive(const Message           &aMessage,
-                                  const Ip6::MessageInfo  &aMessageInfo,
-                                  const Ip6::Icmp::Header &aIcmpHeader);
+    void        HandleIcmpReceive(const Message          &aMessage,
+                                  const Ip6::MessageInfo &aMessageInfo,
+                                  const Ip6::Icmp6Header &aIcmpHeader);
 
     using PingTimer = TimerMilliIn<PingSender, &PingSender::HandleTimer>;
 

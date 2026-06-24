@@ -48,6 +48,21 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+ *
+ * Define as 1 to enable the static CLI interpreter.
+ *
+ * This configuration option enables the static CLI interpreter, allowing the CLI module to statically allocate and
+ * provide a single interpreter instance.
+ *
+ * This is intended to provide backward compatibility with the original `otCli*` APIs. It can be disabled to save RAM
+ * if the static CLI interpreter is not needed.
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+#define OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
  *
  * The maximum size of the CLI line in bytes including the null terminator.
@@ -80,6 +95,18 @@
  */
 #ifndef OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE
 #define OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE
+ *
+ * Indicates whether the plat-tcp CLI commands are enabled.
+ *
+ * These CLI commands are intended primarily for testing and evaluation of the `otPlatTcp` API implementations.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE
+#define OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE 1
 #endif
 
 /**

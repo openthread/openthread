@@ -39,10 +39,7 @@ namespace ot {
 
 static Instance *sInstance;
 
-enum
-{
-    kMaxChildIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD,
-};
+constexpr uint16_t kMaxChildIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
 
 void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, const Ip6::Address aAddressList[])
 {
@@ -112,7 +109,7 @@ void TestChildIp6Address(void)
     const uint8_t            meshLocalIidArray[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
     Ip6::InterfaceIdentifier meshLocalIid;
 
-    meshLocalIid.SetBytes(meshLocalIidArray);
+    meshLocalIid.InitFrom(meshLocalIidArray);
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != nullptr);
@@ -126,9 +123,7 @@ void TestChildIp6Address(void)
     numAddresses = 0;
 
     // First addresses uses the mesh local prefix (mesh-local address).
-    addresses[numAddresses] = sInstance->Get<Mle::Mle>().GetMeshLocalEid();
-    addresses[numAddresses].SetIid(meshLocalIid);
-
+    sInstance->Get<Mle::Mle>().ComposeMeshLocalAddress(meshLocalIid, addresses[numAddresses]);
     numAddresses++;
 
     for (const char *ip6Address : ip6Addresses)

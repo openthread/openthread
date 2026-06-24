@@ -224,6 +224,17 @@ public:
     Error SendMessageToLeaderAloc(Message &aMessage, ResponseHandler aHandler, void *aContext);
 
     /**
+     * Sends a TMF response containing a State TLV.
+     *
+     * @param[in] aRequest  The incoming TMF request message.
+     * @param[in] aState    The state value to append in the State TLV.
+     *
+     * @retval kErrorNone     Successfully sent the response.
+     * @retval kErrorNoBufs   Insufficient available buffers to allocate the response.
+     */
+    Error SendResponseWithStateTlv(const Msg &aRequest, uint8_t aState);
+
+    /**
      * Converts a TMF message priority to IPv6 header DSCP value.
      *
      * @param[in] aPriority  The message priority to convert.

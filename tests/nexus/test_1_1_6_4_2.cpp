@@ -126,11 +126,8 @@ void RunTest6_4_2(Topology aTopology, const char *aJsonFile)
      * - Pass Criteria: N/A
      */
 
-    /** Use AllowList feature to restrict the topology. */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-    router1.AllowList(dut);
-    dut.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, dut);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

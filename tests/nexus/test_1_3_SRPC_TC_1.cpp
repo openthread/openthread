@@ -154,18 +154,10 @@ void Test_1_3_SRPC_TC_1(const char *aJsonFileName)
      *   - N/A
      */
 
-    /** Use AllowList to specify links between nodes. */
-    br1.AllowList(br2);
-    br1.AllowList(router1);
-
-    br2.AllowList(br1);
-    br2.AllowList(router1);
-
-    router1.AllowList(br1);
-    router1.AllowList(br2);
-    router1.AllowList(ed1);
-
-    ed1.AllowList(router1);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(br1, router1);
+    AllowLinkBetween(br2, router1);
+    AllowLinkBetween(router1, ed1);
 
     br1.Join(router1);
     nexus.AdvanceTime(kAttachToRouterTime * 2);

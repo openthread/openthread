@@ -44,33 +44,150 @@ namespace Mle {
 //---------------------------------------------------------------------------------------------------------------------
 // RouteTlv
 
+Error RouteTlv::Data::ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    Error        error;
+    RouterIdMask routerIdMask;
+    OffsetRange  offsetRange = aOffsetRange;
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    bool isEven = true;
+#endif
+
+    SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, routerIdMask));
+
+    mIdSequence = routerIdMask.GetSequence();
+
+    mEntries.Clear();
+
+    for (uint8_t routerId = 0; routerId <= kMaxRouterId; routerId++)
+    {
+        Entry *entry;
+
+        if (!routerIdMask.IsAllocated(routerId))
+        {
+            continue;
+        }
+
+        entry = mEntries.PushBack();
+
+        // If `mEntries` is full, it indicates that there are more than
+        // `kMaxRouters` allocated IDs in the mask, which makes it invalid.
+
+        VerifyOrExit(entry != nullptr, error = kErrorParse);
+
+        entry->mRouterId = routerId;
+
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+        SuccessOrExit(error = aMessage.ReadAndAdvance<uint8_t>(offsetRange, entry->mRouteData));
+#else
+        {
+            EntryType value;
 
-void RouteTlv::Init(void)
-{
-    SetType(kRoute);
-    SetLength(sizeof(*this) - sizeof(Tlv));
-    mRouterIdMask.Clear();
-    ClearAllBytes(mRouteData);
-}
+            SuccessOrExit(error = aMessage.Read<EntryType>(offsetRange, value));
+            value = BigEndian::HostSwap16(value);
 
-bool RouteTlv::IsValid(void) const
-{
-    bool    isValid = false;
-    uint8_t numAllocatedIds;
+            if (isEven)
+            {
+                entry->mRouteData = ReadBits<uint16_t, kEvenEntryMask>(value);
+                offsetRange.AdvanceOffset(sizeof(uint8_t));
+            }
+            else
+            {
+                entry->mRouteData = ReadBits<uint16_t, kOddEntryMask>(value);
+                offsetRange.AdvanceOffset(sizeof(uint16_t));
+            }
 
-    VerifyOrExit(GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask));
-
-    numAllocatedIds = mRouterIdMask.GetNumberOfAllocatedIds();
-    VerifyOrExit(numAllocatedIds <= kMaxRouters);
-
-    isValid = (GetRouteDataLength() >= numAllocatedIds);
+            isEven = !isEven;
+        }
+#endif
+    }
 
 exit:
-    return isValid;
+    return error;
 }
 
-#endif // #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+bool RouteTlv::Data::IsAllocated(uint8_t aRouterId) const { return mEntries.FindMatching(aRouterId); }
+
+void RouteTlv::Data::DetermineRouterIdMask(RouterIdMask &aRouterIdMask) const
+{
+    aRouterIdMask.Clear();
+
+    aRouterIdMask.SetSequence(mIdSequence);
+
+    for (const Entry &entry : mEntries)
+    {
+        aRouterIdMask.Add(entry.mRouterId);
+    }
+}
+
+Error RouteTlv::AppendRouteDataEntry(Message    &aMessage,
+                                     LinkQuality aLqIn,
+                                     LinkQuality aLqOut,
+                                     uint8_t     aRouteCost
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+                                     ,
+                                     bool aIsEven
+#endif
+)
+{
+    Error     error;
+    EntryType entry = 0;
+
+    if (aRouteCost >= kMaxRouteCost)
+    {
+        aRouteCost = 0;
+    }
+
+    WriteBits<EntryType, kLinkQualityOutMask>(entry, aLqOut);
+    WriteBits<EntryType, kLinkQualityInMask>(entry, aLqIn);
+    WriteBits<EntryType, kRouteCostMask>(entry, aRouteCost);
+
+#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    ExitNow(error = aMessage.Append<uint8_t>(entry));
+#else
+    {
+        // Under `OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE`, each route
+        // data entry uses 1.5 bytes (12 bits). Two entries are packed
+        // into 3 bytes.
+        //
+        // For the even (first) entry, we grow the message by 2 bytes
+        // and write the 12 bits into the upper 12 bits of the new
+        // 16-bit word at the end of the message.
+        //
+        // For the odd (second) entry, we grow the message by 1 byte. We
+        // then read the last 16 bits (which overlap with the last byte
+        // of the even entry), write the new 12-bit entry into the
+        // lower 12 bits, and write the 16-bit word back. This
+        // perfectly packs the two 12-bit entries into 3 bytes.
+
+        uint16_t offset;
+        uint16_t data;
+
+        SuccessOrExit(error = aMessage.IncreaseLength(aIsEven ? sizeof(uint16_t) : sizeof(uint8_t)));
+
+        VerifyOrExit(aMessage.GetLength() >= sizeof(uint16_t), error = kErrorParse);
+        offset = aMessage.GetLength() - sizeof(uint16_t);
+
+        if (aIsEven)
+        {
+            data = 0;
+            WriteBits<uint16_t, kEvenEntryMask>(data, entry);
+        }
+        else
+        {
+            IgnoreError(aMessage.Read<uint16_t>(offset, data));
+            data = BigEndian::HostSwap16(data);
+
+            WriteBits<uint16_t, kOddEntryMask>(data, entry);
+        }
+
+        aMessage.Write<uint16_t>(offset, BigEndian::HostSwap16(data));
+    }
+#endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+
+exit:
+    return error;
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 // ConnectivityTlvValue
@@ -195,6 +312,25 @@ void LeaderDataTlvValue::Get(LeaderData &aLeaderData) const
     aLeaderData.SetStableDataVersion(mStableDataVersion);
     aLeaderData.SetLeaderRouterId(mLeaderRouterId);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// CslClockAccuracyTlvValue
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+CslClockAccuracyTlvValue::CslClockAccuracyTlvValue(uint8_t aClockAccuracy, uint8_t aUncertainty)
+    : mClockAccuracy(aClockAccuracy)
+    , mUncertainty(aUncertainty)
+{
+}
+
+void CslClockAccuracyTlvValue::Get(Mac::CslAccuracy &aAccuracy) const
+{
+    aAccuracy.SetClockAccuracy(mClockAccuracy);
+    aAccuracy.SetUncertainty(mUncertainty);
+}
+
+#endif
 
 } // namespace Mle
 } // namespace ot

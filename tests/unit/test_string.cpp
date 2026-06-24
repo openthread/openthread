@@ -36,10 +36,7 @@
 
 namespace ot {
 
-enum
-{
-    kStringSize = 10,
-};
+constexpr uint16_t kStringSize = 10;
 
 template <uint16_t kSize> void PrintString(const char *aName, const String<kSize> aString)
 {

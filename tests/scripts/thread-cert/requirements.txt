@@ -4,9 +4,11 @@
 #
 #    pip-compile requirements.in
 #
+appdirs==1.4.4
+    # via pyshark
 ipaddress==1.0.23
     # via -r requirements.in
-lxml==5.3.0
+lxml==6.1.0
     # via pyshark
 packaging==23.0
     # via pyshark
@@ -14,9 +16,9 @@ pexpect==4.8.0
     # via -r requirements.in
 ptyprocess==0.7.0
     # via pexpect
-py==1.11.0
-    # via pyshark
 pycryptodome==3.19.1
     # via -r requirements.in
 pyshark==0.6
     # via -r requirements.in
+termcolor==3.3.0
+    # via pyshark

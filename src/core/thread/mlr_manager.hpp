@@ -49,14 +49,15 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
-#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "net/netif.hpp"
 #include "thread/child.hpp"
+#include "thread/mlr_types.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/tmf.hpp"
 
 namespace ot {
+namespace Mlr {
 
 /**
  * @addtogroup core-mlr
@@ -74,41 +75,42 @@ namespace ot {
 /**
  * Implements MLR management.
  */
-class MlrManager : public InstanceLocator, private NonCopyable
+class Manager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
-    friend class ot::TimeTicker;
 
 public:
-    typedef otIp6RegisterMulticastListenersCallback MlrCallback;
+    typedef otIp6RegisterMulticastListenersCallback RegisterCallback;
 
     /**
      * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      */
-    explicit MlrManager(Instance &aInstance);
+    explicit Manager(Instance &aInstance);
 
     /**
-     * Notifies Primary Backbone Router status.
+     * Notifies the `MlrManager` of a Primary Backbone Router event.
      *
-     * @param[in]  aState   The state or state change of Primary Backbone Router.
-     * @param[in]  aConfig  The Primary Backbone Router service.
+     * @param[in]  aEvent   The Primary Backbone Router event.
      */
-    void HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState, const BackboneRouter::Config &aConfig);
+    void HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent aEvent);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    static constexpr uint16_t kMaxMlrAddresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1; ///< Max MLR addresses
-
-    typedef Array<Ip6::Address, kMaxMlrAddresses> MlrAddressArray; ///< Registered MLR addresses array.
+    /**
+     * Updates the MLR registration status of a given child's addresses.
+     *
+     * @param[in]  aChild  The child to update.
+     */
+    void UpdateChildRegistrations(Child &aChild);
 
     /**
-     * Updates the Multicast Subscription Table according to the Child information.
+     * Updates the MLR registration status of a given child's addresses.
      *
-     * @param[in]  aChild                       A reference to the child information.
-     * @param[in]  aOldMlrRegisteredAddresses   Array of the Child's previously registered IPv6 addresses.
+     * @param[in]  aChild                    The child to update.
+     * @param[in]  aOldRegisteredAddresses   Child's previously registered addresses.
      */
-    void UpdateProxiedSubscriptions(Child &aChild, const MlrAddressArray &aOldMlrRegisteredAddresses);
+    void UpdateChildRegistrations(Child &aChild, const Child::Ip6AddressArray &aOldRegisteredAddresses);
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
@@ -136,74 +138,81 @@ public:
     Error RegisterMulticastListeners(const Ip6::Address *aAddresses,
                                      uint8_t             aAddressNum,
                                      const uint32_t     *aTimeout,
-                                     MlrCallback         aCallback,
+                                     RegisterCallback    aCallback,
                                      void               *aContext);
 #endif
 
 private:
-    class AddressArray : public Array<Ip6::Address, Ip6AddressesTlv::kMaxAddresses>
+    // Delays (in msec) applied before registration attempts when new
+    // `Netif` or child multicast addresses are added. The longer
+    // delay for child addresses allows the parent to aggregate
+    // multiple address updates into a single MLR request.
+    static constexpr uint32_t kMaxNewNetifAddrRegistraionDelay  = 100;
+    static constexpr uint32_t kMinNewChildAddrRegistrationDelay = 750;
+    static constexpr uint32_t kMaxNewChildAddrRegistrationDelay = 5000;
+
+    static constexpr uint32_t kLongRenewTimeout      = 4 * Time::kOneHourInSec;    // `MLR_TIMEOUT_LONG` (in sec)
+    static constexpr uint32_t kRenewGuardTimeInMsec  = 9 * Time::kOneSecondInMsec; // (in msec)
+    static constexpr uint32_t kSendFailureRetryDelay = 1000;                       // (in msec)
+
+    enum State : uint8_t
     {
-    public:
-        bool IsEmptyOrContains(const Ip6::Address &aAddress) const { return IsEmpty() || Contains(aAddress); }
-        void AddUnique(const Ip6::Address &aAddress);
+        kStateStopped,           // Manager is stopped (e.g., no PBBR).
+        kStateIdle,              // Started but has no multicast addresses to register.
+        kStateToRegisterAll,     // Waiting to register (or re-register) all multicast addresses.
+        kStateRegistering,       // MLR.req is sent, waiting for MLR.rsp, or waiting to retry.
+        kStateRegistered,        // All addresses are registered, waiting for periodic renewal.
+        kStateNewAddrToRegister, // All were registered, but new addresses are pending registration.
     };
 
-    void HandleNotifierEvents(Events aEvents);
+    State GetState(void) const { return mState; }
+    bool  IsRunning(void) const { return mState != kStateStopped; }
+    void  EnterState(State aState);
+    void  UpdateState(void);
+    void  HandleNotifierEvents(Events aEvents);
+    void  DetermineAddressesToRegister(AddressArray &aAddresses) const;
+    void  SendNextRequest(void);
+    void  DetermineRenewTime(void);
+    void  ScheduleTimerForReregistrationDelay(void);
+    void  ScheduleNewAddrRegistration(uint32_t aMinDelay, uint32_t aMaxDelay);
+    void  ProcessResponse(Coap::Msg *aMsg, Error aResult);
+    void  HandleTimer(void);
+    Error SendMessage(const Ip6::Address   *aAddresses,
+                      uint8_t               aAddressNum,
+                      const uint32_t       *aTimeout,
+                      Coap::ResponseHandler aResponseHandler);
 
-    void  SendMlr(void);
-    Error SendMlrMessage(const Ip6::Address   *aAddresses,
-                         uint8_t               aAddressNum,
-                         const uint32_t       *aTimeout,
-                         Coap::ResponseHandler aResponseHandler,
-                         void                 *aContext);
+    DeclareTmfResponseHandlerIn(Manager, HandleResponse);
 
-    DeclareTmfResponseHandlerIn(MlrManager, HandleMlrResponse);
-
-    static Error ParseMlrResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses);
+    static Error ParseResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    DeclareTmfResponseHandlerIn(MlrManager, HandleRegisterResponse);
+    DeclareTmfResponseHandlerIn(Manager, HandleRegisterResponse);
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-    void UpdateLocalSubscriptions(void);
-    bool IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) const;
+    void HandleEventIp6MulticastSubscribed(void);
+    bool IsAddressRegisteredByNetif(const Ip6::Address &aAddress) const;
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    bool IsAddressMlrRegisteredByAnyChild(const Ip6::Address &aAddress) const
-    {
-        return IsAddressMlrRegisteredByAnyChildExcept(aAddress, nullptr);
-    }
-    bool IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const;
+    bool IsAddressRegisteredByAnyChild(const Ip6::Address &aAddress) const;
+    bool IsAddressRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const;
 #endif
 
-    void SetMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
-    void FinishMlr(bool aSuccess, const AddressArray &aFailedAddresses);
-
-    void ScheduleSend(uint16_t aDelay);
-    void UpdateTimeTickerRegistration(void);
-    void UpdateReregistrationDelay(bool aRereg);
-    void Reregister(void);
-    void HandleTimeTick(void);
-
-    void        LogMulticastAddresses(void);
-    void        CheckInvariants(void) const;
-    static void LogMlrResponse(Error aResult, Error aError, uint8_t aStatus, const AddressArray &aFailedAddresses);
+    using DelayTimer = TimerMilliIn<Manager, &Manager::HandleTimer>;
 
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    Callback<MlrCallback> mRegisterCallback;
+    Callback<RegisterCallback> mRegisterCallback;
+    bool                       mRegisterPending;
 #endif
-
-    uint32_t mReregistrationDelay;
-    uint16_t mSendDelay;
-
-    bool mMlrPending : 1;
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    bool mRegisterPending : 1;
-#endif
+    State      mState;
+    TimeMilli  mStartTime;
+    TimeMilli  mRenewTime;
+    DelayTimer mTimer;
 };
 
+} // namespace Mlr
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)

@@ -83,15 +83,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER
- *
- * The maximum number of IPv6 address registrations for MTD.
- */
-#ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER
-#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER (OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD)
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
  *
  * Define as 1 to enable feature to set device properties which are used for calculating the local leader weight on a

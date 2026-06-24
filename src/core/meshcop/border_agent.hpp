@@ -264,6 +264,8 @@ public:
 private:
     static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
+    static constexpr uint32_t kHandshakeTimeout = 15 * 1000; // Handshake timeout (in msec)
+    static constexpr uint32_t kMaxSessions      = 16;        // Max concurrent secure sessions
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     static constexpr uint16_t kDummyUdpPort          = 49152;
@@ -408,9 +410,13 @@ private:
 
     const char *GetServiceName(void);
     bool        IsServiceNameEmpty(void) const { return mServiceName[0] == kNullChar; }
-    void        ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer);
+    void        ConstructServiceName(void);
+    void        ConstructServiceName(uint16_t aRenameIndex, Dns::Name::LabelBuffer &aNameBuffer);
     void        RegisterService(void);
     void        UnregisterService(void);
+    void        HandleRegisterDone(Error aError);
+
+    static void HandleRegisterDone(otInstance *aInstance, otPlatDnssdRequestId aRequestId, otError aError);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
@@ -435,7 +441,10 @@ private:
     bool mIdInitialized;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+    char                   mBaseServiceName[kBaseServiceNameMaxLen + 1];
     Dns::Name::LabelBuffer mServiceName;
+    uint16_t               mServiceRenameIndex;
 #endif
     Counters mCounters;
 };

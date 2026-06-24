@@ -42,7 +42,7 @@
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP
 
 #if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
-extern "C" void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aLogLine)
+extern "C" OT_TOOL_WEAK void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aLogLine)
 {
     OT_UNUSED_VARIABLE(aInstance);
     otPlatLog(aLogLevel, OT_LOG_REGION_CORE, "%s", aLogLine);

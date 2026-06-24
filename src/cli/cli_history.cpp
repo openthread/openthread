@@ -1305,7 +1305,6 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
  *     * `o`: On mesh flag.
  *     * `s`: Stable flag.
  *     * `n`: Nd Dns flag.
- *     * `D`: Domain prefix flag.
  * * Pref: Preference. Values can be either `high`, `med`, or `low`.
  * * RLOC16
  * @sa otHistoryTrackerIterateOnMeshPrefixHistory
@@ -2025,8 +2024,6 @@ void History::HandleNetInfo(otError aError, const otHistoryTrackerNetworkInfo *a
 
     OutputResult(aError);
 }
-
-void History::OutputResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
 
 #endif // #if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
 

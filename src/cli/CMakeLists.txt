@@ -33,6 +33,7 @@ set(COMMON_INCLUDES
 
 set(COMMON_SOURCES
     cli.cpp
+    cli_api.cpp
     cli_ba.cpp
     cli_bbr.cpp
     cli_br.cpp
@@ -50,6 +51,7 @@ set(COMMON_SOURCES
     cli_mesh_diag.cpp
     cli_network_data.cpp
     cli_ping.cpp
+    cli_plat_tcp.cpp
     cli_srp_client.cpp
     cli_srp_server.cpp
     cli_tcat.cpp

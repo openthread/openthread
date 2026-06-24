@@ -28,8 +28,22 @@
 
 #include "nexus_node.hpp"
 
+#include "nexus_utils.hpp"
+
 namespace ot {
 namespace Nexus {
+
+//----------------------------------------------------------------------------------------------------------------------
+
+Node::Node(void)
+    : Platform(static_cast<Instance &>(*this))
+    , mCliInterpreter(static_cast<Instance *>(this), HandleCliOutput, this)
+    , mX(0.0f)
+    , mY(0.0f)
+    , mLastParentId(0xffff)
+{
+    mCliInterpreter.SetPromptConfig(false);
+}
 
 void Node::Reset(void)
 {
@@ -40,10 +54,10 @@ void Node::Reset(void)
     mAlarmMilli.Reset();
     mAlarmMicro.Reset();
     mMdns.Reset();
+    mUpstreamDns.Reset();
     mInfraIf.mPendingTxQueue.DequeueAndFreeAll();
     mPendingTasklet = false;
 
-    otIp6SetReceiveCallback(&GetInstance(), HandleIp6Receive, &GetInstance());
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     mTrel.Reset();
 #endif
@@ -53,6 +67,8 @@ void Node::Reset(void)
     instance = new (instance) Instance();
     instance->SetId(id);
     instance->AfterInit();
+
+    instance->Get<Ip6::Ip6>().SetReceiveCallback(Node::HandleIp6Receive, this);
 }
 
 void Node::Form(void)
@@ -131,9 +147,6 @@ void Node::SendEchoRequest(const Ip6::Address &aDestination,
         messageInfo.SetSockAddr(*aSrcAddress);
     }
 
-    Log("Sending Echo Request from Node %lu (%s) to %s (payload-size:%u)", ToUlong(GetId()), GetName(),
-        aDestination.ToString().AsCString(), aPayloadSize);
-
     SuccessOrQuit(Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, aIdentifier));
 }
 
@@ -141,46 +154,42 @@ void Node::SetName(const char *aPrefix, uint16_t aIndex) { mName.Clear().Append(
 
 void Node::HandleIp6Receive(otMessage *aMessage, void *aContext)
 {
-    static_cast<Node *>(aContext)->HandleReceive(aMessage);
+    OwnedPtr<Message> messagePtr(AsCoreTypePtr(aMessage));
+
+    static_cast<Node *>(aContext)->HandleIp6Receive(messagePtr.PassOwnership());
 }
 
-void Node::HandleReceive(otMessage *aMessage)
+void Node::HandleIp6Receive(OwnedPtr<Message> aMessagePtr)
 {
-    uint16_t     length = otMessageGetLength(aMessage);
-    uint8_t      buffer[1500];
-    Ip6::Header *header;
+    Ip6::Header header;
 
-    VerifyOrExit(length <= sizeof(buffer));
-    VerifyOrQuit(otMessageRead(aMessage, 0, buffer, length) == length);
-
-    VerifyOrExit(length >= sizeof(Ip6::Header));
-    header = reinterpret_cast<Ip6::Header *>(buffer);
+    VerifyOrExit(aMessagePtr != nullptr);
+    SuccessOrExit(header.ParseFrom(*aMessagePtr));
 
     // Forward packets to InfraIf if they are intended for the backbone.
     // We avoid forwarding link-local and realm-local scope packets.
 
     VerifyOrExit(mInfraIf.IsInitialized());
-    VerifyOrExit(header->GetHopLimit() > 1);
 
-    header->SetHopLimit(header->GetHopLimit() - 1);
+    VerifyOrExit(header.GetHopLimit() > 1);
+    header.SetHopLimit(header.GetHopLimit() - 1);
+    aMessagePtr->Write(0, header);
 
-    VerifyOrExit(header->GetDestination().GetScope() > Ip6::Address::kRealmLocalScope);
+    VerifyOrExit(header.GetDestination().GetScope() > Ip6::Address::kRealmLocalScope);
 
-    if (header->GetDestination().IsMulticast())
+    if (header.GetDestination().IsMulticast())
     {
         VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary());
     }
 
-    VerifyOrExit(Get<NetworkData::Leader>().IsOnMesh(header->GetSource()));
+    VerifyOrExit(!header.GetSource().IsLinkLocalUnicastOrMulticast());
+    VerifyOrExit(!Get<Mle::Mle>().IsMeshLocalAddress(header.GetSource()));
+    VerifyOrExit(Get<NetworkData::Leader>().IsOnMesh(header.GetSource()));
 
-    // Only forward if source is NOT Link-Local and NOT Mesh-Local.
-    VerifyOrExit(!header->GetSource().IsLinkLocalUnicastOrMulticast());
-    VerifyOrExit(!Get<Mle::Mle>().IsMeshLocalAddress(header->GetSource()));
-
-    mInfraIf.SendIp6(header->GetSource(), header->GetDestination(), buffer, length);
+    mInfraIf.SendIp6(header, aMessagePtr.PassOwnership());
 
 exit:
-    otMessageFree(aMessage);
+    return;
 }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -230,6 +239,182 @@ const Ip6::Address &Node::FindGlobalAddress(void)
     VerifyOrQuit(matchedAddress != nullptr, "no global address found");
 
     return *matchedAddress;
+}
+
+bool Node::Matches(const Ip6::Address &aAddress, AddressNetif aNetif) const
+{
+    bool matches = false;
+
+    switch (aNetif)
+    {
+    case kThreadNetifAddress:
+        matches = Get<ThreadNetif>().HasUnicastAddress(aAddress);
+        break;
+
+    case kInfraNetifAddress:
+        matches = mInfraIf.HasAddress(aAddress);
+        break;
+
+    case kAnyNetifAddress:
+        matches = Get<ThreadNetif>().HasUnicastAddress(aAddress) || mInfraIf.HasAddress(aAddress);
+        break;
+    }
+
+    return matches;
+}
+
+const char *Node::GetExtendedRoleString(void) const
+{
+    const char     *roleStr;
+    Mle::DeviceRole role = Get<Mle::Mle>().GetRole();
+
+    switch (role)
+    {
+    case Mle::kRoleDisabled:
+        roleStr = "Disabled";
+        break;
+    case Mle::kRoleDetached:
+        roleStr = "Detached";
+        break;
+    case Mle::kRoleLeader:
+        roleStr = "Leader";
+        break;
+    case Mle::kRoleRouter:
+        roleStr = "Router";
+        break;
+    case Mle::kRoleChild:
+        if (Get<Mle::Mle>().IsFullThreadDevice())
+        {
+            roleStr = Get<Mle::Mle>().IsRouterRoleAllowed() ? "REED" : "FED";
+        }
+        else
+        {
+            roleStr = Get<Mle::Mle>().IsRxOnWhenIdle() ? "MED" : "SED";
+        }
+        break;
+    default:
+        roleStr = "Unknown";
+        break;
+    }
+
+    return roleStr;
+}
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Cli
+
+Node::CliOutputLine &Node::CliOutputLine::operator=(const CliOutputLine &aOther)
+{
+    SuccessOrQuit(mLine.Set(aOther.mLine));
+    return *this;
+}
+
+Node::CliOutputLine &Node::CliOutputLine::operator=(CliOutputLine &&aOther)
+{
+    mLine.TakeFrom(aOther.mLine.Move());
+    return *this;
+}
+
+void Node::InputCli(const char *aFormat, ...)
+{
+    static constexpr uint16_t kMaxCommandSize = 256;
+
+    va_list      args;
+    char         command[kMaxCommandSize];
+    StringWriter writer(command, kMaxCommandSize);
+
+    va_start(args, aFormat);
+    writer.AppendVarArgs(aFormat, args);
+    VerifyOrExit(!writer.IsTruncated());
+
+    ClearCliOutput();
+    mCliInterpreter.ProcessLine(command);
+
+exit:
+    va_end(args);
+}
+
+int Node::HandleCliOutput(void *aContext, const char *aFormat, va_list aArguments)
+{
+    return static_cast<Node *>(aContext)->HandleCliOutput(aFormat, aArguments);
+}
+
+int Node::HandleCliOutput(const char *aFormat, va_list aArguments)
+{
+    uint16_t length;
+
+    // Generate output - determine number of chars written
+    length = mCliCurOutputLine.GetLength();
+
+    mCliCurOutputLine.AppendVarArgs(aFormat, aArguments);
+    VerifyOrQuit(!mCliCurOutputLine.IsTruncated());
+
+    length = mCliCurOutputLine.GetLength() - length;
+
+    // Search for `\n` and parse lines one by one
+
+    while (true)
+    {
+        char           lineString[CliOutputLine::kMaxLineSize];
+        char          *end;
+        CliOutputLine *lineEnrry;
+
+        SuccessOrQuit(StringCopy(lineString, mCliCurOutputLine.AsCString()));
+
+        end = AsNonConst(StringFind(lineString, '\n'));
+        VerifyOrExit(end != nullptr);
+
+        mCliCurOutputLine.Clear();
+        mCliCurOutputLine.Append("%s", end + 1);
+
+        *end = kNullChar;
+
+        if (end > &lineString[0])
+        {
+            end--;
+
+            if (*end == '\r')
+            {
+                *end = kNullChar;
+            }
+        }
+
+        // Push the full line into the `mCliOutputLines` array
+
+        lineEnrry = mCliOutputLines.PushBack();
+        VerifyOrQuit(lineEnrry != nullptr);
+
+        SuccessOrQuit(lineEnrry->mLine.Set(lineString));
+    }
+
+exit:
+    return static_cast<int>(length);
+}
+
+bool Node::IsCliOutputSuccess(void)
+{
+    bool isSuccess = false;
+
+    VerifyOrExit(mCliOutputLines.GetLength() > 0);
+    VerifyOrExit(mCliOutputLines.Back()->IsDone());
+    isSuccess = true;
+
+exit:
+    return isSuccess;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+void AllowLinkBetween(Node &aFirstNode, Node &aSecondNode)
+{
+    aFirstNode.AllowList(aSecondNode);
+    aSecondNode.AllowList(aFirstNode);
+}
+
+void UnallowLinkBetween(Node &aFirstNode, Node &aSecondNode)
+{
+    aFirstNode.UnallowList(aSecondNode);
+    aSecondNode.UnallowList(aFirstNode);
 }
 
 } // namespace Nexus

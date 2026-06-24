@@ -49,6 +49,7 @@ otError Url::Init(char *aUrl)
 {
     otError error = OT_ERROR_NONE;
     char   *url   = aUrl;
+    char   *query;
 
     mEnd      = aUrl + strlen(aUrl);
     mProtocol = aUrl;
@@ -59,15 +60,31 @@ otError Url::Init(char *aUrl)
     url += sizeof("://") - 1;
     mPath = url;
 
-    url = strstr(url, "?");
+    query = strchr(url, '?');
 
-    if (url != nullptr)
+    if (query != nullptr)
     {
-        mQuery = ++url;
+        char *end;
 
-        for (char *cur = strtok(url, "&"); cur != nullptr; cur = strtok(nullptr, "&"))
+        *query = '\0';
+        mQuery = query + 1;
+
+        end = strchr(const_cast<char *>(mQuery), '#');
+
+        if (end == nullptr)
         {
-            cur[-1] = '\0';
+            end = const_cast<char *>(mEnd);
+        }
+
+        if (end > mQuery && end[-1] != '&')
+        {
+            memmove(end + 1, end, mEnd - end + 1);
+            *end = '&';
+            mEnd = end + 1;
+        }
+        else
+        {
+            mEnd = end;
         }
     }
     else
@@ -97,21 +114,40 @@ const char *Url::GetValue(const char *aName, const char *aLastValue) const
 
     while (start < mEnd)
     {
-        const char *last = nullptr;
-
-        if (!strncmp(aName, start, len))
+        if (!strncmp(aName, start, len) && (start[len] == '=' || start[len] == '&' || start[len] == '\0'))
         {
+            const char *delimiter = start + len;
+
+            while (delimiter < mEnd && *delimiter != '&' && *delimiter != '\0')
+            {
+                delimiter++;
+            }
+
+            if (delimiter < mEnd && *delimiter == '&')
+            {
+                *const_cast<char *>(delimiter) = '\0';
+            }
+
             if (start[len] == '=')
             {
-                ExitNow(rval = &start[len + 1]);
+                rval = &start[len + 1];
             }
-            else if (start[len] == '\0')
+            else
             {
-                ExitNow(rval = &start[len]);
+                rval = &start[len];
             }
+            break;
         }
-        last  = start;
-        start = last + strlen(last) + 1;
+
+        while (start < mEnd && *start != '&' && *start != '\0')
+        {
+            start++;
+        }
+
+        if (start < mEnd)
+        {
+            start++;
+        }
     }
 
 exit:
@@ -197,6 +233,36 @@ otError Url::ParseInt8(const char *aName, int8_t &aValue) const
     SuccessOrExit(error = ParseInt32(aName, value));
     VerifyOrExit(INT8_MIN <= value && value <= INT8_MAX, error = OT_ERROR_INVALID_ARGS);
     aValue = static_cast<int8_t>(value);
+
+exit:
+    return error;
+}
+
+otError Url::Validate(const char **aUnusedParam) const
+{
+    otError     error = OT_ERROR_NONE;
+    const char *cur   = mQuery;
+
+    while (cur < mEnd)
+    {
+        if (*cur == '&')
+        {
+            const char *p = cur;
+
+            while (p > mQuery && p[-1] != '\0')
+            {
+                p--;
+            }
+
+            if (aUnusedParam != nullptr)
+            {
+                *aUnusedParam = p;
+            }
+
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+        cur++;
+    }
 
 exit:
     return error;

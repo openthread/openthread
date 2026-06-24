@@ -639,6 +639,9 @@ Error Name::LabelIterator::ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, 
     aLabelBuffer[mLabelLength] = kNullChar;
     aLabelLength               = mLabelLength;
 
+    // Check that there is no `kNullChar` (`\0`) in the read label.
+    VerifyOrExit(StringLength(aLabelBuffer, mLabelLength) == mLabelLength, error = kErrorParse);
+
     if (!aAllowDotCharInLabel)
     {
         VerifyOrExit(StringFind(aLabelBuffer, kLabelSeparatorChar) == nullptr, error = kErrorParse);
@@ -1046,7 +1049,7 @@ Error ResourceRecord::ReadName(const Message &aMessage,
     // `ResourceRecord`. `aSkipRecord` indicates whether to skip over
     // the entire resource record or just the read name. On exit, when
     // successfully read, `aOffset` is updated to either point after the
-    // end of record or after the the name field.
+    // end of record or after the name field.
     //
     // When read successfully, this method returns `kErrorNone`. On a
     // parse error (invalid format) returns `kErrorParse`. If the

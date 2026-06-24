@@ -670,7 +670,6 @@ template <> otError Br::Process<Cmd("peers")>(Arg aArgs[])
      * Data entries:
      * - It has added at least one external route entry.
      * - It has added at least one prefix entry with both the default-route and on-mesh flags set.
-     * - It has added at least one domain prefix (with both the domain and on-mesh flags set).
      * The list of peer BRs specifically excludes the current device, even if its is itself acting as a BR.
      * Info per BR entry:
      * - RLOC16 of the BR
@@ -1200,7 +1199,7 @@ template <> otError Br::Process<Cmd("counters")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    Interpreter::GetInterpreter().OutputBorderRouterCounters();
+    GetInterpreter().OutputBorderRouterCounters();
 
 exit:
     return error;

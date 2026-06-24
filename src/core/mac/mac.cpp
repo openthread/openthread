@@ -66,8 +66,8 @@ Mac::Mac(Instance &aInstance)
 #endif
     , mOperation(kOperationIdle)
     , mPendingOperations(0)
-    , mBeaconSequence(Random::NonCrypto::GetUint8())
-    , mDataSequence(Random::NonCrypto::GetUint8())
+    , mBeaconSequence(Random::NonCrypto::Generate<uint8_t>())
+    , mDataSequence(Random::NonCrypto::Generate<uint8_t>())
     , mBroadcastTransmitCount(0)
     , mPanId(kPanIdBroadcast)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
@@ -703,9 +703,9 @@ void Mac::FinishOperation(void)
     mOperation = kOperationIdle;
 }
 
-TxFrame *Mac::PrepareBeaconRequest(void)
+TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
 {
-    TxFrame      &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
+    TxFrame      &frame = aTxFrames.GetBroadcastTxFrame();
     TxFrame::Info frameInfo;
 
     frameInfo.mAddrs.mSource.SetNone();
@@ -723,7 +723,7 @@ TxFrame *Mac::PrepareBeaconRequest(void)
     return &frame;
 }
 
-TxFrame *Mac::PrepareBeacon(void)
+TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 {
     TxFrame      *frame;
     TxFrame::Info frameInfo;
@@ -735,10 +735,10 @@ TxFrame *Mac::PrepareBeacon(void)
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
-    frame = &mLinks.GetTxFrames().GetTxFrame(mTxBeaconRadioLinks);
+    frame = &aTxFrames.GetTxFrame(mTxBeaconRadioLinks);
     mTxBeaconRadioLinks.Clear();
 #else
-    frame = &mLinks.GetTxFrames().GetBroadcastTxFrame();
+    frame = &aTxFrames.GetBroadcastTxFrame();
 #endif
 
     frameInfo.mAddrs.mSource.SetExtended(GetExtAddress());
@@ -900,7 +900,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(aFrame.GetTimeIeOffset() == 0);
+    VerifyOrExit(!aFrame.Has<TimeIe>());
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -917,10 +917,8 @@ exit:
 void Mac::BeginTransmit(void)
 {
     TxFrame  *frame    = nullptr;
-    TxFrames &txFrames = mLinks.GetTxFrames();
+    TxFrames &txFrames = mLinks.InitTxFrames();
     Address   dstAddr;
-
-    txFrames.Clear();
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     mTxPendingRadioLinks.Clear();
@@ -933,7 +931,7 @@ void Mac::BeginTransmit(void)
     {
     case kOperationActiveScan:
         mLinks.SetPanId(kPanIdBroadcast);
-        frame = PrepareBeaconRequest();
+        frame = PrepareBeaconRequest(txFrames);
         VerifyOrExit(frame != nullptr);
         frame->SetChannel(mScanChannel);
         frame->SetSequence(0);
@@ -942,7 +940,7 @@ void Mac::BeginTransmit(void)
         break;
 
     case kOperationTransmitBeacon:
-        frame = PrepareBeacon();
+        frame = PrepareBeacon(txFrames);
         VerifyOrExit(frame != nullptr);
         frame->SetChannel(mRadioChannel);
         frame->SetSequence(mBeaconSequence++);
@@ -1019,12 +1017,17 @@ void Mac::BeginTransmit(void)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     {
-        uint8_t timeIeOffset = GetTimeIeOffset(*frame);
+        TimeIe *timeIe = frame->Find<TimeIe>();
 
-        frame->SetTimeIeOffset(timeIeOffset);
-
-        if (timeIeOffset != 0)
+        if (timeIe == nullptr)
         {
+            frame->SetTimeIeOffset(0);
+        }
+        else
+        {
+            uint8_t offset = static_cast<uint8_t>(timeIe->GetData() - frame->GetPsdu());
+
+            frame->SetTimeIeOffset(offset);
             frame->SetTimeSyncSeq(Get<TimeSync>().GetTimeSyncSeq());
             frame->SetNetworkTimeOffset(Get<TimeSync>().GetNetworkTimeOffset());
         }
@@ -1305,7 +1308,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
                 ProcessCsl(*aAckFrame, dstAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-                if (!mRxOnWhenIdle && aFrame.HasCslIe())
+                if (!mRxOnWhenIdle && aFrame.Has<CslIe>())
                 {
                     Get<DataPollSender>().ResetKeepAliveTimer();
                 }
@@ -1319,7 +1322,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
     if (!aFrame.IsEmpty())
     {
         RadioType  radio          = aFrame.GetRadioType();
-        RadioTypes requiredRadios = mLinks.GetTxFrames().GetRequiredRadioTypes();
+        RadioTypes requiredRadios = mLinks.GetTxFramesRequiredRadioTypes();
 
         Get<RadioSelector>().UpdateOnSendDone(aFrame, aError);
 
@@ -1536,6 +1539,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
+        VerifyOrExit(keyManager.IsKekSet(), error = kErrorSecurity);
         macKey     = &keyManager.GetKek();
         extAddress = &aSrcAddr.GetExtended();
         break;
@@ -2353,24 +2357,6 @@ void Mac::LogFrameTxFailure(const TxFrame &, Error, uint8_t, bool) const {}
 
 // LCOV_EXCL_STOP
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-uint8_t Mac::GetTimeIeOffset(const Frame &aFrame)
-{
-    uint8_t        offset = 0;
-    const uint8_t *base   = aFrame.GetPsdu();
-    const uint8_t *cur    = nullptr;
-
-    cur = reinterpret_cast<const uint8_t *>(aFrame.GetTimeIe());
-    VerifyOrExit(cur != nullptr);
-
-    cur += sizeof(VendorIeHeader);
-    offset = static_cast<uint8_t>(cur - base);
-
-exit:
-    return offset;
-}
-#endif
-
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 void Mac::SetCslCapable(bool aIsCslCapable)
 {
@@ -2490,9 +2476,10 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     CslNeighbor *neighbor = nullptr;
     const CslIe *csl;
 
-    VerifyOrExit(aFrame.IsVersion2015() && aFrame.GetSecurityEnabled());
+    VerifyOrExit(aFrame.IsVersion2015());
+    VerifyOrExit(aFrame.IsSecuredWith(RxFrame::kAllowKeyIdMode1));
 
-    csl = aFrame.GetCslIe();
+    csl = aFrame.Find<CslIe>();
     VerifyOrExit(csl != nullptr);
 
 #if OPENTHREAD_FTD
@@ -2526,24 +2513,20 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
 {
-    constexpr uint8_t kEnhAckProbingIeMaxLen = 2;
+    const LinkMetricsProbingIe *probingIe = aFrame.Find<LinkMetricsProbingIe>();
+    uint8_t                     dataLen;
 
-    const HeaderIe *enhAckProbingIe =
-        reinterpret_cast<const HeaderIe *>(aFrame.GetThreadIe(ThreadIe::kEnhAckProbingIe));
-    const uint8_t *data =
-        reinterpret_cast<const uint8_t *>(enhAckProbingIe) + sizeof(HeaderIe) + sizeof(VendorIeHeader);
-    uint8_t dataLen = 0;
+    VerifyOrExit(probingIe != nullptr);
 
-    VerifyOrExit(enhAckProbingIe != nullptr);
+    dataLen = probingIe->GetMetricsDataLen();
+    VerifyOrExit(dataLen <= LinkMetricsProbingIe::kMaxMetricsDataLen);
 
-    dataLen = enhAckProbingIe->GetLength() - sizeof(VendorIeHeader);
-    VerifyOrExit(dataLen <= kEnhAckProbingIeMaxLen);
+    Get<LinkMetrics::Initiator>().ProcessEnhAckIeData(probingIe->GetMetricsData(), dataLen, aNeighbor);
 
-    Get<LinkMetrics::Initiator>().ProcessEnhAckIeData(data, dataLen, aNeighbor);
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 void Mac::SetRadioFilterEnabled(bool aFilterEnabled)
@@ -2649,13 +2632,13 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     VerifyOrExit(srcAddress.IsExtended(), error = kErrorDrop);
 
     wakeupInfo.mExtAddress    = srcAddress.GetExtended();
-    connectionIe              = aFrame.GetConnectionIe();
+    connectionIe              = aFrame.Find<ConnectionIe>();
     wakeupInfo.mRetryInterval = connectionIe->GetRetryInterval();
     wakeupInfo.mRetryCount    = connectionIe->GetRetryCount();
     VerifyOrExit(wakeupInfo.mRetryInterval > 0 && wakeupInfo.mRetryCount > 0, error = kErrorInvalidArgs);
 
     radioNowUs    = otPlatRadioGetNow(&GetInstance());
-    rvTimeUs      = aFrame.GetRendezvousTimeIe()->GetRendezvousTime() * kUsPerTenSymbols;
+    rvTimeUs      = aFrame.Find<RendezvousTimeIe>()->GetRendezvousTime() * kUsPerTenSymbols;
     rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
 
     if (rvTimestampUs > radioNowUs + kCslRequestAhead)

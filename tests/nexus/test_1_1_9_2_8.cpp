@@ -158,17 +158,10 @@ void Test9_2_8(void)
      * - Pass Criteria: N/A.
      */
 
-    commissioner.AllowList(leader);
-    leader.AllowList(commissioner);
-
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    leader.AllowList(med1);
-    med1.AllowList(leader);
-
-    leader.AllowList(sed1);
-    sed1.AllowList(leader);
+    AllowLinkBetween(commissioner, leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, med1);
+    AllowLinkBetween(leader, sed1);
 
     {
         MeshCoP::Dataset::Info dataset;
@@ -339,9 +332,9 @@ void Test9_2_8(void)
      *     PANID: 0xAFCE).
      */
 
-    router1.AllowList(leader);
-    med1.AllowList(leader);
-    sed1.AllowList(leader);
+    AllowLinkBetween(router1, leader);
+    AllowLinkBetween(med1, leader);
+    AllowLinkBetween(sed1, leader);
 
     SuccessOrQuit(router1.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(Mle::DeviceMode::kModeRxOnWhenIdle |
                                                                         Mle::DeviceMode::kModeFullThreadDevice |

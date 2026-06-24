@@ -81,6 +81,10 @@ class HmacSha256;
 
 } // namespace Crypto
 
+namespace Ip6 {
+class PlatTcp;
+} // namespace Ip6
+
 /**
  * @addtogroup core-message
  *
@@ -293,6 +297,7 @@ class Message : public otMessage, public Buffer, public GetProvider<Message>
     friend class Crypto::HmacSha256;
     friend class Crypto::Sha256;
     friend class Crypto::AesCcm;
+    friend class Ip6::PlatTcp;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
@@ -941,6 +946,37 @@ public:
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
         return Read(aOffsetRange, &aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * Reads a given number of bytes from the message at a given offset range and advances the offset range.
+     *
+     * @param[in,out] aOffsetRange  The offset range in the message to read from. On success, it is advanced.
+     * @param[out]    aBuf          A pointer to a data buffer to copy the read bytes into.
+     * @param[in]     aLength       Number of bytes to read.
+     *
+     * @retval kErrorNone     Requested bytes were successfully read from message. @p aOffsetRange is advanced.
+     * @retval kErrorParse    Not enough bytes remaining to read the requested @p aLength. @p aOffsetRange is unchanged.
+     */
+    Error ReadAndAdvance(OffsetRange &aOffsetRange, void *aBuf, uint16_t aLength) const;
+
+    /**
+     * Reads an object from the message at a given offset range and advances the offset range.
+     *
+     * @tparam     ObjectType   The object type to read from the message.
+     *
+     * @param[in,out] aOffsetRange  The offset range in the message to read from. On success, it is advanced.
+     * @param[out]    aObject       A reference to the object to read into.
+     *
+     * @retval kErrorNone     Object @p aObject was successfully read from message. @p aOffsetRange is advanced.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object. @p aOffsetRange is
+     * unchanged.
+     */
+    template <typename ObjectType> Error ReadAndAdvance(OffsetRange &aOffsetRange, ObjectType &aObject) const
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return ReadAndAdvance(aOffsetRange, &aObject, sizeof(ObjectType));
     }
 
     /**
@@ -1684,6 +1720,14 @@ public:
 #endif
 
     /**
+     * Indicates whether the message queue is empty.
+     *
+     * @retval TRUE   The message queue is empty.
+     * @retval FALSE  The message queue is not empty.
+     */
+    bool IsEmpty(void) const { return GetHead() == nullptr; }
+
+    /**
      * Returns a pointer to the first message.
      *
      * @returns A pointer to the first message.
@@ -1730,6 +1774,15 @@ public:
      * Removes and frees all messages from the queue.
      */
     void DequeueAndFreeAll(void);
+
+    /**
+     * Enqueues all messages from another message queue at the end of this queue.
+     *
+     * Upon return, @p aOtherQueue will be empty.
+     *
+     * @param[in,out] aOtherQueue  The other message queue to enqueue from.
+     */
+    void EnqueueAllFrom(MessageQueue &aOtherQueue);
 
     /**
      * Gets the information about number of messages and buffers in the queue.

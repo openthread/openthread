@@ -38,6 +38,7 @@
 
 #if OPENTHREAD_FTD
 
+#include "common/array.hpp"
 #include "common/const_cast.hpp"
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
@@ -115,7 +116,7 @@ public:
      *
      * @returns The index corresponding to @p aChild.
      */
-    uint16_t GetChildIndex(const Child &aChild) const { return static_cast<uint16_t>(&aChild - mChildren); }
+    uint16_t GetChildIndex(const Child &aChild) const { return mChildren.IndexOf(aChild); }
 
     /**
      * Returns a pointer to a `Child` entry at a given index, or `nullptr` if the index is out of bounds,
@@ -207,7 +208,7 @@ public:
      *
      * @returns  The maximum number of children allowed.
      */
-    uint16_t GetMaxChildrenAllowed(void) const { return mMaxChildrenAllowed; }
+    uint16_t GetMaxChildrenAllowed(void) const { return mChildren.GetLength(); }
 
     /**
      * Sets the maximum number of children allowed.
@@ -306,15 +307,46 @@ public:
      * @retval TRUE  if @p aNeighbor is a `Child` in the child table.
      * @retval FALSE if @p aNeighbor is not a `Child` in the child table.
      */
-    bool Contains(const Neighbor &aNeighbor) const
-    {
-        const void *child = &aNeighbor;
+    bool Contains(const Neighbor &aNeighbor) const { return mChildren.IsInArrayBuffer(&aNeighbor); }
 
-        return (mChildren <= child) && (child < GetArrayEnd(mChildren));
+    /**
+     * Gets the maximum number of IP addresses that each MTD child may register with this device as parent.
+     *
+     * @returns The maximum number of IP addresses that each MTD child may register with this device as parent.
+     */
+    uint8_t GetMaxChildIpAddresses(void) const
+    {
+        return
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+            IsMaxChildIpAddressesOverridden() ? mMaxChildIpAddresses :
+#endif
+                                              kMaxChildIpAddresses;
     }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * Indicates whether the maximum number of IP addresses is overridden.
+     *
+     * @retval TRUE   If the maximum number of IP addresses is overridden.
+     * @retval FALSE  If the maximum number of IP addresses is not overridden.
+     */
+    bool IsMaxChildIpAddressesOverridden(void) const { return (mMaxChildIpAddresses != 0); }
+
+    /**
+     * Overrides the maximum number of IP addresses that each MTD child may register with this device as parent.
+     *
+     * @param[in]  aMaxIpAddresses  The maximum number of IP addresses that each MTD child may register with this
+     *                              device as parent. Zero to clear the setting and restore the default.
+     *
+     * @retval kErrorNone           Successfully set/cleared the number.
+     * @retval kErrorInvalidArgs    If exceeds the allowed maximum number.
+     */
+    Error OverrideMaxChildIpAddresses(uint8_t aMaxIpAddresses);
+#endif
+
 private:
-    static constexpr uint16_t kMaxChildren = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN;
+    static constexpr uint16_t kMaxChildren         = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN;
+    static constexpr uint8_t  kMaxChildIpAddresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
 
     class IteratorBuilder : public InstanceLocator
     {
@@ -337,9 +369,11 @@ private:
     const Child *FindChild(const Child::AddressMatcher &aMatcher) const;
     void         RefreshStoredChildren(void);
 
-    uint16_t mNextChildId;
-    uint16_t mMaxChildrenAllowed;
-    Child    mChildren[kMaxChildren];
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    uint8_t mMaxChildIpAddresses;
+#endif
+    Array<Child, kMaxChildren, uint16_t> mChildren;
+    uint16_t                             mNextChildId;
 };
 
 } // namespace ot

@@ -632,9 +632,6 @@ class OpenThreadTHCI(object):
             self.__configBbrDataset(SeqNum=self.bbrSeqNum,
                                     MlrTimeout=self.bbrMlrTimeout,
                                     ReRegDelay=self.bbrReRegDelay)
-            # Add default domain prefix is not configured otherwise
-            if self.__useDefaultDomainPrefix:
-                self.__addDefaultDomainPrefix()
 
         self.__executeCommand('ifconfig up')
         self.__executeCommand('thread start')
@@ -1473,8 +1470,6 @@ class OpenThreadTHCI(object):
         # to default when joining network
         self.hasSetChannel = False
         self.IsBeingTestedAsCommercialBBR = False
-        # indicate whether the default domain prefix is used.
-        self.__useDefaultDomainPrefix = True
         self.__isUdpOpened = False
         self.IsHost = False
 
@@ -1646,15 +1641,8 @@ class OpenThreadTHCI(object):
         """
         assert (ipaddress.IPv6Network(P_Prefix.decode()))
 
-        # turn off default domain prefix if configBorderRouter is called before joining network
-        if P_dp == 0 and not self.__isOpenThreadRunning():
-            self.__useDefaultDomainPrefix = False
-
         parameter = ''
         prf = ''
-
-        if P_dp:
-            P_slaac_preferred = 1
 
         if P_slaac_preferred == 1:
             parameter += 'p'
@@ -1671,10 +1659,6 @@ class OpenThreadTHCI(object):
 
         if P_on_mesh == 1:
             parameter += 'o'
-
-        if P_dp == 1:
-            assert P_slaac_preferred and P_default and P_on_mesh and P_stable
-            parameter += 'D'
 
         if P_preference == 1:
             prf = 'high'
@@ -3086,37 +3070,6 @@ class OpenThreadTHCI(object):
         cmd = 'childip max %d' % int(num)
         self.__executeCommand(cmd)
 
-    @API
-    def config_next_dua_status_rsp(self, mliid, status_code):
-        if status_code >= 400:
-            # map status_code to correct COAP response code
-            a, b = divmod(status_code, 100)
-            status_code = ((a & 0x7) << 5) + (b & 0x1f)
-
-        cmd = 'bbr mgmt dua %d' % status_code
-
-        if mliid is not None:
-            mliid = mliid.replace(':', '')
-            cmd += ' %s' % mliid
-
-        self.__executeCommand(cmd)
-
-    @API
-    def getDUA(self):
-        dua = self.getGUA('fd00:7d03')
-        return dua
-
-    def __addDefaultDomainPrefix(self):
-        self.configBorderRouter(P_dp=1, P_stable=1, P_on_mesh=1, P_default=1)
-
-    def __setDUA(self, sDua):
-        """specify the DUA before Thread Starts."""
-        if isinstance(sDua, str):
-            sDua = sDua.decode('utf8')
-        iid = ipaddress.IPv6Address(sDua).packed[-8:]
-        cmd = 'dua iid %s' % ''.join('%02x' % ord(b) for b in iid)
-        return self.__executeCommand(cmd)[-1] == 'Done'
-
     def __getMlIid(self):
         """get the Mesh Local IID."""
         # getULA64() would return the full string representation
@@ -3129,10 +3082,6 @@ class OpenThreadTHCI(object):
         assert ':' not in sMlIid
         cmd = 'mliid %s' % sMlIid
         self.__executeCommand(cmd)
-
-    @API
-    def registerDUA(self, sAddr=''):
-        self.__setDUA(sAddr)
 
     @API
     def config_next_mlr_status_rsp(self, status_code):
@@ -3185,8 +3134,7 @@ class OpenThreadTHCI(object):
     @API
     def migrateNetwork(self, channel=None, net_name=None):
         """migrate to another Thread Partition 'net_name' (could be None)
-            on specified 'channel'. Make sure same Mesh Local IID and DUA
-            after migration for DUA-TC-06/06b (DEV-1923)
+            on specified 'channel'.
         """
         if channel is None:
             raise Exception('channel None')
@@ -3197,7 +3145,6 @@ class OpenThreadTHCI(object):
         print('new partition %s on channel %d' % (net_name, channel))
 
         mliid = self.__getMlIid()
-        dua = self.getDUA()
         self.reset()
         deviceRole = self.deviceRole
         self.setDefaultValues()
@@ -3205,7 +3152,6 @@ class OpenThreadTHCI(object):
         if net_name is not None:
             self.setNetworkName(net_name)
         self.__setMlIid(mliid)
-        self.__setDUA(dua)
         return self.joinNetwork(deviceRole)
 
     @API

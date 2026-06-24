@@ -265,8 +265,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(SendRelayTransmit, this));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open(SendRelayTransmit, this));
 
     Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureAgentConnectEvent, this);
 
@@ -653,7 +652,7 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const CommissioningDataset &a
     {
         const SteeringData &steeringData = aDataset.GetSteeringData();
 
-        SuccessOrExit(error = Tlv::Append<SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+        SuccessOrExit(error = SteeringDataTlv::AppendTo(*message, steeringData));
     }
 
     if (aDataset.IsJoinerUdpPortSet())
@@ -736,7 +735,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Msg *aMsg, Error aResult)
         ExitNow();
     }
 
-    Get<Mle::Mle>().GetCommissionerAloc(mSessionId, mCommissionerAloc.GetAddress());
+    Get<Mle::Mle>().ComposeCommissionerAloc(mSessionId, mCommissionerAloc.GetAddress());
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
     SetState(kStateActive);
@@ -859,8 +858,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
     aMsg.mMessage.SetOffset(offsetRange.GetOffset());
     SuccessOrExit(error = aMsg.mMessage.SetLength(offsetRange.GetEndOffset()));
 
-    joinerMessageInfo.SetPeerAddr(Get<Mle::Mle>().GetMeshLocalEid());
-    joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
+    Get<Mle::Mle>().ComposeMeshLocalAddress(mJoinerIid, joinerMessageInfo.GetPeerAddr());
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
     Get<Tmf::SecureAgent>().HandleReceive(aMsg.mMessage, joinerMessageInfo);
@@ -972,7 +970,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     Error                   error = kErrorNone;
-    ExtendedTlv             tlv;
+    OffsetRange             offsetRange;
     OwnedPtr<Coap::Message> message;
     Kek                     kek;
 
@@ -990,10 +988,9 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
         SuccessOrExit(error = Tlv::Append<JoinerRouterKekTlv>(*message, kek));
     }
 
-    tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
-    tlv.SetLength(aMessage.GetLength());
-    SuccessOrExit(error = message->Append(tlv));
-    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
+    offsetRange.InitFromMessageFullLength(aMessage);
+    SuccessOrExit(
+        error = Tlv::AppendTlvWithValueFromMessage(*message, Tlv::kJoinerDtlsEncapsulation, aMessage, offsetRange));
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToRloc(*message, mJoinerRloc));
     message.Release();

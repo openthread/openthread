@@ -110,14 +110,6 @@ class Ipv6Addr(Bytes):
         return True
 
     @property
-    def is_dua(self) -> bool:
-        """
-        Returns if the Ip6 address is Domain Unicast Address.
-        """
-        from pktverify import consts
-        return self.startswith(consts.DOMAIN_PREFIX)
-
-    @property
     def is_backbone_gua(self) -> bool:
         """
         Returns if the Ip6 address is Backbone address.

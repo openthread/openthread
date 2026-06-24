@@ -61,6 +61,13 @@ public:
     static constexpr uint16_t kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1;
 
     /**
+     * Represents an array of IPv6 addresses registered by an MTD child.
+     *
+     * This array does not include the mesh-local EID.
+     */
+    typedef Array<Ip6::Address, kNumIp6Addresses> Ip6AddressArray;
+
+    /**
      * Represents the iterator for registered IPv6 address list of an MTD child.
      */
     typedef otChildIp6AddressIterator AddressIterator;
@@ -83,49 +90,6 @@ public:
          */
         void SetFrom(const Child &aChild);
     };
-
-    /**
-     * Represents an IPv6 address entry registered by an MTD child.
-     */
-    class Ip6AddrEntry : public Ip6::Address
-    {
-    public:
-        /**
-         * Indicates whether the entry matches a given IPv6 address.
-         *
-         * @param[in] aAddress   The IPv6 address.
-         *
-         * @retval TRUE   The entry matches @p aAddress.
-         * @retval FALSE  The entry does not match @p aAddress.
-         */
-        bool Matches(const Ip6::Address &aAddress) const { return (*this == aAddress); }
-
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-        /**
-         * Gets the MLR state of the IPv6 address entry.
-         *
-         * @param[in] aChild  The child owning this address entry.
-         *
-         * @returns The MLR state of IPv6 address entry.
-         */
-        MlrState GetMlrState(const Child &aChild) const;
-
-        /**
-         * Sets the MLR state of the IPv6 address entry.
-         *
-         * @param[in] aState    The MLR state.
-         * @param[in] aChild    The child owning this address entry.
-         */
-        void SetMlrState(MlrState aState, Child &aChild);
-#endif
-    };
-
-    /**
-     * Represents an array of IPv6 address entries registered by an MTD child.
-     *
-     * This array does not include the mesh-local EID.
-     */
-    typedef Array<Ip6AddrEntry, kNumIp6Addresses> Ip6AddressArray;
 
     /**
      * Initializes the `Child` object.
@@ -178,15 +142,6 @@ public:
     const Ip6AddressArray &GetIp6Addresses(void) const { return mIp6Addresses; }
 
     /**
-     * Gets an array of registered IPv6 address entries by the child.
-     *
-     * The array does not include the mesh-local EID. The ML-EID can retrieved using  `GetMeshLocalIp6Address()`.
-     *
-     * @returns The array of registered IPv6 addresses by the child.
-     */
-    Ip6AddressArray &GetIp6Addresses(void) { return mIp6Addresses; }
-
-    /**
      * Iterates over all registered IPv6 addresses (using an iterator).
      *
      * @param[in,out]  aIterator  The iterator to use. On success the iterator will be updated.
@@ -201,7 +156,7 @@ public:
     /**
      * Adds an IPv6 address to the list.
      *
-     * @param[in]  aAddress           A reference to IPv6 address to be added.
+     * @param[in]  aAddress        The IPv6 address to be added.
      *
      * @retval kErrorNone          Successfully added the new address.
      * @retval kErrorAlready       Address is already in the list.
@@ -213,7 +168,7 @@ public:
     /**
      * Removes an IPv6 address from the list.
      *
-     * @param[in]  aAddress               A reference to IPv6 address to be removed.
+     * @param[in]  aAddress           The IPv6 address to be removed.
      *
      * @retval kErrorNone             Successfully removed the address.
      * @retval kErrorNotFound         Address was not found in the list.
@@ -224,24 +179,12 @@ public:
     /**
      * Indicates whether an IPv6 address is in the list of IPv6 addresses of the child.
      *
-     * @param[in]  aAddress   A reference to IPv6 address.
+     * @param[in]  aAddress   The IPv6 address to check.
      *
      * @retval TRUE           The address exists on the list.
      * @retval FALSE          Address was not found in the list.
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
-
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    /**
-     * Retrieves the Domain Unicast Address registered by the child.
-     *
-     * @param[out] aAddress    A reference to return the DUA address.
-     *
-     * @retval kErrorNone      Successfully retrieved the DUA address, @p aAddress is updated.
-     * @retval kErrorNotFound  Could not find any DUA address.
-     */
-    Error GetDomainUnicastAddress(Ip6::Address &aAddress) const;
-#endif
 
     /**
      * Gets the child timeout.
@@ -352,31 +295,39 @@ public:
     void SetBlockParentDowngrade(bool aBlock) { mBlockParentDowngrade = aBlock; }
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+
     /**
-     * Returns if the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * Clears the Multicast Listener Registration (MLR) registration state of all IPv6 addresses of the child.
+     */
+    void ClearAllAddressesMlrRegistrationState(void) { mMlrRegisteredSet.Clear(); }
+
+    /**
+     * Indicates whether the child has a given IPv6 address that is MLR registered.
      *
      * @param[in] aAddress  The IPv6 address.
      *
-     * @retval true   If the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * @retval TRUE   If the child has the IPv6 address @p aAddress and it is MLR registered.
+     * @retval FALSE  If the child does not have the IPv6 address @p aAddress or it is not MLR registered.
      */
     bool HasMlrRegisteredAddress(const Ip6::Address &aAddress) const;
 
     /**
-     * Returns if the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
+     * Sets the MLR registered state of a given IPv6 address of the child.
      *
-     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateRegistered`.
+     * If @p aAddress is not present on the list, calling this method does nothing.
+     *
+     * @param[in] aAddress     The address.
+     * @param[in] aRegistered  TRUE if MLR registered, FALSE otherwise.
      */
-    bool HasAnyMlrRegisteredAddress(void) const { return !mMlrRegisteredSet.IsEmpty(); }
+    void SetAddressMlrRegistrationState(const Ip6::Address &aAddress, bool aRegistered);
 
     /**
-     * Returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
+     * Gets all the MLR registered IPv6 addresses of the child.
      *
-     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
-     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateToRegister`.
+     * @param[out] aAddressArray  A reference to an array to output the addresses.
      */
-    bool HasAnyMlrToRegisterAddress(void) const { return !mMlrToRegisterSet.IsEmpty(); }
+    void GetAllMlrRegisteredAddresses(Ip6AddressArray &aAddressArray) const;
+
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 private:
@@ -387,7 +338,6 @@ private:
     Ip6::InterfaceIdentifier mMeshLocalIid;
     Ip6AddressArray          mIp6Addresses;
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    ChildIp6AddressSet mMlrToRegisterSet;
     ChildIp6AddressSet mMlrRegisteredSet;
 #endif
 

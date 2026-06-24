@@ -123,8 +123,7 @@ Error AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) 
         VerifyOrExit(entry->IsLastTransactionTimeValid());
 
         aInfo.mLastTransTime = entry->GetLastTransactionTime();
-        AsCoreType(&aInfo.mMeshLocalEid).SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
-        AsCoreType(&aInfo.mMeshLocalEid).SetIid(entry->GetMeshLocalIid());
+        Get<Mle::Mle>().ComposeMeshLocalAddress(entry->GetMeshLocalIid(), AsCoreType(&aInfo.mMeshLocalEid));
 
         ExitNow();
     }
@@ -628,17 +627,6 @@ exit:
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
     FreeMessageOnError(message, error);
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(aEid))
-    {
-        uint16_t selfRloc16 = Get<Mle::Mle>().GetRloc16();
-
-        LogInfo("Extending %s to %s for target %s, rloc16=%04x(self)", UriToString<kUriAddressQuery>(),
-                UriToString<kUriBackboneQuery>(), aEid.ToString().AsCString(), selfRloc16);
-        IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(aEid, selfRloc16));
-    }
-#endif
-
     return error;
 }
 
@@ -765,17 +753,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
         if (address.GetAddress() == target && Get<Mle::Mle>().GetMeshLocalEid().GetIid() != meshLocalIid)
         {
             // Target EID matches address and Mesh Local EID differs
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address.GetAddress()))
-            {
-                Get<DuaManager>().NotifyDuplicateDomainUnicastAddress();
-            }
-            else
-#endif
-            {
-                Get<ThreadNetif>().RemoveUnicastAddress(address);
-            }
-
+            Get<ThreadNetif>().RemoveUnicastAddress(address);
             ExitNow();
         }
     }
@@ -797,7 +775,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
 
             if (child.RemoveIp6Address(target) == kErrorNone)
             {
-                destination.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), child.GetRloc16());
+                Get<Mle::Mle>().ComposeRloc(child.GetRloc16(), destination);
 
                 SendAddressError(target, meshLocalIid, destination);
                 ExitNow();
@@ -846,17 +824,6 @@ template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
             ExitNow();
         }
     }
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(target))
-    {
-        uint16_t srcRloc16 = aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator();
-
-        LogInfo("Extending %s to %s for target %s rloc16=%04x", UriToString<kUriAddressQuery>(),
-                UriToString<kUriBackboneQuery>(), target.ToString().AsCString(), srcRloc16);
-        IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(target, srcRloc16));
-    }
-#endif
 
 exit:
     return;
@@ -1017,16 +984,16 @@ void AddressResolver::HandleIcmpReceive(void                *aContext,
                                                                 AsCoreType(aIcmpHeader));
 }
 
-void AddressResolver::HandleIcmpReceive(Message                 &aMessage,
-                                        const Ip6::MessageInfo  &aMessageInfo,
-                                        const Ip6::Icmp::Header &aIcmpHeader)
+void AddressResolver::HandleIcmpReceive(Message                &aMessage,
+                                        const Ip6::MessageInfo &aMessageInfo,
+                                        const Ip6::Icmp6Header &aIcmpHeader)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     Ip6::Header ip6Header;
 
-    VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp::Header::kTypeDstUnreach);
-    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::Icmp::Header::kCodeDstUnreachNoRoute);
+    VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp6Header::kTypeDstUnreach);
+    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::Icmp6Header::kCodeDstUnreachNoRoute);
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), ip6Header));
 
     Remove(ip6Header.GetDestination(), kReasonReceivedIcmpDstUnreachNoRoute);

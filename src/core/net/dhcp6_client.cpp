@@ -268,7 +268,7 @@ void Client::Solicit(uint16_t aRloc16)
 #if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
     messageInfo.SetPeerAddr(Ip6::Address::GetRealmLocalAllRoutersMulticast());
 #else
-    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
+    Get<Mle::Mle>().ComposeRloc(aRloc16, messageInfo.GetPeerAddr());
 #endif
     messageInfo.SetSockAddr(Get<Mle::Mle>().GetMeshLocalRloc());
     messageInfo.mPeerPort = kDhcpServerPort;
@@ -407,9 +407,7 @@ Error Client::ProcessIaNaOption(const Message &aMessage)
     Option::Iterator iterator;
 
     SuccessOrExit(error = Option::FindOption(aMessage, Option::kIaNa, offsetRange));
-    SuccessOrExit(error = aMessage.Read(offsetRange, option));
-
-    offsetRange.AdvanceOffset(sizeof(IaNaOption));
+    SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, option));
 
     // Iterate over and check the sub-options within `IaNaOption`.
 

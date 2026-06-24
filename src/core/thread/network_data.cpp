@@ -514,7 +514,7 @@ void NetworkData::FindRlocs(BorderRouterFilter aBrFilter, RoleFilter aRoleFilter
             case kAnyBrOrServer:
                 break;
             case kBrProvidingExternalIpConn:
-                matches = prefix.mOnMesh && (prefix.mDefaultRoute || prefix.mDp);
+                matches = prefix.mOnMesh && prefix.mDefaultRoute;
                 break;
             }
 

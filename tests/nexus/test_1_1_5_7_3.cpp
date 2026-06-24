@@ -31,7 +31,7 @@
 #include "mac/data_poll_sender.hpp"
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
-#include "thread/network_diagnostic.hpp"
+#include "thread/net_diag.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -65,11 +65,10 @@ static constexpr uint32_t kPollPeriod = 500;
  * Diagnostic TLV types used in the query.
  */
 static constexpr uint8_t kDiagGetTlvs[] = {
-    NetworkDiagnostic::Tlv::kExtMacAddress, NetworkDiagnostic::Tlv::kAddress16,
-    NetworkDiagnostic::Tlv::kMode,          NetworkDiagnostic::Tlv::kConnectivity,
-    NetworkDiagnostic::Tlv::kRoute,         NetworkDiagnostic::Tlv::kLeaderData,
-    NetworkDiagnostic::Tlv::kNetworkData,   NetworkDiagnostic::Tlv::kIp6AddressList,
-    NetworkDiagnostic::Tlv::kChildTable,    NetworkDiagnostic::Tlv::kChannelPages,
+    NetDiag::Tlv::kExtMacAddress, NetDiag::Tlv::kAddress16,      NetDiag::Tlv::kMode,
+    NetDiag::Tlv::kConnectivity,  NetDiag::Tlv::kRoute,          NetDiag::Tlv::kLeaderData,
+    NetDiag::Tlv::kNetworkData,   NetDiag::Tlv::kIp6AddressList, NetDiag::Tlv::kChildTable,
+    NetDiag::Tlv::kChannelPages,
 };
 
 struct DiagGetContext
@@ -100,9 +99,9 @@ static void HandleDiagnosticGetAnswer(otError              aError,
 
     Log("Diagnostic Answer from %s", AsCoreType(&aMessageInfo->mPeerAddr).ToString().AsCString());
 
-    SuccessOrQuit(Tlv::Find<NetworkDiagnostic::ExtMacAddressTlv>(*message, extAddress));
-    SuccessOrQuit(Tlv::Find<NetworkDiagnostic::Address16Tlv>(*message, shortAddress));
-    SuccessOrQuit(Tlv::Find<NetworkDiagnostic::ModeTlv>(*message, mode));
+    SuccessOrQuit(Tlv::Find<NetDiag::ExtMacAddressTlv>(*message, extAddress));
+    SuccessOrQuit(Tlv::Find<NetDiag::Address16Tlv>(*message, shortAddress));
+    SuccessOrQuit(Tlv::Find<NetDiag::ModeTlv>(*message, mode));
 }
 
 void Test5_7_3(void)
@@ -151,18 +150,10 @@ void Test5_7_3(void)
      * - Pass Criteria: N/A.
      */
 
-    /** Use AllowList to specify links between nodes. */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    router1.AllowList(fed1);
-    fed1.AllowList(router1);
-
-    router1.AllowList(med1);
-    med1.AllowList(router1);
-
-    router1.AllowList(sed1);
-    sed1.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, fed1);
+    AllowLinkBetween(router1, med1);
+    AllowLinkBetween(router1, sed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -213,7 +204,7 @@ void Test5_7_3(void)
      * - Pass Criteria: N/A.
      */
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticGet(
         leader.Get<Mle::Mle>().GetRealmLocalAllThreadNodesAddress(), kDiagGetTlvs, sizeof(kDiagGetTlvs),
         HandleDiagnosticGetAnswer, &context));
 

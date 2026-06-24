@@ -40,12 +40,18 @@
 namespace ot {
 namespace Utils {
 
-using namespace NetworkDiagnostic;
+using namespace NetDiag;
 
 RegisterLogModule("MeshDiag");
 
 //---------------------------------------------------------------------------------------------------------------------
 // MeshDiag
+
+const uint8_t MeshDiag::kDiscoverTopologyTlvs[] = {
+    Address16Tlv::kType,      ExtMacAddressTlv::kType, RouteTlv::kType, VersionTlv::kType,
+    Ip6AddressListTlv::kType, // Only if `mDiscoverIp6Addresses` in `DiscoverConfig`.
+    ChildTableTlv::kType,     // Only if `mDiscoverChildTable` in `DiscoverConfig`.
+};
 
 MeshDiag::MeshDiag(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -64,45 +70,54 @@ void MeshDiag::SetResponseTimeout(uint32_t aTimeout)
 
 Error MeshDiag::DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback aCallback, void *aContext)
 {
-    static constexpr uint8_t kMaxTlvsToRequest = 6;
-
     Error   error = kErrorNone;
-    uint8_t tlvs[kMaxTlvsToRequest];
-    uint8_t tlvsLength = 0;
+    TlvList tlvList;
+
+    if (aConfig.mExtraTlvTypesLength != 0)
+    {
+        // Verify that `mExtraTlvTypes` does not contain any of the required topology TLV types.
+        VerifyOrExit(aConfig.mExtraTlvTypes != nullptr, error = kErrorInvalidArgs);
+
+        for (uint8_t i = 0; i < aConfig.mExtraTlvTypesLength; i++)
+        {
+            VerifyOrExit(!DoesArrayContain(kDiscoverTopologyTlvs, aConfig.mExtraTlvTypes[i]),
+                         error = kErrorInvalidArgs);
+        }
+    }
 
     VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
 
-    tlvs[tlvsLength++] = Address16Tlv::kType;
-    tlvs[tlvsLength++] = ExtMacAddressTlv::kType;
-    tlvs[tlvsLength++] = RouteTlv::kType;
-    tlvs[tlvsLength++] = VersionTlv::kType;
+    SuccessOrExit(error = tlvList.AddAll(kDiscoverTopologyTlvs, GetArrayLength(kDiscoverTopologyTlvs)));
 
-    if (aConfig.mDiscoverIp6Addresses)
+    if (!aConfig.mDiscoverIp6Addresses)
     {
-        tlvs[tlvsLength++] = Ip6AddressListTlv::kType;
+        tlvList.Remove(Ip6AddressListTlv::kType);
     }
 
-    if (aConfig.mDiscoverChildTable)
+    if (!aConfig.mDiscoverChildTable)
     {
-        tlvs[tlvsLength++] = ChildTableTlv::kType;
+        tlvList.Remove(ChildTableTlv::kType);
     }
 
-    Get<RouterTable>().GetRouterIdSet(mDiscover.mExpectedRouterIdSet);
+    SuccessOrExit(error = tlvList.AddAll(aConfig.mExtraTlvTypes, aConfig.mExtraTlvTypesLength));
+
+    Get<RouterTable>().GetRouterIdMask(mDiscover.mExpectedRouterIds);
 
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
         Ip6::Address destination;
 
-        if (!mDiscover.mExpectedRouterIdSet.Contains(routerId))
+        if (!mDiscover.mExpectedRouterIds.IsAllocated(routerId))
         {
             continue;
         }
 
-        destination.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), Mle::Rloc16FromRouterId(routerId));
+        Get<Mle::Mle>().ComposeRloc(Mle::Rloc16FromRouterId(routerId), destination);
 
         SuccessOrExit(error = Get<Client>().SendCommand(kUriDiagnosticGetRequest, Message::kPriorityLow, destination,
-                                                        tlvs, tlvsLength, HandleDiagGetResponse, this));
+                                                        tlvList.GetArrayBuffer(), tlvList.GetLength(),
+                                                        HandleDiagGetResponse, this));
     }
 
     mDiscover.mCallback.Set(aCallback, aContext);
@@ -119,6 +134,7 @@ void MeshDiag::HandleDiagGetResponse(Coap::Msg *aMsg, Error aResult)
     RouterInfo      routerInfo;
     Ip6AddrIterator ip6AddrIterator;
     ChildIterator   childIterator;
+    TlvIterator     tlvIterator;
 
     SuccessOrExit(aResult);
     VerifyOrExit(aMsg != nullptr);
@@ -136,9 +152,12 @@ void MeshDiag::HandleDiagGetResponse(Coap::Msg *aMsg, Error aResult)
         routerInfo.mChildIterator = &childIterator;
     }
 
-    mDiscover.mExpectedRouterIdSet.Remove(routerInfo.mRouterId);
+    tlvIterator.InitFrom(aMsg->mMessage);
+    routerInfo.mTlvIterator = &tlvIterator;
 
-    if (mDiscover.mExpectedRouterIdSet.GetNumberOfAllocatedIds() == 0)
+    mDiscover.mExpectedRouterIds.Remove(routerInfo.mRouterId);
+
+    if (mDiscover.mExpectedRouterIds.DetermineAllocatedCount() == 0)
     {
         error  = kErrorNone;
         mState = kStateIdle;
@@ -165,7 +184,7 @@ Error MeshDiag::SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsL
     VerifyOrExit(Mle::IsRouterRloc16(aRloc16), error = kErrorInvalidArgs);
     VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::RouterIdFromRloc16(aRloc16)), error = kErrorNotFound);
 
-    destination.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
+    Get<Mle::Mle>().ComposeRloc(aRloc16, destination);
 
     SuccessOrExit(error = Get<Client>().SendCommand(kUriDiagnosticGetQuery, Message::kPriorityNormal, destination,
                                                     aTlvs, aTlvsLength));
@@ -390,8 +409,7 @@ bool MeshDiag::ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6:
         // Read the `ChildIp6AddressListTlvValue` (which contains the
         // child RLOC16) and then prepare the `Ip6AddrIterator`.
 
-        SuccessOrExit(aMessage.Read(offsetRange, tlvValue));
-        offsetRange.AdvanceOffset(sizeof(tlvValue));
+        SuccessOrExit(aMessage.ReadAndAdvance(offsetRange, tlvValue));
 
         ip6AddrIterator.mMessage     = &aMessage;
         ip6AddrIterator.mOffsetRange = offsetRange;
@@ -467,15 +485,15 @@ void MeshDiag::HandleTimer(void) { Finalize(kErrorResponseTimeout); }
 
 Error MeshDiag::RouterInfo::ParseFrom(const Message &aMessage)
 {
-    Error     error = kErrorNone;
-    Mle::Mle &mle   = aMessage.Get<Mle::Mle>();
-    RouteTlv  routeTlv;
+    Error          error = kErrorNone;
+    Mle::Mle      &mle   = aMessage.Get<Mle::Mle>();
+    RouteTlv::Data routeTlvData;
 
     Clear();
 
     SuccessOrExit(error = Tlv::Find<Address16Tlv>(aMessage, mRloc16));
     SuccessOrExit(error = Tlv::Find<ExtMacAddressTlv>(aMessage, AsCoreType(&mExtAddress)));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, routeTlv));
+    SuccessOrExit(error = RouteTlv::FindIn(aMessage, routeTlvData));
 
     switch (error = Tlv::Find<VersionTlv>(aMessage, mVersion))
     {
@@ -495,13 +513,9 @@ Error MeshDiag::RouterInfo::ParseFrom(const Message &aMessage)
     mIsLeader           = (mRouterId == mle.GetLeaderId());
     mIsBorderRouter     = aMessage.Get<NetworkData::Leader>().ContainsBorderRouterWithRloc(mRloc16);
 
-    for (uint8_t id = 0, index = 0; id <= Mle::kMaxRouterId; id++)
+    for (const RouteTlv::Data::Entry &entry : routeTlvData.GetEntries())
     {
-        if (routeTlv.IsRouterIdSet(id))
-        {
-            mLinkQualities[id] = routeTlv.GetLinkQualityIn(index);
-            index++;
-        }
+        mLinkQualities[entry.GetRouterId()] = entry.GetLinkQualityIn();
     }
 
 exit:
@@ -524,12 +538,12 @@ exit:
 
 Error MeshDiag::Ip6AddrIterator::GetNextAddress(Ip6::Address &aAddress)
 {
-    Error error = kErrorNone;
+    Error error = kErrorNotFound;
 
-    VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
+    VerifyOrExit(mMessage != nullptr);
+    SuccessOrExit(mMessage->ReadAndAdvance(mOffsetRange, aAddress));
 
-    VerifyOrExit(mMessage->Read(mOffsetRange, aAddress) == kErrorNone, error = kErrorNotFound);
-    mOffsetRange.AdvanceOffset(sizeof(Ip6::Address));
+    error = kErrorNone;
 
 exit:
     return error;
@@ -559,8 +573,7 @@ Error MeshDiag::ChildIterator::GetNextChildInfo(ChildInfo &aChildInfo)
 
     VerifyOrExit(mMessage != nullptr);
 
-    SuccessOrExit(mMessage->Read(mOffsetRange, entry));
-    mOffsetRange.AdvanceOffset(sizeof(ChildTableTlvEntry));
+    SuccessOrExit(mMessage->ReadAndAdvance(mOffsetRange, entry));
 
     entry.Parse(info);
 
@@ -618,6 +631,94 @@ void MeshDiag::RouterNeighborEntry::SetFrom(const RouterNeighborTlvValue &aTlvVa
     mLastRssi         = aTlvValue.GetLastRssi();
     mFrameErrorRate   = aTlvValue.GetFrameErrorRate();
     mMessageErrorRate = aTlvValue.GetMessageErrorRate();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// MeshDiag::TlvIterator
+
+void MeshDiag::TlvIterator::InitFrom(const Message &aMessage)
+{
+    mMessage = &aMessage;
+    mIter    = aMessage.GetOffset();
+}
+
+Error MeshDiag::TlvIterator::GetNextTlvInfo(DiagTlvInfo &aTlvInfo)
+{
+    Error     error;
+    uint16_t  offset = mIter;
+    Tlv::Info tlvInfo;
+
+    VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
+
+    while (offset < mMessage->GetLength())
+    {
+        SuccessOrExit(error = tlvInfo.ParseFrom(*mMessage, offset));
+        offset += tlvInfo.GetSize();
+
+        if (DoesArrayContain(kDiscoverTopologyTlvs, tlvInfo.GetType()))
+        {
+            continue;
+        }
+
+        error = NetDiag::Client::ParseDiagTlv(*mMessage, tlvInfo, aTlvInfo);
+
+        switch (error)
+        {
+        case kErrorNotCapable:
+            // Skip over any unrecognized TLV.
+            break;
+
+        case kErrorNone:
+            mIter = offset;
+            OT_FALL_THROUGH;
+
+        default:
+            ExitNow();
+        }
+    }
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// MeshDiag::TlvList
+
+Error MeshDiag::TlvList::Add(uint8_t aTlvType)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!Contains(aTlvType));
+    error = PushBack(aTlvType);
+
+exit:
+    return error;
+}
+
+Error MeshDiag::TlvList::AddAll(const uint8_t *aTlvTypes, uint8_t aLength)
+{
+    Error error = kErrorNone;
+
+    for (uint8_t i = 0; i < aLength; i++)
+    {
+        SuccessOrExit(error = Add(aTlvTypes[i]));
+    }
+
+exit:
+    return error;
+}
+
+void MeshDiag::TlvList::Remove(uint8_t aTlvType)
+{
+    uint8_t *entry = Find(aTlvType);
+
+    VerifyOrExit(entry != nullptr);
+    Array::Remove(*entry);
+
+exit:
+    return;
 }
 
 } // namespace Utils

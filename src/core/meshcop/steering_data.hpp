@@ -43,6 +43,7 @@
 #include "common/code_utils.hpp"
 #include "common/equatable.hpp"
 #include "common/error.hpp"
+#include "common/message.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 

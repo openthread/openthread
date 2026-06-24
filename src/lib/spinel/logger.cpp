@@ -524,7 +524,7 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
     case SPINEL_PROP_STREAM_DEBUG:
     {
         char          debugString[OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE + 1];
-        spinel_size_t stringLength = sizeof(debugString);
+        spinel_size_t stringLength = sizeof(debugString) - 1;
 
         unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, debugString, &stringLength);
         assert(stringLength < sizeof(debugString));

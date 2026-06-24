@@ -50,6 +50,11 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 static constexpr uint32_t kStabilizationTime = 10 * 1000;
 
 /**
+ * Time to advance for address resolution and ping reply, in milliseconds.
+ */
+static constexpr uint32_t kAddressResolutionTime = 20 * 1000;
+
+/**
  * Time to advance for the BBR selection to complete, in milliseconds.
  */
 static constexpr uint32_t kBbrSelectionTime = 10 * 1000;
@@ -133,12 +138,9 @@ void TestMatnTc10(void)
      * - Pass Criteria:
      *   - N/A
      */
-    br1.AllowList(router);
-    br1.AllowList(br2);
-    router.AllowList(br1);
-    router.AllowList(br2);
-    br2.AllowList(br1);
-    br2.AllowList(router);
+    AllowLinkBetween(br1, router);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(router, br2);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -180,9 +182,6 @@ void TestMatnTc10(void)
         config.mMlrTimeout          = kMlrTimeout;
         SuccessOrQuit(br2.Get<BackboneRouter::Local>().SetConfig(config));
     }
-
-    host.mInfraIf.Init(host);
-    host.mInfraIf.AddAddress(host.mInfraIf.GetLinkLocalAddress());
 
     {
         Ip6::Address hostGua;
@@ -304,7 +303,7 @@ void TestMatnTc10(void)
      * - Pass Criteria:
      *   - N/A
      */
-    nexus.AdvanceTime(kStabilizationTime);
+    nexus.AdvanceTime(kAddressResolutionTime);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 8a: BR_1 powers down");

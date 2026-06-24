@@ -92,15 +92,8 @@ void Test5_3_6(void)
      *   - Pass Criteria: N/A
      */
 
-    /**
-     * Use AllowList to specify links between nodes. There is a link between the following node pairs:
-     * - Leader (DUT) and Router 1
-     * - Router 1 and Router 2
-     */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-    router1.AllowList(router2);
-    router2.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, router2);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

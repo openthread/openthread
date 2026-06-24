@@ -73,7 +73,7 @@ otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
     Error error = kErrorNone;
 
     VerifyOrExit(!AsCoreType(aInstance).Get<Mle::Mle>().HasRloc16(Mle::kInvalidRloc16), error = kErrorDetached);
-    AsCoreType(aInstance).Get<Mle::Mle>().GetLeaderRloc(AsCoreType(aLeaderRloc));
+    AsCoreType(aInstance).Get<Mle::Mle>().ComposeLeaderRloc(AsCoreType(aLeaderRloc));
 
 exit:
     return error;
@@ -189,7 +189,7 @@ otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6A
     Error error = kErrorNone;
 
     VerifyOrExit(!AsCoreType(aInstance).Get<Mle::Mle>().HasRloc16(Mle::kInvalidRloc16), error = kErrorDetached);
-    AsCoreType(aInstance).Get<Mle::Mle>().GetServiceAloc(aServiceId, AsCoreType(aServiceAloc));
+    AsCoreType(aInstance).Get<Mle::Mle>().ComposeServiceAloc(aServiceId, AsCoreType(aServiceAloc));
 
 exit:
     return error;
@@ -237,37 +237,6 @@ otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
 exit:
     return error;
 }
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-otError otThreadSetFixedDuaInterfaceIdentifier(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid)
-{
-    Error error = kErrorNone;
-
-    if (aIid)
-    {
-        error = AsCoreType(aInstance).Get<DuaManager>().SetFixedDuaInterfaceIdentifier(AsCoreType(aIid));
-    }
-    else
-    {
-        AsCoreType(aInstance).Get<DuaManager>().ClearFixedDuaInterfaceIdentifier();
-    }
-
-    return error;
-}
-
-const otIp6InterfaceIdentifier *otThreadGetFixedDuaInterfaceIdentifier(otInstance *aInstance)
-{
-    Instance                       &instance = AsCoreType(aInstance);
-    const otIp6InterfaceIdentifier *iid      = nullptr;
-
-    if (instance.Get<DuaManager>().IsFixedDuaInterfaceIdentifierSet())
-    {
-        iid = &instance.Get<DuaManager>().GetFixedDuaInterfaceIdentifier();
-    }
-
-    return iid;
-}
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -533,7 +502,7 @@ void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint1
     StringWriter writer(aBuffer, aSize);
     UptimeMsec   uptime = static_cast<UptimeMsec>(aDuration) * Time::kOneSecondInMsec;
 
-    UptimeToString(uptime, writer, /* aIncludeMsec */ false);
+    UptimeToString(uptime, writer, /* aFlags */ 0);
 }
 #endif
 

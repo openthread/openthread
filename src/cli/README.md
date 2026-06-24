@@ -50,7 +50,6 @@ Done
 - [discover](#discover-channel)
 - [dns](#dns-config)
 - [domainname](#domainname)
-- [dua](#dua-iid)
 - [eidcache](#eidcache)
 - [eui64](#eui64)
 - [extaddr](#extaddr)
@@ -171,30 +170,6 @@ Done
 ```bash
 > bbr
 BBR Primary: None
-Done
-```
-
-### bbr mgmt dua \<status\|coap-code\> [meshLocalIid]
-
-Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status or COAP code.
-
-Only for testing/reference device.
-
-known status value:
-
-- 0: ST_DUA_SUCCESS
-- 1: ST_DUA_REREGISTER
-- 2: ST_DUA_INVALID
-- 3: ST_DUA_DUPLICATE
-- 4: ST_DUA_NO_RESOURCES
-- 5: ST_DUA_BBR_NOT_PRIMARY
-- 6: ST_DUA_GENERAL_FAILURE
-- 160: COAP code 5.00
-
-```bash
-> bbr mgmt dua 1 2f7c235e5025a2fd
-Done
-> bbr mgmt dua 160
 Done
 ```
 
@@ -421,7 +396,7 @@ Requires the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE` feature.
 
 The name can also be configured using the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME` configuration option (which is the recommended way to specify this name). This CLI command (and its corresponding API) is provided for projects where the name needs to be set after device initialization and at run-time.
 
-Per the Thread specification, the service instance should be a user-friendly name identifying the device model or product. A recommended format is "VendorName ProductName". To construct the full name and ensure name uniqueness, the OpenThread Border Agent module will append the Extended Address of the device (as 16-character hex digits) to the given base name. Note that the same name will be used for the ephemeral key service `_meshcop-e._udp` when the ephemeral key feature is enabled and used.
+Per the Thread specification, the service instance should be a user-friendly name identifying the device model or product. A recommended format is "VendorName ProductName". To construct the full name and ensure name uniqueness, the OpenThread Border Agent module appends a suffix (e.g., " #XXXX" where "XXXX" represents the last two bytes of the device's Extended Address in hex) to the given base name. If a name conflict is detected on the network, an additional index may be appended (e.g., " #XXXX (1)"). Note that the same name will be used for the ephemeral key service `_meshcop-e._udp` when the ephemeral key feature is enabled and used.
 
 ```bash
 ba servicebasename OpenThreadBorderAgent
@@ -1536,11 +1511,10 @@ The generated output encompasses the following information:
 - Version
 - Current state
 - Uptime and attach time
-- Channel
-- PAN IDs, extended MAC address, and RLOC16
+- Extended MAC address and RLOC16
+- Active Operational Dataset (redacted)
 - Unicast and multicast IPv6 address list
 - Network Data
-- Partition ID
 - Leader Data
 - Buffer info
 - Network statistics
@@ -1957,34 +1931,6 @@ Set the Thread Domain Name for Thread 1.2 device.
 
 ```bash
 > domainname Test\ Thread
-Done
-```
-
-### dua iid
-
-Get the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
-
-```bash
-> dua iid
-0004000300020001
-Done
-```
-
-### dua iid \<iid\>
-
-Set the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
-
-```bash
-> dua iid 0004000300020001
-Done
-```
-
-### dua iid clear
-
-Clear the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
-
-```bash
-> dua iid clear
 Done
 ```
 
@@ -2557,7 +2503,7 @@ Locate the closest destination of an anycast address (i.e., find the destination
 
 `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is required.
 
-The closest destination is determined based on the the current routing table and path costs within the Thread mesh.
+The closest destination is determined based on the current routing table and path costs within the Thread mesh.
 
 Locate the leader using its anycast address:
 
@@ -3597,7 +3543,7 @@ Done
 
 ### prefix
 
-Get the prefix list in the local Network Data. Note: For the Thread 1.2 border router with backbone capability, the local Domain Prefix would be listed as well (with flag `D`), with preceding `-` if backbone functionality is disabled.
+Get the prefix list in the local Network Data.
 
 ```bash
 > prefix
@@ -3610,8 +3556,6 @@ Done
 
 Add a valid prefix to the Network Data.
 
-Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
-
 - p: Preferred flag
 - a: Stateless IPv6 Address Autoconfiguration flag
 - d: DHCPv6 IPv6 Address Configuration flag
@@ -3620,7 +3564,6 @@ Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 - o: On Mesh flag
 - s: Stable flag
 - n: Nd Dns flag
-- D: Domain Prefix flag
 - prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash

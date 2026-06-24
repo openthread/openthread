@@ -52,11 +52,8 @@ struct TestVector
 
 void TestHkdfSha256(void)
 {
-    enum
-    {
-        kMaxOuttKey = 128,
-        kFillByte   = 0x77,
-    };
+    static constexpr uint16_t kMaxOuttKey = 128;
+    static constexpr uint8_t  kFillByte   = 0x77;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Test Case #1: RFC-5869 Appendix A.1

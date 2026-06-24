@@ -385,53 +385,6 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DUA_ID>(void)
-{
-    const otIp6InterfaceIdentifier *iid   = otThreadGetFixedDuaInterfaceIdentifier(mInstance);
-    otError                         error = OT_ERROR_NONE;
-
-    if (iid == nullptr)
-    {
-        // send empty response
-    }
-    else
-    {
-        for (uint8_t i : iid->mFields.m8)
-        {
-            SuccessOrExit(error = mEncoder.WriteUint8(i));
-        }
-    }
-
-exit:
-    return error;
-}
-
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DUA_ID>(void)
-{
-    otError error = OT_ERROR_NONE;
-
-    if (mDecoder.GetRemainingLength() == 0)
-    {
-        SuccessOrExit(error = otThreadSetFixedDuaInterfaceIdentifier(mInstance, nullptr));
-    }
-    else
-    {
-        otIp6InterfaceIdentifier iid;
-
-        for (uint8_t &i : iid.mFields.m8)
-        {
-            SuccessOrExit(error = mDecoder.ReadUint8(i));
-        }
-
-        SuccessOrExit(error = otThreadSetFixedDuaInterfaceIdentifier(mInstance, &iid));
-    }
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
-
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE>(void)
@@ -1218,6 +1171,8 @@ exit:
 }
 #endif // #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID>(void)
 {
     return mEncoder.WriteUint8(mPreferredRouteId);
@@ -1234,6 +1189,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_PREFERRED_ROUT
 exit:
     return error;
 }
+
+#endif
 
 template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS>(void)
 {

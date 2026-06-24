@@ -59,7 +59,13 @@ EphemeralKeyManager::EphemeralKeyManager(Instance &aInstance)
     , mCoapDtlsSession(nullptr)
     , mTimer(aInstance)
     , mCallbackTask(aInstance)
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    , mServiceRenameIndex(0)
+#endif
 {
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    ClearAllBytes(mServiceName);
+#endif
 }
 
 void EphemeralKeyManager::SetEnabled(bool aEnabled)
@@ -97,8 +103,7 @@ Error EphemeralKeyManager::Start(const char *aKeyString, uint32_t aTimeout, uint
     mDtlsTransport.SetAcceptCallback(EphemeralKeyManager::HandleAcceptSession, this);
     mDtlsTransport.SetRemoveSessionCallback(EphemeralKeyManager::HandleRemoveSession, this);
 
-    SuccessOrExit(error = mDtlsTransport.Open());
-    SuccessOrExit(error = mDtlsTransport.Bind(aUdpPort));
+    SuccessOrExit(error = mDtlsTransport.Open(aUdpPort));
 
     SuccessOrExit(
         error = mDtlsTransport.SetPsk(reinterpret_cast<const uint8_t *>(aKeyString), static_cast<uint8_t>(length)));
@@ -215,7 +220,8 @@ void EphemeralKeyManager::UpdateCountersAndRecordEvent(DeactivationReason aReaso
 void EphemeralKeyManager::SetState(State aState)
 {
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
-    bool isServiceRegistered = ShouldRegisterService();
+    bool wasServiceRegistered = ShouldRegisterService();
+    bool shouldRegister;
 #endif
 
     VerifyOrExit(mState != aState);
@@ -224,8 +230,22 @@ void EphemeralKeyManager::SetState(State aState)
     mCallbackTask.Post();
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
-    VerifyOrExit(isServiceRegistered != ShouldRegisterService());
-    RegisterOrUnregisterService();
+
+    shouldRegister = ShouldRegisterService();
+    VerifyOrExit(wasServiceRegistered != shouldRegister);
+
+    if (shouldRegister)
+    {
+        // We start with the same service name as used by the `Manager`.
+        // We keep track of it separately, so it can be renamed on its
+        // own.
+
+        mServiceRenameIndex = Get<Manager>().mServiceRenameIndex;
+        Get<Manager>().ConstructServiceName(mServiceRenameIndex, mServiceName);
+    }
+
+    RegisterOrUnregisterService(shouldRegister);
+
 #endif
 
 exit:
@@ -349,25 +369,55 @@ bool EphemeralKeyManager::ShouldRegisterService(void) const
     return shouldRegister;
 }
 
-void EphemeralKeyManager::RegisterOrUnregisterService(void)
+void EphemeralKeyManager::ConstructServiceName(void)
+{
+    Get<Manager>().ConstructServiceName(mServiceRenameIndex, mServiceName);
+}
+
+void EphemeralKeyManager::RegisterOrUnregisterService(bool aRegister)
 {
     Dnssd::Service service;
 
     VerifyOrExit(Get<Dnssd>().IsReady());
 
     service.Clear();
-    service.mServiceInstance = Get<Manager>().GetServiceName();
+    service.mServiceInstance = mServiceName;
     service.mServiceType     = kServiceType;
     service.mPort            = GetUdpPort();
 
-    if (ShouldRegisterService())
+    LogInfo("%segistering service %s %s", aRegister ? "R" : "Unr", mServiceName, kServiceType);
+
+    if (aRegister)
     {
-        Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, /* aCallback */ nullptr);
+        Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, HandleRegisterDone);
     }
     else
     {
         Get<Dnssd>().UnregisterService(service, /* aRequestId */ 0, /* aCallback */ nullptr);
     }
+
+exit:
+    return;
+}
+
+void EphemeralKeyManager::HandleRegisterDone(otInstance *aInstance, otPlatDnssdRequestId aRequestId, otError aError)
+{
+    OT_UNUSED_VARIABLE(aRequestId);
+    AsCoreType(aInstance).Get<EphemeralKeyManager>().HandleRegisterDone(aError);
+}
+
+void EphemeralKeyManager::HandleRegisterDone(Error aError)
+{
+    VerifyOrExit(aError == kErrorDuplicated);
+
+    LogInfoOnError(aError, "register service %s %s - retrying with a new name", mServiceName, kServiceType);
+
+    RegisterOrUnregisterService(/* aRegister */ false);
+
+    mServiceRenameIndex++;
+    ConstructServiceName();
+
+    RegisterOrUnregisterService(/* aRegister */ true);
 
 exit:
     return;

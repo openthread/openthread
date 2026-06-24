@@ -101,7 +101,6 @@ set(COMMON_SOURCES
     backbone_router/bbr_local.cpp
     backbone_router/bbr_manager.cpp
     backbone_router/multicast_listeners_table.cpp
-    backbone_router/ndproxy_table.cpp
     border_router/br_log.cpp
     border_router/br_tracker.cpp
     border_router/br_types.cpp
@@ -115,6 +114,7 @@ set(COMMON_SOURCES
     coap/coap_secure.cpp
     common/appender.cpp
     common/binary_search.cpp
+    common/bit_set.cpp
     common/bit_utils.cpp
     common/crc.cpp
     common/data.cpp
@@ -210,6 +210,7 @@ set(COMMON_SOURCES
     net/nd6.cpp
     net/nd_agent.cpp
     net/netif.cpp
+    net/plat_tcp.cpp
     net/slaac_address.cpp
     net/sntp_client.cpp
     net/socket.cpp
@@ -237,7 +238,6 @@ set(COMMON_SOURCES
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
     thread/discover_scanner.cpp
-    thread/dua_manager.cpp
     thread/energy_scan_server.cpp
     thread/indirect_sender.cpp
     thread/key_manager.cpp
@@ -255,8 +255,12 @@ set(COMMON_SOURCES
     thread/mle_tlvs.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
+    thread/mlr_types.cpp
     thread/neighbor.cpp
     thread/neighbor_table.cpp
+    thread/net_diag.cpp
+    thread/net_diag_tlvs.cpp
+    thread/net_diag_types.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
     thread/network_data_leader_ftd.cpp
@@ -266,8 +270,6 @@ set(COMMON_SOURCES
     thread/network_data_service.cpp
     thread/network_data_tlvs.cpp
     thread/network_data_types.cpp
-    thread/network_diagnostic.cpp
-    thread/network_diagnostic_tlvs.cpp
     thread/panid_query_server.cpp
     thread/peer.cpp
     thread/peer_table.cpp
@@ -277,6 +279,7 @@ set(COMMON_SOURCES
     thread/src_match_controller.cpp
     thread/thread_link_info.cpp
     thread/thread_netif.cpp
+    thread/thread_tlvs.cpp
     thread/time_sync_service.cpp
     thread/tmf.cpp
     thread/uri_paths.cpp

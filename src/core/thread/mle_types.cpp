@@ -145,18 +145,25 @@ uint8_t DeviceProperties::CalculateLeaderWeight(void) const
 #endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
-// RouterIdSet
+// RouterIdMask
 
-uint8_t RouterIdSet::GetNumberOfAllocatedIds(void) const
+uint8_t RouterIdMask::DetermineAllocatedCount(void) const
 {
     uint8_t count = 0;
 
-    for (uint8_t byte : mRouterIdSet)
+    for (uint8_t byte : mMask)
     {
         count += CountBitsInMask(byte);
     }
 
     return count;
+}
+
+Error RouterIdMask::AppendMaskTo(Message &aMessage) const { return aMessage.AppendBytes(mMask, kMaskSize); }
+
+Error RouterIdMask::ReadMaskFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    return aMessage.Read(aOffsetRange, mMask, kMaskSize);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

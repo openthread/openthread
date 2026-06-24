@@ -44,6 +44,7 @@
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/num_utils.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -264,6 +265,60 @@ inline bool HasKey(KeyRef aKeyRef) { return otPlatCryptoHasKey(aKeyRef); }
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 /**
+ * Represents a crypto context.
+ */
+class Context : public otCryptoContext
+{
+public:
+    /**
+     * Gets the pointer to the context buffer.
+     *
+     * @returns A pointer to the context buffer.
+     */
+    void *GetContext(void) { return mContext; }
+
+    /**
+     * Gets the size of the context buffer.
+     *
+     * @returns The size of the context buffer in bytes.
+     */
+    uint16_t GetSize(void) const { return mContextSize; }
+
+    /**
+     * Sets the context buffer.
+     *
+     * @param[in] aContext A pointer to the context buffer.
+     * @param[in] aSize    The size of the context buffer in bytes.
+     */
+    void SetContext(void *aContext, uint16_t aSize) { mContext = aContext, mContextSize = aSize; }
+};
+
+/**
+ * Represents a crypto context with a locally allocated buffer.
+ *
+ * @tparam kContextSize The size of the context buffer in bytes.
+ */
+template <uint16_t kContextSize> class ContextWith : public Context
+{
+public:
+    /**
+     * Initializes the context and the locally allocated buffer.
+     */
+    ContextWith(void)
+    {
+        ClearAllBytes(*this);
+#if !OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+        SetContext(mStorage, kContextSize);
+#endif
+    }
+
+private:
+#if !OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+    uint64_t mStorage[DivideAndRoundUp<uint16_t>(kContextSize, sizeof(uint64_t))];
+#endif
+};
+
+/**
  * Represents a crypto key.
  *
  * The `Key` can represent a literal key (i.e., a pointer to a byte array containing the key along with a key length)
@@ -393,6 +448,7 @@ private:
 
 } // namespace Crypto
 
+DefineCoreType(otCryptoContext, Crypto::Context);
 DefineCoreType(otCryptoKey, Crypto::Key);
 
 } // namespace ot

@@ -85,6 +85,7 @@ const char *otSysGetRadioUrlHelpString(void)
     "    uart-flow-control              Enable flow control, disabled by default.\n"                 \
     "    uart-init-deassert             Deassert lines on init when flow control is disabled.\n"     \
     "    uart-reset                     Reset connection after hard resetting RCP(USB CDC ACM).\n"   \
+    "    uart-exclusive                 Lock uart device using flock / TIOCEXCL.\n"                  \
     "\n"
 #else
 #define OT_SPINEL_HDLC_RADIO_URL_HELP_BUS
@@ -148,8 +149,10 @@ void RadioUrl::Init(const char *aUrl)
 {
     if (aUrl != nullptr)
     {
-        VerifyOrDie(strnlen(aUrl, sizeof(mUrl)) < sizeof(mUrl), OT_EXIT_INVALID_ARGUMENTS);
-        strncpy(mUrl, aUrl, sizeof(mUrl) - 1);
+        size_t len = strlen(aUrl);
+
+        VerifyOrDie(len + 1 < sizeof(mUrl), OT_EXIT_INVALID_ARGUMENTS);
+        strcpy(mUrl, aUrl);
         SuccessOrDie(Url::Url::Init(mUrl));
     }
 }

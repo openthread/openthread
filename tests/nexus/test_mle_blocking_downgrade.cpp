@@ -66,28 +66,16 @@ void TestMleBlockingDowngrade(void)
     Log("---------------------------------------------------------------------------------------");
     Log("Form initial topology");
 
-    leader.AllowList(dut);
-    dut.AllowList(leader);
-
-    leader.AllowList(newRouter);
-    newRouter.AllowList(leader);
-
-    child.AllowList(dut);
-    dut.AllowList(child);
-
-    child.AllowList(newRouter);
-    newRouter.AllowList(child);
+    AllowLinkBetween(leader, dut);
+    AllowLinkBetween(leader, newRouter);
+    AllowLinkBetween(child, dut);
+    AllowLinkBetween(child, newRouter);
 
     for (Node *router : routers)
     {
-        leader.AllowList(*router);
-        router->AllowList(leader);
-
-        dut.AllowList(*router);
-        router->AllowList(dut);
-
-        newRouter.AllowList(*router);
-        router->AllowList(newRouter);
+        AllowLinkBetween(leader, *router);
+        AllowLinkBetween(dut, *router);
+        AllowLinkBetween(newRouter, *router);
     }
 
     leader.Form();

@@ -116,6 +116,7 @@
 #include "net/nat64_translator.hpp"
 #include "net/nd_agent.hpp"
 #include "net/netif.hpp"
+#include "net/plat_tcp.hpp"
 #include "net/slaac_address.hpp"
 #include "net/sntp_client.hpp"
 #include "net/srp_advertising_proxy.hpp"
@@ -128,7 +129,6 @@
 #include "thread/anycast_locator.hpp"
 #include "thread/child_supervision.hpp"
 #include "thread/discover_scanner.hpp"
-#include "thread/dua_manager.hpp"
 #include "thread/energy_scan_server.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_metrics.hpp"
@@ -137,11 +137,11 @@
 #include "thread/message_framer.hpp"
 #include "thread/mle.hpp"
 #include "thread/mlr_manager.hpp"
+#include "thread/net_diag.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_notifier.hpp"
 #include "thread/network_data_publisher.hpp"
 #include "thread/network_data_service.hpp"
-#include "thread/network_diagnostic.hpp"
 #include "thread/panid_query_server.hpp"
 #include "thread/radio_selector.hpp"
 #include "thread/thread_netif.hpp"
@@ -209,6 +209,11 @@ public:
     static Instance *Init(void *aBuffer, size_t *aBufferSize);
 
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+    /**
+     * Specifies number of static OpenThread instances.
+     */
+    static constexpr uint16_t kNumStaticInstances = OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM;
+
     /**
      * This static method initializes the OpenThread instance.
      *
@@ -356,6 +361,31 @@ public:
      */
     Error SetLogLevel(LogLevel aLogLevel);
 
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    /**
+     * Overrides the current log level with a new one.
+     *
+     * The active log level will be the maximum of the original (user-set) log level and the override log level.
+     * If this is the first time an override is requested, the current log level is saved as the original log level.
+     *
+     * Subsequent calls to `SetLogLevel()` will update the original log level, and the active log level will be
+     * updated accordingly (again as the maximum of the new original and the override level).
+     *
+     * This method can be called multiple times to change the override log level.
+     *
+     * @param[in] aLogLevel  The override log level.
+     */
+    void OverrideLogLevel(LogLevel aLogLevel);
+
+    /**
+     * Restores the log level to its original (user-set) value.
+     *
+     * This clears the log level override state. If the log level is not currently overridden, calling this
+     * method has no effect.
+     */
+    void RestoreLogLevel(void);
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /**
      * Sets the global log level.
@@ -431,7 +461,7 @@ public:
 #endif
 
     /**
-     * Retrieves the the Message Buffer information.
+     * Retrieves the Message Buffer information.
      *
      * @param[out]  aInfo  A `BufferInfo` where information is written.
      */
@@ -484,10 +514,47 @@ public:
     void AfterInit(void);
 #endif
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    /**
+     * Destructor
+     */
+    ~Instance(void);
+#endif
+
 private:
+    class ActiveInstanceTracker
+    {
+    public:
+        // This class is used to track and update the `gActiveInstance` pointer during the
+        // construction and destruction of an `Instance`.
+        //
+        // `mActiveInstanceTracker` is defined as the very first member variable in `Instance`.
+        // This ensures its constructor is called before any other member components are
+        // initialized, and its destructor is called after all other components are destroyed.
+        // This ensures `gActiveInstance` is correctly set during the entire lifecycle of
+        // the `Instance`, allowing member components to safely emit logs.
+        //
+        // The `Instance` destructor also explicitly sets `gActiveInstance` to the instance
+        // being destroyed at the beginning of its body. This ensures that during the
+        // entire destruction process, log messages are correctly associated with the
+        // instance being destroyed. Finally, when `mActiveInstanceTracker` itself is
+        // destroyed (at the end of the `Instance` destruction), `gActiveInstance` is
+        // set to `nullptr` to avoid any potential use of a dangling pointer.
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+        ActiveInstanceTracker(Instance &aInstance) { gActiveInstance = &aInstance; }
+        ~ActiveInstanceTracker(void) { gActiveInstance = nullptr; }
+#else
+        ActiveInstanceTracker(Instance &) {}
+#endif
+    };
+
 #if !OPENTHREAD_PLATFORM_NEXUS
     Instance(void);
     void AfterInit(void);
+#endif
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    void SignalLogLevelChange(void);
 #endif
 
     //-----------------------------------------------------------------------------------------------------------------
@@ -508,6 +575,8 @@ private:
     //
     // Tasklet and Timer Schedulers are first to ensure other
     // objects/classes can use them from their constructors.
+
+    ActiveInstanceTracker mActiveInstanceTracker;
 
     Tasklet::Scheduler    mTaskletScheduler;
     TimerMilli::Scheduler mTimerMilliScheduler;
@@ -562,6 +631,10 @@ private:
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
     Tmf::Agent  mTmfAgent;
+
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+    Ip6::PlatTcp mPlatTcp;
+#endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     Dhcp6::Client mDhcp6Client;
@@ -642,9 +715,9 @@ private:
 
     VendorInfo mVendorInfo;
 
-    NetworkDiagnostic::Server mNetworkDiagnosticServer;
+    NetDiag::Server mNetDiagServer;
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-    NetworkDiagnostic::Client mNetworkDiagnosticClient;
+    NetDiag::Client mNetDiagClient;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
@@ -697,11 +770,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-    MlrManager mMlrManager;
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    DuaManager mDuaManager;
+    Mlr::Manager mMlrManager;
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
@@ -830,6 +899,11 @@ private:
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     LogLevel mLogLevel;
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    LogLevel mOriginalLogLevel;
+    LogLevel mOverrideLogLevel;
+    bool     mIsLogLevelOverridden;
+#endif
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     bool mIsLogLevelSet;
 #endif
@@ -996,6 +1070,10 @@ template <> inline Ip6::Icmp &Instance::Get(void) { return mIp6.mIcmp; }
 
 template <> inline Ip6::Mpl &Instance::Get(void) { return mIp6.mMpl; }
 
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+template <> inline Ip6::PlatTcp &Instance::Get(void) { return mPlatTcp; }
+#endif
+
 template <> inline Tmf::Agent &Instance::Get(void) { return mTmfAgent; }
 
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
@@ -1054,10 +1132,10 @@ template <> inline Dns::Multicast::Core &Instance::Get(void) { return mMdnsCore;
 
 template <> inline VendorInfo &Instance::Get(void) { return mVendorInfo; }
 
-template <> inline NetworkDiagnostic::Server &Instance::Get(void) { return mNetworkDiagnosticServer; }
+template <> inline NetDiag::Server &Instance::Get(void) { return mNetDiagServer; }
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-template <> inline NetworkDiagnostic::Client &Instance::Get(void) { return mNetworkDiagnosticClient; }
+template <> inline NetDiag::Client &Instance::Get(void) { return mNetDiagClient; }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
@@ -1168,13 +1246,6 @@ template <> inline BackboneRouter::MulticastListenersTable &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-template <> inline BackboneRouter::NdProxyTable &Instance::Get(void)
-{
-    return mBackboneRouterManager.GetNdProxyTable();
-}
-#endif
-
 template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
 {
     return mBackboneRouterManager.GetBackboneTmfAgent();
@@ -1182,11 +1253,7 @@ template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-template <> inline MlrManager &Instance::Get(void) { return mMlrManager; }
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-template <> inline DuaManager &Instance::Get(void) { return mDuaManager; }
+template <> inline Mlr::Manager &Instance::Get(void) { return mMlrManager; }
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE

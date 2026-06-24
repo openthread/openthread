@@ -109,6 +109,7 @@ void Test_5_2_6(void)
     SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     leader.Get<Mle::Mle>().SetRouterUpgradeThreshold(kRouterUpgradeThreshold);
+    leader.Get<Mle::Mle>().SetLeaderUpgradeThreshold(kRouterUpgradeThreshold);
     leader.Get<Mle::Mle>().SetRouterDowngradeThreshold(kRouterDowngradeThreshold);
 
     for (uint16_t i = 0; i < kInitialRouterCount - 2; i++)

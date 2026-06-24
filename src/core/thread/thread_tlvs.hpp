@@ -42,6 +42,7 @@
 #include "meshcop/network_name.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/mlr_types.hpp"
 
 namespace ot {
 
@@ -137,69 +138,9 @@ typedef UintTlvInfo<ThreadTlv::kCommissionerSessionId, uint16_t> ThreadCommissio
 typedef UintTlvInfo<ThreadTlv::kStatus, uint8_t> ThreadStatusTlv;
 
 /**
- * Implements Router Mask TLV generation and parsing.
+ * Defines Router Mask TLV  constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterMask>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kRouterMask);
-        SetLength(sizeof(*this) - sizeof(ThreadTlv));
-        mAssignedRouterIdMask.Clear();
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
-
-    /**
-     * Returns the ID Sequence value.
-     *
-     * @returns The ID Sequence value.
-     */
-    uint8_t GetIdSequence(void) const { return mIdSequence; }
-
-    /**
-     * Sets the ID Sequence value.
-     *
-     * @param[in]  aSequence  The ID Sequence value.
-     */
-    void SetIdSequence(uint8_t aSequence) { mIdSequence = aSequence; }
-
-    /**
-     * Gets the Assigned Router ID Mask.
-     *
-     * @returns The Assigned Router ID Mask.
-     */
-    const Mle::RouterIdSet &GetAssignedRouterIdMask(void) const { return mAssignedRouterIdMask; }
-
-    /**
-     * Gets the Assigned Router ID Mask.
-     *
-     * @returns The Assigned Router ID Mask.
-     */
-    Mle::RouterIdSet &GetAssignedRouterIdMask(void) { return mAssignedRouterIdMask; }
-
-    /**
-     * Sets the Assigned Router ID Mask.
-     *
-     * @param[in]  aRouterIdSet A reference to the Assigned Router ID Mask.
-     */
-    void SetAssignedRouterIdMask(const Mle::RouterIdSet &aRouterIdSet) { mAssignedRouterIdMask = aRouterIdSet; }
-
-private:
-    uint8_t          mIdSequence;
-    Mle::RouterIdSet mAssignedRouterIdMask;
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<ThreadTlv::kRouterMask, Mle::RouterIdMask> ThreadRouterMaskTlv;
 
 /**
  * Defines Thread Network Data TLV constants and types.
@@ -209,46 +150,38 @@ typedef TlvInfo<ThreadTlv::kThreadNetworkData> ThreadNetworkDataTlv;
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
- * Implements IPv6 Addresses TLV generation and parsing.
+ * Defines IPv6 Addresses TLV constants and types and helper methods.
  */
-OT_TOOL_PACKED_BEGIN
-class Ip6AddressesTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kIp6Addresses>
+class Ip6AddressesTlv : public TlvInfo<ThreadTlv::kIp6Addresses>
 {
 public:
-    // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses to [1, 15].
-    static constexpr uint8_t kMinAddresses = 1;
-    static constexpr uint8_t kMaxAddresses = OT_IP6_MAX_MLR_ADDRESSES;
+    /**
+     * Appends an IPv6 Addresses TLV to a message.
+     *
+     * @param[in,out] aMessage       The message to append to.
+     * @param[in]     aAddresses     A pointer to an array of IPv6 addresses.
+     * @param[in]     aNumAddresses  The number of IPv6 addresses in the @p aAddresses array.
+     *
+     * @retval kErrorNone     Successfully appended the TLV.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
+     */
+    static Error AppendTo(Message &aMessage, const Ip6::Address *aAddresses, uint16_t aNumAddresses);
 
     /**
-     * Initializes the TLV.
+     * Finds and parses the IPv6 Addresses TLV from a given message.
+     *
+     * @param[in]  aMessage    The message to parse.
+     * @param[out] aAddresses  An `AddressArray` to output the parsed IPv6 addresses.
+     *
+     * @retval kErrorNone       Successfully found and parsed the TLV.
+     * @retval kErrorNotFound   Could not find the TLV in the message.
+     * @retval kErrorParse      Failed to parse the TLV.
+     * @retval kErrorNoBufs     There are more addresses in the TLV than can fit in `aAddresses`.
      */
-    void Init(void) { SetType(kIp6Addresses); }
+    static Error FindIn(const Message &aMessage, Mlr::AddressArray &aAddresses);
 
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const
-    {
-        return GetLength() >= sizeof(Ip6::Address) * Ip6AddressesTlv::kMinAddresses &&
-               GetLength() <= sizeof(Ip6::Address) * Ip6AddressesTlv::kMaxAddresses &&
-               (GetLength() % sizeof(Ip6::Address)) == 0;
-    }
-
-    /**
-     * Returns a pointer to the IPv6 address entry.
-     *
-     * @param[in]  aIndex  The index into the IPv6 address list.
-     *
-     * @returns A reference to the IPv6 address.
-     */
-    const Ip6::Address &GetIp6Address(uint8_t aIndex) const
-    {
-        return *reinterpret_cast<const Ip6::Address *>(GetValue() + (aIndex * sizeof(Ip6::Address)));
-    }
-} OT_TOOL_PACKED_END;
+    Ip6AddressesTlv(void) = delete;
+};
 
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 

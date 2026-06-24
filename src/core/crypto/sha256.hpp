@@ -47,6 +47,7 @@
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
 #include "crypto/context_size.hpp"
+#include "crypto/storage.hpp"
 
 namespace ot {
 
@@ -135,10 +136,7 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    otCryptoContext mContext;
-#if !OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kSha256ContextSize, uint64_t);
-#endif
+    ContextWith<kSha256ContextSize> mContext;
 };
 
 /**

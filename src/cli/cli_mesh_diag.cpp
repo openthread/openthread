@@ -125,6 +125,7 @@ template <> otError MeshDiag::Process<Cmd("topology")>(Arg aArgs[])
     otError                  error = OT_ERROR_NONE;
     otMeshDiagDiscoverConfig config;
 
+    ClearAllBytes(config);
     config.mDiscoverIp6Addresses = false;
     config.mDiscoverChildTable   = false;
 
@@ -547,8 +548,6 @@ void MeshDiag::HandleMeshDiagQueryChildIp6Addrs(otError                    aErro
 exit:
     OutputResult(aError);
 }
-
-void MeshDiag::OutputResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
 
 } // namespace Cli
 } // namespace ot

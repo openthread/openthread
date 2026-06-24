@@ -242,6 +242,7 @@ void Test_1_3_SRP_TC_15(const char *aJsonFileName)
     Log("Step 8: Eth 1 sends mDNS query QType PTR for service type");
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = kSrpServiceType;
@@ -307,6 +308,7 @@ void Test_1_3_SRP_TC_15(const char *aJsonFileName)
         snprintf(subServiceType, sizeof(subServiceType), "%s._sub.%s", kSrpSubtype1, kSrpServiceType);
 
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = subServiceType;
@@ -374,6 +376,7 @@ void Test_1_3_SRP_TC_15(const char *aJsonFileName)
         snprintf(subServiceType, sizeof(subServiceType), "%s._sub.%s", kSrpSubtype2, kSrpServiceType);
 
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = subServiceType;
@@ -412,6 +415,7 @@ void Test_1_3_SRP_TC_15(const char *aJsonFileName)
         snprintf(subServiceType, sizeof(subServiceType), "%s._sub.%s", kSrpSubtype1, kSrpServiceType);
 
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = subServiceType;
@@ -441,6 +445,7 @@ void Test_1_3_SRP_TC_15(const char *aJsonFileName)
     Log("Step 20: Eth 1 sends mDNS query QType PTR for the parent service type");
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = kSrpServiceType;
@@ -474,6 +479,7 @@ void Test_1_3_SRP_TC_15(const char *aJsonFileName)
         snprintf(subServiceType, sizeof(subServiceType), "%s._sub.%s", kSrpSubtypeInvalid, kSrpServiceType);
 
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = subServiceType;
@@ -538,6 +544,7 @@ void Test_1_3_SRP_TC_15(const char *aJsonFileName)
         snprintf(subServiceType, sizeof(subServiceType), "%s._sub.%s", kSrpSubtype2, kSrpServiceType);
 
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = subServiceType;
@@ -570,6 +577,7 @@ void Test_1_3_SRP_TC_15(const char *aJsonFileName)
         snprintf(subServiceType, sizeof(subServiceType), "%s._sub.%s", kSrpSubtype1, kSrpServiceType);
 
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = subServiceType;

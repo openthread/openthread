@@ -96,7 +96,7 @@ void UptimeTracker::HandleTimer(void)
 static uint16_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
 {
     // Returns the quotient of division `aDividend / aDivisor` and updates
-    // `aDividend` to returns the remainder
+    // `aDividend` to the remainder
 
     uint32_t quotient = aDividend / aDivisor;
 
@@ -105,7 +105,15 @@ static uint16_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
     return static_cast<uint16_t>(quotient);
 }
 
-void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, bool aIncludeMsec)
+UptimeString UptimeToString(UptimeMsec aUptime, UptimeStringFlags aFlags)
+{
+    UptimeString string;
+
+    UptimeToString(aUptime, string, aFlags);
+    return string;
+}
+
+void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, UptimeStringFlags aFlags)
 {
     uint64_t days = aUptime / Time::kOneDayInMsec;
     uint32_t remainder;
@@ -124,9 +132,14 @@ void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, bool aIncludeMsec
     minutes   = DivideAndGetRemainder(remainder, Time::kOneMinuteInMsec);
     seconds   = DivideAndGetRemainder(remainder, Time::kOneSecondInMsec);
 
-    aWriter.Append("%02u:%02u:%02u", hours, minutes, seconds);
+    if ((days > 0) || (hours > 0) || !(aFlags & kUptimeStringSkipHoursIfZero))
+    {
+        aWriter.Append("%02u:", hours);
+    }
 
-    if (aIncludeMsec)
+    aWriter.Append("%02u:%02u", minutes, seconds);
+
+    if (aFlags & kUptimeStringIncludeMsec)
     {
         aWriter.Append(".%03u", static_cast<uint16_t>(remainder));
     }

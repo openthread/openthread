@@ -109,9 +109,7 @@ void RunTest9_2_1(Topology aTopology, const char *aJsonFile)
      * - Description: Ensure topology is formed correctly.
      * - Pass Criteria: N/A.
      */
-
-    leader.AllowList(commissioner);
-    commissioner.AllowList(leader);
+    AllowLinkBetween(leader, commissioner);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

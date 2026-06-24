@@ -832,8 +832,8 @@ private:
     void     StartOperation(Operation aOperation);
     void     FinishOperation(void);
     void     PerformNextOperation(void);
-    TxFrame *PrepareBeaconRequest(void);
-    TxFrame *PrepareBeacon(void);
+    TxFrame *PrepareBeaconRequest(TxFrames &aTxFrames);
+    TxFrame *PrepareBeacon(TxFrames &aTxFrames);
     bool     ShouldSendBeacon(void) const;
     bool     IsJoinable(void) const;
     void     BeginTransmit(void);
@@ -852,10 +852,6 @@ private:
     void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
     void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText) const;
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    uint8_t GetTimeIeOffset(const Frame &aFrame);
-#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);

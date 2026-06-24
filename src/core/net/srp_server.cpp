@@ -80,7 +80,7 @@ Server::Server(Instance &aInstance)
     , mLeaseTimer(aInstance)
     , mOutstandingUpdatesTimer(aInstance)
     , mCompletedUpdateTask(aInstance)
-    , mServiceUpdateId(Random::NonCrypto::GetUint32())
+    , mServiceUpdateId(Random::NonCrypto::Generate<uint32_t>())
     , mPort(kUninitializedPort)
     , mState(kStateDisabled)
     , mAddressMode(kDefaultAddressMode)
@@ -727,8 +727,9 @@ void Server::CommitSrpUpdate(Error                    aError,
 exit:
     if (aMessageInfo != nullptr)
     {
-        if (aError == kErrorNone && (grantedLease != hostLease || grantedKeyLease != hostKeyLease))
+        if (aError == kErrorNone)
         {
+            // RFC 9664: server MUST echo the Update Lease option in any successful (RCODE=0) response.
             SendResponse(aDnsHeader, grantedLease, grantedKeyLease, useShortLease, *aMessageInfo);
         }
         else

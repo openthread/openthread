@@ -205,7 +205,7 @@ otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 void otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase)
 {
-    static_cast<Mac::Frame *>(aFrame)->SetCslIe(aCslPeriod, aCslPhase);
+    static_cast<Mac::Frame *>(aFrame)->UpdateCslIe(aCslPeriod, aCslPhase);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -264,44 +264,37 @@ uint8_t otMacFrameGenerateCslIeTemplate(uint8_t *aDest)
 {
     assert(aDest != nullptr);
 
-    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::CslIe::kHeaderIeId);
-    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetLength(sizeof(Mac::CslIe));
+    reinterpret_cast<Mac::CslIe *>(aDest)->Init();
 
-    return sizeof(Mac::HeaderIe) + sizeof(Mac::CslIe);
+    return sizeof(Mac::CslIe);
 }
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData, uint8_t aIeDataLength)
 {
-    uint8_t len = sizeof(Mac::VendorIeHeader) + aIeDataLength;
+    Mac::LinkMetricsProbingIe *probingIe = reinterpret_cast<Mac::LinkMetricsProbingIe *>(aDest);
 
     assert(aDest != nullptr);
 
-    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::ThreadIe::kHeaderIeId);
-    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetLength(len);
-
-    aDest += sizeof(Mac::HeaderIe);
-
-    reinterpret_cast<Mac::VendorIeHeader *>(aDest)->SetVendorOui(Mac::ThreadIe::kVendorOuiThreadCompanyId);
-    reinterpret_cast<Mac::VendorIeHeader *>(aDest)->SetSubType(Mac::ThreadIe::kEnhAckProbingIe);
+    probingIe->Init(aIeDataLength);
 
     if (aIeData != nullptr)
     {
-        aDest += sizeof(Mac::VendorIeHeader);
-        memcpy(aDest, aIeData, aIeDataLength);
+        probingIe->WriteMetricsDataFrom(aIeData);
     }
 
-    return sizeof(Mac::HeaderIe) + len;
+    return probingIe->GetSize();
 }
 
 void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, uint8_t aDataLen)
 {
     assert(aFrame != nullptr && aData != nullptr);
 
-    reinterpret_cast<Mac::Frame *>(aFrame)->SetEnhAckProbingIe(aData, aDataLen);
+    reinterpret_cast<Mac::Frame *>(aFrame)->UpdateEnhAckProbingIe(aData, aDataLen);
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 static uint16_t ComputeCslPhase(uint32_t aRadioTime, otRadioContext *aRadioContext)
 {
@@ -404,8 +397,14 @@ exit:
 
 otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
 {
+    otError error = OT_ERROR_NONE;
+
+    aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
+
+    VerifyOrExit(!otMacFrameIsSecurityEnabled(aFrame) || !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aRadioContext->mCslPresent) // CSL IE should be filled for every transmit attempt
+    if (static_cast<Mac::Frame *>(aFrame)->Has<Mac::CslIe>()) // CSL IE should be filled for every transmit attempt
     {
         otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod, ComputeCslPhase(aRadioTime, aRadioContext));
     }
@@ -413,8 +412,10 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otMacFrameUpdateTimeIe(aFrame, aRadioTime, aRadioContext);
 #endif
-    aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
-    return otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
+    error = otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
+
+exit:
+    return error;
 }
 
 bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otRadioContext *aRadioContext)

@@ -44,11 +44,12 @@ namespace ot {
 #error "Exactly one of {OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO} MUST be set"
 #endif
 
+// Size of `ot::Instance` in `uint64_t` unit (aligned).
+constexpr size_t kInstanceSizeInUint64s = DivideAndRoundUp<size_t>(sizeof(Instance), sizeof(uint64_t));
+
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-
-// Define the raw storage used for OpenThread instance (in single-instance case).
-OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
-
+// The raw storage used for OpenThread instance (in single-instance case)
+uint64_t gInstanceRaw[kInstanceSizeInUint64s];
 #endif
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
@@ -58,11 +59,10 @@ Instance *gActiveInstance = nullptr;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 
-#define INSTANCE_SIZE_ALIGNED OT_ALIGNED_VAR_SIZE(sizeof(ot::Instance), uint64_t)
-#define MULTI_INSTANCE_SIZE (OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM * INSTANCE_SIZE_ALIGNED)
+constexpr size_t kMultiInstanceSizeInUint64s = (Instance::kNumStaticInstances * kInstanceSizeInUint64s);
 
 // Define the raw storage used for OpenThread instance (in multi-instance case).
-static uint64_t gMultiInstanceRaw[MULTI_INSTANCE_SIZE];
+static uint64_t gMultiInstanceRaw[kMultiInstanceSizeInUint64s];
 
 #endif
 
@@ -78,7 +78,8 @@ LogLevel Instance::sGlobalLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG
 #endif
 
 Instance::Instance(void)
-    : mTimerMilliScheduler(*this)
+    : mActiveInstanceTracker(*this)
+    , mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
@@ -109,6 +110,9 @@ Instance::Instance(void)
     , mIp6(*this)
     , mThreadNetif(*this)
     , mTmfAgent(*this)
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+    , mPlatTcp(*this)
+#endif
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     , mDhcp6Client(*this)
 #endif
@@ -169,9 +173,9 @@ Instance::Instance(void)
 #endif
     , mNetworkDataServiceManager(*this)
     , mVendorInfo(*this)
-    , mNetworkDiagnosticServer(*this)
+    , mNetDiagServer(*this)
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-    , mNetworkDiagnosticClient(*this)
+    , mNetDiagClient(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     , mBorderAgentTxtData(*this)
@@ -213,10 +217,6 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     , mMlrManager(*this)
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    , mDuaManager(*this)
 #endif
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     , mSrpServer(*this)
@@ -319,13 +319,18 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     , mLogLevel(static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT))
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    , mOriginalLogLevel(kLogLevelNone)
+    , mOverrideLogLevel(kLogLevelNone)
+    , mIsLogLevelOverridden(false)
+#endif
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     , mIsLogLevelSet(false)
 #else
 #endif
 #endif
     , mIsInitialized(false)
-    , mId(Random::NonCrypto::GetUint32())
+    , mId(Random::NonCrypto::Generate<uint32_t>())
 {
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
@@ -336,6 +341,10 @@ Instance::Instance(void)
 #endif
 #endif
 }
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+Instance::~Instance(void) { gActiveInstance = this; }
+#endif
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 Utils::Heap &Instance::GetHeap(void)
@@ -373,18 +382,19 @@ Instance &Instance::Get(void)
 }
 
 #else // #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 
 Instance *Instance::InitMultiple(uint8_t aIdx)
 {
     size_t    bufferSize;
-    uint64_t *instanceBuffer = gMultiInstanceRaw + aIdx * INSTANCE_SIZE_ALIGNED;
+    uint64_t *instanceBuffer = gMultiInstanceRaw + aIdx * kInstanceSizeInUint64s;
     Instance *instance       = reinterpret_cast<Instance *>(instanceBuffer);
 
-    VerifyOrExit(aIdx < OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM);
+    VerifyOrExit(aIdx < kNumStaticInstances);
     VerifyOrExit(!instance->mIsInitialized);
 
-    bufferSize = (&gMultiInstanceRaw[MULTI_INSTANCE_SIZE] - instanceBuffer) * sizeof(uint64_t);
+    bufferSize = (&gMultiInstanceRaw[kMultiInstanceSizeInUint64s] - instanceBuffer) * sizeof(uint64_t);
     instance   = Instance::Init(instanceBuffer, &bufferSize);
 
 exit:
@@ -393,13 +403,13 @@ exit:
 
 Instance &Instance::Get(uint8_t aIdx)
 {
-    void *instance = gMultiInstanceRaw + aIdx * INSTANCE_SIZE_ALIGNED;
+    void *instance = gMultiInstanceRaw + aIdx * kInstanceSizeInUint64s;
     return *static_cast<Instance *>(instance);
 }
 
 uint8_t Instance::GetIdx(Instance *aInstance)
 {
-    return static_cast<uint8_t>((reinterpret_cast<uint64_t *>(aInstance) - gMultiInstanceRaw) / INSTANCE_SIZE_ALIGNED);
+    return static_cast<uint8_t>((reinterpret_cast<uint64_t *>(aInstance) - gMultiInstanceRaw) / kInstanceSizeInUint64s);
 }
 
 #endif // #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
@@ -410,8 +420,11 @@ Instance *Instance::Init(void *aBuffer, size_t *aBufferSize)
 
     VerifyOrExit(aBufferSize != nullptr);
 
-    // Make sure the input buffer is big enough
-    VerifyOrExit(sizeof(Instance) <= *aBufferSize, *aBufferSize = sizeof(Instance));
+    if (sizeof(Instance) > *aBufferSize)
+    {
+        *aBufferSize = kInstanceSizeInUint64s * sizeof(uint64_t);
+        ExitNow();
+    }
 
     VerifyOrExit(aBuffer != nullptr);
 
@@ -490,15 +503,7 @@ void Instance::Finalize(void)
 
     IgnoreError(Get<Mac::SubMac>().Disable());
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-
-    /**
-     * Object was created on buffer, so instead of deleting
-     * the object we call destructor explicitly.
-     */
     this->~Instance();
-
-#endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 exit:
     return;
@@ -594,20 +599,66 @@ Error Instance::SetLogLevel(LogLevel aLogLevel)
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
     ExitNow(error = kErrorNotCapable);
 #else
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    if (mIsLogLevelOverridden)
+    {
+        mOriginalLogLevel = aLogLevel;
+        aLogLevel         = Max(aLogLevel, mOverrideLogLevel);
+    }
+#endif
     VerifyOrExit(mLogLevel != aLogLevel);
     mLogLevel = aLogLevel;
-
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    mIsLogLevelSet = true;
-#else
-    otPlatLogHandleLevelChanged(mLogLevel);
-#endif
-    otPlatLogHandleLogLevelChanged(this, mLogLevel);
+    SignalLogLevelChange();
 #endif
 
 exit:
     return error;
 }
+
+void Instance::SignalLogLevelChange(void)
+{
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    mIsLogLevelSet = true;
+#else
+    otPlatLogHandleLevelChanged(mLogLevel);
+#endif
+
+    otPlatLogHandleLogLevelChanged(this, mLogLevel);
+}
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+void Instance::OverrideLogLevel(LogLevel aLogLevel)
+{
+    LogLevel logLevel;
+
+    if (!mIsLogLevelOverridden)
+    {
+        mOriginalLogLevel     = GetLogLevel();
+        mIsLogLevelOverridden = true;
+    }
+
+    mOverrideLogLevel = aLogLevel;
+
+    logLevel = Max(mOverrideLogLevel, mOriginalLogLevel);
+
+    VerifyOrExit(mLogLevel != logLevel);
+    mLogLevel = logLevel;
+    SignalLogLevelChange();
+
+exit:
+    return;
+}
+
+void Instance::RestoreLogLevel(void)
+{
+    VerifyOrExit(mIsLogLevelOverridden);
+    mIsLogLevelOverridden = false;
+    IgnoreError(SetLogLevel(mOriginalLogLevel));
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 Error Instance::SetGlobalLogLevel(LogLevel aLogLevel)

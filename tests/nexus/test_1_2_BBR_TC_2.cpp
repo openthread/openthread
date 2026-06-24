@@ -293,20 +293,16 @@ void Test_1_2_BBR_TC_2(void)
     Log("Step 10: Router_1 sends MLR.req to BR_1 (DUT)");
 
     {
-        Ip6::Address    ma1;
-        Coap::Message  *message;
-        Ip6AddressesTlv addressesTlv;
-        Ip6::Address    destAddr;
+        Ip6::Address   ma1;
+        Coap::Message *message;
+        Ip6::Address   destAddr;
 
         SuccessOrQuit(ma1.FromString(kMa1Address));
 
         message = router1.Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriMlr);
         VerifyOrQuit(message != nullptr);
 
-        addressesTlv.Init();
-        addressesTlv.SetLength(sizeof(Ip6::Address));
-        SuccessOrQuit(message->Append(addressesTlv));
-        SuccessOrQuit(message->Append(ma1));
+        SuccessOrQuit(Ip6AddressesTlv::AppendTo(*message, &ma1, 1));
 
         destAddr = br1.Get<Mle::Mle>().GetMeshLocalEid();
         SuccessOrQuit(router1.Get<Tmf::Agent>().SendMessageTo(*message, destAddr, nullptr, nullptr));

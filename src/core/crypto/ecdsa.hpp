@@ -164,7 +164,7 @@ public:
          *
          * Gives non-const pointer to the buffer and is intended for populating the buffer and setting
          * the key-pair (e.g., reading the key-pair from non-volatile settings). The buffer contains `kMaxDerSize`
-         * bytes. After populating the buffer, `SetDerLength()` can be used to set the the number of bytes written.
+         * bytes. After populating the buffer, `SetDerLength()` can be used to set the number of bytes written.
          *
          * @returns The pointer to the start of key-pair buffer in DER format.
          */

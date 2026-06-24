@@ -135,11 +135,8 @@ void Test1_2_LP_5_3_7(void)
      *   Description: Topology formation: Leader, DUT, SSED_1.
      *   Pass Criteria: N/A.
      */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    router1.AllowList(ssed1);
-    ssed1.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, ssed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

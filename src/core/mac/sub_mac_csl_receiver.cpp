@@ -77,7 +77,7 @@ void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
 {
     // Actual synchronization timestamp should be from the sent frame instead of the current time.
     // Assuming the error here since it is bounded and has very small effect on the final window duration.
-    if (aAckFrame != nullptr && aFrame.HasCslIe())
+    if (aAckFrame != nullptr && aFrame.Has<CslIe>())
     {
         mCslLastSync = TimeMicro(GetLocalTime());
     }

@@ -158,31 +158,23 @@ build_all_features()
     # Build Thread 1.4 with full features
     reset_source
     CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
-        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON
+        "$(dirname "$0")"/cmake-build simulation "${options[@]}"
 
     # Build Thread 1.4 with external heap and msg pool using heap
     reset_source
     CFLAGS="${cppflags[*]} ${CFLAGS} -DOPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1" \
         CXXFLAGS="${cppflags[*]} ${CXXFLAGS} -DOPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1" \
-        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON
+        "$(dirname "$0")"/cmake-build simulation "${options[@]}"
 
     # Build Thread 1.4 with full features and no log
     reset_source
     CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
-        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON -DOT_LOG_OUTPUT=NONE
+        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_LOG_OUTPUT=NONE
 
     # Build Thread 1.4 with full features and full logs
     reset_source
     CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
-        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON -DOT_FULL_LOGS=ON
-
-    # Build Thread 1.4 Backbone Router without DUA ND Proxying
-    reset_source
-    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_BACKBONE_ROUTER_DUA_NDPROXYING=OFF
-
-    # Build Thread 1.4 Backbone Router without Multicast Routing
-    reset_source
-    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_BACKBONE_ROUTER_MULTICAST_ROUTING=OFF
+        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_FULL_LOGS=ON
 
     # Build with Vendor Extension
     reset_source
@@ -196,7 +188,7 @@ build_all_features()
 
     # Build Thread 1.4 with full features and OT_ASSERT=OFF
     reset_source
-    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON -DOT_ASSERT=OFF
+    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_ASSERT=OFF
 
     # Build with RAM settings
     reset_source

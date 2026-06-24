@@ -437,8 +437,6 @@ exit:
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void Dns::OutputResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
-
 otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
 {
     // This method gets the optional DNS config from `aArgs[]`.
@@ -454,7 +452,8 @@ otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
 
     VerifyOrExit(!aArgs[0].IsEmpty(), aConfig = nullptr);
 
-    SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], aConfig->mServerSockAddr.mAddress, nat64Synth));
+    SuccessOrExit(error = ParseOrSynthesizeIp6Address(aArgs[0], aConfig->mServerSockAddr.mAddress, nat64Synth));
+
     if (nat64Synth)
     {
         OutputFormat("Synthesized IPv6 DNS server address: ");

@@ -111,7 +111,7 @@ void SendMlrRequest(Node &aSource, const Ip6::Address &aDestination, const void 
     Coap::Message *message = aSource.Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriMlr);
     VerifyOrQuit(message != nullptr);
 
-    SuccessOrQuit(Tlv::Append<Ip6AddressesTlv>(*message, static_cast<const uint8_t *>(aAddressesData), aDataLength));
+    SuccessOrQuit(Tlv::Append<Ip6AddressesTlv>(*message, aAddressesData, aDataLength));
 
     SuccessOrQuit(aSource.Get<Tmf::Agent>().SendMessageTo(*message, aDestination));
 }
@@ -176,12 +176,9 @@ void TestMatnTc21(void)
      */
     Log("Step 0: Topology formation – BR_1, BR_2, Router");
 
-    br1.AllowList(br2);
-    br1.AllowList(router);
-    br2.AllowList(br1);
-    br2.AllowList(router);
-    router.AllowList(br1);
-    router.AllowList(br2);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(br1, router);
+    AllowLinkBetween(br2, router);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -203,9 +200,6 @@ void TestMatnTc21(void)
     br2.Get<BorderRouter::RoutingManager>().Init();
     SuccessOrQuit(br2.Get<BorderRouter::RoutingManager>().SetEnabled(true));
     br2.Get<BackboneRouter::Local>().SetEnabled(true);
-
-    host.mInfraIf.Init(host);
-    host.mInfraIf.AddAddress(host.mInfraIf.GetLinkLocalAddress());
 
     nexus.AdvanceTime(kStabilizationTime * 2);
 

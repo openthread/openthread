@@ -33,22 +33,27 @@
 
 #include <stdio.h>
 #include <sys/time.h>
-#ifdef OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#include <openthread/platform/flash.h>
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 #endif
 
-enum
-{
-    FLASH_SWAP_SIZE = 2048,
-    FLASH_SWAP_NUM  = 2,
-};
+constexpr uint16_t kFlashSwapSize = 2048;
+constexpr uint8_t  kFlashSwapNum  = 2;
 
 std::map<uint32_t, std::vector<std::vector<uint8_t>>> settings;
 
 ot::Instance *testInitInstance(void)
 {
     otInstance *instance = nullptr;
+
+    settings.clear();
+    for (uint8_t idx = 0; idx < kFlashSwapNum; idx++)
+    {
+        otPlatFlashErase(nullptr, idx);
+    }
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
@@ -73,6 +78,23 @@ ot::Instance *testInitInstance(void)
 #endif
 
     return static_cast<ot::Instance *>(instance);
+}
+
+ot::Instance *testResetInstance(ot::Instance *aInstance)
+{
+    otInstanceFinalize(aInstance);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    {
+        size_t instanceBufferLength = sizeof(ot::Instance);
+
+        aInstance = static_cast<ot::Instance *>(otInstanceInit(aInstance, &instanceBufferLength));
+    }
+#else
+    aInstance = static_cast<ot::Instance *>(otInstanceInitSingle());
+#endif
+
+    return aInstance;
 }
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
@@ -363,7 +385,7 @@ OT_TOOL_WEAK void otPlatSettingsWipe(otInstance *) { settings.clear(); }
 
 uint8_t *GetFlash(void)
 {
-    static uint8_t sFlash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
+    static uint8_t sFlash[kFlashSwapSize * kFlashSwapNum];
     static bool    sInitialized;
 
     if (!sInitialized)
@@ -377,28 +399,28 @@ uint8_t *GetFlash(void)
 
 OT_TOOL_WEAK void otPlatFlashInit(otInstance *) {}
 
-OT_TOOL_WEAK uint32_t otPlatFlashGetSwapSize(otInstance *) { return FLASH_SWAP_SIZE; }
+OT_TOOL_WEAK uint32_t otPlatFlashGetSwapSize(otInstance *) { return kFlashSwapSize; }
 
 OT_TOOL_WEAK void otPlatFlashErase(otInstance *, uint8_t aSwapIndex)
 {
     uint32_t address;
 
-    VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
+    VerifyOrQuit(aSwapIndex < kFlashSwapNum, "aSwapIndex invalid");
 
-    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address = aSwapIndex ? kFlashSwapSize : 0;
 
-    memset(GetFlash() + address, 0xff, FLASH_SWAP_SIZE);
+    memset(GetFlash() + address, 0xff, kFlashSwapSize);
 }
 
 OT_TOOL_WEAK void otPlatFlashRead(otInstance *, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
     uint32_t address;
 
-    VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
-    VerifyOrQuit(aSize <= FLASH_SWAP_SIZE, "aSize invalid");
-    VerifyOrQuit(aOffset <= (FLASH_SWAP_SIZE - aSize), "aOffset + aSize invalid");
+    VerifyOrQuit(aSwapIndex < kFlashSwapNum, "aSwapIndex invalid");
+    VerifyOrQuit(aSize <= kFlashSwapSize, "aSize invalid");
+    VerifyOrQuit(aOffset <= (kFlashSwapSize - aSize), "aOffset + aSize invalid");
 
-    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address = aSwapIndex ? kFlashSwapSize : 0;
 
     memcpy(aData, GetFlash() + address + aOffset, aSize);
 }
@@ -411,11 +433,11 @@ OT_TOOL_WEAK void otPlatFlashWrite(otInstance *,
 {
     uint32_t address;
 
-    VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
-    VerifyOrQuit(aSize <= FLASH_SWAP_SIZE, "aSize invalid");
-    VerifyOrQuit(aOffset <= (FLASH_SWAP_SIZE - aSize), "aOffset + aSize invalid");
+    VerifyOrQuit(aSwapIndex < kFlashSwapNum, "aSwapIndex invalid");
+    VerifyOrQuit(aSize <= kFlashSwapSize, "aSize invalid");
+    VerifyOrQuit(aOffset <= (kFlashSwapSize - aSize), "aOffset + aSize invalid");
 
-    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address = aSwapIndex ? kFlashSwapSize : 0;
 
     for (uint32_t index = 0; index < aSize; index++)
     {
@@ -636,6 +658,46 @@ OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+
+OT_TOOL_WEAK otError otPlatTcpEnableListener(otPlatTcpListener *aListener, const otPlatTcpSockAddr *aLocalSockAddr)
+{
+    OT_UNUSED_VARIABLE(aListener);
+    OT_UNUSED_VARIABLE(aLocalSockAddr);
+
+    return OT_ERROR_FAILED;
+}
+
+OT_TOOL_WEAK void otPlatTcpDisableListener(otPlatTcpListener *aListener) { OT_UNUSED_VARIABLE(aListener); }
+
+OT_TOOL_WEAK otError otPlatTcpConnect(otPlatTcpConnection     *aConn,
+                                      const otPlatTcpSockAddr *aPeerSockAddr,
+                                      const otPlatTcpSockAddr *aLocalSockAddr)
+{
+    OT_UNUSED_VARIABLE(aConn);
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+    OT_UNUSED_VARIABLE(aLocalSockAddr);
+
+    return OT_ERROR_FAILED;
+}
+
+OT_TOOL_WEAK void otPlatTcpNotifyTxPending(otPlatTcpConnection *aConn) { OT_UNUSED_VARIABLE(aConn); }
+
+OT_TOOL_WEAK uint16_t otPlatTcpSend(otPlatTcpConnection *aConn, const uint8_t *aBuffer, uint16_t aLength)
+{
+    OT_UNUSED_VARIABLE(aConn);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aLength);
+
+    return 0;
+}
+
+OT_TOOL_WEAK void otPlatTcpClose(otPlatTcpConnection *aConn) { OT_UNUSED_VARIABLE(aConn); }
+
+OT_TOOL_WEAK void otPlatTcpAbort(otPlatTcpConnection *aConn) { OT_UNUSED_VARIABLE(aConn); }
+
+#endif // #if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
 OT_TOOL_WEAK void otPlatDsoEnableListening(otInstance *aInstance, bool aEnable)
@@ -778,7 +840,11 @@ OT_TOOL_WEAK otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance) {
 
 OT_TOOL_WEAK otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState) { return OT_ERROR_NONE; }
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
-#ifdef OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+
+uint8_t  sPlatBleLastAdvSetData[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+uint16_t sPlatBleLastAdvSetDataLen = 0;
+
 otError otPlatBleEnable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -816,7 +882,9 @@ otError otPlatBleGapAdvStop(otInstance *aInstance)
 
 otError otPlatBleGapDisconnect(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    // Honor the platform contract: report completion of the disconnection via the callback.
+    // Normally this call is done asynchronously, but for unit testing purposes we make the reentrant call.
+    otPlatBleGapOnDisconnected(aInstance, 0);
     return OT_ERROR_NONE;
 }
 
@@ -853,17 +921,19 @@ bool otPlatBleSupportsMultiRadio(otInstance *aInstance)
 otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aAdvertisementData);
-    OT_UNUSED_VARIABLE(aAdvertisementLen);
+    if (aAdvertisementData == nullptr || aAdvertisementLen > OT_TCAT_ADVERTISEMENT_MAX_LEN)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+    memcpy(sPlatBleLastAdvSetData, aAdvertisementData, aAdvertisementLen);
+    sPlatBleLastAdvSetDataLen = aAdvertisementLen;
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aAdvertisementData);
-    OT_UNUSED_VARIABLE(aAdvertisementLen);
-    return OT_ERROR_NONE;
+    return otPlatBleGapAdvSetData(aInstance, aAdvertisementData, aAdvertisementLen);
 }
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE

@@ -383,6 +383,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+ *
+ * Define to 1 to enable software retransmission security logic.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
  *
  * Define to 1 to enable csl transmitter logic.

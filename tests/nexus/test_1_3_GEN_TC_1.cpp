@@ -96,15 +96,8 @@ void Test_1_3_GEN_TC_1(Topology aTopology, const char *aJsonFileName)
     router1.SetName("Router_1");
     ed1.SetName("ED_1");
 
-    /**
-     * In the cpp, use AllowList to specify links between nodes. There is a link between the following node pairs:
-     * - BR_1 and Router_1
-     * - Router_1 and ED_1
-     */
-    br1.AllowList(router1);
-    router1.AllowList(br1);
-    router1.AllowList(ed1);
-    ed1.AllowList(router1);
+    AllowLinkBetween(br1, router1);
+    AllowLinkBetween(router1, ed1);
 
     nexus.AdvanceTime(0);
 
@@ -286,11 +279,10 @@ void Test_1_3_GEN_TC_1(Topology aTopology, const char *aJsonFileName)
      *   - Pass Criteria (only applies if Device == DUT):
      *     - N/A
      */
-    Ip6::Address br1Rloc;
-    br1Rloc.SetToRoutingLocator(router1.Get<Mle::Mle>().GetMeshLocalPrefix(), br1.Get<Mle::Mle>().GetRloc16());
-    uint8_t tlvTypes[] = {NetworkDiagnostic::Tlv::kVersion};
-    SuccessOrQuit(router1.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(br1Rloc, tlvTypes, sizeof(tlvTypes),
-                                                                             nullptr, nullptr));
+    Ip6::Address br1Rloc    = br1.Get<Mle::Mle>().GetMeshLocalRloc();
+    uint8_t      tlvTypes[] = {NetDiag::Tlv::kVersion};
+    SuccessOrQuit(
+        router1.Get<NetDiag::Client>().SendDiagnosticGet(br1Rloc, tlvTypes, sizeof(tlvTypes), nullptr, nullptr));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 14: BR_1 Automatically responds with Get Diagnostic Response unicast to Router_1.");
@@ -318,10 +310,9 @@ void Test_1_3_GEN_TC_1(Topology aTopology, const char *aJsonFileName)
      *   - Pass Criteria (only applies if Device == DUT):
      *     - N/A
      */
-    Ip6::Address router1Rloc;
-    router1Rloc.SetToRoutingLocator(br1.Get<Mle::Mle>().GetMeshLocalPrefix(), router1.Get<Mle::Mle>().GetRloc16());
-    SuccessOrQuit(br1.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(router1Rloc, tlvTypes, sizeof(tlvTypes),
-                                                                         nullptr, nullptr));
+    Ip6::Address router1Rloc = router1.Get<Mle::Mle>().GetMeshLocalRloc();
+    SuccessOrQuit(
+        br1.Get<NetDiag::Client>().SendDiagnosticGet(router1Rloc, tlvTypes, sizeof(tlvTypes), nullptr, nullptr));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 16: Router_1 Automatically responds with Get Diagnostic Response unicast to the DUT.");
@@ -349,10 +340,9 @@ void Test_1_3_GEN_TC_1(Topology aTopology, const char *aJsonFileName)
      *   - Pass Criteria (only applies if Device == DUT):
      *     - N/A
      */
-    Ip6::Address ed1Rloc;
-    ed1Rloc.SetToRoutingLocator(router1.Get<Mle::Mle>().GetMeshLocalPrefix(), ed1.Get<Mle::Mle>().GetRloc16());
-    SuccessOrQuit(router1.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(ed1Rloc, tlvTypes, sizeof(tlvTypes),
-                                                                             nullptr, nullptr));
+    Ip6::Address ed1Rloc = ed1.Get<Mle::Mle>().GetMeshLocalRloc();
+    SuccessOrQuit(
+        router1.Get<NetDiag::Client>().SendDiagnosticGet(ed1Rloc, tlvTypes, sizeof(tlvTypes), nullptr, nullptr));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 18: ED_1 Optionally responds with Get Diagnostic Response unicast to Router_1.");

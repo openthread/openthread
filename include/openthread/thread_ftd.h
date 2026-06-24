@@ -153,12 +153,15 @@ uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
 otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildren);
 
 /**
- * Indicates whether or not the device is router-eligible.
+ * Indicates whether or not the device is allowed to take router or leader roles.
+ *
+ * A device is allowed to become a router if it is a Full Thread Device (FTD), is currently configured to be
+ * router-eligible (see `otThreadSetRouterEligible(true)`), and the active Security Policy permits routers.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval TRUE   If device is router-eligible.
- * @retval FALSE  If device is not router-eligible.
+ * @retval TRUE   If the router role is allowed.
+ * @retval FALSE  If the router role is not allowed.
  */
 bool otThreadIsRouterEligible(otInstance *aInstance);
 
@@ -177,14 +180,16 @@ bool otThreadIsRouterEligible(otInstance *aInstance);
 otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
 
 /**
- * Set the preferred Router Id.
+ * Sets the preferred Router Id.
+ *
+ * Requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
  *
  * Upon becoming a router/leader the node attempts to use this Router Id. If the preferred Router Id is not set or if
  * it can not be used, a randomly generated router id is picked. This property can be set only when the device role is
  * either detached or disabled.
  *
- * @note This API is reserved for testing and demo purposes only. Changing settings with
- * this API will render a production application non-compliant with the Thread Specification.
+ * @note This API is reserved for testing and demo purposes only. Changing settings with this API will render a
+ * production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aRouterId    The preferred Router Id.
@@ -389,10 +394,16 @@ void otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTimeout);
 uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
 
 /**
- * Set the ROUTER_UPGRADE_THRESHOLD parameter used in the Leader role.
+ * Sets the ROUTER_UPGRADE_THRESHOLD parameter.
  *
  * @note This API is reserved for testing and demo purposes only. Changing settings with
  * this API will render a production application non-compliant with the Thread Specification.
+ *
+ * This API historically set a single threshold value that was used for both local role transitions (deciding when
+ * the device itself should upgrade to a router) and by the leader (deciding whether to allow other devices to
+ * upgrade). These behaviors have now been separated into distinct router and leader thresholds. To preserve backward
+ * compatibility with existing applications and test scripts, this function continues to configure both thresholds
+ * (both the local router upgrade threshold and the leader upgrade threshold).
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.
@@ -623,6 +634,15 @@ otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRoute
  * @retval OT_ERROR_NOT_FOUND     No more entries in the address cache table.
  */
 otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntryInfo, otCacheEntryIterator *aIterator);
+
+/**
+ * Clears the EID cache.
+ *
+ * Intended for testing only.
+ *
+ * @param[in]     aInstance   A pointer to an OpenThread instance.
+ */
+void otThreadClearEidCache(otInstance *aInstance);
 
 /**
  * Get the Thread PSKc

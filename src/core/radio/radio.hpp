@@ -723,7 +723,7 @@ public:
      * @param[in]  aLinkMetrics  This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2
      *                           metrics can be specified. The probing would be disabled if @p `aLinkMetrics` is
      *                           bitwise 0.
-     * @param[in]  aShortAddress The short address of the the probing Initiator.
+     * @param[in]  aShortAddress The short address of the probing Initiator.
      * @param[in]  aExtAddress   The extended source address of the probing Initiator.
      *
      * @retval kErrorNone            Successfully enable/disable or update Enhanced-ACK Based Probing for a specific
@@ -916,15 +916,15 @@ inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
                              const Mac::KeyMaterial &aCurrKey,
                              const Mac::KeyMaterial &aNextKey)
 {
-    otRadioKeyType aKeyType;
+    otRadioKeyType keyType;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    aKeyType = OT_KEY_TYPE_KEY_REF;
+    keyType = OT_KEY_TYPE_KEY_REF;
 #else
-    aKeyType = OT_KEY_TYPE_LITERAL_KEY;
+    keyType = OT_KEY_TYPE_LITERAL_KEY;
 #endif
 
-    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey, aKeyType);
+    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey, keyType);
 }
 
 inline Error Radio::GetTransmitPower(int8_t &aPower) { return otPlatRadioGetTransmitPower(GetInstancePtr(), &aPower); }

@@ -449,7 +449,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     enroller.Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext);
 
-    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(Time::kOneSecondInMsec);
@@ -475,7 +475,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -652,7 +652,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     SuccessOrQuit(steeringData.UpdateBloomFilter(admitter.Get<Mac::Mac>().GetExtAddress()));
 
     SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -742,7 +742,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -816,7 +816,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -851,7 +851,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIdAlt));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -964,8 +964,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
         if (testIter != 2)
         {
-            SuccessOrQuit(
-                Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+            SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
         }
 
         responseContext.Clear();
@@ -1005,8 +1004,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-        SuccessOrQuit(
-            Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+        SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
         responseContext.Clear();
         SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -1031,7 +1029,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -1135,7 +1133,7 @@ void TestBorderAdmitterCommissionerConflictAndPetitionerRetry(void)
 
     enroller.Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext);
 
-    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(Time::kOneSecondInMsec);
@@ -1154,7 +1152,7 @@ void TestBorderAdmitterCommissionerConflictAndPetitionerRetry(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message));
 
@@ -1423,7 +1421,7 @@ void TestBorderAdmitterMultipleEnrollers(void)
         recvContext[i].Clear();
         enroller->Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext[i]);
 
-        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open());
+        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open(0));
         SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Connect(sockAddr));
 
         nexus.AdvanceTime(Time::kOneSecondInMsec);
@@ -1465,8 +1463,7 @@ void TestBorderAdmitterMultipleEnrollers(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIds[i]));
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-        SuccessOrQuit(
-            Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData[i].GetData(), steeringData[i].GetLength()));
+        SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData[i]));
 
         responseContexts[i].Clear();
         SuccessOrQuit(
@@ -1761,7 +1758,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
         recvContext[i].Clear();
         enroller->Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext[i]);
 
-        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open());
+        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open(0));
         SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Connect(sockAddr));
 
         nexus.AdvanceTime(Time::kOneSecondInMsec);
@@ -1790,8 +1787,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIds[i]));
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, modes[i]));
-        SuccessOrQuit(
-            Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+        SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
         responseContexts[i].Clear();
         SuccessOrQuit(
@@ -1863,7 +1859,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
                                                   /* aCallback */ nullptr,
                                                   /* aContext */ nullptr));
 
-    joinerIids[0].SetFromExtAddress(joiners[0]->Get<Joiner>().GetId());
+    joinerIids[0].InitFromExtAddress(joiners[0]->Get<Joiner>().GetId());
 
     nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
 
@@ -2012,7 +2008,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
                                                   /* aCallback */ nullptr,
                                                   /* aContext */ nullptr));
 
-    joinerIids[1].SetFromExtAddress(joiners[1]->Get<Joiner>().GetId());
+    joinerIids[1].InitFromExtAddress(joiners[1]->Get<Joiner>().GetId());
 
     nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
 
@@ -2158,7 +2154,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
                                                   /* aCallback */ nullptr,
                                                   /* aContext */ nullptr));
 
-    joinerIids[1].SetFromExtAddress(joiners[1]->Get<Joiner>().GetId());
+    joinerIids[1].InitFromExtAddress(joiners[1]->Get<Joiner>().GetId());
 
     nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
 
@@ -3179,7 +3175,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
 
     static const char *kEnrollerIds[kNumEnrollers] = {"1", "2", "3", "4"};
 
-    static const uint8_t kDiagTlvs[] = {NetworkDiagnostic::Tlv::kExtMacAddress, NetworkDiagnostic::Tlv::kVersion};
+    static const uint8_t kDiagTlvs[] = {NetDiag::Tlv::kExtMacAddress, NetDiag::Tlv::kVersion};
 
     Core                               nexus;
     Node                              &admitter = nexus.CreateNode();
@@ -3200,7 +3196,6 @@ void TestBorderAdmitterForwardingUdpProxy(void)
     uint16_t                           sessionId;
     uint16_t                           rloc16;
     MeshCoP::UdpEncapsulationTlvHeader udpEncapHeader;
-    ExtendedTlv                        extTlv;
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAdmitterForwardingUdpProxy");
@@ -3259,7 +3254,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
         recvContext[i].Clear();
         enroller->Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext[i]);
 
-        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open());
+        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open(0));
         SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Connect(sockAddr));
 
         nexus.AdvanceTime(Time::kOneSecondInMsec);
@@ -3288,8 +3283,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIds[i]));
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, modes[i]));
-        SuccessOrQuit(
-            Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+        SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
         responseContexts[i].Clear();
         SuccessOrQuit(
@@ -3353,7 +3347,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
 
     diagMessage = enrollers[0]->Get<Tmf::Agent>().AllocateAndInitNonConfirmablePostMessage(kUriDiagnosticGetQuery);
     VerifyOrQuit(diagMessage != nullptr);
-    SuccessOrQuit(Tlv::Append<NetworkDiagnostic::TypeListTlv>(*diagMessage, kDiagTlvs, sizeof(kDiagTlvs)));
+    SuccessOrQuit(Tlv::Append<NetDiag::TypeListTlv>(*diagMessage, kDiagTlvs, sizeof(kDiagTlvs)));
     diagMessage->WriteMessageId(0);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3365,10 +3359,8 @@ void TestBorderAdmitterForwardingUdpProxy(void)
     udpEncapHeader.SetSourcePort(Tmf::kUdpPort);
     udpEncapHeader.SetDestinationPort(Tmf::kUdpPort);
 
-    extTlv.SetType(MeshCoP::Tlv::kUdpEncapsulation);
-    extTlv.SetLength(sizeof(udpEncapHeader) + diagMessage->GetLength());
-
-    SuccessOrQuit(message->Append(extTlv));
+    SuccessOrQuit(Tlv::AppendTlvHeader(*message, MeshCoP::Tlv::kUdpEncapsulation,
+                                       sizeof(udpEncapHeader) + diagMessage->GetLength()));
     SuccessOrQuit(message->Append(udpEncapHeader));
     SuccessOrQuit(message->AppendBytesFromMessage(*diagMessage, 0, diagMessage->GetLength()));
     diagMessage->Free();

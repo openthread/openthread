@@ -83,8 +83,6 @@ static constexpr uint16_t kSrpUpdatedPort       = 55556;
 
 void Test_1_3_SRP_TC_1(const char *aJsonFileName)
 {
-    Srp::Client::Service service;
-
     /**
      * 2.1. [1.3] [CERT] Register Single Service
      *
@@ -109,6 +107,9 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Node &br1  = nexus.CreateNode();
     Node &ed1  = nexus.CreateNode();
     Node &eth1 = nexus.CreateNode();
+
+    Srp::Client::Service service;
+    Ip6::Address         hostAddrs[2];
 
     br1.SetName("BR_1");
     ed1.SetName("ED_1");
@@ -188,17 +189,15 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
 
         SuccessOrQuit(ed1.Get<Srp::Client>().SetHostName(kSrpHostName));
 
-        uint8_t addrsCount = 0;
-
-        ed1.mSrpHostAddresses[addrsCount++] = ed1.Get<Mle::Mle>().GetMeshLocalEid();
+        hostAddrs[0] = ed1.Get<Mle::Mle>().GetMeshLocalEid();
 
         {
             Ip6::Prefix omrPrefix;
             SuccessOrQuit(br1.Get<BorderRouter::RoutingManager>().GetOmrPrefix(omrPrefix));
-            ed1.mSrpHostAddresses[addrsCount++] = ed1.FindMatchingAddress(omrPrefix.ToString().AsCString());
+            hostAddrs[1] = ed1.FindMatchingAddress(omrPrefix.ToString().AsCString());
         }
 
-        SuccessOrQuit(ed1.Get<Srp::Client>().SetHostAddresses(ed1.mSrpHostAddresses, addrsCount));
+        SuccessOrQuit(ed1.Get<Srp::Client>().SetHostAddresses(hostAddrs, 2));
 
         ClearAllBytes(service);
         service.mName         = kSrpServiceType;
@@ -285,6 +284,7 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 8: Eth 1 sends mDNS query QType=PTR.");
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = kSrpServiceType;
@@ -323,6 +323,11 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 9b: Eth 1 sends mDNS query QTYPE SRV.");
     {
         Dns::Multicast::Core::SrvResolver resolver;
+
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(resolver);
         resolver.mCallback        = [](otInstance *, const otPlatDnssdSrvResult *) {};
         resolver.mServiceInstance = kSrpInstanceName;
@@ -345,6 +350,11 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 9c: Eth 1 sends mDNS query QTYPE AAAA.");
     {
         Dns::Multicast::Core::AddressResolver resolver;
+
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(resolver);
         resolver.mCallback     = [](otInstance *, const otPlatDnssdAddressResult *) {};
         resolver.mHostName     = kSrpHostName;
@@ -373,8 +383,8 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
         ed1.Get<Srp::Client>().ClearHostAndServices();
         SuccessOrQuit(ed1.Get<Srp::Client>().SetHostName(kSrpHostName));
 
-        ed1.mSrpHostAddresses[0] = ed1.Get<Mle::Mle>().GetMeshLocalEid();
-        SuccessOrQuit(ed1.Get<Srp::Client>().SetHostAddresses(ed1.mSrpHostAddresses, 1));
+        hostAddrs[0] = ed1.Get<Mle::Mle>().GetMeshLocalEid();
+        SuccessOrQuit(ed1.Get<Srp::Client>().SetHostAddresses(hostAddrs, 1));
 
         // Update existing service
         ClearAllBytes(service);
@@ -463,6 +473,11 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 14: Eth 1 sends mDNS query QType=PTR.");
     {
         Dns::Multicast::Core::Browser browser;
+
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = kSrpServiceType;
@@ -499,6 +514,11 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 15b: Eth 1 sends mDNS query QTYPE SRV.");
     {
         Dns::Multicast::Core::SrvResolver resolver;
+
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(resolver);
         resolver.mCallback        = [](otInstance *, const otPlatDnssdSrvResult *) {};
         resolver.mServiceInstance = kSrpInstanceName;
@@ -522,6 +542,11 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 15c: Eth 1 sends mDNS query QTYPE AAAA.");
     {
         Dns::Multicast::Core::AddressResolver resolver;
+
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(resolver);
         resolver.mCallback     = [](otInstance *, const otPlatDnssdAddressResult *) {};
         resolver.mHostName     = kSrpHostName;

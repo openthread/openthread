@@ -44,6 +44,7 @@ RegisterLogModule("HistoryServer");
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mAnswerSender(aInstance, NetDiag::kAnswerTypeHistoryTracker)
 {
 }
 
@@ -60,86 +61,16 @@ template <> void Server::HandleTmf<kUriHistoryQuery>(Coap::Msg &aMsg)
     PrepareAndSendAnswers(aMsg.mMessageInfo.GetPeerAddr(), aMsg.mMessage);
 }
 
-Error Server::AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo)
+void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Coap::Message &aRequest)
 {
-    // Allocates an `Answer` message, adds it to `mAnswerQueue`,
-    // updates the `aInfo.mFirstAnswer` if it is the first allocated
-    // messages, and appends `QueryIdTlv` to the message (if needed).
+    Error         error;
+    AnswerBuilder answerBuilder(GetInstance(), NetDiag::kAnswerTypeHistoryTracker);
+    OffsetRange   offsetRange;
+    Tlv::Info     tlvInfo;
+    RequestTlv    requestTlv;
+    TimeMilli     now = TimerMilli::GetNow();
 
-    Error error = kErrorNone;
-
-    aAnswer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriHistoryAnswer);
-    VerifyOrExit(aAnswer != nullptr, error = kErrorNoBufs);
-    IgnoreError(aAnswer->SetPriority(aInfo.mPriority));
-
-    mAnswerQueue.Enqueue(*aAnswer);
-
-    if (aInfo.mFirstAnswer == nullptr)
-    {
-        aInfo.mFirstAnswer = aAnswer;
-    }
-
-    if (aInfo.mHasQueryId)
-    {
-        SuccessOrExit(error = Tlv::Append<QueryIdTlv>(*aAnswer, aInfo.mQueryId));
-    }
-
-exit:
-    return error;
-}
-
-bool Server::IsLastAnswer(const Coap::Message &aAnswer) const
-{
-    // Indicates whether `aAnswer` is the last one associated with
-    // the same query.
-
-    bool           isLast = true;
-    AnswerTlvValue answerTlvValue;
-
-    // If there is no Answer TLV, we assume it is the last answer.
-
-    SuccessOrExit(Tlv::Find<AnswerTlv>(aAnswer, answerTlvValue));
-    isLast = answerTlvValue.IsLast();
-
-exit:
-    return isLast;
-}
-
-void Server::FreeAllRelatedAnswers(Coap::Message &aFirstAnswer)
-{
-    // Dequeues and frees all answer messages related to the same query
-    // as `aFirstAnswer`. Note that related answers are enqueued in
-    // order.
-
-    Coap::Message *answer = &aFirstAnswer;
-
-    while (answer != nullptr)
-    {
-        Coap::Message *next = IsLastAnswer(*answer) ? nullptr : answer->GetNextCoapMessage();
-
-        mAnswerQueue.DequeueAndFree(*answer);
-        answer = next;
-    }
-}
-
-void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest)
-{
-    Coap::Message *answer;
-    Error          error;
-    AnswerInfo     info;
-    OffsetRange    offsetRange;
-    Tlv::Info      tlvInfo;
-    RequestTlv     requestTlv;
-    AnswerTlvValue answerTlvValue;
-
-    if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
-    {
-        info.mHasQueryId = true;
-    }
-
-    info.mPriority = aRequest.GetPriority();
-
-    SuccessOrExit(error = AllocateAnswer(answer, info));
+    SuccessOrExit(error = answerBuilder.Start(aRequest));
 
     offsetRange.InitFromMessageOffsetToEnd(aRequest);
 
@@ -160,113 +91,33 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
             switch (requestTlv.GetTlvType())
             {
             case Tlv::kNetworkInfo:
-                SuccessOrExit(error = AppendNetworkInfo(answer, info, requestTlv));
+                SuccessOrExit(error = AppendNetworkInfo(answerBuilder, requestTlv, now));
                 break;
 
             default:
                 break;
             }
 
-            SuccessOrExit(error = CheckAnswerLength(answer, info));
+            SuccessOrExit(error = answerBuilder.CheckAnswerLength());
         }
     }
 
-    answerTlvValue.Init(info.mAnswerIndex, AnswerTlvValue::kIsLast);
-    SuccessOrExit(error = Tlv::Append<AnswerTlv>(*answer, answerTlvValue));
+    SuccessOrExit(error = answerBuilder.Finish());
 
-    SendNextAnswer(*info.mFirstAnswer, aDestination);
-
-exit:
-    if ((error != kErrorNone) && (info.mFirstAnswer != nullptr))
-    {
-        FreeAllRelatedAnswers(*info.mFirstAnswer);
-    }
-}
-
-Error Server::CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo)
-{
-    // Checks the length of the `aAnswer` message and if it is above
-    // the threshold, it enqueues the message for transmission after
-    // appending an Answer TLV with the current index to the message.
-    // In this case, it will also allocate a new answer message.
-
-    Error          error = kErrorNone;
-    AnswerTlvValue answerTlvValue;
-
-    VerifyOrExit(aAnswer->GetLength() >= kAnswerMessageLengthThreshold);
-
-    answerTlvValue.Init(aInfo.mAnswerIndex++, AnswerTlvValue::kMoreToFollow);
-    SuccessOrExit(error = Tlv::Append<AnswerTlv>(*aAnswer, answerTlvValue));
-
-    error = AllocateAnswer(aAnswer, aInfo);
-
-exit:
-    return error;
-}
-
-void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination)
-{
-    Error          error      = kErrorNone;
-    Coap::Message *nextAnswer = IsLastAnswer(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
-
-    mAnswerQueue.Dequeue(aAnswer);
-
-    // When sending the message, we pass `nextAnswer` as `aContext`
-    // to be used when invoking callback `HandleAnswerResponse()`.
-
-    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(aAnswer, aDestination, HandleAnswerResponse, nextAnswer);
-
-    if (error != kErrorNone)
-    {
-        // If the `SendMessage()` fails, we `Free` the dequeued
-        // `aAnswer` and all the related next answers in the queue.
-
-        aAnswer.Free();
-
-        if (nextAnswer != nullptr)
-        {
-            FreeAllRelatedAnswers(*nextAnswer);
-        }
-    }
-}
-
-void Server::HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult)
-{
-    Coap::Message *nextAnswer = static_cast<Coap::Message *>(aContext);
-
-    VerifyOrExit(nextAnswer != nullptr);
-
-    nextAnswer->Get<Server>().HandleAnswerResponse(*nextAnswer, aMsg, aResult);
+    mAnswerSender.Send(answerBuilder, aDestination);
 
 exit:
     return;
 }
 
-void Server::HandleAnswerResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult)
-{
-    Error error = aResult;
-
-    SuccessOrExit(error);
-    VerifyOrExit(aResponse != nullptr, error = kErrorDrop);
-    VerifyOrExit(aResponse->GetCode() == Coap::kCodeChanged, error = kErrorDrop);
-
-    SendNextAnswer(aNextAnswer, aResponse->mMessageInfo.GetPeerAddr());
-
-exit:
-    if (error != kErrorNone)
-    {
-        FreeAllRelatedAnswers(aNextAnswer);
-    }
-}
-
-Error Server::AppendNetworkInfo(Coap::Message *&aAnswer, AnswerInfo &aInfo, const RequestTlv &aRequestTlv)
+Error Server::AppendNetworkInfo(AnswerBuilder &aAnswerBuilder, const RequestTlv &aRequestTlv, TimeMilli aNow)
 {
     Error    error = kErrorNone;
     Iterator iterator;
     uint32_t maxEntryAge = aRequestTlv.GetMaxEntryAge();
     uint16_t maxCount    = aRequestTlv.GetNumEntries();
 
-    iterator.Init(aInfo.mNow);
+    iterator.Init(aNow);
 
     for (uint16_t count = 0; (maxCount == 0) || (count < maxCount); count++)
     {
@@ -288,11 +139,11 @@ Error Server::AppendNetworkInfo(Coap::Message *&aAnswer, AnswerInfo &aInfo, cons
 
         networkInfoTlv.InitFrom(*networkInfo, entryAge);
 
-        SuccessOrExit(error = aAnswer->Append(networkInfoTlv));
-        SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
+        SuccessOrExit(error = aAnswerBuilder.GetAnswer().Append(networkInfoTlv));
+        SuccessOrExit(error = aAnswerBuilder.CheckAnswerLength());
     }
 
-    SuccessOrExit(error = Tlv::AppendEmpty<NetworkInfoTlv>(*aAnswer));
+    SuccessOrExit(error = Tlv::AppendEmpty<NetworkInfoTlv>(aAnswerBuilder.GetAnswer()));
 
 exit:
     return error;

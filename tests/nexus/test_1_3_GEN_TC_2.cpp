@@ -176,6 +176,8 @@ void Test_1_3_GEN_TC_2(const char *aJsonFileName)
          */
         Log("Step 2: Eth_1 sends mDNS PTR query for _meshcop._udp.local.");
         Dns::Multicast::Core::Browser browser;
+
+        ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const Dns::Multicast::Core::BrowseResult *) {};
         browser.mServiceType  = kMeshCoPServiceType;
         browser.mInfraIfIndex = kInfraIfIndex;
@@ -202,6 +204,7 @@ void Test_1_3_GEN_TC_2(const char *aJsonFileName)
             Dns::Multicast::Core::TxtResolver resolver;
             char                              serviceInstance[64];
 
+            ClearAllBytes(resolver);
             snprintf(serviceInstance, sizeof(serviceInstance), "OpenThread%s",
                      br1.Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
 

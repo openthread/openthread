@@ -45,7 +45,7 @@
 #include <mbedtls/version.h>
 #include <mbedtls/x509_crt.h>
 
-#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
 #endif
@@ -163,7 +163,7 @@ private:
     mbedtls_ssl_config  mSslConfig;
     mbedtls_x509_crt    mSrvCert;
     mbedtls_pk_context  mPKey;
-#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     mbedtls_entropy_context mEntropy;
 #endif
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE

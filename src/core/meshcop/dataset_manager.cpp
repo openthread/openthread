@@ -543,9 +543,8 @@ Coap::Message *DatasetManager::ProcessGetRequest(const Coap::Message    &aReques
         {
             uint8_t tlvType;
 
-            IgnoreError(aRequest.Read(offsetRange, tlvType));
+            IgnoreError(aRequest.ReadAndAdvance(offsetRange, tlvType));
             tlvList.Add(tlvType);
-            offsetRange.AdvanceOffset(sizeof(uint8_t));
         }
 
         // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1

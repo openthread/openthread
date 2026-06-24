@@ -168,7 +168,6 @@ void Test_1_3_SRPC_TC_4(const char *aJsonFileName)
      *   - N/A
      */
 
-    eth1.mInfraIf.Init(eth1);
     br1.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
     br1.Get<BorderRouter::RoutingManager>().Init();
     SuccessOrQuit(br1.Get<BorderRouter::RoutingManager>().SetEnabled(true));

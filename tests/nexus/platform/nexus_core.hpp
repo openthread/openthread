@@ -29,15 +29,19 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 
+#include "openthread-core-config.h"
+
+#include <stdio.h>
+
+#include "nexus_alarm.hpp"
+#include "nexus_observer.hpp"
+#include "nexus_pcap.hpp"
+#include "nexus_radio.hpp"
+#include "nexus_utils.hpp"
 #include "common/array.hpp"
 #include "common/owning_list.hpp"
 #include "instance/instance.hpp"
 #include "thread/key_manager.hpp"
-
-#include "nexus_alarm.hpp"
-#include "nexus_pcap.hpp"
-#include "nexus_radio.hpp"
-#include "nexus_utils.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -52,13 +56,26 @@ public:
 
     static Core &Get(void) { return *sCore; }
 
-    Node             &CreateNode(void);
+    void AddObserver(Observer &aObserver) { mObservers.Push(aObserver); }
+    void RemoveObserver(Observer &aObserver) { IgnoreError(mObservers.Remove(aObserver)); }
+    void NotifyHeartbeat(void);
+    void NotifyDumpState(void);
+
+    Node &CreateNode(void);
+    Node *FindNodeById(uint32_t aNodeId);
+    Node *FindNodeByExtAddress(const Mac::ExtAddress &aExtAddress);
+
     LinkedList<Node> &GetNodes(void) { return mNodes; }
 
     TimeMilli GetNow(void) { return TimeMilli(static_cast<uint32_t>(mNow / 1000u)); }
     TimeMicro GetNowMicro(void) { return TimeMicro(static_cast<uint32_t>(mNow)); }
     uint64_t  GetNowMicro64(void) const { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
+
+    bool IsUiConnected(void) const;
+
+    void Reset(void);
+    void SetNodeEnabled(uint32_t aNodeId, bool aEnabled);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Test specific helper methods
@@ -74,12 +91,41 @@ public:
                                   uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
                                   uint32_t            aResponseTimeout = 1000);
 
+    void SendAndVerifyEchoRequest(Node               &aSender,
+                                  const Ip6::Address &aExpectedSource,
+                                  const Ip6::Address &aDestination,
+                                  uint16_t            aPayloadSize     = 0,
+                                  uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                  uint32_t            aResponseTimeout = 1000,
+                                  bool                aForceSource     = true);
+
+    void SendAndVerifyNoEchoResponse(Node               &aSender,
+                                     const Ip6::Address &aDestination,
+                                     uint16_t            aPayloadSize     = 0,
+                                     uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                     uint32_t            aResponseTimeout = 1000);
+
+    void SendAndVerifyNoEchoResponse(Node               &aSender,
+                                     const Ip6::Address &aSrcAddress,
+                                     const Ip6::Address &aDestination,
+                                     uint16_t            aPayloadSize     = 0,
+                                     uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                     uint32_t            aResponseTimeout = 1000);
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Used by platform implementation
 
     void UpdateNextAlarmMilli(const Alarm &aAlarm);
     void UpdateNextAlarmMicro(const Alarm &aAlarm);
     void MarkPendingAction(void) { mPendingAction = true; }
+
+    Node *FindNodeByAddress(const Ip6::Address &aAddress);
+    bool  IsThreadAddress(const Ip6::Address &aAddress);
+    Node *FindNodeByThreadAddress(const Ip6::Address &aAddress);
+    Node *FindNodeByInfraIfAddress(const Ip6::Address &aAddress);
+
+    static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aInfo);
+    static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
 
 private:
     static constexpr int8_t  kDefaultRxRssi = -20;
@@ -96,9 +142,11 @@ private:
     {
         IcmpEchoResponseContext(Node &aNode, uint16_t aIdentifier);
 
-        Node    &mNode;
-        uint16_t mIdentifier;
-        bool     mResponseReceived;
+        Node        &mNode;
+        uint16_t     mIdentifier;
+        bool         mResponseReceived;
+        Ip6::Address mExpectedSource;
+        bool         mExpectedSourceCheck;
     };
 
     struct TestVar
@@ -112,8 +160,6 @@ private:
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);
     void ProcessInfraIf(Node &aNode);
-
-    Node *FindNodeByInfraIfAddress(const Ip6::Address &aAddress);
 
     static void HandleIcmpResponse(void                *aContext,
                                    otMessage           *aMessage,
@@ -132,6 +178,8 @@ private:
     bool                  mSaveNodeLogs;
     uint64_t              mNow;
     uint64_t              mNextAlarmTime;
+
+    LinkedList<Observer> mObservers;
 };
 
 } // namespace Nexus

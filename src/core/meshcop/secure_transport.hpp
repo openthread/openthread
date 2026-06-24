@@ -343,7 +343,7 @@ public:
     typedef Error (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * Callback to notify when the socket is automatically closed due to reaching the maximum number of connection
+     * Callback to notify when the transport is automatically closed due to reaching the maximum number of connection
      * attempts (set from `SetMaxConnectionAttempts()`).
      *
      * @param[in] aContext    A pointer to arbitrary context information.
@@ -617,26 +617,46 @@ public:
 #endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
     /**
-     * Opens the transport.
+     * Opens the secure transport and binds it to a UDP socket.
      *
-     * @param[in] aNetifIdentifier A network interface identifier. If not explicitly provided, kNetifUnspecified will
-     *                             be used by default.
+     * This flavor of `Open` creates and binds a UDP socket to the specified @p aPort and @p aNetifIdentifier. The
+     * transport will then use this socket for all its traffic.
      *
-     * @retval kErrorNone     Successfully opened the socket.
-     * @retval kErrorAlready  The connection is already open.
+     * If @p aPort is zero, an ephemeral port number is picked by the socket. The chosen port can be retrieved using
+     * `GetUdpPort()`.
+     *
+     * @param[in] aPort             The port to bind to. If zero, an ephemeral port is used.
+     * @param[in] aNetifIdentifier  A network interface identifier. `kNetifUnspecified` will be used by default.
+     *
+     * @retval kErrorNone     Successfully opened the socket and bound it to @p aPort.
+     * @retval kErrorAlready  The secure transport is already open.
      */
-    Error Open(Ip6::NetifIdentifier aNetifIdentifier = Ip6::NetifIdentifier::kNetifUnspecified);
+    Error Open(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier = Ip6::NetifIdentifier::kNetifUnspecified);
 
     /**
-     * Sets the maximum number of allowed connection requests before socket is automatically closed.
+     * Opens the secure transport using a callback for transmission.
      *
-     * This method can be called when socket is closed. Otherwise `kErrorInvalidSatet` is returned.
+     * This flavor of `Open` does not use a UDP socket. Instead, it relies on the provided @p aCallback for all outgoing
+     * message transmissions. It also expects received messages to be passed in through `HandleReceive()`.
      *
-     * If @p aMaxAttempts is zero, no limit is applied and connections are allowed until the socket is closed. This is
-     * the default behavior if `SetMaxConnectionAttempts()` is not called.
+     * @param[in] aCallback  A pointer to a function for sending messages.
+     * @param[in] aContext   A pointer to arbitrary context information.
+     *
+     * @retval kErrorNone     Successfully opened the transport.
+     * @retval kErrorAlready  The secure transport is already open.
+     */
+    Error Open(TransportCallback aCallback, void *aContext);
+
+    /**
+     * Sets the maximum number of allowed connection requests before transport is automatically closed.
+     *
+     * This method can be called when transport is closed. Otherwise `kErrorInvalidState` is returned.
+     *
+     * If @p aMaxAttempts is zero, no limit is applied and connections are allowed until the transport is closed. This
+     * is the default behavior if `SetMaxConnectionAttempts()` is not called.
      *
      * @param[in] aMaxAttempts    Maximum number of allowed connection attempts.
-     * @param[in] aCallback       Callback to notify when max number of attempts has reached and socket is closed.
+     * @param[in] aCallback       Callback to notify when max number of attempts has reached and transport is closed.
      * @param[in] aContext        A pointer to arbitrary context to use with `AutoCloseCallback`.
      *
      * @retval kErrorNone          Successfully set the maximum allowed connection attempts and callback.
@@ -664,45 +684,32 @@ public:
     }
 
     /**
-     * Binds this DTLS to a UDP port.
+     * Indicates whether or not the secure transport uses a UDP socket.
      *
-     * @param[in]  aPort              The port to bind.
-     *
-     * @retval kErrorNone           Successfully bound the socket.
-     * @retval kErrorInvalidState   The socket is not open.
-     * @retval kErrorAlready        Already bound.
+     * @retval TRUE   The secure transport is open and uses a UDP socket.
+     * @retval FALSE  The secure transport is either closed or does not use a UDP socket.
      */
-    Error Bind(uint16_t aPort);
+    bool UsesSocket(void) const { return mIsOpen && !mTransportCallback.IsSet(); }
 
     /**
-     * Gets the UDP port of this session.
+     * Gets the UDP port of the secure transport.
      *
-     * @returns  UDP port number.
+     * This method can only be used if the secure transport is open and uses a UDP socket. Otherwise, it returns 0.
+     *
+     * @returns  The UDP port number if the transport uses a socket, 0 otherwise.
      */
-    uint16_t GetUdpPort(void) const { return mSocket.GetSockName().GetPort(); }
+    uint16_t GetUdpPort(void) const { return UsesSocket() ? mSocket.GetSockName().GetPort() : 0; }
 
     /**
-     * Binds with a transport callback.
+     * Indicates whether or not the secure transport is closed.
      *
-     * @param[in]  aCallback  A pointer to a function for sending messages.
-     * @param[in]  aContext   A pointer to arbitrary context information.
-     *
-     * @retval kErrorNone           Successfully bound the socket.
-     * @retval kErrorInvalidState   The socket is not open.
-     * @retval kErrorAlready        Already bound.
-     */
-    Error Bind(TransportCallback aCallback, void *aContext);
-
-    /**
-     * Indicates whether or not the secure transpose socket is closed.
-     *
-     * @retval TRUE   The secure transport socket closed.
-     * @retval FALSE  The secure transport socket is not closed.
+     * @retval TRUE   The secure transport closed.
+     * @retval FALSE  The secure transport is not closed.
      */
     bool IsClosed(void) const { return !mIsOpen; }
 
     /**
-     * Closes the socket.
+     * Closes the transport.
      */
     void Close(void);
 
@@ -724,11 +731,13 @@ public:
     void SetPsk(const JoinerPskd &aPskd);
 
     /**
-     * Checks and handles a received message provided to the SecureTransport object. If checks based on
-     * the message info and current connection state pass, the message is processed.
+     * Checks and handles a received message provided to the `SecureTransport`.
      *
-     * @param[in]  aMessage  A reference to the message to receive.
-     * @param[in]  aMessageInfo A reference to the message info associated with @p aMessage.
+     * This method is intended to be used with the flavor of `Open()` that uses a `TransportCallback`. It is used to
+     * pass in a received message for the transport to process.
+     *
+     * @param[in] aMessage      A reference to the message to receive.
+     * @param[in] aMessageInfo  A reference to the message info associated with @p aMessage.
      */
     void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

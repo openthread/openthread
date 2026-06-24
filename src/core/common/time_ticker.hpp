@@ -66,8 +66,6 @@ public:
         kAddressResolver,        ///< `AddressResolver`
         kChildSupervisor,        ///< `ChildSupervisor`
         kIp6FragmentReassembler, ///< `Ip6::Ip6` (handling of fragmented messages)
-        kDuaManager,             ///< `DuaManager`
-        kMlrManager,             ///< `MlrManager`
         kNetworkDataNotifier,    ///< `NetworkData::Notifier`
         kIp6Mpl,                 ///< `Ip6::Mpl`
         kBbrLocal,               ///< `BackboneRouter::Local`

@@ -1,0 +1,89 @@
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+name: Monthly CalVer Release
+
+on:
+  schedule:
+    # Runs at 00:00 UTC on the 1st day of every month
+    - cron: '0 0 1 * *'
+  
+  # Allows you to trigger the workflow manually from the GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      tag_override:
+        description: 'Custom Tag Name (e.g., v2026.05.1). Leave blank for auto CalVer.'
+        required: false
+        type: string
+
+jobs:
+  create-release:
+    name: Create Monthly Release
+    runs-on: ubuntu-24.04
+    
+    # Required permission to create tags and releases
+    permissions:
+      contents: write 
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Generate CalVer Tag Name
+        id: generate_tag
+        env:
+          TAG_OVERRIDE: ${{ inputs.tag_override }}
+        # Formats the date as vYYYY.MM.0 (e.g., v2026.06.0) or uses override if provided
+        run: |
+          if [ -n "$TAG_OVERRIDE" ]; then
+            CALVER_TAG="$TAG_OVERRIDE"
+          else
+            CALVER_TAG="v$(date +'%Y.%m').0"
+          fi
+          echo "TAG_NAME=$CALVER_TAG" >> $GITHUB_ENV
+          echo "Generated tag: $CALVER_TAG"
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Uses the built-in GitHub CLI to create the tag and release simultaneously
+        run: |
+          gh release create "$TAG_NAME" \
+            --target "${{ github.ref_name }}" \
+            --title "OpenThread $TAG_NAME" \
+            --generate-notes
