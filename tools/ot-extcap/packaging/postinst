@@ -1,0 +1,49 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Query tshark for Global Extcap path
+        # We must handle the case where tshark is not installed yet (although we depend on wireshark-common, tshark might be separate)
+        EXTCAP_DIR=""
+        if command -v tshark >/dev/null 2>&1; then
+            # Run tshark -G folders and extract the Global Extcap path.
+            # We use a robust regex that matches either "Global Extcap path:" or "Extcap path:" while excluding "Personal" paths.
+            EXTCAP_DIR=$(tshark -G folders 2>/dev/null | grep -i "Extcap path:" | grep -vi "Personal" | sed -E 's/^.*Extcap path:[[:space:]]*//' | xargs)
+        fi
+
+        # Fallback to standard paths if tshark is not available or returned empty
+        if [ -z "$EXTCAP_DIR" ]; then
+            echo "WARNING: tshark not found or extcap path not detected at install time!"
+            echo "Fallback to checking standard paths..."
+            # Check which standard path exists
+            if [ -d "/usr/libexec/wireshark/extcap" ]; then
+                EXTCAP_DIR="/usr/libexec/wireshark/extcap"
+            elif [ -d "/usr/lib/x86_64-linux-gnu/wireshark/extcap" ]; then
+                EXTCAP_DIR="/usr/lib/x86_64-linux-gnu/wireshark/extcap"
+            else
+                # If neither exists, we skip and print a loud warning
+                echo "WARNING: No standard Wireshark extcap directory found on the system. Symlink was NOT created."
+                echo "Please install Wireshark/TShark or create the symlink manually:"
+                echo "  sudo ln -s /usr/bin/ot-extcap <your-wireshark-extcap-dir>/ot-extcap"
+            fi
+        fi
+
+        if [ -n "$EXTCAP_DIR" ]; then
+            echo "Installing ot-extcap symlink to: $EXTCAP_DIR"
+            mkdir -p "$EXTCAP_DIR"
+            # Create absolute symlink pointing to the installed binary
+            ln -sf /usr/bin/ot-extcap "$EXTCAP_DIR/ot-extcap"
+        fi
+    ;;
+
+    abort-upgrade|abort-remove|abort-install)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

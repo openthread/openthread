@@ -320,3 +320,82 @@ jobs:
       with:
         files: final.info
         fail_ci_if_error: true
+
+  ot-extcap:
+    name: ot-extcap
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies and TShark (non-interactive)
+      run: |
+        echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+          build-essential \
+          cmake \
+          ninja-build \
+          pkg-config \
+          tshark
+
+    - name: Configure and Build
+      run: |
+        cmake -S tools/ot-extcap -B build -G Ninja
+        cmake --build build
+
+    - name: Package with CPack
+      run: |
+        cd build
+        cpack -G DEB
+
+    - name: Install ot-extcap Package
+      run: |
+        DEB_FILE=$(ls build/ot-extcap_*.deb | grep -v dbgsym)
+        echo "Installing $DEB_FILE"
+        sudo dpkg -i "$DEB_FILE"
+
+    - name: Verify Extcap Interface Discovery
+      run: |
+        echo "Verifying ot-extcap installation..."
+        ls -l /usr/bin/ot-extcap
+        # Verify that at least one of the expected symlinks was successfully installed
+        ls -l /usr/libexec/wireshark/extcap/ot-extcap || ls -l /usr/lib/x86_64-linux-gnu/wireshark/extcap/ot-extcap
+        
+        echo "Running tshark -D to verify interface discovery..."
+        TSHARK_OUT=$(tshark -D)
+        echo "$TSHARK_OUT"
+        
+        echo "Checking for spinel_hdlc_uart..."
+        echo "$TSHARK_OUT" | grep -i "spinel_hdlc_uart"
+        
+        echo "Checking for openthread_radio_url..."
+        echo "$TSHARK_OUT" | grep -i "openthread_radio_url"
+        
+        echo "Verification SUCCESS!"
+
+    - name: Uninstall Package and Verify Cleanup
+      run: |
+        echo "Uninstalling ot-extcap..."
+        sudo dpkg -r ot-extcap
+        
+        echo "Verifying cleanup..."
+        if [ -f /usr/bin/ot-extcap ]; then
+            echo "ERROR: /usr/bin/ot-extcap was not removed!"
+            exit 1
+        fi
+        if [ -L /usr/libexec/wireshark/extcap/ot-extcap ]; then
+            echo "ERROR: /usr/libexec/wireshark/extcap/ot-extcap symlink was not removed!"
+            exit 1
+        fi
+        if [ -L /usr/lib/x86_64-linux-gnu/wireshark/extcap/ot-extcap ]; then
+            echo "ERROR: /usr/lib/x86_64-linux-gnu/wireshark/extcap/ot-extcap symlink was not removed!"
+            exit 1
+        fi
+        echo "Uninstall cleanup SUCCESS!"
