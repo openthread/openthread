@@ -187,7 +187,7 @@ static NetworkName                              sCommNetworkName, sCommDomainNam
 static ExtendedPanId                            sCommExtPanId;
 static TcatAgent::CertificateAuthorizationField sCommAuth, sDeviceAuth;
 
-// Helper class to test BLE connection state.
+// Helper class to test the BLE Secure connection state and validate the documented connect-callback contract.
 class TestBleSecure
 {
 public:
@@ -195,18 +195,51 @@ public:
         : mIsConnected(false)
         , mIsBleConnectionOpen(false)
         , mConnectCallbackCount(0)
+        , mContractHonored(true)
     {
     }
 
     void HandleBleSecureConnect(bool aConnected, bool aBleConnectionOpen)
     {
+        // A TLS session cannot exist without an open BLE link to carry it.
+        if (aConnected && !aBleConnectionOpen)
+        {
+            printf("TestBleSecure: illegal pair reported (aConnected=1, aBleConnectionOpen=0)\n");
+            mContractHonored = false;
+        }
+
+        // The callback must fire only on a change of the pair, so never twice in a row with identical values.
+        if (aConnected == mIsConnected && aBleConnectionOpen == mIsBleConnectionOpen)
+        {
+            printf("TestBleSecure: pair repeated without change (aConnected=%d, aBleConnectionOpen=%d)\n", aConnected,
+                   aBleConnectionOpen);
+            mContractHonored = false;
+        }
+
         mIsConnected         = aConnected;
         mIsBleConnectionOpen = aBleConnectionOpen;
         mConnectCallbackCount++;
     }
 
-    bool     IsConnected(void) const { return mIsConnected; }
-    bool     IsBleConnectionOpen(void) const { return mIsBleConnectionOpen; }
+    // Returns TRUE if the contract has been honored by every callback so far AND the currently reported state and
+    // the callback count (since the last reset) match the expected values.
+    bool Verify(bool aConnected, bool aBleConnectionOpen, uint32_t aExpectedCallbackCount) const
+    {
+        bool ok = mContractHonored && (mIsConnected == aConnected) && (mIsBleConnectionOpen == aBleConnectionOpen) &&
+                  (mConnectCallbackCount == aExpectedCallbackCount);
+
+        if (!ok)
+        {
+            printf("TestBleSecure::Verify mismatch: got (aConnected=%d, aBleConnectionOpen=%d, count=%lu, "
+                   "contractHonored=%d), expected (aConnected=%d, aBleConnectionOpen=%d, count=%lu)\n",
+                   mIsConnected, mIsBleConnectionOpen, ToUlong(mConnectCallbackCount), mContractHonored, aConnected,
+                   aBleConnectionOpen, ToUlong(aExpectedCallbackCount));
+        }
+
+        return ok;
+    }
+
+    bool     IsContractHonored(void) const { return mContractHonored; }
     uint32_t GetConnectCallbackCount(void) const { return mConnectCallbackCount; }
     void     ResetConnectCallbackCount(void) { mConnectCallbackCount = 0; }
 
@@ -214,6 +247,7 @@ private:
     bool     mIsConnected;
     bool     mIsBleConnectionOpen;
     uint32_t mConnectCallbackCount;
+    bool     mContractHonored;
 };
 
 static void HandleBleSecureConnect(otInstance *aInstance, bool aConnected, bool aBleConnectionOpen, void *aContext)
@@ -292,12 +326,12 @@ void TestTcatConnectionAndCertAttributes(void)
     VerifyOrQuit(otBleSecureStart(instance, HandleBleSecureConnect, nullptr, true, nullptr) == kErrorAlready);
     SuccessOrQuit(otBleSecureTcatStart(instance, nullptr));
 
-    // Validate connection callbacks when platform informs that peer has connected/disconnected
+    // Validate connection callbacks when platform informs that peer has connected/disconnected.
     VerifyOrQuit(!otBleSecureIsConnected(instance));
     otPlatBleGapOnConnected(instance, kConnectionId);
-    VerifyOrQuit(!ble.IsConnected() && ble.IsBleConnectionOpen());
+    VerifyOrQuit(ble.Verify(/* aConnected */ false, /* aBleConnectionOpen */ true, /* aExpectedCallbackCount */ 1));
     otPlatBleGapOnDisconnected(instance, kConnectionId);
-    VerifyOrQuit(!ble.IsConnected() && !ble.IsBleConnectionOpen());
+    VerifyOrQuit(ble.Verify(/* aConnected */ false, /* aBleConnectionOpen */ false, /* aExpectedCallbackCount */ 2));
 
     // Verify that Thread-attribute parsing isn't available yet when not connected as client or server.
     attributeLen = sizeof(attributeBuffer);
@@ -310,12 +344,12 @@ void TestTcatConnectionAndCertAttributes(void)
 
     // Validate connection callbacks when calling `otBleSecureDisconnect()`
     otPlatBleGapOnConnected(instance, kConnectionId);
-    VerifyOrQuit(!ble.IsConnected() && ble.IsBleConnectionOpen());
+    VerifyOrQuit(ble.Verify(/* aConnected */ false, /* aBleConnectionOpen */ true, /* aExpectedCallbackCount */ 3));
     ble.ResetConnectCallbackCount();
     otBleSecureDisconnect(instance);
-    VerifyOrQuit(!ble.IsConnected() && !ble.IsBleConnectionOpen());
-    // Regression test: a locally-initiated disconnect must invoke the connect callback exactly once.
-    VerifyOrQuit(ble.GetConnectCallbackCount() == 1);
+    // Regression test: a locally-initiated disconnect (with no TLS session) must invoke the connect callback
+    // exactly once, with the fully-disconnected pair.
+    VerifyOrQuit(ble.Verify(/* aConnected */ false, /* aBleConnectionOpen */ false, /* aExpectedCallbackCount */ 1));
 
     // Validate TLS connection can be started (as client) only when peer is BLE-connected
     otPlatBleGapOnConnected(instance, kConnectionId);
@@ -343,6 +377,8 @@ void TestTcatConnectionAndCertAttributes(void)
     VerifyOrQuit(otBleSecureIsTcatAgentStarted(instance));
     otBleSecureStop(instance);
     VerifyOrQuit(!otBleSecureIsTcatAgentStarted(instance));
+
+    VerifyOrQuit(ble.IsContractHonored());
 
     testFreeInstance(instance);
 }
@@ -383,6 +419,8 @@ void TestTcatAdvertisementUpdates(void)
                  "Adv data did not change after disconnect, which it should due to S flag");
 
     otBleSecureStop(instance);
+
+    VerifyOrQuit(ble.IsContractHonored());
 
     testFreeInstance(instance);
 }
