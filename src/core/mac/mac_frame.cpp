@@ -916,7 +916,11 @@ uint8_t Frame::CalculateMicSize(uint8_t aSecurityControl)
 
 uint16_t Frame::GetMaxPayloadLength(void) const { return GetMtu() - (GetHeaderLength() + GetFooterLength()); }
 
-uint16_t Frame::GetPayloadLength(void) const { return mLength - (GetHeaderLength() + GetFooterLength()); }
+uint16_t Frame::GetPayloadLength(void) const
+{
+    uint16_t overhead = static_cast<uint16_t>(GetHeaderLength()) + GetFooterLength();
+    return (mLength >= overhead) ? (mLength - overhead) : 0;
+}
 
 void Frame::SetPayloadLength(uint16_t aLength) { mLength = GetHeaderLength() + GetFooterLength() + aLength; }
 
