@@ -970,6 +970,7 @@ Error Lowpan::DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint
     }
     else
     {
+        VerifyOrExit(aDatagramLength >= aMessage.GetOffset() + sizeof(Ip6::UdpHeader), error = kErrorParse);
         udpHeader.SetLength(aDatagramLength - aMessage.GetOffset());
     }
 
@@ -1035,6 +1036,7 @@ Error Lowpan::Decompress(Message              &aMessage,
 
     if (aDatagramLength)
     {
+        VerifyOrExit(aDatagramLength >= currentOffset + sizeof(Ip6::Header), error = kErrorParse);
         ip6PayloadLength = BigEndian::HostSwap16(aDatagramLength - currentOffset - sizeof(Ip6::Header));
     }
     else
