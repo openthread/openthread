@@ -70,6 +70,7 @@ VENDOR_SW_VERSION_TLV = 27
 THREAD_STACK_VERSION_TLV = 28
 MLE_COUNTERS_TLV = 34
 VENDOR_APP_URL = 35
+VENDOR_OUI = 44
 NON_PREFERRED_CHANNELS_TLV = 36
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -79,11 +80,13 @@ r1.set_vendor_name('RD:nest')
 r1.set_vendor_model('marble')
 r1.set_vendor_sw_version('ot-1.4')
 r1.set_vendor_app_url('https://example.com/vendor-app')
+r1.set_vendor_oui(0x1a2b3c)
 
 verify(r1.get_vendor_name() == 'RD:nest')
 verify(r1.get_vendor_model() == 'marble')
 verify(r1.get_vendor_sw_version() == 'ot-1.4')
 verify(r1.get_vendor_app_url() == 'https://example.com/vendor-app')
+verify(r1.get_vendor_oui() == '1A-2B-3C')
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Check invalid names (too long)
@@ -177,6 +180,13 @@ result = r2.cli('networkdiagnostic get', r1_rloc, VENDOR_APP_URL)
 verify(len(result) == 2)
 verify(result[1].startswith("Vendor App URL:"))
 verify(result[1].split(':', 1)[1].strip() == r1.get_vendor_app_url())
+
+# Get vendor OUI (TLV 44)
+
+result = r2.cli('networkdiagnostic get', r1_rloc, VENDOR_OUI)
+verify(len(result) == 2)
+verify(result[1].startswith("Vendor OUI:"))
+verify(result[1].split(':', 1)[1].strip() == r1.get_vendor_oui())
 
 # Get thread stack version (TLV 30)
 

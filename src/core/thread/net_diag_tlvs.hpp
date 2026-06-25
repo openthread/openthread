@@ -105,6 +105,7 @@ public:
         kBrDhcp6PdOmrPrefix    = OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX,
         kBrLocalOnlinkPrefix   = OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX,
         kBrFavoredOnLinkPrefix = OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX,
+        kVendorOui             = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_OUI,
     };
 
     /**
@@ -232,6 +233,11 @@ typedef StringTlvInfo<Tlv::kThreadStackVersion, Tlv::kMaxThreadStackVersionLengt
  * Defines Vendor App URL TLV constants and types.
  */
 typedef StringTlvInfo<Tlv::kVendorAppUrl, Tlv::kMaxVendorAppUrlLength> VendorAppUrlTlv;
+
+/**
+ * Defines Vendor OUI TLV constants and types.
+ */
+typedef TlvInfo<Tlv::kVendorOui> VendorOuiTlv;
 
 /**
  * Defines Child IPv6 Address List TLV constants and types.

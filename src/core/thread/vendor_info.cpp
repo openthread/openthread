@@ -187,6 +187,20 @@ exit:
     return error;
 }
 
+Error VendorInfo::Oui::ParseFrom(const Message &aMessage, OffsetRange aOffsetRange)
+{
+    Error error = kErrorParse;
+
+    aOffsetRange.ShrinkLength(kMaxSize);
+    SuccessOrExit(SetBitLengthFromSize(aOffsetRange.GetLength()));
+
+    SuccessOrExit(error = aMessage.Read(aOffsetRange.GetOffset(), mBytes, GetSize()));
+    Tidy();
+
+exit:
+    return error;
+}
+
 void VendorInfo::Oui::Tidy(void)
 {
     uint8_t index;

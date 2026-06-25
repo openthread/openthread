@@ -7757,6 +7757,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * - `41`: Border Router DHCPv6-PD OMR Prefix TLV
      * - `42`: Border Router Local On-link Prefix TLV
      * - `43`: Border Router Favored On-link Prefix TLV
+     * - `44`: Vendor OUI TLV
      *
      * @par
      * Sends a network diagnostic request to retrieve specified Type Length Values (TLVs)
@@ -7926,6 +7927,10 @@ void Interpreter::HandleDiagnosticGetResponse(otError              aError,
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL:
             OutputLine("Vendor App URL: %s", diagTlv.mData.mVendorAppUrl);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_OUI:
+            OutputFormat("Vendor OUI: ");
+            OutputVendorOuiLine(diagTlv.mData.mVendorOui);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION:
             OutputLine("Thread Stack Version: %s", diagTlv.mData.mThreadStackVersion);
