@@ -46,6 +46,7 @@
 #include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "mac/mac_frame.hpp"
+#include "radio/radio_types.hpp"
 
 namespace ot {
 
@@ -523,7 +524,7 @@ public:
      * @retval kErrorNone    Successfully scheduled receive window.
      * @retval kErrorFailed  The receive window could not be scheduled.
      */
-    Error ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDuration);
+    Error ReceiveAt(uint8_t aChannel, RadioTime32 aStart, uint32_t aDuration);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -532,7 +533,7 @@ public:
      *
      * @param[in]  aCslSampleTime  The CSL sample time.
      */
-    void UpdateCslSampleTime(uint32_t aCslSampleTime);
+    void UpdateCslSampleTime(RadioTime32 aCslSampleTime);
 
     /**
      * Enables CSL sampling in radio.
@@ -567,7 +568,14 @@ public:
      *
      * @returns The current radio clock time.
      */
-    uint64_t GetNow(void);
+    RadioTime64 GetNow(void);
+
+    /**
+     * Get the current radio time in microseconds as a 32-bit value (lower 32 bits of the full radio time).
+     *
+     * @returns The current radio clock time as a `RadioTime32`.
+     */
+    RadioTime32 GetNowAsRadioTime32(void) { return ConvertRadioTime64To32(GetNow()); }
 
     /**
      * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
@@ -984,7 +992,7 @@ inline Error Radio::Receive(uint8_t aChannel)
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-inline Error Radio::ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+inline Error Radio::ReceiveAt(uint8_t aChannel, RadioTime32 aStart, uint32_t aDuration)
 {
     Error error = otPlatRadioReceiveAt(GetInstancePtr(), aChannel, aStart, aDuration);
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
@@ -998,7 +1006,7 @@ inline Error Radio::ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDurat
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-inline void Radio::UpdateCslSampleTime(uint32_t aCslSampleTime)
+inline void Radio::UpdateCslSampleTime(RadioTime32 aCslSampleTime)
 {
     otPlatRadioUpdateCslSampleTime(GetInstancePtr(), aCslSampleTime);
 }
@@ -1013,7 +1021,7 @@ inline Error Radio::ResetCsl(void) { return otPlatRadioResetCsl(GetInstancePtr()
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
     OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-inline uint64_t Radio::GetNow(void) { return otPlatRadioGetNow(GetInstancePtr()); }
+inline RadioTime64 Radio::GetNow(void) { return otPlatRadioGetNow(GetInstancePtr()); }
 
 inline uint8_t Radio::GetCslAccuracy(void) { return otPlatRadioGetCslAccuracy(GetInstancePtr()); }
 
@@ -1112,7 +1120,7 @@ inline Error Radio::ReceiveAt(uint8_t, uint32_t, uint32_t) { return kErrorNone; 
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-inline void Radio::UpdateCslSampleTime(uint32_t) {}
+inline void Radio::UpdateCslSampleTime(RadioTime32) {}
 
 inline Error Radio::EnableCsl(uint32_t, Mac::ShortAddress, const Mac::ExtAddress &) { return kErrorNotImplemented; }
 
@@ -1121,7 +1129,7 @@ inline Error Radio::ResetCsl(void) { return kErrorNotImplemented; }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
     OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-inline uint64_t Radio::GetNow(void) { return NumericLimits<uint64_t>::kMax; }
+inline RadioTime64 Radio::GetNow(void) { return NumericLimits<uint64_t>::kMax; }
 
 inline uint8_t Radio::GetCslAccuracy(void) { return NumericLimits<uint8_t>::kMax; }
 

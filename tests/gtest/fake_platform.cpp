@@ -385,7 +385,7 @@ otError otPlatRadioSleep(otInstance *) { return OT_ERROR_NONE; }
 
 otError otPlatRadioReceive(otInstance *, uint8_t aChannel) { return FakePlatform::CurrentPlatform().Receive(aChannel); }
 
-otError otPlatRadioReceiveAt(otInstance *, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+otError otPlatRadioReceiveAt(otInstance *, uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration)
 {
     return FakePlatform::CurrentPlatform().ReceiveAt(aChannel, aStart, aDuration);
 }

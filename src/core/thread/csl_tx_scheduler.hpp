@@ -95,8 +95,8 @@ public:
         TimeMilli GetCslLastHeard(void) const { return mCslLastHeard; }
         void      SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
 
-        uint64_t GetLastRxTimestamp(void) const { return mLastRxTimestamp; }
-        void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
+        RadioTime64 GetLastRxTimestamp(void) const { return mLastRxTimestamp; }
+        void        SetLastRxTimestamp(RadioTime64 aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
 
     private:
         uint8_t  mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.

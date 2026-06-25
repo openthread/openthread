@@ -96,7 +96,7 @@ void SubMac::HandleWedReceiveAt(void)
     if (mState != kStateDisabled)
     {
         IgnoreError(
-            Get<Radio>().ReceiveAt(mWakeupChannel, static_cast<uint32_t>(mWedSampleTimeRadio), mWakeupListenDuration));
+            Get<Radio>().ReceiveAt(mWakeupChannel, ConvertRadioTime64To32(mWedSampleTimeRadio), mWakeupListenDuration));
     }
 }
 

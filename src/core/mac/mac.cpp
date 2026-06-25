@@ -2498,7 +2498,7 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     neighbor->SetCslLastHeard(TimerMilli::GetNow());
     neighbor->SetLastRxTimestamp(aFrame.GetTimestamp());
     LogDebg("Timestamp=%lu Sequence=%u CslPeriod=%u CslPhase=%u TransmitPhase=%u",
-            ToUlong(static_cast<uint32_t>(aFrame.GetTimestamp())), aFrame.GetSequence(), csl->GetPeriod(),
+            ToUlong(ConvertRadioTime64To32(aFrame.GetTimestamp())), aFrame.GetSequence(), csl->GetPeriod(),
             csl->GetPhase(), neighbor->GetCslPhase());
 
 #if OPENTHREAD_FTD
@@ -2622,9 +2622,9 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     const ConnectionIe *connectionIe;
     Address             srcAddress;
     WakeupInfo          wakeupInfo;
-    uint32_t            rvTimeUs;
-    uint64_t            rvTimestampUs;
-    uint64_t            radioNowUs;
+    RadioTime32         rvTimeUs;
+    RadioTime64         rvTimestampUs;
+    RadioTime64         radioNowUs;
 
     VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
 
@@ -2637,13 +2637,13 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     wakeupInfo.mRetryCount    = connectionIe->GetRetryCount();
     VerifyOrExit(wakeupInfo.mRetryInterval > 0 && wakeupInfo.mRetryCount > 0, error = kErrorInvalidArgs);
 
-    radioNowUs    = otPlatRadioGetNow(&GetInstance());
+    radioNowUs    = Get<Radio>().GetNow();
     rvTimeUs      = aFrame.Find<RendezvousTimeIe>()->GetRendezvousTime() * kUsPerTenSymbols;
     rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
 
     if (rvTimestampUs > radioNowUs + kCslRequestAhead)
     {
-        wakeupInfo.mAttachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - kCslRequestAhead);
+        wakeupInfo.mAttachDelayMs = ConvertRadioTime64To32(rvTimestampUs - radioNowUs - kCslRequestAhead);
         wakeupInfo.mAttachDelayMs = wakeupInfo.mAttachDelayMs / Time::kOneMsecInUsec;
     }
     else
