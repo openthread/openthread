@@ -1106,6 +1106,8 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
     {
         uint16_t datagramSize = fragmentHeader.GetDatagramSize();
 
+        VerifyOrExit(datagramSize >= sizeof(Ip6::Header), error = kErrorParse);
+
 #if OPENTHREAD_FTD
         UpdateEidRlocCacheAndStaleChild(aRxInfo);
 #endif
