@@ -183,16 +183,15 @@ void BleSecure::Disconnect(void)
         // Request the platform to close the BLE connection. When the platform signals completion
         // (asynchronously) it calls otPlatBleGapOnDisconnected() -> #HandleBleDisconnected(), which
         // in turn calls this method again - now with mBleState no longer kConnected - to invoke below
-        // mConnectCallback and update the advertisement data. We therefore return early here when
+        // mConnectCallback and update the advertisement data. We therefore exit early here when
         // the platform accepted the request, to avoid invoking the callback (and updating the
-        // advertisement data) twice. If the platform did not start the disconnection, no completion
-        // callback will follow and we handle mConnectCallback directly below.
+        // advertisement data) twice. If the platform did not succeed starting the disconnection, no completion
+        // callback will follow, and we handle mConnectCallback directly below.
         VerifyOrExit(otPlatBleGapDisconnect(&GetInstance()) != kErrorNone);
     }
 
     mConnectCallback.InvokeIfSet(&GetInstance(), false, false);
-    // Update advertisement data
-    IgnoreError(NotifyAdvertisementChanged());
+    IgnoreError(NotifyAdvertisementChanged()); // Update advertisement data now since we'll restart advertising
 
 exit:
     return;
@@ -426,7 +425,7 @@ void BleSecure::HandleBleDisconnected(uint16_t aConnectionId)
     mBleState = kNotAdvertising; // per otPlatBleGapAdvStart() API, advertising stopped already when client connected.
     mMtuSize  = kInitialMtuSize;
 
-    Disconnect(); // Stop TLS connection and update advertisement data
+    Disconnect(); // Stop TLS connection, invoke callback and update advertisement data
 
     // Resume advertising (or fulfill a different advertising state requested while a client was connected).
     IgnoreError(SetRequestedBleAdvertisementsState());
@@ -458,6 +457,7 @@ void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent)
         {
             mReceivedMessage = Get<MessagePool>().Allocate(Message::kTypeBle);
         }
+
         if (mReceivedMessage == nullptr)
         {
             err = kErrorNoBufs;
@@ -473,17 +473,20 @@ void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent)
             LogWarn("Rejected TCAT Commissioner, error: %s", ErrorToString(err));
             ExitNow();
         }
+
+        mConnectCallback.InvokeIfSet(&GetInstance(), true, true);
     }
-    else
+    else /* any kDisconnected... event */
     {
         FreeMessage(mReceivedMessage);
         mReceivedMessage = nullptr;
         FreeMessage(mSendMessage);
         mSendMessage = nullptr;
         Get<MeshCoP::TcatAgent>().Disconnected();
-    }
 
-    mConnectCallback.InvokeIfSet(&GetInstance(), aEvent == MeshCoP::Tls::kConnected, mBleState == kConnected);
+        // TLS session ends, so the BLE link must end also. This includes mConnectCallback invocation.
+        Disconnect();
+    }
 
 exit:
     return;
