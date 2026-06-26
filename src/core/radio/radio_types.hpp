@@ -38,6 +38,9 @@
 
 #include <openthread/platform/radio.h>
 
+#include "common/clearable.hpp"
+#include "common/time.hpp"
+
 namespace ot {
 
 #ifdef OT_CONFIG_RADIO_TIME_ENABLE
@@ -48,6 +51,8 @@ namespace ot {
     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
      OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE || OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || \
      OPENTHREAD_CONFIG_TIME_SYNC_ENABLE)
+
+class Radio;
 
 /**
  * Represents a 64-bit radio time in microseconds referenced to a continuous monotonic local radio clock.
@@ -80,6 +85,71 @@ inline RadioTime32 ConvertRadioTime64To32(RadioTime64 aRadioTime64) { return sta
  * @retval FALSE  @p aFirstTime is not strictly before @p aSecondTime.
  */
 bool IsRadioTimeStrictlyBefore(RadioTime32 aFirstTime, RadioTime32 aSecondTime);
+
+#if OT_CONFIG_RADIO_TIME_ENABLE && OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+
+/**
+ * Represents synchronized radio time and local `TimeMicro`.
+ */
+class SyncedRadioLocalTime : public Clearable<SyncedRadioLocalTime>
+{
+public:
+    /**
+     * Sets the synchronized radio and local time values to the current time.
+     *
+     * @param[in] aRadio  The `Radio` to use for radio time.
+     */
+    void SetToNow(Radio &aRadio);
+
+    /**
+     * Gets the local time as `TimeMicor`
+     *
+     * @returns The local microsecond time.
+     */
+    TimeMicro GetAsTimeMicro(void) const { return mLocalTime; }
+
+    /**
+     * Gets the 64-bit radio time.
+     *
+     * @returns The 64-bit radio time.
+     */
+    RadioTime64 GetAsRadio64(void) const { return mRadioTime; }
+
+    /**
+     * Gets the 32-bit radio time.
+     *
+     * @returns The 32-bit radio time.
+     */
+    RadioTime32 GetAsRadio32(void) const { return ConvertRadioTime64To32(mRadioTime); }
+
+    /**
+     * Advances the synchronized radio and local time values by a given duration.
+     *
+     * @param[in] aDuration  The duration in microseconds to add.
+     */
+    void operator+=(uint32_t aDuration)
+    {
+        mRadioTime += aDuration;
+        mLocalTime += aDuration;
+    }
+
+    /**
+     * Rewinds the synchronized radio and local time values by a given duration.
+     *
+     * @param[in] aDuration  The duration in microseconds to subtract.
+     */
+    void operator-=(uint32_t aDuration)
+    {
+        mRadioTime -= aDuration;
+        mLocalTime -= aDuration;
+    }
+
+private:
+    RadioTime64 mRadioTime;
+    TimeMicro   mLocalTime;
+};
+
+#endif // OT_CONFIG_RADIO_TIME_ENABLE && OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 } // namespace ot
 

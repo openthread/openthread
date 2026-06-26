@@ -44,12 +44,11 @@ RegisterLogModule("SubMac");
 
 void SubMac::CslInit(void)
 {
-    mCslPeriod          = 0;
-    mCslChannel         = 0;
-    mCslPeerShort       = 0;
-    mIsCslSampling      = false;
-    mCslSampleTimeRadio = 0;
-    mCslSampleTimeLocal.SetValue(0);
+    mCslPeriod     = 0;
+    mCslChannel    = 0;
+    mCslPeerShort  = 0;
+    mIsCslSampling = false;
+    mCslSampleTime.Clear();
     mCslLastSync.SetValue(0);
     mCslTimer.Stop();
 }
@@ -66,8 +65,7 @@ void SubMac::RestartCslTimerAfterSyncUpdate(void)
         // Rewind sample times by one period. HandleCslTimer() will add this
         // period back, effectively re-evaluating the current CSL period's
         // schedule using the updated mCslLastSync.
-        mCslSampleTimeRadio -= periodUs;
-        mCslSampleTimeLocal -= periodUs;
+        mCslSampleTime -= periodUs;
 
         HandleCslTimer();
     }
@@ -127,12 +125,13 @@ void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShor
     mCslPeriod     = aPeriod;
 
     mCslTimer.Stop();
+
     if (mCslPeriod > 0)
     {
-        mCslSampleTimeRadio = Get<Radio>().GetNowAsRadioTime32();
-        mCslSampleTimeLocal = TimerMicro::GetNow();
+        mCslSampleTime.SetToNow(Get<Radio>());
+
         // Update CSL sync time whenever CSL parameters are re-initialized.
-        mCslLastSync = mCslSampleTimeLocal;
+        mCslLastSync = mCslSampleTime.GetAsTimeMicro();
 
         HandleCslTimer();
     }
@@ -184,15 +183,14 @@ void SubMac::HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter)
     RadioTime32 winStart;
     uint32_t    winDuration;
 
-    mCslTimer.FireAt(mCslSampleTimeLocal + periodUs - aTimeAhead - GetNextCycleDrift());
+    mCslTimer.FireAt(mCslSampleTime.GetAsTimeMicro() + periodUs - aTimeAhead - GetNextCycleDrift());
     aTimeAhead -= kCslReceiveTimeAhead;
-    winStart    = mCslSampleTimeRadio - aTimeAhead;
+    winStart    = mCslSampleTime.GetAsRadio32() - aTimeAhead;
     winDuration = aTimeAhead + aTimeAfter;
 
-    mCslSampleTimeRadio += periodUs;
-    mCslSampleTimeLocal += periodUs;
+    mCslSampleTime += periodUs;
 
-    Get<Radio>().UpdateCslSampleTime(mCslSampleTimeRadio);
+    Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetAsRadio32());
 
     // Schedule reception window for any state except RX - so that CSL RX Window has lower priority
     // than scanning or RX after the data poll.
@@ -221,7 +219,7 @@ void SubMac::HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter)
     if (mIsCslSampling)
     {
         mIsCslSampling = false;
-        mCslTimer.FireAt(mCslSampleTimeLocal - aTimeAhead - GetNextCycleDrift());
+        mCslTimer.FireAt(mCslSampleTime.GetAsTimeMicro() - aTimeAhead - GetNextCycleDrift());
         if (mState == kStateRadioSample)
         {
             LogDebg("CSL sleep %lu", ToUlong(mCslTimer.GetNow().GetValue()));
@@ -233,15 +231,14 @@ void SubMac::HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter)
         uint32_t winStart;
         uint32_t winDuration;
 
-        mCslTimer.FireAt(mCslSampleTimeLocal + aTimeAfter);
+        mCslTimer.FireAt(mCslSampleTime.GetAsTimeMicro() + aTimeAfter);
         mIsCslSampling = true;
         winStart       = TimerMicro::GetNow().GetValue();
         winDuration    = aTimeAhead + aTimeAfter;
 
-        mCslSampleTimeRadio += periodUs;
-        mCslSampleTimeLocal += periodUs;
+        mCslSampleTime += periodUs;
 
-        Get<Radio>().UpdateCslSampleTime(mCslSampleTimeRadio);
+        Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetAsRadio32());
 
         LogCslWindow(winStart, winDuration);
     }
@@ -328,7 +325,7 @@ void SubMac::LogReceived(RxFrame *aFrame)
     GetCslWindowEdges(ahead, after);
     ahead -= kMinReceiveOnAhead + kCslReceiveTimeAhead;
 
-    sampleTime = mCslSampleTimeRadio - mCslPeriod * kUsPerTenSymbols;
+    sampleTime = mCslSampleTime.GetAsRadio32() - mCslPeriod * kUsPerTenSymbols;
     deviation  = ConvertRadioTime64To32(aFrame->GetTimestamp()) + kRadioHeaderPhrDuration - sampleTime;
 
     // This logs three values (all in microseconds):
