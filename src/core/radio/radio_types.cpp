@@ -33,7 +33,7 @@
 
 #include "radio_types.hpp"
 
-#include "common/time.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -44,5 +44,18 @@ bool IsRadioTimeStrictlyBefore(RadioTime32 aFirstTime, RadioTime32 aSecondTime)
 
     return (firstTime < secondTime);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// SyncedRadioLocalTime
+
+#if OT_CONFIG_RADIO_TIME_ENABLE && OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+
+void SyncedRadioLocalTime::SetToNow(Radio &aRadio)
+{
+    mRadioTime = aRadio.GetNow();
+    mLocalTime = TimerMicro::GetNow();
+}
+
+#endif
 
 } // namespace ot
