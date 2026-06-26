@@ -248,6 +248,8 @@ set(COMMON_SOURCES
     thread/mesh_forwarder.cpp
     thread/mesh_forwarder_ftd.cpp
     thread/mesh_forwarder_mtd.cpp
+    thread/mesh_monitor.cpp
+    thread/mesh_monitor_types.cpp
     thread/message_framer.cpp
     thread/mle.cpp
     thread/mle_ftd.cpp
