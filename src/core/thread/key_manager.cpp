@@ -344,13 +344,13 @@ void KeyManager::UpdateKeyMaterial(void)
         Mac::KeyMaterial prevKey;
         Mac::KeyMaterial nextKey;
 
-        curKey.SetFrom(hashKeys.GetMacKey(), kExportableMacKeys);
+        curKey.SetFrom(hashKeys.GetMacKey(), Mac::kDefaultMacKeysExportable);
 
         ComputeKeys(mKeySequence - 1, hashKeys);
-        prevKey.SetFrom(hashKeys.GetMacKey(), kExportableMacKeys);
+        prevKey.SetFrom(hashKeys.GetMacKey(), Mac::kDefaultMacKeysExportable);
 
         ComputeKeys(mKeySequence + 1, hashKeys);
-        nextKey.SetFrom(hashKeys.GetMacKey(), kExportableMacKeys);
+        nextKey.SetFrom(hashKeys.GetMacKey(), Mac::kDefaultMacKeysExportable);
 
         Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prevKey, curKey, nextKey);
     }
