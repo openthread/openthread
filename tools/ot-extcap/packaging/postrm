@@ -1,0 +1,41 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    purge|remove)
+        # We want to clean up the symlink we created.
+        # Since we don't know where it was created (it was dynamic!), we should
+        # query tshark again to find the path and delete it.
+        EXTCAP_DIR=""
+        if command -v tshark >/dev/null 2>&1; then
+            # Use robust regex matching both older and newer Wireshark versions
+            EXTCAP_DIR=$(tshark -G folders 2>/dev/null | grep -i "Extcap path:" | grep -vi "Personal" | sed -E 's/^.*Extcap path:[[:space:]]*//' | xargs)
+        fi
+
+        # Also check standard paths just in case
+        for DIR in "$EXTCAP_DIR" "/usr/libexec/wireshark/extcap" "/usr/lib/x86_64-linux-gnu/wireshark/extcap"; do
+            # CRITICAL: Do NOT use [ -f ] to check for the symlink because the binary has already been
+            # deleted by dpkg before postrm runs, making this a broken symlink.
+            # [ -f ] follows the link, sees the target is missing, and returns false, skipping it.
+            # We must use [ -L ] directly to detect and remove the broken symlink.
+            if [ -n "$DIR" ] && [ -L "$DIR/ot-extcap" ]; then
+                # Double check it is indeed a symlink pointing to our binary
+                LINK_TARGET=$(readlink "$DIR/ot-extcap")
+                if [ "$LINK_TARGET" = "/usr/bin/ot-extcap" ] || [ "$LINK_TARGET" = "/usr/local/bin/ot-extcap" ]; then
+                    echo "Removing ot-extcap symlink from: $DIR"
+                    rm -f "$DIR/ot-extcap"
+                fi
+            fi
+        done
+    ;;
+
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    ;;
+
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

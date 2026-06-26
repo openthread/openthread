@@ -796,7 +796,7 @@ otError RadioSpinel::SetPromiscuous(bool aEnable)
 {
     otError error;
 
-    uint8_t mode = (aEnable ? SPINEL_MAC_PROMISCUOUS_MODE_NETWORK : SPINEL_MAC_PROMISCUOUS_MODE_OFF);
+    uint8_t mode = (aEnable ? SPINEL_MAC_PROMISCUOUS_MODE_FULL : SPINEL_MAC_PROMISCUOUS_MODE_OFF);
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_PROMISCUOUS_MODE, SPINEL_DATATYPE_UINT8_S, mode));
     mIsPromiscuous = aEnable;
 
