@@ -107,6 +107,25 @@ jobs:
         cmake --build --preset simulation
         ctest --preset simulation
 
+  cmake-presets-ccm-one-shot:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
+    - name: Build and test with platform CCM one-shot enabled
+      run: |
+        cmake --preset simulation -DOT_CRYPTO_CCM_ONE_SHOT=ON
+        cmake --build --preset simulation
+        ctest --preset simulation
+
   cmake-version:
     runs-on: ubuntu-24.04
     steps:

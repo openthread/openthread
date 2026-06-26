@@ -339,6 +339,115 @@ void TestAesCcmMessageProcessing(void)
     printf("\nTestAesCcmMessageProcessing PASSED\n\n");
 }
 
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
+
+/**
+ * Verifies `otPlatCryptoAesCcmProcessOneShot` directly and via `AesCcm::Process`,
+ * using IEEE 802.15.4-2006 Annex C Section C.2.3
+ * (MAC command frame: 29-byte header, 1-byte payload, 8-byte MIC).
+ */
+void TestPlatformCcmSinglePart(void)
+{
+    static const uint8_t kKey[] = {
+        0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf,
+    };
+
+    static const uint8_t kNonce[] = {
+        0xAC, 0xDE, 0x48, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x05, 0x06,
+    };
+
+    static constexpr uint32_t kHeaderLength  = 29;
+    static constexpr uint32_t kPayloadLength = 1;
+    static constexpr uint8_t  kTagLength     = 8;
+    static constexpr uint32_t kFrameLength   = kHeaderLength + kPayloadLength + kTagLength;
+
+    static const uint8_t kPlainFrame[kHeaderLength + kPayloadLength] = {
+        0x2B, 0xDC, 0x84, 0x21, 0x43, 0x02, 0x00, 0x00, 0x00, 0x00, 0x48, 0xDE, 0xAC, 0xFF, 0xFF,
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x48, 0xDE, 0xAC, 0x06, 0x05, 0x00, 0x00, 0x00, 0x01, 0xCE,
+    };
+
+    static const uint8_t kEncryptedFrame[kFrameLength] = {
+        0x2B, 0xDC, 0x84, 0x21, 0x43, 0x02, 0x00, 0x00, 0x00, 0x00, 0x48, 0xDE, 0xAC,
+        0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x00, 0x48, 0xDE, 0xAC, 0x06, 0x05, 0x00,
+        0x00, 0x00, 0x01, 0xD8, 0x4F, 0xDE, 0x52, 0x90, 0x61, 0xF9, 0xC6, 0xF1,
+    };
+
+    otInstance              *instance = testInitInstance();
+    uint8_t                  frame[kFrameLength];
+    otPlatCryptoAesCcmConfig config;
+
+    printf("TestPlatformCcmSinglePart\n");
+
+    VerifyOrQuit(instance != nullptr);
+
+    config.mKey.mKey        = kKey;
+    config.mKey.mKeyLength  = sizeof(kKey);
+    config.mKey.mKeyRef     = 0;
+    config.mNonce           = kNonce;
+    config.mNonceLength     = sizeof(kNonce);
+    config.mTagLength       = kTagLength;
+    config.mHeaderLength    = kHeaderLength;
+    config.mPlainTextLength = kPayloadLength;
+
+    // Direct encrypt/decrypt round-trip through the platform hook.
+    memcpy(frame, kPlainFrame, sizeof(kPlainFrame));
+    memset(frame + kHeaderLength + kPayloadLength, 0, kTagLength);
+    SuccessOrQuit(otPlatCryptoAesCcmProcessOneShot(true, &config, frame, frame + kHeaderLength));
+    DumpBuffer("encrypted", frame, sizeof(frame));
+    VerifyOrQuit(memcmp(frame, kEncryptedFrame, kFrameLength) == 0);
+
+    SuccessOrQuit(otPlatCryptoAesCcmProcessOneShot(false, &config, frame, frame + kHeaderLength));
+    DumpBuffer("decrypted", frame, kHeaderLength + kPayloadLength);
+    VerifyOrQuit(memcmp(frame, kPlainFrame, kHeaderLength + kPayloadLength) == 0);
+
+    // Tag corruption must be rejected.
+    memcpy(frame, kPlainFrame, sizeof(kPlainFrame));
+    memset(frame + kHeaderLength + kPayloadLength, 0, kTagLength);
+    SuccessOrQuit(otPlatCryptoAesCcmProcessOneShot(true, &config, frame, frame + kHeaderLength));
+    frame[kHeaderLength + kPayloadLength] ^= 0xFF;
+    VerifyOrQuit(otPlatCryptoAesCcmProcessOneShot(false, &config, frame, frame + kHeaderLength) == kErrorSecurity);
+
+    memcpy(frame, kPlainFrame, sizeof(kPlainFrame));
+    memset(frame + kHeaderLength + kPayloadLength, 0, kTagLength);
+    SuccessOrQuit(otPlatCryptoAesCcmProcessOneShot(true, &config, frame, frame + kHeaderLength));
+    frame[kFrameLength - 1] ^= 0x01;
+    VerifyOrQuit(otPlatCryptoAesCcmProcessOneShot(false, &config, frame, frame + kHeaderLength) == kErrorSecurity);
+
+    // AesCcm::Process must produce the same result as the direct platform call.
+    {
+        uint8_t        directResult[kFrameLength];
+        uint8_t        aesCcmResult[kFrameLength];
+        Crypto::AesCcm aesCcm;
+
+        memcpy(directResult, kPlainFrame, sizeof(kPlainFrame));
+        memset(directResult + kHeaderLength + kPayloadLength, 0, kTagLength);
+        SuccessOrQuit(otPlatCryptoAesCcmProcessOneShot(true, &config, directResult, directResult + kHeaderLength));
+
+        memcpy(aesCcmResult, kPlainFrame, sizeof(kPlainFrame));
+        memset(aesCcmResult + kHeaderLength + kPayloadLength, 0, kTagLength);
+        aesCcm.SetKey(kKey, sizeof(kKey));
+        aesCcm.SetNonce(kNonce, sizeof(kNonce));
+        aesCcm.SetAuthData(aesCcmResult, kHeaderLength);
+        aesCcm.SetTagLength(kTagLength);
+        SuccessOrQuit(aesCcm.Process(Crypto::AesCcm::kEncrypt, aesCcmResult + kHeaderLength, kPayloadLength));
+        VerifyOrQuit(memcmp(directResult, aesCcmResult, kFrameLength) == 0);
+        VerifyOrQuit(memcmp(aesCcmResult, kEncryptedFrame, kFrameLength) == 0);
+
+        aesCcm.SetKey(kKey, sizeof(kKey));
+        aesCcm.SetNonce(kNonce, sizeof(kNonce));
+        aesCcm.SetAuthData(aesCcmResult, kHeaderLength);
+        aesCcm.SetTagLength(kTagLength);
+        SuccessOrQuit(aesCcm.Process(Crypto::AesCcm::kDecrypt, aesCcmResult + kHeaderLength, kPayloadLength));
+        VerifyOrQuit(memcmp(aesCcmResult, kPlainFrame, kHeaderLength + kPayloadLength) == 0);
+    }
+
+    testFreeInstance(instance);
+
+    printf("\nTestPlatformCcmSinglePart PASSED\n\n");
+}
+
+#endif // OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
+
 } // namespace ot
 
 int main(void)
@@ -346,6 +455,9 @@ int main(void)
     ot::TestMacBeaconFrame();
     ot::TestMacCommandFrame();
     ot::TestAesCcmMessageProcessing();
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
+    ot::TestPlatformCcmSinglePart();
+#endif
     printf("All tests passed\n");
     return 0;
 }

@@ -119,7 +119,7 @@ public:
      * @param[in]  aKey        A pointer to the key.
      * @param[in]  aKeyLength  Length of the key in bytes.
      */
-    void SetKey(const uint8_t *aKey, uint16_t aKeyLength) { mConfig.mKey.Set(aKey, aKeyLength); }
+    void SetKey(const uint8_t *aKey, uint16_t aKeyLength) { mConfig.GetKey().Set(aKey, aKeyLength); }
 
     /**
      * Sets the key.
@@ -128,7 +128,7 @@ public:
      *
      * @param[in]  aMacKey        Key Material for AES operation.
      */
-    void SetKey(const Mac::KeyMaterial &aMacKey) { aMacKey.ConvertToCryptoKey(mConfig.mKey); }
+    void SetKey(const Mac::KeyMaterial &aMacKey) { aMacKey.ConvertToCryptoKey(mConfig.GetKey()); }
 
     /**
      * Sets the Nonce.
@@ -245,16 +245,11 @@ public:
                         void       *aTag);
 
 private:
-    struct Config : public Clearable<Config>
+    struct Config : public otPlatCryptoAesCcmConfig, public Clearable<Config>
     {
-        bool IsValid(void) const;
-
-        Key            mKey;
-        uint8_t        mNonceLength;
-        uint8_t        mTagLength;
-        uint32_t       mHeaderLength;
-        uint32_t       mPlainTextLength;
-        const uint8_t *mNonce;
+        bool       IsValid(void) const;
+        Key       &GetKey(void) { return AsCoreType(&mKey); }
+        const Key &GetKey(void) const { return AsCoreType(&mKey); }
     };
 
     class Engine
