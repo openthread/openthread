@@ -49,6 +49,7 @@ trap 'sudo rm -rf "${INSTALL_DIR_tmp}"' EXIT
 
 echo "Downloading LLVM from '${LLVM_URL}' into '${INSTALL_DIR}' ..."
 wget -O - "${LLVM_URL}" | sudo tar -f - -C "${INSTALL_DIR_tmp}" --strip-components=1 -xJ
+sudo rm -rf "${INSTALL_DIR}"
 sudo mv "${INSTALL_DIR_tmp}" "${INSTALL_DIR}"
 
 echo "Creating symlinks in /usr/local/bin..."
