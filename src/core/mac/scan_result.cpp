@@ -35,38 +35,38 @@
 
 namespace ot {
 
-Error ScanResult::PopulateFromBeacon(const Mac::RxFrame *aBeaconFrame)
+Error ScanResult::PopulateFromBeacon(const Mac::RxFrame::Info &aBeaconFrameInfo)
 {
-    Error        error = kErrorNone;
-    Mac::Address address;
+    Error error = kErrorNone;
 
     Clear();
 
-    VerifyOrExit(aBeaconFrame != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aBeaconFrameInfo.mType == Mac::Frame::kTypeBeacon, error = kErrorParse);
 
-    VerifyOrExit(aBeaconFrame->GetType() == Mac::Frame::kTypeBeacon, error = kErrorParse);
+    VerifyOrExit(aBeaconFrameInfo.GetSrcAddr().IsExtended(), error = kErrorParse);
+    mExtAddress = aBeaconFrameInfo.GetSrcAddr().GetExtended();
 
-    SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
-    VerifyOrExit(address.IsExtended(), error = kErrorParse);
-    mExtAddress = address.GetExtended();
-
-    if (aBeaconFrame->GetSrcPanId(mPanId) != kErrorNone)
+    if (aBeaconFrameInfo.mPanIds.IsSourcePresent())
     {
-        IgnoreError(aBeaconFrame->GetDstPanId(mPanId));
+        mPanId = aBeaconFrameInfo.mPanIds.GetSource();
+    }
+    else
+    {
+        mPanId = aBeaconFrameInfo.mPanIds.GetDestination();
     }
 
-    mChannel = aBeaconFrame->GetChannel();
-    mRssi    = aBeaconFrame->GetRssi();
-    mLqi     = aBeaconFrame->GetLqi();
+    mChannel = aBeaconFrameInfo.GetRxFrame().GetChannel();
+    mRssi    = aBeaconFrameInfo.GetRxFrame().GetRssi();
+    mLqi     = aBeaconFrameInfo.GetRxFrame().GetLqi();
 
 #if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
     {
         const Mac::Beacon        *beacon;
         const Mac::BeaconPayload *beaconPayload;
 
-        VerifyOrExit(aBeaconFrame->GetPayloadLength() >= sizeof(Mac::Beacon) + sizeof(Mac::BeaconPayload));
+        VerifyOrExit(aBeaconFrameInfo.mPayload.CanRead(sizeof(Mac::Beacon) + sizeof(Mac::BeaconPayload)));
 
-        beacon = reinterpret_cast<const Mac::Beacon *>(aBeaconFrame->GetPayload());
+        beacon = reinterpret_cast<const Mac::Beacon *>(aBeaconFrameInfo.mPayload.GetBytes());
         VerifyOrExit(beacon->IsValid());
 
         beaconPayload = reinterpret_cast<const Mac::BeaconPayload *>(beacon->GetPayload());

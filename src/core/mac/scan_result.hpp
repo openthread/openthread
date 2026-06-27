@@ -169,7 +169,7 @@ public:
 private:
     typedef Callback<Handler> ScanCallback;
 
-    Error PopulateFromBeacon(const Mac::RxFrame *aBeaconFrame);
+    Error PopulateFromBeacon(const Mac::RxFrame::Info &aBeaconFrameInfo);
 };
 
 /**

@@ -235,7 +235,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &) { return nullp
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
-void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError)
+void CslTxScheduler::HandleSentFrame(const Mac::TxFrame::Info &aFrameInfo, Error aError)
 {
     CslNeighbor *neighbor = mCslTxNeighbor;
 
@@ -245,13 +245,13 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError)
 
     mCslTxNeighbor = nullptr;
 
-    HandleSentFrame(aFrame, aError, *neighbor);
+    HandleSentFrame(aFrameInfo, aError, *neighbor);
 
 exit:
     RescheduleCslTx();
 }
 
-void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, CslNeighbor &aCslNeighbor)
+void CslTxScheduler::HandleSentFrame(const Mac::TxFrame::Info &aFrameInfo, Error aError, CslNeighbor &aCslNeighbor)
 {
     switch (aError)
     {
@@ -261,7 +261,8 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         break;
 
     case kErrorNoAck:
-        OT_ASSERT(!aFrame.GetSecurityEnabled() || aFrame.IsHeaderUpdated());
+        OT_ASSERT(aFrameInfo.mIsEmptyFrame || !aFrameInfo.mSecurityEnabled ||
+                  aFrameInfo.GetTxFrame().IsHeaderUpdated());
 
         aCslNeighbor.IncrementCslTxAttempts();
         LogInfo("CSL tx to %04x failed, attempt %d/%d", aCslNeighbor.GetRloc16(), aCslNeighbor.GetCslTxAttempts(),
@@ -283,20 +284,14 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         // dropped until indirect tx attempts count reaches max. So here it
         // would set sequence number and schedule next CSL tx.
 
-        if (!aFrame.IsEmpty())
+        if (!aFrameInfo.mIsEmptyFrame)
         {
-            aCslNeighbor.SetIndirectDataSequenceNumber(aFrame.GetSequence());
+            aCslNeighbor.SetIndirectDataSequenceNumber(aFrameInfo.mSequenceNum);
 
-            if (aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated())
+            if (aFrameInfo.mSecurityEnabled && aFrameInfo.GetTxFrame().IsHeaderUpdated())
             {
-                uint32_t frameCounter;
-                uint8_t  keyId;
-
-                IgnoreError(aFrame.GetFrameCounter(frameCounter));
-                aCslNeighbor.SetIndirectFrameCounter(frameCounter);
-
-                IgnoreError(aFrame.GetKeyId(keyId));
-                aCslNeighbor.SetIndirectKeyId(keyId);
+                aCslNeighbor.SetIndirectFrameCounter(aFrameInfo.mFrameCounter);
+                aCslNeighbor.SetIndirectKeyId(aFrameInfo.mKeyId);
             }
         }
 
@@ -304,10 +299,9 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 
-    Get<IndirectSender>().HandleSentFrameToCslNeighbor(aFrame, mFrameContext, aError, aCslNeighbor);
+    Get<IndirectSender>().HandleSentFrameToCslNeighbor(aFrameInfo, mFrameContext, aError, aCslNeighbor);
 
 exit:
     return;

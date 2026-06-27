@@ -131,6 +131,28 @@ public:
      * @param[in] aLength   The length (number of bytes) to skip over.
      */
     void SkipOver(uint16_t aLength);
+
+    /**
+     * Removes a footer of a given length from the end of the `FrameData`.
+     *
+     * @param[in] aLength   The length of the footer (number of bytes) to remove.
+     *
+     * @retval kErrorNone   Successfully removed the footer.
+     * @retval kErrorParse  The current data length is smaller than @p aLength.
+     */
+    Error RemoveFooter(uint16_t aLength);
+
+    /**
+     * Removes a footer of a given length from the end of the `FrameData` and initializes another `FrameData` to point
+     * to the removed footer bytes.
+     *
+     * @param[in]  aLength      The length of the footer (number of bytes) to remove and extract.
+     * @param[out] aFooterData  A reference to a `FrameData` to initialize with the extracted footer bytes.
+     *
+     * @retval kErrorNone   Successfully extracted the footer bytes into @p aFooterData.
+     * @retval kErrorParse  The current data length is smaller than @p aLength.
+     */
+    Error ExtractFooter(uint16_t aLength, FrameData &aFooterData);
 };
 
 } // namespace ot

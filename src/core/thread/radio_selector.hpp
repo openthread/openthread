@@ -130,10 +130,10 @@ public:
      * Notifies `RadioSelector` the status of frame transmission on a radio link type. The radio link
      * type is provided by the `aFrame` itself.
      *
-     * @param[in] aFrame     A transmitted frame.
+     * @param[in] aFrameInfo A transmitted frame information.
      * @param[in] aTxError   The transmission error.
      */
-    void UpdateOnSendDone(Mac::TxFrame &aFrame, Error aTxError);
+    void UpdateOnSendDone(Mac::TxFrame::Info &aFrameInfo, Error aTxError);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**

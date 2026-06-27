@@ -402,7 +402,7 @@ public:
      * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status
      * of a frame transmission request, this method is invoked on all frame transmission attempts.
      *
-     * @param[in] aFrame      The transmitted frame.
+     * @param[in] aFrameInfo  The transmitted frame information.
      * @param[in] aError      kErrorNone when the frame was transmitted successfully,
      *                        kErrorNoAck when the frame was transmitted but no ACK was received,
      *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -411,19 +411,19 @@ public:
      * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
      *                        when there was an error in transmission (i.e., `aError` is not NONE).
      */
-    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
+    void RecordFrameTransmitStatus(const TxFrame::Info &aFrameInfo, Error aError, uint8_t aRetryCount, bool aWillRetx);
 
     /**
      * Is called to handle transmit events.
      *
-     * @param[in]  aFrame      The frame that was transmitted.
+     * @param[in]  aFrameInfo  The transmitted frame information.
      * @param[in]  aAckFrame   A pointer to the ACK frame, `nullptr` if no ACK was received.
      * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
      *                         kErrorNoAck when the frame was transmitted but no ACK was received,
      *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,
      *                         kErrorAbort when transmission was aborted for other reasons.
      */
-    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+    void HandleTransmitDone(TxFrame::Info &aFrameInfo, RxFrame *aAckFrame, Error aError);
 
     /**
      * Returns if an active scan is in progress.
@@ -818,10 +818,10 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
-    Error ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    Error ProcessReceiveSecurity(RxFrame::Info &aFrameInfo, Neighbor *aNeighbor);
     void  ProcessTransmitSecurity(TxFrame &aFrame);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    Error ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
+    Error ProcessEnhAckSecurity(TxFrame::Info &aTxFrameInfo, RxFrame::Info &aAckFrameInfo);
 #endif
 
     void     UpdateIdleMode(void);
@@ -838,33 +838,33 @@ private:
     bool     IsJoinable(void) const;
     void     BeginTransmit(void);
     Error    FilterDestShortAddress(ShortAddress aDestAddress) const;
-    void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame);
-    bool     HandleMacCommand(RxFrame &aFrame);
+    void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame::Info &aRxFrameInfo);
+    bool     HandleMacCommand(RxFrame::Info &aFrameInfo);
     void     HandleTimer(void);
 
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
     void  PerformActiveScan(void);
-    void  ReportActiveScanResult(const RxFrame *aBeaconFrame);
+    void  ReportActiveScanResult(const RxFrame::Info *aBeaconFrameInfo);
     void  PerformEnergyScan(void);
     void  ReportEnergyScanResult(int8_t aRssi);
 
-    void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
-    void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
+    void LogFrameRxFailure(const RxFrame::Info &aFrameInfo, Error aError) const;
+    void LogFrameTxFailure(const TxFrame::Info &aFrameInfo, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText) const;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
+    void ProcessCsl(const RxFrame::Info &aFrameInfo, const Address &aSrcAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     void UpdateCslParameters(void);
     void UpdateCslState(void);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
+    void ProcessEnhAckProbing(const RxFrame::Info &aFrameInfo, const Neighbor &aNeighbor);
 #endif
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    Error HandleWakeupFrame(const RxFrame &aFrame);
+    Error HandleWakeupFrame(const RxFrame::Info &aFrameInfo);
     void  UpdateWakeupListening(void);
 #endif
     static const char *OperationToString(Operation aOperation);

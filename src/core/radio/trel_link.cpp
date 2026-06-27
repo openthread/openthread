@@ -247,10 +247,14 @@ exit:
 
 void Link::InvokeSendDone(Error aError, Mac::RxFrame *aAckFrame)
 {
+    Mac::TxFrame::Info frameInfo;
+
     SetState(kStateReceive);
 
-    Get<Mac::Mac>().RecordFrameTransmitStatus(mTxFrame, aError, /* aRetryCount */ 0, /* aWillRetx */ false);
-    Get<Mac::Mac>().HandleTransmitDone(mTxFrame, aAckFrame, aError);
+    IgnoreError(frameInfo.ParseFrom(mTxFrame));
+
+    Get<Mac::Mac>().RecordFrameTransmitStatus(frameInfo, aError, /* aRetryCount */ 0, /* aWillRetx */ false);
+    Get<Mac::Mac>().HandleTransmitDone(frameInfo, aAckFrame, aError);
 }
 
 void Link::HandleTimer(void)

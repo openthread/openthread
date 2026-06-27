@@ -128,10 +128,10 @@ public:
      * In case of transmit failure, the data poll sender may choose to send the next data poll more quickly (up to
      * some fixed number of attempts).
      *
-     * @param[in] aFrame     The data poll frame.
+     * @param[in] aFrameInfo The data poll frame information.
      * @param[in] aError     Error status of a data poll message transmission.
      */
-    void HandlePollSent(Mac::TxFrame &aFrame, Error aError);
+    void HandlePollSent(Mac::TxFrame::Info &aFrameInfo, Error aError);
 
     /**
      * Informs the data poll sender that a data poll timeout happened, i.e., when the ack in response to
@@ -144,22 +144,22 @@ public:
     /**
      * Informs the data poll sender to process a received MAC frame.
      *
-     * @param[in] aFrame     A reference to the received frame to process.
+     * @param[in] aFrameInfo     A reference to the received frame information to process.
      */
-    void ProcessRxFrame(const Mac::RxFrame &aFrame);
+    void ProcessRxFrame(const Mac::RxFrame::Info &aFrameInfo);
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
      * Informs the data poll sender to process a transmitted MAC frame.
      *
-     * @param[in]  aFrame      A reference to the frame that was transmitted.
-     * @param[in]  aAckFrame   A pointer to the ACK frame, `nullptr` if no ACK was received.
-     * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
-     *                         kErrorNoAck when the frame was transmitted but no ACK was received,
-     *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,
-     *                         kErrorAbort when transmission was aborted for other reasons.
+     * @param[in]  aFrameInfo     The frame that was transmitted.
+     * @param[in]  aAckFrameInfo  The ack frame information (can be invalid if no ack is received).
+     * @param[in]  aError         kErrorNone when the frame was transmitted successfully,
+     *                            kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                            kErrorChannelAccessFailure when the tx failed due to activity on the channel,
+     *                            kErrorAbort when transmission was aborted for other reasons.
      */
-    void ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFrame *aAckFrame, Error aError);
+    void ProcessTxDone(const Mac::TxFrame::Info &aFrameInfo, const Mac::RxFrame::Info aAckFrameInfo, Error aError);
 #endif
 
     /**

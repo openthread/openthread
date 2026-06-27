@@ -40,6 +40,7 @@
 #include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
+#include "common/frame_data.hpp"
 #include "common/numeric_limits.hpp"
 #include "mac/mac_header_ie.hpp"
 #include "mac/mac_types.hpp"
@@ -133,8 +134,6 @@ public:
         kMacCmdGtsRequest                 = 9,
     };
 
-    static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for `InfoString` (ToInfoString()).
-
     static constexpr uint8_t kPreambleSize  = 4;
     static constexpr uint8_t kSfdSize       = 1;
     static constexpr uint8_t kPhrSize       = 1;
@@ -145,9 +144,141 @@ public:
     static constexpr uint8_t kImmAckLength  = kFcfSize + kDsnSize + k154FcsSize;
 
     /**
-     * Defines the fixed-length `String` object returned from `ToInfoString()` method.
+     * Represents parsed MAC frame information and field breakdown.
      */
-    typedef String<kInfoStringSize> InfoString;
+    class Info : public Clearable<Info>
+    {
+    public:
+        static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for `InfoString` (ToInfoString()).
+
+        /**
+         * Defines the fixed-length `String` object returned from `ToInfoString()` method.
+         */
+        typedef String<kInfoStringSize> InfoString;
+
+        /**
+         * Specifies the mode used when parsing a MAC frame.
+         */
+        enum ParseMode : uint8_t
+        {
+            kParseAddrFields,     ///< Parse address fields only.
+            kParseSecurityHeader, ///< Parse address fields, FCS, and Aux Security Header.
+            kParseFully,          ///< Perform full frame parsing and breakdown.
+        };
+
+        // TODO: write docs for this
+        Info(void) { Clear(); }
+
+        /**
+         * Parses a MAC frame into `Info`.
+         *
+         * @param[in] aFrame  The MAC frame to parse.
+         * @param[in] aMode   The parse mode specifying how deeply to parse the frame.
+         *
+         * @retval kErrorNone   Successfully parsed the MAC frame according to @p aMode.
+         * @retval kErrorParse  Failed to parse the MAC frame (frame is malformed).
+         */
+        Error ParseFrom(const Frame &aFrame, ParseMode aMode = kParseFully);
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Parse success status
+
+        Frame *mFrame; // TODO: write - Pointer to frame (even if it fails to parse we track pointer to last request)
+
+        bool mIsEmptyFrame;                ///< TODO: special case where frame is empty.
+        bool mAddrFieldsValidated : 1;     ///< TODO: write
+        bool mSecurityHeaderValidated : 1; ///< TODO: write
+        bool mFullyValidated : 1;          ///< Fully arsed and validated the frame format
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // MAC Header (Address Fields)
+
+        bool      mSecurityEnabled : 1; ///< Indicates whether security is enabled.
+        bool      mFramePending : 1;    ///< Frame Pending bit.
+        bool      mAckRequest : 1;      ///< ACK Request bit.
+        bool      mHasIe : 1;           ///< Indicates whether Header IE is present.
+        bool      mHasSequenceNum : 1;  ///< Indicates whether Sequence Number is present.
+        uint8_t   mType;                ///< Frame type.
+        uint8_t   mSequenceNum;         ///< Sequence number (if `mHasSequenceNum` is true).
+        uint8_t   mCommandId;           ///< Command ID (if `mType` is `kTypeMacCmd`).
+        Version   mVersion;             ///< Frame version.
+        Addresses mAddrs;               ///< Source and destination addresses.
+        PanIds    mPanIds;              ///< Source and destination PAN IDs.
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Security Header (if `mSecurityEnabled` is true)
+
+        uint8_t   mSecurityLevel; ///< Security level
+        uint8_t   mKeyIdMode;     ///< Key ID mode (if `mSecurityEnabled` is true).
+        uint8_t   mKeyId;         ///< Key ID.
+        uint32_t  mFrameCounter;  ///< Frame Counter.
+        FrameData mKeySource;     ///< Key Source bytes.
+        FrameData mMic;           ///< Message Integrity Code (MIC) bytes.
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Header IEs
+
+        FrameData mIe; ///< Header IE bytes (if `mHasIe` is true).
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Frame breakdown
+
+        FrameData mHeader;      ///< MAC Header bytes.
+        FrameData mPayload;     ///< MAC Payload bytes.
+        FrameData mFooter;      ///< MAC Footer bytes (FCS and MIC).
+        uint16_t  mTotalLength; ///< Total frame length (including all headers, payload, and footers).
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Misc
+
+        uint8_t mChannel; ///< Channel associated with  the frame.
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        RadioType mRadioType; ///< TODO: write
+#endif
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Simple getter/setter to access or update various sub-fields
+
+        /**
+         * Gets the Source Address.
+         *
+         * @returns The Source Address.
+         */
+        const Address &GetSrcAddr(void) const { return mAddrs.mSource; }
+
+        /**
+         * Gets the Destination Address.
+         *
+         * @returns The Destination Address.
+         */
+        const Address &GetDstAddr(void) const { return mAddrs.mDestination; }
+
+        /**
+         * Indicates whether the frame is a MAC Command frame with a specific Command ID.
+         *
+         * @param[in] aCommandId  The Command ID to check against.
+         *
+         * @retval TRUE   The frame is a MAC Command frame matching @p aCommandId.
+         * @retval FALSE  The frame is not a MAC Command frame or does not match @p aCommandId.
+         */
+        bool IsMacCommand(CommandId aCommandId) const { return (mType == kTypeMacCmd) && (mCommandId == aCommandId); }
+
+
+
+        /**
+         * Converts the frame information to a human-readable `InfoString`.
+         *
+         * @returns An `InfoString` containing frame information.
+         */
+        InfoString ToInfoString(void) const;
+
+    protected:
+        uint8_t *mFrameCounterBytes; // Pointer to Frame Counter bytes in the frame (to update counter).
+        uint8_t *mKeyIdBytes;        // Pointer to Key ID byte in the frame (to update Key ID).
+
+    private:
+        static Error ReadAddress(uint16_t aFcfAddrMode, FrameData &aFrameData, Address &aAddress);
+    };
 
     /**
      * Indicates whether the frame is empty (no payload).
@@ -680,13 +811,6 @@ public:
 #endif
 
     /**
-     * Returns information about the frame object as an `InfoString` object.
-     *
-     * @returns An `InfoString` containing info about the frame.
-     */
-    InfoString ToInfoString(void) const;
-
-    /**
      * Returns the Frame Control field of the frame.
      *
      * @returns The Frame Control field.
@@ -808,14 +932,36 @@ public:
     typedef uint8_t KeyIdModeFlags;
 
     /**
-     * Indicates whether the frame is secured with a given set of allowed Key ID Modes.
-     *
-     * @param[in] aFlags  A bitmask of `KeyIdModeFlags` specifying the allowed modes.
-     *
-     * @retval TRUE   The frame has security enabled and uses one of the allowed Key ID Modes.
-     * @retval FALSE  The frame does not have security enabled, or its Key ID Mode is not allowed.
+     * Represents parsed received MAC frame information and field breakdown.
      */
-    bool IsSecuredWith(KeyIdModeFlags aFlags) const;
+    class Info : public Frame::Info
+    {
+    public:
+        // TODO: write and explain
+        RxFrame &GetRxFrame(void) const { return *static_cast<RxFrame *>(mFrame); }
+
+        /**
+         * Indicates whether the frame is secured with a given set of allowed Key ID Modes.
+         *
+         * @param[in] aFlags  A bitmask of `KeyIdModeFlags` specifying the allowed modes.
+         *
+         * @retval TRUE   The frame has security enabled and uses one of the allowed Key ID Modes.
+         * @retval FALSE  The frame does not have security enabled, or its Key ID Mode is not allowed.
+         */
+        bool IsSecuredWith(KeyIdModeFlags aFlags) const;
+
+        /**
+         * Performs AES CCM on the frame which is received.
+         *
+         * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
+         *                          for AES CCM computation.
+         * @param[in]  aMacKey      A reference to the MAC key to decrypt the received frame.
+         *
+         * @retval kErrorNone      Process of received frame AES CCM succeeded.
+         * @retval kErrorSecurity  Received frame MIC check failed.
+         */
+        Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey);
+    };
 
     /**
      * Returns the RSSI in dBm used for reception.
@@ -869,18 +1015,6 @@ public:
      * @returns The timestamp in microseconds.
      */
     const RadioTime64 &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
-
-    /**
-     * Performs AES CCM on the frame which is received.
-     *
-     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
-     *                          for AES CCM computation.
-     * @param[in]  aMacKey      A reference to the MAC key to decrypt the received frame.
-     *
-     * @retval kErrorNone      Process of received frame AES CCM succeeded.
-     * @retval kErrorSecurity  Received frame MIC check failed.
-     */
-    Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey);
 };
 
 /**
@@ -889,6 +1023,53 @@ public:
 class TxFrame : public Frame
 {
 public:
+    /**
+     * Represents parsed TX MAC frame information and field breakdown.
+     */
+    class Info : public Frame::Info
+    {
+    public:
+        // TODO: write and explain
+        TxFrame &GetTxFrame(void) const { return *static_cast<TxFrame *>(mFrame); }
+
+        /**
+         * Updates the Frame Counter field in the frame  and the parsed `Info`.
+         *
+         * @param[in] aFrameCounter  The new Frame Counter value.
+         */
+        void UpdateFrameCounter(uint32_t aFrameCounter);
+
+        /**
+         * Updates the Key ID field in the frame  and the parsed `Info`.
+         *
+         * @param[in] aKeyId  The new Key ID value.
+         */
+        void UpdateKeyId(uint8_t aKeyId);
+
+        /**
+         * Updates the Key Source field in the frame.
+         *
+         * The buffer @p aKeySource MUST contain the proper number of bytes (`mKeySource.GetLength()`).
+         *
+         * @param[in] aKeySource  A pointer to a buffer containing the new Key Source bytes.
+         */
+        void UpdateKeySource(const uint8_t *aKeySource);
+
+        /**
+         * Performs AES CCM on the frame which is going to be sent.
+         *
+         * @param[in]  aExtAddress  An extended address which will be used to generate nonce for AES CCM computation.
+         */
+        void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
+
+        /**
+         * Restore the frame for transmit processing.
+         *
+         * @param[in]  aExtAddress  An extended address, which will be used to generate nonce for AES CCM computation.
+         */
+        void RestoreTransmitSecurity(const ExtAddress &aExtAddress);
+    };
+
     /**
      * Represents the information to use to build the frame.
      */
@@ -1072,22 +1253,6 @@ public:
      * @param[in] aFromFrame  The frame to copy from.
      */
     void CopyFrom(const TxFrame &aFromFrame);
-
-    /**
-     * Performs AES CCM on the frame which is going to be sent.
-     *
-     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
-     *                          for AES CCM computation.
-     */
-    void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
-
-    /**
-     * Restore the frame for transmit processing.
-     *
-     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
-     *                          for AES CCM computation.
-     */
-    void RestoreTransmitSecurity(const ExtAddress &aExtAddress);
 
     /**
      * Indicates whether or not the frame has security processed.

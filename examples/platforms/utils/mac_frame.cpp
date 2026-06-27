@@ -173,7 +173,13 @@ otError otMacFrameGetSequence(const otRadioFrame *aFrame, uint8_t *aSequence)
 
 void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *aExtAddress)
 {
-    static_cast<Mac::TxFrame *>(aFrame)->ProcessTransmitAesCcm(*static_cast<const Mac::ExtAddress *>(aExtAddress));
+    Mac::TxFrame::Info frameInfo;
+
+    SuccessOrExit(frameInfo.ParseFrom(*static_cast<Mac::TxFrame *>(aFrame)));
+    frameInfo.ProcessTransmitAesCcm(*static_cast<const Mac::ExtAddress *>(aExtAddress));
+
+exit:
+    return;
 }
 
 bool otMacFrameIsVersion2015(const otRadioFrame *aFrame)

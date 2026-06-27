@@ -36,6 +36,7 @@
 #include <stdio.h>
 
 #include "common/code_utils.hpp"
+#include "common/const_cast.hpp"
 #include "common/debug.hpp"
 #include "common/frame_builder.hpp"
 #include "common/log.hpp"
@@ -250,6 +251,311 @@ void TxFrame::BuildInfo::PrepareHeadersIn(TxFrame &aTxFrame) const
     builder.AppendLength(micSize + aTxFrame.GetFcsSize());
 
     aTxFrame.mLength = builder.GetLength();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+Error Frame::Info::ParseFrom(const Frame &aFrame, ParseMode aMode)
+{
+    Error     error;
+    FrameData frameData;
+    uint16_t  fcf;
+    uint16_t  value;
+    uint8_t   secCtl;
+    uint8_t   size;
+
+    Clear();
+
+    mFrame = AsNonConst(&aFrame);
+
+    if (aFrame.mLength == 0)
+    {
+        mIsEmptyFrame = true;
+        ExitNow(error = kErrorParse);
+    }
+
+    VerifyOrExit(aFrame.mPsdu != nullptr, error = kErrorParse);
+
+    frameData.Init(aFrame.mPsdu, aFrame.mLength);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Address Fields
+
+    SuccessOrExit(error = frameData.ReadUint<kLittleEndian>(fcf));
+
+    value = ReadBits<uint16_t, kFcfFrameTypeMask>(fcf);
+
+    switch (value)
+    {
+    case kTypeBeacon:
+    case kTypeData:
+    case kTypeAck:
+    case kTypeMacCmd:
+        mType = static_cast<uint8_t>(value);
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
+
+    value = (fcf & kFcfFrameVersionMask);
+
+    switch (value)
+    {
+    case kVersion2003:
+    case kVersion2006:
+    case kVersion2015:
+        mVersion = static_cast<Version>(value);
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
+
+    mSecurityEnabled = ((fcf & kFcfSecurityEnabled) != 0);
+    mFramePending    = ((fcf & kFcfFramePending) != 0);
+    mAckRequest      = ((fcf & kFcfAckRequest) != 0);
+    mHasSequenceNum  = ((fcf & kFcfSequenceSuppression) == 0);
+
+    if (mVersion == kVersion2015)
+    {
+        mHasIe = ((fcf & kFcfIePresent) != 0);
+    }
+
+    // Sequence Number
+
+    if (mHasSequenceNum)
+    {
+        SuccessOrExit(error = frameData.ReadUint8(mSequenceNum));
+    }
+
+    // Dest PAN ID and Address
+
+    if (IsDstPanIdPresent(fcf))
+    {
+        SuccessOrExit(error = frameData.ReadUint<kLittleEndian>(value));
+        mPanIds.SetDestination(value);
+    }
+
+    SuccessOrExit(error = ReadAddress(ReadBits<uint16_t, kFcfDstAddrMask>(fcf), frameData, mAddrs.mDestination));
+
+    // Src PAN ID and Address
+
+    if (IsSrcPanIdPresent(fcf))
+    {
+        SuccessOrExit(error = frameData.ReadUint<kLittleEndian>(value));
+        mPanIds.SetSource(value);
+    }
+
+    SuccessOrExit(error = ReadAddress(ReadBits<uint16_t, kFcfSrcAddrMask>(fcf), frameData, mAddrs.mSource));
+
+    mAddrFieldsValidated = true;
+
+    if (aMode == kParseAddrFields)
+    {
+        ExitNow();
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // FCS
+
+    SuccessOrExit(error = frameData.ExtractFooter(aFrame.GetFcsSize(), mFooter));
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Aux Security Header
+
+    if (mSecurityEnabled)
+    {
+        SuccessOrExit(error = frameData.ReadUint8(secCtl));
+
+        mSecurityLevel = (secCtl & kSecLevelMask);
+        VerifyOrExit(mSecurityLevel != kSecurityNone, error = kErrorParse);
+
+        mKeyIdMode = (secCtl & kKeyIdModeMask);
+
+        mFrameCounterBytes = AsNonConst(frameData.GetBytes());
+        SuccessOrExit(error = frameData.ReadUint<kLittleEndian>(mFrameCounter));
+
+        // Key Source
+
+        switch (mKeyIdMode)
+        {
+        case kKeyIdMode0:
+        default:
+            size = kKeySourceSizeMode0;
+            break;
+        case kKeyIdMode1:
+            size = kKeySourceSizeMode1;
+            break;
+        case kKeyIdMode2:
+            size = kKeySourceSizeMode2;
+            break;
+        case kKeyIdMode3:
+            size = kKeySourceSizeMode3;
+            break;
+        }
+
+        VerifyOrExit(frameData.CanRead(size), error = kErrorParse);
+        mKeySource.Init(frameData.GetBytes(), size);
+        frameData.SkipOver(size);
+
+        mKeyIdBytes = AsNonConst(frameData.GetBytes());
+        SuccessOrExit(error = frameData.ReadUint8(mKeyId));
+
+        size = CalculateMicSize(secCtl);
+        SuccessOrExit(error = frameData.ExtractFooter(size, mMic));
+
+        // Update `mFooter` to include the previously extracted FCS
+        // and the MIC.
+
+        size += mFooter.GetLength();
+        mFooter.Init(mMic.GetBytes(), size);
+    }
+
+    mSecurityHeaderValidated = true;
+
+    if (aMode == kParseSecurityHeader)
+    {
+        ExitNow();
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Header IE
+
+    if (mHasIe)
+    {
+#if !OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+        ExitNow(error = kErrorParse);
+#else
+        mIe = frameData;
+
+        do
+        {
+            const HeaderIe *ie;
+
+            VerifyOrExit(frameData.CanRead(sizeof(HeaderIe)), error = kErrorParse);
+            ie = reinterpret_cast<const HeaderIe *>(frameData.GetBytes());
+
+            VerifyOrExit(frameData.CanRead(ie->GetSize()), error = kErrorParse);
+            frameData.SkipOver(ie->GetSize());
+
+            if (ie->GetId() == Termination2Ie::kId)
+            {
+                break;
+            }
+
+            // If the `frameData.IsEmpty()`, we exit the `while()`
+            // loop. This covers the case where frame contains one or more
+            // Header IEs but no data payload. In this case, spec does not
+            // require Header IE termination to be included (it is optional)
+            // since the end of frame can be determined from frame length and
+            // footer length.
+
+        } while (!frameData.IsEmpty());
+
+        mIe.InitFromRange(mIe.GetBytes(), frameData.GetBytes());
+
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // MAC Command
+
+    if (mType == kTypeMacCmd)
+    {
+        VerifyOrExit(frameData.CanRead(sizeof(mCommandId)), error = kErrorParse);
+        mCommandId = *frameData.GetBytes();
+
+        // The treatment of the Command ID field in a MAC command frame
+        // is version-dependent. In the 2015 spec, it is part of the
+        // encrypted payload, while in earlier versions, it is part of
+        // the MAC header.
+
+        if (mVersion != kVersion2015)
+        {
+            frameData.SkipOver(sizeof(mCommandId));
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Frame breakdown (Header and Payload)
+
+    mHeader.InitFromRange(aFrame.mPsdu, frameData.GetBytes());
+    mPayload     = frameData;
+    mTotalLength = aFrame.mLength;
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Misc fields
+
+    mChannel = aFrame.GetChannel();
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    mRadioType = aFrame.GetRadioType();
+#endif
+
+    mFullyValidated = true;
+
+exit:
+    return error;
+}
+
+void TxFrame::Info::UpdateFrameCounter(uint32_t aFrameCounter)
+{
+    VerifyOrExit(mFrameCounterBytes != nullptr);
+
+    LittleEndian::WriteUint32(aFrameCounter, mFrameCounterBytes);
+    mFrameCounter = aFrameCounter;
+
+exit:
+    return;
+}
+
+void TxFrame::Info::UpdateKeyId(uint8_t aKeyId)
+{
+    VerifyOrExit(mKeyIdBytes != nullptr);
+
+    *mKeyIdBytes = aKeyId;
+    mKeyId       = aKeyId;
+
+exit:
+    return;
+}
+
+void TxFrame::Info::UpdateKeySource(const uint8_t *aKeySource)
+{
+    VerifyOrExit(mKeySource.GetBytes() != nullptr);
+
+    memcpy(AsNonConst(mKeySource.GetBytes()), aKeySource, mKeySource.GetLength());
+
+exit:
+    return;
+}
+
+Error Frame::Info::ReadAddress(uint16_t aFcfAddrMode, FrameData &aFrameData, Address &aAddress)
+{
+    Error    error = kErrorNone;
+    uint16_t shortAddr;
+
+    switch (aFcfAddrMode)
+    {
+    case kFcfAddrNone:
+        aAddress.SetNone();
+        break;
+
+    case kFcfAddrShort:
+        SuccessOrExit(error = aFrameData.ReadUint<kLittleEndian>(shortAddr));
+        aAddress.SetShort(shortAddr);
+        break;
+
+    case kFcfAddrExt:
+        VerifyOrExit(aFrameData.CanRead(sizeof(ExtAddress)), error = kErrorParse);
+        aAddress.SetExtended(aFrameData.GetBytes(), ExtAddress::kReverseByteOrder);
+        aFrameData.SkipOver(sizeof(ExtAddress));
+        break;
+
+    default:
+        error = kErrorParse;
+    }
+
+exit:
+    return error;
 }
 
 Error Frame::ValidatePsdu(void) const
@@ -1206,29 +1512,25 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 #endif
 }
 
-void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
+void TxFrame::Info::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
-    uint32_t              frameCounter = 0;
-    uint8_t               securityLevel;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
 
-    VerifyOrExit(GetSecurityEnabled());
+    VerifyOrExit(mFullyValidated);
+    VerifyOrExit(mSecurityEnabled);
 
-    SuccessOrExit(GetSecurityLevel(securityLevel));
-    SuccessOrExit(GetFrameCounter(frameCounter));
+    nonce.InitFrom(aExtAddress, mFrameCounter, mSecurityLevel);
 
-    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
-
-    aesCcm.SetKey(GetAesKey());
+    aesCcm.SetKey(GetTxFrame().GetAesKey());
     aesCcm.SetNonce(nonce);
-    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
-    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
+    aesCcm.SetAuthData(mHeader.GetBytes(), mHeader.GetLength());
+    aesCcm.SetTagLength(static_cast<uint8_t>(mMic.GetLength()));
 
-    SuccessOrExit(aesCcm.Process(Crypto::AesCcm::kEncrypt, GetPayload(), GetPayloadLength()));
+    SuccessOrExit(aesCcm.Process(Crypto::AesCcm::kEncrypt, AsNonConst(mPayload.GetBytes()), mPayload.GetLength()));
 
-    SetIsSecurityProcessed(true);
+    GetTxFrame().SetIsSecurityProcessed(true);
 
 exit:
     return;
@@ -1238,33 +1540,31 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
-void TxFrame::RestoreTransmitSecurity(const ExtAddress &aExtAddress)
+void TxFrame::Info::RestoreTransmitSecurity(const ExtAddress &aExtAddress)
 {
-    uint32_t              frameCounter = 0;
-    uint8_t               securityLevel;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
 
-    VerifyOrExit(GetSecurityEnabled() && IsSecurityProcessed());
+    VerifyOrExit(mFullyValidated);
 
-    SuccessOrExit(GetSecurityLevel(securityLevel));
-    SuccessOrExit(GetFrameCounter(frameCounter));
+    VerifyOrExit(mSecurityEnabled);
+    VerifyOrExit(GetTxFrame().IsSecurityProcessed());
 
-    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
+    nonce.InitFrom(aExtAddress, mFrameCounter, mSecurityLevel);
 
-    aesCcm.SetKey(GetAesKey());
+    aesCcm.SetKey(GetTxFrame().GetAesKey());
     aesCcm.SetNonce(nonce);
-    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
-    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
+    aesCcm.SetAuthData(mHeader.GetBytes(), mHeader.GetLength());
+    aesCcm.SetTagLength(static_cast<uint8_t>(mMic.GetLength()));
 
     // We expect success because we are only decrypting back to plaintext,
     // and we know the ciphertext was generated correctly by us previously.
-    IgnoreError(aesCcm.Process(Crypto::AesCcm::kDecrypt, GetPayload(), GetPayloadLength()));
+    IgnoreError(aesCcm.Process(Crypto::AesCcm::kDecrypt, AsNonConst(mPayload.GetBytes()), mPayload.GetLength()));
 
-    SetIsSecurityProcessed(false);
+    GetTxFrame().SetIsSecurityProcessed(false);
 
 exit:
-    SetIsHeaderUpdated(false);
+    GetTxFrame().SetIsHeaderUpdated(false);
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
@@ -1381,15 +1681,13 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupReq
 }
 #endif
 
-bool RxFrame::IsSecuredWith(KeyIdModeFlags aFlags) const
+bool RxFrame::Info::IsSecuredWith(KeyIdModeFlags aFlags) const
 {
-    bool    isSecure = false;
-    uint8_t keyIdMode;
+    bool isSecure = false;
 
-    VerifyOrExit(GetSecurityEnabled());
-    SuccessOrExit(GetKeyIdMode(keyIdMode));
+    VerifyOrExit(mSecurityEnabled);
 
-    switch (keyIdMode)
+    switch (mKeyIdMode)
     {
     case kKeyIdMode0:
         VerifyOrExit(aFlags & kAllowKeyIdMode0);
@@ -1407,33 +1705,28 @@ exit:
     return isSecure;
 }
 
-Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
+Error RxFrame::Info::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-    Error                 error        = kErrorSecurity;
-    uint32_t              frameCounter = 0;
-    uint8_t               securityLevel;
+    Error                 error = kErrorNone;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
 
-    VerifyOrExit(GetSecurityEnabled(), error = kErrorNone);
+    VerifyOrExit(mSecurityEnabled);
 
-    SuccessOrExit(GetSecurityLevel(securityLevel));
-    SuccessOrExit(GetFrameCounter(frameCounter));
-
-    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
+    nonce.InitFrom(aExtAddress, mFrameCounter, mSecurityLevel);
 
     aesCcm.SetKey(aMacKey);
     aesCcm.SetNonce(nonce);
-    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
-    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
+    aesCcm.SetAuthData(mHeader.GetBytes(), mHeader.GetLength());
+    aesCcm.SetTagLength(static_cast<uint8_t>(mMic.GetLength()));
 
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     // Do not decrypt when fuzzing
-    ExitNow(error = kErrorNone);
+    ExitNow();
 #endif
 
-    error = aesCcm.Process(Crypto::AesCcm::kDecrypt, GetPayload(), GetPayloadLength());
+    error = aesCcm.Process(Crypto::AesCcm::kDecrypt, AsNonConst(mPayload.GetBytes()), mPayload.GetLength());
 
 exit:
     return error;
@@ -1447,30 +1740,26 @@ exit:
 
 // LCOV_EXCL_START
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
-
-Frame::InfoString Frame::ToInfoString(void) const
+Frame::Info::InfoString Frame::Info::ToInfoString(void) const
 {
     InfoString string;
-    uint8_t    commandId, type;
-    Address    src, dst;
-    uint32_t   frameCounter;
-    bool       sequencePresent;
 
-    string.Append("len:%d", mLength);
-
-    sequencePresent = IsSequencePresent();
-
-    if (sequencePresent)
+    if (!mFullyValidated)
     {
-        string.Append(", seqnum:%d", GetSequence());
+        string.Append("malformed frame");
+        ExitNow();
+    }
+
+    string.Append("len:%u", mTotalLength);
+
+    if (mHasSequenceNum)
+    {
+        string.Append(", seqnum:%d", mSequenceNum);
     }
 
     string.Append(", type:");
 
-    type = GetType();
-
-    switch (type)
+    switch (mType)
     {
     case kTypeBeacon:
         string.Append("Beacon");
@@ -1485,12 +1774,7 @@ Frame::InfoString Frame::ToInfoString(void) const
         break;
 
     case kTypeMacCmd:
-        if (GetCommandId(commandId) != kErrorNone)
-        {
-            commandId = 0xff;
-        }
-
-        switch (commandId)
+        switch (mCommandId)
         {
         case kMacCmdDataRequest:
             string.Append("Cmd(DataReq)");
@@ -1501,36 +1785,32 @@ Frame::InfoString Frame::ToInfoString(void) const
             break;
 
         default:
-            string.Append("Cmd(%d)", commandId);
+            string.Append("Cmd(%u)", mCommandId);
             break;
         }
 
         break;
 
     default:
-        string.Append("%d", type);
+        string.Append("%u", mType);
         break;
     }
 
-    IgnoreError(GetSrcAddr(src));
-    IgnoreError(GetDstAddr(dst));
+    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", mAddrs.mSource.ToString().AsCString(),
+                  mAddrs.mDestination.ToString().AsCString(), ToYesNo(mSecurityEnabled), ToYesNo(mAckRequest));
 
-    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
-                  ToYesNo(GetSecurityEnabled()), ToYesNo(GetAckRequest()));
-
-    if (!sequencePresent && GetFrameCounter(frameCounter) == kErrorNone)
+    if (mSecurityEnabled)
     {
-        string.Append(", fc:%lu", ToUlong(frameCounter));
+        string.Append(", fc:%lu", ToUlong(mFrameCounter));
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    string.Append(", radio:%s", RadioTypeToString(GetRadioType()));
+    string.Append(", radio:%s", RadioTypeToString(mRadioType));
 #endif
 
+exit:
     return string;
 }
-
-#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 // LCOV_EXCL_STOP
 

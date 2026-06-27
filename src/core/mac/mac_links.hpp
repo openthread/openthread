@@ -676,12 +676,9 @@ public:
     /**
      * Sets the current MAC frame counter value from the value from a `TxFrame`.
      *
-     * @param[in] TxFrame  The `TxFrame` from which to get the counter value.
-     *
-     * @retval kErrorNone            If successful.
-     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
+     * @param[in] aFrameInfo  The `TxFrame::Info` to set the counter on.
      */
-    void SetMacFrameCounter(TxFrame &aFrame);
+    void SetMacFrameCounter(TxFrame::Info &aFrameInfo);
 #endif
 
 private:

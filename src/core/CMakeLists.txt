@@ -316,6 +316,7 @@ set(RADIO_COMMON_SOURCES
     common/binary_search.cpp
     common/error.cpp
     common/frame_builder.cpp
+    common/frame_data.cpp
     common/log.cpp
     common/random.cpp
     common/string.cpp

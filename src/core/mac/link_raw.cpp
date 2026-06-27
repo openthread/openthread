@@ -207,13 +207,13 @@ exit:
     return error;
 }
 
-void LinkRaw::InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
+void LinkRaw::InvokeTransmitDone(TxFrame::Info &aFrameInfo, RxFrame *aAckFrame, Error aError)
 {
-    LogDebg("TransmitDone(%d bytes), error:%s", aFrame.mLength, ErrorToString(aError));
+    LogDebg("TransmitDone(%d bytes), error:%s", aFrameInfo.GetTxFrame().mLength, ErrorToString(aError));
 
     if (mTransmitDoneCallback)
     {
-        mTransmitDoneCallback(&GetInstance(), &aFrame, aAckFrame, aError);
+        mTransmitDoneCallback(&GetInstance(), &aFrameInfo.GetTxFrame(), aAckFrame, aError);
         mTransmitDoneCallback = nullptr;
     }
 }
@@ -278,14 +278,17 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void LinkRaw::RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx)
+void LinkRaw::RecordFrameTransmitStatus(const TxFrame::Info &aFrameInfo,
+                                        Error                aError,
+                                        uint8_t              aRetryCount,
+                                        bool                 aWillRetx)
 {
     OT_UNUSED_VARIABLE(aWillRetx);
 
     if (aError != kErrorNone)
     {
         LogInfo("Frame tx failed, error:%s, retries:%d/%d, %s", ErrorToString(aError), aRetryCount,
-                aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
+                aFrameInfo.GetTxFrame().GetMaxFrameRetries(), aFrameInfo.ToInfoString().AsCString());
     }
 }
 

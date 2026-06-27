@@ -74,4 +74,26 @@ exit:
 
 void FrameData::SkipOver(uint16_t aLength) { Init(GetBytes() + aLength, GetLength() - aLength); }
 
+Error FrameData::RemoveFooter(uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(GetLength() >= aLength, error = kErrorParse);
+    SetLength(GetLength() - aLength);
+
+exit:
+    return error;
+}
+
+Error FrameData::ExtractFooter(uint16_t aLength, FrameData &aFooterData)
+{
+    Error error;
+
+    SuccessOrExit(error = RemoveFooter(aLength));
+    aFooterData.Init(GetBytes() + GetLength(), aLength);
+
+exit:
+    return error;
+}
+
 } // namespace ot

@@ -113,9 +113,9 @@ public:
     /**
      * Sets the `ThreadLinkInfo` from a given received frame.
      *
-     * @param[in] aFrame  A received frame.
+     * @param[in] aFrameInfo  A received frame information
      */
-    void SetFrom(const Mac::RxFrame &aFrame);
+    void SetFrom(const Mac::RxFrame::Info &aFrameInfo);
 };
 
 DefineCoreType(otThreadLinkInfo, ThreadLinkInfo);

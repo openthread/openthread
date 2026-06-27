@@ -247,18 +247,14 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-void Links::SetMacFrameCounter(TxFrame &aFrame)
+void Links::SetMacFrameCounter(TxFrame::Info &aFrameInfo)
 {
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioType radioType = aFrame.GetRadioType();
-#endif
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (radioType == kRadioTypeTrel)
+    if (aFrameInfo.mRadioType == kRadioTypeTrel)
 #endif
     {
-        aFrame.SetFrameCounter(Get<KeyManager>().GetTrelMacFrameCounter());
+        aFrameInfo.UpdateFrameCounter(Get<KeyManager>().GetTrelMacFrameCounter());
         Get<KeyManager>().IncrementTrelMacFrameCounter();
         ExitNow();
     }

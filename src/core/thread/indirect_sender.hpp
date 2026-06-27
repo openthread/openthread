@@ -261,16 +261,19 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     // Callbacks from `CslTxScheduler`
     Error PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aCslNeighbor);
-    void  HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
-                                       const FrameContext &aContext,
-                                       Error               aError,
-                                       CslNeighbor        &aCslNeighbor);
+    void  HandleSentFrameToCslNeighbor(const Mac::TxFrame::Info &aFrameInfo,
+                                       const FrameContext       &aContext,
+                                       Error                     aError,
+                                       CslNeighbor              &aCslNeighbor);
 #endif
 
 #if OPENTHREAD_FTD
     // Callbacks from `DataPollHandler`
     Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
-    void  HandleSentFrameToChild(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, Child &aChild);
+    void  HandleSentFrameToChild(const Mac::TxFrame::Info &aFrameInfo,
+                                 const FrameContext       &aContext,
+                                 Error                     aError,
+                                 Child                    &aChild);
     void  HandleFrameChangeDone(Child &aChild);
 
     void UpdateIndirectMessage(Child &aChild);

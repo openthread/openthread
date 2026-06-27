@@ -196,9 +196,9 @@ private:
 
     // Callbacks from `Mac`
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    void          HandleSentFrame(const Mac::TxFrame &aFrame, Error aError);
+    void          HandleSentFrame(const Mac::TxFrame::Info &aFrameInfo, Error aError);
 
-    void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, CslNeighbor &aaCslNeighbor);
+    void HandleSentFrame(const Mac::TxFrame::Info &aFrame, Error aError, CslNeighbor &aaCslNeighbor);
 
     uint32_t     mCslFrameRequestAheadUs;
     CslNeighbor *mCslTxNeighbor;

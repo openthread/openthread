@@ -381,10 +381,10 @@ exit:
     return error;
 }
 
-void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
-                                            const FrameContext &aContext,
-                                            Error               aError,
-                                            Child              &aChild)
+void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame::Info &aFrameInfo,
+                                            const FrameContext       &aContext,
+                                            Error                     aError,
+                                            Child                    &aChild)
 {
     Message *message    = aChild.GetIndirectMessage();
     uint16_t nextOffset = aContext.mMessageNextOffset;
@@ -450,9 +450,8 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
     {
         // The indirect tx of this message to the child is done.
 
-        Error        txError    = aError;
-        uint16_t     childIndex = Get<ChildTable>().GetChildIndex(aChild);
-        Mac::Address macDest;
+        Error    txError    = aError;
+        uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
         aChild.SetIndirectMessage(nullptr);
         aChild.GetLinkInfo().AddMessageTxStatus(aChild.GetIndirectTxSuccess());
@@ -484,10 +483,10 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         }
 #endif
 
-        if (!aFrame.IsEmpty())
+        if (!aFrameInfo.mIsEmptyFrame)
         {
-            IgnoreError(aFrame.GetDstAddr(macDest));
-            Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageTransmit, *message, txError, &macDest);
+            Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageTransmit, *message, txError,
+                                            &aFrameInfo.GetDstAddr());
         }
 
         Get<MeshForwarder>().mCounters.UpdateOnTxDone(*message, aChild.GetIndirectTxSuccess());
@@ -501,12 +500,20 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         message->InvokeTxCallback(txError);
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        if (aFrame.IsEmpty())
         {
-            aChild.GetMacAddress(macDest);
-        }
+            Mac::Address macDest;
 
-        Get<HistoryTracker::Local>().RecordTxMessage(*message, macDest, txError == kErrorNone);
+            if (aFrameInfo.mIsEmptyFrame)
+            {
+                aChild.GetMacAddress(macDest);
+            }
+            else
+            {
+                macDest = aFrameInfo.GetDstAddr();
+            }
+
+            Get<HistoryTracker::Local>().RecordTxMessage(*message, macDest, txError == kErrorNone);
+        }
 #endif
         Get<MeshForwarder>().RemoveMessageIfNoPendingTx(*message);
     }
@@ -567,15 +574,15 @@ Error IndirectSender::PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame,
     return error;
 }
 
-void IndirectSender::HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
-                                                  const FrameContext &aContext,
-                                                  Error               aError,
-                                                  CslNeighbor        &aCslNeighbor)
+void IndirectSender::HandleSentFrameToCslNeighbor(const Mac::TxFrame::Info &aFrameInfo,
+                                                  const FrameContext       &aContext,
+                                                  Error                     aError,
+                                                  CslNeighbor              &aCslNeighbor)
 {
 #if OPENTHREAD_FTD
-    HandleSentFrameToChild(aFrame, aContext, aError, static_cast<Child &>(aCslNeighbor));
+    HandleSentFrameToChild(aFrameInfo, aContext, aError, static_cast<Child &>(aCslNeighbor));
 #else
-    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aFrameInfo);
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aError);
     OT_UNUSED_VARIABLE(aCslNeighbor);

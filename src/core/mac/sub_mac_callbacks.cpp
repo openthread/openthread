@@ -64,25 +64,25 @@ void SubMac::Callbacks::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
     Get<Mac>().RecordCcaStatus(aCcaSuccess, aChannel);
 }
 
-void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                                  Error          aError,
-                                                  uint8_t        aRetryCount,
-                                                  bool           aWillRetx)
+void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame::Info &aFrameInfo,
+                                                  Error                aError,
+                                                  uint8_t              aRetryCount,
+                                                  bool                 aWillRetx)
 {
-    Get<Mac>().RecordFrameTransmitStatus(aFrame, aError, aRetryCount, aWillRetx);
+    Get<Mac>().RecordFrameTransmitStatus(aFrameInfo, aError, aRetryCount, aWillRetx);
 }
 
-void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
+void SubMac::Callbacks::TransmitDone(TxFrame::Info &aFrameInfo, RxFrame *aAckFrame, Error aError)
 {
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     if (Get<LinkRaw>().IsEnabled())
     {
-        Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
+        Get<LinkRaw>().InvokeTransmitDone(aFrameInfo, aAckFrame, aError);
     }
     else
 #endif
     {
-        Get<Mac>().HandleTransmitDone(aFrame, aAckFrame, aError);
+        Get<Mac>().HandleTransmitDone(aFrameInfo, aAckFrame, aError);
     }
 }
 
@@ -111,17 +111,17 @@ void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError) { Get<LinkRaw
 
 void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t) {}
 
-void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                                  Error          aError,
-                                                  uint8_t        aRetryCount,
-                                                  bool           aWillRetx)
+void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame::Info &aFrameInfo,
+                                                  Error                aError,
+                                                  uint8_t              aRetryCount,
+                                                  bool                 aWillRetx)
 {
-    Get<LinkRaw>().RecordFrameTransmitStatus(aFrame, aError, aRetryCount, aWillRetx);
+    Get<LinkRaw>().RecordFrameTransmitStatus(aFrameInfo, aError, aRetryCount, aWillRetx);
 }
 
-void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
+void SubMac::Callbacks::TransmitDone(TxFrame::Info &aFrameInfo, RxFrame *aAckFrame, Error aError)
 {
-    Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
+    Get<LinkRaw>().InvokeTransmitDone(aFrameInfo, aAckFrame, aError);
 }
 
 void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi) { Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi); }

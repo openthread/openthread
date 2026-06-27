@@ -185,11 +185,11 @@ private:
     typedef IndirectSenderBase::FrameContext FrameContext;
 
     // Callbacks from MAC
-    void          HandleDataPoll(Mac::RxFrame &aFrame);
+    void          HandleDataPoll(Mac::RxFrame::Info &aFrameInfo);
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    void          HandleSentFrame(const Mac::TxFrame &aFrame, Error aError);
+    void          HandleSentFrame(const Mac::TxFrame::Info &aFrameInfo, Error aError);
 
-    void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild);
+    void HandleSentFrame(const Mac::TxFrame::Info &aFrameInfo, Error aError, Child &aChild);
     void ProcessPendingPolls(void);
     void ResetTxAttempts(Child &aChild);
 

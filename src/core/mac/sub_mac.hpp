@@ -148,7 +148,7 @@ public:
          * @note Unlike `TransmitDone` which is invoked after all re-transmission attempts to indicate the final status
          * of a frame transmission, this method is invoked on all frame transmission attempts.
          *
-         * @param[in] aFrame      The transmitted frame.
+         * @param[in] aFrameInfo  The transmitted frame information.
          * @param[in] aError      kErrorNone when the frame was transmitted successfully,
          *                        kErrorNoAck when the frame was transmitted but no ACK was received,
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -157,7 +157,10 @@ public:
          * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
          *                        when there was an error in current transmission attempt.
          */
-        void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
+        void RecordFrameTransmitStatus(const TxFrame::Info &aFrameInfo,
+                                       Error                aError,
+                                       uint8_t              aRetryCount,
+                                       bool                 aWillRetx);
 
         /**
          * The method notifies user of `SubMac` that the transmit operation has completed, providing, if applicable,
@@ -170,7 +173,7 @@ public:
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
          *                        kErrorAbort when transmission was aborted for other reasons.
          */
-        void TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+        void TransmitDone(TxFrame::Info &aFrameInfo, RxFrame *aAckFrame, Error aError);
 
         /**
          * Notifies user of `SubMac` that energy scan is complete.
@@ -611,6 +614,7 @@ private:
     bool ShouldHandleTransmitTargetTime(void) const;
     bool ShouldHandleTransitionToSleep(void) const;
 
+    void SkipFrameTx(void);
     void ProcessTransmitSecurity(void);
     void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId);
     void StartCsmaBackoff(void);
@@ -623,7 +627,7 @@ private:
     void HandleReceiveDone(RxFrame *aFrame, Error aError);
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
-    void SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame);
+    void SignalFrameCounterUsedOnTxDone(const TxFrame::Info &aFrameInfo);
     void HandleEnergyScanDone(int8_t aMaxRssi);
     void HandleTimer(void);
 

@@ -173,6 +173,14 @@ public:
     void SetLength(LengthType aLength) { mLength = aLength; }
 
     /**
+     * Indicates whether or not the `Data` is empty (length is zero).
+     *
+     * @retval TRUE   The `Data` is empty (length is zero).
+     * @retval FALSE  The `Data` is not empty (length is non-zero).
+     */
+    bool IsEmpty(void) const { return mLength == 0; }
+
+    /**
      * Copies the `Data` bytes to a given buffer.
      *
      * It is up to the caller to ensure that @p aBuffer has enough space for the current data length.

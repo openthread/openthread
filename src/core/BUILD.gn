@@ -835,6 +835,8 @@ openthread_radio_sources = [
   "common/error.hpp",
   "common/frame_builder.cpp",
   "common/frame_builder.hpp",
+  "common/frame_data.cpp",
+  "common/frame_data.hpp",
   "common/log.cpp",
   "common/random.cpp",
   "common/string.cpp",

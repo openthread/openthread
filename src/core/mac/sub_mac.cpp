@@ -351,7 +351,7 @@ Error SubMac::Send(void)
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     if (mRadioFilterEnabled)
     {
-        mCallbacks.TransmitDone(mTransmitFrame, nullptr, mTransmitFrame.GetAckRequest() ? kErrorNoAck : kErrorNone);
+        SkipFrameTx();
         ExitNow();
     }
 #endif
@@ -371,32 +371,46 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+void SubMac::SkipFrameTx(void)
+{
+    TxFrame::Info frameInfo;
+    Error         error = kErrorNone;
+
+    IgnoreError(frameInfo.ParseFrom(mTransmitFrame));
+
+    error = (frameInfo.mAddrFieldsValidated && frameInfo.mAckRequest) ? kErrorNoAck : kErrorNone;
+
+    mCallbacks.TransmitDone(frameInfo, /* aAckFrame */ nullptr, error);
+}
+#endif
+
 void SubMac::ProcessTransmitSecurity(void)
 {
     const ExtAddress *extAddress = nullptr;
-    uint8_t           keyIdMode;
+    TxFrame::Info frameInfo;
 
-    VerifyOrExit(mTransmitFrame.GetSecurityEnabled());
+    SuccessOrExit(frameInfo.ParseFrom(mTransmitFrame));
+
+    VerifyOrExit(frameInfo.mSecurityEnabled);
     VerifyOrExit(!mTransmitFrame.IsSecurityProcessed());
-
-    SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
-        mTransmitFrame.SetKeyId(mKeyId);
+        frameInfo.UpdateKeyId(mKeyId);
     }
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    if (mTransmitFrame.GetType() == Frame::kTypeMultipurpose)
+    if (frameInfo.mType == Frame::kTypeMultipurpose)
     {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode2);
+        VerifyOrExit(frameInfo.mKeyIdMode == Frame::kKeyIdMode2);
     }
     else
 #endif
     {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+        VerifyOrExit(frameInfo.mKeyIdMode == Frame::kKeyIdMode1);
     }
 
     mTransmitFrame.SetAesKey(GetCurrentMacKey());
@@ -405,7 +419,7 @@ void SubMac::ProcessTransmitSecurity(void)
     {
         uint32_t frameCounter = GetFrameCounter();
 
-        mTransmitFrame.SetFrameCounter(frameCounter);
+        frameInfo.UpdateFrameCounter(frameCounter);
         SignalFrameCounterUsed(frameCounter, mKeyId);
     }
 
@@ -416,7 +430,7 @@ void SubMac::ProcessTransmitSecurity(void)
     VerifyOrExit(!mTransmitFrame.Has<TimeIe>());
 #endif
 
-    mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
+    frameInfo.ProcessTransmitAesCcm(*extAddress);
 
 exit:
     return;
@@ -528,21 +542,34 @@ exit:
 
 void SubMac::HandleTransmitStarted(TxFrame &aFrame)
 {
+    Frame::Info frameInfo;
+
     if (mPcapCallback.IsSet())
     {
         mPcapCallback.Invoke(&aFrame, true);
     }
 
-    if (ShouldHandleAckTimeout() && aFrame.GetAckRequest())
+    VerifyOrExit(ShouldHandleAckTimeout());
+
+    SuccessOrExit(frameInfo.ParseFrom(aFrame, Frame::Info::kParseAddrFields));
+
+    if (frameInfo.mAckRequest)
     {
         StartTimer(kAckTimeout);
     }
+
+exit:
+    return;
 }
 
 void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 {
-    bool ccaSuccess = true;
-    bool shouldRetx;
+    bool          ccaSuccess = true;
+    bool          shouldRetx;
+    TxFrame::Info frameInfo;
+
+    // TODO: write why we allow failure here!
+    IgnoreError(frameInfo.ParseFrom(aFrame));
 
     // Stop ack timeout timer.
 
@@ -578,7 +605,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         OT_UNREACHABLE_CODE(ExitNow());
     }
 
-    SignalFrameCounterUsedOnTxDone(aFrame);
+    SignalFrameCounterUsedOnTxDone(frameInfo);
 
     // Determine whether a CSMA retry is required.
 
@@ -595,7 +622,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 
     shouldRetx = ((aError != kErrorNone) && ShouldHandleRetries() && (mTransmitRetries < aFrame.GetMaxFrameRetries()));
 
-    mCallbacks.RecordFrameTransmitStatus(aFrame, aError, mTransmitRetries, shouldRetx);
+    mCallbacks.RecordFrameTransmitStatus(frameInfo, aError, mTransmitRetries, shouldRetx);
 
     if (shouldRetx)
     {
@@ -603,9 +630,9 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         aFrame.SetIsARetransmission(true);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
-        if (aFrame.GetSecurityEnabled() && aFrame.HasAnyHeaderIe())
+        if (frameInfo.mFullyValidated && frameInfo.mSecurityEnabled && frameInfo.mHasIe)
         {
-            aFrame.RestoreTransmitSecurity(GetExtAddress());
+            frameInfo.RestoreTransmitSecurity(GetExtAddress());
         }
 
         ProcessTransmitSecurity();
@@ -641,22 +668,15 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     }
 #endif
 
-    mCallbacks.TransmitDone(aFrame, aAckFrame, aError);
+    mCallbacks.TransmitDone(frameInfo, aAckFrame, aError);
 
 exit:
     return;
 }
 
-void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
+void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame::Info &aFrameInfo)
 {
-    uint8_t  keyIdMode;
-    uint8_t  keyId;
-    uint32_t frameCounter;
-    bool     allowError = false;
-
-    OT_UNUSED_VARIABLE(allowError);
-
-    VerifyOrExit(!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated());
+    bool shouldAssert;
 
     // In an FTD/MTD build, if/when link-raw is enabled, the `TxFrame`
     // is prepared and given by user and may not necessarily follow 15.4
@@ -667,17 +687,28 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
     // OpenThread core, we expect no error and therefore assert if
     // parsing fails.
 
+    shouldAssert = !aFrameInfo.mFullyValidated;
+
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    allowError = Get<LinkRaw>().IsEnabled();
+    if (Get<LinkRaw>().IsEnabled())
+    {
+        shouldAssert = false;
+    }
 #endif
 
-    VerifyOrExit(aFrame.GetKeyIdMode(keyIdMode) == kErrorNone, OT_ASSERT(allowError));
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+    if (shouldAssert)
+    {
+        OT_ASSERT(false);
+    }
 
-    VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == kErrorNone, OT_ASSERT(allowError));
-    VerifyOrExit(aFrame.GetKeyId(keyId) == kErrorNone, OT_ASSERT(allowError));
+    VerifyOrExit(aFrameInfo.mFullyValidated);
 
-    SignalFrameCounterUsed(frameCounter, keyId);
+    VerifyOrExit(!ShouldHandleTransmitSecurity());
+    VerifyOrExit(aFrameInfo.mSecurityEnabled && aFrameInfo.GetTxFrame().IsHeaderUpdated());
+
+    VerifyOrExit(aFrameInfo.mKeyIdMode == Frame::kKeyIdMode1);
+
+    SignalFrameCounterUsed(aFrameInfo.mFrameCounter, aFrameInfo.mKeyId);
 
 exit:
     return;
