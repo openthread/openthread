@@ -40,6 +40,15 @@
 
 namespace ot {
 
+#ifdef OT_CONFIG_RADIO_TIME_ENABLE
+#error "OT_CONFIG_RADIO_TIME_ENABLE MUST NOT be defined directly. It is derived from other configs"
+#endif
+
+#define OT_CONFIG_RADIO_TIME_ENABLE                                                               \
+    (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
+     OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE || OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || \
+     OPENTHREAD_CONFIG_TIME_SYNC_ENABLE)
+
 /**
  * Represents a 64-bit radio time in microseconds referenced to a continuous monotonic local radio clock.
  */
