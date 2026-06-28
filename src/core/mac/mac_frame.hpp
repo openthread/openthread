@@ -232,7 +232,7 @@ public:
      *
      * @param[in]  aFramePending  The Frame Pending bit.
      */
-    void SetFramePending(bool aFramePending);
+    void SetFramePending(bool aFramePending) { UpdateFcfFlag(aFramePending, kFcfFramePending); }
 
     /**
      * Indicates whether or not the Ack Request bit is set.
@@ -247,7 +247,7 @@ public:
      *
      * @param[in]  aAckRequest  The Ack Request bit.
      */
-    void SetAckRequest(bool aAckRequest);
+    void SetAckRequest(bool aAckRequest) { UpdateFcfFlag(aAckRequest, kFcfAckRequest); }
 
     /**
      * Indicates whether or not the PanId Compression bit is set.
@@ -270,7 +270,7 @@ public:
      *
      * @param[in]  aIePresent   The IE Present bit.
      */
-    void SetIePresent(bool aIePresent);
+    void SetIePresent(bool aIePresent) { UpdateFcfFlag(aIePresent, kFcfIePresent); }
 
     /**
      * Returns the Sequence Number value.
@@ -743,6 +743,7 @@ protected:
     static constexpr uint8_t kMaxPsduSize  = kInvalidSize - 1;
 
     void    SetFrameControlField(uint16_t aFcf) { LittleEndian::WriteUint16(aFcf, mPsdu); }
+    void    UpdateFcfFlag(bool aSet, uint16_t aBitFlag);
     uint8_t SkipSequenceIndex(void) const;
     uint8_t FindDstPanIdIndex(void) const;
     uint8_t FindDstAddrIndex(void) const;
