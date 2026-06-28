@@ -121,10 +121,27 @@ otError DecodeDnssdHost(Decoder              &aDecoder,
                         uint16_t             &aCallbackDataLen)
 {
     otError error = OT_ERROR_NONE;
+    const otIp6Address *address;
 
     SuccessOrExit(error = aDecoder.ReadUtf8(aHost.mHostName));
     SuccessOrExit(error = aDecoder.ReadUint16(aHost.mAddressesLength));
-    SuccessOrExit(error = aDecoder.ReadIp6Address(aHost.mAddresses));
+
+    if (aHost.mAddressesLength == 0)
+    {
+        aHost.mAddresses = nullptr;
+    }
+    else
+    {
+        SuccessOrExit(error = aDecoder.ReadIp6Address(aHost.mAddresses));
+
+        for (uint16_t i = 1; i < aHost.mAddressesLength; i++)
+        {
+            SuccessOrExit(error = aDecoder.ReadIp6Address(address));
+        }
+
+        OT_UNUSED_VARIABLE(address);
+    }
+
     SuccessOrExit(error = aDecoder.ReadUint32(aRequestId));
     SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
 
