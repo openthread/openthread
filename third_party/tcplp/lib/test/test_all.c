@@ -50,28 +50,28 @@ void test_bmp() {
     bmp_init(buffer, test_bmp_size);
     bmp_test("bmp_init", buffer, test_bmp_size, "0000000000000000");
 
-    bmp_setrange(buffer, 11, 7);
+    bmp_setrange(buffer, test_bmp_size, 11, 7);
     bmp_test("bmp_setrange 1", buffer, test_bmp_size, "001FC00000000000");
 
-    bmp_setrange(buffer, 35, 3);
+    bmp_setrange(buffer, test_bmp_size, 35, 3);
     bmp_test("bmp_setrange 2", buffer, test_bmp_size, "001FC0001C000000");
 
-    bmp_setrange(buffer, 47, 4);
+    bmp_setrange(buffer, test_bmp_size, 47, 4);
     bmp_test("bmp_setrange 3", buffer, test_bmp_size, "001FC0001C01E000");
 
-    bmp_swap(buffer, 3, 36, 1);
+    bmp_swap(buffer, test_bmp_size, 3, 36, 1);
     bmp_test("bmp_swap 1", buffer, test_bmp_size, "101FC0001401E000");
 
-    bmp_swap(buffer, 0, 40, 24);
+    bmp_swap(buffer, test_bmp_size, 0, 40, 24);
     bmp_test("bmp_swap 2", buffer, test_bmp_size, "01E0000014101FC0");
 
-    bmp_swap(buffer, 2, 42, 15);
+    bmp_swap(buffer, test_bmp_size, 2, 42, 15);
     bmp_test("bmp_swap 3", buffer, test_bmp_size, "101F80001401E040");
 
-    bmp_swap(buffer, 13, 23, 2);
+    bmp_swap(buffer, test_bmp_size, 13, 23, 2);
     bmp_test("bmp_swap 4", buffer, test_bmp_size, "101981801401E040");
 
-    bmp_swap(buffer, 0, 35, 24);
+    bmp_swap(buffer, test_bmp_size, 0, 35, 24);
     bmp_test("bmp_swap 5", buffer, test_bmp_size, "A00F028002033020");
 }
 
