@@ -190,10 +190,8 @@ bool AesCcm::Config::IsValid(void) const
 {
     bool isValid = false;
 
-    if (mNonceLength > 0)
-    {
-        VerifyOrExit(mNonce != nullptr);
-    }
+    VerifyOrExit(mNonceLength > 0);
+    VerifyOrExit(mNonce != nullptr);
 
     VerifyOrExit((mTagLength % 2) == 0);
     VerifyOrExit(IsValueInRange(mTagLength, kMinTagLength, kMaxTagLength));
