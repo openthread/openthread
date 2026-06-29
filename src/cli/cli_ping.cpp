@@ -234,7 +234,7 @@ void PingSender::HandlePingStatistics(const otPingSenderStatistics *aStatistics)
     if (aStatistics->mReceivedCount != 0)
     {
         uint32_t avgRoundTripTime =
-            1000 * static_cast<uint64_t>(aStatistics->mTotalRoundTripTime) / aStatistics->mReceivedCount;
+            static_cast<uint32_t>(1000 * static_cast<uint64_t>(aStatistics->mTotalRoundTripTime) / aStatistics->mReceivedCount);
 
         OutputFormat(" Round-trip min/avg/max = %u/%u.%03u/%u ms.", aStatistics->mMinRoundTripTime,
                      static_cast<uint16_t>(avgRoundTripTime / 1000), static_cast<uint16_t>(avgRoundTripTime % 1000),
