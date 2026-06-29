@@ -63,26 +63,11 @@ static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
 /**
  * Counts the number of `1` bits in the binary representation of a given unsigned int bit-mask value.
  *
- * @tparam UintType   The unsigned int type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
- *
  * @param[in] aMask   A bit mask.
  *
  * @returns The number of `1` bits in @p aMask.
  */
-template <typename UintType> uint8_t CountBitsInMask(UintType aMask)
-{
-    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
-
-    uint8_t count = 0;
-
-    while (aMask != 0)
-    {
-        aMask &= aMask - 1;
-        count++;
-    }
-
-    return count;
-}
+uint8_t CountBitsInMask(uint32_t aMask);
 
 /**
  * Counts the number of consecutive matching bits between two byte arrays.
