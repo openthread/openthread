@@ -106,6 +106,7 @@ jobs:
 
   upload-coverage:
     needs: unit-tests
+    if: github.repository == 'openthread/openthread' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner

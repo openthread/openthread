@@ -209,6 +209,7 @@ jobs:
   upload-coverage:
     needs:
     - toranj-cli
+    if: github.repository == 'openthread/openthread' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
