@@ -209,7 +209,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # 8. BR_2 does not forward the ping packet with multicast address MA1 to
         # its Thread Network.
         pkts.filter_wpan_src64(vars['BR_2']) \
-            .filter_AMPLFMA(mpl_seed_id=(vars['BR_2_RLOC'])) \
+            .filter_MPL(mpl_seed_id=(vars['BR_2_RLOC'])) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_not_next()
 
@@ -219,7 +219,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # MPL Seed ID:  If Source outer IP header = BR_1 RLOC, SeedID length = 0
         #               Else, SeedID length = 1, and Seed ID = BR_1 RLOC16
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA(mpl_seed_id=(vars['BR_1_RLOC'])) \
+            .filter_MPL(mpl_seed_id=(vars['BR_1_RLOC'])) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_next()
 
@@ -241,14 +241,14 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # 12. BR_2 does not forward the ping packet with multicast address, MA2,
         # to the Thread Network in whatever way.
         pkts.filter_wpan_src64(vars['BR_2']) \
-            .filter_AMPLFMA(mpl_seed_id=(vars['BR_2_RLOC'])) \
+            .filter_MPL(mpl_seed_id=(vars['BR_2_RLOC'])) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_not_next()
 
         # 13. BR_1 does not forward the ping packet with multicast address, MA2,
         # to the Thread Network in whatever way.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA(mpl_seed_id=(vars['BR_1_RLOC'])) \
+            .filter_MPL(mpl_seed_id=(vars['BR_1_RLOC'])) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_not_next()
 
@@ -261,14 +261,14 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # 15. BR_2 does not forward the ping packet with multicast address MA1g,
         # to the Thread Network in whatever way.
         pkts.filter_wpan_src64(vars['BR_2']) \
-            .filter_AMPLFMA(mpl_seed_id=(vars['BR_2_RLOC'])) \
+            .filter_MPL(mpl_seed_id=(vars['BR_2_RLOC'])) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_not_next()
 
         # 16. BR_1 does not forward the ping packet with multicast address MA1g,
         # to its Thread Network in whatever way.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA(mpl_seed_id=(vars['BR_1_RLOC'])) \
+            .filter_MPL(mpl_seed_id=(vars['BR_1_RLOC'])) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_not_next()
 
