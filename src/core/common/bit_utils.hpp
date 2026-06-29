@@ -103,6 +103,17 @@ template <typename UintType> uint8_t CountBitsInMask(UintType aMask)
 uint16_t CountMatchingBits(const uint8_t *aFirst, const uint8_t *aSecond, uint16_t aMaxBitLength);
 
 /**
+ * Determines the minimum number of bits required to represent a given integer value.
+ *
+ * @note For a value of `0`, this function returns `1`.
+ *
+ * @param[in] aValue  The 32-bit unsigned integer value.
+ *
+ * @returns The minimum number of bits required to represent @p aValue.
+ */
+uint8_t DetermineMinBitSizeFor(uint32_t aValue);
+
+/**
  * Sets the specified bit in a given integer to 1.
  *
  * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
