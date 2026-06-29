@@ -349,6 +349,41 @@ static void HandleTcatJoin(otInstance *aInstance, bool aIsJoin, otError aError, 
     counters.mLastError = static_cast<Error>(aError);
 }
 
+// Observer for the public OpenThread state-changed callback (`otStateChangedCallback`). Used to verify
+// that the Notifier coalesces multiple changes into a single notification rather than delivering them
+// across several callbacks.
+struct StateChangeObserver
+{
+    uint32_t mTotalCount;      // total number of state-changed callbacks received
+    uint32_t mNetworkKeyCount; // callbacks that reported OT_CHANGED_NETWORK_KEY
+    uint32_t mExtPanIdCount;   // callbacks that reported OT_CHANGED_THREAD_EXT_PANID
+    uint32_t mBothInOneCount;  // callbacks that reported BOTH of the above together (i.e. coalesced)
+};
+
+static void HandleNotifierStateChanged(otChangedFlags aFlags, void *aContext)
+{
+    static constexpr otChangedFlags kBothFlags = OT_CHANGED_NETWORK_KEY | OT_CHANGED_THREAD_EXT_PANID;
+
+    StateChangeObserver &observer = *static_cast<StateChangeObserver *>(aContext);
+
+    observer.mTotalCount++;
+
+    if (aFlags & OT_CHANGED_NETWORK_KEY)
+    {
+        observer.mNetworkKeyCount++;
+    }
+
+    if (aFlags & OT_CHANGED_THREAD_EXT_PANID)
+    {
+        observer.mExtPanIdCount++;
+    }
+
+    if ((aFlags & kBothFlags) == kBothFlags)
+    {
+        observer.mBothInOneCount++;
+    }
+}
+
 static Instance *TestInitInstanceTcat(void)
 {
     Instance *instance = testInitInstance();
@@ -1159,6 +1194,58 @@ public:
         testFreeInstance(instance);
     }
 
+    // Verifies the OpenThread Notifier assumption that TcatAgent::HandleNotifierEvents() relies on:
+    // multiple state changes that occur back-to-back are coalesced into a single notification carrying all of
+    // the corresponding event flags.
+    static void TestTcatNotifierCoalescesEvents(void)
+    {
+        Instance           *instance = TestInitInstanceTcat();
+        TcatAgent          *agent    = &instance->Get<TcatAgent>();
+        StateChangeObserver observer = {};
+
+        // Commit a baseline Active Dataset and drain all resulting notifications.
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        otTaskletsProcess(instance);
+
+        // A Commissioner connects to the (uncommissioned) device
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ false);
+        VerifyOrQuit(agent->IsStarted());
+        VerifyOrQuit(!agent->mIsCommissioned);
+
+        // Start observing state-changed notifications.
+        SuccessOrQuit(otSetStateChangedCallback(instance, HandleNotifierStateChanged, &observer));
+
+        // The agent writes a new Active Dataset that differs in exactly 2 items - signalled as two distinct
+        // Notifier events.
+        {
+            Dataset::Info changed = sFullDataset;
+
+            changed.mNetworkKey.m8[0] ^= 0xff;
+            changed.mExtendedPanId.m8[0] ^= 0xff;
+            instance->Get<ActiveDatasetManager>().SaveLocal(changed);
+            agent->mHasWrittenActiveDataset = true; // model that this Agent is the source of the change
+        }
+
+        // repeat the tasklets processing to ensure subsequent notifer calls are not made.
+        for (int i = 0; i < 3; i++)
+        {
+            // Process pending tasklets: this drives the Notifier to emit the accumulated events.
+            otTaskletsProcess(instance);
+
+            VerifyOrQuit(observer.mTotalCount == 1, "two changes must produce exactly one notification, not two");
+            VerifyOrQuit(observer.mNetworkKeyCount == 1, "Network Key change must be reported exactly once");
+            VerifyOrQuit(observer.mExtPanIdCount == 1, "Extended PAN ID change must be reported exactly once");
+            VerifyOrQuit(observer.mBothInOneCount == 1, "both changes must be coalesced into the same notification");
+
+            // Because the agent saw both events coalesced while mHasWrittenActiveDataset was set, it recognizes the
+            // change as its own and retains the Commissioner's authorization to overwrite the dataset.
+            VerifyOrQuit(!agent->mIsCommissioned, "a self-made dataset change must not revoke authorization");
+        }
+
+        otRemoveStateChangeCallback(instance, HandleNotifierStateChanged, &observer);
+        testFreeInstance(instance);
+    }
+
 }; // class UnitTester
 
 } // namespace MeshCoP
@@ -1181,6 +1268,7 @@ int main(void)
     ot::MeshCoP::UnitTester::TestTcatAttemptDatasetOverwrite();
     ot::MeshCoP::UnitTester::TestTcatAttemptDatasetOverwriteAfterAttach();
     ot::MeshCoP::UnitTester::TestTcatRepeatedCommandActivation();
+    ot::MeshCoP::UnitTester::TestTcatNotifierCoalescesEvents();
     printf("All tests passed\n");
 #else
     printf("TCAT feature is not enabled\n");
