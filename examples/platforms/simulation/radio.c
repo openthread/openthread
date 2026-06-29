@@ -1041,7 +1041,7 @@ exit:
 }
 #endif
 
-uint64_t otPlatRadioGetNow(otInstance *aInstance)
+otRadioTime64 otPlatRadioGetNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -1109,7 +1109,7 @@ otError otPlatRadioResetCsl(otInstance *aInstance)
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, otRadioTime32 aCslSampleTime)
 {
     OT_UNUSED_VARIABLE(aInstance);
 

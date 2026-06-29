@@ -100,7 +100,7 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
 
     VerifyOrExit(frame->GenerateWakeupFrame(Get<Mac::Mac>().GetPanId(), mWakeupRequest, source) == kErrorNone,
                  frame = nullptr);
-    frame->SetTxDelayBaseTime(static_cast<uint32_t>(Get<Radio>().GetNow()));
+    frame->SetTxDelayBaseTime(Get<Radio>().GetNowAsRadioTime32());
     frame->SetTxDelay(radioTxDelay);
     frame->SetCsmaCaEnabled(kWakeupFrameTxCca);
     frame->SetMaxCsmaBackoffs(0);

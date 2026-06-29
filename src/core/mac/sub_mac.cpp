@@ -427,32 +427,29 @@ void SubMac::StartCsmaBackoff(void)
     uint8_t backoffExponent = kCsmaMinBe + mCsmaBackoffs;
 
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (mTransmitFrame.mInfo.mTxInfo.mTxDelay != 0 || mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime != 0)
+    if (mTransmitFrame.GetTxDelay() != 0 || mTransmitFrame.GetTxDelayBaseTime() != 0)
     {
         SetState(kStateCslTransmit);
 
         if (ShouldHandleTransmitTargetTime())
         {
             static constexpr uint32_t kAheadTime = kCcaSampleInterval + kCslTransmitTimeAhead + kRadioHeaderShrDuration;
-            Time                      txStartTime = Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime);
-            Time                      radioNow    = Time(static_cast<uint32_t>(Get<Radio>().GetNow()));
+
+            RadioTime32 radioNow    = Get<Radio>().GetNowAsRadioTime32();
+            RadioTime32 txStartTime = mTransmitFrame.GetTxDelayBaseTime();
 
             txStartTime += (mTransmitFrame.mInfo.mTxInfo.mTxDelay - kAheadTime);
 
-            if (radioNow < txStartTime)
+            if (IsRadioTimeStrictlyBefore(radioNow, txStartTime))
             {
                 StartTimer(txStartTime - radioNow);
+                ExitNow();
             }
-            else // Transmit without delay
-            {
-                BeginTransmit();
-            }
-        }
-        else
-        {
-            BeginTransmit();
+
+            // Transmit without delay
         }
 
+        BeginTransmit();
         ExitNow();
     }
 #endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE

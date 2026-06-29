@@ -672,28 +672,26 @@ private:
     SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint16_t mCslPeriod;             // The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t  mCslChannel : 7;        // The CSL sample channel.
-    bool     mIsCslSampling : 1;     // Indicates that the current time is in CSL sample window
-                                     // for platforms not supporting `Radio::ReceiveAt()`.
-    uint16_t    mCslPeerShort;       // The CSL peer short address.
-    uint32_t    mCslSampleTimeRadio; // The CSL sample time of the current period based on radio time (lower 32-bit).
-    TimeMicro   mCslSampleTimeLocal; // The CSL sample time of the current period based on local time.
-    TimeMicro   mCslLastSync;        // The timestamp of the last successful CSL synchronization.
-    CslAccuracy mCslParentAccuracy;  // The parent's CSL accuracy (clock accuracy and uncertainty).
-    TimerMicro  mCslTimer;
+    uint16_t mCslPeriod;                     // The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t  mCslChannel : 7;                // The CSL sample channel.
+    bool     mIsCslSampling : 1;             // Indicates that the current time is in CSL sample window
+                                             // for platforms not supporting `Radio::ReceiveAt()`.
+    uint16_t             mCslPeerShort;      // The CSL peer short address.
+    SyncedRadioLocalTime mCslSampleTime;     // The CSL sample time for current period.
+    TimeMicro            mCslLastSync;       // The timestamp of the last successful CSL synchronization.
+    CslAccuracy          mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
+    TimerMicro           mCslTimer;
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    bool mIsWedSampling : 1;          // Indicates that the current time is in WED's sample window
-                                      // for platforms not supporting `Radio::ReceiveAt()`.
-    bool       mIsWedEnabled : 1;     // Indicates if the WED is enabled.
-    uint32_t   mWakeupListenInterval; // The wake-up listen interval, in microseconds.
-    uint32_t   mWakeupListenDuration; // The wake-up listen duration, in microseconds.
-    uint8_t    mWakeupChannel;        // The wake-up sample channel.
-    TimeMicro  mWedSampleTime;        // The WED sample time of the current interval in local time.
-    uint64_t   mWedSampleTimeRadio;   // The WED sample time of the current interval in radio time.
-    TimerMicro mWedTimer;
+    bool mIsWedSampling : 1;                    // Indicates that the current time is in WED's sample window
+                                                // for platforms not supporting `Radio::ReceiveAt()`.
+    bool                 mIsWedEnabled : 1;     // Indicates if the WED is enabled.
+    uint32_t             mWakeupListenInterval; // The wake-up listen interval, in microseconds.
+    uint32_t             mWakeupListenDuration; // The wake-up listen duration, in microseconds.
+    uint8_t              mWakeupChannel;        // The wake-up sample channel.
+    SyncedRadioLocalTime mWedSampleTime;        // The WED sample time of the current interval.
+    TimerMicro           mWedTimer;
 #endif
 };
 

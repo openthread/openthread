@@ -43,6 +43,7 @@
 #include "mac/mac_header_ie.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/network_name.hpp"
+#include "radio/radio_types.hpp"
 
 namespace ot {
 namespace Mac {
@@ -945,7 +946,7 @@ public:
      *
      * @returns The timestamp in microseconds.
      */
-    const uint64_t &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
+    const RadioTime64 &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
 
     /**
      * Performs AES CCM on the frame which is received.
@@ -1284,6 +1285,13 @@ public:
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
+     * Gets the TX delay field for the frame.
+     *
+     * @returns The delay time for the TX frame in microseconds.
+     */
+    uint32_t GetTxDelay(void) const { return mInfo.mTxInfo.mTxDelay; }
+
+    /**
      * Set TX delay field for the frame.
      *
      * @param[in]    aTxDelay    The delay time for the TX frame.
@@ -1291,11 +1299,18 @@ public:
     void SetTxDelay(uint32_t aTxDelay) { mInfo.mTxInfo.mTxDelay = aTxDelay; }
 
     /**
+     * Gets the TX delay base time field for the frame.
+     *
+     * @returns The delay base time for the TX frame as a `RadioTime32`.
+     */
+    RadioTime32 GetTxDelayBaseTime(void) const { return mInfo.mTxInfo.mTxDelayBaseTime; }
+
+    /**
      * Set TX delay base time field for the frame.
      *
      * @param[in]    aTxDelayBaseTime    The delay base time for the TX frame.
      */
-    void SetTxDelayBaseTime(uint32_t aTxDelayBaseTime) { mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
+    void SetTxDelayBaseTime(RadioTime32 aTxDelayBaseTime) { mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
 #endif
 };
 
