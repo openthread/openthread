@@ -702,4 +702,9 @@
 #error "OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER is removed. All addresses are now registered."
 #endif
 
+#ifdef OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
+#error "OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME was removed and is no longer supported. " \
+       "It was originally implemented as a provisional solution for the wake mechanism."
+#endif
+
 #endif // OT_CORE_CONFIG_OPENTHREAD_CORE_CONFIG_CHECK_H_

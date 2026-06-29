@@ -252,21 +252,6 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
     aTxFrame.mLength = builder.GetLength();
 }
 
-void Frame::SetFrameControlField(uint16_t aFcf)
-{
-#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-    if (IsShortFcf(aFcf))
-    {
-        OT_ASSERT((aFcf >> 8) == 0);
-        mPsdu[0] = static_cast<uint8_t>(aFcf);
-    }
-    else
-#endif
-    {
-        LittleEndian::WriteUint16(aFcf, mPsdu);
-    }
-}
-
 Error Frame::ValidatePsdu(void) const
 {
     Error   error = kErrorNone;
@@ -298,44 +283,15 @@ exit:
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 bool Frame::IsWakeupFrame(void) const
 {
-    const uint16_t      fcf    = GetFrameControlField();
-    bool                result = false;
-    uint8_t             keyIdMode;
-    uint8_t             firstIeIndex;
-    Address             srcAddress;
-    const ConnectionIe *connectionIe;
-
-    // Wake-up frame is a Multipurpose frame without Ack Request...
-    VerifyOrExit((fcf & kFcfFrameTypeMask) == kTypeMultipurpose);
-    VerifyOrExit((fcf & kMpFcfAckRequest) == 0);
-
-    // ... with extended source address...
-    SuccessOrExit(GetSrcAddr(srcAddress));
-    VerifyOrExit(srcAddress.IsExtended());
-
-    // ... secured with Key Id Mode 2...
-    SuccessOrExit(GetKeyIdMode(keyIdMode));
-    VerifyOrExit(keyIdMode == kKeyIdMode2);
-
-    // ... that has Rendezvous Time IE and Connection IE...
-    VerifyOrExit(Has<RendezvousTimeIe>());
-    VerifyOrExit((connectionIe = Find<ConnectionIe>()) != nullptr);
-
-    // ... but no other IEs nor payload.
-    firstIeIndex = FindHeaderIeIndex();
-    VerifyOrExit(mPsdu + firstIeIndex + sizeof(RendezvousTimeIe) + connectionIe->GetSize() == GetFooter());
-
-    result = true;
-
-exit:
-    return result;
+    // Placeholder implementation following removal of legacy Multipurpose frame format.
+    return false;
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif
 
 void Frame::SetAckRequest(bool aAckRequest)
 {
     uint16_t fcf  = GetFrameControlField();
-    uint16_t mask = Select<kFcfAckRequest, kMpFcfAckRequest>(fcf);
+    uint16_t mask = kFcfAckRequest;
 
     if (aAckRequest)
     {
@@ -352,7 +308,7 @@ void Frame::SetAckRequest(bool aAckRequest)
 void Frame::SetFramePending(bool aFramePending)
 {
     uint16_t fcf  = GetFrameControlField();
-    uint16_t mask = Select<kFcfFramePending, kMpFcfFramePending>(fcf);
+    uint16_t mask = kFcfFramePending;
 
     if (aFramePending)
     {
@@ -369,7 +325,7 @@ void Frame::SetFramePending(bool aFramePending)
 void Frame::SetIePresent(bool aIePresent)
 {
     uint16_t fcf  = GetFrameControlField();
-    uint16_t mask = Select<kFcfIePresent, kMpFcfIePresent>(fcf);
+    uint16_t mask = kFcfIePresent;
 
     if (aIePresent)
     {
@@ -386,7 +342,7 @@ void Frame::SetIePresent(bool aIePresent)
 uint8_t Frame::SkipSequenceIndex(void) const
 {
     uint16_t fcf   = GetFrameControlField();
-    uint8_t  index = GetFcfSize(fcf);
+    uint8_t  index = kFcfSize;
 
     if (IsSequencePresent(fcf))
     {
@@ -412,14 +368,7 @@ bool Frame::IsDstPanIdPresent(uint16_t aFcf)
 {
     bool present;
 
-#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-    if (IsMultipurpose(aFcf))
-    {
-        present = (aFcf & kMpFcfPanidPresent) != 0;
-    }
-    else
-#endif
-        if (IsVersion2015(aFcf))
+    if (IsVersion2015(aFcf))
     {
         // Original table at `InitMacHeader()`
         //
@@ -485,14 +434,14 @@ uint8_t Frame::GetSequence(void) const
 {
     OT_ASSERT(IsSequencePresent());
 
-    return GetPsdu()[GetFcfSize(GetFrameControlField())];
+    return GetPsdu()[kFcfSize];
 }
 
 void Frame::SetSequence(uint8_t aSequence)
 {
     OT_ASSERT(IsSequencePresent());
 
-    GetPsdu()[GetFcfSize(GetFrameControlField())] = aSequence;
+    GetPsdu()[kFcfSize] = aSequence;
 }
 
 uint8_t Frame::FindDstAddrIndex(void) const { return SkipSequenceIndex() + (IsDstPanIdPresent() ? sizeof(PanId) : 0); }
@@ -556,15 +505,7 @@ bool Frame::IsSrcPanIdPresent(uint16_t aFcf)
 {
     bool present;
 
-#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-    if (IsMultipurpose(aFcf))
-    {
-        // Sources PAN ID is implicitly equal to Destination PAN ID in Multipurpose frames
-        present = false;
-    }
-    else
-#endif
-        if (IsVersion2015(aFcf) && ((aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask)) == (kFcfDstAddrExt | kFcfSrcAddrExt)))
+    if (IsVersion2015(aFcf) && ((aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask)) == (kFcfDstAddrExt | kFcfSrcAddrExt)))
     {
         // Special case for a IEEE 802.15.4-2015 frame: When both
         // addresses are extended, then the source PAN iD is not present
@@ -1004,7 +945,7 @@ exit:
 
 uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
 {
-    uint8_t size = GetFcfSize(aFcf) + (IsSequencePresent(aFcf) ? kDsnSize : 0);
+    uint8_t size = kFcfSize + (IsSequencePresent(aFcf) ? kDsnSize : 0);
 
     // This static method calculates the size (number of bytes) of
     // Address header field for a given Frame Control `aFcf` value.
@@ -1467,56 +1408,14 @@ exit:
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource)
 {
-    Error        error = kErrorNone;
-    uint16_t     fcf;
-    uint8_t      secCtl;
-    uint8_t      wakeupIdLength;
-    FrameBuilder builder;
-    Address      dest;
+    // Placeholder implementation following removal of legacy Multipurpose frame format.
+    OT_UNUSED_VARIABLE(aPanId);
+    OT_UNUSED_VARIABLE(aWakeupRequest);
+    OT_UNUSED_VARIABLE(aSource);
 
-    fcf = kTypeMultipurpose | kMpFcfLongFrame | kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression |
-          kMpFcfIePresent;
-
-    VerifyOrExit(!aSource.IsNone(), error = kErrorInvalidArgs);
-
-    if (aWakeupRequest.IsWakeupByExtAddress())
-    {
-        wakeupIdLength = 0;
-        dest.SetExtended(aWakeupRequest.GetExtAddress());
-    }
-    else
-    {
-        wakeupIdLength = GetWakeupIdLength(aWakeupRequest.GetWakeupId());
-        dest.SetNone();
-    }
-
-    fcf |= DetermineFcfAddrType(dest, kMpFcfDstAddrShift);
-    fcf |= DetermineFcfAddrType(aSource, kMpFcfSrcAddrShift);
-
-    builder.Init(mPsdu, GetMtu());
-
-    IgnoreError(builder.AppendUint<kLittleEndian>(fcf));
-    IgnoreError(builder.AppendUint<kLittleEndian>(aPanId));
-    IgnoreError(builder.AppendMacAddress(dest));
-    IgnoreError(builder.AppendMacAddress(aSource));
-
-    secCtl = kKeyIdMode2 | kSecurityEncMic32;
-    IgnoreError(builder.AppendUint8(secCtl));
-    builder.AppendLength(CalculateSecurityHeaderSize(secCtl) - sizeof(secCtl));
-
-    builder.Append<RendezvousTimeIe>()->Init();
-
-    builder.Append<ConnectionIe>()->Init(wakeupIdLength);
-    builder.AppendLength(wakeupIdLength);
-
-    builder.AppendLength(CalculateMicSize(secCtl) + GetFcsSize());
-
-    mLength = builder.GetLength();
-
-exit:
-    return error;
+    return kErrorFailed;
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif
 
 bool RxFrame::IsSecuredWith(KeyIdModeFlags aFlags) const
 {
@@ -1643,12 +1542,6 @@ Frame::InfoString Frame::ToInfoString(void) const
         }
 
         break;
-
-#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-    case kTypeMultipurpose:
-        string.Append("MP");
-        break;
-#endif
 
     default:
         string.Append("%d", type);
