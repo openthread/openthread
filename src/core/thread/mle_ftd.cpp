@@ -464,16 +464,71 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
         Get<AddressResolver>().Clear();
     }
 
-    // Remove children that do not have a matching RLOC16
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
         if (RouterIdFromRloc16(child.GetRloc16()) != mRouterId)
         {
+            // Remove children that do not have a matching RLOC16
             RemoveNeighbor(child);
         }
     }
 
+    mChildUpdateRestoreRetryInterval = kChildUpdateRestoreMinRetryInterval;
+    ScheduleChildUpdateToRestoreNonSleepyChildren();
+
     LogNote("Partition ID 0x%lx", ToUlong(mLeaderData.GetPartitionId()));
+}
+
+void Mle::ScheduleChildUpdateToRestoreNonSleepyChildren(void)
+{
+    uint32_t delay              = 0;
+    bool     hasUnrestoredChild = false;
+
+    for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+    {
+        if (!child.IsRxOnWhenIdle() || !child.IsStateRestoring())
+        {
+            continue;
+        }
+
+        hasUnrestoredChild = true;
+
+        // If a previously scheduled "Child Update Request" is not yet
+        // sent, do not re-schedule.
+
+        if (mDelayedSender.HasAnyScheduledChildUpdateRequestToChild(child))
+        {
+            continue;
+        }
+
+        // Spread the "Child Update Request" transmissions to avoid a
+        // traffic burst and allow collection of responses from each
+        // child by adding a gap interval ± jitter (15 ± 2 msec) per
+        // child.
+
+        delay += Random::NonCrypto::AddJitter(kChildUpdateRestoreGapInterval, kChildUpdateRestoreGapJitter);
+        mDelayedSender.ScheduleChildUpdateRequestToChild(child, delay);
+    }
+
+    if (hasUnrestoredChild)
+    {
+        // Set the retry timeout counter to the max of `delayInSec` and
+        // the current `RetryInterval`. On average, 15 msec is used per
+        // rx-on child, so if a device has 10 children, it will be ~150
+        // msec. For an extreme case of 512 children, the window will
+        // be ~7.7 seconds. We also double the current retry interval
+        // up to `MaxRetryInterval`.
+
+        uint8_t delayInSec = static_cast<uint8_t>(DivideAndRoundUp(delay, Time::kOneSecondInMsec));
+
+        mChildUpdateRestoreRetryTimeout = Max<uint8_t>(mChildUpdateRestoreRetryInterval, delayInSec + 1);
+
+        mChildUpdateRestoreRetryInterval =
+            Min<uint8_t>(2 * mChildUpdateRestoreRetryInterval, kChildUpdateRestoreMaxRetryInterval);
+
+        LogInfo("Scheduled Child Update tx to restore rx-on children, retry timeout:%u, interval:%u",
+                mChildUpdateRestoreRetryTimeout, mChildUpdateRestoreRetryInterval);
+    }
 }
 
 void Mle::HandleAdvertiseTrickleTimer(TrickleTimer &aTimer) { aTimer.Get<Mle>().HandleAdvertiseTrickleTimer(); }
@@ -1676,9 +1731,22 @@ void Mle::HandleTimeTick(void)
             LogInfo("Child 0x%04x timeout expired", child.GetRloc16());
             RemoveNeighbor(child);
         }
-        else if (IsRouterOrLeader() && child.IsStateRestored())
+        else if (IsRouterOrLeader() && child.IsStateRestored() && !child.IsRxOnWhenIdle())
         {
             IgnoreError(SendChildUpdateRequestToChild(child));
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Retry restoring non-sleepy children (scheduling Child Update)
+
+    if (mChildUpdateRestoreRetryTimeout > 0)
+    {
+        mChildUpdateRestoreRetryTimeout--;
+
+        if (mChildUpdateRestoreRetryTimeout == 0)
+        {
+            ScheduleChildUpdateToRestoreNonSleepyChildren();
         }
     }
 
@@ -2177,11 +2245,17 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         ExitNow();
     }
 
-    // Ignore "Child Update Request" from a child that is present in the
-    // child table but it is not yet in valid state. For example, a
-    // child which is being restored (due to parent reset) or is in the
-    // middle of the attach process (in `kStateParentRequest` or
-    // `kStateChildIdRequest`).
+    // If the child is in the restoring state (due to parent reset), we
+    // schedule a "Child Update" request to the child after a short random
+    // delay. We ignore "Child Update Request" if the child is not yet in
+    // a valid state (e.g., it is in the middle of the attach process).
+
+    if (child->IsStateRestoring() && child->IsRxOnWhenIdle())
+    {
+        mDelayedSender.ScheduleChildUpdateRequestToChild(*child,
+                                                         GenerateRandomDelay(kChildUpdateRestoreAfterRxMaxDelay));
+        ExitNow();
+    }
 
     VerifyOrExit(child->IsStateValid());
 
@@ -3122,21 +3196,25 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
     }
     else if (IsChildRloc16(aNeighbor.GetRloc16()))
     {
+        Child &child = static_cast<Child &>(aNeighbor);
+
         OT_ASSERT(mChildTable.Contains(aNeighbor));
+
+        mDelayedSender.RemoveScheduledChildUpdateRequestToChild(child);
 
         if (aNeighbor.IsStateValidOrRestoring())
         {
             mNeighborTable.Signal(NeighborTable::kChildRemoved, aNeighbor);
         }
 
-        Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
+        Get<IndirectSender>().ClearAllMessagesForSleepyChild(child);
 
         if (aNeighbor.IsFullThreadDevice())
         {
             Get<AddressResolver>().RemoveEntriesForRloc16(aNeighbor.GetRloc16());
         }
 
-        mChildTable.RemoveStoredChild(static_cast<Child &>(aNeighbor));
+        mChildTable.RemoveStoredChild(child);
     }
     else if (aNeighbor.IsStateValid())
     {
