@@ -130,6 +130,47 @@ void TestCountMatchingBitsExamples(void)
     printf("TestCountMatchingBitsExamples() passed\n");
 }
 
+void TestDetermineMinBitSize(void)
+{
+    VerifyOrQuit(DetermineMinBitSizeFor(0) == 1);
+    VerifyOrQuit(DetermineMinBitSizeFor(1) == 1);
+
+    VerifyOrQuit(DetermineMinBitSizeFor(2) == 2);
+    VerifyOrQuit(DetermineMinBitSizeFor(3) == 2);
+
+    VerifyOrQuit(DetermineMinBitSizeFor(4) == 3);
+    VerifyOrQuit(DetermineMinBitSizeFor(6) == 3);
+    VerifyOrQuit(DetermineMinBitSizeFor(7) == 3);
+
+    VerifyOrQuit(DetermineMinBitSizeFor(8) == 4);
+    VerifyOrQuit(DetermineMinBitSizeFor(11) == 4);
+    VerifyOrQuit(DetermineMinBitSizeFor(15) == 4);
+
+    VerifyOrQuit(DetermineMinBitSizeFor(16) == 5);
+    VerifyOrQuit(DetermineMinBitSizeFor(30) == 5);
+    VerifyOrQuit(DetermineMinBitSizeFor(32) == 6);
+
+    VerifyOrQuit(DetermineMinBitSizeFor(127) == 7);
+    VerifyOrQuit(DetermineMinBitSizeFor(128) == 8);
+    VerifyOrQuit(DetermineMinBitSizeFor(255) == 8);
+    VerifyOrQuit(DetermineMinBitSizeFor(256) == 9);
+    VerifyOrQuit(DetermineMinBitSizeFor(500) == 9);
+
+    VerifyOrQuit(DetermineMinBitSizeFor(1000) == 10);
+    VerifyOrQuit(DetermineMinBitSizeFor(1023) == 10);
+    VerifyOrQuit(DetermineMinBitSizeFor(1024) == 11);
+    VerifyOrQuit(DetermineMinBitSizeFor(2000) == 11);
+
+    VerifyOrQuit(DetermineMinBitSizeFor(0xffff) == 16);
+    VerifyOrQuit(DetermineMinBitSizeFor(0x10000) == 17);
+
+    VerifyOrQuit(DetermineMinBitSizeFor(0x7fffffff) == 31);
+    VerifyOrQuit(DetermineMinBitSizeFor(0x80000000) == 32);
+    VerifyOrQuit(DetermineMinBitSizeFor(0xffffffff) == 32);
+
+    printf("TestDetermineMinBitSize() passed\n");
+}
+
 } // namespace ot
 
 int main(void)
@@ -137,6 +178,7 @@ int main(void)
     ot::TestCountBitsInMask();
     ot::TestCountMatchingBitsAllCombinations();
     ot::TestCountMatchingBitsExamples();
+    ot::TestDetermineMinBitSize();
 
     printf("All tests passed\n");
     return 0;
