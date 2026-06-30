@@ -237,7 +237,7 @@ exit:
     return error;
 }
 
-otError otPlatCryptoHkdfInit(otCryptoContext *aContext)
+OT_TOOL_WEAK otError otPlatCryptoHkdfInit(otCryptoContext *aContext)
 {
     Error error = kErrorNone;
 

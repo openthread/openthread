@@ -103,6 +103,9 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
 #endif
 #endif
     {SPINEL_PROP_BACKBONE_ROUTER_STATE, SPINEL_STATUS_OK, false},
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    {SPINEL_PROP_TREL_STATE, SPINEL_STATUS_OK, false},
+#endif
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
