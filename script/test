@@ -411,6 +411,15 @@ do_build_otbr_docker()
             third_party/openthread/repo
         rm -rf .git
 
+        # Install radvd 2.20
+        if grep -q "ENTRYPOINT" etc/docker/test/Dockerfile; then
+            sed -i '/ENTRYPOINT/i RUN third_party/openthread/repo/script/install_radvd' etc/docker/test/Dockerfile
+        elif grep -q "CMD" etc/docker/test/Dockerfile; then
+            sed -i '/CMD/i RUN third_party/openthread/repo/script/install_radvd' etc/docker/test/Dockerfile
+        else
+            echo "RUN third_party/openthread/repo/script/install_radvd" >>etc/docker/test/Dockerfile
+        fi
+
         docker build -t "${otbr_docker_image}" -f etc/docker/test/Dockerfile . \
             "${docker_build_args[@]}" \
             --build-arg OTBR_OPTIONS="${otbr_options[*]}"

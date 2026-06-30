@@ -4229,6 +4229,28 @@ EOF
 """)
         self._start_radvd_and_verify()
 
+    def start_pref64_radvd_service(self, nat64_prefix):
+        self.bash(f"""cat >/etc/radvd.conf <<EOF
+interface eth0
+{{
+    AdvSendAdvert on;
+
+    AdvReachableTime 20;
+    AdvRetransTimer 20;
+    AdvDefaultLifetime 180;
+    MinRtrAdvInterval 120;
+    MaxRtrAdvInterval 180;
+    AdvDefaultPreference low;
+
+    nat64prefix {nat64_prefix}
+    {{
+        AdvValidLifetime 1800;
+    }};
+}};
+EOF
+""")
+        self._start_radvd_and_verify()
+
     def stop_radvd_service(self):
         self.bash('service radvd stop')
 
