@@ -40,6 +40,7 @@
 #include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
+#include "common/frame_builder.hpp"
 #include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "mac/mac_types.hpp"
@@ -60,6 +61,8 @@ OT_TOOL_PACKED_BEGIN
 class HeaderIe
 {
 public:
+    static constexpr uint8_t kMaxLength = 127; ///< Maximum Header IE length in bytes.
+
     /**
      * Returns the IE Element ID.
      *
@@ -114,6 +117,41 @@ public:
     {
         return (aIe.GetId() == IeType::kId) && static_cast<const IeType *>(&aIe)->IsValid();
     }
+
+    /**
+     * Represents the opaque type for a bookmark used by `StartIe()/EndIe()`.
+     */
+    typedef uint16_t Bookmark;
+
+    /**
+     * Starts appending a (variable-length) `HeaderIe` in a `FrameBuilder`.
+     *
+     * On success, this method appends a `HeaderIe` descriptor (with length initialized to zero) to @p aBuilder and
+     * saves the current byte offset as @p aBookmark. The caller can then append the IE content bytes to @p aBuilder,
+     * and finally call `EndIe()` to update the IE length field automatically.
+     *
+     * @param[in,out] aBuilder   The `FrameBuilder` instance to append to.
+     * @param[in]     aId        The IE Element ID.
+     * @param[out]    aBookmark  A reference to a `Bookmark` to save the start offset.
+     *
+     * @retval kErrorNone    Successfully started the `HeaderIe`.
+     * @retval kErrorNoBufs  Insufficient space in @p aBuilder to append the `HeaderIe` header.
+     */
+    static Error StartIe(FrameBuilder &aBuilder, uint8_t aId, Bookmark &aBookmark);
+
+    /**
+     * Finishes appending a `HeaderIe` in a `FrameBuilder`.
+     *
+     * This method updates the length field of the `HeaderIe` previously started using `StartIe()`. It determines the
+     * IE length based on the number of bytes appended to @p aBuilder since `StartIe()` was called.
+     *
+     * @param[in,out] aBuilder   The `FrameBuilder` instance.
+     * @param[in]     aBookmark  The `Bookmark` used when calling `StartIe()`.
+     *
+     * @retval kErrorNone         Successfully finalized the `HeaderIe` length.
+     * @retval kErrorInvalidArgs  The @p aBookmark is invalid or the appended IE length exceeds `kMaxLength`.
+     */
+    static Error EndIe(FrameBuilder &aBuilder, const Bookmark &aBookmark);
 
 protected:
     void           Init(uint8_t aId, uint8_t aLen);
