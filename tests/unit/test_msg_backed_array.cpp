@@ -198,8 +198,49 @@ void TestMsgBackedArray(void)
 
     VerifyOrQuit(array.Push(entry4) == kErrorNoBufs);
 
-    // Clearing array
+    // Test RemoveAt
+    // Array: [entry0, entry4, entry2, entry1]
+    SuccessOrQuit(array.RemoveAt(1)); // Removes entry4, replaced by entry1
+    VerifyOrQuit(array.GetLength() == 3);
+    SuccessOrQuit(array.ReadAt(0, entry));
+    VerifyOrQuit(entry == entry0);
+    SuccessOrQuit(array.ReadAt(1, entry));
+    VerifyOrQuit(entry == entry1);
+    SuccessOrQuit(array.ReadAt(2, entry));
+    VerifyOrQuit(entry == entry2);
+    VerifyOrQuit(array.ReadAt(3, entry) == kErrorNotFound);
 
+    // Test Remove with IndexedEntry
+    // Array: [entry0, entry1, entry2]
+    SuccessOrQuit(array.FindMatching(entry, true)); // Finds entry2 at index 2
+    VerifyOrQuit(entry.GetIndex() == 2);
+    SuccessOrQuit(array.Remove(entry)); // Removes entry2 (last element, no replacement)
+    VerifyOrQuit(entry.IsIndexInvalid());
+    VerifyOrQuit(array.GetLength() == 2);
+    SuccessOrQuit(array.ReadAt(0, entry));
+    VerifyOrQuit(entry == entry0);
+    SuccessOrQuit(array.ReadAt(1, entry));
+    VerifyOrQuit(entry == entry1);
+    VerifyOrQuit(array.ReadAt(2, entry) == kErrorNotFound);
+
+    // Test RemoveMatching
+    // Array: [entry0, entry1]
+    SuccessOrQuit(array.Push(entry2));
+    SuccessOrQuit(array.Push(entry3));
+    // Array: [entry0, entry1, entry2, entry3]
+    VerifyOrQuit(array.GetLength() == 4);
+
+    SuccessOrQuit(array.RemoveMatching("Second Entry")); // Removes entry1, replaced by entry3
+    VerifyOrQuit(array.GetLength() == 3);
+    SuccessOrQuit(array.ReadAt(0, entry));
+    VerifyOrQuit(entry == entry0);
+    SuccessOrQuit(array.ReadAt(1, entry));
+    VerifyOrQuit(entry == entry3);
+    SuccessOrQuit(array.ReadAt(2, entry));
+    VerifyOrQuit(entry == entry2);
+    VerifyOrQuit(array.ReadAt(3, entry) == kErrorNotFound);
+
+    // Clearing array
     array.Clear();
 
     VerifyOrQuit(array.GetLength() == 0);
