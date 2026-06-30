@@ -967,22 +967,22 @@ class TxFrame : public Frame
 {
 public:
     /**
-     * Represents header information.
+     * Represents the information to use to build the frame.
      */
-    struct Info : public Clearable<Info>
+    struct BuildInfo : public Clearable<BuildInfo>
     {
         /**
-         * Initializes the `Info` by clearing all its fields (setting all bytes to zero).
+         * Initializes the `BuildInfo` by clearing all its fields (setting all bytes to zero).
          */
-        Info(void) { Clear(); }
+        BuildInfo(void) { Clear(); }
 
         /**
-         * Prepares MAC headers based on `Info` fields in a given `TxFrame`.
+         * Prepares MAC headers based on `BuildInfo` fields in a given `TxFrame`.
          *
-         * This method uses the `Info` structure to construct the MAC address and security headers in @p aTxFrame.
+         * This method uses the `BuildInfo` structure to construct the MAC address and security headers in @p aTxFrame.
          * It determines the Frame Control Field (FCF), including setting the appropriate frame type, security level,
          * and addressing mode flags. It populates the source and destination addresses and PAN IDs within the MAC
-         * header based on the information provided in the `Info` structure.
+         * header based on the information provided in the `BuildInfo` structure.
          *
          * It sets the Ack Request bit in the FCF if the following criteria are met:
          *   - A destination address is present

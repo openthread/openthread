@@ -49,7 +49,7 @@
 namespace ot {
 namespace Mac {
 
-void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
+void TxFrame::BuildInfo::PrepareHeadersIn(TxFrame &aTxFrame) const
 {
     uint16_t     fcf;
     FrameBuilder builder;
@@ -1384,12 +1384,12 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
 {
-    Error   error = kErrorNone;
-    Info    frameInfo;
-    Address address;
-    PanId   panId;
-    uint8_t securityLevel = kSecurityNone;
-    uint8_t keyIdMode     = kKeyIdMode0;
+    Error     error = kErrorNone;
+    BuildInfo buildInfo;
+    Address   address;
+    PanId     panId;
+    uint8_t   securityLevel = kSecurityNone;
+    uint8_t   keyIdMode     = kKeyIdMode0;
 
     // Validate the received frame.
 
@@ -1406,8 +1406,8 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
     // Check `aRxFrame` has a valid source, which is then used as
     // ack frames destination.
 
-    SuccessOrExit(error = aRxFrame.GetSrcAddr(frameInfo.mAddrs.mDestination));
-    VerifyOrExit(!frameInfo.mAddrs.mDestination.IsNone(), error = kErrorParse);
+    SuccessOrExit(error = aRxFrame.GetSrcAddr(buildInfo.mAddrs.mDestination));
+    VerifyOrExit(!buildInfo.mAddrs.mDestination.IsNone(), error = kErrorParse);
 
     if (aRxFrame.GetSecurityEnabled())
     {
@@ -1420,12 +1420,12 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
     if (aRxFrame.IsSrcPanIdPresent())
     {
         SuccessOrExit(error = aRxFrame.GetSrcPanId(panId));
-        frameInfo.mPanIds.SetDestination(panId);
+        buildInfo.mPanIds.SetDestination(panId);
     }
     else if (aRxFrame.IsDstPanIdPresent())
     {
         SuccessOrExit(error = aRxFrame.GetDstPanId(panId));
-        frameInfo.mPanIds.SetDestination(panId);
+        buildInfo.mPanIds.SetDestination(panId);
     }
 
     // Prepare the ack frame
@@ -1433,12 +1433,12 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
     mChannel = aRxFrame.mChannel;
     ClearAllBytes(mInfo.mTxInfo);
 
-    frameInfo.mType          = kTypeAck;
-    frameInfo.mVersion       = kVersion2015;
-    frameInfo.mSecurityLevel = static_cast<SecurityLevel>(securityLevel);
-    frameInfo.mKeyIdMode     = static_cast<KeyIdMode>(keyIdMode);
+    buildInfo.mType          = kTypeAck;
+    buildInfo.mVersion       = kVersion2015;
+    buildInfo.mSecurityLevel = static_cast<SecurityLevel>(securityLevel);
+    buildInfo.mKeyIdMode     = static_cast<KeyIdMode>(keyIdMode);
 
-    frameInfo.PrepareHeadersIn(*this);
+    buildInfo.PrepareHeadersIn(*this);
 
     SetFramePending(aIsFramePending);
     SetIePresent(aIeLength != 0);

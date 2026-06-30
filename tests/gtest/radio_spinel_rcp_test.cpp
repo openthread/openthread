@@ -66,17 +66,17 @@ TEST(RadioSpinelTransmit, shouldPassDesiredTxPowerToRadioPlatform)
     txFrame.mPsdu = frameBuffer;
 
     {
-        Mac::TxFrame::Info frameInfo;
+        Mac::TxFrame::BuildInfo buildInfo;
 
-        frameInfo.mType    = Mac::Frame::kTypeData;
-        frameInfo.mVersion = Mac::Frame::kVersion2006;
-        frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
-        frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
-        frameInfo.mPanIds.SetSource(kSrcPanId);
-        frameInfo.mPanIds.SetDestination(kDstPanId);
-        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(kSrcAddr);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(kSrcPanId);
+        buildInfo.mPanIds.SetDestination(kDstPanId);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        frameInfo.PrepareHeadersIn(txFrame);
+        buildInfo.PrepareHeadersIn(txFrame);
     }
 
     txFrame.mInfo.mTxInfo.mTxPower = kTxPower;
@@ -110,17 +110,17 @@ TEST(RadioSpinelTransmit, shouldCauseSwitchingToRxChannelAfterTxDone)
     txFrame.mPsdu = frameBuffer;
 
     {
-        Mac::TxFrame::Info frameInfo;
+        Mac::TxFrame::BuildInfo buildInfo;
 
-        frameInfo.mType    = Mac::Frame::kTypeData;
-        frameInfo.mVersion = Mac::Frame::kVersion2006;
-        frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
-        frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
-        frameInfo.mPanIds.SetSource(kSrcPanId);
-        frameInfo.mPanIds.SetDestination(kDstPanId);
-        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(kSrcAddr);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(kSrcPanId);
+        buildInfo.mPanIds.SetDestination(kDstPanId);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        frameInfo.PrepareHeadersIn(txFrame);
+        buildInfo.PrepareHeadersIn(txFrame);
     }
 
     txFrame.mInfo.mTxInfo.mTxPower              = kTxPower;
@@ -156,17 +156,17 @@ TEST(RadioSpinelTransmit, shouldSkipCsmaCaWhenDisabled)
     txFrame.mPsdu = frameBuffer;
 
     {
-        Mac::TxFrame::Info frameInfo;
+        Mac::TxFrame::BuildInfo buildInfo;
 
-        frameInfo.mType    = Mac::Frame::kTypeData;
-        frameInfo.mVersion = Mac::Frame::kVersion2006;
-        frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
-        frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
-        frameInfo.mPanIds.SetSource(kSrcPanId);
-        frameInfo.mPanIds.SetDestination(kDstPanId);
-        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(kSrcAddr);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(kSrcPanId);
+        buildInfo.mPanIds.SetDestination(kDstPanId);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        frameInfo.PrepareHeadersIn(txFrame);
+        buildInfo.PrepareHeadersIn(txFrame);
     }
 
     txFrame.mInfo.mTxInfo.mCsmaCaEnabled = false;
@@ -212,17 +212,17 @@ TEST(RadioSpinelTransmit, shouldPerformCsmaCaWhenEnabled)
     txFrame.mPsdu = frameBuffer;
 
     {
-        Mac::TxFrame::Info frameInfo;
+        Mac::TxFrame::BuildInfo buildInfo;
 
-        frameInfo.mType    = Mac::Frame::kTypeData;
-        frameInfo.mVersion = Mac::Frame::kVersion2006;
-        frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
-        frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
-        frameInfo.mPanIds.SetSource(kSrcPanId);
-        frameInfo.mPanIds.SetDestination(kDstPanId);
-        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(kSrcAddr);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(kSrcPanId);
+        buildInfo.mPanIds.SetDestination(kDstPanId);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        frameInfo.PrepareHeadersIn(txFrame);
+        buildInfo.PrepareHeadersIn(txFrame);
     }
 
     txFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
@@ -262,17 +262,17 @@ TEST(RadioSpinelTransmit, shouldNotCauseSwitchingToRxAfterTxDoneIfNotRxOnWhenIdl
     txFrame.mPsdu = frameBuffer;
 
     {
-        Mac::TxFrame::Info frameInfo;
+        Mac::TxFrame::BuildInfo buildInfo;
 
-        frameInfo.mType    = Mac::Frame::kTypeData;
-        frameInfo.mVersion = Mac::Frame::kVersion2006;
-        frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
-        frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
-        frameInfo.mPanIds.SetSource(kSrcPanId);
-        frameInfo.mPanIds.SetDestination(kDstPanId);
-        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(kSrcAddr);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(kSrcPanId);
+        buildInfo.mPanIds.SetDestination(kDstPanId);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        frameInfo.PrepareHeadersIn(txFrame);
+        buildInfo.PrepareHeadersIn(txFrame);
     }
 
     txFrame.mInfo.mTxInfo.mTxPower              = kTxPower;
@@ -338,17 +338,17 @@ TEST(RadioSpinelTransmit, shouldSkipCsmaBackoffWhenCsmaCaIsEnabledAndMaxBackoffs
     txFrame.mPsdu = frameBuffer;
 
     {
-        Mac::TxFrame::Info frameInfo;
+        Mac::TxFrame::BuildInfo buildInfo;
 
-        frameInfo.mType    = Mac::Frame::kTypeData;
-        frameInfo.mVersion = Mac::Frame::kVersion2006;
-        frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
-        frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
-        frameInfo.mPanIds.SetSource(kSrcPanId);
-        frameInfo.mPanIds.SetDestination(kDstPanId);
-        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(kSrcAddr);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(kSrcPanId);
+        buildInfo.mPanIds.SetDestination(kDstPanId);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        frameInfo.PrepareHeadersIn(txFrame);
+        buildInfo.PrepareHeadersIn(txFrame);
     }
 
     txFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
