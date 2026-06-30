@@ -290,43 +290,43 @@ void TestMacHeader(void)
         uint8_t psdu[OT_RADIO_FRAME_MAX_SIZE];
         uint8_t offset;
 
-        Mac::TxFrame       frame;
-        Mac::TxFrame::Info frameInfo;
-        Mac::Address       address;
-        Mac::PanId         panId;
+        Mac::TxFrame            frame;
+        Mac::TxFrame::BuildInfo buildInfo;
+        Mac::Address            address;
+        Mac::PanId              panId;
 
         frame.mPsdu      = psdu;
         frame.mLength    = 0;
         frame.mRadioType = 0;
 
-        VerifyOrQuit(frameInfo.mAddrs.mSource.IsNone());
-        VerifyOrQuit(frameInfo.mAddrs.mDestination.IsNone());
-        VerifyOrQuit(!frameInfo.mPanIds.IsSourcePresent());
-        VerifyOrQuit(!frameInfo.mPanIds.IsDestinationPresent());
+        VerifyOrQuit(buildInfo.mAddrs.mSource.IsNone());
+        VerifyOrQuit(buildInfo.mAddrs.mDestination.IsNone());
+        VerifyOrQuit(!buildInfo.mPanIds.IsSourcePresent());
+        VerifyOrQuit(!buildInfo.mPanIds.IsDestinationPresent());
 
         switch (testCase.mSrcAddrType)
         {
         case kNoneAddr:
-            frameInfo.mAddrs.mSource.SetNone();
+            buildInfo.mAddrs.mSource.SetNone();
             break;
         case kShrtAddr:
-            frameInfo.mAddrs.mSource.SetShort(kShortAddr1);
+            buildInfo.mAddrs.mSource.SetShort(kShortAddr1);
             break;
         case kExtdAddr:
-            frameInfo.mAddrs.mSource.SetExtended(extAddr1);
+            buildInfo.mAddrs.mSource.SetExtended(extAddr1);
             break;
         }
 
         switch (testCase.mDstAddrType)
         {
         case kNoneAddr:
-            frameInfo.mAddrs.mDestination.SetNone();
+            buildInfo.mAddrs.mDestination.SetNone();
             break;
         case kShrtAddr:
-            frameInfo.mAddrs.mDestination.SetShort(kShortAddr2);
+            buildInfo.mAddrs.mDestination.SetShort(kShortAddr2);
             break;
         case kExtdAddr:
-            frameInfo.mAddrs.mDestination.SetExtended(extAddr2);
+            buildInfo.mAddrs.mDestination.SetExtended(extAddr2);
             break;
         }
 
@@ -335,10 +335,10 @@ void TestMacHeader(void)
         case kNoPanId:
             break;
         case kUsePanId1:
-            frameInfo.mPanIds.SetSource(kPanId1);
+            buildInfo.mPanIds.SetSource(kPanId1);
             break;
         case kUsePanId2:
-            frameInfo.mPanIds.SetSource(kPanId2);
+            buildInfo.mPanIds.SetSource(kPanId2);
             break;
         }
 
@@ -347,20 +347,20 @@ void TestMacHeader(void)
         case kNoPanId:
             break;
         case kUsePanId1:
-            frameInfo.mPanIds.SetDestination(kPanId1);
+            buildInfo.mPanIds.SetDestination(kPanId1);
             break;
         case kUsePanId2:
-            frameInfo.mPanIds.SetDestination(kPanId2);
+            buildInfo.mPanIds.SetDestination(kPanId2);
             break;
         }
 
-        frameInfo.mType             = Mac::Frame::kTypeData;
-        frameInfo.mVersion          = testCase.mVersion;
-        frameInfo.mSecurityLevel    = testCase.mSecurity;
-        frameInfo.mKeyIdMode        = testCase.mKeyIdMode;
-        frameInfo.mSuppressSequence = testCase.mSuppressSequence;
+        buildInfo.mType             = Mac::Frame::kTypeData;
+        buildInfo.mVersion          = testCase.mVersion;
+        buildInfo.mSecurityLevel    = testCase.mSecurity;
+        buildInfo.mKeyIdMode        = testCase.mKeyIdMode;
+        buildInfo.mSuppressSequence = testCase.mSuppressSequence;
 
-        frameInfo.PrepareHeadersIn(frame);
+        buildInfo.PrepareHeadersIn(frame);
 
         VerifyOrQuit(frame.GetHeaderLength() == testCase.mHeaderLength);
         VerifyOrQuit(frame.GetFooterLength() == testCase.mFooterLength);
@@ -376,25 +376,25 @@ void TestMacHeader(void)
 
         VerifyOrQuit(frame.IsSrcAddrPresent() == (testCase.mSrcAddrType != kNoneAddr));
         SuccessOrQuit(frame.GetSrcAddr(address));
-        VerifyOrQuit(CompareAddresses(address, frameInfo.mAddrs.mSource));
+        VerifyOrQuit(CompareAddresses(address, buildInfo.mAddrs.mSource));
         VerifyOrQuit(frame.IsDstAddrPresent() == (testCase.mDstAddrType != kNoneAddr));
         SuccessOrQuit(frame.GetDstAddr(address));
-        VerifyOrQuit(CompareAddresses(address, frameInfo.mAddrs.mDestination));
+        VerifyOrQuit(CompareAddresses(address, buildInfo.mAddrs.mDestination));
 
         VerifyOrQuit(frame.IsDstPanIdPresent() == (testCase.mDstPanIdMode != kNoPanId));
 
         if (frame.IsDstPanIdPresent())
         {
             SuccessOrQuit(frame.GetDstPanId(panId));
-            VerifyOrQuit(panId == frameInfo.mPanIds.GetDestination());
-            VerifyOrQuit(frameInfo.mPanIds.IsDestinationPresent());
+            VerifyOrQuit(panId == buildInfo.mPanIds.GetDestination());
+            VerifyOrQuit(buildInfo.mPanIds.IsDestinationPresent());
         }
 
         if (frame.IsSrcPanIdPresent())
         {
             SuccessOrQuit(frame.GetSrcPanId(panId));
-            VerifyOrQuit(panId == frameInfo.mPanIds.GetSource());
-            VerifyOrQuit(frameInfo.mPanIds.IsSourcePresent());
+            VerifyOrQuit(panId == buildInfo.mPanIds.GetSource());
+            VerifyOrQuit(buildInfo.mPanIds.IsSourcePresent());
         }
 
         if (frame.GetSecurityEnabled())

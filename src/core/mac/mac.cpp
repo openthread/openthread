@@ -705,18 +705,18 @@ void Mac::FinishOperation(void)
 
 TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
 {
-    TxFrame      &frame = aTxFrames.GetBroadcastTxFrame();
-    TxFrame::Info frameInfo;
+    TxFrame           &frame = aTxFrames.GetBroadcastTxFrame();
+    TxFrame::BuildInfo buildInfo;
 
-    frameInfo.mAddrs.mSource.SetNone();
-    frameInfo.mAddrs.mDestination.SetShort(kShortAddrBroadcast);
-    frameInfo.mPanIds.SetDestination(kShortAddrBroadcast);
+    buildInfo.mAddrs.mSource.SetNone();
+    buildInfo.mAddrs.mDestination.SetShort(kShortAddrBroadcast);
+    buildInfo.mPanIds.SetDestination(kShortAddrBroadcast);
 
-    frameInfo.mType      = Frame::kTypeMacCmd;
-    frameInfo.mCommandId = Frame::kMacCmdBeaconRequest;
-    frameInfo.mVersion   = Frame::kVersion2003;
+    buildInfo.mType      = Frame::kTypeMacCmd;
+    buildInfo.mCommandId = Frame::kMacCmdBeaconRequest;
+    buildInfo.mVersion   = Frame::kVersion2003;
 
-    frameInfo.PrepareHeadersIn(frame);
+    buildInfo.PrepareHeadersIn(frame);
 
     LogInfo("Sending Beacon Request");
 
@@ -725,9 +725,9 @@ TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
 
 TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 {
-    TxFrame      *frame;
-    TxFrame::Info frameInfo;
-    Beacon       *beacon = nullptr;
+    TxFrame           *frame;
+    TxFrame::BuildInfo buildInfo;
+    Beacon            *beacon = nullptr;
 #if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     uint8_t        beaconLength;
     BeaconPayload *beaconPayload = nullptr;
@@ -741,14 +741,14 @@ TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
     frame = &aTxFrames.GetBroadcastTxFrame();
 #endif
 
-    frameInfo.mAddrs.mSource.SetExtended(GetExtAddress());
-    frameInfo.mPanIds.SetSource(mPanId);
-    frameInfo.mAddrs.mDestination.SetNone();
+    buildInfo.mAddrs.mSource.SetExtended(GetExtAddress());
+    buildInfo.mPanIds.SetSource(mPanId);
+    buildInfo.mAddrs.mDestination.SetNone();
 
-    frameInfo.mType    = Frame::kTypeBeacon;
-    frameInfo.mVersion = Frame::kVersion2003;
+    buildInfo.mType    = Frame::kTypeBeacon;
+    buildInfo.mVersion = Frame::kVersion2003;
 
-    frameInfo.PrepareHeadersIn(*frame);
+    buildInfo.PrepareHeadersIn(*frame);
 
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
