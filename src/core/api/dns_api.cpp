@@ -49,7 +49,7 @@ otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aE
 }
 
 otError otDnsEncodeTxtData(const otDnsTxtEntry *aTxtEntries,
-                           uint8_t              aNumTxtEntries,
+                           uint16_t             aNumTxtEntries,
                            uint8_t             *aTxtData,
                            uint16_t            *aTxtDataLength)
 {
