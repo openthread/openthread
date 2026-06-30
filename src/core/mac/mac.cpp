@@ -245,6 +245,11 @@ void Mac::PerformActiveScan(void)
     }
     else
     {
+        if (!mRxOnWhenIdle && !mPromiscuous)
+        {
+            mLinks.Sleep();
+        }
+
         mLinks.SetRxOnWhenIdle(mRxOnWhenIdle);
         mLinks.SetPanId(mPanId);
         FinishOperation();
