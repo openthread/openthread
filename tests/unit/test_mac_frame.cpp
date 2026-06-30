@@ -470,6 +470,88 @@ void VerifyChannelMaskContent(const Mac::ChannelMask &aMask, uint8_t *aChannels,
     VerifyOrQuit(aLength == aMask.GetNumberOfChannels());
 }
 
+void TestMacHeaderIeStartEnd(void)
+{
+    using HeaderIe = Mac::HeaderIe;
+
+    static const uint8_t kIeId1     = 0x0a;
+    static const uint8_t kIeId2     = 0x0b;
+    static const uint8_t kIeId3     = 0x0c;
+    static const uint8_t kContent[] = {0x11, 0x22, 0x33, 0x44, 0x55};
+
+    uint8_t            buffer[256];
+    FrameBuilder       builder;
+    uint16_t           offset;
+    HeaderIe::Bookmark bookmark;
+    HeaderIe          *ie;
+    uint8_t            largeContent[128];
+
+    printf("TestMacHeaderIeStartEnd\n");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Normal use: Append an IE (5 bytes content)
+
+    builder.Init(buffer, sizeof(buffer));
+    SuccessOrQuit(HeaderIe::StartIe(builder, kIeId1, bookmark));
+    VerifyOrQuit(builder.GetLength() == sizeof(HeaderIe));
+
+    SuccessOrQuit(builder.AppendBytes(kContent, sizeof(kContent)));
+    SuccessOrQuit(HeaderIe::EndIe(builder, bookmark));
+
+    VerifyOrQuit(builder.GetLength() == sizeof(HeaderIe) + sizeof(kContent));
+
+    ie = reinterpret_cast<HeaderIe *>(buffer);
+    VerifyOrQuit(ie->GetId() == kIeId1);
+    VerifyOrQuit(ie->GetLength() == sizeof(kContent));
+    VerifyOrQuit(ie->GetSize() == sizeof(HeaderIe) + sizeof(kContent));
+    VerifyOrQuit(memcmp(ie->GetContent(), kContent, sizeof(kContent)) == 0);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Normal use: Append a new IE with empty payload (0-length IE)
+
+    offset = builder.GetLength();
+    SuccessOrQuit(HeaderIe::StartIe(builder, kIeId2, bookmark));
+    SuccessOrQuit(HeaderIe::EndIe(builder, bookmark));
+
+    // First IE should remain untouched
+    ie = reinterpret_cast<HeaderIe *>(buffer);
+    VerifyOrQuit(ie->GetId() == kIeId1);
+    VerifyOrQuit(ie->GetLength() == sizeof(kContent));
+    VerifyOrQuit(ie->GetSize() == sizeof(HeaderIe) + sizeof(kContent));
+    VerifyOrQuit(memcmp(ie->GetContent(), kContent, sizeof(kContent)) == 0);
+
+    // Second IE with empty content
+    ie = builder.Read<HeaderIe>(offset);
+    VerifyOrQuit(ie->GetId() == kIeId2);
+    VerifyOrQuit(ie->GetLength() == 0);
+    VerifyOrQuit(ie->GetSize() == sizeof(HeaderIe));
+
+    VerifyOrQuit(builder.GetLength() == 2 * sizeof(HeaderIe) + sizeof(kContent));
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Maximum allowed IE length (127 bytes)
+
+    memset(largeContent, 0xaa, sizeof(largeContent));
+
+    builder.Init(buffer, sizeof(buffer));
+    SuccessOrQuit(HeaderIe::StartIe(builder, kIeId3, bookmark));
+    SuccessOrQuit(builder.AppendBytes(largeContent, HeaderIe::kMaxLength));
+    SuccessOrQuit(HeaderIe::EndIe(builder, bookmark));
+
+    ie = builder.Read<HeaderIe>(0);
+    VerifyOrQuit(ie->GetId() == kIeId3);
+    VerifyOrQuit(ie->GetLength() == HeaderIe::kMaxLength);
+    VerifyOrQuit(builder.GetLength() == ie->GetSize());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Exceeding maximum length (128 bytes > 127)
+
+    builder.Init(buffer, sizeof(buffer));
+    SuccessOrQuit(HeaderIe::StartIe(builder, kIeId3, bookmark));
+    SuccessOrQuit(builder.AppendBytes(largeContent, HeaderIe::kMaxLength + 1));
+    VerifyOrQuit(HeaderIe::EndIe(builder, bookmark) == kErrorInvalidArgs);
+}
+
 void TestMacChannelMask(void)
 {
     uint8_t allChannels[] = {11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
@@ -788,6 +870,7 @@ int main(void)
 {
     ot::TestMacAddress();
     ot::TestMacHeader();
+    ot::TestMacHeaderIeStartEnd();
     ot::TestMacChannelMask();
     ot::TestMacFrameApi();
     ot::TestMacFrameAckGeneration();
