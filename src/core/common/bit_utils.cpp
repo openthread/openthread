@@ -79,4 +79,17 @@ exit:
     return matchedLen;
 }
 
+uint8_t DetermineMinBitSizeFor(uint32_t aValue)
+{
+    uint8_t bitSize = 0;
+
+    do
+    {
+        bitSize++;
+        aValue >>= 1;
+    } while (aValue != 0);
+
+    return bitSize;
+}
+
 } // namespace ot
