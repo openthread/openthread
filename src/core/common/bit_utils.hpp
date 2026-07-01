@@ -114,6 +114,23 @@ uint16_t CountMatchingBits(const uint8_t *aFirst, const uint8_t *aSecond, uint16
 uint8_t DetermineMinBitSizeFor(uint32_t aValue);
 
 /**
+ * Generates an unsigned integer bit-mask with a specified number of lowest bits set to 1.
+ *
+ * @tparam UintType    The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in] aBitSize  The number of lowest bits to set to 1.
+ *
+ * @returns The generated bit-mask.
+ */
+template <typename UintType> constexpr inline UintType MaskForBitSize(uint8_t aBitSize)
+{
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
+
+    return (aBitSize >= BitSizeOf(UintType)) ? NumericLimits<UintType>::kMax
+                                             : static_cast<UintType>((static_cast<UintType>(1) << aBitSize) - 1);
+}
+
+/**
  * Sets the specified bit in a given integer to 1.
  *
  * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
