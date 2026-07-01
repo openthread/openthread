@@ -1668,7 +1668,7 @@ Error Headers::DecompressFrom(const FrameData &aFrameData, const Mac::Addresses 
     case kProtoUdp:
         if (nextHeaderCompressed)
         {
-            SuccessOrExit(error = aInstance.Get<Lowpan::Lowpan>().DecompressUdpHeader(mHeader.mUdp, frameData));
+            SuccessOrExit(error = Lowpan::Lowpan::DecompressUdpHeader(mHeader.mUdp, frameData));
         }
         else
         {

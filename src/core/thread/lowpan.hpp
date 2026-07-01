@@ -174,16 +174,15 @@ public:
     /**
      * Compresses an IPv6 header.
      *
-     * @param[in]   aMessage       A reference to the IPv6 message.
-     * @param[in]   aMacAddrs      The MAC source and destination addresses.
-     * @param[in]   aFrameBuilder  The `FrameBuilder` to use to append the compressed headers.
+     * @param[in]     aMessage       A reference to the IPv6 message.
+     * @param[in]     aMacAddrs      The MAC source and destination addresses.
+     * @param[in,out] aFrameBuilder  The `FrameBuilder` to use to append the compressed headers.
      *
-     * @returns The size of the compressed header in bytes.
+     * @retval kErrorNone     Successfully compressed the IPv6 header and appended to @p aFrameBuilder.
+     * @retval kErrorParse    Failed to compress due to invalid header or exceeding recursion limit.
+     * @retval kErrorNoBufs   Insufficient buffer space in @p aFrameBuilder.
      */
-    Error Compress(Message              &aMessage,
-                   const Mac::Addresses &aMacAddrs,
-                   FrameBuilder         &aFrameBuilder,
-                   uint8_t               aRecursionDepth = 0);
+    Error Compress(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder);
 
     /**
      * Decompresses a LOWPAN_IPHC header.
@@ -202,8 +201,7 @@ public:
     Error Decompress(Message              &aMessage,
                      const Mac::Addresses &aMacAddrs,
                      FrameData            &aFrameData,
-                     uint16_t              aDatagramLength,
-                     uint8_t               aRecursionDepth = 0);
+                     uint16_t              aDatagramLength);
 
     /**
      * Decompresses a LOWPAN_IPHC header.
@@ -234,7 +232,7 @@ public:
      * @retval kErrorNone    The header was decompressed successfully. @p aUdpHeader and @p aFrameData are updated.
      * @retval kErrorParse   Failed to parse the lowpan header.
      */
-    Error DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, FrameData &aFrameData);
+    static Error DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, FrameData &aFrameData);
 
     /**
      * Decompresses the IPv6 ECN field in a LOWPAN_IPHC header.
@@ -244,7 +242,7 @@ public:
      *
      * @returns The decompressed ECN field. If the IPHC header is not valid `kEcnNotCapable` is returned.
      */
-    Ip6::Ecn DecompressEcn(const Message &aMessage, uint16_t aOffset) const;
+    static Ip6::Ecn DecompressEcn(const Message &aMessage, uint16_t aOffset);
 
     /**
      * Updates the compressed ECN field in a LOWPAN_IPHC header to `kEcnMarked`.
@@ -255,10 +253,10 @@ public:
      * @param[in,out] aMessage  The message containing the IPHC header and to update.
      * @param[in]     aOffset   The offset in @p aMessage to start of IPHC header.
      */
-    void MarkCompressedEcn(Message &aMessage, uint16_t aOffset);
+    static void MarkCompressedEcn(Message &aMessage, uint16_t aOffset);
 
 private:
-    static constexpr uint8_t kMaxRecursionDepth = 4;
+    static constexpr uint8_t kMaxRecursionDepth = 5;
 
     static constexpr uint16_t kHcDispatch     = 3 << 13;
     static constexpr uint16_t kHcDispatchMask = 7 << 13;
@@ -310,31 +308,79 @@ private:
     static constexpr uint8_t kUdpChecksum = 1 << 2;
     static constexpr uint8_t kUdpPortMask = 3 << 0;
 
-    void  FindContextForId(uint8_t aContextId, Context &aContext) const;
-    void  FindContextToCompressAddress(const Ip6::Address &aIp6Address, Context &aContext) const;
-    Error Compress(Message              &aMessage,
-                   const Mac::Addresses &aMacAddrs,
-                   FrameBuilder         &aFrameBuilder,
-                   uint8_t              &aHeaderDepth,
-                   uint8_t               aRecursionDepth);
+    class Compressor : public InstanceLocator, private NonCopyable
+    {
+    public:
+        Compressor(Instance &aInstance, Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder)
+            : InstanceLocator(aInstance)
+            , mMessage(aMessage)
+            , mMacAddrs(aMacAddrs)
+            , mFrameBuilder(aFrameBuilder)
+            , mRecursionDepth(0)
+        {
+        }
 
-    Error CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBuilder, uint8_t &aNextHeader);
-    Error CompressSourceIid(const Mac::Address &aMacAddr,
-                            const Ip6::Address &aIpAddr,
-                            const Context      &aContext,
-                            uint16_t           &aHcCtl,
-                            FrameBuilder       &aFrameBuilder);
-    Error CompressDestinationIid(const Mac::Address &aMacAddr,
-                                 const Ip6::Address &aIpAddr,
-                                 const Context      &aContext,
-                                 uint16_t           &aHcCtl,
-                                 FrameBuilder       &aFrameBuilder);
-    Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, FrameBuilder &aFrameBuilder);
-    Error CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder);
+        Error Compress(void);
 
-    Error DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData);
-    Error DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint16_t aDatagramLength);
-    Error DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
+    private:
+        void  FindContextToCompressAddress(const Ip6::Address &aIp6Address, Context &aContext) const;
+        Error Compress(uint8_t &aHeaderDepth);
+        Error CompressExtensionHeader(uint8_t &aNextHeader);
+        Error CompressSourceIid(const Ip6::Address &aIpAddr, const Context &aContext, uint16_t &aHcCtl);
+        Error CompressDestinationIid(const Ip6::Address &aIpAddr, const Context &aContext, uint16_t &aHcCtl);
+        Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl);
+        Error CompressUdp(void);
+
+        Message              &mMessage;
+        const Mac::Addresses &mMacAddrs;
+        FrameBuilder         &mFrameBuilder;
+        uint8_t               mRecursionDepth;
+    };
+
+    class HeaderDecompressor : public InstanceLocator, private NonCopyable
+    {
+    public:
+        HeaderDecompressor(Instance &aInstance, const Mac::Addresses &aMacAddrs, FrameData &aFrameData)
+            : InstanceLocator(aInstance)
+            , mMacAddrs(aMacAddrs)
+            , mFrameData(aFrameData)
+        {
+        }
+
+        Error DecompressBaseHeader(Ip6::Header &aIp6Header, bool &aCompressedNextHeader);
+
+    protected:
+        static Error DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
+
+        const Mac::Addresses &mMacAddrs;
+        FrameData            &mFrameData;
+    };
+
+    class Decompressor : public HeaderDecompressor
+    {
+    public:
+        Decompressor(Instance             &aInstance,
+                     Message              &aMessage,
+                     const Mac::Addresses &aMacAddrs,
+                     FrameData            &aFrameData,
+                     uint16_t              aDatagramLength)
+            : HeaderDecompressor(aInstance, aMacAddrs, aFrameData)
+            , mMessage(aMessage)
+            , mDatagramLength(aDatagramLength)
+            , mRecursionDepth(0)
+        {
+        }
+
+        Error Decompress(void);
+
+    private:
+        Error DecompressExtensionHeader(void);
+        Error DecompressUdpHeader(void);
+
+        Message &mMessage;
+        uint16_t mDatagramLength;
+        uint8_t  mRecursionDepth;
+    };
 
     static Error ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::InterfaceIdentifier &aIid);
 };
@@ -455,7 +501,7 @@ public:
     /**
      * Appends the Mesh Header into a given frame.
      *
-     * @param[out]  aFrameBuilder  The `FrameBuilder` to append to.
+     * @param[in,out] aFrameBuilder  The `FrameBuilder` to append to.
      *
      * @retval kErrorNone    Successfully appended the MeshHeader to @p aFrameBuilder.
      * @retval kErrorNoBufs  Insufficient available buffers.
