@@ -204,14 +204,14 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
             VerifyOrQuit((compressedMsg = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
             SuccessOrQuit(compressedMsg->AppendBytes(result, compressBytes));
 
-            ecn = sLowpan->DecompressEcn(*compressedMsg, /* aOffset */ 0);
+            ecn = Lowpan::Lowpan::DecompressEcn(*compressedMsg, /* aOffset */ 0);
             VerifyOrQuit(ecn == aVector.GetIpHeader().GetEcn());
             printf("Decompressed ECN is %d\n", ecn);
 
             if (ecn != Ip6::kEcnNotCapable)
             {
-                sLowpan->MarkCompressedEcn(*compressedMsg, /*a aOffset */ 0);
-                ecn = sLowpan->DecompressEcn(*compressedMsg, /* aOffset */ 0);
+                Lowpan::Lowpan::MarkCompressedEcn(*compressedMsg, /*a aOffset */ 0);
+                ecn = Lowpan::Lowpan::DecompressEcn(*compressedMsg, /* aOffset */ 0);
                 VerifyOrQuit(ecn == Ip6::kEcnMarked);
                 printf("ECN is updated to %d\n", ecn);
             }
