@@ -180,10 +180,7 @@ public:
      *
      * @returns The size of the compressed header in bytes.
      */
-    Error Compress(Message              &aMessage,
-                   const Mac::Addresses &aMacAddrs,
-                   FrameBuilder         &aFrameBuilder,
-                   uint8_t               aRecursionDepth = 0);
+    Error Compress(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder);
 
     /**
      * Decompresses a LOWPAN_IPHC header.
@@ -310,28 +307,37 @@ private:
     static constexpr uint8_t kUdpChecksum = 1 << 2;
     static constexpr uint8_t kUdpPortMask = 3 << 0;
 
+    class Compressor : public GetProvider<Compressor>
+    {
+    public:
+        Compressor(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder)
+            : mMessage(aMessage)
+            , mMacAddrs(aMacAddrs)
+            , mFrameBuilder(aFrameBuilder)
+            , mRecursionDepth(0)
+        {
+        }
+
+        Error Compress(void);
+
+        Instance &GetInstance(void) const { return mMessage.GetInstance(); }
+
+    private:
+        void  FindContextToCompressAddress(const Ip6::Address &aIp6Address, Context &aContext) const;
+        Error Compress(uint8_t &aHeaderDepth);
+        Error CompressExtensionHeader(uint8_t &aNextHeader);
+        Error CompressSourceIid(const Ip6::Address &aIpAddr, const Context &aContext, uint16_t &aHcCtl);
+        Error CompressDestinationIid(const Ip6::Address &aIpAddr, const Context &aContext, uint16_t &aHcCtl);
+        Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl);
+        Error CompressUdp(void);
+
+        Message              &mMessage;
+        const Mac::Addresses &mMacAddrs;
+        FrameBuilder         &mFrameBuilder;
+        uint8_t               mRecursionDepth;
+    };
+
     void  FindContextForId(uint8_t aContextId, Context &aContext) const;
-    void  FindContextToCompressAddress(const Ip6::Address &aIp6Address, Context &aContext) const;
-    Error Compress(Message              &aMessage,
-                   const Mac::Addresses &aMacAddrs,
-                   FrameBuilder         &aFrameBuilder,
-                   uint8_t              &aHeaderDepth,
-                   uint8_t               aRecursionDepth);
-
-    Error CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBuilder, uint8_t &aNextHeader);
-    Error CompressSourceIid(const Mac::Address &aMacAddr,
-                            const Ip6::Address &aIpAddr,
-                            const Context      &aContext,
-                            uint16_t           &aHcCtl,
-                            FrameBuilder       &aFrameBuilder);
-    Error CompressDestinationIid(const Mac::Address &aMacAddr,
-                                 const Ip6::Address &aIpAddr,
-                                 const Context      &aContext,
-                                 uint16_t           &aHcCtl,
-                                 FrameBuilder       &aFrameBuilder);
-    Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, FrameBuilder &aFrameBuilder);
-    Error CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder);
-
     Error DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData);
     Error DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint16_t aDatagramLength);
     Error DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
