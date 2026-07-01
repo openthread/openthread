@@ -233,6 +233,7 @@ ot_unit_test(link_metrics_manager)
 ot_unit_test(link_quality)
 ot_unit_test(linked_list)
 ot_unit_test(lowpan)
+ot_unit_test(ltv)
 ot_unit_test(mac_frame)
 ot_unit_test(macros)
 ot_unit_test(mdns)
@@ -272,6 +273,30 @@ ot_unit_test(toolchain test_toolchain_c.c)
 ot_unit_test(trickle_timer)
 ot_unit_test(url)
 ot_unit_test(vendor_oui)
+
+# Thread Direct LTV test — requires both WI and WL configs enabled.
+add_executable(ot-test-td-ltv
+    test_td_ltv.cpp
+)
+
+target_include_directories(ot-test-td-ltv
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_link_libraries(ot-test-td-ltv
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+target_compile_options(ot-test-td-ltv
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+        "-DOPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE=1"
+)
+
+add_test(NAME ot-test-td-ltv COMMAND ot-test-td-ltv)
 
 ot_unit_ncp_test(cli)
 ot_unit_ncp_test(dnssd)
