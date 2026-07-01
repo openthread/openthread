@@ -524,6 +524,27 @@ private:
 } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+/**
+ * Defines the Thread Header IE Element ID and LTV type codes.
+ *
+ * The Thread Header IE is an IEEE 802.15.4 Header IE with Element ID 0x2d.
+ * Its payload is a sequence of LTV (Length-Type-Value) encoded elements
+ * packed with `PackedLtvStream` from `common/ltvs.hpp`.
+ */
+struct ThreadHeaderIe
+{
+    static constexpr uint8_t kElementId     = 0x2d; ///< IEEE 802.15.4 Header IE Element ID for Thread Group.
+    static constexpr uint8_t kTypeTargetId  = 0x01; ///< Target ID LTV - Wake Identifier filter.
+    static constexpr uint8_t kTypeSca       = 0x02; ///< Scheduled Channel Access LTV.
+    static constexpr uint8_t kTypeChallenge = 0x03; ///< Thread Challenge LTV.
+
+    // Challenge LTV (18 B) + SCA LTV with full 256-bit RAM bitmap and SLW (41 B) = 59 B.
+    // Use 64 to stay aligned and leave one byte of margin.
+    static constexpr uint8_t kEnhAckPlainMaxSize = 64;
+};
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
 /**
  * @}
  */

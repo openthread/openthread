@@ -125,6 +125,7 @@ set(COMMON_SOURCES
     common/heap_data.cpp
     common/heap_string.cpp
     common/log.cpp
+    common/ltvs.cpp
     common/message.cpp
     common/notifier.cpp
     common/offset_range.cpp
@@ -157,6 +158,7 @@ set(COMMON_SOURCES
     mac/mac_filter.cpp
     mac/mac_frame.cpp
     mac/mac_header_ie.cpp
+    mac/mac_header_ltv.cpp
     mac/mac_links.cpp
     mac/mac_types.cpp
     mac/scan_result.cpp
@@ -316,6 +318,7 @@ set(RADIO_COMMON_SOURCES
     common/error.cpp
     common/frame_builder.cpp
     common/log.cpp
+    common/ltvs.cpp
     common/random.cpp
     common/string.cpp
     common/tasklet.cpp
@@ -331,6 +334,7 @@ set(RADIO_COMMON_SOURCES
     mac/link_raw.cpp
     mac/mac_frame.cpp
     mac/mac_header_ie.cpp
+    mac/mac_header_ltv.cpp
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
