@@ -100,7 +100,7 @@ void TimeTicker::HandleTimer(void)
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     if (mReceivers & Mask(kIp6FragmentReassembler))
     {
-        Get<Ip6::Ip6>().HandleTimeTick();
+        Get<Ip6::Fragments>().HandleTimeTick();
     }
 #endif
 

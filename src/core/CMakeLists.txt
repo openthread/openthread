@@ -204,6 +204,7 @@ set(COMMON_SOURCES
     net/ip6.cpp
     net/ip6_address.cpp
     net/ip6_filter.cpp
+    net/ip6_fragments.cpp
     net/ip6_headers.cpp
     net/ip6_mpl.cpp
     net/mdns.cpp

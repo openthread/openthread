@@ -264,6 +264,13 @@ void Message::Free(void)
     // freed before we know the TX outcome, it's treated as a dropped
     // message, signaling `kErrorDrop`.
 
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    if ((GetSubType() == kSubTypeIp6Fragment) && (GetFragmentParent() != nullptr))
+    {
+        Get<Ip6::Fragments>().HandleIpFragmentTxDone(*this, kErrorDrop);
+    }
+#endif
+
     InvokeTxCallback(kErrorDrop);
     Get<MessagePool>().Free(this);
 }
@@ -378,6 +385,16 @@ void Message::InvokeTxCallback(Error aError)
         callback(this, aError, GetMetadata().mTxContext);
     }
 }
+
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+void Message::ClearIp6FragTxState(void)
+{
+    SetIp6FragTxActive(false);
+    SetIp6FragIdentification(0);
+    SetFragmentParent(nullptr); // Also clears the unioned `mIp6FragNextOffset`/`mIp6FragIpProto`.
+    SetDoNotEvict(false);
+}
+#endif
 
 Error Message::AppendBytes(const void *aBuf, uint16_t aLength)
 {

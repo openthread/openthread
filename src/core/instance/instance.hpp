@@ -1074,6 +1074,8 @@ template <> inline Ip6::Mpl &Instance::Get(void) { return mIp6.mMpl; }
 template <> inline Ip6::PlatTcp &Instance::Get(void) { return mPlatTcp; }
 #endif
 
+template <> inline Ip6::Fragments &Instance::Get(void) { return mIp6.mFragments; }
+
 template <> inline Tmf::Agent &Instance::Get(void) { return mTmfAgent; }
 
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE

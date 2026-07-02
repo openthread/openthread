@@ -34,6 +34,7 @@
 #include "indirect_sender.hpp"
 
 #include "instance/instance.hpp"
+#include "net/ip6_fragments.hpp"
 
 namespace ot {
 
@@ -492,11 +493,26 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
         Get<MeshForwarder>().mCounters.UpdateOnTxDone(*message, aChild.GetIndirectTxSuccess());
 
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+        if ((message->GetSubType() == Message::kSubTypeIp6Fragment) && !aChild.GetIndirectTxSuccess())
+        {
+            message->SetTxSuccess(false);
+        }
+#endif
+
         if (message->GetIndirectTxChildMask().Has(childIndex))
         {
             message->GetIndirectTxChildMask().Remove(childIndex);
             mSourceMatchController.DecrementMessageCount(aChild);
         }
+
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+        if ((message->GetSubType() == Message::kSubTypeIp6Fragment) && !message->IsDirectTransmission() &&
+            message->GetIndirectTxChildMask().IsEmpty())
+        {
+            Get<Ip6::Fragments>().HandleIpFragmentTxDone(*message, txError);
+        }
+#endif
 
         message->InvokeTxCallback(txError);
 

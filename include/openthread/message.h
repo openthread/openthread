@@ -303,10 +303,14 @@ otError otMessageGetThreadLinkInfo(const otMessage *aMessage, otThreadLinkInfo *
  * The error indicates the transmission status of the IPv6 message from this device to an immediate neighbor (one-hop
  * transmission). It doesn't indicate that the message is received by its final intended destination (multi-hop away).
  *
- * For a unicast IPv6 message, an `OT_ERROR_NONE` error indicates that the message (all its corresponding fragment
- * frames if the message is larger and requires fragmentation) was successfully delivered to the immediate neighbor,
- * and a MAC layer acknowledgment was received for all fragments. This is reported regardless of whether the message
- * is sent using direct TX or indirect TX (to a sleepy child using CSL or data poll triggered TX).
+ * For a unicast IPv6 message, an `OT_ERROR_NONE` error indicates that the message (all its corresponding 6LoWPAN
+ * fragment frames if the message is larger and requires link-layer fragmentation) was successfully delivered to the
+ * immediate neighbor, and a MAC layer acknowledgment was received for all fragments. This is reported regardless of
+ * whether the message is sent using direct TX or indirect TX (to a sleepy child using CSL or data poll triggered TX).
+ *
+ * For datagrams that require IPv6 fragmentation (Next Header = Fragment), the callback is invoked once on the original
+ * datagram message after all IP fragments have been transmitted successfully, or when the first IP fragment fails.
+ * The parent datagram is not transmitted on the mesh directly; only its IP fragment messages are.
  *
  * For a multicast message, an `OT_ERROR_NONE` status indicates that the message (all its fragment frames) was
  * successfully broadcast. Note that no MAC-level acknowledgment is required for broadcast frame TX.

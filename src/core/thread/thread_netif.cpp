@@ -95,6 +95,9 @@ void ThreadNetif::Down(void)
     UnsubscribeAllNodesMulticast();
 
     mIsUp = false;
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    Get<Ip6::Fragments>().HandleInterfaceDown();
+#endif
     Get<MeshForwarder>().Stop();
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
     IgnoreError(Get<Utils::ChannelMonitor>().Stop());

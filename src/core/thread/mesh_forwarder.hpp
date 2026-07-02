@@ -82,6 +82,7 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
     friend class DataPollSender;
     friend class IndirectSender;
     friend class Ip6::Ip6;
+    friend class Ip6::Fragments;
     friend class Mle::DiscoverScanner;
     friend class TimeTicker;
     friend class ot::MessagePool;
@@ -94,6 +95,7 @@ public:
     {
         friend class MeshForwarder;
         friend class IndirectSender;
+        friend class Ip6::Fragments;
 
     private:
         Counters(void) { Clear(); }
