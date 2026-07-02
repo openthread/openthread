@@ -255,6 +255,13 @@ protected:
 #if OPENTHREAD_FTD
         ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
 #endif
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+        Message *mFragmentParent; // Parent datagram for an IPv6 fragment message.
+        uint32_t mIp6FragIdentification;
+        uint16_t mIp6FragNextOffset; // Byte offset into the fragmentable part of a parent datagram.
+        uint8_t  mIp6FragIpProto;
+        bool     mIp6FragTxActive;
+#endif
     };
 
     static_assert(kSize > sizeof(Metadata) + sizeof(otMessageBuffer), "Metadata does not fit in a single buffer");
@@ -328,7 +335,7 @@ public:
         kSubTypeMplRetransmission      = 2, ///< MPL next retransmission message
         kSubTypeJoinerEntrust          = 3, ///< Joiner Entrust
         kSubTypeJoinerFinalizeResponse = 4, ///< Joiner Finalize Response
-
+        kSubTypeIp6Fragment            = 5, ///< IPv6 fragment (TX)
     };
 
     enum Priority : uint8_t
@@ -677,9 +684,12 @@ public:
      * an immediate neighbor (one hop). It doesn't indicate delivery to the final multi-hop destination.
      *
      * For unicast messages, `kErrorNone` callback error signifies successful delivery and MAC acknowledgment for all
-     * fragments of the message to an immediate neighbor, irrespective of whether direct or indirect TX is used. For
-     * multicast messages, `kErrorNone` indicates successful broadcast of all fragments. Note that no MAC-level ack
-     * is expected for broadcast frame transmissions.
+     * 6LoWPAN fragments of the message to an immediate neighbor, irrespective of whether direct or indirect TX is
+     * used. For multicast messages, `kErrorNone` indicates successful broadcast of all fragments. Note that no
+     * MAC-level ack is expected for broadcast frame transmissions.
+     *
+     * For datagrams that require IPv6 fragmentation, the callback is invoked once on the original datagram message
+     * after all IP fragments have been transmitted successfully, or when the first IP fragment fails.
      *
      * Only one callback can be registered per `Message`. Subsequent calls replace any existing callback. If the
      * message is never actually sent, the callback will still be invoked when the message is freed, with `kErrorDrop`
@@ -1337,6 +1347,67 @@ public:
      *                         fragment transmission failed).
      */
     void SetTxSuccess(bool aTxSuccess) { GetMetadata().mTxSuccess = aTxSuccess; }
+
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    /**
+     * Returns the parent datagram message for an IPv6 fragment message.
+     *
+     * @returns A pointer to the parent message, or `nullptr` if none.
+     */
+    Message *GetFragmentParent(void) const { return GetMetadata().mFragmentParent; }
+
+    /**
+     * Sets the parent datagram message for an IPv6 fragment message.
+     *
+     * @param[in] aParent  A pointer to the parent message, or `nullptr`.
+     */
+    void SetFragmentParent(Message *aParent) { GetMetadata().mFragmentParent = aParent; }
+
+    /**
+     * Indicates whether or not IPv6 fragmentation transmission is active on this message.
+     */
+    bool IsIp6FragTxActive(void) const { return GetMetadata().mIp6FragTxActive; }
+
+    /**
+     * Sets whether or not IPv6 fragmentation transmission is active on this message.
+     */
+    void SetIp6FragTxActive(bool aActive) { GetMetadata().mIp6FragTxActive = aActive; }
+
+    /**
+     * Returns the IPv6 fragmentation identification value for a parent datagram.
+     */
+    uint32_t GetIp6FragIdentification(void) const { return GetMetadata().mIp6FragIdentification; }
+
+    /**
+     * Sets the IPv6 fragmentation identification value for a parent datagram.
+     */
+    void SetIp6FragIdentification(uint32_t aIdentification) { GetMetadata().mIp6FragIdentification = aIdentification; }
+
+    /**
+     * Returns the next byte offset into the fragmentable part of a parent datagram.
+     */
+    uint16_t GetIp6FragNextOffset(void) const { return GetMetadata().mIp6FragNextOffset; }
+
+    /**
+     * Sets the next byte offset into the fragmentable part of a parent datagram.
+     */
+    void SetIp6FragNextOffset(uint16_t aOffset) { GetMetadata().mIp6FragNextOffset = aOffset; }
+
+    /**
+     * Returns the upper-layer protocol for an IPv6 fragmentation parent datagram.
+     */
+    uint8_t GetIp6FragIpProto(void) const { return GetMetadata().mIp6FragIpProto; }
+
+    /**
+     * Sets the upper-layer protocol for an IPv6 fragmentation parent datagram.
+     */
+    void SetIp6FragIpProto(uint8_t aIpProto) { GetMetadata().mIp6FragIpProto = aIpProto; }
+
+    /**
+     * Clears IPv6 fragmentation TX state on this message.
+     */
+    void ClearIp6FragTxState(void);
+#endif // OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
 
     /**
      * Indicates whether the message may be evicted.

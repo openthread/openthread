@@ -379,6 +379,18 @@ void Message::InvokeTxCallback(Error aError)
     }
 }
 
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+void Message::ClearIp6FragTxState(void)
+{
+    SetFragmentParent(nullptr);
+    SetIp6FragTxActive(false);
+    SetIp6FragIdentification(0);
+    SetIp6FragNextOffset(0);
+    SetIp6FragIpProto(0);
+    SetDoNotEvict(false);
+}
+#endif
+
 Error Message::AppendBytes(const void *aBuf, uint16_t aLength)
 {
     Error    error;

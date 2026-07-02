@@ -56,6 +56,7 @@
 #include "net/checksum.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
+#include "net/ip6_fragments.hpp"
 #include "net/ip6_headers.hpp"
 #include "net/ip6_mpl.hpp"
 #include "net/ip6_types.hpp"
@@ -110,6 +111,7 @@ class Ip6 : public InstanceLocator, public MessageAllocator<Ip6, ReservedHeaderS
 {
     friend class ot::Instance;
     friend class ot::TimeTicker;
+    friend class Fragments;
     friend class Mpl;
 
 public:
@@ -322,7 +324,6 @@ public:
 
 private:
     static constexpr uint8_t kMaxRecursionDepth = 4;
-    static constexpr uint8_t kReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT;
 
     static constexpr uint16_t kMinimalMtu = 1280;
 
@@ -354,14 +355,6 @@ private:
                                  uint8_t           &aNextHeader,
                                  bool              &aReceive);
     bool  HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const;
-    Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
-    Error HandleFragment(Message &aMessage);
-#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    void CleanupFragmentationBuffer(void);
-    void HandleTimeTick(void);
-    void UpdateReassemblyList(void);
-    void SendIcmpError(Message &aMessage, Icmp6Header::Type aIcmpType, Icmp6Header::Code aIcmpCode);
-#endif
     Error ReadHopByHopHeader(const Message &aMessage, OffsetRange &aOffsetRange, HopByHopHeader &aHbhHeader) const;
     Error AddMplOption(Message &aMessage, Header &aHeader);
     Error PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader);
@@ -393,12 +386,11 @@ private:
     Icmp          mIcmp;
     Udp           mUdp;
     Mpl           mMpl;
+    Fragments     mFragments;
 #if OPENTHREAD_CONFIG_TCP_ENABLE
     Tcp mTcp;
 #endif
-#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    MessageQueue mReassemblyList;
-#endif
+
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
     BrCounters mBrCounters;
 #endif
