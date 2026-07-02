@@ -524,6 +524,21 @@ private:
 } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+/**
+ * Defines the Thread Header IE Element ID and LTV type codes.
+ *
+ * Element ID 0x2d; payload is a packed LTV sequence (see `PackedLtvStream`).
+ */
+struct ThreadHeaderIe
+{
+    static constexpr uint8_t kElementId     = 0x2d;
+    static constexpr uint8_t kTypeTargetId  = 0x01;
+    static constexpr uint8_t kTypeSca       = 0x02;
+    static constexpr uint8_t kTypeChallenge = 0x03;
+};
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
 /**
  * @}
  */
