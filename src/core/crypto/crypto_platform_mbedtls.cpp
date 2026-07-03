@@ -37,6 +37,7 @@
 #include <string.h>
 
 #include <mbedtls/aes.h>
+#include <mbedtls/ccm.h>
 #include <mbedtls/cmac.h>
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/ecdsa.h>
@@ -151,6 +152,59 @@ OT_TOOL_WEAK otError otPlatCryptoAesFree(otCryptoContext *aContext)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
+
+OT_TOOL_WEAK otError otPlatCryptoAesCcmProcessOneShot(bool                            aEncrypt,
+                                                      const otPlatCryptoAesCcmConfig *aConfig,
+                                                      const uint8_t                  *aHeader,
+                                                      uint8_t                        *aData)
+{
+    Error               error = kErrorNone;
+    mbedtls_ccm_context ctx;
+    int                 ret;
+
+    mbedtls_ccm_init(&ctx);
+
+    VerifyOrExit(aConfig != nullptr && aConfig->mNonce != nullptr && aData != nullptr, error = kErrorInvalidArgs);
+
+    {
+        const LiteralKey key(*static_cast<const Key *>(&aConfig->mKey));
+
+        ret = mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key.GetBytes(), key.GetLength() * kBitsPerByte);
+        VerifyOrExit(ret == 0, error = kErrorFailed);
+
+        if (aEncrypt)
+        {
+            ret = mbedtls_ccm_encrypt_and_tag(&ctx, aConfig->mPlainTextLength, aConfig->mNonce, aConfig->mNonceLength,
+                                              aHeader, aConfig->mHeaderLength, aData, aData,
+                                              aData + aConfig->mPlainTextLength, aConfig->mTagLength);
+            VerifyOrExit(ret == 0, error = kErrorFailed);
+        }
+        else
+        {
+            // MBEDTLS_ERR_CCM_AUTH_FAILED is the expected return on tag mismatch; map to kErrorSecurity.
+            ret = mbedtls_ccm_auth_decrypt(&ctx, aConfig->mPlainTextLength, aConfig->mNonce, aConfig->mNonceLength,
+                                           aHeader, aConfig->mHeaderLength, aData, aData,
+                                           aData + aConfig->mPlainTextLength, aConfig->mTagLength);
+
+            if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED)
+            {
+                error = kErrorSecurity;
+            }
+            else
+            {
+                VerifyOrExit(ret == 0, error = kErrorFailed);
+            }
+        }
+    }
+
+exit:
+    mbedtls_ccm_free(&ctx);
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 

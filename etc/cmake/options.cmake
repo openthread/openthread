@@ -307,6 +307,7 @@ endif()
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 set(OT_CRYPTO_LIB_VALUES "MBEDTLS" "PSA" "PLATFORM")
 ot_multi_option(OT_CRYPTO_LIB OT_CRYPTO_LIB_VALUES OPENTHREAD_CONFIG_CRYPTO_LIB OPENTHREAD_CONFIG_CRYPTO_LIB_ "set Crypto backend library")
+ot_option(OT_CRYPTO_CCM_ONE_SHOT OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE "platform one-shot AES-CCM* hook")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 set(OT_THREAD_VERSION_VALUES "1.1" "1.2" "1.3" "1.3.1" "1.4")

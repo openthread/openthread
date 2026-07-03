@@ -389,6 +389,49 @@ OT_TOOL_WEAK otError otPlatCryptoAesFree(otCryptoContext *aContext)
     return kErrorNone;
 }
 
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
+
+OT_TOOL_WEAK otError otPlatCryptoAesCcmProcessOneShot(bool                            aEncrypt,
+                                                      const otPlatCryptoAesCcmConfig *aConfig,
+                                                      const uint8_t                  *aHeader,
+                                                      uint8_t                        *aData)
+{
+    Error           error = kErrorNone;
+    psa_status_t    status;
+    psa_algorithm_t algorithm;
+    size_t          outputLen = 0;
+
+    VerifyOrExit(aConfig != nullptr && aConfig->mNonce != nullptr && aData != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aConfig->mKey.mKey == nullptr, error = kErrorInvalidArgs);
+
+    algorithm = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, aConfig->mTagLength);
+
+    if (aEncrypt)
+    {
+        // Output layout: ciphertext || tag, written in-place over the plaintext buffer.
+        status = psa_aead_encrypt(aConfig->mKey.mKeyRef, algorithm, aConfig->mNonce, aConfig->mNonceLength, aHeader,
+                                  aConfig->mHeaderLength, aData, aConfig->mPlainTextLength, aData,
+                                  aConfig->mPlainTextLength + aConfig->mTagLength, &outputLen);
+        SuccessOrExit(error = PsaToOtError(status));
+        VerifyOrExit(outputLen == aConfig->mPlainTextLength + aConfig->mTagLength, error = kErrorFailed);
+    }
+    else
+    {
+        // Input layout: ciphertext || tag contiguous at aData. Output plaintext written in-place.
+        status = psa_aead_decrypt(aConfig->mKey.mKeyRef, algorithm, aConfig->mNonce, aConfig->mNonceLength, aHeader,
+                                  aConfig->mHeaderLength, aData, aConfig->mPlainTextLength + aConfig->mTagLength, aData,
+                                  aConfig->mPlainTextLength, &outputLen);
+        error  = (status == PSA_ERROR_INVALID_SIGNATURE) ? kErrorSecurity : PsaToOtError(status);
+        SuccessOrExit(error);
+        VerifyOrExit(outputLen == aConfig->mPlainTextLength, error = kErrorFailed);
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 OT_TOOL_WEAK otError otPlatCryptoHmacSha256Init(otCryptoContext *aContext)
