@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/numeric_limits.hpp"
@@ -230,8 +231,6 @@ public:
     /**
      * Sets the Frame Pending bit.
      *
-     * @note This method must not be called on a Multipurpose frame with short Frame Control field.
-     *
      * @param[in]  aFramePending  The Frame Pending bit.
      */
     void SetFramePending(bool aFramePending);
@@ -247,16 +246,12 @@ public:
     /**
      * Sets the Ack Request bit.
      *
-     * @note This method must not be called on a Multipurpose frame with short Frame Control field.
-     *
      * @param[in]  aAckRequest  The Ack Request bit.
      */
     void SetAckRequest(bool aAckRequest);
 
     /**
      * Indicates whether or not the PanId Compression bit is set.
-     *
-     * @note This method must not be called on a Multipurpose frame, which lacks this flag.
      *
      * @retval TRUE   If the PanId Compression bit is set.
      * @retval FALSE  If the PanId Compression bit is not set.
@@ -273,8 +268,6 @@ public:
 
     /**
      * Sets the IE Present bit.
-     *
-     * @note This method must not be called on a Multipurpose frame with short Frame Control field.
      *
      * @param[in]  aIePresent   The IE Present bit.
      */
@@ -698,22 +691,9 @@ public:
      *
      * @returns The Frame Control field.
      */
-    uint16_t GetFrameControlField(void) const
-    {
-        uint16_t fcf = mPsdu[0];
-
-#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-        if (!IsShortFcf(fcf))
-#endif
-        {
-            fcf |= (mPsdu[1] << 8);
-        }
-
-        return fcf;
-    }
+    uint16_t GetFrameControlField(void) const { return LittleEndian::ReadUint16(mPsdu); }
 
 protected:
-    static constexpr uint8_t kShortFcfSize        = sizeof(uint8_t);
     static constexpr uint8_t kSecurityControlSize = sizeof(uint8_t);
     static constexpr uint8_t kFrameCounterSize    = sizeof(uint32_t);
     static constexpr uint8_t kCommandIdSize       = sizeof(uint8_t);
@@ -745,25 +725,6 @@ protected:
     static constexpr uint16_t kFcfSrcAddrExt          = kFcfAddrExt << kFcfSrcAddrShift;
     static constexpr uint16_t kFcfSrcAddrMask         = kFcfAddrMask << kFcfSrcAddrShift;
 
-    // Frame Control field format for MAC Multipurpose frame
-    static constexpr uint16_t kMpFcfLongFrame           = 1 << 3;
-    static constexpr uint16_t kMpFcfDstAddrShift        = 4;
-    static constexpr uint16_t kMpFcfDstAddrNone         = kFcfAddrNone << kMpFcfDstAddrShift;
-    static constexpr uint16_t kMpFcfDstAddrShort        = kFcfAddrShort << kMpFcfDstAddrShift;
-    static constexpr uint16_t kMpFcfDstAddrExt          = kFcfAddrExt << kMpFcfDstAddrShift;
-    static constexpr uint16_t kMpFcfDstAddrMask         = kFcfAddrMask << kMpFcfDstAddrShift;
-    static constexpr uint16_t kMpFcfSrcAddrShift        = 6;
-    static constexpr uint16_t kMpFcfSrcAddrNone         = kFcfAddrNone << kMpFcfSrcAddrShift;
-    static constexpr uint16_t kMpFcfSrcAddrShort        = kFcfAddrShort << kMpFcfSrcAddrShift;
-    static constexpr uint16_t kMpFcfSrcAddrExt          = kFcfAddrExt << kMpFcfSrcAddrShift;
-    static constexpr uint16_t kMpFcfSrcAddrMask         = kFcfAddrMask << kMpFcfSrcAddrShift;
-    static constexpr uint16_t kMpFcfPanidPresent        = 1 << 8;
-    static constexpr uint16_t kMpFcfSecurityEnabled     = 1 << 9;
-    static constexpr uint16_t kMpFcfSequenceSuppression = 1 << 10;
-    static constexpr uint16_t kMpFcfFramePending        = 1 << 11;
-    static constexpr uint16_t kMpFcfAckRequest          = 1 << 14;
-    static constexpr uint16_t kMpFcfIePresent           = 1 << 15;
-
     static constexpr uint8_t kSecLevelMask  = 7 << 0;
     static constexpr uint8_t kKeyIdModeMask = 3 << 3;
 
@@ -782,7 +743,7 @@ protected:
     static constexpr uint8_t kInvalidSize  = kInvalidIndex;
     static constexpr uint8_t kMaxPsduSize  = kInvalidSize - 1;
 
-    void    SetFrameControlField(uint16_t aFcf);
+    void    SetFrameControlField(uint16_t aFcf) { LittleEndian::WriteUint16(aFcf, mPsdu); }
     uint8_t SkipSequenceIndex(void) const;
     uint8_t FindDstPanIdIndex(void) const;
     uint8_t FindDstAddrIndex(void) const;
@@ -796,63 +757,23 @@ protected:
     uint8_t FindHeaderIeIndex(void) const;
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-    static uint8_t GetFcfSize(uint16_t aFcf) { return IsShortFcf(aFcf) ? kShortFcfSize : kFcfSize; }
-#else
-    // clang-format off
-    static uint8_t GetFcfSize(uint16_t /* aFcf */) { return kFcfSize; }
-    // clang-format on
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-    template <uint16_t kValue, uint16_t kMpValue> static uint16_t Select(uint16_t aFcf)
-    {
-        return IsMultipurpose(aFcf) ? kMpValue : kValue;
-    }
-#else
-    template <uint16_t kValue, uint16_t kMpValue> static uint16_t Select(uint16_t /* aFcf */) { return kValue; }
-#endif
-
-    template <uint16_t kValue, uint16_t kMpValue> static uint16_t MaskFcf(uint16_t aFcf)
-    {
-        return aFcf & Select<kValue, kMpValue>(aFcf);
-    }
-
-    static uint16_t GetFcfDstAddr(uint16_t aFcf)
-    {
-        return MaskFcf<kFcfDstAddrMask, kMpFcfDstAddrMask>(aFcf) >> Select<kFcfDstAddrShift, kMpFcfDstAddrShift>(aFcf);
-    }
-
-    static uint16_t GetFcfSrcAddr(uint16_t aFcf)
-    {
-        return MaskFcf<kFcfSrcAddrMask, kMpFcfSrcAddrMask>(aFcf) >> Select<kFcfSrcAddrShift, kMpFcfSrcAddrShift>(aFcf);
-    }
-
-    static bool IsMultipurpose(uint16_t aFcf) { return (aFcf & kFcfFrameTypeMask) == kTypeMultipurpose; }
-    static bool IsShortFcf(uint16_t aFcf)
-    {
-        return (aFcf & (kFcfFrameTypeMask | kMpFcfLongFrame)) == (kTypeMultipurpose | 0);
-    }
-    static bool IsSequencePresent(uint16_t aFcf)
-    {
-        return !MaskFcf<kFcfSequenceSuppression, kMpFcfSequenceSuppression>(aFcf);
-    }
-    static bool IsDstAddrPresent(uint16_t aFcf) { return MaskFcf<kFcfDstAddrMask, kMpFcfDstAddrMask>(aFcf); }
-    static bool IsDstPanIdPresent(uint16_t aFcf);
-    static bool IsSrcAddrPresent(uint16_t aFcf) { return MaskFcf<kFcfSrcAddrMask, kMpFcfSrcAddrMask>(aFcf); }
-    static bool IsSrcPanIdPresent(uint16_t aFcf);
-    static bool IsSecurityEnabled(uint16_t aFcf) { return MaskFcf<kFcfSecurityEnabled, kMpFcfSecurityEnabled>(aFcf); }
-    static bool IsFramePending(uint16_t aFcf) { return MaskFcf<kFcfFramePending, kMpFcfFramePending>(aFcf); }
-    static bool IsIePresent(uint16_t aFcf) { return MaskFcf<kFcfIePresent, kMpFcfIePresent>(aFcf); }
-    static bool IsAckRequest(uint16_t aFcf) { return MaskFcf<kFcfAckRequest, kMpFcfAckRequest>(aFcf); }
-    static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kVersion2015; }
-
+    static uint16_t GetFcfDstAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfDstAddrMask>(aFcf); }
+    static uint16_t GetFcfSrcAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf); }
+    static bool     IsSequencePresent(uint16_t aFcf) { return (aFcf & kFcfSequenceSuppression) == 0; }
+    static bool     IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != 0; }
+    static bool     IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != 0; }
+    static bool     IsSecurityEnabled(uint16_t aFcf) { return (aFcf & kFcfSecurityEnabled) != 0; }
+    static bool     IsFramePending(uint16_t aFcf) { return (aFcf & kFcfFramePending) != 0; }
+    static bool     IsIePresent(uint16_t aFcf) { return (aFcf & kFcfIePresent) != 0; }
+    static bool     IsAckRequest(uint16_t aFcf) { return (aFcf & kFcfAckRequest) != 0; }
+    static bool     IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kVersion2015; }
+    static bool     IsDstPanIdPresent(uint16_t aFcf);
+    static bool     IsSrcPanIdPresent(uint16_t aFcf);
     static uint16_t DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift);
-
-    static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
-    static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
-    static uint8_t CalculateKeySourceSize(uint8_t aSecurityControl);
-    static uint8_t CalculateMicSize(uint8_t aSecurityControl);
+    static uint8_t  CalculateAddrFieldSize(uint16_t aFcf);
+    static uint8_t  CalculateSecurityHeaderSize(uint8_t aSecurityControl);
+    static uint8_t  CalculateKeySourceSize(uint8_t aSecurityControl);
+    static uint8_t  CalculateMicSize(uint8_t aSecurityControl);
 
 private:
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
