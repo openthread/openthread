@@ -978,7 +978,7 @@ void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacF
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-uint64_t otPlatRadioGetNow(otInstance *aInstance)
+otRadioTime64 otPlatRadioGetNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return GetRadioSpinel().GetNow();
@@ -1097,7 +1097,7 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance          *aInstance,
 }
 #endif
 
-otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannel);

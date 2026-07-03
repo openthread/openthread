@@ -99,7 +99,7 @@ void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
         mCslLastSync = TimerMicro::GetNow();
 #else
-        mCslLastSync = TimeMicro(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp));
+        mCslLastSync = TimeMicro(ConvertRadioTime64To32(aFrame->GetTimestamp()));
 #endif
     }
 
@@ -129,7 +129,7 @@ void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShor
     mCslTimer.Stop();
     if (mCslPeriod > 0)
     {
-        mCslSampleTimeRadio = static_cast<uint32_t>(Get<Radio>().GetNow());
+        mCslSampleTimeRadio = Get<Radio>().GetNowAsRadioTime32();
         mCslSampleTimeLocal = TimerMicro::GetNow();
         // Update CSL sync time whenever CSL parameters are re-initialized.
         mCslLastSync = mCslSampleTimeLocal;
@@ -180,9 +180,9 @@ void SubMac::HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter)
      *       x-|------------|-------------------------------------x-|------------|---------------------------------------|
      *            sample                   sleep                        sample                    sleep
      */
-    uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
-    uint32_t winStart;
-    uint32_t winDuration;
+    uint32_t    periodUs = mCslPeriod * kUsPerTenSymbols;
+    RadioTime32 winStart;
+    uint32_t    winDuration;
 
     mCslTimer.FireAt(mCslSampleTimeLocal + periodUs - aTimeAhead - GetNextCycleDrift());
     aTimeAhead -= kCslReceiveTimeAhead;
@@ -290,7 +290,7 @@ uint32_t SubMac::GetLocalTime(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
     now = TimerMicro::GetNow().GetValue();
 #else
-    now = static_cast<uint32_t>(Get<Radio>().GetNow());
+    now = Get<Radio>().GetNowAsRadioTime32();
 #endif
 
     return now;
@@ -321,8 +321,7 @@ void SubMac::LogReceived(RxFrame *aFrame)
                  (dst.GetType() == Address::kTypeExtended && dst.GetExtended() == GetExtAddress()));
 
     LogDebg("Received frame in state (SubMac %s, CSL %s), timestamp %lu", StateToString(mState),
-            mIsCslSampling ? "CslSample" : "CslSleep",
-            ToUlong(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp)));
+            mIsCslSampling ? "CslSample" : "CslSleep", ToUlong(ConvertRadioTime64To32(aFrame->GetTimestamp())));
 
     VerifyOrExit(mState == kStateRadioSample);
 
@@ -330,7 +329,7 @@ void SubMac::LogReceived(RxFrame *aFrame)
     ahead -= kMinReceiveOnAhead + kCslReceiveTimeAhead;
 
     sampleTime = mCslSampleTimeRadio - mCslPeriod * kUsPerTenSymbols;
-    deviation  = static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) + kRadioHeaderPhrDuration - sampleTime;
+    deviation  = ConvertRadioTime64To32(aFrame->GetTimestamp()) + kRadioHeaderPhrDuration - sampleTime;
 
     // This logs three values (all in microseconds):
     // - Absolute sample time in which the CSL receiver expected the MHR of the received frame.
