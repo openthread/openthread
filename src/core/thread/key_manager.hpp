@@ -571,7 +571,6 @@ public:
 private:
     static constexpr uint16_t kDefaultKeySwitchGuardTime    = 624; // ~ 93% of 672 (default key rotation time)
     static constexpr uint32_t kKeySwitchGuardTimePercentage = 93;  // Percentage of key rotation time.
-    static constexpr bool     kExportableMacKeys            = OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE;
 
     static_assert(kDefaultKeySwitchGuardTime ==
                       SecurityPolicy::kDefaultKeyRotationTime * kKeySwitchGuardTimePercentage / 100,

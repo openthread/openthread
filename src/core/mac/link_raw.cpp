@@ -253,9 +253,9 @@ Error LinkRaw::SetMacKey(uint8_t    aKeyIdMode,
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
 
-    prevKey.SetFrom(aPrevKey);
-    currKey.SetFrom(aCurrKey);
-    nextKey.SetFrom(aNextKey);
+    prevKey.SetFrom(aPrevKey, kDefaultMacKeysExportable);
+    currKey.SetFrom(aCurrKey, kDefaultMacKeysExportable);
+    nextKey.SetFrom(aNextKey, kDefaultMacKeysExportable);
 
     mSubMac.SetMacKey(aKeyIdMode, aKeyId, prevKey, currKey, nextKey);
 

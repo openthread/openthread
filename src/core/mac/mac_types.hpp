@@ -80,6 +80,8 @@ typedef otShortAddress ShortAddress;
 
 constexpr ShortAddress kShortAddrBroadcast = OT_RADIO_BROADCAST_SHORT_ADDR; ///< Broadcast Short Address.
 constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///< Invalid Short Address.
+constexpr bool         kDefaultMacKeysExportable =
+    OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE; ///< Default exportability policy for MAC key refs.
 
 /**
  * Represents the wake-up identifier.
