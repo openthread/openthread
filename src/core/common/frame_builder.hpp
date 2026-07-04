@@ -297,6 +297,25 @@ public:
      */
     void RemoveBytes(uint16_t aOffset, uint16_t aLength);
 
+    /**
+     * Reads a pointer to a previously appended object in the `FrameBuilder` at a given byte offset.
+     *
+     * This method does not perform any bounds checking. The caller MUST ensure the object of type `ObjectType`
+     * fits within the previously appended content.
+     *
+     * @tparam ObjectType  The object type to read.
+     *
+     * @param[in] aOffset  The byte offset where the object starts.
+     *
+     * @returns A pointer to the `ObjectType` at @p aOffset.
+     */
+    template <typename ObjectType> ObjectType *Read(uint16_t aOffset)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return reinterpret_cast<ObjectType *>(mBuffer + aOffset);
+    }
+
 private:
     uint8_t *mBuffer;
     uint16_t mLength;

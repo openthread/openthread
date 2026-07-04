@@ -43,6 +43,42 @@ void HeaderIe::Init(uint8_t aId, uint8_t aLen)
     SetId(aId);
 }
 
+Error HeaderIe::StartIe(FrameBuilder &aBuilder, uint8_t aId, Bookmark &aBookmark)
+{
+    Error     error = kErrorNone;
+    HeaderIe *ie;
+
+    aBookmark = aBuilder.GetLength();
+
+    ie = aBuilder.Append<HeaderIe>();
+    VerifyOrExit(ie != nullptr, error = kErrorNoBufs);
+
+    ie->Init(aId, 0);
+
+exit:
+    return error;
+}
+
+Error HeaderIe::EndIe(FrameBuilder &aBuilder, const Bookmark &aBookmark)
+{
+    Error     error  = kErrorNone;
+    uint16_t  offset = aBookmark;
+    uint16_t  length;
+    HeaderIe *ie;
+
+    VerifyOrExit(offset + sizeof(HeaderIe) <= aBuilder.GetLength(), error = kErrorInvalidArgs);
+
+    ie = aBuilder.Read<HeaderIe>(offset);
+
+    length = aBuilder.GetLength() - offset - sizeof(HeaderIe);
+    VerifyOrExit(length <= kMaxLength, error = kErrorInvalidArgs);
+
+    ie->SetLength(static_cast<uint8_t>(length));
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 Error ConnectionIe::SetWakeupId(WakeupId aWakeupId)
