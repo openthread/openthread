@@ -560,8 +560,7 @@ public:
     Error ResetCsl(void);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
-    OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OT_CONFIG_RADIO_TIME_ENABLE
     /**
      * Get the current radio time in microseconds referenced to a continuous monotonic local radio clock (64 bits
      * width).
@@ -592,7 +591,7 @@ public:
      * @returns The CSL Uncertainty in units of 10 us.
      */
     uint8_t GetCslUncertainty(void);
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OT_CONFIG_RADIO_TIME_ENABLE
 
     /**
      * Gets the radio transmit frame buffer.
@@ -1019,8 +1018,7 @@ inline Error Radio::EnableCsl(uint32_t aCslPeriod, Mac::ShortAddress aShortAddr,
 inline Error Radio::ResetCsl(void) { return otPlatRadioResetCsl(GetInstancePtr()); }
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
-    OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OT_CONFIG_RADIO_TIME_ENABLE
 inline RadioTime64 Radio::GetNow(void) { return otPlatRadioGetNow(GetInstancePtr()); }
 
 inline uint8_t Radio::GetCslAccuracy(void) { return otPlatRadioGetCslAccuracy(GetInstancePtr()); }
@@ -1127,8 +1125,7 @@ inline Error Radio::EnableCsl(uint32_t, Mac::ShortAddress, const Mac::ExtAddress
 inline Error Radio::ResetCsl(void) { return kErrorNotImplemented; }
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
-    OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OT_CONFIG_RADIO_TIME_ENABLE
 inline RadioTime64 Radio::GetNow(void) { return NumericLimits<uint64_t>::kMax; }
 
 inline uint8_t Radio::GetCslAccuracy(void) { return NumericLimits<uint8_t>::kMax; }
