@@ -288,52 +288,17 @@ bool Frame::IsWakeupFrame(void) const
 }
 #endif
 
-void Frame::SetAckRequest(bool aAckRequest)
+void Frame::UpdateFcfFlag(bool aSet, uint16_t aBitFlag)
 {
-    uint16_t fcf  = GetFrameControlField();
-    uint16_t mask = kFcfAckRequest;
+    uint16_t fcf = GetFrameControlField();
 
-    if (aAckRequest)
+    if (aSet)
     {
-        fcf |= mask;
+        fcf |= aBitFlag;
     }
     else
     {
-        fcf &= ~mask;
-    }
-
-    SetFrameControlField(fcf);
-}
-
-void Frame::SetFramePending(bool aFramePending)
-{
-    uint16_t fcf  = GetFrameControlField();
-    uint16_t mask = kFcfFramePending;
-
-    if (aFramePending)
-    {
-        fcf |= mask;
-    }
-    else
-    {
-        fcf &= ~mask;
-    }
-
-    SetFrameControlField(fcf);
-}
-
-void Frame::SetIePresent(bool aIePresent)
-{
-    uint16_t fcf  = GetFrameControlField();
-    uint16_t mask = kFcfIePresent;
-
-    if (aIePresent)
-    {
-        fcf |= mask;
-    }
-    else
-    {
-        fcf &= ~mask;
+        fcf &= ~aBitFlag;
     }
 
     SetFrameControlField(fcf);
