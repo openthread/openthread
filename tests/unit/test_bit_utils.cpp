@@ -37,23 +37,28 @@ namespace ot {
 
 void TestCountBitsInMask(void)
 {
-    VerifyOrQuit(CountBitsInMask<uint8_t>(0) == 0);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(1) == 1);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(2) == 1);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(3) == 2);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(4) == 1);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(7) == 3);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(11) == 3);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(15) == 4);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(0x11) == 2);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(0xef) == 7);
-    VerifyOrQuit(CountBitsInMask<uint8_t>(0xff) == 8);
+    VerifyOrQuit(CountBitsInMask(0) == 0);
+    VerifyOrQuit(CountBitsInMask(1) == 1);
+    VerifyOrQuit(CountBitsInMask(2) == 1);
+    VerifyOrQuit(CountBitsInMask(3) == 2);
+    VerifyOrQuit(CountBitsInMask(4) == 1);
+    VerifyOrQuit(CountBitsInMask(7) == 3);
+    VerifyOrQuit(CountBitsInMask(11) == 3);
+    VerifyOrQuit(CountBitsInMask(15) == 4);
+    VerifyOrQuit(CountBitsInMask(0x11) == 2);
+    VerifyOrQuit(CountBitsInMask(0xef) == 7);
+    VerifyOrQuit(CountBitsInMask(0xff) == 8);
 
-    VerifyOrQuit(CountBitsInMask<uint16_t>(0) == 0);
-    VerifyOrQuit(CountBitsInMask<uint16_t>(0xff00) == 8);
-    VerifyOrQuit(CountBitsInMask<uint16_t>(0xff) == 8);
-    VerifyOrQuit(CountBitsInMask<uint16_t>(0xaa55) == 8);
-    VerifyOrQuit(CountBitsInMask<uint16_t>(0xffff) == 16);
+    VerifyOrQuit(CountBitsInMask(0xff00) == 8);
+    VerifyOrQuit(CountBitsInMask(0xaa55) == 8);
+    VerifyOrQuit(CountBitsInMask(0xffff) == 16);
+
+    VerifyOrQuit(CountBitsInMask(0x10000) == 1);
+    VerifyOrQuit(CountBitsInMask(0xff0055) == 12);
+    VerifyOrQuit(CountBitsInMask(0xaa0055) == 8);
+    VerifyOrQuit(CountBitsInMask(0xaa007700) == 10);
+    VerifyOrQuit(CountBitsInMask(0xffff0000) == 16);
+    VerifyOrQuit(CountBitsInMask(0xffffffff) == 32);
 
     printf("TestCountBitsInMask() passed\n");
 }
