@@ -99,7 +99,7 @@ enum StorageType : uint8_t
  */
 typedef otCryptoKeyRef KeyRef;
 
-constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Invalid `KeyRef` value (PSA_KEY_ID_VENDOR_MAX + 1).
+constexpr KeyRef kInvalidKeyRef = OPENTHREAD_CONFIG_CRYPTO_INVALID_KEY_REF; ///< Sentinel marking "no key set".
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
@@ -190,7 +190,7 @@ private:
  * @retval TRUE   If @p aKeyRef is valid.
  * @retval FALSE  If @p aKeyRef is not valid.
  */
-inline bool IsKeyRefValid(KeyRef aKeyRef) { return (aKeyRef < kInvalidKeyRef); }
+inline bool IsKeyRefValid(KeyRef aKeyRef) { return otPlatCryptoIsKeyRefValid(aKeyRef); }
 
 /**
  * Import a key into PSA ITS.
