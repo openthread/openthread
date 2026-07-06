@@ -4959,6 +4959,64 @@ enum
      */
     SPINEL_PROP_DNSSD_SRV_RESULT = SPINEL_PROP_DNSSD__BEGIN + 9,
 
+    /// DNS-SD TXT Resolver
+    /**
+     * Format: `UULD`: Inserted/Removed
+     *
+     * `U`: The service instance label.
+     * `U`: The service type.
+     * `L`: The infrastructure network interface index.
+     * `D`: The context of the request (pointer to `otPlatDnssdTxtCallback`).
+     */
+    SPINEL_PROP_DNSSD_TXT_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 10,
+
+    /// DNS-SD TXT Resolution Result
+    /**
+     * Format: `UUdLLD`: Set
+     *
+     * `U`: Service instance label.
+     * `U`: Service type.
+     * `d`: Encoded TXT data bytes (empty if removed).
+     * `L`: TTL in seconds (zero indicates removal).
+     * `L`: Infrastructure interface index.
+     * `D`: Callback context (`sizeof(otPlatDnssdTxtCallback)`).
+     */
+    SPINEL_PROP_DNSSD_TXT_RESULT = SPINEL_PROP_DNSSD__BEGIN + 11,
+
+    /// DNS-SD IPv6 Address Resolver
+    /**
+     * Format: `ULD`: Inserted/Removed
+     *
+     * `U`: Host name (no domain).
+     * `L`: Infrastructure interface index.
+     * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
+     */
+    SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 12,
+
+    /// DNS-SD IPv6 Address Resolution Result
+    /**
+     * Format: `ULS(A(6)L)D`: Set
+     *
+     * `U`: Host name.
+     * `L`: Infrastructure interface index.
+     * `S`: Number of entries.
+     * `(A(6)L)`: Array of (`S` entries) of (`A(6)` IPv6 address, `L` TTL) entries.
+     * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
+     */
+    SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 13,
+
+    /// DNS-SD IPv4 Address Resolver
+    /**
+     * Format: `ULD`: Inserted/Removed (same as IPv6 resolver; IPv4 uses IPv4-mapped IPv6 in results).
+     */
+    SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 14,
+
+    /// DNS-SD IPv4 Address Resolution Result
+    /**
+     * Format: Same as `SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT`.
+     */
+    SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 15,
+
     SPINEL_PROP_DNSSD__END = 0x950,
 
     SPINEL_PROP_BORDER_AGENT__BEGIN = 0x950,
