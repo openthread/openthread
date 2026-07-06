@@ -186,6 +186,23 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES
+ *
+ * The maximum number of `otPlatDnssdAddressAndTtl` entries the NCP decodes from a single
+ * `SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT` or `SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT` property update.
+ *
+ * Each entry is stored on the stack while handling the property; increase this only if the host may
+ * send larger address lists and the platform can afford the extra stack usage.
+ *
+ * Must be at least 1. If the Spinel address array contains more entries than this limit, the NCP
+ * reports the first `OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES` entries and ignores
+ * the rest.
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES
+#define OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES 32
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
  *
  * Define to 1 to enable the NCP CLI Stream feature.

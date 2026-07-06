@@ -316,6 +316,152 @@ void TestNcpDnssdSrvResolve(void)
     VerifyOrQuit(sDnssdSrvCallbackInvoked);
 }
 
+static bool sDnssdTxtCallbackInvoked = false;
+
+static const uint8_t kTestTxtData[] = {0x01, 0x02, 0x03};
+
+static void TestDnssdTxtCallback(otInstance *aInstance, const otPlatDnssdTxtResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    VerifyOrQuit(strcmp(aResult->mServiceInstance, "GAT-X303 #1") == 0);
+    VerifyOrQuit(strcmp(aResult->mServiceType, "_ms._tcp") == 0);
+    VerifyOrQuit(aResult->mTxtDataLength == sizeof(kTestTxtData));
+    VerifyOrQuit(aResult->mTxtData != nullptr);
+    VerifyOrQuit(memcmp(aResult->mTxtData, kTestTxtData, sizeof(kTestTxtData)) == 0);
+    VerifyOrQuit(aResult->mTtl == 90);
+    VerifyOrQuit(aResult->mInfraIfIndex == 1);
+
+    sDnssdTxtCallbackInvoked = true;
+}
+
+static otError GenerateSpinelDnssdTxtResultFrame(const otPlatDnssdTxtResult &aTxtResult, uint8_t *aBuf, uint16_t &aLen)
+{
+    otError                error = OT_ERROR_NONE;
+    uint8_t                buf[kMaxSpinelBufferSize];
+    Spinel::Buffer         ncpBuffer(buf, kMaxSpinelBufferSize);
+    Spinel::Encoder        encoder(ncpBuffer);
+    otPlatDnssdTxtCallback callback = &TestDnssdTxtCallback;
+
+    uint8_t header = SPINEL_HEADER_FLAG | 0 /* Iid */ | 1 /* Tid */;
+    SuccessOrExit(error = encoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_DNSSD_TXT_RESULT));
+    SuccessOrExit(error = EncodeDnssdTxtResult(encoder, aTxtResult, reinterpret_cast<const uint8_t *>(&callback),
+                                               sizeof(callback)));
+    SuccessOrExit(error = encoder.EndFrame());
+
+    SuccessOrExit(ncpBuffer.OutFrameBegin());
+    aLen = ncpBuffer.OutFrameGetLength();
+    VerifyOrExit(ncpBuffer.OutFrameRead(aLen, aBuf) == aLen, error = OT_ERROR_FAILED);
+
+exit:
+    return error;
+}
+
+void TestNcpDnssdTxtResolve(void)
+{
+    Instance              *instance = static_cast<Instance *>(testInitInstance());
+    Ncp::NcpBase           ncpBase(instance);
+    uint8_t                recvBuf[kMaxSpinelBufferSize];
+    uint16_t               recvLen;
+    otPlatDnssdTxtResolver resolver;
+    otPlatDnssdTxtResult   txtResult;
+
+    resolver.mServiceInstance = "GAT-X303 #1";
+    resolver.mServiceType     = "_ms._tcp";
+    resolver.mInfraIfIndex    = 1;
+    resolver.mCallback        = TestDnssdTxtCallback;
+
+    otPlatDnssdStartTxtResolver(instance, &resolver);
+
+    txtResult.mServiceInstance = "GAT-X303 #1";
+    txtResult.mServiceType     = "_ms._tcp";
+    txtResult.mTxtData         = kTestTxtData;
+    txtResult.mTxtDataLength   = sizeof(kTestTxtData);
+    txtResult.mTtl             = 90;
+    txtResult.mInfraIfIndex    = 1;
+
+    SuccessOrQuit(GenerateSpinelDnssdTxtResultFrame(txtResult, recvBuf, recvLen));
+
+    ncpBase.HandleReceive(recvBuf, recvLen);
+
+    VerifyOrQuit(sDnssdTxtCallbackInvoked);
+}
+
+static bool sDnssdAddressCallbackInvoked = false;
+
+static void TestDnssdAddressCallback(otInstance *aInstance, const otPlatDnssdAddressResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    VerifyOrQuit(strcmp(aResult->mHostName, "my-host") == 0);
+    VerifyOrQuit(aResult->mInfraIfIndex == 3);
+    VerifyOrQuit(aResult->mAddressesLength == 2);
+    VerifyOrQuit(aResult->mAddresses != nullptr);
+    VerifyOrQuit(aResult->mAddresses[0].mTtl == 60);
+    VerifyOrQuit(aResult->mAddresses[1].mTtl == 120);
+    VerifyOrQuit(aResult->mAddresses[0].mAddress.mFields.m8[0] == 0x11);
+    VerifyOrQuit(aResult->mAddresses[1].mAddress.mFields.m8[0] == 0x22);
+
+    sDnssdAddressCallbackInvoked = true;
+}
+
+static otError GenerateSpinelDnssdAddressResultFrame(const otPlatDnssdAddressResult &aAddressResult,
+                                                     uint8_t                        *aBuf,
+                                                     uint16_t                       &aLen)
+{
+    otError                    error = OT_ERROR_NONE;
+    uint8_t                    buf[kMaxSpinelBufferSize];
+    Spinel::Buffer             ncpBuffer(buf, kMaxSpinelBufferSize);
+    Spinel::Encoder            encoder(ncpBuffer);
+    otPlatDnssdAddressCallback callback = &TestDnssdAddressCallback;
+
+    uint8_t header = SPINEL_HEADER_FLAG | 0 /* Iid */ | 1 /* Tid */;
+    SuccessOrExit(error = encoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT));
+    SuccessOrExit(error = EncodeDnssdAddressResult(encoder, aAddressResult,
+                                                   reinterpret_cast<const uint8_t *>(&callback), sizeof(callback)));
+    SuccessOrExit(error = encoder.EndFrame());
+
+    SuccessOrExit(ncpBuffer.OutFrameBegin());
+    aLen = ncpBuffer.OutFrameGetLength();
+    VerifyOrExit(ncpBuffer.OutFrameRead(aLen, aBuf) == aLen, error = OT_ERROR_FAILED);
+
+exit:
+    return error;
+}
+
+void TestNcpDnssdAddressResolve(void)
+{
+    Instance                  *instance = static_cast<Instance *>(testInitInstance());
+    Ncp::NcpBase               ncpBase(instance);
+    uint8_t                    recvBuf[kMaxSpinelBufferSize];
+    uint16_t                   recvLen;
+    otPlatDnssdAddressResolver resolver;
+    otPlatDnssdAddressResult   addrResult;
+    otPlatDnssdAddressAndTtl   addrArray[2];
+
+    resolver.mHostName     = "my-host";
+    resolver.mInfraIfIndex = 3;
+    resolver.mCallback     = TestDnssdAddressCallback;
+
+    otPlatDnssdStartIp6AddressResolver(instance, &resolver);
+
+    memset(&addrArray[0].mAddress, 0x11, sizeof(addrArray[0].mAddress));
+    addrArray[0].mTtl = 60;
+    memset(&addrArray[1].mAddress, 0x22, sizeof(addrArray[1].mAddress));
+    addrArray[1].mTtl = 120;
+
+    addrResult.mHostName        = "my-host";
+    addrResult.mInfraIfIndex    = 3;
+    addrResult.mAddresses       = addrArray;
+    addrResult.mAddressesLength = 2;
+
+    SuccessOrQuit(GenerateSpinelDnssdAddressResultFrame(addrResult, recvBuf, recvLen));
+
+    ncpBase.HandleReceive(recvBuf, recvLen);
+
+    VerifyOrQuit(sDnssdAddressCallbackInvoked);
+}
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
@@ -327,6 +473,8 @@ int main(void)
     ot::TestNcpDnssdRegistrations();
     ot::TestNcpDnssdBrowse();
     ot::TestNcpDnssdSrvResolve();
+    ot::TestNcpDnssdTxtResolve();
+    ot::TestNcpDnssdAddressResolve();
 #endif
     printf("All tests passed\n");
     return 0;
