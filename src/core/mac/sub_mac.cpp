@@ -603,9 +603,9 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         aFrame.SetIsARetransmission(true);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
-        if (aFrame.GetSecurityEnabled() && aFrame.IsSecurityProcessed() && aFrame.HasAnyHeaderIe())
+        if (aFrame.GetSecurityEnabled() && aFrame.HasAnyHeaderIe())
         {
-            aFrame.DecryptTransmitAesCcm(GetExtAddress());
+            aFrame.RestoreTransmitSecurity(GetExtAddress());
         }
 
         ProcessTransmitSecurity();

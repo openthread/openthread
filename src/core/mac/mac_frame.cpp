@@ -1238,7 +1238,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
-void TxFrame::DecryptTransmitAesCcm(const ExtAddress &aExtAddress)
+void TxFrame::RestoreTransmitSecurity(const ExtAddress &aExtAddress)
 {
     uint32_t              frameCounter = 0;
     uint8_t               securityLevel;
@@ -1262,10 +1262,9 @@ void TxFrame::DecryptTransmitAesCcm(const ExtAddress &aExtAddress)
     IgnoreError(aesCcm.Process(Crypto::AesCcm::kDecrypt, GetPayload(), GetPayloadLength()));
 
     SetIsSecurityProcessed(false);
-    SetIsHeaderUpdated(false);
 
 exit:
-    return;
+    SetIsHeaderUpdated(false);
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
