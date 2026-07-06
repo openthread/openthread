@@ -544,6 +544,8 @@ OT_TOOL_WEAK void otPlatInfraIfDhcp6PdClientSend(otInstance   *aInstance,
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
+bool otPlatCryptoIsKeyRefValid(otCryptoKeyRef aKeyRef) { return (aKeyRef != OPENTHREAD_CONFIG_CRYPTO_INVALID_KEY_REF); }
+
 otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
                               otCryptoKeyType      aKeyType,
                               otCryptoKeyAlgorithm aKeyAlgorithm,
