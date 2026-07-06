@@ -1082,12 +1082,12 @@ public:
     void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
 
     /**
-     * Decrypts the frame which was previously encrypted.
+     * Restore the frame for transmit processing.
      *
      * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
      *                          for AES CCM computation.
      */
-    void DecryptTransmitAesCcm(const ExtAddress &aExtAddress);
+    void RestoreTransmitSecurity(const ExtAddress &aExtAddress);
 
     /**
      * Indicates whether or not the frame has security processed.
