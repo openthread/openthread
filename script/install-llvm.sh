@@ -28,7 +28,7 @@
 #
 # This script downloads and installs a specific version of clang-format and clang-tidy.
 
-set -e
+set -e -o pipefail
 
 LLVM_VERSION="19.1.7"
 ARCH=$(uname -m)
@@ -42,26 +42,15 @@ fi
 LLVM_PACKAGE="LLVM-${LLVM_VERSION}-Linux-X64"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVM_PACKAGE}.tar.xz"
 INSTALL_DIR="/opt/llvm-${LLVM_VERSION}"
-TEMP_DIR=$(mktemp -d)
+INSTALL_DIR_tmp="$INSTALL_DIR.tmp"
 
-cleanup()
-{
-    rm -rf "${TEMP_DIR}"
-}
+sudo mkdir -p "${INSTALL_DIR_tmp}"
+trap 'sudo rm -rf "${INSTALL_DIR_tmp}"' EXIT
 
-trap cleanup EXIT
-
-cd "${TEMP_DIR}"
-
-echo "Downloading LLVM from ${LLVM_URL}..."
-wget -O llvm.tar.xz "${LLVM_URL}"
-
-echo "Uncompressing to ${TEMP_DIR}..."
-tar xf llvm.tar.xz
-
-echo "Installing to ${INSTALL_DIR}..."
-sudo mkdir -p /opt
-sudo mv "${LLVM_PACKAGE}" "${INSTALL_DIR}"
+echo "Downloading LLVM from '${LLVM_URL}' into '${INSTALL_DIR}' ..."
+wget -O - "${LLVM_URL}" | sudo tar -f - -C "${INSTALL_DIR_tmp}" --strip-components=1 -xJ
+sudo rm -rf "${INSTALL_DIR}"
+sudo mv "${INSTALL_DIR_tmp}" "${INSTALL_DIR}"
 
 echo "Creating symlinks in /usr/local/bin..."
 sudo ln -sf "${INSTALL_DIR}/bin/clang-format" "/usr/local/bin/clang-format-19"
