@@ -75,6 +75,7 @@ static Error PsaToOtError(psa_status_t aStatus)
         error = kErrorNone;
         break;
     case PSA_ERROR_INVALID_ARGUMENT:
+    case PSA_ERROR_INVALID_HANDLE:
         error = kErrorInvalidArgs;
         break;
     case PSA_ERROR_BUFFER_TOO_SMALL:
@@ -254,6 +255,12 @@ OT_TOOL_WEAK void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return otPlat
 OT_TOOL_WEAK void  otPlatCryptoFree(void *aPtr) { otPlatFree(aPtr); }
 #endif
 
+OT_TOOL_WEAK bool otPlatCryptoIsKeyRefValid(otCryptoKeyRef aKeyRef)
+{
+    return IsValueInRange(aKeyRef, PSA_KEY_ID_USER_MIN, PSA_KEY_ID_USER_MAX) ||
+           IsValueInRange(aKeyRef, PSA_KEY_ID_VENDOR_MIN, PSA_KEY_ID_VENDOR_MAX);
+}
+
 OT_TOOL_WEAK otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
                                            otCryptoKeyType      aKeyType,
                                            otCryptoKeyAlgorithm aKeyAlgorithm,
@@ -290,6 +297,9 @@ OT_TOOL_WEAK otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
     switch (aKeyPersistence)
     {
     case OT_CRYPTO_KEY_STORAGE_PERSISTENT:
+        // For persistent storage, the caller supplies the target `KeyRef` via `*aKeyRef`, so it must be validated
+        // here. For volatile storage, `*aKeyRef` is a pure output populated by `psa_import_key()` below.
+        VerifyOrExit(otPlatCryptoIsKeyRefValid(*aKeyRef), error = kErrorInvalidArgs);
         psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_PERSISTENT);
         psa_set_key_id(&attributes, *aKeyRef);
         break;
@@ -313,6 +323,7 @@ OT_TOOL_WEAK otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuf
     Error error = kErrorNone;
 
     VerifyOrExit(aBuffer != nullptr && aKeyLen != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aKeyRef), error = kErrorInvalidArgs);
 
     error = PsaToOtError(psa_export_key(aKeyRef, aBuffer, aBufferLen, aKeyLen));
 
@@ -320,16 +331,28 @@ exit:
     return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef) { return PsaToOtError(psa_destroy_key(aKeyRef)); }
+OT_TOOL_WEAK otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aKeyRef), error = kErrorInvalidArgs);
+    error = PsaToOtError(psa_destroy_key(aKeyRef));
+
+exit:
+    return error;
+}
 
 OT_TOOL_WEAK bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_status_t         status;
+    psa_status_t         status     = PSA_ERROR_INVALID_HANDLE;
+
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aKeyRef));
 
     status = psa_get_key_attributes(aKeyRef, &attributes);
     psa_reset_key_attributes(&attributes);
 
+exit:
     return status == PSA_SUCCESS;
 }
 
@@ -341,7 +364,7 @@ OT_TOOL_WEAK otError otPlatCryptoAesInit(otCryptoContext *aContext)
     SuccessOrExit(error = ValidateContext(aContext, sizeof(psa_key_id_t)));
 
     keyRef  = static_cast<psa_key_id_t *>(aContext->mContext);
-    *keyRef = PSA_KEY_ID_NULL;
+    *keyRef = PSA_KEY_ID_NULL; // Initialize the key reference to an invalid value.
 
 exit:
     return error;
@@ -353,7 +376,8 @@ OT_TOOL_WEAK otError otPlatCryptoAesSetKey(otCryptoContext *aContext, const otCr
     psa_key_id_t *keyRef;
 
     SuccessOrExit(error = ValidateContext(aContext, sizeof(psa_key_id_t)));
-    VerifyOrExit(aKey != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aKey != nullptr && aKey->mKey == nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aKey->mKeyRef), error = kErrorInvalidArgs);
 
     keyRef  = static_cast<psa_key_id_t *>(aContext->mContext);
     *keyRef = aKey->mKeyRef;
@@ -374,6 +398,7 @@ OT_TOOL_WEAK otError otPlatCryptoAesEncrypt(otCryptoContext *aContext, const uin
     VerifyOrExit(aInput != nullptr && aOutput != nullptr, error = kErrorInvalidArgs);
 
     keyRef = static_cast<psa_key_id_t *>(aContext->mContext);
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(*keyRef), error = kErrorInvalidArgs);
     status = psa_cipher_encrypt(*keyRef, PSA_ALG_ECB_NO_PADDING, aInput, blockSize, aOutput, blockSize, &cipherLen);
 
     error = PsaToOtError(status);
@@ -403,6 +428,8 @@ OT_TOOL_WEAK otError otPlatCryptoAesCcmProcessOneShot(bool                      
 
     VerifyOrExit(aConfig != nullptr && aConfig->mNonce != nullptr && aData != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aConfig->mKey.mKey == nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aConfig->mKey.mKeyRef), error = kErrorInvalidArgs);
+    VerifyOrExit(aHeader != nullptr || aConfig->mHeaderLength == 0, error = kErrorInvalidArgs);
 
     algorithm = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, aConfig->mTagLength);
 
@@ -472,6 +499,7 @@ OT_TOOL_WEAK otError otPlatCryptoHmacSha256Start(otCryptoContext *aContext, cons
 
     SuccessOrExit(error = ValidateContext(aContext, sizeof(psa_mac_operation_t)));
     VerifyOrExit(aKey != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aKey->mKeyRef), error = kErrorInvalidArgs);
 
     operation = static_cast<psa_mac_operation_t *>(aContext->mContext);
 
@@ -548,6 +576,7 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(otCryptoContext   *aContext,
 
     SuccessOrExit(error = ValidateContext(aContext, sizeof(psa_key_derivation_operation_t)));
     VerifyOrExit(aInputKey != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aInputKey->mKeyRef), error = kErrorInvalidArgs);
 
     operation = static_cast<psa_key_derivation_operation_t *>(aContext->mContext);
 
@@ -580,7 +609,10 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(otCryptoContext   *aContext,
 
 exit:
     psa_reset_key_attributes(&attributes);
-    psa_destroy_key(keyRef);
+    if (otPlatCryptoIsKeyRefValid(keyRef))
+    {
+        psa_destroy_key(keyRef);
+    }
 
     return error;
 }
@@ -722,8 +754,10 @@ OT_TOOL_WEAK otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize)
 OT_TOOL_WEAK otError otPlatCryptoEcdsaGenerateAndImportKey(otCryptoKeyRef aKeyRef)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_status_t         status;
-    psa_key_id_t         keyId = static_cast<psa_key_id_t>(aKeyRef);
+    psa_status_t         status     = PSA_ERROR_INVALID_HANDLE;
+    psa_key_id_t         keyId      = static_cast<psa_key_id_t>(aKeyRef);
+
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aKeyRef));
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_SIGN_HASH);
     psa_set_key_algorithm(&attributes, PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_256));
@@ -743,9 +777,11 @@ exit:
 
 OT_TOOL_WEAK otError otPlatCryptoEcdsaExportPublicKey(otCryptoKeyRef aKeyRef, otPlatCryptoEcdsaPublicKey *aPublicKey)
 {
-    psa_status_t status;
+    psa_status_t status = PSA_ERROR_INVALID_HANDLE;
     size_t       exportedLen;
     uint8_t      buffer[1 + OT_CRYPTO_ECDSA_PUBLIC_KEY_SIZE];
+
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aKeyRef));
 
     status = psa_export_public_key(aKeyRef, buffer, sizeof(buffer), &exportedLen);
     VerifyOrExit(status == PSA_SUCCESS);
@@ -761,8 +797,10 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaSignUsingKeyRef(otCryptoKeyRef            
                                                       const otPlatCryptoSha256Hash *aHash,
                                                       otPlatCryptoEcdsaSignature   *aSignature)
 {
-    psa_status_t status;
+    psa_status_t status = PSA_ERROR_INVALID_HANDLE;
     size_t       signatureLen;
+
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aKeyRef));
 
     status = psa_sign_hash(aKeyRef, PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_256), aHash->m8, OT_CRYPTO_SHA256_HASH_SIZE,
                            aSignature->m8, OT_CRYPTO_ECDSA_SIGNATURE_SIZE, &signatureLen);
@@ -811,7 +849,9 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaVerifyUsingKeyRef(otCryptoKeyRef          
                                                         const otPlatCryptoSha256Hash     *aHash,
                                                         const otPlatCryptoEcdsaSignature *aSignature)
 {
-    psa_status_t status;
+    psa_status_t status = PSA_ERROR_INVALID_HANDLE;
+
+    VerifyOrExit(otPlatCryptoIsKeyRefValid(aKeyRef));
 
     status = psa_verify_hash(aKeyRef, PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_256), aHash->m8,
                              OT_CRYPTO_SHA256_HASH_SIZE, aSignature->m8, OT_CRYPTO_ECDSA_SIGNATURE_SIZE);

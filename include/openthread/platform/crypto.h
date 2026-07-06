@@ -224,6 +224,18 @@ typedef struct otPlatCryptoEcdsaSignature otPlatCryptoEcdsaSignature;
 void otPlatCryptoInit(void);
 
 /**
+ * Check whether a given key reference is valid.
+ *
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ * 
+ * @param[in]  aKeyRef          The Key Ref to check.
+ *
+ * @retval TRUE                 @p aKeyRef is valid.
+ * @retval FALSE                @p aKeyRef is not valid.
+ */
+bool otPlatCryptoIsKeyRefValid(otCryptoKeyRef aKeyRef);
+
+/**
  * Import a key into PSA ITS.
  *
  * @param[in,out] aKeyRef           Pointer to the key ref to be used for crypto operations.
