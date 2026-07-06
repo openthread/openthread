@@ -176,6 +176,69 @@ void TestDetermineMinBitSize(void)
     printf("TestDetermineMinBitSize() passed\n");
 }
 
+void TestMaskForBitSize(void)
+{
+    VerifyOrQuit(MaskForBitSize<uint8_t>(0) == 0);
+    VerifyOrQuit(MaskForBitSize<uint8_t>(1) == 0x01);
+    VerifyOrQuit(MaskForBitSize<uint8_t>(2) == 0x03);
+    VerifyOrQuit(MaskForBitSize<uint8_t>(3) == 0x07);
+    VerifyOrQuit(MaskForBitSize<uint8_t>(4) == 0x0f);
+    VerifyOrQuit(MaskForBitSize<uint8_t>(7) == 0x7f);
+    VerifyOrQuit(MaskForBitSize<uint8_t>(8) == 0xff);
+    VerifyOrQuit(MaskForBitSize<uint8_t>(9) == 0xff);
+
+    VerifyOrQuit(MaskForBitSize<uint16_t>(0) == 0);
+    VerifyOrQuit(MaskForBitSize<uint16_t>(7) == 0x007f);
+    VerifyOrQuit(MaskForBitSize<uint16_t>(8) == 0x00ff);
+    VerifyOrQuit(MaskForBitSize<uint16_t>(11) == 0x07ff);
+    VerifyOrQuit(MaskForBitSize<uint16_t>(16) == 0xffff);
+    VerifyOrQuit(MaskForBitSize<uint16_t>(20) == 0xffff);
+
+    VerifyOrQuit(MaskForBitSize<uint32_t>(0) == 0);
+    VerifyOrQuit(MaskForBitSize<uint32_t>(16) == 0x0000ffff);
+    VerifyOrQuit(MaskForBitSize<uint32_t>(31) == 0x7fffffff);
+    VerifyOrQuit(MaskForBitSize<uint32_t>(32) == 0xffffffff);
+    VerifyOrQuit(MaskForBitSize<uint32_t>(33) == 0xffffffff);
+
+    VerifyOrQuit(MaskForBitSize<uint64_t>(0) == 0);
+    VerifyOrQuit(MaskForBitSize<uint64_t>(32) == 0xffffffffULL);
+    VerifyOrQuit(MaskForBitSize<uint64_t>(63) == 0x7fffffffffffffffULL);
+    VerifyOrQuit(MaskForBitSize<uint64_t>(64) == 0xffffffffffffffffULL);
+    VerifyOrQuit(MaskForBitSize<uint64_t>(65) == 0xffffffffffffffffULL);
+
+    // Compile-time checks
+
+    static_assert(MaskForBitSize<uint8_t>(0) == 0, "MaskForBitSize<uint8_t>(0) failed");
+    static_assert(MaskForBitSize<uint8_t>(1) == 0x01, "MaskForBitSize<uint8_t>(1) failed");
+    static_assert(MaskForBitSize<uint8_t>(2) == 0x03, "MaskForBitSize<uint8_t>(2) failed");
+    static_assert(MaskForBitSize<uint8_t>(3) == 0x07, "MaskForBitSize<uint8_t>(3) failed");
+    static_assert(MaskForBitSize<uint8_t>(4) == 0x0f, "MaskForBitSize<uint8_t>(4) failed");
+    static_assert(MaskForBitSize<uint8_t>(7) == 0x7f, "MaskForBitSize<uint8_t>(7) failed");
+    static_assert(MaskForBitSize<uint8_t>(8) == 0xff, "MaskForBitSize<uint8_t>(8) failed");
+    static_assert(MaskForBitSize<uint8_t>(9) == 0xff, "MaskForBitSize<uint8_t>(9) failed");
+
+    static_assert(MaskForBitSize<uint16_t>(0) == 0, "MaskForBitSize<uint16_t>(0) failed");
+    static_assert(MaskForBitSize<uint16_t>(7) == 0x007f, "MaskForBitSize<uint16_t>(7) failed");
+    static_assert(MaskForBitSize<uint16_t>(8) == 0x00ff, "MaskForBitSize<uint16_t>(8) failed");
+    static_assert(MaskForBitSize<uint16_t>(11) == 0x07ff, "MaskForBitSize<uint16_t>(11) failed");
+    static_assert(MaskForBitSize<uint16_t>(16) == 0xffff, "MaskForBitSize<uint16_t>(16) failed");
+    static_assert(MaskForBitSize<uint16_t>(20) == 0xffff, "MaskForBitSize<uint16_t>(20) failed");
+
+    static_assert(MaskForBitSize<uint32_t>(0) == 0, "MaskForBitSize<uint32_t>(0) failed");
+    static_assert(MaskForBitSize<uint32_t>(16) == 0x0000ffff, "MaskForBitSize<uint32_t>(16) failed");
+    static_assert(MaskForBitSize<uint32_t>(31) == 0x7fffffff, "MaskForBitSize<uint32_t>(31) failed");
+    static_assert(MaskForBitSize<uint32_t>(32) == 0xffffffff, "MaskForBitSize<uint32_t>(32) failed");
+    static_assert(MaskForBitSize<uint32_t>(33) == 0xffffffff, "MaskForBitSize<uint32_t>(33) failed");
+
+    static_assert(MaskForBitSize<uint64_t>(0) == 0, "MaskForBitSize<uint64_t>(0) failed");
+    static_assert(MaskForBitSize<uint64_t>(32) == 0xffffffffULL, "MaskForBitSize<uint64_t>(32) failed");
+    static_assert(MaskForBitSize<uint64_t>(63) == 0x7fffffffffffffffULL, "MaskForBitSize<uint64_t>(63) failed");
+    static_assert(MaskForBitSize<uint64_t>(64) == 0xffffffffffffffffULL, "MaskForBitSize<uint64_t>(64) failed");
+    static_assert(MaskForBitSize<uint64_t>(65) == 0xffffffffffffffffULL, "MaskForBitSize<uint64_t>(65) failed");
+
+    printf("TestMaskForBitSize() passed\n");
+}
+
 } // namespace ot
 
 int main(void)
@@ -184,6 +247,7 @@ int main(void)
     ot::TestCountMatchingBitsAllCombinations();
     ot::TestCountMatchingBitsExamples();
     ot::TestDetermineMinBitSize();
+    ot::TestMaskForBitSize();
 
     printf("All tests passed\n");
     return 0;
