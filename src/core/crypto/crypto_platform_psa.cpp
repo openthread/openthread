@@ -402,7 +402,9 @@ OT_TOOL_WEAK otError otPlatCryptoAesCcmProcessOneShot(bool                      
     size_t          outputLen = 0;
 
     VerifyOrExit(aConfig != nullptr && aConfig->mNonce != nullptr && aData != nullptr, error = kErrorInvalidArgs);
-    VerifyOrExit(aConfig->mKey.mKey == nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aConfig->mKey.mKey == nullptr && aConfig->mKey.mKeyRef != 0,
+                 error = kErrorInvalidArgs); // only accept key reference
+    VerifyOrExit(aHeader != nullptr || aConfig->mHeaderLength == 0, error = kErrorInvalidArgs);
 
     algorithm = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, aConfig->mTagLength);
 

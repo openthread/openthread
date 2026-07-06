@@ -438,7 +438,7 @@ void SubMac::StartCsmaBackoff(void)
             RadioTime32 radioNow    = Get<Radio>().GetNowAsRadioTime32();
             RadioTime32 txStartTime = mTransmitFrame.GetTxDelayBaseTime();
 
-            txStartTime += (mTransmitFrame.mInfo.mTxInfo.mTxDelay - kAheadTime);
+            txStartTime += (mTransmitFrame.GetTxDelay() - kAheadTime);
 
             if (IsRadioTimeStrictlyBefore(radioNow, txStartTime))
             {
