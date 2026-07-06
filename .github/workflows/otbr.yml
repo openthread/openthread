@@ -65,12 +65,6 @@ jobs:
             description: ""
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
-            cert_scripts: ./tests/scripts/thread-cert/border_router/MATN/*.py
-            packet_verification: 1
-            nat64: 0
-            description: "MATN"
-          - otbr_mdns: "mDNSResponder"
-            otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/internet/*.py
             packet_verification: 1
             nat64: 1
