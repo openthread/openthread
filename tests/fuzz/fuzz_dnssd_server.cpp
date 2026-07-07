@@ -26,6 +26,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const uint16_t kMaxMessageSize = 2048;
     unsigned int   seed;
+    Message       *message         = nullptr;
 
     if (size < sizeof(seed))
     {
@@ -52,8 +53,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     // Explicitly enable the SRP server and start the unicast DNS-SD server so that the
     // UDP socket on port 53 is bound and `HandleUdpReceive` (the query parser) is reachable.
-    // `SetAutoEnableMode()` alone has no effect here because the node is not a Border Router
-    // with `RoutingManager` enabled.
     node.Get<Srp::Server>().SetEnabled(true);
     SuccessOrQuit(node.Get<Dns::ServiceDiscovery::Server>().Start());
     nexus.AdvanceTime(1 * 1000);
@@ -62,7 +61,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         uint16_t         port = Dns::ServiceDiscovery::Server::kPort;
         Ip6::Address     dest = node.Get<Mle::Mle>().GetMeshLocalEid();
         Ip6::Udp::Socket socket(node.GetInstance(), &FuzzUdpNoop, nullptr);
-        Message         *message;
         Ip6::MessageInfo info;
 
         SuccessOrExit(socket.Open(Ip6::kNetifThreadInternal));
@@ -75,7 +73,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         info.SetPeerAddr(dest);
         info.SetPeerPort(port);
 
-        IgnoreError(socket.SendTo(*message, info));
+        if (socket.SendTo(*message, info) == kErrorNone)
+        {
+            message = nullptr;
+        }
 
         nexus.AdvanceTime(2 * 1000);
 
@@ -83,6 +84,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
 exit:
+    if (message != nullptr)
+    {
+        message->Free();
+    }
     return 0;
 }
 

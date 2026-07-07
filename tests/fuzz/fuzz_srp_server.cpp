@@ -25,6 +25,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const uint16_t kMaxMessageSize = 2048;
     unsigned int   seed;
+    Message       *message         = nullptr;
 
     if (size < sizeof(seed))
     {
@@ -45,9 +46,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     // Border-router leader running the SRP server (matches the working ip6 harness setup).
     Node &server = nexus.CreateNode();
     SuccessOrQuit(server.GetInstance().SetLogLevel(kLogLevelNone));
+    server.GetInstance().Get<Srp::Server>().SetAutoEnableMode(true);
     server.GetInstance().Get<BorderRouter::InfraIf>().Init(/* aInfraIfIndex */ 1, /* aIsRunning */ true);
     SuccessOrQuit(server.GetInstance().Get<BorderRouter::RoutingManager>().SetEnabled(true));
-    server.GetInstance().Get<Srp::Server>().SetAutoEnableMode(true);
 
     server.Form();
     nexus.AdvanceTime(60 * 1000);
@@ -72,7 +73,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         uint16_t         port = server.Get<Srp::Server>().GetPort();
         Ip6::Address     dest = server.Get<Mle::Mle>().GetMeshLocalEid();
         Ip6::Udp::Socket socket(sender.GetInstance(), &FuzzUdpNoop, nullptr);
-        Message         *message;
         Ip6::MessageInfo info;
 
         SuccessOrExit(socket.Open(Ip6::kNetifThreadInternal));
@@ -85,7 +85,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         info.SetPeerAddr(dest);
         info.SetPeerPort(port);
 
-        IgnoreError(socket.SendTo(*message, info));
+        if (socket.SendTo(*message, info) == kErrorNone)
+        {
+            message = nullptr;
+        }
 
         nexus.AdvanceTime(5 * 1000);
 
@@ -93,6 +96,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
 exit:
+    if (message != nullptr)
+    {
+        message->Free();
+    }
     return 0;
 }
 
