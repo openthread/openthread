@@ -25,7 +25,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const uint16_t kMaxMessageSize = 2048;
     unsigned int   seed;
-    Message       *message         = nullptr;
+    Message *message = nullptr;
 
     if (size < sizeof(seed))
     {
