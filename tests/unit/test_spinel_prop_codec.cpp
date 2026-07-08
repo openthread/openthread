@@ -72,13 +72,15 @@ void TestDnssd(void)
     otPlatDnssdHost dnssdHostDecode;
     otIp6Address    dnssdHostAddrs[] = {
         {0xfd, 0x2a, 0xc3, 0x0c, 0x87, 0xd3, 0x00, 0x01, 0xed, 0x1c, 0x0c, 0x91, 0xcc, 0xb6, 0x57, 0x8b},
+        {0xfd, 0x2a, 0xc3, 0x0c, 0x87, 0xd3, 0x00, 0x01, 0xed, 0x1c, 0x0c, 0x91, 0xcc, 0xb6, 0x57, 0x8c},
+        {0xfd, 0x2a, 0xc3, 0x0c, 0x87, 0xd3, 0x00, 0x01, 0xed, 0x1c, 0x0c, 0x91, 0xcc, 0xb6, 0x57, 0x8d},
     };
     otPlatDnssdRequestId requestId;
     const uint8_t       *callbackData;
     uint16_t             callbackDataLen;
     dnssdHostEncode.mHostName        = "ot-host1";
     dnssdHostEncode.mAddresses       = dnssdHostAddrs;
-    dnssdHostEncode.mAddressesLength = 1;
+    dnssdHostEncode.mAddressesLength = sizeof(dnssdHostAddrs) / sizeof(dnssdHostAddrs[0]);
 
     SuccessOrQuit(error = encoder.BeginFrame(SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_INSERTED));
     SuccessOrQuit(error = EncodeDnssd(encoder, dnssdHostEncode, 1 /* aRequestId */, DnssdFakeCallback));
@@ -102,6 +104,67 @@ void TestDnssd(void)
     VerifyOrQuit(requestId == 1);
     VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdRegisterCallback));
     VerifyOrQuit(*reinterpret_cast<const otPlatDnssdRegisterCallback *>(callbackData) == DnssdFakeCallback);
+
+    ncpBuffer.Clear();
+    dnssdHostEncode.mHostName        = "ot-host-empty";
+    dnssdHostEncode.mAddresses       = nullptr;
+    dnssdHostEncode.mAddressesLength = 0;
+
+    SuccessOrQuit(error = encoder.BeginFrame(SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_INSERTED));
+    SuccessOrQuit(error = EncodeDnssd(encoder, dnssdHostEncode, 10 /* aRequestId */, DnssdFakeCallback));
+    SuccessOrQuit(error = encoder.EndFrame());
+    SuccessOrQuit(ncpBuffer.OutFrameBegin());
+    len = ncpBuffer.OutFrameGetLength();
+    VerifyOrQuit(ncpBuffer.OutFrameRead(len, buf) == len);
+
+    decoder.Init(buf, len);
+    SuccessOrQuit(error = decoder.ReadUint8(header));
+    VerifyOrQuit(header == SPINEL_HEADER_FLAG);
+    SuccessOrQuit(error = decoder.ReadUintPacked(command));
+    VerifyOrQuit(command == SPINEL_CMD_PROP_VALUE_INSERTED);
+    SuccessOrQuit(error = decoder.ReadUintPacked(propKey));
+    VerifyOrQuit(static_cast<spinel_prop_key_t>(propKey) == SPINEL_PROP_DNSSD_HOST);
+    SuccessOrQuit(error = DecodeDnssdHost(decoder, dnssdHostDecode, requestId, callbackData, callbackDataLen));
+    VerifyOrQuit(strcmp(dnssdHostDecode.mHostName, dnssdHostEncode.mHostName) == 0);
+    VerifyOrQuit(dnssdHostDecode.mAddressesLength == 0);
+    VerifyOrQuit(dnssdHostDecode.mAddresses == nullptr);
+    VerifyOrQuit(requestId == 10);
+    VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdRegisterCallback));
+    VerifyOrQuit(*reinterpret_cast<const otPlatDnssdRegisterCallback *>(callbackData) == DnssdFakeCallback);
+
+    ncpBuffer.Clear();
+    dnssdHostEncode.mHostName        = "ot-host-short";
+    dnssdHostEncode.mAddresses       = dnssdHostAddrs;
+    dnssdHostEncode.mAddressesLength = 1;
+
+    SuccessOrQuit(error = encoder.BeginFrame(SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_INSERTED));
+    SuccessOrQuit(error = EncodeDnssd(encoder, dnssdHostEncode, 11 /* aRequestId */, DnssdFakeCallback));
+    SuccessOrQuit(error = encoder.EndFrame());
+    SuccessOrQuit(ncpBuffer.OutFrameBegin());
+    len = ncpBuffer.OutFrameGetLength();
+    VerifyOrQuit(ncpBuffer.OutFrameRead(len, buf) == len);
+
+    decoder.Init(buf, len);
+    SuccessOrQuit(error = decoder.ReadUint8(header));
+    SuccessOrQuit(error = decoder.ReadUintPacked(command));
+    SuccessOrQuit(error = decoder.ReadUintPacked(propKey));
+    {
+        const char *hostName;
+
+        SuccessOrQuit(error = decoder.ReadUtf8(hostName));
+    }
+
+    buf[decoder.GetReadLength()]     = 2;
+    buf[decoder.GetReadLength() + 1] = 0;
+
+    decoder.Init(buf, len);
+    SuccessOrQuit(error = decoder.ReadUint8(header));
+    VerifyOrQuit(header == SPINEL_HEADER_FLAG);
+    SuccessOrQuit(error = decoder.ReadUintPacked(command));
+    VerifyOrQuit(command == SPINEL_CMD_PROP_VALUE_INSERTED);
+    SuccessOrQuit(error = decoder.ReadUintPacked(propKey));
+    VerifyOrQuit(static_cast<spinel_prop_key_t>(propKey) == SPINEL_PROP_DNSSD_HOST);
+    VerifyOrQuit(DecodeDnssdHost(decoder, dnssdHostDecode, requestId, callbackData, callbackDataLen) == OT_ERROR_PARSE);
 
     // Test DnssdService encoding and decoding
     otPlatDnssdService dnssdServiceEncode;
