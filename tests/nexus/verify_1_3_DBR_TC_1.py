@@ -301,7 +301,6 @@ def verify(pv):
 
     pkts.filter_wpan_src64(BR_1).\
         filter_ipv6_src(Ipv6Addr(pv.vars['ETH_1_LL_ADDR'])).\
-        filter_ipv6_dst(ED_1_OMR).\
         filter_ping_request().\
         must_not_next()
 

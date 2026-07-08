@@ -97,14 +97,19 @@ void InfraIf::RemoveAllAddresses(void)
 
 const Ip6::Address *InfraIf::FindAddress(const char *aPrefix) const
 {
-    Ip6::Prefix         prefix;
-    const Ip6::Address *matchedAddress = nullptr;
+    Ip6::Prefix prefix;
 
     SuccessOrQuit(prefix.FromString(aPrefix));
+    return FindAddress(prefix);
+}
+
+const Ip6::Address *InfraIf::FindAddress(const Ip6::Prefix &aPrefix) const
+{
+    const Ip6::Address *matchedAddress = nullptr;
 
     for (const Ip6::Address &address : mAddresses)
     {
-        if (address.MatchesPrefix(prefix))
+        if (address.MatchesPrefix(aPrefix))
         {
             matchedAddress = &address;
             break;
