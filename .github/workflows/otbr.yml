@@ -107,7 +107,7 @@ jobs:
         ./script/test build_otbr_docker
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build lcov
         sudo bash script/install_socat
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt

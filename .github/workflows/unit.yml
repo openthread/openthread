@@ -76,7 +76,7 @@ jobs:
         submodules: recursive
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov libgtest-dev libgmock-dev
     - name: Build Simulation
       run: ./script/cmake-build simulation -DOT_BUILD_GTEST=ON -DOT_BORDER_ROUTING=ON -DOT_BORDER_ROUTING_DHCP6_PD=ON

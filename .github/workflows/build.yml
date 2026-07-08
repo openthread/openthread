@@ -58,7 +58,7 @@ jobs:
         submodules: recursive
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y shellcheck iwyu
         sudo bash script/install-llvm.sh
         python3 -m pip install yapf==0.43.0
@@ -160,7 +160,7 @@ jobs:
         submodules: recursive
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
     - name: Package
       run: |
@@ -179,7 +179,7 @@ jobs:
         submodules: recursive
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y clang-tools-14 ninja-build
     - name: Run
       run: |
@@ -256,7 +256,7 @@ jobs:
     - name: Bootstrap
       run: |
         cd /tmp
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
         wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm
         tar xf gcc-arm
@@ -288,7 +288,7 @@ jobs:
         submodules: recursive
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         case ${{ matrix.gcc_ver }} in
           11)
             sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -324,7 +324,7 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ matrix.clang_ver }}
-          sudo apt-get update
+          sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
           sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
       - name: Build
         run: |
@@ -344,7 +344,7 @@ jobs:
         submodules: recursive
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build gn
     - name: Build
       run: |

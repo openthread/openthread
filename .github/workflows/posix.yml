@@ -99,7 +99,7 @@ jobs:
         retention-days: 1
     - name: Run TUN Mode
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
         sudo apt-get install --no-install-recommends -y bind9-host ntp
         sudo bash script/install_socat
@@ -159,7 +159,7 @@ jobs:
         submodules: recursive
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y expect lcov libreadline-dev net-tools ninja-build
         sudo bash script/install_socat
         cd /tmp
@@ -205,7 +205,7 @@ jobs:
         submodules: recursive
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y net-tools ninja-build
     - name: Build
       run: |
