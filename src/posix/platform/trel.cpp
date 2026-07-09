@@ -276,37 +276,50 @@ exit:
 
 static void ReceivePacket(int aSocket, otInstance *aInstance)
 {
-    struct sockaddr_in6 sockAddr;
-    socklen_t           sockAddrLen = sizeof(sockAddr);
-    ssize_t             ret;
+    const uint16_t kMaxRxPacketsPerIteration = 64;
 
-    memset(&sockAddr, 0, sizeof(sockAddr));
-
-    ret = recvfrom(aSocket, (char *)sRxPacketBuffer, sizeof(sRxPacketBuffer), 0, (struct sockaddr *)&sockAddr,
-                   &sockAddrLen);
-    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
-
-    sRxPacketLength = (uint16_t)(ret);
-
-    if (sRxPacketLength > sizeof(sRxPacketBuffer))
+    for (uint16_t i = 0; i < kMaxRxPacketsPerIteration;)
     {
-        sRxPacketLength = sizeof(sRxPacketLength);
-    }
+        struct sockaddr_in6 sockAddr;
+        socklen_t           sockAddrLen = sizeof(sockAddr);
+        ssize_t             ret;
 
-    LogDebg("ReceivePacket() - received from [%s]:%d, id:%d, pkt:%s", Ip6AddrToString(&sockAddr.sin6_addr),
-            ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id, BufferToString(sRxPacketBuffer, sRxPacketLength));
+        memset(&sockAddr, 0, sizeof(sockAddr));
 
-    if (sEnabled)
-    {
-        otSockAddr senderAddr;
+        ret = recvfrom(aSocket, (char *)sRxPacketBuffer, sizeof(sRxPacketBuffer), 0, (struct sockaddr *)&sockAddr,
+                       &sockAddrLen);
+        if (ret < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                break;
+            }
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            VerifyOrDie(false, OT_EXIT_ERROR_ERRNO);
+        }
 
-        ++sCounters.mRxPackets;
-        sCounters.mRxBytes += sRxPacketLength;
+        sRxPacketLength = (uint16_t)(ret);
 
-        memcpy(&senderAddr.mAddress, &sockAddr.sin6_addr, sizeof(otIp6Address));
-        senderAddr.mPort = ntohs(sockAddr.sin6_port);
+        LogDebg("ReceivePacket() - received from [%s]:%d, id:%d, pkt:%s", Ip6AddrToString(&sockAddr.sin6_addr),
+                ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id, BufferToString(sRxPacketBuffer, sRxPacketLength));
 
-        otPlatTrelHandleReceived(aInstance, sRxPacketBuffer, sRxPacketLength, &senderAddr);
+        if (sEnabled)
+        {
+            otSockAddr senderAddr;
+
+            ++sCounters.mRxPackets;
+            sCounters.mRxBytes += sRxPacketLength;
+
+            memcpy(&senderAddr.mAddress, &sockAddr.sin6_addr, sizeof(otIp6Address));
+            senderAddr.mPort = ntohs(sockAddr.sin6_port);
+
+            otPlatTrelHandleReceived(aInstance, sRxPacketBuffer, sRxPacketLength, &senderAddr);
+        }
+
+        i++;
     }
 }
 
