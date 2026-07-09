@@ -43,6 +43,7 @@
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
+#include "common/num_utils.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
 #include "common/timer.hpp"
@@ -498,29 +499,33 @@ public:
     /**
      * Returns the MAC retry histogram for direct transmission.
      *
-     * @param[out]  aNumberOfEntries    A reference to where the size of returned histogram array is placed.
+     * @param[out]  aSize    A reference to where the size of returned histogram array is placed.
      *
      * @returns     A pointer to the histogram of retries (in a form of an array).
      *              The n-th element indicates that the packet has been sent with n-th retry.
+     *              If the number of retries is larger than the histogram array max size, the last entry
+     *              counts all retries at or above the limit.
      */
-    const uint32_t *GetDirectRetrySuccessHistogram(uint8_t &aNumberOfEntries);
+    const uint32_t *GetDirectRetrySuccessHistogram(uint16_t &aSize) const;
 
 #if OPENTHREAD_FTD
     /**
      * Returns the MAC retry histogram for indirect transmission.
      *
-     * @param[out]  aNumberOfEntries    A reference to where the size of returned histogram array is placed.
+     * @param[out]  aSize    A reference to where the size of returned histogram array is placed.
      *
      * @returns     A pointer to the histogram of retries (in a form of an array).
      *              The n-th element indicates that the packet has been sent with n-th retry.
+     *              If the number of retries is larger than the histogram array max size, the last entry
+     *              counts all retries at or above the limit.
      */
-    const uint32_t *GetIndirectRetrySuccessHistogram(uint8_t &aNumberOfEntries);
+    const uint32_t *GetIndirectRetrySuccessHistogram(uint16_t &aSize) const;
 #endif
 
     /**
      * Resets MAC retry histogram.
      */
-    void ResetRetrySuccessHistogram(void);
+    void ResetRetrySuccessHistogram(void) { mRetryHistogram.Clear(); }
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
     /**
@@ -796,27 +801,24 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-    struct RetryHistogram
+    struct RetryHistogram : public Clearable<RetryHistogram>
     {
-        /**
-         * Histogram of number of retries for a single direct packet until success
-         * [0 retry: packet count, 1 retry: packet count, 2 retry : packet count ...
-         *  until max retry limit: packet count]
-         *
-         *  The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT.
-         */
-        uint32_t mTxDirectRetrySuccess[OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT];
+        static constexpr uint16_t kMaxDirect   = OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT;
+        static constexpr uint16_t kMaxIndirect = OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT;
 
-        /**
-         * Histogram of number of retries for a single indirect packet until success
-         * [0 retry: packet count, 1 retry: packet count, 2 retry : packet count ...
-         *  until max retry limit: packet count]
-         *
-         *  The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT.
-         */
-        uint32_t mTxIndirectRetrySuccess[OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT];
+        static_assert(kMaxDirect > 0, "kMaxDirect must be greater than 0");
+
+        uint32_t mDirect[kMaxDirect];
+        void     RecordDirectTx(uint8_t aRetryCount) { mDirect[Min<uint16_t>(aRetryCount, kMaxDirect - 1)]++; }
+
+#if OPENTHREAD_FTD
+        static_assert(kMaxIndirect > 0, "kMaxIndirect must be greater than 0");
+
+        uint32_t mIndirect[kMaxIndirect];
+        void     RecordIndirectTx(uint8_t aRetryCount) { mIndirect[Min<uint16_t>(aRetryCount, kMaxIndirect - 1)]++; }
+#endif
     };
-#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+#endif
 
     Error ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void  ProcessTransmitSecurity(TxFrame &aFrame);

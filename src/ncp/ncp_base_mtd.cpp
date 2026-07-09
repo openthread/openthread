@@ -2928,8 +2928,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
     otError         error = OT_ERROR_NONE;
     const uint32_t *histogramDirect;
     const uint32_t *histogramIndirect;
-    uint8_t         histogramDirectEntries;
-    uint8_t         histogramIndirectEntries;
+    uint16_t        histogramDirectEntries;
+    uint16_t        histogramIndirectEntries;
 
     histogramDirect   = otLinkGetTxDirectRetrySuccessHistogram(mInstance, &histogramDirectEntries);
     histogramIndirect = otLinkGetTxIndirectRetrySuccessHistogram(mInstance, &histogramIndirectEntries);
@@ -2939,7 +2939,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
 
     // Encode direct message retries histogram
     SuccessOrExit(error = mEncoder.OpenStruct());
-    for (uint8_t i = 0; i < histogramDirectEntries; i++)
+    for (uint16_t i = 0; i < histogramDirectEntries; i++)
     {
         SuccessOrExit(error = mEncoder.WriteUint32(histogramDirect[i]));
     }
@@ -2947,7 +2947,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
 
     // Encode indirect message retries histogram
     SuccessOrExit(error = mEncoder.OpenStruct());
-    for (uint8_t i = 0; i < histogramIndirectEntries; i++)
+    for (uint16_t i = 0; i < histogramIndirectEntries; i++)
     {
         SuccessOrExit(error = mEncoder.WriteUint32(histogramIndirect[i]));
     }

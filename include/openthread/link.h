@@ -851,33 +851,43 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 /**
  * Gets histogram of retries for a single direct packet until success.
  *
- * Is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ * Requires `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE`.
  *
- * @param[in]   aInstance          A pointer to an OpenThread instance.
- * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
+ * The configuration `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT` specifies the size of the
+ * direct TX histogram array.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aSize        A pointer to where the size of returned histogram array is placed.
  *
  * @returns     A pointer to the histogram of retries (in a form of an array).
  *              The n-th element indicates that the packet has been sent with n-th retry.
+ *              If the number of retries is larger than the histogram array max size, the last entry
+ *              counts all retries at or above the limit.
  */
-const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint16_t *aSize);
 
 /**
  * Gets histogram of retries for a single indirect packet until success.
  *
- * Is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ * Requires `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE`.
  *
- * @param[in]   aInstance          A pointer to an OpenThread instance.
- * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
+ * The configuration `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT` specifies the size of the
+ * indirect TX histogram array.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[out]  aSize       A pointer to where the size of returned histogram array is placed.
  *
  * @returns     A pointer to the histogram of retries (in a form of an array).
  *              The n-th element indicates that the packet has been sent with n-th retry.
+ *              If the number of retries is larger than the histogram array max size, the last entry
+ *              counts all retries at or above the limit.
  */
-const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint16_t *aSize);
 
 /**
  * Clears histogram statistics for direct and indirect transmissions.
  *
- * Is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ * Requires `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE`.
  *
  * @param[in]   aInstance          A pointer to an OpenThread instance.
  */
