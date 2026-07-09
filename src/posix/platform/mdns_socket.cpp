@@ -43,6 +43,7 @@
 #include <unistd.h>
 #ifdef __linux__
 #include <linux/rtnetlink.h>
+#include <sys/ioctl.h>
 #endif
 
 #include <openthread/platform/time.h>
@@ -419,6 +420,12 @@ void MdnsSocket::SendQueuedMessages(MsgType aMsgType)
             addr6.sin6_family = AF_INET6;
             addr6.sin6_port   = htons(metadata.mIp6Port);
             CopyIp6AddressTo(metadata.mIp6Address, &addr6.sin6_addr);
+
+            if (IsIp6AddressLinkLocal(metadata.mIp6Address))
+            {
+                addr6.sin6_scope_id = mInfraIfIndex;
+            }
+
             bytesSent = sendto(mFd6, buffer, length, 0, reinterpret_cast<struct sockaddr *>(&addr6), sizeof(addr6));
             VerifyOrExit(bytesSent == length);
             metadata.mIp6Port = 0;
@@ -452,45 +459,152 @@ exit:
     return;
 }
 
+#ifdef __linux__
+static bool IsLoopbackInterface(int aIfIndex)
+{
+    static int  sLastIfIndex    = -1;
+    static bool sLastIsLoopback = false;
+    bool        isLoopback      = false;
+    char        ifName[IF_NAMESIZE];
+
+    VerifyOrExit(aIfIndex > 0);
+
+    if (aIfIndex == sLastIfIndex)
+    {
+        isLoopback = sLastIsLoopback;
+        ExitNow();
+    }
+
+    VerifyOrExit(if_indextoname(static_cast<unsigned int>(aIfIndex), ifName) != nullptr);
+
+    if (strcmp(ifName, "lo") == 0)
+    {
+        isLoopback = true;
+    }
+    else
+    {
+        int fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+
+        if (fd >= 0)
+        {
+            struct ifreq ifr;
+
+            memset(&ifr, 0, sizeof(ifr));
+            strncpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name) - 1);
+
+            if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
+            {
+                isLoopback = ((ifr.ifr_flags & IFF_LOOPBACK) != 0);
+            }
+
+            close(fd);
+        }
+    }
+
+    sLastIfIndex    = aIfIndex;
+    sLastIsLoopback = isLoopback;
+
+exit:
+    return isLoopback;
+}
+#endif
+
 void MdnsSocket::ReceiveMessage(MsgType aMsgType)
 {
-    otMessage            *message = nullptr;
-    uint8_t               buffer[kMaxMessageLength];
-    otPlatMdnsAddressInfo addrInfo;
-    uint16_t              length = 0;
-    struct sockaddr_in6   sockaddr6;
-    struct sockaddr_in    sockaddr;
-    socklen_t             len = sizeof(sockaddr6);
-    ssize_t               rval;
+    otMessage                   *message = nullptr;
+    uint8_t                      buffer[kMaxMessageLength];
+    otPlatMdnsAddressInfo        addrInfo;
+    uint16_t                     length = 0;
+    struct sockaddr_storage      peerAddr;
+    struct iovec                 iov;
+    struct msghdr                msg;
+    alignas(struct cmsghdr) char cmsgBuffer[1024];
+    ssize_t                      rval;
+#ifdef __linux__
+    int ifIndex = -1;
+#endif
 
     memset(&addrInfo, 0, sizeof(addrInfo));
+    memset(&peerAddr, 0, sizeof(peerAddr));
+    memset(&msg, 0, sizeof(msg));
+    memset(cmsgBuffer, 0, sizeof(cmsgBuffer));
+
+    iov.iov_base       = buffer;
+    iov.iov_len        = sizeof(buffer);
+    msg.msg_name       = &peerAddr;
+    msg.msg_namelen    = sizeof(peerAddr);
+    msg.msg_iov        = &iov;
+    msg.msg_iovlen     = 1;
+    msg.msg_control    = cmsgBuffer;
+    msg.msg_controllen = sizeof(cmsgBuffer);
 
     switch (aMsgType)
     {
     case kIp6Msg:
-        len = sizeof(sockaddr6);
-        memset(&sockaddr6, 0, sizeof(sockaddr6));
-        rval = recvfrom(mFd6, reinterpret_cast<char *>(&buffer), sizeof(buffer), 0,
-                        reinterpret_cast<struct sockaddr *>(&sockaddr6), &len);
-        VerifyOrExit(rval >= 0, LogCrit("recvfrom() for IPv6 socket failed, errno: %s", strerror(errno)));
+        rval = recvmsg(mFd6, &msg, 0);
+        VerifyOrExit(rval >= 0, LogCrit("recvmsg() for IPv6 socket failed, errno: %s", strerror(errno)));
         length = static_cast<uint16_t>(rval);
-        ReadIp6AddressFrom(&sockaddr6.sin6_addr, addrInfo.mAddress);
-        addrInfo.mPort = ntohs(sockaddr6.sin6_port);
         break;
 
     case kIp4Msg:
-        len = sizeof(sockaddr);
-        memset(&sockaddr, 0, sizeof(sockaddr));
-        rval = recvfrom(mFd4, reinterpret_cast<char *>(&buffer), sizeof(buffer), 0,
-                        reinterpret_cast<struct sockaddr *>(&sockaddr), &len);
-        VerifyOrExit(rval >= 0, LogCrit("recvfrom() for IPv4 socket failed, errno: %s", strerror(errno)));
+        rval = recvmsg(mFd4, &msg, 0);
+        VerifyOrExit(rval >= 0, LogCrit("recvmsg() for IPv4 socket failed, errno: %s", strerror(errno)));
         length = static_cast<uint16_t>(rval);
-        otIp4ToIp4MappedIp6Address((otIp4Address *)(&sockaddr.sin_addr.s_addr), &addrInfo.mAddress);
-        addrInfo.mPort = ntohs(sockaddr.sin_port);
         break;
     }
 
     VerifyOrExit(length > 0);
+
+#ifdef __linux__
+    ifIndex = -1;
+
+    for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg))
+    {
+        if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_PKTINFO)
+        {
+            struct in_pktinfo pktinfo;
+
+            if (cmsg->cmsg_len >= CMSG_LEN(sizeof(struct in_pktinfo)))
+            {
+                memcpy(&pktinfo, CMSG_DATA(cmsg), sizeof(pktinfo));
+                ifIndex = pktinfo.ipi_ifindex;
+            }
+        }
+        else if (cmsg->cmsg_level == IPPROTO_IPV6 && cmsg->cmsg_type == IPV6_PKTINFO)
+        {
+            struct in6_pktinfo pktinfo;
+
+            if (cmsg->cmsg_len >= CMSG_LEN(sizeof(struct in6_pktinfo)))
+            {
+                memcpy(&pktinfo, CMSG_DATA(cmsg), sizeof(pktinfo));
+                ifIndex = static_cast<int>(pktinfo.ipi6_ifindex);
+            }
+        }
+    }
+
+    VerifyOrExit(ifIndex == static_cast<int>(mInfraIfIndex) || IsLoopbackInterface(ifIndex));
+#endif
+
+    switch (aMsgType)
+    {
+    case kIp6Msg:
+    {
+        struct sockaddr_in6 *sockaddr6 = reinterpret_cast<struct sockaddr_in6 *>(&peerAddr);
+
+        ReadIp6AddressFrom(&sockaddr6->sin6_addr, addrInfo.mAddress);
+        addrInfo.mPort = ntohs(sockaddr6->sin6_port);
+        break;
+    }
+
+    case kIp4Msg:
+    {
+        struct sockaddr_in *sockaddr = reinterpret_cast<struct sockaddr_in *>(&peerAddr);
+
+        otIp4ToIp4MappedIp6Address(reinterpret_cast<otIp4Address *>(&sockaddr->sin_addr.s_addr), &addrInfo.mAddress);
+        addrInfo.mPort = ntohs(sockaddr->sin_port);
+        break;
+    }
+    }
 
     message = otIp6NewMessage(mInstance, nullptr);
     VerifyOrExit(message != nullptr);
@@ -749,16 +863,7 @@ otError MdnsSocket::OpenIp4Socket(uint32_t aInfraIfIndex)
     VerifyOrExit(fd >= 0, LogCrit("Failed to create IPv4 socket"));
 
 #ifdef __linux__
-    {
-        char        nameBuffer[IF_NAMESIZE];
-        const char *ifname;
-
-        ifname = if_indextoname(aInfraIfIndex, nameBuffer);
-        VerifyOrExit(ifname != NULL, LogCrit("if_indextoname() failed"));
-
-        error = SetSocketOptionValue(fd, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen(ifname), "SO_BINDTODEVICE");
-        SuccessOrExit(error);
-    }
+    SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IP, IP_PKTINFO, 1, "IP_PKTINFO"));
 #else
     {
         int ifindex = static_cast<int>(aInfraIfIndex);
@@ -842,20 +947,9 @@ otError MdnsSocket::OpenIp6Socket(uint32_t aInfraIfIndex)
     VerifyOrExit(fd >= 0, LogCrit("Failed to create IPv4 socket"));
 
 #ifdef __linux__
-    {
-        char        nameBuffer[IF_NAMESIZE];
-        const char *ifname;
-
-        ifname = if_indextoname(aInfraIfIndex, nameBuffer);
-        VerifyOrExit(ifname != NULL, LogCrit("if_indextoname() failed"));
-
-        error = SetSocketOptionValue(fd, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen(ifname), "SO_BINDTODEVICE");
-        SuccessOrExit(error);
-    }
+    SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_RECVPKTINFO, 1, "IPV6_RECVPKTINFO"));
 #else
-    {
-        SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_BOUND_IF, ifindex, "IPV6_BOUND_IF"));
-    }
+    SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_BOUND_IF, ifindex, "IPV6_BOUND_IF"));
 #endif
 
     SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, 255, "IPV6_MULTICAST_HOPS"));
@@ -930,7 +1024,9 @@ otError MdnsSocket::SetReuseAddrPortOptions(int aFd)
     otError error;
 
     SuccessOrExit(error = SetSocketOption<int>(aFd, SOL_SOCKET, SO_REUSEADDR, 1, "SO_REUSEADDR"));
+#ifndef __linux__
     SuccessOrExit(error = SetSocketOption<int>(aFd, SOL_SOCKET, SO_REUSEPORT, 1, "SO_REUSEPORT"));
+#endif
 
 exit:
     return error;

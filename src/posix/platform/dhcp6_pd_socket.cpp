@@ -419,7 +419,9 @@ otError Dhcp6PdSocket::SetReuseAddrPortOptions(int aFd)
     otError error;
 
     SuccessOrExit(error = SetSocketOption<int>(aFd, SOL_SOCKET, SO_REUSEADDR, 1, "SO_REUSEADDR"));
+#ifndef __linux__
     SuccessOrExit(error = SetSocketOption<int>(aFd, SOL_SOCKET, SO_REUSEPORT, 1, "SO_REUSEPORT"));
+#endif
 
 exit:
     return error;
