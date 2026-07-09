@@ -870,6 +870,7 @@ public:
      */
     const RadioTime64 &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * Performs AES CCM on the frame which is received.
      *
@@ -881,6 +882,7 @@ public:
      * @retval kErrorSecurity  Received frame MIC check failed.
      */
     Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey);
+#endif
 };
 
 /**
