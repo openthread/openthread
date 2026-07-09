@@ -1267,14 +1267,14 @@ exit:
 
 Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, uint8_t aRecursionDepth)
 {
-    Error  error;
-    Header header;
-
-    VerifyOrExit(aRecursionDepth <= kMaxRecursionDepth, error = kErrorDrop);
+    Error   error;
+    Header  header;
     bool    receive;
     bool    forwardThread;
     bool    forwardHost;
     uint8_t nextHeader;
+
+    VerifyOrExit(aRecursionDepth <= kMaxRecursionDepth, error = kErrorDrop);
 
     SuccessOrExit(error = header.ParseFrom(*aMessagePtr));
 
