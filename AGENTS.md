@@ -1,4 +1,4 @@
-# OpenThread (`openthread`) GEMINI.md
+# OpenThread (`openthread`)
 
 ## Project Overview
 
