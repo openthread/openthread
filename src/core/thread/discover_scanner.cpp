@@ -78,7 +78,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         {
             Mac::ExtAddress extAddress;
 
-            Get<Radio>().GetIeeeEui64(extAddress);
+            Get<Radio::Radio>().GetIeeeEui64(extAddress);
             MeshCoP::ComputeJoinerId(extAddress, extAddress);
             MeshCoP::SteeringData::CalculateHashBitIndexes(extAddress, mFilterIndexes);
         }

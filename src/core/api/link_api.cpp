@@ -142,7 +142,7 @@ exit:
 
 void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64)
 {
-    AsCoreType(aInstance).Get<Radio>().GetIeeeEui64(AsCoreType(aEui64));
+    AsCoreType(aInstance).Get<Radio::Radio>().GetIeeeEui64(AsCoreType(aEui64));
 }
 
 otPanId otLinkGetPanId(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetPanId(); }
@@ -453,9 +453,9 @@ otError otLinkSetCslPeriod(otInstance *aInstance, uint32_t aPeriod)
     }
     else
     {
-        VerifyOrExit((aPeriod % kUsPerTenSymbols) == 0, error = kErrorInvalidArgs);
-        periodInTenSymbolsUnit = ClampToUint16(aPeriod / kUsPerTenSymbols);
-        VerifyOrExit(periodInTenSymbolsUnit >= kMinCslPeriod, error = kErrorInvalidArgs);
+        VerifyOrExit((aPeriod % Radio::kUsPerTenSymbols) == 0, error = kErrorInvalidArgs);
+        periodInTenSymbolsUnit = ClampToUint16(aPeriod / Radio::kUsPerTenSymbols);
+        VerifyOrExit(periodInTenSymbolsUnit >= Radio::kMinCslPeriod, error = kErrorInvalidArgs);
     }
 
     AsCoreType(aInstance).Get<Mac::Mac>().SetCslPeriod(periodInTenSymbolsUnit);
@@ -470,7 +470,7 @@ otError otLinkSetCslTimeout(otInstance *aInstance, uint32_t aTimeout)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(kMaxCslTimeout >= aTimeout, error = kErrorInvalidArgs);
+    VerifyOrExit(Radio::kMaxCslTimeout >= aTimeout, error = kErrorInvalidArgs);
     AsCoreType(aInstance).Get<Mle::Mle>().SetCslTimeout(aTimeout);
 
 exit:
