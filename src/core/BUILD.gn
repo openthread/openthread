@@ -536,6 +536,8 @@ openthread_core_files = [
   "mac/mac_header_ie.hpp",
   "mac/mac_links.cpp",
   "mac/mac_links.hpp",
+  "mac/mac_ltvs.cpp",
+  "mac/mac_ltvs.hpp",
   "mac/mac_types.cpp",
   "mac/mac_types.hpp",
   "mac/scan_result.cpp",
