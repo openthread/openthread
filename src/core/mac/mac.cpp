@@ -38,6 +38,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
+#include "mac/mac_beacon.hpp"
 #include "utils/static_counter.hpp"
 
 namespace ot {
@@ -727,11 +728,6 @@ TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 {
     TxFrame           *frame;
     TxFrame::BuildInfo buildInfo;
-    Beacon            *beacon = nullptr;
-#if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
-    uint8_t        beaconLength;
-    BeaconPayload *beaconPayload = nullptr;
-#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
@@ -750,31 +746,9 @@ TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 
     buildInfo.PrepareHeadersIn(*frame);
 
-    beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
-    beacon->Init();
-
 #if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
-    beaconLength = sizeof(*beacon);
-
-    beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
-
-    beaconPayload->Init();
-
-    if (IsJoinable())
-    {
-        beaconPayload->SetJoiningPermitted();
-    }
-    else
-    {
-        beaconPayload->ClearJoiningPermitted();
-    }
-
-    beaconPayload->SetNetworkName(Get<MeshCoP::NetworkIdentity>().GetNetworkName().GetAsData());
-    beaconPayload->SetExtendedPanId(Get<MeshCoP::NetworkIdentity>().GetExtPanId());
-
-    beaconLength += sizeof(*beaconPayload);
-
-    frame->SetPayloadLength(beaconLength);
+    reinterpret_cast<Beacon *>(frame->GetPayload())->Init(Get<MeshCoP::NetworkIdentity>(), IsJoinable());
+    frame->SetPayloadLength(sizeof(Beacon));
 #endif
 
     LogBeacon("Sending");

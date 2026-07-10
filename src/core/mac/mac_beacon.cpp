@@ -28,60 +28,54 @@
 
 /**
  * @file
- *   This file includes implementation of methods in `ScanResult`.
+ *   This file implements Beacon frame MAC payload related functions.
  */
 
-#include "scan_result.hpp"
+#include "mac_beacon.hpp"
 
-#include "mac/mac_beacon.hpp"
+#include "common/clearable.hpp"
+#include "common/code_utils.hpp"
 
 namespace ot {
+namespace Mac {
 
-Error ScanResult::PopulateFromBeacon(const Mac::RxFrame *aBeaconFrame)
+#if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE || OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+
+void Beacon::Init(const MeshCoP::NetworkIdentity &aNetworkIdentity, bool aJoiningPermitted)
 {
-    Error        error = kErrorNone;
-    Mac::Address address;
+    ClearAllBytes(*this);
 
-    Clear();
+    mSuperframeSpec = LittleEndian::HostSwap16(kSuperFrameSpec);
+    mProtocolId     = kProtocolId;
 
-    VerifyOrExit(aBeaconFrame != nullptr, error = kErrorInvalidArgs);
-
-    VerifyOrExit(aBeaconFrame->GetType() == Mac::Frame::kTypeBeacon, error = kErrorParse);
-
-    SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
-    VerifyOrExit(address.IsExtended(), error = kErrorParse);
-    mExtAddress = address.GetExtended();
-
-    if (aBeaconFrame->GetSrcPanId(mPanId) != kErrorNone)
+    if (aJoiningPermitted)
     {
-        IgnoreError(aBeaconFrame->GetDstPanId(mPanId));
+        mFlags = kJoiningFlag | (kJoinableProtocolVersion << kVersionOffset);
+    }
+    else
+    {
+        mFlags = (kDefaultProtocolVersion << kVersionOffset);
     }
 
-    mChannel = aBeaconFrame->GetChannel();
-    mRssi    = aBeaconFrame->GetRssi();
-    mLqi     = aBeaconFrame->GetLqi();
-
-#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
-    {
-        const Mac::Beacon *beacon;
-
-        VerifyOrExit(aBeaconFrame->GetPayloadLength() >= sizeof(Mac::Beacon));
-
-        beacon = reinterpret_cast<const Mac::Beacon *>(aBeaconFrame->GetPayload());
-        VerifyOrExit(beacon->IsValid());
-
-        mVersion       = beacon->GetProtocolVersion();
-        mIsJoinable    = beacon->IsJoiningPermitted();
-        mIsNative      = beacon->IsNative();
-        mExtendedPanId = beacon->GetExtendedPanId();
-
-        IgnoreError(AsCoreType(&mNetworkName).Set(beacon->GetNetworkName()));
-        VerifyOrExit(IsValidUtf8String(mNetworkName.m8), error = kErrorParse);
-    }
-#endif
-
-exit:
-    return error;
+    aNetworkIdentity.GetNetworkName().GetAsData().CopyTo(mNetworkName, sizeof(mNetworkName));
+    mExtendedPanId = aNetworkIdentity.GetExtPanId();
 }
 
+bool Beacon::IsValid(void) const
+{
+    bool isValid = false;
+
+    VerifyOrExit(mSuperframeSpec == LittleEndian::HostSwap16(kSuperFrameSpec));
+    VerifyOrExit(mGtsSpec == 0);
+    VerifyOrExit(mPendingAddressSpec == 0);
+    VerifyOrExit(mProtocolId == kProtocolId);
+    isValid = true;
+
+exit:
+    return isValid;
+}
+
+#endif // OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE || OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+
+} // namespace Mac
 } // namespace ot

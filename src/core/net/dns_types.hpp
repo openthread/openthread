@@ -51,6 +51,7 @@
 #include "common/string.hpp"
 #include "common/type_traits.hpp"
 #include "crypto/ecdsa.hpp"
+#include "meshcop/network_name.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
 
