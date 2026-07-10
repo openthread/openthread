@@ -224,7 +224,7 @@ Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
 
         if (!hasFragmentHeader || (fragmentHeader.GetDatagramOffset() == 0))
         {
-            Ip6::Ecn ecn = Get<Lowpan::Lowpan>().DecompressEcn(aMessage, offset);
+            Ip6::Ecn ecn = Lowpan::Lowpan::DecompressEcn(aMessage, offset);
 
             isEcnCapable = (ecn != Ip6::kEcnNotCapable);
 
@@ -247,7 +247,7 @@ Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
                 {
                 case Ip6::kEcnCapable0:
                 case Ip6::kEcnCapable1:
-                    Get<Lowpan::Lowpan>().MarkCompressedEcn(aMessage, offset);
+                    Lowpan::Lowpan::MarkCompressedEcn(aMessage, offset);
                     LogMessage(kMessageMarkEcn, aMessage);
                     break;
 
