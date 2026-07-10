@@ -1408,9 +1408,9 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
             mCounters.mTxDirectMaxRetryExpiry++;
         }
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-        else if (mLinks.GetTransmitRetries() < OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT)
+        else
         {
-            mRetryHistogram.mTxDirectRetrySuccess[mLinks.GetTransmitRetries()]++;
+            mRetryHistogram.RecordDirectTx(mLinks.GetTransmitRetries());
         }
 #endif
 
@@ -1444,9 +1444,9 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
             mCounters.mTxIndirectMaxRetryExpiry++;
         }
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-        else if (mLinks.GetTransmitRetries() < OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT)
+        else
         {
-            mRetryHistogram.mTxIndirectRetrySuccess[mLinks.GetTransmitRetries()]++;
+            mRetryHistogram.RecordIndirectTx(mLinks.GetTransmitRetries());
         }
 #endif
 
@@ -2210,37 +2210,19 @@ exit:
 Error Mac::GetRegion(uint16_t &aRegionCode) const { return Get<Radio>().GetRegion(aRegionCode); }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-const uint32_t *Mac::GetDirectRetrySuccessHistogram(uint8_t &aNumberOfEntries)
+const uint32_t *Mac::GetDirectRetrySuccessHistogram(uint16_t &aSize) const
 {
-    if (mMaxFrameRetriesDirect >= OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT)
-    {
-        aNumberOfEntries = OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT;
-    }
-    else
-    {
-        aNumberOfEntries = mMaxFrameRetriesDirect + 1;
-    }
-
-    return mRetryHistogram.mTxDirectRetrySuccess;
+    aSize = Min<uint16_t>(RetryHistogram::kMaxDirect, static_cast<uint16_t>(mMaxFrameRetriesDirect) + 1);
+    return mRetryHistogram.mDirect;
 }
 
 #if OPENTHREAD_FTD
-const uint32_t *Mac::GetIndirectRetrySuccessHistogram(uint8_t &aNumberOfEntries)
+const uint32_t *Mac::GetIndirectRetrySuccessHistogram(uint16_t &aSize) const
 {
-    if (mMaxFrameRetriesIndirect >= OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT)
-    {
-        aNumberOfEntries = OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT;
-    }
-    else
-    {
-        aNumberOfEntries = mMaxFrameRetriesIndirect + 1;
-    }
-
-    return mRetryHistogram.mTxIndirectRetrySuccess;
+    aSize = Min<uint16_t>(RetryHistogram::kMaxIndirect, static_cast<uint16_t>(mMaxFrameRetriesIndirect) + 1);
+    return mRetryHistogram.mIndirect;
 }
 #endif
-
-void Mac::ResetRetrySuccessHistogram() { ClearAllBytes(mRetryHistogram); }
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
 uint8_t Mac::ComputeLinkMargin(int8_t aRss) const { return ot::ComputeLinkMargin(GetNoiseFloor(), aRss); }
