@@ -40,11 +40,8 @@
 #include "common/frame_builder.hpp"
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
-#include "radio/trel_link.hpp"
-#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE || \
-    (OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE)
 #include "crypto/aes_ccm.hpp"
-#endif
+#include "radio/trel_link.hpp"
 
 namespace ot {
 namespace Mac {
