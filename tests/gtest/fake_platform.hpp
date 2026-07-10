@@ -84,8 +84,14 @@ public:
     virtual otError       Transmit(otRadioFrame *aFrame);
     virtual otError       ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
     {
+        // `aStart` is an absolute radio time truncated to 32 bits (see `otPlatRadioReceiveAt()`'s
+        // documentation), not a duration relative to `mNow`. Reconstruct the intended 64-bit time by
+        // taking the signed difference between `aStart` and the low 32 bits of `mNow`, which correctly
+        // handles 32-bit rollover as long as the intended time is within `INT32_MAX` us of `mNow`.
+        int32_t diff = static_cast<int32_t>(aStart - static_cast<uint32_t>(mNow));
+
         mReceiveAtChannel = aChannel;
-        mReceiveAtStart   = mNow + aStart;
+        mReceiveAtStart   = static_cast<uint64_t>(static_cast<int64_t>(mNow) + diff);
         mReceiveAtEnd     = mReceiveAtStart + aDuration;
 
         return OT_ERROR_NONE;
