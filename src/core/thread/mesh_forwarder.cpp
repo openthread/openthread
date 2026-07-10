@@ -758,7 +758,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
     // `SendDone` event from `Mac` layer with success status and
     // wait for deferred ack callback instead.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aFrame.GetRadioType() == Mac::kRadioTypeTrel)
+    if (aFrame.GetRadioType() == Radio::kTypeTrel)
 #endif
     {
         VerifyOrExit(aError != kErrorNone);
@@ -1523,7 +1523,7 @@ void MeshForwarder::AppendSecErrorPrioRssRadioLabelsToLogString(StringWriter  &a
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    aString.Append(", radio:%s", aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all");
+    aString.Append(", radio:%s", aMessage.IsRadioTypeSet() ? Radio::TypeToString(aMessage.GetRadioType()) : "all");
 #endif
 }
 

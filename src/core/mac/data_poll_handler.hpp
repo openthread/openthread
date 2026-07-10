@@ -116,8 +116,8 @@ public:
         void SetFrameReplacePending(bool aReplacePending) { mFrameReplacePending = aReplacePending; }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        Mac::RadioType GetLastPollRadioType(void) const { return mLastPollRadioType; }
-        void           SetLastPollRadioType(Mac::RadioType aRadioType) { mLastPollRadioType = aRadioType; }
+        Radio::Type GetLastPollRadioType(void) const { return mLastPollRadioType; }
+        void        SetLastPollRadioType(Radio::Type aRadioType) { mLastPollRadioType = aRadioType; }
 #endif
 
         uint32_t mIndirectFrameCounter;    // Frame counter for current indirect frame (used for retx).
@@ -128,7 +128,7 @@ public:
         bool     mFramePurgePending : 1;   // Indicates a pending purge request for the current indirect frame.
         bool     mFrameReplacePending : 1; // Indicates a pending replace request for the current indirect frame.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        Mac::RadioType mLastPollRadioType; // The radio link last data poll frame was received on.
+        Radio::Type mLastPollRadioType; // The radio link last data poll frame was received on.
 #endif
 
         static_assert(kMaxPollTriggeredTxAttempts < (1 << 5), "mIndirectTxAttempts cannot fit max!");

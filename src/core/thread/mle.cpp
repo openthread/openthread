@@ -1923,7 +1923,7 @@ void Mle::CheckTrelPeerAddrOnSecureMleRx(const Message &aMessage)
     OT_UNUSED_VARIABLE(aMessage);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aMessage.IsRadioTypeSet() && aMessage.GetRadioType() == Mac::kRadioTypeTrel)
+    if (aMessage.IsRadioTypeSet() && aMessage.GetRadioType() == Radio::kTypeTrel)
 #endif
     {
         Get<Trel::Link>().CheckPeerAddrOnRxSuccess(Trel::Link::kAllowPeerSockAddrUpdate);

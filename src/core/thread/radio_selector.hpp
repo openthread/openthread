@@ -46,6 +46,7 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_links.hpp"
 #include "mac/mac_types.hpp"
+#include "radio/radio_types.hpp"
 
 namespace ot {
 
@@ -83,7 +84,7 @@ public:
          *
          * @returns The supported radio types set.
          */
-        Mac::RadioTypes GetSupportedRadioTypes(void) const { return mSupportedRadioTypes; }
+        Radio::Types GetSupportedRadioTypes(void) const { return mSupportedRadioTypes; }
 
         /**
          * Retrieves the multi radio information `otMultiRadioNeighborInfo` associated with the neighbor.
@@ -93,15 +94,15 @@ public:
         void PopulateMultiRadioInfo(MultiRadioInfo &aInfo);
 
     private:
-        void AddSupportedRadioType(Mac::RadioType aType) { mSupportedRadioTypes.Add(aType); }
-        void RemoveSupportedRadioType(Mac::RadioType aType) { mSupportedRadioTypes.Remove(aType); }
+        void AddSupportedRadioType(Radio::Type aType) { mSupportedRadioTypes.Add(aType); }
+        void RemoveSupportedRadioType(Radio::Type aType) { mSupportedRadioTypes.Remove(aType); }
         void ClearSupportedRadioType(void) { mSupportedRadioTypes.Clear(); }
 
-        uint8_t GetRadioPreference(Mac::RadioType aType) const { return mRadioPreference[aType]; }
-        void    SetRadioPreference(Mac::RadioType aType, uint8_t aValue) { mRadioPreference[aType] = aValue; }
+        uint8_t GetRadioPreference(Radio::Type aType) const { return mRadioPreference[aType]; }
+        void    SetRadioPreference(Radio::Type aType, uint8_t aValue) { mRadioPreference[aType] = aValue; }
 
-        Mac::RadioTypes mSupportedRadioTypes;
-        uint8_t         mRadioPreference[Mac::kNumRadioTypes];
+        Radio::Types mSupportedRadioTypes;
+        uint8_t      mRadioPreference[Radio::kNumTypes];
     };
 
     /**
@@ -122,7 +123,7 @@ public:
      * @param[in] aRadioType    The radio link type on which the frame/message was received.
      * @param[in] aIsDuplicate  Indicates whether the received frame/message is a duplicate or not.
      */
-    void UpdateOnReceive(Neighbor &aNeighbor, Mac::RadioType aRadioType, bool aIsDuplicate);
+    void UpdateOnReceive(Neighbor &aNeighbor, Radio::Type aRadioType, bool aIsDuplicate);
 
     /**
      * Updates the neighbor info (for multi radio support) on a send done event.
@@ -155,7 +156,7 @@ public:
      *
      * @returns The radio type on which the data poll frame should be sent.
      */
-    Mac::RadioType SelectPollFrameRadio(const Neighbor &aParent);
+    Radio::Type SelectPollFrameRadio(const Neighbor &aParent);
 
     /**
      * Selects the radio link for sending a given message to a specified MAC destination.
@@ -188,11 +189,11 @@ private:
 
     static constexpr uint16_t kRadioPreferenceStringSize = 75;
 
-    LogLevel       UpdatePreference(Neighbor &aNeighbor, Mac::RadioType aRadioType, int16_t aDifference);
-    Mac::RadioType Select(Mac::RadioTypes aRadioOptions, const Neighbor &aNeighbor);
-    void           Log(LogLevel aLogLevel, const char *aActionText, Mac::RadioType aType, const Neighbor &aNeighbor);
+    LogLevel    UpdatePreference(Neighbor &aNeighbor, Radio::Type aRadioType, int16_t aDifference);
+    Radio::Type Select(Radio::Types aRadioOptions, const Neighbor &aNeighbor);
+    void        Log(LogLevel aLogLevel, const char *aActionText, Radio::Type aType, const Neighbor &aNeighbor);
 
-    static const Mac::RadioType sRadioSelectionOrder[Mac::kNumRadioTypes];
+    static const Radio::Type sRadioSelectionOrder[Radio::kNumTypes];
 };
 
 /**

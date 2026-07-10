@@ -886,7 +886,7 @@ void Message::UpdateLinkInfoFrom(const ThreadLinkInfo &aLinkInfo)
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
+    SetRadioType(static_cast<Radio::Type>(aLinkInfo.mRadioType));
 #endif
 }
 

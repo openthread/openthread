@@ -124,7 +124,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const
+Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest, Radio::Type &aRadioType) const
 #else
 Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
 #endif
@@ -543,7 +543,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
     Mac::TxFrame::BuildInfo buildInfo;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    Mac::RadioType radio;
+    Radio::Type radio;
 
     SuccessOrExit(GetPollDestinationAddress(buildInfo.mAddrs.mDestination, radio));
     frame = &aTxFrames.GetTxFrame(radio);

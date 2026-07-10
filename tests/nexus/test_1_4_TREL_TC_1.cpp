@@ -133,8 +133,8 @@ void Test1_4_Trel_Tc_1(void)
         const Neighbor *neighbor = router1.Get<NeighborTable>().FindNeighbor(br.Get<Mac::Mac>().GetExtAddress());
 
         VerifyOrQuit(neighbor != nullptr);
-        VerifyOrQuit(neighbor->GetSupportedRadioTypes().Contains(Mac::kRadioTypeIeee802154));
-        VerifyOrQuit(neighbor->GetSupportedRadioTypes().Contains(Mac::kRadioTypeTrel));
+        VerifyOrQuit(neighbor->GetSupportedRadioTypes().Contains(ot::Radio::kTypeIeee802154));
+        VerifyOrQuit(neighbor->GetSupportedRadioTypes().Contains(ot::Radio::kTypeTrel));
     }
 
     /**

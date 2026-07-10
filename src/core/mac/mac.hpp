@@ -54,6 +54,7 @@
 #include "mac/mac_types.hpp"
 #include "mac/scan_result.hpp"
 #include "mac/sub_mac.hpp"
+#include "radio/radio_types.hpp"
 #include "radio/trel_link.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
@@ -941,9 +942,9 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioTypes mTxPendingRadioLinks;
-    RadioTypes mTxBeaconRadioLinks;
-    Error      mTxError;
+    Radio::Types mTxPendingRadioLinks;
+    Radio::Types mTxBeaconRadioLinks;
+    Error        mTxError;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

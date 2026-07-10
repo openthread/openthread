@@ -227,7 +227,7 @@ protected:
         uint8_t mOrigin : 2;   // The origin of the message.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         uint8_t mRadioType : 2; // The radio link type the message was received on, or should be sent on.
-        static_assert(Mac::kNumRadioTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
+        static_assert(Radio::kNumTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
 #endif
         uint8_t mType : 3;    // The message type.
         uint8_t mSubType : 4; // The message sub type.
@@ -1573,14 +1573,14 @@ public:
      *
      * @returns The radio link type of the message.
      */
-    Mac::RadioType GetRadioType(void) const { return static_cast<Mac::RadioType>(GetMetadata().mRadioType); }
+    Radio::Type GetRadioType(void) const { return static_cast<Radio::Type>(GetMetadata().mRadioType); }
 
     /**
      * Sets the radio link type the message was received on, or should be sent on.
      *
      * @param[in] aRadioType   A radio link type of the message.
      */
-    void SetRadioType(Mac::RadioType aRadioType)
+    void SetRadioType(Radio::Type aRadioType)
     {
         GetMetadata().mIsRadioTypeSet = true;
         GetMetadata().mRadioType      = aRadioType;

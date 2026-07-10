@@ -53,7 +53,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (rxFrame != nullptr)
     {
-        rxFrame->SetRadioType(Mac::kRadioTypeIeee802154);
+        rxFrame->SetRadioType(Radio::kTypeIeee802154);
     }
 #endif
 
@@ -80,7 +80,7 @@ extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame
     VerifyOrExit(instance.IsInitialized());
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
+    txFrame.SetRadioType(Radio::kTypeIeee802154);
 #endif
 
     instance.Get<Radio::Callbacks>().HandleTransmitStarted(txFrame);
@@ -100,10 +100,10 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (ackFrame != nullptr)
     {
-        ackFrame->SetRadioType(Mac::kRadioTypeIeee802154);
+        ackFrame->SetRadioType(Radio::kTypeIeee802154);
     }
 
-    txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
+    txFrame.SetRadioType(Radio::kTypeIeee802154);
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -160,7 +160,7 @@ extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (rxFrame != nullptr)
     {
-        rxFrame->SetRadioType(Mac::kRadioTypeIeee802154);
+        rxFrame->SetRadioType(Radio::kTypeIeee802154);
     }
 #endif
 
@@ -180,7 +180,7 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
     }
 #endif
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
+    txFrame.SetRadioType(Radio::kTypeIeee802154);
 #endif
 
     AsCoreType(aInstance).Get<Radio::Callbacks>().HandleDiagsTransmitDone(txFrame, aError);
