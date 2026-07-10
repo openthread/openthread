@@ -462,10 +462,10 @@ exit:
 #ifdef __linux__
 static bool IsLoopbackInterface(int aIfIndex)
 {
-    static int  sLastIfIndex    = -1;
-    static bool sLastIsLoopback = false;
-    bool        isLoopback      = false;
-    char        ifName[IF_NAMESIZE];
+    static int   sLastIfIndex    = -1;
+    static bool  sLastIsLoopback = false;
+    bool         isLoopback      = false;
+    struct ifreq ifr;
 
     VerifyOrExit(aIfIndex > 0);
 
@@ -475,9 +475,10 @@ static bool IsLoopbackInterface(int aIfIndex)
         ExitNow();
     }
 
-    VerifyOrExit(if_indextoname(static_cast<unsigned int>(aIfIndex), ifName) != nullptr);
+    memset(&ifr, 0, sizeof(ifr));
+    VerifyOrExit(if_indextoname(static_cast<unsigned int>(aIfIndex), ifr.ifr_name) != nullptr);
 
-    if (strcmp(ifName, "lo") == 0)
+    if (strcmp(ifr.ifr_name, "lo") == 0)
     {
         isLoopback = true;
     }
@@ -487,11 +488,6 @@ static bool IsLoopbackInterface(int aIfIndex)
 
         if (fd >= 0)
         {
-            struct ifreq ifr;
-
-            memset(&ifr, 0, sizeof(ifr));
-            strncpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name) - 1);
-
             if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
             {
                 isLoopback = ((ifr.ifr_flags & IFF_LOOPBACK) != 0);
