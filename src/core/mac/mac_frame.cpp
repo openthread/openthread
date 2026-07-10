@@ -1404,9 +1404,10 @@ exit:
     return isSecure;
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
     Error                 error        = kErrorSecurity;
     uint32_t              frameCounter = 0;
     uint8_t               securityLevel;
@@ -1434,13 +1435,9 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
 
 exit:
     return error;
-#else
-    OT_UNUSED_VARIABLE(aExtAddress);
-    OT_UNUSED_VARIABLE(aMacKey);
-
-    return kErrorNone;
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 }
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 // LCOV_EXCL_START
 
