@@ -843,6 +843,12 @@ private:
     void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame);
     bool     HandleMacCommand(RxFrame &aFrame);
     void     HandleTimer(void);
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    Error ProcessTxDone(TxFrame &aFrame, RxFrame *aAckFrame, Error &aError);
+#endif
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    Error ProcessMultiRadioTxDone(TxFrame &aFrame, Error &aError);
+#endif
 
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);

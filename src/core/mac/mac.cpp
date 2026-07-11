@@ -1239,129 +1239,181 @@ exit:
     return;
 }
 
-void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
-{
-    bool ackRequested = aFrame.GetAckRequest();
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (!aFrame.IsEmpty()
+
+Error Mac::ProcessTxDone(TxFrame &aFrame, RxFrame *aAckFrame, Error &aError)
+{
+    // Process post-transmission actions on IEEE 802.15.4 link
+    // (handling broadcast retransmissions and ACK processing).
+    //
+    // Returns `kErrorPending` if a broadcast frame is scheduled for
+    // retransmission (indicating overall frame transmission is not yet
+    // finished). Returns `kErrorNone` otherwise.
+    //
+    // May update `aError` (e.g., setting it to `kErrorNoAck` if Enh-ACK
+    // security or MAC filter checks fail).
+
+    Error     error = kErrorNone;
+    Address   dstAddr;
+    Neighbor *neighbor;
+
+    VerifyOrExit(!aFrame.IsEmpty());
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        && (aFrame.GetRadioType() == kRadioTypeIeee802154)
+    VerifyOrExit(aFrame.GetRadioType() == kRadioTypeIeee802154);
 #endif
-    )
+    IgnoreError(aFrame.GetDstAddr(dstAddr));
+
+    // Determine whether to re-transmit a broadcast frame.
+
+    if (dstAddr.IsBroadcast())
     {
-        Address dstAddr;
+        mBroadcastTransmitCount++;
 
-        IgnoreError(aFrame.GetDstAddr(dstAddr));
-
-        // Determine whether to re-transmit a broadcast frame.
-        if (dstAddr.IsBroadcast())
+        if (mBroadcastTransmitCount < kTxNumBcast)
         {
-            mBroadcastTransmitCount++;
-
-            if (mBroadcastTransmitCount < kTxNumBcast)
-            {
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-                {
-                    RadioTypes radioTypes;
-                    radioTypes.Add(kRadioTypeIeee802154);
-                    mLinks.Send(aFrame, radioTypes);
-                }
-#else
-                mLinks.Send();
-#endif
-                ExitNow();
+            {
+                RadioTypes radioTypes;
+                radioTypes.Add(kRadioTypeIeee802154);
+                mLinks.Send(aFrame, radioTypes);
             }
-
-            mBroadcastTransmitCount = 0;
+#else
+            mLinks.Send();
+#endif
+            ExitNow(error = kErrorPending);
         }
 
-        if (ackRequested && (aAckFrame != nullptr))
-        {
-            Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
+        mBroadcastTransmitCount = 0;
+    }
+
+    // If an ACK was requested and received, process the ACK frame
+    // (verifying MAC filter, Enh-ACK security, and updating
+    // neighbor link info and CSL).
+
+    VerifyOrExit(aFrame.GetAckRequest() && (aAckFrame != nullptr));
+
+    SuccessOrExit(aError);
+
+    neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-            if ((aError == kErrorNone) && (neighbor != nullptr) &&
-                (mFilter.ApplyToRxFrame(*aAckFrame, neighbor->GetExtAddress(), neighbor) != kErrorNone))
-            {
-                aError = kErrorNoAck;
-            }
+    if ((neighbor != nullptr) && mFilter.ApplyToRxFrame(*aAckFrame, neighbor->GetExtAddress(), neighbor) != kErrorNone)
+    {
+        aError = kErrorNoAck;
+        ExitNow();
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-            // Verify Enh-ACK integrity by checking its MIC
-            if ((aError == kErrorNone) && (ProcessEnhAckSecurity(aFrame, *aAckFrame) != kErrorNone))
-            {
-                aError = kErrorNoAck;
-            }
+    if (ProcessEnhAckSecurity(aFrame, *aAckFrame) != kErrorNone)
+    {
+        aError = kErrorNoAck;
+        ExitNow();
+    }
 #endif
 
-            if ((aError == kErrorNone) && (neighbor != nullptr))
-            {
-                UpdateNeighborLinkInfo(*neighbor, *aAckFrame);
+    VerifyOrExit(neighbor != nullptr);
+
+    UpdateNeighborLinkInfo(*neighbor, *aAckFrame);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-                ProcessEnhAckProbing(*aAckFrame, *neighbor);
+    ProcessEnhAckProbing(*aAckFrame, *neighbor);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-                ProcessCsl(*aAckFrame, dstAddr);
+    ProcessCsl(*aAckFrame, dstAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-                if (!mRxOnWhenIdle && aFrame.Has<CslIe>())
-                {
-                    Get<DataPollSender>().ResetKeepAliveTimer();
-                }
-#endif
-            }
-        }
+    if (!mRxOnWhenIdle && aFrame.Has<CslIe>())
+    {
+        Get<DataPollSender>().ResetKeepAliveTimer();
     }
+#endif
+
+exit:
+    return error;
+}
+
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (!aFrame.IsEmpty())
+
+Error Mac::ProcessMultiRadioTxDone(TxFrame &aFrame, Error &aError)
+{
+    // Process post-transmission actions under multi-radio config
+    // (updating radio selector and tracking transmission across
+    // multiple radio links).
+    //
+    // Returns `kErrorPending` if transmissions on other radio links are
+    // still pending. Returns `kErrorNone` once all radio links have
+    // completed and updates `aError` with the overall transmission
+    // result (`mTxError`).
+
+    Error      error = kErrorNone;
+    RadioType  radio;
+    RadioTypes requiredRadios;
+
+    VerifyOrExit(!aFrame.IsEmpty());
+
+    radio          = aFrame.GetRadioType();
+    requiredRadios = mLinks.GetTxFramesRequiredRadioTypes();
+
+    Get<RadioSelector>().UpdateOnSendDone(aFrame, aError);
+
+    if (requiredRadios.IsEmpty())
     {
-        RadioType  radio          = aFrame.GetRadioType();
-        RadioTypes requiredRadios = mLinks.GetTxFramesRequiredRadioTypes();
+        // If the "required radio type set" is empty, successful
+        // tx over any radio link is sufficient for overall tx to
+        // be considered successful. In this case `mTxError`
+        // starts as `kErrorAbort` and we update it only when
+        // it is not already `kErrorNone`.
 
-        Get<RadioSelector>().UpdateOnSendDone(aFrame, aError);
-
-        if (requiredRadios.IsEmpty())
+        if (mTxError != kErrorNone)
         {
-            // If the "required radio type set" is empty, successful
-            // tx over any radio link is sufficient for overall tx to
-            // be considered successful. In this case `mTxError`
-            // starts as `kErrorAbort` and we update it only when
-            // it is not already `kErrorNone`.
-
-            if (mTxError != kErrorNone)
-            {
-                mTxError = aError;
-            }
+            mTxError = aError;
         }
-        else
-        {
-            // When the "required radio type set" is not empty we
-            // expect the successful frame tx on all links in this set
-            // to consider the overall tx successful. In this case,
-            // `mTxError` starts as `kErrorNone` and we update it
-            // if tx over any link in the set fails.
-
-            if (requiredRadios.Contains(radio) && (aError != kErrorNone))
-            {
-                LogDebgOnError(aError, "tx frame on required radio link %s", RadioTypeToString(radio));
-                mTxError = aError;
-            }
-        }
-
-        // Keep track of radio links on which the frame is sent
-        // and wait for all radio links to finish.
-        mTxPendingRadioLinks.Remove(radio);
-
-        VerifyOrExit(mTxPendingRadioLinks.IsEmpty());
-
-        aError = mTxError;
     }
+    else
+    {
+        // When the "required radio type set" is not empty we
+        // expect the successful frame tx on all links in this set
+        // to consider the overall tx successful. In this case,
+        // `mTxError` starts as `kErrorNone` and we update it
+        // if tx over any link in the set fails.
+
+        if (requiredRadios.Contains(radio) && (aError != kErrorNone))
+        {
+            LogDebgOnError(aError, "tx frame on required radio link %s", RadioTypeToString(radio));
+            mTxError = aError;
+        }
+    }
+
+    // Keep track of radio links on which the frame is sent
+    // and wait for all radio links to finish.
+    mTxPendingRadioLinks.Remove(radio);
+
+    if (!mTxPendingRadioLinks.IsEmpty())
+    {
+        ExitNow(error = kErrorPending);
+    }
+
+    aError = mTxError;
+
+exit:
+    return error;
+}
+
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
+void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
+{
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    SuccessOrExit(ProcessTxDone(aFrame, aAckFrame, aError));
+#endif
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    SuccessOrExit(ProcessMultiRadioTxDone(aFrame, aError));
+#endif
 
     // Determine next action based on current operation.
 
@@ -1379,7 +1431,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         break;
 
     case kOperationTransmitPoll:
-        OT_ASSERT(aFrame.IsEmpty() || ackRequested);
+        OT_ASSERT(aFrame.IsEmpty() || aFrame.GetAckRequest());
 
         if ((aError == kErrorNone) && (aAckFrame != nullptr))
         {
