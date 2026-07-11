@@ -727,9 +727,9 @@ TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 {
     TxFrame           *frame;
     TxFrame::BuildInfo buildInfo;
-    Beacon            *beacon = nullptr;
+    Beacon            *beacon;
+    uint8_t            beaconLength;
 #if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
-    uint8_t        beaconLength;
     BeaconPayload *beaconPayload = nullptr;
 #endif
 
@@ -752,10 +752,9 @@ TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
-
-#if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     beaconLength = sizeof(*beacon);
 
+#if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
 
     beaconPayload->Init();
@@ -773,9 +772,9 @@ TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
     beaconPayload->SetExtendedPanId(Get<MeshCoP::NetworkIdentity>().GetExtPanId());
 
     beaconLength += sizeof(*beaconPayload);
+#endif
 
     frame->SetPayloadLength(beaconLength);
-#endif
 
     LogBeacon("Sending");
 
