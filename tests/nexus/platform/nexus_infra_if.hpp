@@ -53,6 +53,7 @@ public:
     void RemoveAllAddresses(void);
 
     const Ip6::Address *FindAddress(const char *aPrefix) const;
+    const Ip6::Address *FindAddress(const Ip6::Prefix &aPrefix) const;
     const Ip6::Address &FindMatchingAddress(const char *aPrefix) const;
 
     const Ip6::Address              &GetLinkLocalAddress(void) const { return mAddresses[0]; }

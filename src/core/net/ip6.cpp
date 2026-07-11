@@ -1102,6 +1102,15 @@ Error Ip6::SendRaw(OwnedPtr<Message> aMessagePtr)
         ExitNow(error = kErrorDrop);
     }
 
+    // When the message is forwarded from host to Thread, drop it if
+    // its source is a link-local address that does not belong to the
+    // Thread interface.
+    if (header.GetSource().IsLinkLocalUnicast() && !Get<ThreadNetif>().HasUnicastAddress(header.GetSource()))
+    {
+        LogInfo("Dropping packet with foreign link-local source address");
+        ExitNow(error = kErrorDrop);
+    }
+
     // When the packet is forwarded from host to Thread, if its source is on-mesh or its destination is
     // mesh-local, we'll drop the packet unless the packet originates from this device.
     if (Get<NetworkData::Leader>().IsOnMesh(header.GetSource()) ||

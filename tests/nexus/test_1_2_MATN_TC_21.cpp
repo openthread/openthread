@@ -149,6 +149,7 @@ void TestMatnTc21(void)
     Ip6::Address mae1;
     Ip6::Address mae2;
     Ip6::Address mae3;
+    Ip6::Prefix  onLinkPrefix;
 
     br1.SetName("BR_1");
     br2.SetName("BR_2");
@@ -205,6 +206,8 @@ void TestMatnTc21(void)
 
     VerifyOrQuit(br1.Get<BackboneRouter::Local>().IsPrimary());
     VerifyOrQuit(!br2.Get<BackboneRouter::Local>().IsPrimary());
+
+    SuccessOrQuit(br1.Get<BorderRouter::RoutingManager>().GetFavoredOnLinkPrefix(onLinkPrefix));
 
     nexus.AddTestVar("MA1", kMA1);
     nexus.AddTestVar("MA3", kMA3);
@@ -410,8 +413,14 @@ void TestMatnTc21(void)
      *   - N/A
      */
     Log("Step 16: Host sends a ICMPv6 Echo Request to MA1 on the backbone link.");
-    host.mInfraIf.SendEchoRequest(host.mInfraIf.GetLinkLocalAddress(), ma1, kEchoIdentifier, kEchoPayloadSize);
-    nexus.AdvanceTime(0);
+    {
+        const Ip6::Address *srcAddr;
+
+        srcAddr = host.mInfraIf.FindAddress(onLinkPrefix);
+        VerifyOrQuit(srcAddr != nullptr);
+        host.mInfraIf.SendEchoRequest(*srcAddr, ma1, kEchoIdentifier, kEchoPayloadSize);
+        nexus.AdvanceTime(0);
+    }
 
     /**
      * Step 17
