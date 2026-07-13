@@ -114,10 +114,7 @@ public:
      * @retval kErrorNone         Successfully set vendor info.
      * @retval kErrorInvalidArgs  Vendor info could not be set.
      */
-    Error SetTcatVendorInfo(const MeshCoP::TcatAgent::VendorInfo &aVendorInfo)
-    {
-        return Get<MeshCoP::TcatAgent>().SetTcatVendorInfo(aVendorInfo);
-    }
+    Error SetTcatVendorInfo(const MeshCoP::TcatAgent::VendorInfo &aVendorInfo);
 
     /**
      * Enables the TCAT protocol over BLE Secure.
@@ -226,21 +223,6 @@ public:
      * @param[in]  aPskd  A Joiner PSKd.
      */
     void SetPsk(const MeshCoP::JoinerPskd &aPskd);
-
-    /**
-     * Sends a secure BLE message.
-     *
-     * @param[in]  aMessage        A pointer to the message to send.
-     *
-     * If the return value is kErrorNone, OpenThread takes ownership of @p aMessage, and the caller should no longer
-     * reference @p aMessage. If the return value is not kErrorNone, the caller retains ownership of @p aMessage,
-     * including freeing @p aMessage if the message buffer is no longer needed.
-     *
-     * @retval kErrorNone          Successfully sent message.
-     * @retval kErrorNoBufs        Failed to allocate buffer memory.
-     * @retval kErrorInvalidState  TLS connection was not initialized.
-     */
-    Error SendMessage(Message &aMessage);
 
     /**
      * Sends a secure BLE data packet.
