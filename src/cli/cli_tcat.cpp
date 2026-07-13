@@ -171,19 +171,19 @@ static void HandleBleSecureReceive(otInstance               *aInstance,
  * @cparam tcat advid [@ca{id_type}] [@ca{value}]
  * * The `id_type` has five possible values:
  *   * `clear` - removes all previously set advertised IDs.
- *   * `oui24` - sets OUI24 ID type.
- *   * `oui36` - sets OUI36 ID type.
+ *   * `oui` - sets OUI ID type.
  *   * `discriminator` - sets discriminator ID type.
  *   * `ianapen` - sets IANA PEN ID type.
+ *   * `applicationprotocol` - sets application protocol ID type.
  * * The `value` hexstring value of the ID.
  * @par
  * Sets/clears advertised ID type and value.
  */
 template <> otError Tcat::Process<Cmd("advid")>(Arg aArgs[])
 {
-    otError                  error = OT_ERROR_NONE;
-    otTcatAdvertisedDeviceId devId;
-    static const char *const kVendorIdTypes[] = {"clear", "oui24", "oui36", "discriminator", "ianapen"};
+    otError                  error            = OT_ERROR_NONE;
+    otTcatAdvertisedDeviceId devId            = {};
+    static const char *const kVendorIdTypes[] = {"clear", "oui", "discriminator", "ianapen", "applicationprotocol"};
 
     mVendorInfo.mAdvertisedDeviceIds = sAdvertisedDeviceIds;
 
@@ -202,13 +202,9 @@ template <> otError Tcat::Process<Cmd("advid")>(Arg aArgs[])
         ExitNow();
     }
 
-    if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_OUI24])
+    if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_OUI])
     {
-        devId.mDeviceIdType = OT_TCAT_DEVICE_ID_OUI24;
-    }
-    else if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_OUI36])
-    {
-        devId.mDeviceIdType = OT_TCAT_DEVICE_ID_OUI36;
+        devId.mDeviceIdType = OT_TCAT_DEVICE_ID_OUI;
     }
     else if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_DISCRIMINATOR])
     {
@@ -218,6 +214,10 @@ template <> otError Tcat::Process<Cmd("advid")>(Arg aArgs[])
     {
         devId.mDeviceIdType = OT_TCAT_DEVICE_ID_IANAPEN;
     }
+    else if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL])
+    {
+        devId.mDeviceIdType = OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL;
+    }
     else if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_EMPTY])
     {
         for (otTcatAdvertisedDeviceId &vendorDeviceId : sAdvertisedDeviceIds)
@@ -225,6 +225,13 @@ template <> otError Tcat::Process<Cmd("advid")>(Arg aArgs[])
             vendorDeviceId.mDeviceIdType = OT_TCAT_DEVICE_ID_EMPTY;
             vendorDeviceId.mDeviceIdLen  = 0;
         }
+
+        // Update the vendor info to remove advertised device IDs if the TCAT agent is already started
+        if (otBleSecureIsTcatAgentStarted(GetInstancePtr()))
+        {
+            SuccessOrExit(error = otBleSecureSetTcatVendorInfo(GetInstancePtr(), &mVendorInfo));
+        }
+
         ExitNow();
     }
     else
@@ -244,6 +251,12 @@ template <> otError Tcat::Process<Cmd("advid")>(Arg aArgs[])
                 vendorDeviceId = devId;
                 break;
             }
+        }
+
+        // Update the vendor info with the new advertised device IDs if the TCAT agent is already started
+        if (otBleSecureIsTcatAgentStarted(GetInstancePtr()))
+        {
+            SuccessOrExit(error = otBleSecureSetTcatVendorInfo(GetInstancePtr(), &mVendorInfo));
         }
     }
     else
