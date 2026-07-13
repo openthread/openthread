@@ -50,7 +50,6 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
-#include <openthread/message.h>
 #include <openthread/tcat.h>
 
 #ifdef __cplusplus
@@ -418,22 +417,6 @@ bool otBleSecureIsTcatAgentStarted(otInstance *aInstance);
  * @retval FALSE  The command class is not authorized.
  */
 bool otBleSecureIsCommandClassAuthorized(otInstance *aInstance, otTcatCommandClass aCommandClass);
-
-/**
- * Sends a secure BLE message.
- *
- * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aMessage      A pointer to the message to send.
- *
- * If the return value is OT_ERROR_NONE, OpenThread takes ownership of @p aMessage, and the caller should no longer
- * reference @p aMessage. If the return value is not OT_ERROR_NONE, the caller retains ownership of @p aMessage,
- * including freeing @p aMessage if the message buffer is no longer needed.
- *
- * @retval OT_ERROR_NONE           Successfully sent message.
- * @retval OT_ERROR_NO_BUFS        Failed to allocate buffer memory.
- * @retval OT_ERROR_INVALID_STATE  TLS connection was not initialized.
- */
-otError otBleSecureSendMessage(otInstance *aInstance, otMessage *aMessage);
 
 /**
  * Sends a secure BLE data packet.

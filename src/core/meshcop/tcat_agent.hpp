@@ -275,11 +275,11 @@ public:
      */
     enum TcatDeviceIdType : uint8_t
     {
-        kTcatDeviceIdEmpty         = OT_TCAT_DEVICE_ID_EMPTY,
-        kTcatDeviceIdOui24         = OT_TCAT_DEVICE_ID_OUI24,
-        kTcatDeviceIdOui36         = OT_TCAT_DEVICE_ID_OUI36,
-        kTcatDeviceIdDiscriminator = OT_TCAT_DEVICE_ID_DISCRIMINATOR,
-        kTcatDeviceIdIanaPen       = OT_TCAT_DEVICE_ID_IANAPEN,
+        kTcatDeviceIdEmpty               = OT_TCAT_DEVICE_ID_EMPTY,
+        kTcatDeviceIdOui                 = OT_TCAT_DEVICE_ID_OUI,
+        kTcatDeviceIdDiscriminator       = OT_TCAT_DEVICE_ID_DISCRIMINATOR,
+        kTcatDeviceIdIanaPen             = OT_TCAT_DEVICE_ID_IANAPEN,
+        kTcatDeviceIdApplicationProtocol = OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL,
     };
 
     /**
@@ -545,21 +545,17 @@ struct DeviceTypeAndStatus
     bool    mDeviceType : 1;
 };
 
-static constexpr uint8_t kTlvVendorOui24Length         = 3;
-static constexpr uint8_t kTlvVendorOui36Length         = 5;
-static constexpr uint8_t kTlvDeviceDiscriminatorLength = 5;
 static constexpr uint8_t kTlvBleLinkCapabilitiesLength = 1;
 static constexpr uint8_t kTlvDeviceTypeAndStatusLength = 1;
-static constexpr uint8_t kTlvVendorIanaPenLength       = 4;
 
 enum TcatAdvertisementTlvType : uint8_t
 {
-    kTlvVendorOui24         = 1, ///< TCAT vendor OUI 24
-    kTlvVendorOui36         = 2, ///< TCAT vendor OUI 36
-    kTlvDeviceDiscriminator = 3, ///< TCAT random vendor discriminator
-    kTlvDeviceTypeAndStatus = 4, ///< TCAT Thread device type and status
-    kTlvBleLinkCapabilities = 5, ///< TCAT BLE link capabilities of device
-    kTlvVendorIanaPen       = 6, ///< TCAT Vendor IANA PEN
+    kTlvVendorOui             = 1, ///< TCAT vendor OUI 24
+    kTlvDeviceDiscriminator   = 3, ///< TCAT random vendor discriminator
+    kTlvDeviceTypeAndStatus   = 4, ///< TCAT Thread device type and status
+    kTlvBleLinkCapabilities   = 5, ///< TCAT BLE link capabilities of device
+    kTlvVendorIanaPen         = 6, ///< TCAT Vendor IANA PEN
+    kTlvApplicationProtocolId = 7, ///< TCAT Application Protocol ID
 };
 
 } // namespace MeshCoP

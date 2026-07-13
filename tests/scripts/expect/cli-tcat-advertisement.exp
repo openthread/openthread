@@ -45,18 +45,18 @@ send "tcat advid\n"
 expect_line "type ianapen, value: f378aabb"
 expect_line "Done"
 
-send "tcat advid oui24 f378aa\n"
+send "tcat advid oui f378aa\n"
 expect_line "Done"
 
 send "tcat advid\n"
-expect_line "type oui24, value: f378aa"
+expect_line "type oui, value: f378aa"
 expect_line "Done"
 
-send "tcat advid oui36 f378aabbcc\n"
+send "tcat advid applicationprotocol c000aabb\n"
 expect_line "Done"
 
 send "tcat advid\n"
-expect_line "type oui36, value: f378aabbcc"
+expect_line "type applicationprotocol, value: c000aabb"
 expect_line "Done"
 
 send "tcat advid discriminator f378aabbdd\n"

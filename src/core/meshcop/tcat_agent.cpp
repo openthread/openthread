@@ -1201,13 +1201,8 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
         {
             switch (MapEnum(mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdType))
             {
-            case kTcatDeviceIdOui24:
-                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui24,
-                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
-                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
-                break;
-            case kTcatDeviceIdOui36:
-                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui36,
+            case kTcatDeviceIdOui:
+                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui,
                                               mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
                                               mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;
@@ -1218,6 +1213,11 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
                 break;
             case kTcatDeviceIdIanaPen:
                 SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorIanaPen,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
+                break;
+            case kTcatDeviceIdApplicationProtocol:
+                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvApplicationProtocolId,
                                               mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
                                               mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;

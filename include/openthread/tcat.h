@@ -181,12 +181,12 @@ typedef enum otTcatCommandClass
  */
 typedef enum otTcatAdvertisedDeviceIdType
 {
-    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Advertised device ID type not set
-    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Advertised device ID type IEEE OUI-24
-    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Advertised device ID type IEEE OUI-36
-    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Advertised device ID type Device Discriminator
-    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Advertised device ID type IANA PEN
-    OT_TCAT_DEVICE_ID_MAX           = 5, ///< Advertised device ID max number of types
+    OT_TCAT_DEVICE_ID_EMPTY                = 0, ///< Advertised device ID type not set
+    OT_TCAT_DEVICE_ID_OUI                  = 1, ///< Advertised device ID type IEEE OUI
+    OT_TCAT_DEVICE_ID_DISCRIMINATOR        = 2, ///< Advertised device ID type Device Discriminator
+    OT_TCAT_DEVICE_ID_IANAPEN              = 3, ///< Advertised device ID type IANA PEN
+    OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL = 4, ///< Advertised device ID type Application Protocol
+    OT_TCAT_DEVICE_ID_MAX                  = 5, ///< Advertised device ID max number of types
 } otTcatAdvertisedDeviceIdType;
 
 typedef struct otTcatAdvertisedDeviceId
