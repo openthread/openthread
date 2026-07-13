@@ -48,6 +48,7 @@ static uint16_t sEtagReceiveHookCallCount = 0;
 static bool     sEtagResponseReceived     = false;
 static otError  sEtagResponseError        = OT_ERROR_NONE;
 static bool     sEtagShouldChange         = false;
+static bool     sEtagShouldDisappear      = false;
 
 static void HandleReproductionResponse(void                *aContext,
                                        otMessage           *aMessage,
@@ -179,16 +180,14 @@ static otError EtagReceiveHook(void          *aContext,
 }
 
 // Serves a 3-block (0, 1, 2) GET response, always tagging block 0 with ETag
-// `0x11`. When `sEtagShouldChange` is set, later blocks carry ETag `0x22`
-// instead, simulating the resource being modified mid-transfer (RFC 7959,
-// Section 2.4). Otherwise all blocks keep ETag `0x11`.
+// `0x11`. Later blocks either keep the same ETag, change to `0x22`, or omit
+// the option, depending on the test case.
 static void HandleEtagRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     Instance      &instance = *static_cast<Instance *>(aContext);
     Coap::Message &message  = AsCoapMessage(aMessage);
     Coap::Message *response = instance.Get<Coap::ApplicationCoap>().NewMessage();
     uint32_t       blockNum = 0;
-    uint8_t        etag;
 
     VerifyOrQuit(response != nullptr);
     SuccessOrQuit(response->InitAsResponse(Coap::kTypeAck, Coap::kCodeContent, message));
@@ -204,8 +203,12 @@ static void HandleEtagRequest(void *aContext, otMessage *aMessage, const otMessa
 
     // ETag option MUST be appended before Block2 (CoAP option numbers must be
     // written in increasing order: ETag is 4, Block2 is 23).
-    etag = ((blockNum == 0) || !sEtagShouldChange) ? 0x11 : 0x22;
-    SuccessOrQuit(response->AppendOption(Coap::kOptionETag, sizeof(etag), &etag));
+    if ((blockNum == 0) || !sEtagShouldDisappear)
+    {
+        uint8_t etag = ((blockNum == 0) || !sEtagShouldChange) ? 0x11 : 0x22;
+
+        SuccessOrQuit(response->AppendOption(Coap::kOptionETag, sizeof(etag), &etag));
+    }
 
     Coap::BlockInfo blockInfo;
     blockInfo.mBlockNumber = blockNum;
@@ -213,8 +216,7 @@ static void HandleEtagRequest(void *aContext, otMessage *aMessage, const otMessa
     blockInfo.mMoreBlocks  = (blockNum < 2); // We send 3 blocks in total (0, 1, 2)
     SuccessOrQuit(response->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
 
-    SuccessOrQuit(instance.Get<Coap::ApplicationCoap>().SendMessageWithResponseHandlerSeparateParams(
-        *response, AsCoreType(aMessageInfo), nullptr, nullptr, &TransmitHook, nullptr, nullptr));
+    SuccessOrQuit(instance.Get<Coap::ApplicationCoap>().SendMessage(*response, AsCoreType(aMessageInfo)));
 }
 
 // Exercises RFC 7959 Section 2.4: a CoAP client doing a Block2 GET transfer
@@ -241,9 +243,8 @@ void TestCoapBlockEtag(void)
 
     SuccessOrQuit(leader.Get<Coap::ApplicationCoap>().Start(OT_DEFAULT_COAP_PORT));
 
-    Coap::ResourceBlockWise resource("etest", &HandleEtagRequest, &leader.GetInstance(), &EtagReceiveHook,
-                                     &TransmitHook);
-    leader.Get<Coap::ApplicationCoap>().AddBlockWiseResource(resource);
+    Coap::Resource resource("etest", &HandleEtagRequest, &leader.GetInstance());
+    leader.Get<Coap::ApplicationCoap>().AddResource(resource);
 
     SuccessOrQuit(router.Get<Coap::ApplicationCoap>().Start(OT_DEFAULT_COAP_PORT));
 
@@ -265,6 +266,7 @@ void TestCoapBlockEtag(void)
         SuccessOrQuit(message->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
 
         sEtagShouldChange         = false;
+        sEtagShouldDisappear      = false;
         sEtagReceiveHookCallCount = 0;
         sEtagResponseReceived     = false;
         sEtagResponseError        = OT_ERROR_NONE;
@@ -294,6 +296,7 @@ void TestCoapBlockEtag(void)
         SuccessOrQuit(message->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
 
         sEtagShouldChange         = true;
+        sEtagShouldDisappear      = false;
         sEtagReceiveHookCallCount = 0;
         sEtagResponseReceived     = false;
         sEtagResponseError        = OT_ERROR_NONE;
@@ -308,7 +311,37 @@ void TestCoapBlockEtag(void)
         VerifyOrQuit(sEtagResponseError == OT_ERROR_ABORT);
     }
 
-    leader.Get<Coap::ApplicationCoap>().RemoveBlockWiseResource(resource);
+    // Case 3: ETag disappears after block 0 - client MUST abort because it can
+    // no longer verify that subsequent blocks belong to the same representation.
+    {
+        Coap::Message *message = router.Get<Coap::ApplicationCoap>().NewMessage();
+        VerifyOrQuit(message != nullptr);
+        SuccessOrQuit(message->Init(Coap::kTypeConfirmable, Coap::kCodeGet));
+        SuccessOrQuit(message->AppendUriPathOptions("etest"));
+
+        Coap::BlockInfo blockInfo;
+        blockInfo.mBlockNumber = 0;
+        blockInfo.mBlockSzx    = Coap::kBlockSzx16;
+        blockInfo.mMoreBlocks  = false;
+        SuccessOrQuit(message->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
+
+        sEtagShouldChange         = false;
+        sEtagShouldDisappear      = true;
+        sEtagReceiveHookCallCount = 0;
+        sEtagResponseReceived     = false;
+        sEtagResponseError        = OT_ERROR_NONE;
+
+        SuccessOrQuit(router.Get<Coap::ApplicationCoap>().SendMessageWithResponseHandlerSeparateParams(
+            *message, messageInfo, nullptr, &HandleEtagResponse, nullptr, &EtagReceiveHook, nullptr));
+
+        nexus.AdvanceTime(5 * 1000);
+
+        VerifyOrQuit(sEtagReceiveHookCallCount == 1); // Only block 0 delivered to the app.
+        VerifyOrQuit(sEtagResponseReceived);
+        VerifyOrQuit(sEtagResponseError == OT_ERROR_ABORT);
+    }
+
+    leader.Get<Coap::ApplicationCoap>().RemoveResource(resource);
     IgnoreError(leader.Get<Coap::ApplicationCoap>().Stop());
     IgnoreError(router.Get<Coap::ApplicationCoap>().Stop());
 }

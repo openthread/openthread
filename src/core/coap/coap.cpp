@@ -1183,10 +1183,9 @@ Error CoapBase::SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t a
         // across the blocks being reassembled. Here we compare against the ETag remembered
         // from the first block of this transfer. A mismatch means the resource was modified
         // mid-transfer, so the transfer is aborted instead of assembling mismatched blocks.
-        VerifyOrExit(
-            (oldCallbacks.mEtagLength == 0) || (etagLength == 0) ||
-                ((etagLength == oldCallbacks.mEtagLength) && (memcmp(etag, oldCallbacks.mEtag, etagLength) == 0)),
-            error = kErrorAbort);
+        VerifyOrExit((oldCallbacks.mEtagLength == 0) || ((etagLength == oldCallbacks.mEtagLength) &&
+                                                         (memcmp(etag, oldCallbacks.mEtag, etagLength) == 0)),
+                     error = kErrorAbort);
     }
 
     offsetRange.InitFromMessageOffsetToEnd(aRxMsg.mMessage);
