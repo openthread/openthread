@@ -563,7 +563,7 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
     case SPINEL_PROP_RCP_MAC_KEY:
     {
         uint8_t      keyIdMode;
-        uint8_t      keyId;
+        uint8_t      keyIndex;
         otMacKey     prevKey;
         unsigned int prevKeyLen = sizeof(otMacKey);
         otMacKey     currKey;
@@ -575,10 +575,10 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
             data, len,
             SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S
                 SPINEL_DATATYPE_DATA_WLEN_S,
-            &keyIdMode, &keyId, prevKey.m8, &prevKeyLen, currKey.m8, &currKeyLen, nextKey.m8, &nextKeyLen);
+            &keyIdMode, &keyIndex, prevKey.m8, &prevKeyLen, currKey.m8, &currKeyLen, nextKey.m8, &nextKeyLen);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         start += Snprintf(start, static_cast<uint32_t>(end - start),
-                          ", keyIdMode:%u, keyId:%u, prevKey:***, currKey:***, nextKey:***", keyIdMode, keyId);
+                          ", keyIdMode:%u, keyIndex:%u, prevKey:***, currKey:***, nextKey:***", keyIdMode, keyIndex);
     }
     break;
 

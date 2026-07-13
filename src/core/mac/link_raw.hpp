@@ -245,7 +245,7 @@ public:
      * Updates MAC keys and key index.
      *
      * @param[in]   aKeyIdMode        The key ID mode.
-     * @param[in]   aKeyId            The key index.
+     * @param[in]   aKeyIndex            The key index.
      * @param[in]   aPrevKey          The previous MAC key.
      * @param[in]   aCurrKey          The current MAC key.
      * @param[in]   aNextKey          The next MAC key.
@@ -254,7 +254,11 @@ public:
      * @retval kErrorFailed          Platform failed to import key.
      * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      */
-    Error SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey);
+    Error SetMacKey(uint8_t    aKeyIdMode,
+                    uint8_t    aKeyIndex,
+                    const Key &aPrevKey,
+                    const Key &aCurrKey,
+                    const Key &aNextKey);
 
     /**
      * Sets the current MAC frame counter value.

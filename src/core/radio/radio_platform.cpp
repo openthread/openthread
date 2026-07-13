@@ -236,7 +236,7 @@ extern "C" OT_TOOL_WEAK otRadioState otPlatRadioGetState(otInstance *aInstance)
 
 extern "C" OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance             *aInstance,
                                                   uint8_t                 aKeyIdMode,
-                                                  uint8_t                 aKeyId,
+                                                  uint8_t                 aKeyIndex,
                                                   const otMacKeyMaterial *aPrevKey,
                                                   const otMacKeyMaterial *aCurrKey,
                                                   const otMacKeyMaterial *aNextKey,
@@ -244,7 +244,7 @@ extern "C" OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance             *aInsta
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aKeyIdMode);
-    OT_UNUSED_VARIABLE(aKeyId);
+    OT_UNUSED_VARIABLE(aKeyIndex);
     OT_UNUSED_VARIABLE(aPrevKey);
     OT_UNUSED_VARIABLE(aCurrKey);
     OT_UNUSED_VARIABLE(aNextKey);

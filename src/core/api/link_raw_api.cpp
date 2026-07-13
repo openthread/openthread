@@ -204,12 +204,12 @@ exit:
 
 otError otLinkRawSetMacKey(otInstance     *aInstance,
                            uint8_t         aKeyIdMode,
-                           uint8_t         aKeyId,
+                           uint8_t         aKeyIndex,
                            const otMacKey *aPrevKey,
                            const otMacKey *aCurrKey,
                            const otMacKey *aNextKey)
 {
-    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetMacKey(aKeyIdMode, aKeyId, AsCoreType(aPrevKey),
+    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetMacKey(aKeyIdMode, aKeyIndex, AsCoreType(aPrevKey),
                                                                AsCoreType(aCurrKey), AsCoreType(aNextKey));
 }
 

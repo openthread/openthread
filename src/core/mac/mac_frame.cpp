@@ -708,7 +708,7 @@ void Frame::SetKeySource(const uint8_t *aKeySource)
     memcpy(&mPsdu[index + kSecurityControlSize + kFrameCounterSize], aKeySource, keySourceSize);
 }
 
-Error Frame::GetKeyId(uint8_t &aKeyId) const
+Error Frame::GetKeyIndex(uint8_t &aKeyIndex) const
 {
     Error   error = kErrorNone;
     uint8_t keySourceSize;
@@ -718,13 +718,13 @@ Error Frame::GetKeyId(uint8_t &aKeyId) const
 
     keySourceSize = CalculateKeySourceSize(mPsdu[index]);
 
-    aKeyId = mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize];
+    aKeyIndex = mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize];
 
 exit:
     return error;
 }
 
-void Frame::SetKeyId(uint8_t aKeyId)
+void Frame::SetKeyIndex(uint8_t aKeyIndex)
 {
     uint8_t keySourceSize;
     uint8_t index = FindSecurityHeaderIndex();
@@ -733,7 +733,7 @@ void Frame::SetKeyId(uint8_t aKeyId)
 
     keySourceSize = CalculateKeySourceSize(mPsdu[index]);
 
-    mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize] = aKeyId;
+    mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize] = aKeyIndex;
 }
 
 Error Frame::GetCommandId(uint8_t &aCommandId) const
@@ -1348,10 +1348,10 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
 
     if (aRxFrame.GetSecurityEnabled())
     {
-        uint8_t keyId;
+        uint8_t keyIndex;
 
-        SuccessOrExit(error = aRxFrame.GetKeyId(keyId));
-        SetKeyId(keyId);
+        SuccessOrExit(error = aRxFrame.GetKeyIndex(keyIndex));
+        SetKeyIndex(keyIndex);
     }
 
     if (aIeLength > 0)

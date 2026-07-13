@@ -187,7 +187,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
         if (frame->GetSecurityEnabled())
         {
             frame->SetFrameCounter(mCslTxNeighbor->GetIndirectFrameCounter());
-            frame->SetKeyId(mCslTxNeighbor->GetIndirectKeyId());
+            frame->SetKeyIndex(mCslTxNeighbor->GetIndirectKeyIndex());
         }
     }
     else
@@ -291,13 +291,13 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
             if (aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated())
             {
                 uint32_t frameCounter;
-                uint8_t  keyId;
+                uint8_t  keyIndex;
 
                 IgnoreError(aFrame.GetFrameCounter(frameCounter));
                 aCslNeighbor.SetIndirectFrameCounter(frameCounter);
 
-                IgnoreError(aFrame.GetKeyId(keyId));
-                aCslNeighbor.SetIndirectKeyId(keyId);
+                IgnoreError(aFrame.GetKeyIndex(keyIndex));
+                aCslNeighbor.SetIndirectKeyIndex(keyIndex);
             }
         }
 

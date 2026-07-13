@@ -241,7 +241,7 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 }
 
 Error LinkRaw::SetMacKey(uint8_t    aKeyIdMode,
-                         uint8_t    aKeyId,
+                         uint8_t    aKeyIndex,
                          const Key &aPrevKey,
                          const Key &aCurrKey,
                          const Key &aNextKey)
@@ -257,7 +257,7 @@ Error LinkRaw::SetMacKey(uint8_t    aKeyIdMode,
     currKey.SetFrom(aCurrKey, kDefaultMacKeysExportable);
     nextKey.SetFrom(aNextKey, kDefaultMacKeysExportable);
 
-    mSubMac.SetMacKey(aKeyIdMode, aKeyId, prevKey, currKey, nextKey);
+    mSubMac.SetMacKey(aKeyIdMode, aKeyIndex, prevKey, currKey, nextKey);
 
 exit:
     return error;

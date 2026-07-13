@@ -729,7 +729,7 @@ void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable);
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aKeyIdMode   The key ID mode.
- * @param[in]   aKeyId       Current MAC key index.
+ * @param[in]   aKeyIndex       Current MAC key index.
  * @param[in]   aPrevKey     A pointer to the previous MAC key.
  * @param[in]   aCurrKey     A pointer to the current MAC key.
  * @param[in]   aNextKey     A pointer to the next MAC key.
@@ -737,7 +737,7 @@ void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable);
  */
 void otPlatRadioSetMacKey(otInstance             *aInstance,
                           uint8_t                 aKeyIdMode,
-                          uint8_t                 aKeyId,
+                          uint8_t                 aKeyIndex,
                           const otMacKeyMaterial *aPrevKey,
                           const otMacKeyMaterial *aCurrKey,
                           const otMacKeyMaterial *aNextKey,

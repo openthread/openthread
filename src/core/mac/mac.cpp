@@ -845,7 +845,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         if (!aFrame.IsHeaderUpdated())
         {
             mLinks.SetMacFrameCounter(aFrame);
-            aFrame.SetKeyId((keyManager.GetCurrentKeySequence() & 0x7f) + 1);
+            aFrame.SetKeyIndex((keyManager.GetCurrentKeySequence() & 0x7f) + 1);
         }
 #endif
         break;
@@ -868,7 +868,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
-        aFrame.SetKeyId(0xff);
+        aFrame.SetKeyIndex(0xff);
         extAddress = &AsCoreType(&sMode2ExtAddress);
         break;
     }
@@ -1552,7 +1552,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     uint8_t            securityLevel;
     uint8_t            keyIdMode;
     uint32_t           frameCounter;
-    uint8_t            keyid;
+    uint8_t            keyIndex;
     uint32_t           keySequence = 0;
     const KeyMaterial *macKey;
     const ExtAddress  *extAddress;
@@ -1578,20 +1578,20 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     case Frame::kKeyIdMode1:
         VerifyOrExit(aNeighbor != nullptr);
 
-        IgnoreError(aFrame.GetKeyId(keyid));
-        keyid--;
+        IgnoreError(aFrame.GetKeyIndex(keyIndex));
+        keyIndex--;
 
-        if (keyid == (keyManager.GetCurrentKeySequence() & 0x7f))
+        if (keyIndex == (keyManager.GetCurrentKeySequence() & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence();
             macKey      = mLinks.GetCurrentMacKey(aFrame);
         }
-        else if (keyid == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
+        else if (keyIndex == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence() - 1;
             macKey      = mLinks.GetTemporaryMacKey(aFrame, keySequence);
         }
-        else if (keyid == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
+        else if (keyIndex == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence() + 1;
             macKey      = mLinks.GetTemporaryMacKey(aFrame, keySequence);
@@ -1639,9 +1639,9 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
             // TODO: Avoid generating a new key if a wake-up frame was recently received already
 
-            IgnoreError(aFrame.GetKeyId(keyid));
+            IgnoreError(aFrame.GetKeyIndex(keyIndex));
             sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
-            VerifyOrExit(((sequence & 0x7f) + 1) == keyid, error = kErrorSecurity);
+            VerifyOrExit(((sequence & 0x7f) + 1) == keyIndex, error = kErrorSecurity);
 
             macKey     = (sequence == keyManager.GetCurrentKeySequence()) ? mLinks.GetCurrentMacKey(aFrame)
                                                                           : &keyManager.GetTemporaryMacKey(sequence);
@@ -1705,8 +1705,8 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 {
     Error              error = kErrorSecurity;
     uint8_t            securityLevel;
-    uint8_t            txKeyId;
-    uint8_t            ackKeyId;
+    uint8_t            txKeyIndex;
+    uint8_t            ackKeyIndex;
     uint8_t            keyIdMode;
     uint32_t           frameCounter;
     Address            srcAddr;
@@ -1726,10 +1726,10 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     IgnoreError(aAckFrame.GetKeyIdMode(keyIdMode));
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
 
-    IgnoreError(aTxFrame.GetKeyId(txKeyId));
-    IgnoreError(aAckFrame.GetKeyId(ackKeyId));
+    IgnoreError(aTxFrame.GetKeyIndex(txKeyIndex));
+    IgnoreError(aAckFrame.GetKeyIndex(ackKeyIndex));
 
-    VerifyOrExit(txKeyId == ackKeyId);
+    VerifyOrExit(txKeyIndex == ackKeyIndex);
 
     IgnoreError(aAckFrame.GetFrameCounter(frameCounter));
     LogDebg("Rx security - Ack frame counter %lu", ToUlong(frameCounter));
@@ -1758,17 +1758,17 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     VerifyOrExit(srcAddr.IsExtended() && neighbor != nullptr);
 
-    ackKeyId--;
+    ackKeyIndex--;
 
-    if (ackKeyId == (keyManager.GetCurrentKeySequence() & 0x7f))
+    if (ackKeyIndex == (keyManager.GetCurrentKeySequence() & 0x7f))
     {
         macKey = &mLinks.GetSubMac().GetCurrentMacKey();
     }
-    else if (ackKeyId == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
+    else if (ackKeyIndex == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
     {
         macKey = &mLinks.GetSubMac().GetPreviousMacKey();
     }
-    else if (ackKeyId == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
+    else if (ackKeyIndex == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
     {
         macKey = &mLinks.GetSubMac().GetNextMacKey();
     }

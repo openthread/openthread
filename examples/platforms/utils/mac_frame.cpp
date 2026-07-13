@@ -236,14 +236,17 @@ bool otMacFrameIsKeyIdMode2(otRadioFrame *aFrame)
 
 uint8_t otMacFrameGetKeyId(otRadioFrame *aFrame)
 {
-    uint8_t keyId = 0;
+    uint8_t keyIndex = 0;
 
-    IgnoreError(static_cast<const Mac::Frame *>(aFrame)->GetKeyId(keyId));
+    IgnoreError(static_cast<const Mac::Frame *>(aFrame)->GetKeyIndex(keyIndex));
 
-    return keyId;
+    return keyIndex;
 }
 
-void otMacFrameSetKeyId(otRadioFrame *aFrame, uint8_t aKeyId) { static_cast<Mac::Frame *>(aFrame)->SetKeyId(aKeyId); }
+void otMacFrameSetKeyId(otRadioFrame *aFrame, uint8_t aKeyId)
+{
+    static_cast<Mac::Frame *>(aFrame)->SetKeyIndex(aKeyId);
+}
 
 uint32_t otMacFrameGetFrameCounter(otRadioFrame *aFrame)
 {
