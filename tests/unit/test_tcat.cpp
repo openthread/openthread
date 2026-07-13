@@ -123,7 +123,64 @@ static constexpr uint16_t kConnectionId                  = 0;
 static constexpr int      kCertificateThreadVersion      = 2;
 static constexpr int      kCertificateAuthorizationField = 3;
 
+static constexpr otTcatAdvertisedDeviceId kAdvDevIds[] = {
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_OUI, .mDeviceIdLen = 5, .mDeviceId = {0x11, 0x12, 0x13, 0x14, 0x15}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL,
+     .mDeviceIdLen  = 3,
+     .mDeviceId     = {0x21, 0x22, 0x23, 0xFF, 0xFF}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_EMPTY}};
+
+static constexpr otTcatAdvertisedDeviceId kAdvDevIdsExceedingMaxAdvDataLen[] = {
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_OUI, .mDeviceIdLen = 5, .mDeviceId = {0x11, 0x12, 0x13, 0x14, 0x15}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_DISCRIMINATOR, .mDeviceIdLen = 5, .mDeviceId = {0x21, 0x22, 0x23, 0x24, 0x25}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_IANAPEN, .mDeviceIdLen = 5, .mDeviceId = {0x31, 0x32, 0x33, 0x34, 0x35}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL,
+     .mDeviceIdLen  = 4,
+     .mDeviceId     = {0x41, 0x42, 0x43, 0x44, 0xFF}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_EMPTY}};
+
+static constexpr otTcatAdvertisedDeviceId kAdvDevIdsJustFittingMaxAdvDataLen[] = {
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_OUI, .mDeviceIdLen = 5, .mDeviceId = {0x11, 0x12, 0x13, 0x14, 0x15}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_DISCRIMINATOR, .mDeviceIdLen = 5, .mDeviceId = {0x21, 0x22, 0x23, 0x24, 0x25}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_IANAPEN, .mDeviceIdLen = 5, .mDeviceId = {0x31, 0x32, 0x33, 0x34, 0x35}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL,
+     .mDeviceIdLen  = 3,
+     .mDeviceId     = {0x41, 0x42, 0x43, 0xFF, 0xFF}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_EMPTY}};
+
+static constexpr otTcatAdvertisedDeviceId kAdvDevIdsExceedingMaxIdLen[] = {
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_OUI,
+     .mDeviceIdLen  = 6, // exceeding maximum length
+     .mDeviceId     = {0x11, 0x12, 0x13, 0x14, 0x15}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL,
+     .mDeviceIdLen  = 3,
+     .mDeviceId     = {0x21, 0x22, 0x23, 0xFF, 0xFF}},
+    {.mDeviceIdType = OT_TCAT_DEVICE_ID_EMPTY}};
+
 static constexpr otTcatVendorInfo vendorInfo = {.mProvisioningUrl = kUrl, .mPskdString = kPskdVendor};
+
+// Advertisement data expected for vendor data without devices IDs
+static uint8_t sExpectedAdvData[] = {0xFB, //  Thread UUID in little endian byte order
+                                     0xFF, OPENTHREAD_CONFIG_THREAD_VERSION << 4 | OT_TCAT_OPCODE,
+                                     0x51, // link capabilities, len = 1, val = 0x80
+                                     0x80,
+                                     0x41, // type & status, len = 1, val = <dynamic>
+                                     0xFF};
+
+// Advertisement data expected for vendor data with devices IDs
+static uint8_t sExpectedExtAdvData[] = {0xFB, //  Thread UUID in little endian byte order
+                                        0xFF, OPENTHREAD_CONFIG_THREAD_VERSION << 4 | OT_TCAT_OPCODE,
+                                        0x15, // OUI, len = 5, val = 0x1112131415
+                                        0x11, 0x12,
+                                        0x13, 0x14,
+                                        0x15,
+                                        0x73, // application data, len = 3, val = 0x212223
+                                        0x21, 0x22,
+                                        0x23,
+                                        0x51, // link capabilities, len = 1, val = 0x80
+                                        0x80,
+                                        0x41, // type & status, len = 1, val = <dynamic>
+                                        0xFF};
 
 // TCAT command class bits for expressing any combination of classes in tests
 static constexpr uint16_t kClassNone            = 0;
@@ -495,10 +552,12 @@ void TestTcatConnectionAndCertAttributes(void)
 
 void TestTcatAdvertisementUpdates(void)
 {
-    TestBleSecure ble;
-    Instance     *instance = TestInitInstanceTcat();
-    uint8_t       advDataSnapshot[OT_TCAT_ADVERTISEMENT_MAX_LEN];
-    uint16_t      advDataSnapshotLen;
+    TestBleSecure       ble;
+    Instance           *instance = TestInitInstanceTcat();
+    uint8_t             advDataSnapshot[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+    uint16_t            advDataSnapshotLen;
+    otTcatVendorInfo    extendedVendorInfo = vendorInfo;
+    DeviceTypeAndStatus deviceTypeAndStatus;
 
     VerifyOrQuit(sPlatBleLastAdvSetDataLen == 0, "Adv data should be unset before BleSecure start");
 
@@ -507,6 +566,53 @@ void TestTcatAdvertisementUpdates(void)
 
     VerifyOrQuit(sPlatBleLastAdvSetDataLen > 0, "Adv data should be set after BleSecure start");
     VerifyOrQuit(sPlatBleAdvertising, "Advertising should be started after BleSecure start");
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == sizeof(sExpectedAdvData),
+                 "Unexpected advertising data length after starting TCAT");
+
+    // Build the the device type and status information for the simulated device
+    deviceTypeAndStatus.mRsv                            = 0;
+    deviceTypeAndStatus.mMultiRadioSupport              = otPlatBleSupportsMultiRadio(instance);
+    deviceTypeAndStatus.mStoresActiveOperationalDataset = 0;
+    deviceTypeAndStatus.mIsCommissioned                 = 0;
+    deviceTypeAndStatus.mThreadNetworkActive            = 0;
+    deviceTypeAndStatus.mDeviceType   = instance->Get<Mle::Mle>().GetDeviceMode().IsFullThreadDevice();
+    deviceTypeAndStatus.mRxOnWhenIdle = instance->Get<Mle::Mle>().GetDeviceMode().IsRxOnWhenIdle();
+
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE || \
+                       OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE)
+    deviceTypeAndStatus.mIsBorderRouter = true;
+#else
+    deviceTypeAndStatus.mIsBorderRouter = false;
+#endif
+
+    sExpectedAdvData[sizeof(sExpectedAdvData) - 1] = *reinterpret_cast<uint8_t *>(&deviceTypeAndStatus);
+    VerifyOrQuit(memcmp(sPlatBleLastAdvSetData, sExpectedAdvData, sizeof(sExpectedAdvData)) == 0,
+                 "Adv data not matching expected values");
+
+    SuccessOrQuit(otBleSecureSetTcatVendorInfo(instance, &vendorInfo));
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == sizeof(sExpectedAdvData),
+                 "Unexpected advertising data length after re-setting vendor data");
+
+    extendedVendorInfo.mAdvertisedDeviceIds = kAdvDevIdsExceedingMaxAdvDataLen;
+    VerifyOrQuit(otBleSecureSetTcatVendorInfo(instance, &extendedVendorInfo) == kErrorInvalidArgs,
+                 "Unexpected return code after setting vendor data with too many vendor IDs");
+
+    extendedVendorInfo.mAdvertisedDeviceIds = kAdvDevIdsJustFittingMaxAdvDataLen;
+    VerifyOrQuit(otBleSecureSetTcatVendorInfo(instance, &extendedVendorInfo) == kErrorNone,
+                 "Unexpected return code after setting vendor data with the maximum number of vendor IDs");
+
+    extendedVendorInfo.mAdvertisedDeviceIds = kAdvDevIdsExceedingMaxIdLen;
+    VerifyOrQuit(otBleSecureSetTcatVendorInfo(instance, &extendedVendorInfo) == kErrorInvalidArgs,
+                 "Unexpected return code after setting vendor data with a vendor ID exceeding maximum length");
+
+    extendedVendorInfo.mAdvertisedDeviceIds = kAdvDevIds;
+    SuccessOrQuit(otBleSecureSetTcatVendorInfo(instance, &extendedVendorInfo));
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == sizeof(sExpectedExtAdvData),
+                 "Unexpected advertising data length after setting extended vendor data");
+    sExpectedExtAdvData[sizeof(sExpectedExtAdvData) - 1] = *reinterpret_cast<uint8_t *>(&deviceTypeAndStatus);
+    VerifyOrQuit(memcmp(sPlatBleLastAdvSetData, sExpectedExtAdvData, sizeof(sExpectedExtAdvData)) == 0,
+                 "Adv data not matching expected values with device IDs");
+
     advDataSnapshotLen = sPlatBleLastAdvSetDataLen;
     memcpy(advDataSnapshot, sPlatBleLastAdvSetData, advDataSnapshotLen);
 
@@ -549,6 +655,20 @@ void TestTcatAdvertisementUpdates(void)
     VerifyOrQuit(sPlatBleLastAdvSetDataLen == advDataSnapshotLen, "Adv data length changed unexpectedly");
     VerifyOrQuit(memcmp(sPlatBleLastAdvSetData, advDataSnapshot, advDataSnapshotLen) == 0,
                  "Adv data changed unexpectedly after TLS guard timeout expired");
+
+    deviceTypeAndStatus.mStoresActiveOperationalDataset  = 1; // Partial dataset present
+    sExpectedExtAdvData[sizeof(sExpectedExtAdvData) - 1] = *reinterpret_cast<uint8_t *>(&deviceTypeAndStatus);
+    VerifyOrQuit(memcmp(sPlatBleLastAdvSetData, sExpectedExtAdvData, sizeof(sExpectedExtAdvData)) == 0,
+                 "Adv data does not indicate presence of a partial dataset");
+
+    // Re-test setting vendor data without device IDs after disconnect
+    SuccessOrQuit(otBleSecureSetTcatVendorInfo(instance, &vendorInfo));
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == sizeof(sExpectedAdvData),
+                 "Unexpected advertising data length after disconnecting and re-setting vendor data");
+
+    sExpectedAdvData[sizeof(sExpectedAdvData) - 1] = *reinterpret_cast<uint8_t *>(&deviceTypeAndStatus);
+    VerifyOrQuit(memcmp(sPlatBleLastAdvSetData, sExpectedAdvData, sizeof(sExpectedAdvData)) == 0,
+                 "Adv data not matching after disconnecting and re-setting vendor data");
 
     otBleSecureStop(instance);
 

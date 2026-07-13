@@ -48,8 +48,32 @@ RegisterLogModule("TcatAgent");
 
 bool TcatAgent::VendorInfo::IsValid(void) const
 {
+    bool isValid = false;
+
+    VerifyOrExit(mPskdString != nullptr);
+
     // Note: mProvisioningUrl can be nullptr, if not present
-    return mPskdString != nullptr && Tlv::ValidateStringValue<ProvisioningUrlTlv>(mProvisioningUrl) == kErrorNone;
+    VerifyOrExit(Tlv::ValidateStringValue<ProvisioningUrlTlv>(mProvisioningUrl) == kErrorNone);
+
+    if (mAdvertisedDeviceIds != nullptr)
+    {
+        // Service UUID + version/opcode byte + capabilities TLV + status TLV
+        uint16_t len = sizeof(uint16_t) + 1 + 1 + kTlvBleLinkCapabilitiesLength + 1 + kTlvDeviceTypeAndStatusLength;
+
+        for (uint8_t i = 0; i < OT_TCAT_MAX_ADVERTISED_DEVICEID_COUNT &&
+                            mAdvertisedDeviceIds[i].mDeviceIdType != OT_TCAT_DEVICE_ID_EMPTY;
+             i++)
+        {
+            VerifyOrExit(mAdvertisedDeviceIds[i].mDeviceIdLen <= OT_TCAT_MAX_ADVERTISED_DEVICEID_SIZE);
+            len += 1 + mAdvertisedDeviceIds[i].mDeviceIdLen;
+        }
+        VerifyOrExit(len <= OT_TCAT_ADVERTISEMENT_MAX_LEN);
+    }
+
+    isValid = true;
+
+exit:
+    return isValid;
 }
 
 TcatAgent::TcatAgent(Instance &aInstance)
@@ -1221,11 +1245,19 @@ void SerializeTcatAdvertisementTlv(uint8_t                 *aBuffer,
                                    uint16_t                &aOffset,
                                    TcatAdvertisementTlvType aType,
                                    uint16_t                 aLength,
-                                   const uint8_t           *aValue)
+                                   const uint8_t           *aValue,
+                                   bool                    &aOverflow)
 {
-    aBuffer[aOffset++] = static_cast<uint8_t>(aType << 4 | (aLength & 0xf));
-    memcpy(aBuffer + aOffset, aValue, aLength);
-    aOffset += aLength;
+    if (aOffset + aLength < OT_TCAT_ADVERTISEMENT_MAX_LEN && !aOverflow)
+    {
+        aBuffer[aOffset++] = static_cast<uint8_t>(aType << 4 | (aLength & 0xf));
+        memcpy(aBuffer + aOffset, aValue, aLength);
+        aOffset += aLength;
+    }
+    else
+    {
+        aOverflow = true;
+    }
 }
 
 Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData) const
@@ -1233,6 +1265,7 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
     Error                 error = kErrorNone;
     DeviceTypeAndStatus   tas;
     otBleLinkCapabilities caps;
+    bool                  overflow = false;
 
     VerifyOrExit(mVendorInfo != nullptr && aAdvertisementData != nullptr, error = kErrorInvalidArgs);
 
@@ -1245,29 +1278,31 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
 
     if (mVendorInfo->mAdvertisedDeviceIds != nullptr)
     {
-        for (uint8_t i = 0; mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdType != OT_TCAT_DEVICE_ID_EMPTY; i++)
+        for (uint8_t i = 0; i < OT_TCAT_MAX_ADVERTISED_DEVICEID_COUNT &&
+                            mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdType != OT_TCAT_DEVICE_ID_EMPTY;
+             i++)
         {
-            switch (MapEnum(mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdType))
+            switch (mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdType)
             {
-            case kTcatDeviceIdOui24:
-                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui24,
+            case OT_TCAT_DEVICE_ID_OUI:
+                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui,
                                               mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
-                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId, overflow);
                 break;
-            case kTcatDeviceIdOui36:
-                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui36,
-                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
-                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
-                break;
-            case kTcatDeviceIdDiscriminator:
+            case OT_TCAT_DEVICE_ID_DISCRIMINATOR:
                 SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvDeviceDiscriminator,
                                               mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
-                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId, overflow);
                 break;
-            case kTcatDeviceIdIanaPen:
+            case OT_TCAT_DEVICE_ID_IANAPEN:
                 SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorIanaPen,
                                               mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
-                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId, overflow);
+                break;
+            case OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL:
+                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvApplicationProtocolId,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId, overflow);
                 break;
             default:
                 break;
@@ -1280,7 +1315,7 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
     if (caps.mGattNotifications || caps.mL2CapDirect)
     {
         SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvBleLinkCapabilities, kTlvBleLinkCapabilitiesLength,
-                                      reinterpret_cast<uint8_t *>(&caps));
+                                      reinterpret_cast<uint8_t *>(&caps), overflow);
     }
 
     tas.mRsv               = 0;
@@ -1300,8 +1335,9 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
 #endif
 
     SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvDeviceTypeAndStatus, kTlvDeviceTypeAndStatusLength,
-                                  reinterpret_cast<uint8_t *>(&tas));
-    OT_ASSERT(aLen <= OT_TCAT_ADVERTISEMENT_MAX_LEN);
+                                  reinterpret_cast<uint8_t *>(&tas), overflow);
+
+    VerifyOrExit(!overflow, error = kErrorNoBufs);
 
 exit:
     return error;

@@ -271,18 +271,6 @@ public:
     };
 
     /**
-     * Represents Device ID type.
-     */
-    enum TcatDeviceIdType : uint8_t
-    {
-        kTcatDeviceIdEmpty         = OT_TCAT_DEVICE_ID_EMPTY,
-        kTcatDeviceIdOui24         = OT_TCAT_DEVICE_ID_OUI24,
-        kTcatDeviceIdOui36         = OT_TCAT_DEVICE_ID_OUI36,
-        kTcatDeviceIdDiscriminator = OT_TCAT_DEVICE_ID_DISCRIMINATOR,
-        kTcatDeviceIdIanaPen       = OT_TCAT_DEVICE_ID_IANAPEN,
-    };
-
-    /**
      * Initializes the TCAT agent object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -420,6 +408,7 @@ public:
      *
      * @retval kErrorNone           Successfully retrieved the TCAT advertisement data.
      * @retval kErrorInvalidArgs    The vendor data could not be retrieved, or aAdvertisementData is null.
+     * @retval kErrorNoBufs         Advertisement from vendor data exceeds OT_TCAT_ADVERTISEMENT_MAX_LEN.
      */
     Error GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData) const;
 
@@ -555,21 +544,17 @@ struct DeviceTypeAndStatus
     bool    mDeviceType : 1;
 };
 
-static constexpr uint8_t kTlvVendorOui24Length         = 3;
-static constexpr uint8_t kTlvVendorOui36Length         = 5;
-static constexpr uint8_t kTlvDeviceDiscriminatorLength = 5;
 static constexpr uint8_t kTlvBleLinkCapabilitiesLength = 1;
 static constexpr uint8_t kTlvDeviceTypeAndStatusLength = 1;
-static constexpr uint8_t kTlvVendorIanaPenLength       = 4;
 
 enum TcatAdvertisementTlvType : uint8_t
 {
-    kTlvVendorOui24         = 1, ///< TCAT vendor OUI 24
-    kTlvVendorOui36         = 2, ///< TCAT vendor OUI 36
-    kTlvDeviceDiscriminator = 3, ///< TCAT random vendor discriminator
-    kTlvDeviceTypeAndStatus = 4, ///< TCAT Thread device type and status
-    kTlvBleLinkCapabilities = 5, ///< TCAT BLE link capabilities of device
-    kTlvVendorIanaPen       = 6, ///< TCAT Vendor IANA PEN
+    kTlvVendorOui             = 1, ///< TCAT vendor IEEE OUI (OUI-24, OUI-28, or OUI-36)
+    kTlvDeviceDiscriminator   = 3, ///< TCAT random vendor discriminator
+    kTlvDeviceTypeAndStatus   = 4, ///< TCAT Thread device type and status
+    kTlvBleLinkCapabilities   = 5, ///< TCAT BLE link capabilities of device
+    kTlvVendorIanaPen         = 6, ///< TCAT Vendor IANA PEN
+    kTlvApplicationProtocolId = 7, ///< TCAT Application Protocol ID
 };
 
 } // namespace MeshCoP
@@ -577,7 +562,6 @@ enum TcatAdvertisementTlvType : uint8_t
 DefineCoreType(otTcatVendorInfo, MeshCoP::TcatAgent::VendorInfo);
 
 DefineMapEnum(otTcatApplicationProtocol, MeshCoP::TcatAgent::TcatApplicationProtocol);
-DefineMapEnum(otTcatAdvertisedDeviceIdType, MeshCoP::TcatAgent::TcatDeviceIdType);
 
 } // namespace ot
 
