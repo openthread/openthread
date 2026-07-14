@@ -1051,19 +1051,16 @@ public:
     /**
      * Returns the key used for frame encryption and authentication (AES CCM).
      *
-     * @returns The pointer to the key.
+     * @returns The key.
      */
-    const Mac::KeyMaterial &GetAesKey(void) const
-    {
-        return *static_cast<const Mac::KeyMaterial *>(mInfo.mTxInfo.mAesKey);
-    }
+    const KeyMaterial &GetAesKey(void) const { return AsCoreType(mInfo.mTxInfo.mAesKey); }
 
     /**
      * Sets the key used for frame encryption and authentication (AES CCM).
      *
-     * @param[in]  aAesKey  The pointer to the key.
+     * @param[in]  aAesKey  The key.
      */
-    void SetAesKey(const Mac::KeyMaterial &aAesKey) { mInfo.mTxInfo.mAesKey = &aAesKey; }
+    void SetAesKey(const KeyMaterial &aAesKey) { mInfo.mTxInfo.mAesKey = &aAesKey; }
 
     /**
      * Copies the PSDU and all attributes (except for frame link type) from another frame.
