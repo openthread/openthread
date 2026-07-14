@@ -31,8 +31,9 @@
 #include "instance/instance.hpp"
 
 namespace ot {
+namespace Radio {
 
-const uint8_t Radio::kSupportedChannelPages[kNumChannelPages] = {
+const uint8_t kSupportedChannelPages[kNumChannelPages] = {
 #if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
     kChannelPage0,
 #endif
@@ -43,6 +44,41 @@ const uint8_t Radio::kSupportedChannelPages[kNumChannelPages] = {
     OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE,
 #endif
 };
+
+uint32_t ChannelMaskForPage(uint8_t aChannelPage)
+{
+    uint32_t mask = 0;
+
+#if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+    if (aChannelPage == kChannelPage0)
+    {
+        mask = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+    if (aChannelPage == kChannelPage2)
+    {
+        mask = OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
+    if (aChannelPage == OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE)
+    {
+        mask = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK;
+    }
+#endif
+    return mask;
+}
+
+bool IsCslChannelValid(uint8_t aCslChannel)
+{
+    return ((aCslChannel == 0) ||
+            ((kChannelMin == aCslChannel) || ((kChannelMin < aCslChannel) && (aCslChannel <= kChannelMax))));
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 
 #if OPENTHREAD_RADIO
 void Radio::Init(void)
@@ -133,19 +169,19 @@ Error Radio::Transmit(Mac::TxFrame &aFrame)
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 inline uint64_t UintSafeMinus(uint64_t aLhs, uint64_t aRhs) { return aLhs > aRhs ? (aLhs - aRhs) : 0; }
 
-Radio::Statistics::Statistics(void)
+Statistics::Statistics(void)
     : mStatus(kDisabled)
 {
     ResetTime();
 }
 
-void Radio::Statistics::RecordStateChange(Status aStatus)
+void Statistics::RecordStateChange(Status aStatus)
 {
     UpdateTime();
     mStatus = aStatus;
 }
 
-void Radio::Statistics::HandleReceiveAt(uint32_t aDurationUs)
+void Statistics::HandleReceiveAt(uint32_t aDurationUs)
 {
     // The actual rx time of ReceiveAt cannot be obtained from software level. This is a workaround.
     if (mStatus == kSleep)
@@ -154,12 +190,12 @@ void Radio::Statistics::HandleReceiveAt(uint32_t aDurationUs)
     }
 }
 
-void Radio::Statistics::RecordTxDone(otError aError, uint16_t aPsduLength)
+void Statistics::RecordTxDone(Error aError, uint16_t aPsduLength)
 {
     if (aError == kErrorNone || aError == kErrorNoAck)
     {
-        uint32_t txTimeUs = (aPsduLength + Mac::Frame::kPhyHeaderSize) * Radio::kSymbolsPerOctet * Radio::kSymbolTime;
-        uint32_t rxAckTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * Radio::kPhyUsPerByte;
+        uint32_t txTimeUs    = (aPsduLength + Mac::Frame::kPhyHeaderSize) * kSymbolsPerOctet * kSymbolTime;
+        uint32_t rxAckTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * kPhyUsPerByte;
 
         UpdateTime();
         mTimeStats.mTxTime += txTimeUs;
@@ -180,7 +216,7 @@ void Radio::Statistics::RecordTxDone(otError aError, uint16_t aPsduLength)
     }
 }
 
-void Radio::Statistics::RecordRxDone(otError aError)
+void Statistics::RecordRxDone(Error aError)
 {
     uint32_t ackTimeUs;
 
@@ -188,7 +224,7 @@ void Radio::Statistics::RecordRxDone(otError aError)
 
     UpdateTime();
     // Currently we cannot know the actual length of ACK. So assume the ACK is an immediate ACK.
-    ackTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * Radio::kPhyUsPerByte;
+    ackTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * kPhyUsPerByte;
     mTimeStats.mTxTime += ackTimeUs;
     if (mStatus == kReceive)
     {
@@ -199,20 +235,20 @@ exit:
     return;
 }
 
-const Radio::Statistics::TimeStats &Radio::Statistics::GetStats(void)
+const Statistics::TimeStats &Statistics::GetStats(void)
 {
     UpdateTime();
 
     return mTimeStats;
 }
 
-void Radio::Statistics::ResetTime(void)
+void Statistics::ResetTime(void)
 {
     ClearAllBytes(mTimeStats);
     mLastUpdateTime = TimerMicro::GetNow();
 }
 
-void Radio::Statistics::UpdateTime(void)
+void Statistics::UpdateTime(void)
 {
     TimeMicro nowTime     = TimerMicro::GetNow();
     uint32_t  timeElapsed = nowTime - mLastUpdateTime;
@@ -234,4 +270,5 @@ void Radio::Statistics::UpdateTime(void)
 
 #endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 
+} // namespace Radio
 } // namespace ot

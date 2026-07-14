@@ -737,7 +737,7 @@ public:
      * Sets the wake-up listen parameters.
      *
      * The listen interval must be greater than the listen duration.
-     * The listen duration must be greater or equal than `kMinWakeupListenDuration`.
+     * The listen duration must be greater or equal than `Radio::kMinWakeupListenDuration`.
      *
      * @param[in]  aInterval  The wake-up listen interval in microseconds.
      * @param[in]  aDuration  The wake-up listen duration in microseconds.

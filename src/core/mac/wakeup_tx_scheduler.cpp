@@ -100,7 +100,7 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
 
     VerifyOrExit(frame->GenerateWakeupFrame(Get<Mac::Mac>().GetPanId(), mWakeupRequest, source) == kErrorNone,
                  frame = nullptr);
-    frame->SetTxDelayBaseTime(Get<Radio>().GetNowAsRadioTime32());
+    frame->SetTxDelayBaseTime(Get<Radio::Radio>().GetNowAsTime32());
     frame->SetTxDelay(radioTxDelay);
     frame->SetCsmaCaEnabled(kWakeupFrameTxCca);
     frame->SetMaxCsmaBackoffs(0);
@@ -110,9 +110,9 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     // For the n-th wake-up frame, set the Rendezvous Time so that the expected reception of a Parent Request happens in
     // the "free space" between the "n+1"-th and "n+2"-th wake-up frame.
     rendezvousTimeUs = mIntervalUs;
-    rendezvousTimeUs += (mIntervalUs - (kWakeupFrameLength + kParentRequestLength) * kOctetDuration) / 2;
+    rendezvousTimeUs += (mIntervalUs - (kWakeupFrameLength + kParentRequestLength) * Radio::kOctetDuration) / 2;
 
-    frame->Find<Mac::RendezvousTimeIe>()->SetRendezvousTime(ClampToUint16(rendezvousTimeUs / kUsPerTenSymbols));
+    frame->Find<Mac::RendezvousTimeIe>()->SetRendezvousTime(ClampToUint16(rendezvousTimeUs / Radio::kUsPerTenSymbols));
 
     connectionIe = frame->Find<Mac::ConnectionIe>();
     connectionIe->SetRetryInterval(kConnectionRetryInterval);

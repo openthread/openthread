@@ -323,7 +323,7 @@ Error Server::AppendServerIdOption(Message &aMessage)
 {
     Mac::ExtAddress eui64;
 
-    Get<Radio>().GetIeeeEui64(eui64);
+    Get<Radio::Radio>().GetIeeeEui64(eui64);
 
     return ServerIdOption::AppendWithEui64Duid(aMessage, eui64);
 }

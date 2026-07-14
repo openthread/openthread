@@ -73,7 +73,7 @@ Mac::Mac(Instance &aInstance)
     , mPanId(kPanIdBroadcast)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
-    , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
+    , mSupportedChannelMask(Get<Radio::Radio>().GetSupportedChannelMask())
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mMaxFrameRetriesDirect(kDefaultMaxFrameRetriesDirect)
@@ -2214,7 +2214,7 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
 void Mac::SetPromiscuous(bool aPromiscuous)
 {
     mPromiscuous = aPromiscuous;
-    Get<Radio>().SetPromiscuous(aPromiscuous);
+    Get<Radio::Radio>().SetPromiscuous(aPromiscuous);
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     mDelayingSleep    = false;
@@ -2230,15 +2230,15 @@ Error Mac::SetRegion(uint16_t aRegionCode)
     Error       error;
     ChannelMask oldMask = mSupportedChannelMask;
 
-    SuccessOrExit(error = Get<Radio>().SetRegion(aRegionCode));
-    mSupportedChannelMask.SetMask(Get<Radio>().GetSupportedChannelMask());
+    SuccessOrExit(error = Get<Radio::Radio>().SetRegion(aRegionCode));
+    mSupportedChannelMask.SetMask(Get<Radio::Radio>().GetSupportedChannelMask());
     IgnoreError(Get<Notifier>().Update(oldMask, mSupportedChannelMask, kEventSupportedChannelMaskChanged));
 
 exit:
     return error;
 }
 
-Error Mac::GetRegion(uint16_t &aRegionCode) const { return Get<Radio>().GetRegion(aRegionCode); }
+Error Mac::GetRegion(uint16_t &aRegionCode) const { return Get<Radio::Radio>().GetRegion(aRegionCode); }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 const uint32_t *Mac::GetDirectRetrySuccessHistogram(uint16_t &aSize) const
@@ -2478,7 +2478,7 @@ uint32_t Mac::GetCslPeriodInMsec(void) const
 
 uint32_t Mac::CslPeriodToUsec(uint16_t aPeriodInTenSymbols)
 {
-    return static_cast<uint32_t>(aPeriodInTenSymbols) * kUsPerTenSymbols;
+    return static_cast<uint32_t>(aPeriodInTenSymbols) * Radio::kUsPerTenSymbols;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -2511,7 +2511,7 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     neighbor->SetCslLastHeard(TimerMilli::GetNow());
     neighbor->SetLastRxTimestamp(aFrame.GetTimestamp());
     LogDebg("Timestamp=%lu Sequence=%u CslPeriod=%u CslPhase=%u TransmitPhase=%u",
-            ToUlong(ConvertRadioTime64To32(aFrame.GetTimestamp())), aFrame.GetSequence(), csl->GetPeriod(),
+            ToUlong(Radio::ConvertTime64To32(aFrame.GetTimestamp())), aFrame.GetSequence(), csl->GetPeriod(),
             csl->GetPhase(), neighbor->GetCslPhase());
 
 #if OPENTHREAD_FTD
@@ -2583,7 +2583,7 @@ Error Mac::SetWakeupListenParameters(uint32_t aInterval, uint32_t aDuration)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(aDuration >= kMinWakeupListenDuration, error = kErrorInvalidArgs);
+    VerifyOrExit(aDuration >= Radio::kMinWakeupListenDuration, error = kErrorInvalidArgs);
     VerifyOrExit(aInterval > aDuration, error = kErrorInvalidArgs);
 
     mWakeupListenInterval = aInterval;
@@ -2635,9 +2635,9 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     const ConnectionIe *connectionIe;
     Address             srcAddress;
     WakeupInfo          wakeupInfo;
-    RadioTime32         rvTimeUs;
-    RadioTime64         rvTimestampUs;
-    RadioTime64         radioNowUs;
+    Radio::Time32       rvTimeUs;
+    Radio::Time64       rvTimestampUs;
+    Radio::Time64       radioNowUs;
 
     VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
 
@@ -2650,13 +2650,14 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     wakeupInfo.mRetryCount    = connectionIe->GetRetryCount();
     VerifyOrExit(wakeupInfo.mRetryInterval > 0 && wakeupInfo.mRetryCount > 0, error = kErrorInvalidArgs);
 
-    radioNowUs    = Get<Radio>().GetNow();
-    rvTimeUs      = aFrame.Find<RendezvousTimeIe>()->GetRendezvousTime() * kUsPerTenSymbols;
-    rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
+    radioNowUs = Get<Radio::Radio>().GetNow();
+    rvTimeUs   = aFrame.Find<RendezvousTimeIe>()->GetRendezvousTime() * Radio::kUsPerTenSymbols;
+    rvTimestampUs =
+        aFrame.GetTimestamp() + Radio::kHeaderPhrDuration + aFrame.GetLength() * Radio::kOctetDuration + rvTimeUs;
 
     if (rvTimestampUs > radioNowUs + kCslRequestAhead)
     {
-        wakeupInfo.mAttachDelayMs = ConvertRadioTime64To32(rvTimestampUs - radioNowUs - kCslRequestAhead);
+        wakeupInfo.mAttachDelayMs = Radio::ConvertTime64To32(rvTimestampUs - radioNowUs - kCslRequestAhead);
         wakeupInfo.mAttachDelayMs = wakeupInfo.mAttachDelayMs / Time::kOneMsecInUsec;
     }
     else
@@ -2686,7 +2687,7 @@ exit:
 
 uint32_t Mac::CalculateRadioBusTransferTime(uint16_t aFrameSize) const
 {
-    uint32_t busSpeed     = Get<Radio>().GetBusSpeed();
+    uint32_t busSpeed     = Get<Radio::Radio>().GetBusSpeed();
     uint32_t trasnferTime = 0;
 
     if (busSpeed != 0)
@@ -2694,7 +2695,7 @@ uint32_t Mac::CalculateRadioBusTransferTime(uint16_t aFrameSize) const
         trasnferTime = DivideAndRoundUp<uint32_t>(aFrameSize * kBitsPerByte * Time::kOneSecondInUsec, busSpeed);
     }
 
-    trasnferTime += Get<Radio>().GetBusLatency();
+    trasnferTime += Get<Radio::Radio>().GetBusLatency();
 
     return trasnferTime;
 }

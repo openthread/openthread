@@ -65,7 +65,7 @@ Error Mle::P2p::WakeupAndLink(const P2pRequest &aP2pRequest, P2pLinkDoneCallback
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(!Get<Radio>().GetPromiscuous(), error = kErrorInvalidState);
+    VerifyOrExit(!Get<Radio::Radio>().GetPromiscuous(), error = kErrorInvalidState);
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
     VerifyOrExit(!Get<Mle>().IsDisabled(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateIdle, error = kErrorBusy);

@@ -36,28 +36,29 @@
 #include "instance/instance.hpp"
 
 namespace ot {
+namespace Radio {
 
-void Radio::Callbacks::HandleReceiveDone(Mac::RxFrame *aFrame, Error aError)
+void Callbacks::HandleReceiveDone(Mac::RxFrame *aFrame, Error aError)
 {
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
-    Get<Radio::Statistics>().RecordRxDone(aError);
+    Get<Statistics>().RecordRxDone(aError);
 #endif
     Get<Mac::SubMac>().HandleReceiveDone(aFrame, aError);
 }
 
-void Radio::Callbacks::HandleTransmitStarted(Mac::TxFrame &aFrame) { Get<Mac::SubMac>().HandleTransmitStarted(aFrame); }
+void Callbacks::HandleTransmitStarted(Mac::TxFrame &aFrame) { Get<Mac::SubMac>().HandleTransmitStarted(aFrame); }
 
-void Radio::Callbacks::HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, Error aError)
+void Callbacks::HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, Error aError)
 {
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
-    Get<Radio::Statistics>().RecordTxDone(aError, aFrame.GetLength());
+    Get<Statistics>().RecordTxDone(aError, aFrame.GetLength());
 #endif
     Get<Mac::SubMac>().HandleTransmitDone(aFrame, aAckFrame, aError);
 }
 
-void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi) { Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi); }
+void Callbacks::HandleEnergyScanDone(int8_t aMaxRssi) { Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi); }
 
-void Radio::Callbacks::HandleBusLatencyChanged(void)
+void Callbacks::HandleBusLatencyChanged(void)
 {
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     Get<CslTxScheduler>().UpdateFrameRequestAhead();
@@ -68,7 +69,7 @@ void Radio::Callbacks::HandleBusLatencyChanged(void)
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError)
+void Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError)
 {
 #if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
     // Pass it to notify OpenThread `Diags` module on host side.
@@ -78,7 +79,7 @@ void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError
 #endif
 }
 
-void Radio::Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aError)
+void Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aError)
 {
 #if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
     // Pass it to notify OpenThread `Diags` module on host side.
@@ -90,4 +91,5 @@ void Radio::Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aErro
 }
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
 
+} // namespace Radio
 } // namespace ot

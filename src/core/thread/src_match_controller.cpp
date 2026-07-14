@@ -104,15 +104,15 @@ exit:
 
 void SourceMatchController::ClearTable(void)
 {
-    Get<Radio>().ClearSrcMatchShortEntries();
-    Get<Radio>().ClearSrcMatchExtEntries();
+    Get<Radio::Radio>().ClearSrcMatchShortEntries();
+    Get<Radio::Radio>().ClearSrcMatchExtEntries();
     LogDebg("Cleared all entries");
 }
 
 void SourceMatchController::Enable(bool aEnable)
 {
     mEnabled = aEnable;
-    Get<Radio>().EnableSrcMatch(mEnabled);
+    Get<Radio::Radio>().EnableSrcMatch(mEnabled);
     LogDebg("%sabling", mEnabled ? "En" : "Dis");
 }
 
@@ -141,13 +141,13 @@ Error SourceMatchController::AddAddress(const Child &aChild)
 
     if (aChild.IsIndirectSourceMatchShort())
     {
-        error = Get<Radio>().AddSrcMatchShortEntry(aChild.GetRloc16());
+        error = Get<Radio::Radio>().AddSrcMatchShortEntry(aChild.GetRloc16());
 
         LogDebg("Adding short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(), ErrorToString(error), error);
     }
     else
     {
-        error = Get<Radio>().AddSrcMatchExtEntry(aChild.GetExtAddress());
+        error = Get<Radio::Radio>().AddSrcMatchExtEntry(aChild.GetExtAddress());
 
         LogDebg("Adding addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(), ErrorToString(error),
                 error);
@@ -169,13 +169,13 @@ void SourceMatchController::ClearEntry(Child &aChild)
 
     if (aChild.IsIndirectSourceMatchShort())
     {
-        error = Get<Radio>().ClearSrcMatchShortEntry(aChild.GetRloc16());
+        error = Get<Radio::Radio>().ClearSrcMatchShortEntry(aChild.GetRloc16());
 
         LogDebg("Clearing short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(), ErrorToString(error), error);
     }
     else
     {
-        error = Get<Radio>().ClearSrcMatchExtEntry(aChild.GetExtAddress());
+        error = Get<Radio::Radio>().ClearSrcMatchExtEntry(aChild.GetExtAddress());
 
         LogDebg("Clearing addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(), ErrorToString(error),
                 error);

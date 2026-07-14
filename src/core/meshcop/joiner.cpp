@@ -56,7 +56,7 @@ void Joiner::SetIdFromIeeeEui64(void)
 {
     Mac::ExtAddress eui64;
 
-    Get<Radio>().GetIeeeEui64(eui64);
+    Get<Radio::Radio>().GetIeeeEui64(eui64);
     ComputeJoinerId(eui64, mId);
 }
 

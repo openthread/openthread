@@ -307,7 +307,7 @@ Error Client::AppendClientIdOption(Message &aMessage)
 {
     Mac::ExtAddress eui64;
 
-    Get<Radio>().GetIeeeEui64(eui64);
+    Get<Radio::Radio>().GetIeeeEui64(eui64);
 
     return ClientIdOption::AppendWithEui64Duid(aMessage, eui64);
 }
@@ -394,7 +394,7 @@ Error Client::ProcessClientIdOption(const Message &aMessage)
 {
     Mac::ExtAddress eui64;
 
-    Get<Radio>().GetIeeeEui64(eui64);
+    Get<Radio::Radio>().GetIeeeEui64(eui64);
 
     return ClientIdOption::MatchesEui64Duid(aMessage, eui64);
 }

@@ -137,10 +137,11 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const CslNeighbor &aCslNeig
 {
     // See CslTxScheduler::NeighborInfo::mCslPhase
 
-    RadioTime64 radioNow      = Get<Radio>().GetNow();
-    uint32_t    periodInUs    = aCslNeighbor.GetCslPeriod() * kUsPerTenSymbols;
-    RadioTime64 firstTxWindow = aCslNeighbor.GetLastRxTimestamp() + aCslNeighbor.GetCslPhase() * kUsPerTenSymbols;
-    RadioTime64 nextTxWindow  = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
+    Radio::Time64 radioNow   = Get<Radio::Radio>().GetNow();
+    uint32_t      periodInUs = aCslNeighbor.GetCslPeriod() * Radio::kUsPerTenSymbols;
+    Radio::Time64 firstTxWindow =
+        aCslNeighbor.GetLastRxTimestamp() + aCslNeighbor.GetCslPhase() * Radio::kUsPerTenSymbols;
+    Radio::Time64 nextTxWindow = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
 
     while (nextTxWindow < radioNow + aAheadUs)
     {
@@ -222,7 +223,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     VerifyOrExit(delay <= mCslFrameRequestAheadUs + kFramePreparationGuardInterval, frame = nullptr);
 
     frame->SetTxDelay(txDelay);
-    frame->SetTxDelayBaseTime(ConvertRadioTime64To32(mCslTxNeighbor->GetLastRxTimestamp()));
+    frame->SetTxDelayBaseTime(Radio::ConvertTime64To32(mCslTxNeighbor->GetLastRxTimestamp()));
     frame->SetCsmaCaEnabled(true);
 
 exit:

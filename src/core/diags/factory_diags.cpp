@@ -154,7 +154,7 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    Get<Radio>().SetDiagMode(true);
+    Get<Radio::Radio>().SetDiagMode(true);
 
     return kErrorNone;
 }
@@ -164,7 +164,7 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    Get<Radio>().SetDiagMode(false);
+    Get<Radio::Radio>().SetDiagMode(false);
 
     return kErrorNone;
 }
@@ -193,7 +193,7 @@ const struct Diags::Command Diags::sCommands[] = {
 
 Diags::Diags(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTxPacket(&Get<Radio>().GetTransmitBuffer())
+    , mTxPacket(&Get<Radio::Radio>().GetTransmitBuffer())
     , mTxPeriod(0)
     , mTxPackets(0)
     , mChannel(20)
@@ -349,7 +349,7 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
 
         if (!mIsSleepOn)
         {
-            IgnoreError(Get<Radio>().Receive(mChannel));
+            IgnoreError(Get<Radio::Radio>().Receive(mChannel));
         }
     }
 
@@ -372,7 +372,7 @@ Error Diags::ProcessPower(uint8_t aArgsLength, char *aArgs[])
         SuccessOrExit(error = Utils::CmdLineParser::ParseAsInt8(aArgs[0], txPower));
 
         mTxPower = txPower;
-        SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
+        SuccessOrExit(error = Get<Radio::Radio>().SetTransmitPower(mTxPower));
         otPlatDiagTxPowerSet(mTxPower);
     }
 
@@ -492,21 +492,21 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 #endif
 
     mStats.Clear();
-    IgnoreError(Get<Radio>().Enable());
-    Get<Radio>().SetDiagMode(true);
+    IgnoreError(Get<Radio::Radio>().Enable());
+    Get<Radio::Radio>().SetDiagMode(true);
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
 
-    Get<Radio>().SetPromiscuous(true);
+    Get<Radio::Radio>().SetPromiscuous(true);
     Get<Mac::SubMac>().SetRxOnWhenIdle(true);
     otPlatAlarmMilliStop(&GetInstance());
-    SuccessOrExit(error = Get<Radio>().Receive(mChannel));
-    SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
+    SuccessOrExit(error = Get<Radio::Radio>().Receive(mChannel));
+    SuccessOrExit(error = Get<Radio::Radio>().SetTransmitPower(mTxPower));
 
 exit:
     if (error != kErrorNone)
     {
-        Get<Radio>().SetDiagMode(false);
+        Get<Radio::Radio>().SetDiagMode(false);
     }
 
     return error;
@@ -552,8 +552,8 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgs);
 
     otPlatAlarmMilliStop(&GetInstance());
-    Get<Radio>().SetDiagMode(false);
-    Get<Radio>().SetPromiscuous(false);
+    Get<Radio::Radio>().SetDiagMode(false);
+    Get<Radio::Radio>().SetPromiscuous(false);
     Get<Mac::SubMac>().SetRxOnWhenIdle(false);
 
     return kErrorNone;
@@ -623,7 +623,7 @@ Error Diags::TransmitPacket(void)
         }
     }
 
-    error = Get<Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket));
+    error = Get<Radio::Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket));
     if (error == kErrorNone)
     {
         mDiagSendOn = true;
@@ -671,8 +671,8 @@ Error Diags::RadioReceive(void)
 {
     Error error;
 
-    SuccessOrExit(error = Get<Radio>().Receive(mChannel));
-    SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
+    SuccessOrExit(error = Get<Radio::Radio>().Receive(mChannel));
+    SuccessOrExit(error = Get<Radio::Radio>().SetTransmitPower(mTxPower));
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
     mIsSleepOn = false;
@@ -689,7 +689,7 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
 
     if (StringMatch(aArgs[0], "sleep"))
     {
-        SuccessOrExit(error = Get<Radio>().Sleep());
+        SuccessOrExit(error = Get<Radio::Radio>().Sleep());
         mIsSleepOn = true;
     }
     else if (StringMatch(aArgs[0], "receive"))
@@ -784,7 +784,7 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
     }
     else if (StringMatch(aArgs[0], "state"))
     {
-        otRadioState state = Get<Radio>().GetState();
+        otRadioState state = Get<Radio::Radio>().GetState();
 
         error = kErrorNone;
 
@@ -813,11 +813,11 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
     }
     else if (StringMatch(aArgs[0], "enable"))
     {
-        SuccessOrExit(error = Get<Radio>().Enable());
+        SuccessOrExit(error = Get<Radio::Radio>().Enable());
     }
     else if (StringMatch(aArgs[0], "disable"))
     {
-        SuccessOrExit(error = Get<Radio>().Disable());
+        SuccessOrExit(error = Get<Radio::Radio>().Disable());
     }
 
 exit:
@@ -920,7 +920,7 @@ void Diags::TransmitDone(Error aError)
 
     if (mIsSleepOn)
     {
-        IgnoreError(Get<Radio>().Sleep());
+        IgnoreError(Get<Radio::Radio>().Sleep());
     }
 
     UpdateTxStats(aError);
@@ -1319,7 +1319,7 @@ void Diags::Output(const char *aFormat, ...)
     va_end(args);
 }
 
-bool Diags::IsEnabled(void) { return Get<Radio>().GetDiagMode(); }
+bool Diags::IsEnabled(void) { return Get<Radio::Radio>().GetDiagMode(); }
 
 } // namespace FactoryDiags
 } // namespace ot

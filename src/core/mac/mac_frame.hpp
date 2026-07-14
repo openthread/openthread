@@ -868,7 +868,7 @@ public:
      *
      * @returns The timestamp in microseconds.
      */
-    const RadioTime64 &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
+    const Radio::Time64 &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
@@ -1225,16 +1225,16 @@ public:
     /**
      * Gets the TX delay base time field for the frame.
      *
-     * @returns The delay base time for the TX frame as a `RadioTime32`.
+     * @returns The delay base time for the TX frame as a `Radio::Time32`.
      */
-    RadioTime32 GetTxDelayBaseTime(void) const { return mInfo.mTxInfo.mTxDelayBaseTime; }
+    Radio::Time32 GetTxDelayBaseTime(void) const { return mInfo.mTxInfo.mTxDelayBaseTime; }
 
     /**
      * Set TX delay base time field for the frame.
      *
      * @param[in]    aTxDelayBaseTime    The delay base time for the TX frame.
      */
-    void SetTxDelayBaseTime(RadioTime32 aTxDelayBaseTime) { mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
+    void SetTxDelayBaseTime(Radio::Time32 aTxDelayBaseTime) { mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
 #endif
 };
 
