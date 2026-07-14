@@ -339,7 +339,7 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aKeyIdMode   The key ID mode.
- * @param[in]   aKeyId       The key index.
+ * @param[in]   aKeyIndex    The key index.
  * @param[in]   aPrevKey     The previous MAC key.
  * @param[in]   aCurrKey     The current MAC key.
  * @param[in]   aNextKey     The next MAC key.
@@ -349,7 +349,7 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
  */
 otError otLinkRawSetMacKey(otInstance     *aInstance,
                            uint8_t         aKeyIdMode,
-                           uint8_t         aKeyId,
+                           uint8_t         aKeyIndex,
                            const otMacKey *aPrevKey,
                            const otMacKey *aCurrKey,
                            const otMacKey *aNextKey);

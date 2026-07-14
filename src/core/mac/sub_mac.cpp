@@ -94,7 +94,7 @@ void SubMac::Init(void)
     mNextKey.Clear();
 
     mFrameCounter = 0;
-    mKeyId        = 0;
+    mKeyIndex     = 0;
     mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -383,7 +383,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
-        mTransmitFrame.SetKeyId(mKeyId);
+        mTransmitFrame.SetKeyIndex(mKeyIndex);
     }
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
@@ -406,7 +406,7 @@ void SubMac::ProcessTransmitSecurity(void)
         uint32_t frameCounter = GetFrameCounter();
 
         mTransmitFrame.SetFrameCounter(frameCounter);
-        SignalFrameCounterUsed(frameCounter, mKeyId);
+        SignalFrameCounterUsed(frameCounter, mKeyIndex);
     }
 
     extAddress = &GetExtAddress();
@@ -651,7 +651,7 @@ exit:
 void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
 {
     uint8_t  keyIdMode;
-    uint8_t  keyId;
+    uint8_t  keyIndex;
     uint32_t frameCounter;
     bool     allowError = false;
 
@@ -676,9 +676,9 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
 
     VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == kErrorNone, OT_ASSERT(allowError));
-    VerifyOrExit(aFrame.GetKeyId(keyId) == kErrorNone, OT_ASSERT(allowError));
+    VerifyOrExit(aFrame.GetKeyIndex(keyIndex) == kErrorNone, OT_ASSERT(allowError));
 
-    SignalFrameCounterUsed(frameCounter, keyId);
+    SignalFrameCounterUsed(frameCounter, keyIndex);
 
 exit:
     return;
@@ -941,7 +941,7 @@ void SubMac::SetState(State aState)
 }
 
 void SubMac::SetMacKey(uint8_t            aKeyIdMode,
-                       uint8_t            aKeyId,
+                       uint8_t            aKeyIndex,
                        const KeyMaterial &aPrevKey,
                        const KeyMaterial &aCurrKey,
                        const KeyMaterial &aNextKey)
@@ -952,10 +952,10 @@ void SubMac::SetMacKey(uint8_t            aKeyIdMode,
     case Frame::kKeyIdMode2:
         break;
     case Frame::kKeyIdMode1:
-        mKeyId   = aKeyId;
-        mPrevKey = aPrevKey;
-        mCurrKey = aCurrKey;
-        mNextKey = aNextKey;
+        mKeyIndex = aKeyIndex;
+        mPrevKey  = aPrevKey;
+        mCurrKey  = aCurrKey;
+        mNextKey  = aNextKey;
         break;
 
     default:
@@ -965,15 +965,15 @@ void SubMac::SetMacKey(uint8_t            aKeyIdMode,
 
     VerifyOrExit(!ShouldHandleTransmitSecurity());
 
-    Get<Radio::Radio>().SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey);
+    Get<Radio::Radio>().SetMacKey(aKeyIdMode, aKeyIndex, aPrevKey, aCurrKey, aNextKey);
 
 exit:
     return;
 }
 
-void SubMac::SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId)
+void SubMac::SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyIndex)
 {
-    VerifyOrExit(aKeyId == mKeyId);
+    VerifyOrExit(aKeyIndex == mKeyIndex);
 
     mCallbacks.FrameCounterUsed(aFrameCounter);
 

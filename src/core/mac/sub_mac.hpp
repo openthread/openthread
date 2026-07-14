@@ -407,13 +407,13 @@ public:
      * Sets MAC keys and key index.
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
-     * @param[in] aKeyId      The key ID.
+     * @param[in] aKeyIndex   The key Index
      * @param[in] aPrevKey    The previous MAC key.
      * @param[in] aCurrKey    The current MAC key.
      * @param[in] aNextKey    The next MAC key.
      */
     void SetMacKey(uint8_t            aKeyIdMode,
-                   uint8_t            aKeyId,
+                   uint8_t            aKeyIndex,
                    const KeyMaterial &aPrevKey,
                    const KeyMaterial &aCurrKey,
                    const KeyMaterial &aNextKey);
@@ -586,7 +586,7 @@ private:
     bool ShouldHandleTransitionToSleep(void) const;
 
     void ProcessTransmitSecurity(void);
-    void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId);
+    void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyIndex);
     void StartCsmaBackoff(void);
     void StartTimerForBackoff(uint8_t aBackoffExponent);
     void BeginTransmit(void);
@@ -666,7 +666,7 @@ private:
     KeyMaterial                  mCurrKey;
     KeyMaterial                  mNextKey;
     uint32_t                     mFrameCounter;
-    uint8_t                      mKeyId;
+    uint8_t                      mKeyIndex;
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     uint8_t mRetxDelayBackOffExponent;
 #endif

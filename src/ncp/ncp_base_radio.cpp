@@ -192,14 +192,14 @@ void NcpBase::LinkRawTransmitDone(uint8_t aIid, otRadioFrame *aFrame, otRadioFra
 
         if (static_cast<Mac::TxFrame *>(aFrame)->GetSecurityEnabled() && headerUpdated)
         {
-            uint8_t  keyId;
+            uint8_t  keyIndex;
             uint32_t frameCounter;
 
             // Transmit frame auxiliary key index and frame counter
-            SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetKeyId(keyId));
+            SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetKeyIndex(keyIndex));
             SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetFrameCounter(frameCounter));
 
-            SuccessOrExit(mEncoder.WriteUint8(keyId));
+            SuccessOrExit(mEncoder.WriteUint8(keyIndex));
             SuccessOrExit(mEncoder.WriteUint32(frameCounter));
         }
 
@@ -541,7 +541,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
 {
     otError        error = OT_ERROR_NONE;
     uint8_t        keyIdMode;
-    uint8_t        keyId;
+    uint8_t        keyIndex;
     uint16_t       keySize;
     const uint8_t *prevKey;
     const uint8_t *currKey;
@@ -550,7 +550,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
     SuccessOrExit(error = mDecoder.ReadUint8(keyIdMode));
     VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1, error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = mDecoder.ReadUint8(keyId));
+    SuccessOrExit(error = mDecoder.ReadUint8(keyIndex));
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(prevKey, keySize));
     VerifyOrExit(keySize == sizeof(otMacKey), error = OT_ERROR_INVALID_ARGS);
@@ -562,7 +562,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
     VerifyOrExit(keySize == sizeof(otMacKey), error = OT_ERROR_INVALID_ARGS);
 
     error =
-        otLinkRawSetMacKey(mInstance, keyIdMode, keyId, reinterpret_cast<const otMacKey *>(prevKey),
+        otLinkRawSetMacKey(mInstance, keyIdMode, keyIndex, reinterpret_cast<const otMacKey *>(prevKey),
                            reinterpret_cast<const otMacKey *>(currKey), reinterpret_cast<const otMacKey *>(nextKey));
 
 exit:

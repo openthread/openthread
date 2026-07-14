@@ -248,7 +248,7 @@ template <> otError RcpCapsDiag::HandleSpinelCommand<SPINEL_CMD_PROP_VALUE_SET, 
 template <> otError RcpCapsDiag::HandleSpinelCommand<SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_RCP_MAC_KEY>(void)
 {
     static constexpr uint8_t keyIdMode1 = 1 << 3;
-    static constexpr uint8_t keyId      = 100;
+    static constexpr uint8_t keyIndex   = 100;
     otMacKeyMaterial         prevKey;
     otMacKeyMaterial         curKey;
     otMacKeyMaterial         nextKey;
@@ -256,7 +256,7 @@ template <> otError RcpCapsDiag::HandleSpinelCommand<SPINEL_CMD_PROP_VALUE_SET, 
     memset(prevKey.mKeyMaterial.mKey.m8, 0x11, OT_MAC_KEY_SIZE);
     memset(curKey.mKeyMaterial.mKey.m8, 0x22, OT_MAC_KEY_SIZE);
     memset(nextKey.mKeyMaterial.mKey.m8, 0x33, OT_MAC_KEY_SIZE);
-    return mRadioSpinel.SetMacKey(keyIdMode1, keyId, &prevKey, &curKey, &nextKey);
+    return mRadioSpinel.SetMacKey(keyIdMode1, keyIndex, &prevKey, &curKey, &nextKey);
 }
 
 template <> otError RcpCapsDiag::HandleSpinelCommand<SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_RCP_CSL_ACCURACY>(void)

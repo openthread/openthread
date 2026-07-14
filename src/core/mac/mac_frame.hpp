@@ -421,20 +421,21 @@ public:
     void SetKeySource(const uint8_t *aKeySource);
 
     /**
-     * Gets the Key Identifier.
+     * Gets the Key Index (sub-field of Key ID).
      *
-     * @param[out]  aKeyId  The Key Identifier.
+     * @param[out]  aKeyIndex  The Key Index
      *
-     * @retval kErrorNone  Successfully retrieved the Key Identifier.
+     * @retval kErrorNone   Successfully retrieved the Key Index.
+     * @retval kErrorParse  Failed to parse MAC or security header.
      */
-    Error GetKeyId(uint8_t &aKeyId) const;
+    Error GetKeyIndex(uint8_t &aKeyIndex) const;
 
     /**
-     * Sets the Key Identifier.
+     * Sets the Key Index (sub-field of Key ID).
      *
-     * @param[in]  aKeyId  The Key Identifier.
+     * @param[in]  aKeyIndex  The Key Index.
      */
-    void SetKeyId(uint8_t aKeyId);
+    void SetKeyIndex(uint8_t aKeyIndex);
 
     /**
      * Gets the Command ID.

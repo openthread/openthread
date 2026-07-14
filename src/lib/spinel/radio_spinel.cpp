@@ -854,7 +854,7 @@ exit:
 }
 
 otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
-                               uint8_t                 aKeyId,
+                               uint8_t                 aKeyIndex,
                                const otMacKeyMaterial *aPrevKey,
                                const otMacKeyMaterial *aCurrKey,
                                const otMacKeyMaterial *aNextKey)
@@ -867,7 +867,7 @@ otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
     SuccessOrExit(error = ReadMacKey(*aPrevKey, prevKey));
     SuccessOrExit(error = ReadMacKey(*aCurrKey, currKey));
     SuccessOrExit(error = ReadMacKey(*aNextKey, nextKey));
-    error = SetMacKey(aKeyIdMode, aKeyId, prevKey, currKey, nextKey);
+    error = SetMacKey(aKeyIdMode, aKeyIndex, prevKey, currKey, nextKey);
 
 exit:
     return error;
@@ -876,19 +876,19 @@ exit:
 #else
 
 otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
-                               uint8_t                 aKeyId,
+                               uint8_t                 aKeyIndex,
                                const otMacKeyMaterial *aPrevKey,
                                const otMacKeyMaterial *aCurrKey,
                                const otMacKeyMaterial *aNextKey)
 {
-    return SetMacKey(aKeyIdMode, aKeyId, aPrevKey->mKeyMaterial.mKey, aCurrKey->mKeyMaterial.mKey,
+    return SetMacKey(aKeyIdMode, aKeyIndex, aPrevKey->mKeyMaterial.mKey, aCurrKey->mKeyMaterial.mKey,
                      aNextKey->mKeyMaterial.mKey);
 }
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 otError RadioSpinel::SetMacKey(uint8_t         aKeyIdMode,
-                               uint8_t         aKeyId,
+                               uint8_t         aKeyIndex,
                                const otMacKey &aPrevKey,
                                const otMacKey &aCurrKey,
                                const otMacKey &aNextKey)
@@ -898,12 +898,12 @@ otError RadioSpinel::SetMacKey(uint8_t         aKeyIdMode,
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY,
                               SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
                                   SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
-                              aKeyIdMode, aKeyId, aPrevKey.m8, sizeof(aPrevKey), aCurrKey.m8, sizeof(aCurrKey),
+                              aKeyIdMode, aKeyIndex, aPrevKey.m8, sizeof(aPrevKey), aCurrKey.m8, sizeof(aCurrKey),
                               aNextKey.m8, sizeof(aNextKey)));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mKeyIdMode = aKeyIdMode;
-    mKeyId     = aKeyId;
+    mKeyIndex  = aKeyIndex;
 
     mPrevKey = aPrevKey;
     mCurrKey = aCurrKey;
@@ -1582,14 +1582,14 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
     if ((sRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && (!mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated) &&
         headerUpdated && static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
     {
-        uint8_t  keyId;
+        uint8_t  keyIndex;
         uint32_t frameCounter;
 
         // Replace transmit frame security key index and frame counter with the one filled by RCP
-        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S, &keyId,
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S, &keyIndex,
                                           &frameCounter);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        static_cast<Mac::TxFrame *>(mTransmitFrame)->SetKeyId(keyId);
+        static_cast<Mac::TxFrame *>(mTransmitFrame)->SetKeyIndex(keyIndex);
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetFrameCounter(frameCounter);
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
@@ -2192,8 +2192,8 @@ void RadioSpinel::RestoreProperties(void)
         SuccessOrDie(Set(SPINEL_PROP_RCP_MAC_KEY,
                          SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
                              SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
-                         mKeyIdMode, mKeyId, mPrevKey.m8, sizeof(otMacKey), mCurrKey.m8, sizeof(otMacKey), mNextKey.m8,
-                         sizeof(otMacKey)));
+                         mKeyIdMode, mKeyIndex, mPrevKey.m8, sizeof(otMacKey), mCurrKey.m8, sizeof(otMacKey),
+                         mNextKey.m8, sizeof(otMacKey)));
     }
 
     if (mMacFrameCounterSet)

@@ -396,7 +396,7 @@ public:
     void SetShortAddress(Mac::ShortAddress aShortAddress);
 
     /**
-     * Set the altrnate short address.
+     * Set the alternate short address.
      *
      * @param[in] aShortAddress  The alternate short address.
      */
@@ -406,13 +406,13 @@ public:
      * Sets MAC key and key ID.
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
-     * @param[in] aKeyId      Current MAC key index.
+     * @param[in] aKeyIndex   Current MAC key index.
      * @param[in] aPrevKey    The previous MAC key.
      * @param[in] aCurrKey    The current MAC key.
      * @param[in] aNextKey    The next MAC key.
      */
     void SetMacKey(uint8_t                 aKeyIdMode,
-                   uint8_t                 aKeyId,
+                   uint8_t                 aKeyIndex,
                    const Mac::KeyMaterial &aPrevKey,
                    const Mac::KeyMaterial &aCurrKey,
                    const Mac::KeyMaterial &aNextKey);
@@ -891,7 +891,7 @@ inline void Radio::SetAlternateShortAddress(Mac::ShortAddress aShortAddress)
 }
 
 inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
-                             uint8_t                 aKeyId,
+                             uint8_t                 aKeyIndex,
                              const Mac::KeyMaterial &aPrevKey,
                              const Mac::KeyMaterial &aCurrKey,
                              const Mac::KeyMaterial &aNextKey)
@@ -904,7 +904,7 @@ inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
     keyType = OT_KEY_TYPE_LITERAL_KEY;
 #endif
 
-    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey, keyType);
+    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyIndex, &aPrevKey, &aCurrKey, &aNextKey, keyType);
 }
 
 inline Error Radio::GetTransmitPower(int8_t &aPower) { return otPlatRadioGetTransmitPower(GetInstancePtr(), &aPower); }
