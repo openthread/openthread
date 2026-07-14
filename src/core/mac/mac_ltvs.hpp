@@ -343,6 +343,17 @@ public:
      */
     static Error EncodeAndAppend(AppendInfo *aLtvList, uint16_t aNumLtvs, FrameBuilder &aBuilder);
 
+    /**
+     * Optimizes the order of LTV entries in an array to minimize the overall encoded length.
+     *
+     * This method rearranges the entries in @p aLtvList so that as many LTVs as possible can use the packed format
+     * rather than the base header format.
+     *
+     * @param[in,out] aLtvList  An array of `AppendInfo` entries to reorder.
+     * @param[in]     aNumLtvs  The number of LTV elements in @p aLtvList.
+     */
+    static void OptimizeListOrder(AppendInfo *aLtvList, uint16_t aNumLtvs);
+
 private:
     Ltv(void) = delete;
 };
