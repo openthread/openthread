@@ -237,7 +237,7 @@ otError ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid hex bytes and/or not @p aSize bytes.
  */
-template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aString, uint8_t (&aBuffer)[kBufferSize])
+template <uint16_t kBufferSize> inline otError ParseAsHexString(const char *aString, uint8_t (&aBuffer)[kBufferSize])
 {
     return ParseAsHexString(aString, aBuffer, kBufferSize);
 }
