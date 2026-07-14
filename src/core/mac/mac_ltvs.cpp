@@ -81,9 +81,9 @@ Error Ltv::ParsedInfo::ParseFromAndAdvance(FrameData &aFrameData)
     else
     {
         uint8_t lenMask  = MaskForBitSize<uint8_t>(lenBitSize);
-        uint8_t typeMask = ~lenMask;
+        uint8_t typeMask = static_cast<uint8_t>(~lenMask);
 
-        mLength = (headerByte & lenMask);
+        mLength = static_cast<uint8_t>(headerByte & lenMask);
 
         // Check if the Type bits match the escape mask (all 1s in
         // upper bits), which indicates that the LTV uses base
@@ -91,7 +91,7 @@ Error Ltv::ParsedInfo::ParseFromAndAdvance(FrameData &aFrameData)
 
         if ((headerByte & typeMask) != typeMask)
         {
-            mType  = (headerByte & typeMask) >> lenBitSize;
+            mType  = static_cast<uint8_t>((headerByte & typeMask) >> lenBitSize);
             packed = true;
         }
     }
@@ -197,7 +197,7 @@ void Ltv::AppendInfo::DetermineIfPackable(uint32_t &aTotalLength)
     if (CanUsePacked(lenBitSize))
     {
         mIsPackable = true;
-        mHeaderByte = mLength | static_cast<uint8_t>(mType << lenBitSize);
+        mHeaderByte = static_cast<uint8_t>(mLength | (mType << lenBitSize));
         aTotalLength++;
         ExitNow();
     }
@@ -211,7 +211,7 @@ void Ltv::AppendInfo::DetermineIfPackable(uint32_t &aTotalLength)
     lenBitSize = DetermineMinBitSizeFor(aTotalLength);
 
     mIsPackable = false;
-    mHeaderByte = mLength | ~MaskForBitSize<uint8_t>(lenBitSize);
+    mHeaderByte = static_cast<uint8_t>(mLength | ~MaskForBitSize<uint8_t>(lenBitSize));
     aTotalLength++;
 
 exit:
