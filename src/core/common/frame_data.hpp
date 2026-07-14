@@ -123,6 +123,21 @@ public:
     }
 
     /**
+     * Reads an object from the `FrameData` without copying.
+     *
+     * @tparam ObjectType   The object type to read from the `FrameData`.
+     *
+     * @returns A pointer to the object in the `FrameData` buffer and skips over it, or `nullptr` if not enough bytes
+     *          remain to read the entire object.
+     */
+    template <typename ObjectType> const ObjectType *Read(void)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return static_cast<const ObjectType *>(ReadLength(sizeof(ObjectType)));
+    }
+
+    /**
      * Skips over a given number of bytes from `FrameData`.
      *
      * The caller MUST make sure that the @p aLength is smaller than current data length. Otherwise the behavior of
@@ -131,6 +146,9 @@ public:
      * @param[in] aLength   The length (number of bytes) to skip over.
      */
     void SkipOver(uint16_t aLength);
+
+private:
+    const void *ReadLength(uint16_t aLength);
 };
 
 } // namespace ot

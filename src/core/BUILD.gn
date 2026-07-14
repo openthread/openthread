@@ -528,6 +528,8 @@ openthread_core_files = [
   "mac/link_raw.hpp",
   "mac/mac.cpp",
   "mac/mac.hpp",
+  "mac/mac_beacon.cpp",
+  "mac/mac_beacon.hpp",
   "mac/mac_filter.cpp",
   "mac/mac_filter.hpp",
   "mac/mac_frame.cpp",
