@@ -80,7 +80,7 @@ void TcatAgent::ClearCommissionerState(void)
     mPskdVerified                  = false;
     mPskcVerified                  = false;
     mInstallCodeVerified           = false;
-    mIsCommissioned                = false;
+    mCanOverwriteDataset           = false;
     mApplicationResponsePending    = false;
     mHasWrittenActiveDataset       = false;
 }
@@ -243,8 +243,8 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     NotifyStateChange();
     LogInfo("Connected");
 
-    // This specifically stores the state IsCommissioned at _start_ of session:
-    mIsCommissioned = Get<ActiveDatasetManager>().IsCommissioned();
+    // If already commissioned at start of session, overwriting is never allowed.
+    mCanOverwriteDataset = !Get<ActiveDatasetManager>().IsCommissioned();
 
 exit:
     return error;
@@ -403,7 +403,7 @@ exit:
 
 bool TcatAgent::IsSetActiveDatasetAuthorized(const Dataset *aDataset) const
 {
-    return !mIsCommissioned &&
+    return mCanOverwriteDataset &&
            IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mCommissioningFlags,
                                              mDeviceAuthorizationField.mCommissioningFlags, aDataset);
 }
@@ -585,7 +585,7 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessa
     uint8_t buf[kCommissionerCertMaxLength];
     size_t  bufLen = sizeof(buf);
 
-    VerifyOrExit(!mIsCommissioned, error = kErrorAlready);
+    VerifyOrExit(mCanOverwriteDataset, error = kErrorAlready);
 
     SuccessOrExit(error = dataset.SetFrom(aIncomingMessage, aOffsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
@@ -719,7 +719,7 @@ Error TcatAgent::HandleDecommission(void)
 #endif
 
     mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
-    mIsCommissioned = false; // enable repeated commissioning/decommissioning in a session
+    mCanOverwriteDataset = true; // enable repeated commissioning/decommissioning cycles in a session
 
 exit:
     return error;
@@ -1121,7 +1121,7 @@ void TcatAgent::HandleNotifierEvents(Events aEvents)
     // This event revokes the Commissioner's existing authorization (if any) to rewrite datasets.
     if (!mHasWrittenActiveDataset && aEvents.ContainsAny(kEventNetworkKeyChanged | kEventThreadExtPanIdChanged))
     {
-        mIsCommissioned = true;
+        mCanOverwriteDataset = false;
     }
     mHasWrittenActiveDataset = false;
 

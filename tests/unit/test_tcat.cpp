@@ -97,6 +97,16 @@ void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
 
 uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
 
+// Override the weak test platform stub to prevent buffer NULL dereference during the tests.
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *)
+{
+    static otRadioFrame sTxFrame;
+    static uint8_t      sTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
+
+    sTxFrame.mPsdu = sTxPsdu;
+    return &sTxFrame;
+}
+
 } // extern "C"
 
 namespace ot {
@@ -561,7 +571,7 @@ private:
         aAgent->ClearCommissionerState();
         aAgent->mCommissionerAuthorizationField = aCommAuth;
         aAgent->mDeviceAuthorizationField       = aDeviceAuth;
-        aAgent->mIsCommissioned                 = aIsCommissionedAtStart;
+        aAgent->mCanOverwriteDataset            = !aIsCommissionedAtStart;
 
         aAgent->mNextState =
             (aAgent->mState == TcatAgent::kStateActiveTemporary) ? TcatAgent::kStateStandby : TcatAgent::kStateActive;
@@ -621,11 +631,15 @@ private:
     // just like a real attach. Requires a complete Active Dataset to be present.
     static void MockDeviceAttachedToNetwork(Instance *aInstance)
     {
-        SuccessOrQuit(otIp6SetEnabled(aInstance, true));
-        SuccessOrQuit(otThreadSetEnabled(aInstance, true));
         SuccessOrQuit(otThreadBecomeLeader(aInstance));
         otTaskletsProcess(aInstance);
         VerifyOrQuit(otThreadGetDeviceRole(aInstance) == OT_DEVICE_ROLE_LEADER);
+    }
+
+    static void MockDeviceDetachedFromNetwork(Instance *aInstance)
+    {
+        otTaskletsProcess(aInstance);
+        VerifyOrQuit(otThreadGetDeviceRole(aInstance) == OT_DEVICE_ROLE_DISABLED);
     }
 
 public:
@@ -1066,7 +1080,7 @@ public:
         testFreeInstance(instance);
     }
 
-    static void TestTcatAttemptDatasetOverwrite(void)
+    static void TestTcatDatasetOverwrite(void)
     {
         Instance  *instance = TestInitInstanceTcat();
         TcatAgent *agent    = &instance->Get<TcatAgent>();
@@ -1122,7 +1136,7 @@ public:
         testFreeInstance(instance);
     }
 
-    static void TestTcatAttemptDatasetOverwriteAfterAttach(void)
+    static void TestTcatDatasetOverwriteAfterAttach(void)
     {
         Instance  *instance = TestInitInstanceTcat();
         TcatAgent *agent    = &instance->Get<TcatAgent>();
@@ -1136,15 +1150,29 @@ public:
         VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
         VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
 
-        // Once the device attaches to a Thread network, the TCAT Commissioner can no longer overwrite the
-        // Active Dataset (this prevents a dataset from propagating to other already-networked devices).
+        for (int i = 0; i < 3; i++)
+        {
+            // Once the device is attached to a Thread network, the TCAT Commissioner can no longer overwrite the
+            // Active Dataset (this prevents a dataset from propagating to other already-networked devices).
+            agent->HandleStartThreadInterface();
+            MockDeviceAttachedToNetwork(instance);
+            VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+            // When the device has detached from Thread, the TCAT Commissioner can overwrite the Active Dataset
+            // even without a Decommission command, because it's still in the same TCAT session.
+            agent->HandleStopThreadInterface();
+            MockDeviceDetachedFromNetwork(instance);
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        }
+
+        // Attach to Thread Network again to prepare for the next test.
+        agent->HandleStartThreadInterface();
         MockDeviceAttachedToNetwork(instance);
 
-        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
-        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
-
         // After the Active Dataset is cleared (decommissioned), the agent considers the device no longer
-        // commissioned and allows overwriting again.
+        // commissioned and allows overwriting.
         MockActiveDatasetCleared(instance);
         VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
         VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
@@ -1210,7 +1238,7 @@ public:
         // A Commissioner connects to the (uncommissioned) device
         MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ false);
         VerifyOrQuit(agent->IsStarted());
-        VerifyOrQuit(!agent->mIsCommissioned);
+        VerifyOrQuit(agent->mCanOverwriteDataset);
 
         // Start observing state-changed notifications.
         SuccessOrQuit(otSetStateChangedCallback(instance, HandleNotifierStateChanged, &observer));
@@ -1239,7 +1267,7 @@ public:
 
             // Because the agent saw both events coalesced while mHasWrittenActiveDataset was set, it recognizes the
             // change as its own and retains the Commissioner's authorization to overwrite the dataset.
-            VerifyOrQuit(!agent->mIsCommissioned, "a self-made dataset change must not revoke authorization");
+            VerifyOrQuit(agent->mCanOverwriteDataset, "a self-made dataset change must not revoke authorization");
         }
 
         otRemoveStateChangeCallback(instance, HandleNotifierStateChanged, &observer);
@@ -1265,8 +1293,8 @@ int main(void)
     ot::MeshCoP::UnitTester::TestTcatCommissioner1AuthWithDeviceRequirements();
     ot::MeshCoP::UnitTester::TestTcatCommissioner2AuthWithDeviceRequirements();
     ot::MeshCoP::UnitTester::TestTcatCommissioner4AuthWithExistingPartialDataset();
-    ot::MeshCoP::UnitTester::TestTcatAttemptDatasetOverwrite();
-    ot::MeshCoP::UnitTester::TestTcatAttemptDatasetOverwriteAfterAttach();
+    ot::MeshCoP::UnitTester::TestTcatDatasetOverwrite();
+    ot::MeshCoP::UnitTester::TestTcatDatasetOverwriteAfterAttach();
     ot::MeshCoP::UnitTester::TestTcatRepeatedCommandActivation();
     ot::MeshCoP::UnitTester::TestTcatNotifierCoalescesEvents();
     printf("All tests passed\n");

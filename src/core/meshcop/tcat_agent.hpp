@@ -520,7 +520,7 @@ private:
     bool                             mPskdVerified : 1;
     bool                             mPskcVerified : 1;
     bool                             mInstallCodeVerified : 1;
-    bool                             mIsCommissioned : 1;
+    bool                             mCanOverwriteDataset : 1;
     bool                             mApplicationResponsePending : 1;
     bool                             mHasWrittenActiveDataset : 1;
     using ExpireTimer = TimerMilliIn<TcatAgent, &TcatAgent::HandleTimer>;
