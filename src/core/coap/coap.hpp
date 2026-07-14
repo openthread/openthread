@@ -824,6 +824,26 @@ private:
 #endif
     };
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    struct Block2ResponseMetadata : public Clearable<Block2ResponseMetadata>
+    {
+        Block2ResponseMetadata(void) { Clear(); }
+
+        void InitFromRequest(const Msg &aRxMsg, const char *aUriPath);
+        bool MatchesRequest(const Msg &aRxMsg, const char *aUriPath) const;
+        bool MatchesResponse(const Msg &aTxMsg) const;
+
+        Ip6::Address                 mSockAddr;
+        uint16_t                     mSockPort;
+        Ip6::Address                 mPeerAddr;
+        uint16_t                     mPeerPort;
+        uint16_t                     mMessageId;
+        Token                        mToken;
+        Message::UriPathStringBuffer mUriPath;
+        bool                         mIsSet;
+    };
+#endif
+
     class PendingRequests;
 
     class Request
@@ -1001,6 +1021,9 @@ private:
     Error ProcessBlockwiseSend(Msg &aMsg, const SendCallbacks &aCallbacks);
     Error ProcessBlockwiseResponse(Msg &aRxMsg, Request &aRequest);
     Error ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
+    void  ClearPendingBlock2Response(void);
+    void  ClearPendingBlock2ResponseFor(const Msg &aTxMsg);
+    void  CommitPendingBlock2Response(void);
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
     Error PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
@@ -1028,6 +1051,8 @@ private:
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     LinkedList<ResourceBlockWise> mBlockWiseResources;
     Message                      *mLastResponse;
+    Block2ResponseMetadata        mLastResponseMetadata;
+    Block2ResponseMetadata        mPendingBlock2ResponseMetadata;
 #endif
 };
 
