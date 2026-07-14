@@ -764,7 +764,7 @@ Error TcatAgent::HandleGetDeviceId(Message &aOutgoingMessage, bool &aResponse)
 
     if (length == 0)
     {
-        Get<Radio>().GetIeeeEui64(eui64);
+        Get<Radio::Radio>().GetIeeeEui64(eui64);
 
         length   = sizeof(Mac::ExtAddress);
         deviceId = eui64.m8;

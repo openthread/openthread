@@ -34,6 +34,7 @@
 #include "mac_ltvs.hpp"
 
 #include "common/bit_utils.hpp"
+#include "common/numeric_limits.hpp"
 
 namespace ot {
 namespace Mac {
@@ -81,9 +82,9 @@ Error Ltv::ParsedInfo::ParseFromAndAdvance(FrameData &aFrameData)
     else
     {
         uint8_t lenMask  = MaskForBitSize<uint8_t>(lenBitSize);
-        uint8_t typeMask = ~lenMask;
+        uint8_t typeMask = static_cast<uint8_t>(~lenMask);
 
-        mLength = (headerByte & lenMask);
+        mLength = static_cast<uint8_t>(headerByte & lenMask);
 
         // Check if the Type bits match the escape mask (all 1s in
         // upper bits), which indicates that the LTV uses base
@@ -91,7 +92,7 @@ Error Ltv::ParsedInfo::ParseFromAndAdvance(FrameData &aFrameData)
 
         if ((headerByte & typeMask) != typeMask)
         {
-            mType  = (headerByte & typeMask) >> lenBitSize;
+            mType  = static_cast<uint8_t>((headerByte & typeMask) >> lenBitSize);
             packed = true;
         }
     }
@@ -197,7 +198,7 @@ void Ltv::AppendInfo::DetermineIfPackable(uint32_t &aTotalLength)
     if (CanUsePacked(lenBitSize))
     {
         mIsPackable = true;
-        mHeaderByte = mLength | static_cast<uint8_t>(mType << lenBitSize);
+        mHeaderByte = static_cast<uint8_t>(mLength | (mType << lenBitSize));
         aTotalLength++;
         ExitNow();
     }
@@ -211,7 +212,7 @@ void Ltv::AppendInfo::DetermineIfPackable(uint32_t &aTotalLength)
     lenBitSize = DetermineMinBitSizeFor(aTotalLength);
 
     mIsPackable = false;
-    mHeaderByte = mLength | ~MaskForBitSize<uint8_t>(lenBitSize);
+    mHeaderByte = static_cast<uint8_t>(mLength | ~MaskForBitSize<uint8_t>(lenBitSize));
     aTotalLength++;
 
 exit:
@@ -268,6 +269,80 @@ Error Ltv::EncodeAndAppend(AppendInfo *aLtvList, uint16_t aNumLtvs, FrameBuilder
 
 exit:
     return error;
+}
+
+void Ltv::OptimizeListOrder(AppendInfo *aLtvList, uint16_t aNumLtvs)
+{
+    uint32_t curLength = 0;
+
+    VerifyOrExit(aNumLtvs > 1);
+
+    // We determine the optimal order backward from the last LTV position
+    // (`aNumLtvs - 1`) down to the first (`0`). At each position `curLtv`,
+    // we evaluate all candidate entries from `aLtvList[0]` up to `curLtv`
+    // given the cumulative length `curLength` of the entries already placed
+    // after `curLtv`. We select the candidate that can be packed and yields
+    // the smallest cumulative length, placing it into `curLtv`.
+
+    for (AppendInfo *curLtv = &aLtvList[aNumLtvs - 1]; curLtv > &aLtvList[0]; curLtv--)
+    {
+        AppendInfo *bestLtv    = nullptr;
+        uint32_t    bestLength = NumericLimits<uint32_t>::kMax;
+
+        for (AppendInfo *ltv = &aLtvList[0]; ltv <= curLtv; ltv++)
+        {
+            uint32_t length   = curLength;
+            bool     isBetter = true;
+
+            ltv->DetermineIfPackable(length);
+
+            // We compare candidate `ltv` against the current `bestLtv`:
+            //
+            // - If `bestLtv` is packable (`bestLtv->mIsPackable` is true),
+            //   candidate `ltv` is preferred only if it is also packable and
+            //   yields a smaller or equal cumulative length (`length <=
+            //   bestLength`). Using `<=` prefers later entries on ties,
+            //   preserving the caller's original list order.
+            //
+            // - Otherwise (`bestLtv` is null or unpackable), we always prefer
+            //   the new candidate `ltv`: If `ltv` is packable, it improves
+            //   packability; if `ltv` is also unpackable, preferring a later
+            //   candidate preserves the caller's original list order.
+
+            if ((bestLtv != nullptr) && bestLtv->mIsPackable)
+            {
+                isBetter = ltv->mIsPackable && (length <= bestLength);
+            }
+
+            if (isBetter)
+            {
+                bestLtv    = ltv;
+                bestLength = length;
+            }
+        }
+
+        // Move `bestLtv` to position `curLtv` by shifting the elements
+        // between `bestLtv + 1` and `curLtv` one position up. Using a shift
+        // rather than a direct swap preserves the relative order of all
+        // remaining entries.
+
+        if ((bestLtv != nullptr) && (bestLtv != curLtv))
+        {
+            AppendInfo best = *bestLtv;
+
+            for (AppendInfo *ltv = bestLtv; ltv < curLtv; ltv++)
+            {
+                *ltv = ltv[1];
+            }
+
+            *curLtv = best;
+        }
+
+        curLength = bestLength;
+    }
+
+exit:
+    return;
 }
 
 } // namespace Mac

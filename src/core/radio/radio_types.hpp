@@ -42,6 +42,7 @@
 #include "common/time.hpp"
 
 namespace ot {
+namespace Radio {
 
 #ifdef OT_CONFIG_RADIO_TIME_ENABLE
 #error "OT_CONFIG_RADIO_TIME_ENABLE MUST NOT be defined directly. It is derived from other configs"
@@ -57,21 +58,21 @@ class Radio;
 /**
  * Represents a 64-bit radio time in microseconds referenced to a continuous monotonic local radio clock.
  */
-typedef otRadioTime64 RadioTime64;
+typedef otRadioTime64 Time64;
 
 /**
- * Represents a 32-bit radio time in microseconds (holds the lower 32 bits of a `RadioTime64`).
+ * Represents a 32-bit radio time in microseconds (holds the lower 32 bits of a `Radio::Time64`).
  */
-typedef otRadioTime32 RadioTime32;
+typedef otRadioTime32 Time32;
 
 /**
  * Converts a 64-bit radio time to a 32-bit radio time.
  *
- * @param[in] aRadioTime64  The 64-bit radio time to convert.
+ * @param[in] aTime64  The 64-bit radio time to convert.
  *
- * @returns The converted 32-bit radio time (lower 32 bits of @p aRadioTime64).
+ * @returns The converted 32-bit radio time (lower 32 bits of @p aTime64).
  */
-inline RadioTime32 ConvertRadioTime64To32(RadioTime64 aRadioTime64) { return static_cast<RadioTime32>(aRadioTime64); }
+inline Time32 ConvertTime64To32(Time64 aTime64) { return static_cast<Time32>(aTime64); }
 
 /**
  * Indicates whether a given 32-bit radio time is strictly before another 32-bit radio time.
@@ -84,14 +85,14 @@ inline RadioTime32 ConvertRadioTime64To32(RadioTime64 aRadioTime64) { return sta
  * @retval TRUE   @p aFirstTime is strictly before @p aSecondTime.
  * @retval FALSE  @p aFirstTime is not strictly before @p aSecondTime.
  */
-bool IsRadioTimeStrictlyBefore(RadioTime32 aFirstTime, RadioTime32 aSecondTime);
+bool IsTimeStrictlyBefore(Time32 aFirstTime, Time32 aSecondTime);
 
 #if OT_CONFIG_RADIO_TIME_ENABLE && OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 /**
  * Represents synchronized radio time and local `TimeMicro`.
  */
-class SyncedRadioLocalTime : public Clearable<SyncedRadioLocalTime>
+class SyncedTime : public Clearable<SyncedTime>
 {
 public:
     /**
@@ -106,21 +107,21 @@ public:
      *
      * @returns The local microsecond time.
      */
-    TimeMicro GetAsTimeMicro(void) const { return mLocalTime; }
+    TimeMicro GetAsLocalTimeMicro(void) const { return mLocalTime; }
 
     /**
      * Gets the 64-bit radio time.
      *
      * @returns The 64-bit radio time.
      */
-    RadioTime64 GetAsRadio64(void) const { return mRadioTime; }
+    Time64 GetAsTime64(void) const { return mRadioTime; }
 
     /**
      * Gets the 32-bit radio time.
      *
      * @returns The 32-bit radio time.
      */
-    RadioTime32 GetAsRadio32(void) const { return ConvertRadioTime64To32(mRadioTime); }
+    Time32 GetAsTime32(void) const { return ConvertTime64To32(mRadioTime); }
 
     /**
      * Advances the synchronized radio and local time values by a given duration.
@@ -145,12 +146,13 @@ public:
     }
 
 private:
-    RadioTime64 mRadioTime;
-    TimeMicro   mLocalTime;
+    Time64    mRadioTime;
+    TimeMicro mLocalTime;
 };
 
 #endif // OT_CONFIG_RADIO_TIME_ENABLE && OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
+} // namespace Radio
 } // namespace ot
 
 #endif // OT_CORE_RADIO_RADIO_TYPES_HPP_

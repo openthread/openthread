@@ -1109,6 +1109,7 @@ struct WakeupInfo
 
 DefineCoreType(otExtAddress, Mac::ExtAddress);
 DefineCoreType(otMacKey, Mac::Key);
+DefineCoreType(otMacKeyMaterial, Mac::KeyMaterial);
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 DefineCoreType(otWakeupRequest, Mac::WakeupRequest);
 DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);

@@ -70,7 +70,7 @@ static constexpr uint32_t kCslPeriodMs = 500;
 /**
  * CSL period in units of 10 symbols.
  */
-static constexpr uint32_t kCslPeriodInTenSymbols = kCslPeriodMs * kUsPerMs / kUsPerTenSymbols;
+static constexpr uint32_t kCslPeriodInTenSymbols = kCslPeriodMs * kUsPerMs / ot::Radio::kUsPerTenSymbols;
 
 /**
  * CSL timeout in seconds.

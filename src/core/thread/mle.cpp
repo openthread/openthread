@@ -188,7 +188,7 @@ Error Mle::Start(StartMode aMode)
     Error error = kErrorNone;
 
     // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
-    VerifyOrExit(!Get<Radio>().GetPromiscuous(), error = kErrorInvalidState);
+    VerifyOrExit(!Get<Radio::Radio>().GetPromiscuous(), error = kErrorInvalidState);
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
 
     if (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast)
@@ -3034,7 +3034,7 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 
     static constexpr uint64_t usInSecond = 1000000;
 
-    uint64_t cslPeriodUs  = kMinCslPeriod * kUsPerTenSymbols;
+    uint64_t cslPeriodUs  = Radio::kMinCslPeriod * Radio::kUsPerTenSymbols;
     uint64_t cslTimeoutUs = GetCslTimeout() * usInSecond;
     uint64_t k            = cslTimeoutUs / cslPeriodUs;
 
@@ -3809,7 +3809,7 @@ Error Mle::TxMessage::AppendCslTimeoutTlv(void)
 Error Mle::TxMessage::AppendCslClockAccuracyTlv(void)
 {
     return Tlv::Append<CslClockAccuracyTlv>(
-        *this, CslClockAccuracyTlvValue(Get<Radio>().GetCslAccuracy(), Get<Radio>().GetCslUncertainty()));
+        *this, CslClockAccuracyTlvValue(Get<Radio::Radio>().GetCslAccuracy(), Get<Radio::Radio>().GetCslUncertainty()));
 }
 #endif
 

@@ -154,6 +154,7 @@ set(COMMON_SOURCES
     mac/data_poll_sender.cpp
     mac/link_raw.cpp
     mac/mac.cpp
+    mac/mac_beacon.cpp
     mac/mac_filter.cpp
     mac/mac_frame.cpp
     mac/mac_header_ie.cpp

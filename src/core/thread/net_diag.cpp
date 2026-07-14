@@ -345,7 +345,7 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
     {
         Mac::ExtAddress eui64;
 
-        Get<Radio>().GetIeeeEui64(eui64);
+        Get<Radio::Radio>().GetIeeeEui64(eui64);
         error = Tlv::Append<Eui64Tlv>(aMessage, eui64);
         break;
     }

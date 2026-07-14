@@ -718,6 +718,127 @@ void TestFindAndValidate(void)
     printf("TestFindAndValidate - PASSED\n");
 }
 
+void PrintLtvList(const char *aLabel, const Ltv::AppendInfo *aLtvList, uint16_t aNumLtvs)
+{
+    printf("\n%s:\n", aLabel);
+
+    for (uint16_t i = 0; i < aNumLtvs; i++)
+    {
+        printf("  [%u] type:%-3u len:%-3u id:%u\n", i, aLtvList[i].GetType(), aLtvList[i].GetLength(),
+               aLtvList[i].GetId());
+    }
+}
+
+void TestOptimizeListOrder(void)
+{
+    Ltv::AppendInfo ltvs[8];
+    uint8_t         buffer[512];
+    FrameBuilder    builder;
+    uint16_t        unoptimizedLen;
+    uint16_t        optimizedLen;
+
+    printf("------------------------------------------------------------------------------\n");
+    printf("TestOptimizeListOrder\n");
+
+    // Single LTV (No-op edge case)
+    ltvs[0].InitTypeLengthId(1, 4, 100);
+    Ltv::OptimizeListOrder(ltvs, 1);
+    VerifyOrQuit(ltvs[0].GetId() == 100);
+
+    // Equal packability and length (Order preservation test)
+    ltvs[0].InitTypeLengthId(1, 2, 10);
+    ltvs[1].InitTypeLengthId(2, 2, 20);
+    ltvs[2].InitTypeLengthId(3, 2, 30);
+
+    Ltv::OptimizeListOrder(ltvs, 3);
+    VerifyOrQuit(ltvs[0].GetId() == 10);
+    VerifyOrQuit(ltvs[1].GetId() == 20);
+    VerifyOrQuit(ltvs[2].GetId() == 30);
+
+    // Mixed lengths and types where reordering reduces overall encoded length
+    ltvs[0].InitTypeLengthId(1, 0, 0xa);
+    ltvs[1].InitTypeLengthId(2, 4, 0xb);
+    ltvs[2].InitTypeLengthId(2, 3, 0xc);
+    ltvs[3].InitTypeLengthId(3, 90, 0xd);
+
+    builder.Init(buffer, sizeof(buffer));
+    SuccessOrQuit(Ltv::EncodeAndAppend(ltvs, 4, builder));
+    unoptimizedLen = builder.GetLength();
+
+    PrintLtvList("Unoptimized", ltvs, 4);
+
+    Ltv::OptimizeListOrder(ltvs, 4);
+
+    PrintLtvList("Optimized", ltvs, 4);
+
+    VerifyOrQuit(ltvs[0].GetId() == 0xd);
+    VerifyOrQuit(ltvs[1].GetId() == 0xb);
+    VerifyOrQuit(ltvs[2].GetId() == 0xc);
+    VerifyOrQuit(ltvs[3].GetId() == 0xa);
+
+    builder.Init(buffer, sizeof(buffer));
+    SuccessOrQuit(Ltv::EncodeAndAppend(ltvs, 4, builder));
+    optimizedLen = builder.GetLength();
+
+    printf("\nEncoded-len: Unoptimized %lu -> Optimized %lu\n", ToUlong(unoptimizedLen), ToUlong(optimizedLen));
+
+    VerifyOrQuit(optimizedLen < unoptimizedLen);
+
+    // Optimizing again, should not change the order
+
+    Ltv::OptimizeListOrder(ltvs, 4);
+
+    VerifyOrQuit(ltvs[0].GetId() == 0xd);
+    VerifyOrQuit(ltvs[1].GetId() == 0xb);
+    VerifyOrQuit(ltvs[2].GetId() == 0xc);
+    VerifyOrQuit(ltvs[3].GetId() == 0xa);
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+
+    ltvs[0].InitTypeLengthId(5, 0, 10);
+    ltvs[1].InitTypeLengthId(255, 0, 20);
+    ltvs[2].InitTypeLengthId(127, 1, 30);
+    ltvs[3].InitTypeLengthId(1, 30, 40);
+    ltvs[4].InitTypeLengthId(1, 14, 50);
+    ltvs[5].InitTypeLengthId(128, 100, 60);
+
+    builder.Init(buffer, sizeof(buffer));
+    SuccessOrQuit(Ltv::EncodeAndAppend(ltvs, 6, builder));
+    unoptimizedLen = builder.GetLength();
+
+    PrintLtvList("Unoptimized", ltvs, 6);
+
+    Ltv::OptimizeListOrder(ltvs, 6);
+
+    PrintLtvList("Optimized", ltvs, 6);
+
+    VerifyOrQuit(ltvs[0].GetId() == 30);
+    VerifyOrQuit(ltvs[1].GetId() == 60);
+    VerifyOrQuit(ltvs[2].GetId() == 40);
+    VerifyOrQuit(ltvs[3].GetId() == 50);
+    VerifyOrQuit(ltvs[4].GetId() == 10);
+    VerifyOrQuit(ltvs[5].GetId() == 20);
+
+    builder.Init(buffer, sizeof(buffer));
+    SuccessOrQuit(Ltv::EncodeAndAppend(ltvs, 6, builder));
+    optimizedLen = builder.GetLength();
+
+    printf("\nEncoded-len: Unoptimized %lu -> Optimized %lu\n", ToUlong(unoptimizedLen), ToUlong(optimizedLen));
+
+    VerifyOrQuit(optimizedLen < unoptimizedLen);
+
+    Ltv::OptimizeListOrder(ltvs, 6);
+
+    VerifyOrQuit(ltvs[0].GetId() == 30);
+    VerifyOrQuit(ltvs[1].GetId() == 60);
+    VerifyOrQuit(ltvs[2].GetId() == 40);
+    VerifyOrQuit(ltvs[3].GetId() == 50);
+    VerifyOrQuit(ltvs[4].GetId() == 10);
+    VerifyOrQuit(ltvs[5].GetId() == 20);
+
+    printf("\nTestOptimizeListOrder - PASSED\n");
+}
+
 } // namespace Mac
 } // namespace ot
 
@@ -729,6 +850,7 @@ int main(void)
     ot::Mac::TestLtvErrorsAndNegativeCases();
     ot::Mac::TestAppendInfoGetId();
     ot::Mac::TestFindAndValidate();
+    ot::Mac::TestOptimizeListOrder();
 
     printf("\nAll tests passed\n");
     return 0;

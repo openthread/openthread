@@ -33,6 +33,9 @@
 
 #include "scan_result.hpp"
 
+#include "common/frame_data.hpp"
+#include "mac/mac_beacon.hpp"
+
 namespace ot {
 
 Error ScanResult::PopulateFromBeacon(const Mac::RxFrame *aBeaconFrame)
@@ -61,16 +64,17 @@ Error ScanResult::PopulateFromBeacon(const Mac::RxFrame *aBeaconFrame)
 
 #if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
     {
-        const Mac::Beacon        *beacon;
+        FrameData                 frameData;
+        const Mac::BeaconHeader  *beaconHeader;
         const Mac::BeaconPayload *beaconPayload;
 
-        VerifyOrExit(aBeaconFrame->GetPayloadLength() >= sizeof(Mac::Beacon) + sizeof(Mac::BeaconPayload));
+        frameData.Init(aBeaconFrame->GetPayload(), aBeaconFrame->GetPayloadLength());
 
-        beacon = reinterpret_cast<const Mac::Beacon *>(aBeaconFrame->GetPayload());
-        VerifyOrExit(beacon->IsValid());
+        beaconHeader = frameData.Read<Mac::BeaconHeader>();
+        VerifyOrExit((beaconHeader != nullptr) && beaconHeader->IsValid());
 
-        beaconPayload = reinterpret_cast<const Mac::BeaconPayload *>(beacon->GetPayload());
-        VerifyOrExit(beaconPayload->IsValid());
+        beaconPayload = frameData.Read<Mac::BeaconPayload>();
+        VerifyOrExit((beaconPayload != nullptr) && beaconPayload->IsValid());
 
         mVersion       = beaconPayload->GetProtocolVersion();
         mIsJoinable    = beaconPayload->IsJoiningPermitted();

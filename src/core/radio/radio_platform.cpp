@@ -58,7 +58,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (instance.Get<Radio>().GetDiagMode())
+    if (instance.Get<Radio::Radio>().GetDiagMode())
     {
         instance.Get<Radio::Callbacks>().HandleDiagsReceiveDone(rxFrame, aError);
     }
@@ -107,7 +107,7 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (instance.Get<Radio>().GetDiagMode())
+    if (instance.Get<Radio::Radio>().GetDiagMode())
     {
 #if OPENTHREAD_RADIO
         uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;

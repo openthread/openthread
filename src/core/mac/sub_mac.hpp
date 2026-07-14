@@ -499,32 +499,6 @@ public:
 #endif
 
 private:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void        CslInit(void);
-    void        RestartCslTimerAfterSyncUpdate(void);
-    void        UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
-    void        UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
-    static void HandleCslTimer(Timer &aTimer);
-    void        HandleCslTimer(void);
-    void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
-    uint32_t    GetNextCycleDrift(void);
-    uint32_t    GetLocalTime(void);
-    bool        IsCslEnabled(void) const { return mCslPeriod > 0; }
-#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-    void LogReceived(RxFrame *aFrame);
-#endif
-    void HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter);
-    void HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter);
-    void LogCslWindow(uint32_t aWinStart, uint32_t aWinDuration);
-#endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    void        WedInit(void);
-    static void HandleWedTimer(Timer &aTimer);
-    void        HandleWedTimer(void);
-    void        HandleWedReceiveAt(void);
-    void        HandleWedReceiveOrSleep(void);
-#endif
-
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
     static constexpr uint8_t  kCsmaMaxBe         = 5;                  // macMaxBE (IEEE 802.15.4-2006).
     static constexpr uint32_t kUnitBackoffPeriod = 20;                 // Number of symbols (IEEE 802.15.4-2006).
@@ -638,6 +612,33 @@ private:
     void RadioSample(void);
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    void        CslInit(void);
+    void        RestartCslTimerAfterSyncUpdate(void);
+    void        UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
+    void        UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
+    static void HandleCslTimer(Timer &aTimer);
+    void        HandleCslTimer(void);
+    void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
+    uint32_t    GetNextCycleDrift(void);
+    uint32_t    GetLocalTime(void);
+    bool        IsCslEnabled(void) const { return mCslPeriod > 0; }
+#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+    void LogReceived(RxFrame *aFrame);
+#endif
+    void HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter);
+    void HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter);
+    void LogCslWindow(uint32_t aWinStart, uint32_t aWinDuration);
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    void        WedInit(void);
+    static void HandleWedTimer(Timer &aTimer);
+    void        HandleWedTimer(void);
+    void        HandleWedReceiveAt(void);
+    void        HandleWedReceiveOrSleep(void);
+#endif
+
     using SubMacTimer =
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         TimerMicroIn<SubMac, &SubMac::HandleTimer>;
@@ -672,26 +673,26 @@ private:
     SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint16_t mCslPeriod;                     // The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t  mCslChannel : 7;                // The CSL sample channel.
-    bool     mIsCslSampling : 1;             // Indicates that the current time is in CSL sample window
-                                             // for platforms not supporting `Radio::ReceiveAt()`.
-    uint16_t             mCslPeerShort;      // The CSL peer short address.
-    SyncedRadioLocalTime mCslSampleTime;     // The CSL sample time for current period.
-    TimeMicro            mCslLastSync;       // The timestamp of the last successful CSL synchronization.
-    CslAccuracy          mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
-    TimerMicro           mCslTimer;
+    uint16_t mCslPeriod;                  // The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t  mCslChannel : 7;             // The CSL sample channel.
+    bool     mIsCslSampling : 1;          // Indicates that the current time is in CSL sample window
+                                          // for platforms not supporting `Radio::ReceiveAt()`.
+    uint16_t          mCslPeerShort;      // The CSL peer short address.
+    Radio::SyncedTime mCslSampleTime;     // The CSL sample time for current period.
+    TimeMicro         mCslLastSync;       // The timestamp of the last successful CSL synchronization.
+    CslAccuracy       mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
+    TimerMicro        mCslTimer;
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    bool mIsWedSampling : 1;                    // Indicates that the current time is in WED's sample window
-                                                // for platforms not supporting `Radio::ReceiveAt()`.
-    bool                 mIsWedEnabled : 1;     // Indicates if the WED is enabled.
-    uint32_t             mWakeupListenInterval; // The wake-up listen interval, in microseconds.
-    uint32_t             mWakeupListenDuration; // The wake-up listen duration, in microseconds.
-    uint8_t              mWakeupChannel;        // The wake-up sample channel.
-    SyncedRadioLocalTime mWedSampleTime;        // The WED sample time of the current interval.
-    TimerMicro           mWedTimer;
+    bool mIsWedSampling : 1;                 // Indicates that the current time is in WED's sample window
+                                             // for platforms not supporting `Radio::ReceiveAt()`.
+    bool              mIsWedEnabled : 1;     // Indicates if the WED is enabled.
+    uint32_t          mWakeupListenInterval; // The wake-up listen interval, in microseconds.
+    uint32_t          mWakeupListenDuration; // The wake-up listen duration, in microseconds.
+    uint8_t           mWakeupChannel;        // The wake-up sample channel.
+    Radio::SyncedTime mWedSampleTime;        // The WED sample time of the current interval.
+    TimerMicro        mWedTimer;
 #endif
 };
 

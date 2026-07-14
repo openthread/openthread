@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022, The OpenThread Authors.
+ *  Copyright (c) 2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,62 +28,53 @@
 
 /**
  * @file
- *   This file includes implementation of `FrameData`.
+ *   This file implements Beacon frame related functions.
  */
 
-#include "frame_data.hpp"
+#include "mac_beacon.hpp"
 
+#include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 
 namespace ot {
+namespace Mac {
 
-Error FrameData::ReadUint8(uint8_t &aUint8) { return ReadBytes(&aUint8, sizeof(uint8_t)); }
-
-template <Encoding kEncoding, typename UintType> Error FrameData::ReadUint(UintType &aUint)
+void BeaconHeader::Init(void)
 {
-    Error error;
-
-    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType is not valid, it must be an unsigned int");
-
-    SuccessOrExit(error = ReadBytes(&aUint, sizeof(UintType)));
-    aUint = HostSwap<kEncoding>(aUint);
-
-exit:
-    return error;
+    mSuperframeSpec     = LittleEndian::HostSwap16(kSuperFrameSpec);
+    mGtsSpec            = 0;
+    mPendingAddressSpec = 0;
 }
 
-template Error FrameData::ReadUint<kBigEndian, uint16_t>(uint16_t &aUint);
-template Error FrameData::ReadUint<kBigEndian, uint32_t>(uint32_t &aUint);
-template Error FrameData::ReadUint<kBigEndian, uint64_t>(uint64_t &aUint);
-template Error FrameData::ReadUint<kLittleEndian, uint16_t>(uint16_t &aUint);
-template Error FrameData::ReadUint<kLittleEndian, uint32_t>(uint32_t &aUint);
-template Error FrameData::ReadUint<kLittleEndian, uint64_t>(uint64_t &aUint);
-
-Error FrameData::ReadBytes(void *aBuffer, uint16_t aLength)
+bool BeaconHeader::IsValid(void) const
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(CanRead(aLength), error = kErrorParse);
-    memcpy(aBuffer, GetBytes(), aLength);
-    SkipOver(aLength);
-
-exit:
-    return error;
+    return (mSuperframeSpec == LittleEndian::HostSwap16(kSuperFrameSpec)) && (mGtsSpec == 0) &&
+           (mPendingAddressSpec == 0);
 }
 
-void FrameData::SkipOver(uint16_t aLength) { Init(GetBytes() + aLength, GetLength() - aLength); }
+#if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE || OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
 
-const void *FrameData::ReadLength(uint16_t aLength)
+void BeaconPayload::Init(const MeshCoP::NetworkIdentity &aNetworkIdentity, bool aJoiningPermitted)
 {
-    const void *data = nullptr;
+    ClearAllBytes(*this);
 
-    VerifyOrExit(CanRead(aLength));
-    data = GetBytes();
-    SkipOver(aLength);
+    mProtocolId = kProtocolId;
 
-exit:
-    return data;
+    if (aJoiningPermitted)
+    {
+        mFlags = kJoiningFlag | (kJoinableProtocolVersion << kVersionOffset);
+    }
+    else
+    {
+        mFlags = (kDefaultProtocolVersion << kVersionOffset);
+    }
+
+    aNetworkIdentity.GetNetworkName().GetAsData().CopyTo(mNetworkName, sizeof(mNetworkName));
+    mExtendedPanId = aNetworkIdentity.GetExtPanId();
 }
 
+#endif // OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE || OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+
+} // namespace Mac
 } // namespace ot

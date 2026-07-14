@@ -595,7 +595,7 @@ private:
     // Radio is initialized before other member variables
     // (particularly, SubMac and Mac) to allow them to use its methods
     // from their constructor.
-    Radio mRadio;
+    Radio::Radio mRadio;
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     UptimeTracker mUptimeTracker;
@@ -921,7 +921,7 @@ DefineCoreType(otBufferInfo, Instance::BufferInfo);
 
 template <> inline Instance &Instance::Get(void) { return *this; }
 
-template <> inline Radio &Instance::Get(void) { return mRadio; }
+template <> inline Radio::Radio &Instance::Get(void) { return mRadio; }
 
 template <> inline Radio::Callbacks &Instance::Get(void) { return mRadio.mCallbacks; }
 

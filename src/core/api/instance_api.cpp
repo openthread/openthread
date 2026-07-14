@@ -198,5 +198,5 @@ const char *otGetVersionString(void)
 
 const char *otGetRadioVersionString(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Radio>().GetVersionString();
+    return AsCoreType(aInstance).Get<Radio::Radio>().GetVersionString();
 }

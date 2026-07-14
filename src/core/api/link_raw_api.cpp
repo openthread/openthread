@@ -58,7 +58,10 @@ otError otLinkRawSetAlternateShortAddress(otInstance *aInstance, otShortAddress 
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetAlternateShortAddress(aShortAddress);
 }
 
-bool otLinkRawGetPromiscuous(otInstance *aInstance) { return AsCoreType(aInstance).Get<Radio>().GetPromiscuous(); }
+bool otLinkRawGetPromiscuous(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Radio::Radio>().GetPromiscuous();
+}
 
 otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
@@ -66,7 +69,7 @@ otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
     Instance &instance = AsCoreType(aInstance);
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
-    instance.Get<Radio>().SetPromiscuous(aEnable);
+    instance.Get<Radio::Radio>().SetPromiscuous(aEnable);
 
 exit:
     return error;
@@ -79,7 +82,7 @@ otError otLinkRawSleep(otInstance *aInstance)
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    error = instance.Get<Radio>().Sleep();
+    error = instance.Get<Radio::Radio>().Sleep();
 
 exit:
     return error;
@@ -97,7 +100,7 @@ otError otLinkRawTransmit(otInstance *aInstance, otLinkRawTransmitDone aCallback
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().Transmit(aCallback);
 }
 
-int8_t otLinkRawGetRssi(otInstance *aInstance) { return AsCoreType(aInstance).Get<Radio>().GetRssi(); }
+int8_t otLinkRawGetRssi(otInstance *aInstance) { return AsCoreType(aInstance).Get<Radio::Radio>().GetRssi(); }
 
 otRadioCaps otLinkRawGetCaps(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::LinkRaw>().GetCaps(); }
 
@@ -116,7 +119,7 @@ otError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable)
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    instance.Get<Radio>().EnableSrcMatch(aEnable);
+    instance.Get<Radio::Radio>().EnableSrcMatch(aEnable);
 
 exit:
     return error;
@@ -129,7 +132,7 @@ otError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, uint16_t aShortAdd
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    error = instance.Get<Radio>().AddSrcMatchShortEntry(aShortAddress);
+    error = instance.Get<Radio::Radio>().AddSrcMatchShortEntry(aShortAddress);
 
 exit:
     return error;
@@ -142,7 +145,7 @@ otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    error = instance.Get<Radio>().AddSrcMatchExtEntry(AsCoreType(aExtAddress));
+    error = instance.Get<Radio::Radio>().AddSrcMatchExtEntry(AsCoreType(aExtAddress));
 
 exit:
     return error;
@@ -154,7 +157,7 @@ otError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, uint16_t aShortA
     Instance &instance = AsCoreType(aInstance);
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
-    error = instance.Get<Radio>().ClearSrcMatchShortEntry(aShortAddress);
+    error = instance.Get<Radio::Radio>().ClearSrcMatchShortEntry(aShortAddress);
 
 exit:
     return error;
@@ -167,7 +170,7 @@ otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    error = instance.Get<Radio>().ClearSrcMatchExtEntry(AsCoreType(aExtAddress));
+    error = instance.Get<Radio::Radio>().ClearSrcMatchExtEntry(AsCoreType(aExtAddress));
 
 exit:
     return error;
@@ -180,7 +183,7 @@ otError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance)
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    instance.Get<Radio>().ClearSrcMatchShortEntries();
+    instance.Get<Radio::Radio>().ClearSrcMatchShortEntries();
 
 exit:
     return error;
@@ -193,7 +196,7 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    instance.Get<Radio>().ClearSrcMatchExtEntries();
+    instance.Get<Radio::Radio>().ClearSrcMatchExtEntries();
 
 exit:
     return error;

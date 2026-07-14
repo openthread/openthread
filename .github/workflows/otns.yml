@@ -230,5 +230,6 @@ jobs:
           pattern: cov-*
           merge-multiple: true
       - name: Upload Coverage
+        continue-on-error: ${{ !(github.repository == 'openthread/openthread' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)) }}
         run: |
           script/test upload_codecov

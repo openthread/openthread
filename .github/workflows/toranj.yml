@@ -236,4 +236,4 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:
         files: final.info
-        fail_ci_if_error: true
+        fail_ci_if_error: ${{ github.repository == 'openthread/openthread' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}

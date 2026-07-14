@@ -44,7 +44,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
 {
     Error            error;
     Mac::ChannelMask supportedChannels = aInstance.Get<Mac::Mac>().GetSupportedChannelMask();
-    Mac::ChannelMask preferredChannels(aInstance.Get<Radio>().GetPreferredChannelMask());
+    Mac::ChannelMask preferredChannels(aInstance.Get<Radio::Radio>().GetPreferredChannelMask());
     StringWriter     nameWriter(mNetworkName.m8, sizeof(mNetworkName));
 
     // If the preferred channel mask is not empty, select a random

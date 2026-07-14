@@ -73,32 +73,13 @@ class Neighbor;
 
 namespace Mac {
 
-constexpr uint32_t kDataPollTimeout =
-    OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT; ///< Timeout for receiving Data Frame (in msec).
-constexpr uint32_t kSleepDelay = 300;        ///< Max sleep delay when frame is pending (in msec).
-
 constexpr uint16_t kScanDurationDefault = OPENTHREAD_CONFIG_MAC_SCAN_DURATION; ///< Duration per channel (in msec).
-
-constexpr uint8_t kMaxCsmaBackoffsDirect   = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
-constexpr uint8_t kMaxCsmaBackoffsIndirect = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT;
-constexpr uint8_t kMaxCsmaBackoffsCsl      = 0;
-
-constexpr uint8_t kDefaultMaxFrameRetriesDirect   = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
-constexpr uint8_t kDefaultMaxFrameRetriesIndirect = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT;
-constexpr uint8_t kMaxFrameRetriesCsl             = 0;
-
-constexpr uint8_t kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST; ///< Num of times broadcast frame is tx.
 
 /**
  * Specifies the number of microseconds ahead of time that the MAC layer should deliver a CSL frame to the sub-MAC
  * layer.
  */
 constexpr uint16_t kCslRequestAhead = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US;
-
-constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
-
-constexpr uint32_t kDefaultWedListenInterval = OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL;
-constexpr uint32_t kDefaultWedListenDuration = OPENTHREAD_CONFIG_WED_LISTEN_DURATION;
 
 /**
  * Defines the function pointer which is called during an Energy Scan when the scan result for a channel is
@@ -737,7 +718,7 @@ public:
      * Sets the wake-up listen parameters.
      *
      * The listen interval must be greater than the listen duration.
-     * The listen duration must be greater or equal than `kMinWakeupListenDuration`.
+     * The listen duration must be greater or equal than `Radio::kMinWakeupListenDuration`.
      *
      * @param[in]  aInterval  The wake-up listen interval in microseconds.
      * @param[in]  aDuration  The wake-up listen duration in microseconds.
@@ -779,6 +760,22 @@ public:
 
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
+
+    static constexpr uint32_t kDataPollTimeout = OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT; // in msec.
+    static constexpr uint32_t kSleepDelay      = 300;                                     // in msec.
+
+    static constexpr uint8_t kMaxCsmaBackoffsDirect          = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
+    static constexpr uint8_t kMaxCsmaBackoffsIndirect        = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT;
+    static constexpr uint8_t kMaxCsmaBackoffsCsl             = 0;
+    static constexpr uint8_t kDefaultMaxFrameRetriesDirect   = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
+    static constexpr uint8_t kDefaultMaxFrameRetriesIndirect = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT;
+    static constexpr uint8_t kMaxFrameRetriesCsl             = 0;
+    static constexpr uint8_t kTxNumBcast                     = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST;
+
+    static constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
+
+    static constexpr uint32_t kDefaultWedListenInterval = OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL;
+    static constexpr uint32_t kDefaultWedListenDuration = OPENTHREAD_CONFIG_WED_LISTEN_DURATION;
 
     enum Operation : uint8_t
     {
