@@ -68,7 +68,7 @@ void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aD
 
         HandleWedTimer();
     }
-    else if (!RadioSupportsReceiveTiming())
+    else if (!RadioSupports(kCapReceiveTiming))
     {
         UpdateRadioSampleState();
     }
@@ -76,7 +76,7 @@ void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aD
 
 void SubMac::HandleWedTimer(void)
 {
-    if (RadioSupportsReceiveTiming())
+    if (RadioSupports(kCapReceiveTiming))
     {
         HandleWedReceiveAt();
     }

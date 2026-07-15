@@ -107,6 +107,9 @@ class SubMac : public InstanceLocator, private NonCopyable
     friend class LinkRaw;
 
 public:
+    using Capability   = Radio::Capability;   ///< A radio capability.
+    using Capabilities = Radio::Capabilities; ///< A bit-vector of radio capabilities.
+
     /**
      * Defines the callbacks notifying `SubMac` user of changes and events.
      */
@@ -200,16 +203,16 @@ public:
     /**
      * Gets the capabilities provided by platform radio.
      *
-     * @returns The capability bit vector (see `OT_RADIO_CAP_*` definitions).
+     * @returns The capability bit vector (see `Radio::Capability` definitions).
      */
-    otRadioCaps GetRadioCaps(void) const { return mRadioCaps; }
+    Capabilities GetRadioCaps(void) const { return mRadioCaps; }
 
     /**
      * Gets the capabilities provided by `SubMac` layer.
      *
-     * @returns The capability bit vector (see `OT_RADIO_CAP_*` definitions).
+     * @returns The capability bit vector (see `Radio::Capability` definitions).
      */
-    otRadioCaps GetCaps(void) const;
+    Capabilities GetCaps(void) const;
 
     /**
      * Sets the PAN ID.
@@ -512,6 +515,18 @@ private:
     static constexpr uint32_t kEnergyScanRssiSampleInterval = 1000; // RSSI sample interval for energy scan, in usec
 #endif
 
+    static constexpr Capability kCapAckTimeout         = Radio::kCapAckTimeout;
+    static constexpr Capability kCapEnergyScan         = Radio::kCapEnergyScan;
+    static constexpr Capability kCapTransmitRetries    = Radio::kCapTransmitRetries;
+    static constexpr Capability kCapCsmaBackoff        = Radio::kCapCsmaBackoff;
+    static constexpr Capability kCapSleepToTx          = Radio::kCapSleepToTx;
+    static constexpr Capability kCapTransmitSec        = Radio::kCapTransmitSec;
+    static constexpr Capability kCapTransmitTiming     = Radio::kCapTransmitTiming;
+    static constexpr Capability kCapReceiveTiming      = Radio::kCapReceiveTiming;
+    static constexpr Capability kCapRxOnWhenIdle       = Radio::kCapRxOnWhenIdle;
+    static constexpr Capability kCapTransmitFramePower = Radio::kCapTransmitFramePower;
+    static constexpr Capability kCapAltShortAddr       = Radio::kCapAltShortAddr;
+
     enum State : uint8_t
     {
         kStateDisabled,    // Radio is disabled.
@@ -551,27 +566,14 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     // CSL transmitter would schedule delayed transmission `kCslTransmitTimeAhead` earlier
     // than expected delayed transmit time. The value is in usec.
-    // Only for radios not supporting OT_RADIO_CAPS_TRANSMIT_TIMING.
+    // Only for radios not supporting kCapTransmitTiming.
     static constexpr uint32_t kCslTransmitTimeAhead = OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD;
 #endif
 
-    /**
-     * Initializes the states of the sub-MAC layer.
-     */
     void Init(void);
 
-    bool RadioSupportsCsmaBackoff(void) const
-    {
-        return ((mRadioCaps & (OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES)) != 0);
-    }
-
-    bool RadioSupportsTransmitSecurity(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) != 0); }
-    bool RadioSupportsRetries(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0); }
-    bool RadioSupportsAckTimeout(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0); }
-    bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
-    bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
-    bool RadioSupportsReceiveTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RECEIVE_TIMING) != 0); }
-    bool RadioSupportsRxOnWhenIdle(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RX_ON_WHEN_IDLE) != 0); }
+    bool RadioSupports(Capability aCapability) const { return (mRadioCaps & aCapability) != 0; }
+    bool RadioSupportsAny(Capabilities aCapabilities) const { return (mRadioCaps & aCapabilities) != 0; }
 
     bool ShouldHandleTransmitSecurity(void) const;
     bool ShouldHandleCsmaBackOff(void) const;
@@ -639,7 +641,7 @@ private:
     using SubMacTimer = TimerMilliIn<SubMac, &SubMac::HandleTimer>;
 #endif
 
-    otRadioCaps  mRadioCaps;
+    Capabilities mRadioCaps;
     State        mState;
     uint8_t      mCsmaBackoffs;
     uint8_t      mTransmitRetries;
