@@ -1839,7 +1839,7 @@ private:
         void     SetKeyId(uint32_t aKeySequence)
         {
             mKeySource = BigEndian::HostSwap32(aKeySequence);
-            mKeyIndex  = (aKeySequence & 0x7f) + 1;
+            mKeyIndex  = Mac::DetermineKeyIndexFor(aKeySequence);
         }
 
     private:

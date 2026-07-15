@@ -356,6 +356,8 @@ bool KeyMaterial::operator==(const KeyMaterial &aOther) const
 #endif
 }
 
+uint8_t DetermineKeyIndexFor(uint32_t aKeySequence) { return static_cast<uint8_t>((aKeySequence & 0x7f) + 1); }
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 uint8_t GetWakeupIdLength(WakeupId aWakeupId)
 {
