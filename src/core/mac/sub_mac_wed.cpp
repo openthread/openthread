@@ -74,8 +74,6 @@ void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aD
     }
 }
 
-void SubMac::HandleWedTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleWedTimer(); }
-
 void SubMac::HandleWedTimer(void)
 {
     if (RadioSupportsReceiveTiming())

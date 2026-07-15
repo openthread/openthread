@@ -613,16 +613,15 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void        CslInit(void);
-    void        RestartCslTimerAfterSyncUpdate(void);
-    void        UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
-    void        UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
-    static void HandleCslTimer(Timer &aTimer);
-    void        HandleCslTimer(void);
-    void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
-    uint32_t    GetNextCycleDrift(void);
-    uint32_t    GetLocalTime(void);
-    bool        IsCslEnabled(void) const { return mCslPeriod > 0; }
+    void     CslInit(void);
+    void     RestartCslTimerAfterSyncUpdate(void);
+    void     UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
+    void     UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
+    void     HandleCslTimer(void);
+    void     GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
+    uint32_t GetNextCycleDrift(void);
+    uint32_t GetLocalTime(void);
+    bool     IsCslEnabled(void) const { return mCslPeriod > 0; }
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
 #endif
@@ -632,18 +631,16 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    void        WedInit(void);
-    static void HandleWedTimer(Timer &aTimer);
-    void        HandleWedTimer(void);
-    void        HandleWedReceiveAt(void);
-    void        HandleWedReceiveOrSleep(void);
+    void WedInit(void);
+    void HandleWedTimer(void);
+    void HandleWedReceiveAt(void);
+    void HandleWedReceiveOrSleep(void);
 #endif
 
-    using SubMacTimer =
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-        TimerMicroIn<SubMac, &SubMac::HandleTimer>;
+    using SubMacTimer = TimerMicroIn<SubMac, &SubMac::HandleTimer>;
 #else
-        TimerMilliIn<SubMac, &SubMac::HandleTimer>;
+    using SubMacTimer = TimerMilliIn<SubMac, &SubMac::HandleTimer>;
 #endif
 
     otRadioCaps  mRadioCaps;
@@ -673,6 +670,8 @@ private:
     SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    using CslTimer = TimerMicroIn<SubMac, &SubMac::HandleCslTimer>;
+
     uint16_t mCslPeriod;                  // The CSL sample period, in units of 10 symbols (160 microseconds).
     uint8_t  mCslChannel : 7;             // The CSL sample channel.
     bool     mIsCslSampling : 1;          // Indicates that the current time is in CSL sample window
@@ -681,10 +680,12 @@ private:
     Radio::SyncedTime mCslSampleTime;     // The CSL sample time for current period.
     TimeMicro         mCslLastSync;       // The timestamp of the last successful CSL synchronization.
     CslAccuracy       mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
-    TimerMicro        mCslTimer;
+    CslTimer          mCslTimer;
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    using WedTimer = TimerMicroIn<SubMac, &SubMac::HandleWedTimer>;
+
     bool mIsWedSampling : 1;                 // Indicates that the current time is in WED's sample window
                                              // for platforms not supporting `Radio::ReceiveAt()`.
     bool              mIsWedEnabled : 1;     // Indicates if the WED is enabled.
@@ -692,7 +693,7 @@ private:
     uint32_t          mWakeupListenDuration; // The wake-up listen duration, in microseconds.
     uint8_t           mWakeupChannel;        // The wake-up sample channel.
     Radio::SyncedTime mWedSampleTime;        // The WED sample time of the current interval.
-    TimerMicro        mWedTimer;
+    WedTimer          mWedTimer;
 #endif
 };
 

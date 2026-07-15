@@ -144,8 +144,6 @@ exit:
     return;
 }
 
-void SubMac::HandleCslTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleCslTimer(); }
-
 void SubMac::HandleCslTimer(void)
 {
     uint32_t timeAhead, timeAfter;
