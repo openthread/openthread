@@ -190,11 +190,6 @@ bool otBleSecureIsCommandClassAuthorized(otInstance *aInstance, otTcatCommandCla
         static_cast<Ble::BleSecure::CommandClass>(aCommandClass));
 }
 
-otError otBleSecureSendMessage(otInstance *aInstance, otMessage *aMessage)
-{
-    return AsCoreType(aInstance).Get<Ble::BleSecure>().SendMessage(AsCoreType(aMessage));
-}
-
 otError otBleSecureSend(otInstance *aInstance, uint8_t *aBuf, uint16_t aLength)
 {
     return AsCoreType(aInstance).Get<Ble::BleSecure>().Send(aBuf, aLength);
