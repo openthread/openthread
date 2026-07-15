@@ -78,9 +78,8 @@ void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
     if (aAckFrame != nullptr && aFrame.Has<CslIe>())
     {
         mCslLastSync = TimeMicro(GetLocalTime());
+        RestartCslTimerAfterSyncUpdate();
     }
-
-    RestartCslTimerAfterSyncUpdate();
 }
 
 void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
@@ -99,9 +98,8 @@ void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
 #else
         mCslLastSync = TimeMicro(Radio::ConvertTime64To32(aFrame->GetTimestamp()));
 #endif
+        RestartCslTimerAfterSyncUpdate();
     }
-
-    RestartCslTimerAfterSyncUpdate();
 
 exit:
     return;
@@ -192,7 +190,8 @@ void SubMac::HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter)
 
     // Schedule reception window for any state except RX - so that CSL RX Window has lower priority
     // than scanning or RX after the data poll.
-    if ((mState != kStateDisabled) && (mState != kStateReceive))
+    if ((mState != kStateDisabled) && (mState != kStateReceive) &&
+        Radio::IsTimeStrictlyBefore(Get<Radio::Radio>().GetNowAsTime32(), winStart + winDuration))
     {
         IgnoreError(Get<Radio::Radio>().ReceiveAt(mCslChannel, winStart, winDuration));
     }
