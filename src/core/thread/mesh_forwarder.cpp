@@ -34,6 +34,9 @@
 #include "mesh_forwarder.hpp"
 
 #include "instance/instance.hpp"
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+#include "net/ip6_fragments.hpp"
+#endif
 #include "utils/static_counter.hpp"
 
 namespace ot {
@@ -42,7 +45,7 @@ RegisterLogModule("MeshForwarder");
 
 void MeshForwarder::Counters::UpdateOnTxDone(const Message &aMessage, bool aTxSuccess)
 {
-    if (aMessage.GetType() == Message::kTypeIp6)
+    if (aMessage.GetType() == Message::kTypeIp6 && aMessage.GetSubType() != Message::kSubTypeIp6Fragment)
     {
         aTxSuccess ? mTxSuccess++ : mTxFailure++;
     }
@@ -943,6 +946,20 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
     VerifyOrExit(aMessage.IsDirectTransmission());
 
     aMessage.ClearDirectTransmission();
+
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    if (aMessage.GetSubType() == Message::kSubTypeIp6Fragment)
+    {
+        if (aError != kErrorNone)
+        {
+            aMessage.SetTxSuccess(false);
+        }
+
+        Get<Ip6::Fragments>().HandleIpFragmentTxDone(aMessage, aError);
+        ExitNow();
+    }
+#endif
+
     aMessage.SetOffset(0);
 
     if (aError != kErrorNone)
