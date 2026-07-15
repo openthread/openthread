@@ -228,8 +228,13 @@ jobs:
         with:
           path: coverage/
           pattern: cov-*
-          merge-multiple: true
-      - name: Upload Coverage
-        continue-on-error: ${{ !(github.repository == 'openthread/openthread' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)) }}
+      - name: Combine Coverage
         run: |
-          script/test upload_codecov
+          script/test combine_coverage
+      - name: Upload Coverage
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: final.info
+          fail_ci_if_error: true
