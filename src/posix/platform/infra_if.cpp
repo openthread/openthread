@@ -41,6 +41,7 @@
 
 #include <errno.h>
 #include <ifaddrs.h>
+#include <net/if.h>
 #include <netdb.h>
 // clang-format off
 #include <netinet/in.h>
@@ -182,7 +183,13 @@ int InfraNetif::CreateIcmp6Socket(const char *aInfraIfName)
 #ifdef __linux__
     rval = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, aInfraIfName, strlen(aInfraIfName));
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
-    rval = setsockopt(sock, IPPROTO_IPV6, IPV6_BOUND_IF, aInfraIfName, strlen(aInfraIfName));
+    {
+        // IPV6_BOUND_IF takes an interface index, not a name.
+        unsigned int ifIndex = if_nametoindex(aInfraIfName);
+
+        VerifyOrDie(ifIndex != 0, OT_EXIT_INVALID_ARGUMENTS);
+        rval = setsockopt(sock, IPPROTO_IPV6, IPV6_BOUND_IF, &ifIndex, sizeof(ifIndex));
+    }
 #endif // __linux__
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
