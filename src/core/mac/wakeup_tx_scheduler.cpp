@@ -93,7 +93,7 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     radioTxDelay = mTxTimeUs - nowUs;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    frame = &aTxFrames.GetTxFrame(Mac::kRadioTypeIeee802154);
+    frame = &aTxFrames.GetTxFrame(Radio::kTypeIeee802154);
 #else
     frame = &aTxFrames.GetTxFrame();
 #endif

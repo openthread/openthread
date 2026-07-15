@@ -42,6 +42,7 @@
 #include "mac/mac_types.hpp"
 #include "mac/sub_mac.hpp"
 #include "radio/radio.hpp"
+#include "radio/radio_types.hpp"
 #include "radio/trel_link.hpp"
 
 namespace ot {
@@ -74,7 +75,7 @@ public:
      *
      * @returns A reference to the `TxFrame` for the given radio link type.
      */
-    TxFrame &GetTxFrame(RadioType aRadioType);
+    TxFrame &GetTxFrame(Radio::Type aRadioType);
 
     /**
      * Gets the `TxFrame` with the smallest MTU size among a given set of radio types.
@@ -86,7 +87,7 @@ public:
      *
      * @returns A reference to the `TxFrame` with the smallest MTU size among the set of @p aRadioTypes.
      */
-    TxFrame &GetTxFrame(RadioTypes aRadioTypes);
+    TxFrame &GetTxFrame(Radio::Types aRadioTypes);
 
     /**
      * Gets the `TxFrame` for sending a broadcast frame.
@@ -109,7 +110,7 @@ public:
      *
      * @returns The selected radio types.
      */
-    RadioTypes GetSelectedRadioTypes(void) const { return mSelectedRadioTypes; }
+    Radio::Types GetSelectedRadioTypes(void) const { return mSelectedRadioTypes; }
 
     /**
      * Gets the required radio types.
@@ -122,7 +123,7 @@ public:
      *
      * @returns The required radio types.
      */
-    RadioTypes GetRequiredRadioTypes(void) const { return mRequiredRadioTypes; }
+    Radio::Types GetRequiredRadioTypes(void) const { return mRequiredRadioTypes; }
 
     /**
      * Sets the required types.
@@ -131,7 +132,7 @@ public:
      *
      * @param[in] aRadioTypes   A set of radio link types.
      */
-    void SetRequiredRadioTypes(RadioTypes aRadioTypes) { mRequiredRadioTypes = aRadioTypes; }
+    void SetRequiredRadioTypes(Radio::Types aRadioTypes) { mRequiredRadioTypes = aRadioTypes; }
 
 #else // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
@@ -266,8 +267,8 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioTypes mSelectedRadioTypes;
-    RadioTypes mRequiredRadioTypes;
+    Radio::Types mSelectedRadioTypes;
+    Radio::Types mRequiredRadioTypes;
 #endif
 };
 
@@ -554,7 +555,7 @@ public:
      * @param[in] aFrame       A reference to a prepared frame.
      * @param[in] aRadioTypes  A set of radio types to send on.
      */
-    void Send(TxFrame &aFrame, RadioTypes aRadioTypes);
+    void Send(TxFrame &aFrame, Radio::Types aRadioTypes);
 
     /**
      * Gets the required radio types (`GetRequiredRadioTypes()`) from `TxFrames`.
@@ -565,7 +566,7 @@ public:
      *
      * @returns The required radio types.
      */
-    RadioTypes GetTxFramesRequiredRadioTypes(void) const { return mTxFrames.GetRequiredRadioTypes(); }
+    Radio::Types GetTxFramesRequiredRadioTypes(void) const { return mTxFrames.GetRequiredRadioTypes(); }
 
 #endif // !OPENTHREAD_CONFIG_MULTI_RADIO
 

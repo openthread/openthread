@@ -61,8 +61,8 @@ Link::Link(Instance &aInstance)
     mTxFrame.SetLength(0);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    mTxFrame.SetRadioType(Mac::kRadioTypeTrel);
-    mRxFrame.SetRadioType(Mac::kRadioTypeTrel);
+    mTxFrame.SetRadioType(Radio::kTypeTrel);
+    mRxFrame.SetRadioType(Radio::kTypeTrel);
 #endif
 
     mTimer.Start(kAckWaitWindow);
@@ -229,7 +229,7 @@ void Link::BeginTransmit(void)
         mRxFrame.mLength  = k154AckFrameSize;
         mRxFrame.mChannel = mTxFrame.GetChannel();
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        mRxFrame.mRadioType = Mac::kRadioTypeTrel;
+        mRxFrame.mRadioType = Radio::kTypeTrel;
 #endif
         mRxFrame.mInfo.mRxInfo.mTimestamp             = 0;
         mRxFrame.mInfo.mRxInfo.mRssi                  = Radio::kInvalidRssi;
@@ -380,7 +380,7 @@ void Link::ProcessReceivedPacket(Packet &aPacket, const Ip6::SockAddr &aSockAddr
     mRxFrame.mLength  = aPacket.GetPayloadLength();
     mRxFrame.mChannel = aPacket.GetHeader().GetChannel();
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    mRxFrame.mRadioType = Mac::kRadioTypeTrel;
+    mRxFrame.mRadioType = Radio::kTypeTrel;
 #endif
     mRxFrame.mInfo.mRxInfo.mTimestamp             = 0;
     mRxFrame.mInfo.mRxInfo.mRssi                  = kRxRssi;

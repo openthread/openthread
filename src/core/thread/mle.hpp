@@ -1741,7 +1741,7 @@ private:
     {
         Mac::PanId mPanId;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        Mac::RadioType mRadioType;
+        Radio::Type mRadioType;
 #endif
     };
 

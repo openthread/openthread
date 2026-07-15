@@ -259,7 +259,7 @@ private:
     const Neighbor &GetParent(void) const;
     void            HandlePollTimer(void) { IgnoreError(SendDataPoll()); }
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    Error GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
+    Error GetPollDestinationAddress(Mac::Address &aDest, Radio::Type &aRadioType) const;
 #else
     Error GetPollDestinationAddress(Mac::Address &aDest) const;
 #endif

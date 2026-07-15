@@ -828,7 +828,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 #if !OPENTHREAD_CONFIG_MULTI_RADIO
         ExitNow();
 #else
-        VerifyOrExit(aFrame.GetRadioType() != kRadioTypeIeee802154);
+        VerifyOrExit(aFrame.GetRadioType() != Radio::kTypeIeee802154);
 #endif
 #endif
 
@@ -1020,7 +1020,7 @@ void Mac::BeginTransmit(void)
         // copy the frame into correct `TxFrame` for each radio type
         // (if it is not already prepared).
 
-        for (RadioType radio : RadioTypes::kAllRadioTypes)
+        for (Radio::Type radio : Radio::Types::kAllTypes)
         {
             if (txFrames.GetSelectedRadioTypes().Contains(radio))
             {
@@ -1037,7 +1037,7 @@ void Mac::BeginTransmit(void)
         // process security for each radio type separately. This
         // allows radio links to handle security differently, e.g.,
         // with different keys or link frame counters.
-        for (RadioType radio : RadioTypes::kAllRadioTypes)
+        for (Radio::Type radio : Radio::Types::kAllTypes)
         {
             if (txFrames.GetSelectedRadioTypes().Contains(radio))
             {
@@ -1240,7 +1240,7 @@ Error Mac::ProcessTxDone(TxFrame &aFrame, RxFrame *aAckFrame, Error &aError)
     VerifyOrExit(!aFrame.IsEmpty());
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    VerifyOrExit(aFrame.GetRadioType() == kRadioTypeIeee802154);
+    VerifyOrExit(aFrame.GetRadioType() == Radio::kTypeIeee802154);
 #endif
     IgnoreError(aFrame.GetDstAddr(dstAddr));
 
@@ -1254,8 +1254,9 @@ Error Mac::ProcessTxDone(TxFrame &aFrame, RxFrame *aAckFrame, Error &aError)
         {
 #if OPENTHREAD_CONFIG_MULTI_RADIO
             {
-                RadioTypes radioTypes;
-                radioTypes.Add(kRadioTypeIeee802154);
+                Radio::Types radioTypes;
+
+                radioTypes.Add(Radio::kTypeIeee802154);
                 mLinks.Send(aFrame, radioTypes);
             }
 #else
@@ -1329,9 +1330,9 @@ Error Mac::ProcessMultiRadioTxDone(TxFrame &aFrame, Error &aError)
     // completed and updates `aError` with the overall transmission
     // result (`mTxError`).
 
-    Error      error = kErrorNone;
-    RadioType  radio;
-    RadioTypes requiredRadios;
+    Error        error = kErrorNone;
+    Radio::Type  radio;
+    Radio::Types requiredRadios;
 
     VerifyOrExit(!aFrame.IsEmpty());
 
@@ -1363,7 +1364,7 @@ Error Mac::ProcessMultiRadioTxDone(TxFrame &aFrame, Error &aError)
 
         if (requiredRadios.Contains(radio) && (aError != kErrorNone))
         {
-            LogDebgOnError(aError, "tx frame on required radio link %s", RadioTypeToString(radio));
+            LogDebgOnError(aError, "tx frame on required radio link %s", Radio::TypeToString(radio));
             mTxError = aError;
         }
     }
@@ -1678,7 +1679,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        if (aFrame.GetRadioType() == kRadioTypeIeee802154)
+        if (aFrame.GetRadioType() == Radio::kTypeIeee802154)
 #endif
         {
             if ((frameCounter + 1) > aNeighbor->GetLinkAckFrameCounter())
@@ -2127,7 +2128,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aFrame->GetRadioType() == kRadioTypeTrel)
+    if (aFrame->GetRadioType() == Radio::kTypeTrel)
 #endif
     {
         if (error == kErrorNone)
@@ -2329,7 +2330,7 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryC
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aFrame.GetRadioType() == kRadioTypeIeee802154)
+    if (aFrame.GetRadioType() == Radio::kTypeIeee802154)
 #endif
     {
         uint8_t maxAttempts = aFrame.GetMaxFrameRetries() + 1;
@@ -2345,7 +2346,7 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryC
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aFrame.GetRadioType() == kRadioTypeTrel)
+    if (aFrame.GetRadioType() == Radio::kTypeTrel)
 #endif
     {
         if (Get<Trel::Interface>().IsEnabled())

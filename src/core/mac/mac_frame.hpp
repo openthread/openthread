@@ -642,14 +642,14 @@ public:
      *
      * @returns Frame's radio link type.
      */
-    RadioType GetRadioType(void) const { return static_cast<RadioType>(mRadioType); }
+    Radio::Type GetRadioType(void) const { return static_cast<Radio::Type>(mRadioType); }
 
     /**
      * Sets the radio link type of the frame.
      *
      * @param[in] aRadioType  A radio link type.
      */
-    void SetRadioType(RadioType aRadioType) { mRadioType = static_cast<uint8_t>(aRadioType); }
+    void SetRadioType(Radio::Type aRadioType) { mRadioType = static_cast<uint8_t>(aRadioType); }
 #endif
 
     /**
