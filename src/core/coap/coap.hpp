@@ -802,12 +802,8 @@ protected:
     void SetResourceHandler(ResourceHandler aHandler) { mResourceHandler = aHandler; }
 
 private:
-    static constexpr uint16_t kMaxBlockSize = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    // Per RFC 7252, Section 5.10.6, the ETag Option value is an opaque
-    // sequence of 1-8 bytes.
-    static constexpr uint8_t kMaxEtagLength = 8;
-#endif
+    static constexpr uint16_t kMaxBlockSize  = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
+    static constexpr uint8_t  kMaxEtagLength = OT_COAP_MAX_ETAG_LENGTH;
 
     struct SendCallbacks
     {
@@ -826,12 +822,8 @@ private:
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         BlockwiseReceiveHook  mBlockwiseReceiveHook;
         BlockwiseTransmitHook mBlockwiseTransmitHook;
-        // ETag (RFC 7252, Section 5.10.6) of the first Block2 response in an
-        // ongoing block-wise transfer, remembered so later blocks can be
-        // compared against it per RFC 7959, Section 2.4. `mEtagLength == 0`
-        // means no ETag is being tracked for the transfer.
-        uint8_t mEtag[kMaxEtagLength];
-        uint8_t mEtagLength;
+        uint8_t               mEtag[kMaxEtagLength]; // To remember ETag value over a set of Block2 responses.
+        uint8_t               mEtagLength;
 #endif
     };
 
