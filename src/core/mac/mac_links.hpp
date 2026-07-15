@@ -395,17 +395,16 @@ public:
     /**
      * Registers a callback to provide received packet capture for IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     *                               or nullptr to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     * @param[in]  aCallback   The packet capture callback, or `nullptr` to disable packet capture.
+     * @param[in]  aContext    A pointer to application-specific context.
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
+    void SetPcapCallback(PcapCallback aCallback, void *aContext)
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        mSubMac.SetPcapCallback(aPcapCallback, aCallbackContext);
+        mSubMac.SetPcapCallback(aCallback, aContext);
 #endif
-        OT_UNUSED_VARIABLE(aPcapCallback);
-        OT_UNUSED_VARIABLE(aCallbackContext);
+        OT_UNUSED_VARIABLE(aCallback);
+        OT_UNUSED_VARIABLE(aContext);
     }
 
     /**

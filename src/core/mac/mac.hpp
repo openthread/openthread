@@ -437,16 +437,12 @@ public:
     bool IsInTransmitState(void) const;
 
     /**
-     * Registers a callback to provide received raw IEEE 802.15.4 frames.
+     * Registers a callback to provide received packet capture for IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     *                               or `nullptr` to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     * @param[in]  aCallback   The packet capture callback, or `nullptr` to disable packet capture.
+     * @param[in]  aContext    A pointer to application-specific context.
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
-    {
-        mLinks.SetPcapCallback(aPcapCallback, aCallbackContext);
-    }
+    void SetPcapCallback(PcapCallback aCallback, void *aContext) { mLinks.SetPcapCallback(aCallback, aContext); }
 
     /**
      * Indicates whether or not promiscuous mode is enabled at the link layer.
