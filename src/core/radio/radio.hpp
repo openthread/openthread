@@ -46,6 +46,7 @@
 #include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "mac/mac_frame.hpp"
+#include "radio/radio_frame.hpp"
 #include "radio/radio_types.hpp"
 
 namespace ot {

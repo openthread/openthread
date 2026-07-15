@@ -225,6 +225,7 @@ set(COMMON_SOURCES
     radio/ble_secure.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
+    radio/radio_frame.cpp
     radio/radio_platform.cpp
     radio/radio_types.cpp
     radio/trel_interface.cpp
@@ -341,6 +342,7 @@ set(RADIO_COMMON_SOURCES
     mac/sub_mac_wed.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
+    radio/radio_frame.cpp
     radio/radio_platform.cpp
     radio/radio_types.cpp
     thread/link_quality.cpp

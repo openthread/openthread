@@ -41,7 +41,6 @@
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "crypto/aes_ccm.hpp"
-#include "radio/trel_link.hpp"
 
 namespace ot {
 namespace Mac {
@@ -1112,57 +1111,6 @@ exit:
 #endif
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-uint16_t Frame::GetMtu(void) const
-{
-    uint16_t mtu = 0;
-
-    switch (GetRadioType())
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case Radio::kTypeIeee802154:
-        mtu = OT_RADIO_FRAME_MAX_SIZE;
-        break;
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case Radio::kTypeTrel:
-        mtu = Trel::Link::kMtuSize;
-        break;
-#endif
-    }
-
-    return mtu;
-}
-
-uint8_t Frame::GetFcsSize(void) const
-{
-    uint8_t fcsSize = 0;
-
-    switch (GetRadioType())
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case Radio::kTypeIeee802154:
-        fcsSize = k154FcsSize;
-        break;
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case Radio::kTypeTrel:
-        fcsSize = Trel::Link::kFcsSize;
-        break;
-#endif
-    }
-
-    return fcsSize;
-}
-
-#elif OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-uint16_t Frame::GetMtu(void) const { return Trel::Link::kMtuSize; }
-
-uint8_t Frame::GetFcsSize(void) const { return Trel::Link::kFcsSize; }
-#endif
 
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
