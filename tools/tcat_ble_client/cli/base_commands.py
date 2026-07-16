@@ -244,6 +244,27 @@ class DisconnectCommand(Command):
         return CommandResultNone()
 
 
+class SimulationBleDisconnectCommand(Command):
+
+    def get_help_string(self) -> str:
+        return 'Simulate a BLE link break to a simulated TCAT device (no Disconnect TLV, no TLS shutdown).'
+
+    async def execute_default(self, args, context) -> CommandResult:
+        ble_stream = context['ble_stream']
+        if not isinstance(ble_stream, UdpStream):
+            return CommandResultError('only available for a simulation connection (use \'simulation <id>\' first).')
+
+        print('Disconnecting simulated BLE link...')
+        # Signal the abrupt link break to the device, then drop local stream state without a TLS
+        # shutdown (no close-notify), mirroring a real abrupt disconnect on the client side too.
+        await ble_stream.simulation_ble_disconnect()
+        await ble_stream.disconnect()
+        context['ble_stream'] = None
+        context['ble_sstream'] = None
+        print('Done')
+        return CommandResultNone()
+
+
 class ExtractDatasetCommand(BleCommand):
 
     def get_log_string(self) -> str:
@@ -498,10 +519,34 @@ async def disconnect_helper(context: dict) -> None:
     bles = context['ble_stream']
     if bles is not None:
         logger.debug('Closing BLE connection.')
+        doing_disconn = True
         await bles.disconnect()
     context['ble_stream'] = None
     if doing_disconn:
         print('Done')
+
+
+async def connection_closed_helper(context: dict) -> bool:
+    """Formally tear down a TCAT link that was lost unexpectedly (e.g. the peer dropped BLE).
+
+    Unlike `disconnect_helper`, this sends no Disconnect TLV and performs no TLS close-notify,
+    because the link is already gone. Returns True if a connection was actually torn down.
+    """
+    if context['ble_sstream'] is None and context['ble_stream'] is None:
+        return False  # nothing to tear down (already disconnected)
+
+    print('TCAT Device disconnected: the BLE connection was closed unexpectedly.')
+
+    # Clear references first so this stays correct if both the receive loop and a command
+    # detect the closed link concurrently, then drop the (already dead) link without any
+    # over-the-link traffic.
+    bles = context['ble_stream']
+    context['ble_sstream'] = None
+    context['ble_stream'] = None
+    if bles is not None:
+        logger.debug('Closing BLE connection.')
+        await bles.disconnect()
+    return True
 
 
 class ScanCommand(Command):
