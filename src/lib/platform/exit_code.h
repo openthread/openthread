@@ -132,9 +132,13 @@ const char *otExitCodeToString(uint8_t aExitCode);
  *
  * @param[in]  aError  An error code to be evaluated against OT_ERROR_NONE.
  */
-#define SuccessOrDie(aError)             \
-    VerifyOrDie(aError == OT_ERROR_NONE, \
-                (aError == OT_ERROR_INVALID_ARGS ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE))
+#define SuccessOrDie(aError)                                                                                      \
+    do                                                                                                            \
+    {                                                                                                             \
+        otError _successOrDieError = (aError);                                                                    \
+        VerifyOrDie(_successOrDieError == OT_ERROR_NONE,                                                          \
+                    (_successOrDieError == OT_ERROR_INVALID_ARGS ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE)); \
+    } while (false)
 
 /**
  * Unconditionally both records exit status and terminates the program.
