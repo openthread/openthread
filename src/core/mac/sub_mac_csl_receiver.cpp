@@ -56,7 +56,7 @@ void SubMac::CslInit(void)
 void SubMac::RestartCslTimerAfterSyncUpdate(void)
 {
     // Only applies for the case where radio supports receive timing.
-    if (RadioSupportsReceiveTiming() && mCslTimer.IsRunning())
+    if (RadioSupports(kCapReceiveTiming) && mCslTimer.IsRunning())
     {
         uint32_t periodUs = mCslPeriod * Radio::kUsPerTenSymbols;
 
@@ -135,7 +135,7 @@ void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShor
 
         HandleCslTimer();
     }
-    else if (!RadioSupportsReceiveTiming())
+    else if (!RadioSupports(kCapReceiveTiming))
     {
         UpdateRadioSampleState();
     }
@@ -151,7 +151,7 @@ void SubMac::HandleCslTimer(void)
     GetCslWindowEdges(timeAhead, timeAfter);
 
     // The handler works in different ways when the radio supports receive-timing and doesn't.
-    if (RadioSupportsReceiveTiming())
+    if (RadioSupports(kCapReceiveTiming))
     {
         HandleCslReceiveAt(timeAhead, timeAfter);
     }

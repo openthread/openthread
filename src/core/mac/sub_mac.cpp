@@ -65,7 +65,7 @@ SubMac::SubMac(Instance &aInstance)
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && !OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
     // Assuming the platform must deal with the retransmission security correctly.
-    OT_ASSERT(mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES);
+    OT_ASSERT(RadioSupports(kCapTransmitRetries));
 #endif
     Init();
 }
@@ -105,53 +105,52 @@ void SubMac::Init(void)
 #endif
 }
 
-otRadioCaps SubMac::GetCaps(void) const
+SubMac::Capabilities SubMac::GetCaps(void) const
 {
-    otRadioCaps caps;
+    Capabilities caps;
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     caps = mRadioCaps;
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE
-    caps |= OT_RADIO_CAPS_ACK_TIMEOUT;
+    caps |= kCapAckTimeout;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE
-    caps |= OT_RADIO_CAPS_CSMA_BACKOFF;
+    caps |= kCapCsmaBackoff;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE
-    caps |= OT_RADIO_CAPS_TRANSMIT_RETRIES;
+    caps |= kCapTransmitRetries;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE
-    caps |= OT_RADIO_CAPS_ENERGY_SCAN;
+    caps |= kCapEnergyScan;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    caps |= OT_RADIO_CAPS_TRANSMIT_SEC;
+    caps |= kCapTransmitSec;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    caps |= OT_RADIO_CAPS_TRANSMIT_TIMING;
+    caps |= kCapTransmitTiming;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    caps |= OT_RADIO_CAPS_RECEIVE_TIMING;
+    caps |= kCapReceiveTiming;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE
-    caps |= OT_RADIO_CAPS_RX_ON_WHEN_IDLE;
+    caps |= kCapRxOnWhenIdle;
 #endif
 
 #if OPENTHREAD_RADIO
-    caps |= OT_RADIO_CAPS_SLEEP_TO_TX;
+    caps |= kCapSleepToTx;
 #endif
 
 #else
-    caps = OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES |
-           OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
-           OT_RADIO_CAPS_RECEIVE_TIMING | OT_RADIO_CAPS_RX_ON_WHEN_IDLE;
+    caps = kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec |
+           kCapTransmitTiming | kCapReceiveTiming | kCapRxOnWhenIdle;
 #endif
 
     return caps;
@@ -194,7 +193,7 @@ void SubMac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     mRxOnWhenIdle = aRxOnWhenIdle;
 
-    if (RadioSupportsRxOnWhenIdle())
+    if (RadioSupports(kCapRxOnWhenIdle))
     {
 #if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
         Get<Radio::Radio>().SetRxOnWhenIdle(mRxOnWhenIdle);
@@ -503,7 +502,7 @@ void SubMac::BeginTransmit(void)
     VerifyOrExit(mState == kStateCsmaBackoff);
 #endif
 
-    if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
+    if (!RadioSupports(kCapSleepToTx))
     {
         SuccessOrAssert(Get<Radio::Radio>().Receive(mTransmitFrame.GetChannel()));
     }
@@ -734,7 +733,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     VerifyOrExit(!mRadioFilterEnabled, HandleEnergyScanDone(Radio::kInvalidRssi));
 #endif
 
-    if (RadioSupportsEnergyScan())
+    if (RadioSupports(kCapEnergyScan))
     {
         IgnoreError(Get<Radio::Radio>().EnergyScan(aScanChannel, aScanDuration));
         SetState(kStateEnergyScan);
@@ -759,7 +758,7 @@ exit:
 
 void SubMac::SampleRssi(void)
 {
-    OT_ASSERT(!RadioSupportsEnergyScan());
+    OT_ASSERT(!RadioSupports(kCapEnergyScan));
 
     int8_t rssi = GetRssi();
 
@@ -825,7 +824,7 @@ bool SubMac::ShouldHandleTransmitSecurity(void) const
 {
     bool swTxSecurity = true;
 
-    VerifyOrExit(!RadioSupportsTransmitSecurity(), swTxSecurity = false);
+    VerifyOrExit(!RadioSupports(kCapTransmitSec), swTxSecurity = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
@@ -843,7 +842,8 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
 {
     bool swCsma = true;
 
-    VerifyOrExit(mTransmitFrame.IsCsmaCaEnabled() && !RadioSupportsCsmaBackoff(), swCsma = false);
+    VerifyOrExit(mTransmitFrame.IsCsmaCaEnabled(), swCsma = false);
+    VerifyOrExit(!RadioSupportsAny(kCapCsmaBackoff | kCapTransmitRetries), swCsma = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
@@ -861,7 +861,7 @@ bool SubMac::ShouldHandleAckTimeout(void) const
 {
     bool swAckTimeout = true;
 
-    VerifyOrExit(!RadioSupportsAckTimeout(), swAckTimeout = false);
+    VerifyOrExit(!RadioSupports(kCapAckTimeout), swAckTimeout = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
@@ -879,7 +879,7 @@ bool SubMac::ShouldHandleRetries(void) const
 {
     bool swRetries = true;
 
-    VerifyOrExit(!RadioSupportsRetries(), swRetries = false);
+    VerifyOrExit(!RadioSupports(kCapTransmitRetries), swRetries = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
@@ -897,7 +897,7 @@ bool SubMac::ShouldHandleEnergyScan(void) const
 {
     bool swEnergyScan = true;
 
-    VerifyOrExit(!RadioSupportsEnergyScan(), swEnergyScan = false);
+    VerifyOrExit(!RadioSupports(kCapEnergyScan), swEnergyScan = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
@@ -915,7 +915,7 @@ bool SubMac::ShouldHandleTransmitTargetTime(void) const
 {
     bool swTxDelay = true;
 
-    VerifyOrExit(!RadioSupportsTransmitTiming(), swTxDelay = false);
+    VerifyOrExit(!RadioSupports(kCapTransmitTiming), swTxDelay = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
@@ -929,7 +929,7 @@ exit:
     return swTxDelay;
 }
 
-bool SubMac::ShouldHandleTransitionToSleep(void) const { return (mRxOnWhenIdle || !RadioSupportsRxOnWhenIdle()); }
+bool SubMac::ShouldHandleTransitionToSleep(void) const { return (mRxOnWhenIdle || !RadioSupports(kCapRxOnWhenIdle)); }
 
 void SubMac::SetState(State aState)
 {
@@ -1041,7 +1041,7 @@ void SubMac::RadioSample(void)
 
     SetState(kStateRadioSample);
 
-    if (!RadioSupportsReceiveTiming())
+    if (!RadioSupports(kCapReceiveTiming))
     {
         UpdateRadioSampleState();
     }

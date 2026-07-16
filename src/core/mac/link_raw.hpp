@@ -94,7 +94,7 @@ public:
      *
      * @returns The radio capability bit vector.
      */
-    otRadioCaps GetCaps(void) const { return mSubMac.GetCaps(); }
+    Radio::Capabilities GetCaps(void) const { return mSubMac.GetCaps(); }
 
     /**
      * Starts a (recurring) Receive on the link-layer.
