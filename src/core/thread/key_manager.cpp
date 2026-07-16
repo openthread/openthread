@@ -340,20 +340,14 @@ void KeyManager::UpdateKeyMaterial(void)
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     {
-        Mac::KeyMaterial curKey;
-        Mac::KeyMaterial prevKey;
-        Mac::KeyMaterial nextKey;
+        HashKeys prevHashKeys;
+        HashKeys nextHashKeys;
 
-        curKey.SetFrom(hashKeys.GetMacKey(), Mac::kDefaultMacKeysExportable);
+        ComputeKeys(mKeySequence - 1, prevHashKeys);
+        ComputeKeys(mKeySequence + 1, nextHashKeys);
 
-        ComputeKeys(mKeySequence - 1, hashKeys);
-        prevKey.SetFrom(hashKeys.GetMacKey(), Mac::kDefaultMacKeysExportable);
-
-        ComputeKeys(mKeySequence + 1, hashKeys);
-        nextKey.SetFrom(hashKeys.GetMacKey(), Mac::kDefaultMacKeysExportable);
-
-        Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, Mac::DetermineKeyIndexFor(mKeySequence), prevKey, curKey,
-                                     nextKey);
+        Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, Mac::DetermineKeyIndexFor(mKeySequence),
+                                     prevHashKeys.GetMacKey(), hashKeys.GetMacKey(), nextHashKeys.GetMacKey());
     }
 #endif
 

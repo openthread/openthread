@@ -356,6 +356,24 @@ bool KeyMaterial::operator==(const KeyMaterial &aOther) const
 #endif
 }
 
+void KeyTrio::Clear(void)
+{
+    mKeyIndex = 0;
+
+    for (KeyMaterial &key : mKeys)
+    {
+        key.Clear();
+    }
+}
+
+void KeyTrio::Set(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey)
+{
+    mKeyIndex = aKeyIndex;
+    mKeys[kPrev].SetFrom(aPrevKey, kIsExportable);
+    mKeys[kCur].SetFrom(aCurKey, kIsExportable);
+    mKeys[kNext].SetFrom(aNextKey, kIsExportable);
+}
+
 uint8_t DetermineKeyIndexFor(uint32_t aKeySequence) { return static_cast<uint8_t>((aKeySequence & 0x7f) + 1); }
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

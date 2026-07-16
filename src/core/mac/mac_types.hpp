@@ -47,6 +47,7 @@
 #include "common/clearable.hpp"
 #include "common/data.hpp"
 #include "common/equatable.hpp"
+#include "common/non_copyable.hpp"
 #include "common/string.hpp"
 #include "crypto/storage.hpp"
 #include "radio/radio_types.hpp"
@@ -81,8 +82,6 @@ typedef otShortAddress ShortAddress;
 
 constexpr ShortAddress kShortAddrBroadcast = OT_RADIO_BROADCAST_SHORT_ADDR; ///< Broadcast Short Address.
 constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///< Invalid Short Address.
-constexpr bool         kDefaultMacKeysExportable =
-    OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE; ///< Default exportability policy for MAC key refs.
 
 /**
  * Represents the packet capture callback function pointer.
@@ -647,6 +646,57 @@ private:
 #endif
     Key &GetKey(void) { return static_cast<Key &>(mKeyMaterial.mKey); }
     void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
+};
+
+class SubMac;
+
+/**
+ * Represents a trio of MAC keys (previous, current, and next) and their associated key index.
+ */
+class KeyTrio : private NonCopyable
+{
+    friend class SubMac;
+
+public:
+    /**
+     * Represents the key type (previous, current, or next).
+     */
+    enum Type : uint8_t
+    {
+        kPrev, ///< Previous MAC key.
+        kCur,  ///< Current MAC key.
+        kNext, ///< Next MAC key.
+    };
+
+    /**
+     * Clears the stored keys and key index.
+     */
+    void Clear(void);
+
+    /**
+     * Gets a MAC key of a given type from the trio.
+     *
+     * @param[in] aType  The key type (`kPrev`, `kCur`, or `kNext`).
+     *
+     * @returns A reference to the requested MAC key.
+     */
+    const KeyMaterial &GetKey(Type aType) const { return mKeys[aType]; }
+
+    /**
+     * Gets the MAC key index.
+     *
+     * @returns The MAC key index.
+     */
+    uint8_t GetKeyIndex(void) const { return mKeyIndex; }
+
+private:
+    static constexpr bool    kIsExportable = OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE;
+    static constexpr uint8_t kNumTypes     = 3;
+
+    void Set(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
+
+    KeyMaterial mKeys[kNumTypes];
+    uint8_t     mKeyIndex;
 };
 
 /**

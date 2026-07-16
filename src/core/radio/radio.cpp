@@ -84,8 +84,8 @@ bool IsCslChannelValid(uint8_t aCslChannel)
 void Radio::Init(void)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    Mac::ExtAddress  allZeroExtAddress;
-    Mac::KeyMaterial emptyKeyMaterial;
+    Mac::ExtAddress allZeroExtAddress;
+    Mac::KeyTrio    emptyKeyTrio;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     SuccessOrAssert(ResetCsl());
@@ -105,8 +105,9 @@ void Radio::Init(void)
     allZeroExtAddress.Clear();
     SetExtendedAddress(allZeroExtAddress);
     SetShortAddress(Mac::kShortAddrInvalid);
-    emptyKeyMaterial.Clear();
-    SetMacKey(0, 0, emptyKeyMaterial, emptyKeyMaterial, emptyKeyMaterial);
+
+    emptyKeyTrio.Clear();
+    SetMacKey(Mac::Frame::kKeyIdMode1, emptyKeyTrio);
     SetMacFrameCounter(0);
 
     SetPromiscuous(false);

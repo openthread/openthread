@@ -182,7 +182,7 @@ const KeyMaterial *Links::GetCurrentMacKey(const Frame &aFrame) const
     if (radioType == Radio::kTypeIeee802154)
 #endif
     {
-        ExitNow(key = &Get<SubMac>().GetCurrentMacKey());
+        ExitNow(key = &Get<SubMac>().GetMacKey(KeyTrio::kCur));
     }
 #endif
 
@@ -218,11 +218,11 @@ const KeyMaterial *Links::GetTemporaryMacKey(const Frame &aFrame, uint32_t aKeyS
     {
         if (aKeySequence == Get<KeyManager>().GetCurrentKeySequence() - 1)
         {
-            ExitNow(key = &Get<SubMac>().GetPreviousMacKey());
+            ExitNow(key = &Get<SubMac>().GetMacKey(KeyTrio::kPrev));
         }
         else if (aKeySequence == Get<KeyManager>().GetCurrentKeySequence() + 1)
         {
-            ExitNow(key = &Get<SubMac>().GetNextMacKey());
+            ExitNow(key = &Get<SubMac>().GetMacKey(KeyTrio::kNext));
         }
         else
         {

@@ -89,12 +89,8 @@ void SubMac::Init(void)
     mRadioFilterEnabled = false;
 #endif
 
-    mPrevKey.Clear();
-    mCurrKey.Clear();
-    mNextKey.Clear();
-
+    mKeyTrio.Clear();
     mFrameCounter = 0;
-    mKeyIndex     = 0;
     mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -382,7 +378,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
-        mTransmitFrame.SetKeyIndex(mKeyIndex);
+        mTransmitFrame.SetKeyIndex(mKeyTrio.GetKeyIndex());
     }
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
@@ -398,14 +394,14 @@ void SubMac::ProcessTransmitSecurity(void)
         VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
     }
 
-    mTransmitFrame.SetAesKey(GetCurrentMacKey());
+    mTransmitFrame.SetAesKey(GetMacKey(KeyTrio::kCur));
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
         uint32_t frameCounter = GetFrameCounter();
 
         mTransmitFrame.SetFrameCounter(frameCounter);
-        SignalFrameCounterUsed(frameCounter, mKeyIndex);
+        SignalFrameCounterUsed(frameCounter, mKeyTrio.GetKeyIndex());
     }
 
     extAddress = &GetExtAddress();
@@ -940,22 +936,32 @@ void SubMac::SetState(State aState)
     }
 }
 
-void SubMac::SetMacKey(uint8_t            aKeyIdMode,
-                       uint8_t            aKeyIndex,
-                       const KeyMaterial &aPrevKey,
-                       const KeyMaterial &aCurrKey,
-                       const KeyMaterial &aNextKey)
+void SubMac::SetMacKey(uint8_t    aKeyIdMode,
+                       uint8_t    aKeyIndex,
+                       const Key &aPrevKey,
+                       const Key &aCurKey,
+                       const Key &aNextKey)
 {
+    const KeyTrio *radioKeys = nullptr;
+    KeyTrio        tempKeyTrio;
+
+    if (aKeyIdMode == Frame::kKeyIdMode1)
+    {
+        mKeyTrio.Set(aKeyIndex, aPrevKey, aCurKey, aNextKey);
+    }
+
+    VerifyOrExit(!ShouldHandleTransmitSecurity());
+
     switch (aKeyIdMode)
     {
     case Frame::kKeyIdMode0:
     case Frame::kKeyIdMode2:
+        tempKeyTrio.Set(aKeyIndex, aPrevKey, aCurKey, aNextKey);
+        radioKeys = &tempKeyTrio;
         break;
+
     case Frame::kKeyIdMode1:
-        mKeyIndex = aKeyIndex;
-        mPrevKey  = aPrevKey;
-        mCurrKey  = aCurrKey;
-        mNextKey  = aNextKey;
+        radioKeys = &mKeyTrio;
         break;
 
     default:
@@ -963,9 +969,8 @@ void SubMac::SetMacKey(uint8_t            aKeyIdMode,
         break;
     }
 
-    VerifyOrExit(!ShouldHandleTransmitSecurity());
-
-    Get<Radio::Radio>().SetMacKey(aKeyIdMode, aKeyIndex, aPrevKey, aCurrKey, aNextKey);
+    VerifyOrExit(radioKeys != nullptr);
+    Get<Radio::Radio>().SetMacKey(aKeyIdMode, *radioKeys);
 
 exit:
     return;
@@ -973,7 +978,7 @@ exit:
 
 void SubMac::SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyIndex)
 {
-    VerifyOrExit(aKeyIndex == mKeyIndex);
+    VerifyOrExit(aKeyIndex == mKeyTrio.GetKeyIndex());
 
     mCallbacks.FrameCounterUsed(aFrameCounter);
 
