@@ -207,12 +207,16 @@ public:
      */
     Capabilities GetRadioCaps(void) const { return mRadioCaps; }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * Gets the capabilities provided by `SubMac` layer.
      *
      * @returns The capability bit vector (see `Radio::Capability` definitions).
      */
     Capabilities GetCaps(void) const;
+#elif OPENTHREAD_RADIO
+    Capabilities GetCaps(void) const { return mRadioCaps | kSwEnabledCapabilities; }
+#endif
 
     /**
      * Sets the PAN ID.
@@ -506,6 +510,25 @@ private:
     static constexpr Capability kCapTransmitFramePower = Radio::kCapTransmitFramePower;
     static constexpr Capability kCapAltShortAddr       = Radio::kCapAltShortAddr;
 
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
+#define ConditionalCap(kCapability, kEnableConfig) ((kEnableConfig) ? kCapability : 0)
+
+    static constexpr Capabilities kSwEnabledCapabilities =
+        ConditionalCap(kCapAckTimeout, OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE) |
+        ConditionalCap(kCapEnergyScan, OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE) |
+        ConditionalCap(kCapTransmitRetries, OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE) |
+        ConditionalCap(kCapCsmaBackoff, OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE) |
+        ConditionalCap(kCapTransmitSec, OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE) |
+        ConditionalCap(kCapTransmitTiming, OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE) |
+        ConditionalCap(kCapReceiveTiming, OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE) |
+        ConditionalCap(kCapRxOnWhenIdle, OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE) |
+        ConditionalCap(kCapSleepToTx, OPENTHREAD_RADIO);
+
+#undef ConditionalCap
+
+#endif
+
     enum State : uint8_t
     {
         kStateDisabled,    // Radio is disabled.
@@ -552,14 +575,13 @@ private:
     void Init(void);
 
     bool RadioSupports(Capability aCapability) const { return (mRadioCaps & aCapability) != 0; }
-    bool RadioSupportsAny(Capabilities aCapabilities) const { return (mRadioCaps & aCapabilities) != 0; }
-
-    bool ShouldHandleTransmitSecurity(void) const;
+    bool ShouldHandle(Capability aCapability) const;
+    bool ShouldHandleTransmitSecurity(void) const { return ShouldHandle(kCapTransmitSec); }
+    bool ShouldHandleAckTimeout(void) const { return ShouldHandle(kCapAckTimeout); }
+    bool ShouldHandleRetries(void) const { return ShouldHandle(kCapTransmitRetries); }
+    bool ShouldHandleEnergyScan(void) const { return ShouldHandle(kCapEnergyScan); }
+    bool ShouldHandleTransmitTargetTime(void) const { return ShouldHandle(kCapTransmitTiming); }
     bool ShouldHandleCsmaBackOff(void) const;
-    bool ShouldHandleAckTimeout(void) const;
-    bool ShouldHandleRetries(void) const;
-    bool ShouldHandleEnergyScan(void) const;
-    bool ShouldHandleTransmitTargetTime(void) const;
     bool ShouldHandleTransitionToSleep(void) const;
 
     void ProcessTransmitSecurity(void);
