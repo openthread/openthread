@@ -352,7 +352,8 @@ void KeyManager::UpdateKeyMaterial(void)
         ComputeKeys(mKeySequence + 1, hashKeys);
         nextKey.SetFrom(hashKeys.GetMacKey(), Mac::kDefaultMacKeysExportable);
 
-        Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prevKey, curKey, nextKey);
+        Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, Mac::DetermineKeyIndexFor(mKeySequence), prevKey, curKey,
+                                     nextKey);
     }
 #endif
 

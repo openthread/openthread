@@ -845,7 +845,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         if (!aFrame.IsHeaderUpdated())
         {
             mLinks.SetMacFrameCounter(aFrame);
-            aFrame.SetKeyIndex((keyManager.GetCurrentKeySequence() & 0x7f) + 1);
+            aFrame.SetKeyIndex(DetermineKeyIndexFor(keyManager.GetCurrentKeySequence()));
         }
 #endif
         break;
@@ -1580,26 +1580,28 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         VerifyOrExit(aNeighbor != nullptr);
 
         IgnoreError(aFrame.GetKeyIndex(keyIndex));
-        keyIndex--;
+        keySequence = keyManager.GetCurrentKeySequence();
 
-        if (keyIndex == (keyManager.GetCurrentKeySequence() & 0x7f))
+        if (keyIndex == DetermineKeyIndexFor(keySequence))
         {
-            keySequence = keyManager.GetCurrentKeySequence();
-            macKey      = mLinks.GetCurrentMacKey(aFrame);
-        }
-        else if (keyIndex == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
-        {
-            keySequence = keyManager.GetCurrentKeySequence() - 1;
-            macKey      = mLinks.GetTemporaryMacKey(aFrame, keySequence);
-        }
-        else if (keyIndex == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
-        {
-            keySequence = keyManager.GetCurrentKeySequence() + 1;
-            macKey      = mLinks.GetTemporaryMacKey(aFrame, keySequence);
+            macKey = mLinks.GetCurrentMacKey(aFrame);
         }
         else
         {
-            ExitNow();
+            if (keyIndex == DetermineKeyIndexFor(keySequence - 1))
+            {
+                keySequence--;
+            }
+            else if (keyIndex == DetermineKeyIndexFor(keySequence + 1))
+            {
+                keySequence++;
+            }
+            else
+            {
+                ExitNow();
+            }
+
+            macKey = mLinks.GetTemporaryMacKey(aFrame, keySequence);
         }
 
         // If the frame is from a neighbor not in valid state (e.g., it is from a child being
@@ -1642,7 +1644,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
             IgnoreError(aFrame.GetKeyIndex(keyIndex));
             sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
-            VerifyOrExit(((sequence & 0x7f) + 1) == keyIndex, error = kErrorSecurity);
+            VerifyOrExit(DetermineKeyIndexFor(sequence) == keyIndex, error = kErrorSecurity);
 
             macKey     = (sequence == keyManager.GetCurrentKeySequence()) ? mLinks.GetCurrentMacKey(aFrame)
                                                                           : &keyManager.GetTemporaryMacKey(sequence);
@@ -1709,11 +1711,11 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     uint8_t            txKeyIndex;
     uint8_t            ackKeyIndex;
     uint8_t            keyIdMode;
+    uint32_t           keySequence;
     uint32_t           frameCounter;
     Address            srcAddr;
     Address            dstAddr;
-    Neighbor          *neighbor   = nullptr;
-    KeyManager        &keyManager = Get<KeyManager>();
+    Neighbor          *neighbor = nullptr;
     const KeyMaterial *macKey;
 
     VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
@@ -1758,18 +1760,17 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     }
 
     VerifyOrExit(srcAddr.IsExtended() && neighbor != nullptr);
+    keySequence = Get<KeyManager>().GetCurrentKeySequence();
 
-    ackKeyIndex--;
-
-    if (ackKeyIndex == (keyManager.GetCurrentKeySequence() & 0x7f))
+    if (ackKeyIndex == DetermineKeyIndexFor(keySequence))
     {
         macKey = &mLinks.GetSubMac().GetCurrentMacKey();
     }
-    else if (ackKeyIndex == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
+    else if (ackKeyIndex == DetermineKeyIndexFor(keySequence - 1))
     {
         macKey = &mLinks.GetSubMac().GetPreviousMacKey();
     }
-    else if (ackKeyIndex == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
+    else if (ackKeyIndex == DetermineKeyIndexFor(keySequence + 1))
     {
         macKey = &mLinks.GetSubMac().GetNextMacKey();
     }

@@ -650,6 +650,15 @@ private:
 };
 
 /**
+ * Determines the MAC Key Index for a given Key Sequence.
+ *
+ * @param[in] aKeySequence  The Key Sequence value.
+ *
+ * @returns The MAC Key Index corresponding to @p aKeySequence.
+ */
+uint8_t DetermineKeyIndexFor(uint32_t aKeySequence);
+
+/**
  * Represents Link Frame Counters for all supported radio links.
  */
 class LinkFrameCounters
