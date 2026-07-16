@@ -1155,10 +1155,39 @@ Error CoapBase::SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t a
     BlockInfo     msgBlockInfo;
     BlockInfo     requestBlockInfo;
     SendCallbacks callbacks;
+    uint8_t       etag[kMaxEtagLength];
+    uint8_t       etagLength = 0;
 
     SuccessOrExit(error = aRxMsg.mMessage.ReadBlockOptionValues(kOptionBlock2, msgBlockInfo));
 
     VerifyOrExit(msgBlockInfo.GetBlockSize() <= kMaxBlockSize, error = kErrorNoBufs);
+
+    // Look for an ETag Option (RFC 7252, Section 5.10.6) in this block response. A value
+    // longer than `kMaxEtagLength` is not valid per RFC 7252 and is treated as absent.
+    {
+        Option::Iterator etagIterator;
+
+        if ((etagIterator.Init(aRxMsg.mMessage, kOptionETag) == kErrorNone) && !etagIterator.IsDone() &&
+            (etagIterator.GetOption()->GetLength() <= kMaxEtagLength))
+        {
+            etagLength = static_cast<uint8_t>(etagIterator.GetOption()->GetLength());
+            SuccessOrExit(error = etagIterator.ReadOptionValue(etag));
+        }
+    }
+
+    if (msgBlockInfo.mBlockNumber != 0)
+    {
+        const SendCallbacks &oldCallbacks = aRequest.GetCallbacks();
+
+        // RFC 7959, Section 2.4: if an ETag Option is available, the client MUST compare it
+        // across the blocks being reassembled. Here we compare against the ETag remembered
+        // from the first block of this transfer. A mismatch means the resource was modified
+        // mid-transfer, so the transfer is aborted instead of assembling mismatched blocks.
+        VerifyOrExit(
+            (oldCallbacks.mEtagLength == 0) || (etagLength == 0) ||
+                ((etagLength == oldCallbacks.mEtagLength) && (memcmp(etag, oldCallbacks.mEtag, etagLength) == 0)),
+            error = kErrorAbort);
+    }
 
     offsetRange.InitFromMessageOffsetToEnd(aRxMsg.mMessage);
     VerifyOrExit(offsetRange.GetLength() <= msgBlockInfo.GetBlockSize(), error = kErrorNoBufs);
@@ -1194,6 +1223,17 @@ Error CoapBase::SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t a
 
     callbacks                        = aRequest.GetCallbacks();
     callbacks.mBlockwiseTransmitHook = nullptr;
+
+    if (msgBlockInfo.mBlockNumber == 0)
+    {
+        // Remember the ETag of the first block so it can be compared against in
+        // subsequent blocks of this same transfer (see check above).
+        callbacks.mEtagLength = etagLength;
+        if (etagLength != 0)
+        {
+            memcpy(callbacks.mEtag, etag, etagLength);
+        }
+    }
 
     SuccessOrExit(error = SendMessage(*request, aRxMsg.mMessageInfo, /* aTxParameters */ nullptr, callbacks));
 
@@ -1430,6 +1470,7 @@ void CoapBase::SendCallbacks::Clear(void)
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     mBlockwiseReceiveHook  = nullptr;
     mBlockwiseTransmitHook = nullptr;
+    mEtagLength            = 0;
 #endif
 }
 
