@@ -44,16 +44,6 @@
  */
 
 /**
- * @def OPENTHREAD_CONFIG_MESH_MONITOR_ENABLE
- *
- * @brief Define to 1 to enable Mesh Monitor support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MESH_MONITOR_ENABLE
-#define OPENTHREAD_CONFIG_MESH_MONITOR_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_MESH_MONITOR_CLIENT_ENABLE
  *
  * @brief Define to 1 to enable Mesh Monitor client support.
@@ -79,24 +69,24 @@
  * If the number of cache buffers used for the monitor cache exceeds this
  * value an update message will be sent irrespective of current timer state.
  *
- * @Note This does not prevent the cache from growing further. The monitor
- * cache will be evicted irrespective of its size when more message buffers are
- * needed elsewhere.
+ * @Note `OPENTHREAD_CONFIG_MESH_MONITOR_CACHE_BUFFERS_LIMIT` does not refer to a strict limit preventing the cache from
+ * growing further. The monitor cache will be evicted irrespective of its size when more message buffers are needed
+ * elsewhere.
  */
 #ifndef OPENTHREAD_CONFIG_MESH_MONITOR_CACHE_BUFFERS_LIMIT
 #define OPENTHREAD_CONFIG_MESH_MONITOR_CACHE_BUFFERS_LIMIT 4
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MESH_MONITOR_REGISTRATION_INTERVAL
+ * @def OPENTHREAD_CONFIG_MESH_MONITOR_REGISTRATION_INTERVAL_MAX
  *
  * The maximum allowed time between registration requests from clients needed
  * to keep servers active.
  *
  * In milliseconds.
  */
-#ifndef OPENTHREAD_CONFIG_MESH_MONITOR_REGISTRATION_INTERVAL
-#define OPENTHREAD_CONFIG_MESH_MONITOR_REGISTRATION_INTERVAL (1000 * 60 * 10)
+#ifndef OPENTHREAD_CONFIG_MESH_MONITOR_REGISTRATION_INTERVAL_MAX
+#define OPENTHREAD_CONFIG_MESH_MONITOR_REGISTRATION_INTERVAL_MAX (1000 * 60 * 10)
 #endif
 
 /**

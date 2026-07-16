@@ -47,6 +47,18 @@ extern "C" {
 /**
  * @addtogroup api-thread-general
  *
+ * @brief
+ *   This module includes functions for Mesh Monitor.
+ *
+ *   The server functions are not explicitly marked and are available when the Mesh Monitor
+ *   `OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE` is enabled. Client functions are explicitly marked to require
+ *   `OPENTHREAD_CONFIG_MESH_MONITOR_CLIENT_ENABLE` enabled.
+ *   Mesh Monitor is a protocol for collecting and reporting Thread network information. It allows a client to
+ *   request Mesh Monitoring data from a server about the server's state and its children's states. The client can
+ *   register with the server to be notified about changes of the requested Mesh Monitoring data. The information is
+ *   organized in TLVs (Type-Length-Value) and can include details about the devices, their connectivity, and other
+ *   network parameters.
+ *
  * @{
  */
 
@@ -75,24 +87,24 @@ typedef enum otMeshMonUpdateMode
 #define OT_MESH_MON_TLV_TIMEOUT 2U                      ///< Timeout TLV
 #define OT_MESH_MON_TLV_LAST_HEARD 3U                   ///< Last Heard TLV
 #define OT_MESH_MON_TLV_CONNECTION_TIME 4U              ///< Connection Time TLV
-#define OT_MESH_MON_TLV_CSL 5U                          ///< CSL TLV
+#define OT_MESH_MON_TLV_CSL 5U                          ///< CSL Configuration TLV
 #define OT_MESH_MON_TLV_ROUTE64 6U                      ///< Route64 TLV
 #define OT_MESH_MON_TLV_LINK_MARGIN_IN 7U               ///< Link Margin In TLV
-#define OT_MESH_MON_TLV_MAC_LINK_ERROR_RATES_TX 8U      ///< Mac Link Error Rates Tx TLV
+#define OT_MESH_MON_TLV_MAC_LINK_ERROR_RATES_TX 8U      ///< MAC Link Error Rates Tx TLV
 #define OT_MESH_MON_TLV_MLEID 9U                        ///< ML-EID TLV
-#define OT_MESH_MON_TLV_IP6_ADDRESS_LIST 10U            ///< Ip6 Address List TLV
+#define OT_MESH_MON_TLV_IP6_ADDRESS_LIST 10U            ///< IPv6 Address List TLV
 #define OT_MESH_MON_TLV_ALOC_LIST 11U                   ///< ALOC List TLV
-#define OT_MESH_MON_TLV_THREAD_SPEC_VERSION 12U         ///< Thread Spec Version TLV
+#define OT_MESH_MON_TLV_THREAD_SPEC_VERSION 12U         ///< Thread Specification Version TLV
 #define OT_MESH_MON_TLV_THREAD_STACK_VERSION 13U        ///< Thread Stack Version TLV
 #define OT_MESH_MON_TLV_VENDOR_NAME 14U                 ///< Vendor Name TLV
 #define OT_MESH_MON_TLV_VENDOR_MODEL 15U                ///< Vendor Model TLV
 #define OT_MESH_MON_TLV_VENDOR_SW_VERSION 16U           ///< Vendor Software Version TLV
 #define OT_MESH_MON_TLV_VENDOR_APP_URL 17U              ///< Vendor App URL TLV
-#define OT_MESH_MON_TLV_IP6_LINK_LOCAL_ADDRESS_LIST 18U ///< Ip6 Link Local Address List TLV
-#define OT_MESH_MON_TLV_EUI64 19U                       ///< EUI64 TLV
-#define OT_MESH_MON_TLV_MAC_COUNTERS 20U                ///< Mac Counters TLV
-#define OT_MESH_MON_TLV_MAC_LINK_ERROR_RATES_RX 21U     ///< Mac Link Error Rates Rx TLV
-#define OT_MESH_MON_TLV_MLE_COUNTERS 22U                ///< Mle Counters TLV
+#define OT_MESH_MON_TLV_IP6_LINK_LOCAL_ADDRESS_LIST 18U ///< IPv6 Link-Local Address List TLV
+#define OT_MESH_MON_TLV_EUI64 19U                       ///< EUI-64 TLV
+#define OT_MESH_MON_TLV_MAC_COUNTERS 20U                ///< MAC Counters TLV
+#define OT_MESH_MON_TLV_MAC_LINK_ERROR_RATES_RX 21U     ///< MAC Link Error Rates Rx TLV
+#define OT_MESH_MON_TLV_MLE_COUNTERS 22U                ///< MLE Counters TLV
 #define OT_MESH_MON_TLV_LINK_MARGIN_OUT 23U             ///< Link Margin Out TLV
 
 #define OT_MESH_MON_DATA_TLV_MAX 23U ///< The highest known tlv value that can be requested using a request set.
@@ -184,14 +196,14 @@ typedef struct otMeshMonAlocIterator
 /**
  * Represents a Link Margin TLV value.
  *
- * - `OT_MESH_MON_TLV_LINK_MARGIN_IN` reports the quality of frames received by
+ * - `OT_MESH_MON_TLV_LINK_MARGIN_IN` reports the link margin of frames received by
  *   this device from its peer.
- * - `OT_MESH_MON_TLV_LINK_MARGIN_OUT` reports the quality of frames transmitted
+ * - `OT_MESH_MON_TLV_LINK_MARGIN_OUT` reports the link margin of frames transmitted
  *   by this device to its peer, as observed by the peer.
  */
 typedef struct otMeshMonLinkMargin
 {
-    uint8_t mLinkMargin;  ///< Link margin in dB
+    uint8_t mLinkMargin;  ///< Average Link margin in dB
     int8_t  mAverageRssi; ///< Average RSSI in dBm
     int8_t  mLastRssi;    ///< Last RSSI in dBm
 } otMeshMonLinkMargin;
@@ -385,6 +397,8 @@ void otMeshMonStopClient(otInstance *aInstance);
 /**
  * Checks if a specific TLV type is set in the Mesh Monitor TLV set.
  *
+ * Requires `OPENTHREAD_CONFIG_MESH_MONITOR_CLIENT_ENABLE`.
+ *
  * @param[in] aTlvSet  A pointer to the Mesh Monitor TLV set to query.
  *                     Must not be a null pointer.
  * @param[in] aTlv     The TLV type identifier to check for in the set.
@@ -411,6 +425,8 @@ otError otMeshMonSetTlv(otMeshMonTlvSet *aTlvSet, uint8_t aTlv);
 
 /**
  * Clears a specific TLV from the Mesh Monitor TLV set.
+ *
+ * Requires `OPENTHREAD_CONFIG_MESH_MONITOR_CLIENT_ENABLE`.
  *
  * @param[in,out] aTlvSet  A pointer to the Mesh Monitor TLV set to modify.
  *                         If NULL, the function returns without performing any operation.
