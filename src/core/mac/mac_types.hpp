@@ -85,6 +85,11 @@ constexpr bool         kDefaultMacKeysExportable =
     OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE; ///< Default exportability policy for MAC key refs.
 
 /**
+ * Represents the packet capture callback function pointer.
+ */
+typedef otLinkPcapCallback PcapCallback;
+
+/**
  * Represents the wake-up identifier.
  */
 typedef otWakeupId WakeupId;

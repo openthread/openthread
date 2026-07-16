@@ -263,14 +263,10 @@ public:
     /**
      * Registers a callback to provide received packet capture for IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     *                               or `nullptr` to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     * @param[in]  aCallback   The packet capture callback, or `nullptr` to disable packet capture.
+     * @param[in]  aContext    A pointer to application-specific context.
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
-    {
-        mPcapCallback.Set(aPcapCallback, aCallbackContext);
-    }
+    void SetPcapCallback(PcapCallback aCallback, void *aContext) { mPcapCallback.Set(aCallback, aContext); }
 
     /**
      * Indicates whether radio should stay in Receive or Sleep during idle periods.
@@ -654,16 +650,16 @@ private:
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     bool mRadioFilterEnabled : 1;
 #endif
-    int8_t                       mEnergyScanMaxRssi;
-    TimeMilli                    mEnergyScanEndTime;
-    TxFrame                     &mTransmitFrame;
-    Callbacks                    mCallbacks;
-    Callback<otLinkPcapCallback> mPcapCallback;
-    KeyMaterial                  mPrevKey;
-    KeyMaterial                  mCurrKey;
-    KeyMaterial                  mNextKey;
-    uint32_t                     mFrameCounter;
-    uint8_t                      mKeyIndex;
+    int8_t                 mEnergyScanMaxRssi;
+    TimeMilli              mEnergyScanEndTime;
+    TxFrame               &mTransmitFrame;
+    Callbacks              mCallbacks;
+    Callback<PcapCallback> mPcapCallback;
+    KeyMaterial            mPrevKey;
+    KeyMaterial            mCurrKey;
+    KeyMaterial            mNextKey;
+    uint32_t               mFrameCounter;
+    uint8_t                mKeyIndex;
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     uint8_t mRetxDelayBackOffExponent;
 #endif
