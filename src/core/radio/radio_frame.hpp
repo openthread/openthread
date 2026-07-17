@@ -194,6 +194,32 @@ public:
     bool IsAckedWithFramePending(void) const { return AsFrame().mInfo.mRxInfo.mAckedWithFramePending; }
 
     /**
+     * Indicates whether or not the frame was acknowledged with a secured Enh-ACK.
+     *
+     * @retval TRUE   The frame was acknowledged with a secured Enh-ACK.
+     * @retval FALSE  The frame was not acknowledged with a secured Enh-ACK.
+     */
+    bool IsAckedWithSecEnhAck(void) const { return AsFrame().mInfo.mRxInfo.mAckedWithSecEnhAck; }
+
+    /**
+     * Returns the frame counter from the received secured Enh-ACK.
+     *
+     * Only applicable when `IsAckedWithSecEnhAck()` is true.
+     *
+     * @returns The secured Enh-ACK frame counter.
+     */
+    uint32_t GetAckFrameCounter(void) const { return AsFrame().mInfo.mRxInfo.mAckFrameCounter; }
+
+    /**
+     * Returns the key index from the received secured Enh-ACK.
+     *
+     * Only applicable when `IsAckedWithSecEnhAck()` is true.
+     *
+     * @returns The secured Enh-ACK key index.
+     */
+    uint8_t GetAckKeyIndex(void) const { return AsFrame().mInfo.mRxInfo.mAckKeyId; }
+
+    /**
      * Returns the timestamp when the frame was received.
      *
      * The value SHALL be the time of the local radio clock in
@@ -422,7 +448,6 @@ public:
     void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { AsFrame().mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
      * Gets the TX delay field for the frame.
      *
@@ -450,7 +475,6 @@ public:
      * @param[in]    aTxDelayBaseTime    The delay base time for the TX frame.
      */
     void SetTxDelayBaseTime(Time32 aTxDelayBaseTime) { AsFrame().mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
-#endif
 
 private:
     Frame       &AsFrame(void) { return *static_cast<TxFrameType *>(this); }

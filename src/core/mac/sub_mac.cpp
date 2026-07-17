@@ -304,9 +304,9 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
         mPcapCallback.Invoke(aFrame, false);
     }
 
-    if (!ShouldHandleTransmitSecurity() && aFrame != nullptr && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+    if (!ShouldHandleTransmitSecurity() && aFrame != nullptr && aFrame->IsAckedWithSecEnhAck())
     {
-        SignalFrameCounterUsed(aFrame->mInfo.mRxInfo.mAckFrameCounter, aFrame->mInfo.mRxInfo.mAckKeyId);
+        SignalFrameCounterUsed(aFrame->GetAckFrameCounter(), aFrame->GetAckKeyIndex());
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -438,7 +438,7 @@ void SubMac::StartCsmaBackoff(void)
             Radio::Time32 radioNow    = Get<Radio::Radio>().GetNowAsTime32();
             Radio::Time32 txStartTime = mTransmitFrame.GetTxDelayBaseTime();
 
-            txStartTime += (mTransmitFrame.mInfo.mTxInfo.mTxDelay - kAheadTime);
+            txStartTime += (mTransmitFrame.GetTxDelay() - kAheadTime);
 
             if (Radio::IsTimeStrictlyBefore(radioNow, txStartTime))
             {
@@ -511,11 +511,11 @@ void SubMac::BeginTransmit(void)
 
     error = Get<Radio::Radio>().Transmit(mTransmitFrame);
 
-    if (error == kErrorInvalidState && mTransmitFrame.mInfo.mTxInfo.mTxDelay > 0)
+    if (error == kErrorInvalidState && mTransmitFrame.GetTxDelay() > 0)
     {
         // Platform `transmit_at` fails and we send the frame directly.
-        mTransmitFrame.mInfo.mTxInfo.mTxDelay         = 0;
-        mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime = 0;
+        mTransmitFrame.SetTxDelay(0);
+        mTransmitFrame.SetTxDelayBaseTime(0);
 
         error = Get<Radio::Radio>().Transmit(mTransmitFrame);
     }

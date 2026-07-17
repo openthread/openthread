@@ -110,7 +110,7 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     if (instance.Get<Radio::Radio>().GetDiagMode())
     {
 #if OPENTHREAD_RADIO
-        uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;
+        uint8_t channel = txFrame.GetRxChannelAfterTxDone();
 
         if (channel != aFrame->mChannel)
         {
@@ -171,7 +171,7 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
 {
     Mac::TxFrame &txFrame = *static_cast<Mac::TxFrame *>(aFrame);
 #if OPENTHREAD_RADIO
-    uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;
+    uint8_t channel = txFrame.GetRxChannelAfterTxDone();
 
     if (channel != aFrame->mChannel)
     {

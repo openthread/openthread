@@ -92,7 +92,7 @@ void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
 #endif
 
     // Assuming the risk of the parent missing the Enh-ACK in favor of smaller CSL receive window
-    if ((mCslPeriod > 0) && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+    if ((mCslPeriod > 0) && aFrame->IsAckedWithSecEnhAck())
     {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
         mCslLastSync = TimerMicro::GetNow();
