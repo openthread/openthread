@@ -37,6 +37,7 @@
 
 #include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -374,7 +375,59 @@ void KeyTrio::Set(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, co
     mKeys[kNext].SetFrom(aNextKey, kIsExportable);
 }
 
+const KeyMaterial &KeyTrio::SelectKey(uint8_t aKeyIndex) const
+{
+    const KeyMaterial *key = &GetKey(kCur);
+
+    if (aKeyIndex == mKeyIndex)
+    {
+        ExitNow();
+    }
+
+    VerifyOrExit(IsValueInRange(mKeyIndex, kMinKeyIndex, kMaxKeyIndex));
+
+    if (aKeyIndex == DeterminePrevKeyIndex(mKeyIndex))
+    {
+        key = &GetKey(kPrev);
+    }
+    else if (aKeyIndex == DetermineNextKeyIndex(mKeyIndex))
+    {
+        key = &GetKey(kNext);
+    }
+
+exit:
+    return *key;
+}
+
 uint8_t DetermineKeyIndexFor(uint32_t aKeySequence) { return static_cast<uint8_t>((aKeySequence & 0x7f) + 1); }
+
+uint8_t DetermineNextKeyIndex(uint8_t aKeyIndex)
+{
+    uint8_t nextIndex = aKeyIndex;
+
+    nextIndex++;
+
+    if (nextIndex > kMaxKeyIndex)
+    {
+        nextIndex = kMinKeyIndex;
+    }
+
+    return nextIndex;
+}
+
+uint8_t DeterminePrevKeyIndex(uint8_t aKeyIndex)
+{
+    uint8_t prevIndex = aKeyIndex;
+
+    prevIndex--;
+
+    if (prevIndex < kMinKeyIndex)
+    {
+        prevIndex = kMaxKeyIndex;
+    }
+
+    return prevIndex;
+}
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 uint8_t GetWakeupIdLength(WakeupId aWakeupId)
