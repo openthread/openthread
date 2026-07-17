@@ -88,6 +88,8 @@ Mle::Mle(Instance &aInstance)
     , mChildRouterLinks(kChildRouterLinks)
     , mAlternateRloc16Timeout(0)
     , mLeaderUpgradeThreshold(kRouterUpgradeThreshold)
+    , mChildUpdateRestoreRetryTimeout(0)
+    , mChildUpdateRestoreRetryInterval(0)
     , mParentPriority(kParentPriorityUnspecified)
     , mPreviousPartitionIdRouter(0)
     , mPreviousPartitionId(0)
@@ -3194,6 +3196,35 @@ void Mle::DelayedSender::RemoveScheduledParentResponses(void)
     RemoveMatchingSchedules(kTypeParentResponse, destination);
 }
 
+void Mle::DelayedSender::ScheduleChildUpdateRequestToChild(const Child &aChild, uint32_t aDelay)
+{
+    Ip6::Address destination;
+    uint16_t     childRloc16;
+
+    destination.InitAsLinkLocalAddress(aChild.GetExtAddress());
+    RemoveMatchingSchedules(kTypeChildUpdateRequestOfChild, destination);
+
+    childRloc16 = aChild.GetRloc16();
+    AddSchedule(kTypeChildUpdateRequestOfChild, destination, aDelay, &childRloc16, sizeof(uint16_t));
+}
+
+bool Mle::DelayedSender::HasAnyScheduledChildUpdateRequestToChild(const Child &aChild) const
+{
+    Ip6::Address destination;
+
+    destination.InitAsLinkLocalAddress(aChild.GetExtAddress());
+
+    return HasMatchingSchedule(kTypeChildUpdateRequestOfChild, destination);
+}
+
+void Mle::DelayedSender::RemoveScheduledChildUpdateRequestToChild(const Child &aChild)
+{
+    Ip6::Address destination;
+
+    destination.InitAsLinkLocalAddress(aChild.GetExtAddress());
+    RemoveMatchingSchedules(kTypeChildUpdateRequestOfChild, destination);
+}
+
 void Mle::DelayedSender::ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay)
 {
     VerifyOrExit(!HasMatchingSchedule(kTypeAdvertisement, aDestination));
@@ -3356,6 +3387,22 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
 
         IgnoreError(aSchedule.Read(sizeof(Header), info));
         Get<Mle>().SendParentResponse(info);
+        break;
+    }
+
+    case kTypeChildUpdateRequestOfChild:
+    {
+        uint16_t rloc16;
+        Child   *child;
+
+        IgnoreError(aSchedule.Read(sizeof(Header), rloc16));
+        child = Get<ChildTable>().FindChild(rloc16, Child::kInStateValidOrRestoring);
+
+        if (child != nullptr)
+        {
+            IgnoreError(Get<Mle>().SendChildUpdateRequestToChild(*child));
+        }
+
         break;
     }
 
