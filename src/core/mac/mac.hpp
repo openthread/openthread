@@ -819,6 +819,8 @@ private:
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     Error ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
 #endif
+    const KeyMaterial *DetermineMode1Key(const Frame &aFrame) const;
+    const KeyMaterial *DetermineMode1KeyAndSequence(const Frame &aFrame, uint32_t &aKeySequence) const;
 
     void     UpdateIdleMode(void);
     bool     IsPending(Operation aOperation) const { return mPendingOperations & (1U << aOperation); }
