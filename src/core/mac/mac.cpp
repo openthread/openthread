@@ -1764,15 +1764,15 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     if (ackKeyIndex == DetermineKeyIndexFor(keySequence))
     {
-        macKey = &mLinks.GetSubMac().GetCurrentMacKey();
+        macKey = &mLinks.GetSubMac().GetMacKey(KeyTrio::kCur);
     }
     else if (ackKeyIndex == DetermineKeyIndexFor(keySequence - 1))
     {
-        macKey = &mLinks.GetSubMac().GetPreviousMacKey();
+        macKey = &mLinks.GetSubMac().GetMacKey(KeyTrio::kPrev);
     }
     else if (ackKeyIndex == DetermineKeyIndexFor(keySequence + 1))
     {
-        macKey = &mLinks.GetSubMac().GetNextMacKey();
+        macKey = &mLinks.GetSubMac().GetMacKey(KeyTrio::kNext);
     }
     else
     {

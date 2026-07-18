@@ -403,50 +403,29 @@ public:
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
+     * Gets a MAC key of a given type from `SubMac`.
+     *
+     * @param[in] aType  The key type (`KeyTrio::kPrev`, `KeyTrio::kCur`, or `KeyTrio::kNext`).
+     *
+     * @returns A reference to the requested MAC key.
+     */
+    const KeyMaterial &GetMacKey(KeyTrio::Type aType) const { return mKeyTrio.GetKey(aType); }
+
+    /**
      * Sets MAC keys and key index.
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
-     * @param[in] aKeyIndex   The key Index
+     * @param[in] aKeyIndex   The key index.
      * @param[in] aPrevKey    The previous MAC key.
-     * @param[in] aCurrKey    The current MAC key.
+     * @param[in] aCurKey     The current MAC key.
      * @param[in] aNextKey    The next MAC key.
      */
-    void SetMacKey(uint8_t            aKeyIdMode,
-                   uint8_t            aKeyIndex,
-                   const KeyMaterial &aPrevKey,
-                   const KeyMaterial &aCurrKey,
-                   const KeyMaterial &aNextKey);
-
-    /**
-     * Returns a reference to the current MAC key.
-     *
-     * @returns A reference to the current MAC key.
-     */
-    const KeyMaterial &GetCurrentMacKey(void) const { return mCurrKey; }
-
-    /**
-     * Returns a reference to the previous MAC key.
-     *
-     * @returns A reference to the previous MAC key.
-     */
-    const KeyMaterial &GetPreviousMacKey(void) const { return mPrevKey; }
-
-    /**
-     * Returns a reference to the next MAC key.
-     *
-     * @returns A reference to the next MAC key.
-     */
-    const KeyMaterial &GetNextMacKey(void) const { return mNextKey; }
+    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
 
     /**
      * Clears the stored MAC keys.
      */
-    void ClearMacKeys(void)
-    {
-        mPrevKey.Clear();
-        mCurrKey.Clear();
-        mNextKey.Clear();
-    }
+    void ClearMacKeys(void) { mKeyTrio.Clear(); }
 
     /**
      * Returns the current MAC frame counter value.
@@ -657,11 +636,8 @@ private:
     TxFrame               &mTransmitFrame;
     Callbacks              mCallbacks;
     Callback<PcapCallback> mPcapCallback;
-    KeyMaterial            mPrevKey;
-    KeyMaterial            mCurrKey;
-    KeyMaterial            mNextKey;
+    KeyTrio                mKeyTrio;
     uint32_t               mFrameCounter;
-    uint8_t                mKeyIndex;
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     uint8_t mRetxDelayBackOffExponent;
 #endif

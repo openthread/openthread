@@ -46,6 +46,7 @@
 #include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "radio/radio_frame.hpp"
 #include "radio/radio_types.hpp"
 
@@ -426,19 +427,12 @@ public:
     void SetAlternateShortAddress(Mac::ShortAddress aShortAddress);
 
     /**
-     * Sets MAC key and key ID.
+     * Sets MAC keys and key index.
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
-     * @param[in] aKeyIndex   Current MAC key index.
-     * @param[in] aPrevKey    The previous MAC key.
-     * @param[in] aCurrKey    The current MAC key.
-     * @param[in] aNextKey    The next MAC key.
+     * @param[in] aKeyTrio    The `KeyTrio` set (prev, cur, next) along with the key index.
      */
-    void SetMacKey(uint8_t                 aKeyIdMode,
-                   uint8_t                 aKeyIndex,
-                   const Mac::KeyMaterial &aPrevKey,
-                   const Mac::KeyMaterial &aCurrKey,
-                   const Mac::KeyMaterial &aNextKey);
+    void SetMacKey(uint8_t aKeyIdMode, const Mac::KeyTrio &aKeyTrio);
 
     /**
      * Sets the current MAC Frame Counter value.
@@ -913,11 +907,7 @@ inline void Radio::SetAlternateShortAddress(Mac::ShortAddress aShortAddress)
     otPlatRadioSetAlternateShortAddress(GetInstancePtr(), aShortAddress);
 }
 
-inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
-                             uint8_t                 aKeyIndex,
-                             const Mac::KeyMaterial &aPrevKey,
-                             const Mac::KeyMaterial &aCurrKey,
-                             const Mac::KeyMaterial &aNextKey)
+inline void Radio::SetMacKey(uint8_t aKeyIdMode, const Mac::KeyTrio &aKeyTrio)
 {
     otRadioKeyType keyType;
 
@@ -927,7 +917,8 @@ inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
     keyType = OT_KEY_TYPE_LITERAL_KEY;
 #endif
 
-    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyIndex, &aPrevKey, &aCurrKey, &aNextKey, keyType);
+    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyTrio.GetKeyIndex(), &aKeyTrio.GetKey(Mac::KeyTrio::kPrev),
+                         &aKeyTrio.GetKey(Mac::KeyTrio::kCur), &aKeyTrio.GetKey(Mac::KeyTrio::kNext), keyType);
 }
 
 inline Error Radio::GetTransmitPower(int8_t &aPower) { return otPlatRadioGetTransmitPower(GetInstancePtr(), &aPower); }
@@ -1072,13 +1063,7 @@ inline void Radio::SetShortAddress(Mac::ShortAddress) {}
 
 inline void Radio::SetAlternateShortAddress(Mac::ShortAddress) {}
 
-inline void Radio::SetMacKey(uint8_t,
-                             uint8_t,
-                             const Mac::KeyMaterial &,
-                             const Mac::KeyMaterial &,
-                             const Mac::KeyMaterial &)
-{
-}
+inline void Radio::SetMacKey(uint8_t, const Mac::KeyTrio &) {}
 
 inline Error Radio::GetTransmitPower(int8_t &) { return kErrorNotImplemented; }
 

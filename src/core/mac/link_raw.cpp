@@ -243,21 +243,14 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 Error LinkRaw::SetMacKey(uint8_t    aKeyIdMode,
                          uint8_t    aKeyIndex,
                          const Key &aPrevKey,
-                         const Key &aCurrKey,
+                         const Key &aCurKey,
                          const Key &aNextKey)
 {
-    Error       error = kErrorNone;
-    KeyMaterial prevKey;
-    KeyMaterial currKey;
-    KeyMaterial nextKey;
+    Error error = kErrorNone;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
 
-    prevKey.SetFrom(aPrevKey, kDefaultMacKeysExportable);
-    currKey.SetFrom(aCurrKey, kDefaultMacKeysExportable);
-    nextKey.SetFrom(aNextKey, kDefaultMacKeysExportable);
-
-    mSubMac.SetMacKey(aKeyIdMode, aKeyIndex, prevKey, currKey, nextKey);
+    mSubMac.SetMacKey(aKeyIdMode, aKeyIndex, aPrevKey, aCurKey, aNextKey);
 
 exit:
     return error;
