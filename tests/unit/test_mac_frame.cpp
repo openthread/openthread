@@ -745,8 +745,6 @@ void TestMacFrameApi(void)
 
 void TestMacFrameAckGeneration(void)
 {
-    constexpr uint8_t kImmAckLength = 5;
-
     Mac::RxFrame receivedFrame;
     Mac::TxFrame ackFrame;
     uint8_t      ackFrameBuffer[100];
@@ -782,7 +780,7 @@ void TestMacFrameAckGeneration(void)
     receivedFrame.mLength = sizeof(data_psdu1);
 
     ackFrame.GenerateImmAck(receivedFrame, false);
-    VerifyOrQuit(ackFrame.mLength == kImmAckLength);
+    VerifyOrQuit(ackFrame.mLength == Mac::Frame::GetImmAckLength());
     VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kTypeAck);
     VerifyOrQuit(!ackFrame.GetSecurityEnabled());
     VerifyOrQuit(!ackFrame.GetFramePending());
