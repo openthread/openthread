@@ -689,6 +689,20 @@ public:
      */
     uint8_t GetKeyIndex(void) const { return mKeyIndex; }
 
+    /**
+     * Selects the MAC key from the trio for a given key index.
+     *
+     * This method always returns a valid key. If the given key index matches the current, previous, or next key index
+     * in the trio, the corresponding key material is returned. If the given key index does not match any of these,
+     * the current key material is returned by default. This is a safety precaution to ensure that any frame with
+     * security enabled is encrypted using a valid key.
+     *
+     * @param[in] aKeyIndex  The key index to select.
+     *
+     * @returns A reference to the selected MAC key.
+     */
+    const KeyMaterial &SelectKey(uint8_t aKeyIndex) const;
+
 private:
     static constexpr bool    kIsExportable = OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE;
     static constexpr uint8_t kNumTypes     = 3;
@@ -699,6 +713,9 @@ private:
     uint8_t     mKeyIndex;
 };
 
+constexpr uint8_t kMinKeyIndex = 1;    ///< Minimum Key Index value.
+constexpr uint8_t kMaxKeyIndex = 0x80; ///< Maximum Key Index value.
+
 /**
  * Determines the MAC Key Index for a given Key Sequence.
  *
@@ -707,6 +724,30 @@ private:
  * @returns The MAC Key Index corresponding to @p aKeySequence.
  */
 uint8_t DetermineKeyIndexFor(uint32_t aKeySequence);
+
+/**
+ * Determines the next MAC Key Index (handling 1-128 wrap-around).
+ *
+ * The caller MUST ensure @p aKeyIndex is valid and within range (`kMinKeyIndex` to `kMaxKeyIndex`), otherwise the
+ * behavior is undefined.
+ *
+ * @param[in] aKeyIndex  The current Key Index value.
+ *
+ * @returns The next MAC Key Index value.
+ */
+uint8_t DetermineNextKeyIndex(uint8_t aKeyIndex);
+
+/**
+ * Determines the previous MAC Key Index (handling 1-128 wrap-around).
+ *
+ * The caller MUST ensure @p aKeyIndex is valid and within range (`kMinKeyIndex` to `kMaxKeyIndex`), otherwise the
+ * behavior is undefined.
+ *
+ * @param[in] aKeyIndex  The current Key Index value.
+ *
+ * @returns The previous MAC Key Index value.
+ */
+uint8_t DeterminePrevKeyIndex(uint8_t aKeyIndex);
 
 /**
  * Represents Link Frame Counters for all supported radio links.

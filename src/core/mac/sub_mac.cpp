@@ -342,6 +342,7 @@ void SubMac::ProcessTransmitSecurity(void)
 {
     const ExtAddress *extAddress = nullptr;
     uint8_t           keyIdMode;
+    uint8_t           keyIndex;
 
     VerifyOrExit(mTransmitFrame.GetSecurityEnabled());
     VerifyOrExit(!mTransmitFrame.IsSecurityProcessed());
@@ -350,7 +351,12 @@ void SubMac::ProcessTransmitSecurity(void)
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
-        mTransmitFrame.SetKeyIndex(mKeyTrio.GetKeyIndex());
+        keyIndex = mKeyTrio.GetKeyIndex();
+        mTransmitFrame.SetKeyIndex(keyIndex);
+    }
+    else
+    {
+        SuccessOrExit(mTransmitFrame.GetKeyIndex(keyIndex));
     }
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
@@ -366,14 +372,14 @@ void SubMac::ProcessTransmitSecurity(void)
         VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
     }
 
-    mTransmitFrame.SetAesKey(GetMacKey(KeyTrio::kCur));
+    mTransmitFrame.SetAesKey(mKeyTrio.SelectKey(keyIndex));
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
         uint32_t frameCounter = GetFrameCounter();
 
         mTransmitFrame.SetFrameCounter(frameCounter);
-        SignalFrameCounterUsed(frameCounter, mKeyTrio.GetKeyIndex());
+        SignalFrameCounterUsed(frameCounter, keyIndex);
     }
 
     extAddress = &GetExtAddress();
