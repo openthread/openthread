@@ -101,56 +101,28 @@ void SubMac::Init(void)
 #endif
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
 SubMac::Capabilities SubMac::GetCaps(void) const
 {
-    Capabilities caps;
+    Capabilities caps = mRadioCaps;
 
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    caps = mRadioCaps;
-
-#if OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE
-    caps |= kCapAckTimeout;
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    if (Get<LinkRaw>().IsEnabled())
+    {
+        caps |= kSwEnabledCapabilities;
+    }
+    else
 #endif
-
-#if OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE
-    caps |= kCapCsmaBackoff;
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE
-    caps |= kCapTransmitRetries;
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE
-    caps |= kCapEnergyScan;
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    caps |= kCapTransmitSec;
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    caps |= kCapTransmitTiming;
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    caps |= kCapReceiveTiming;
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE
-    caps |= kCapRxOnWhenIdle;
-#endif
-
-#if OPENTHREAD_RADIO
-    caps |= kCapSleepToTx;
-#endif
-
-#else
-    caps = kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec |
-           kCapTransmitTiming | kCapReceiveTiming | kCapRxOnWhenIdle;
-#endif
+    {
+        caps |= (kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec |
+                 kCapTransmitTiming | kCapReceiveTiming | kCapRxOnWhenIdle);
+    }
 
     return caps;
 }
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 void SubMac::SetPanId(PanId aPanId)
 {
@@ -816,113 +788,64 @@ void SubMac::HandleTimer(void)
     }
 }
 
-bool SubMac::ShouldHandleTransmitSecurity(void) const
+bool SubMac::ShouldHandle(Capability aCapability) const
 {
-    bool swTxSecurity = true;
+    // Determines whether `SubMac` should handle a given radio
+    // capability.
+    //
+    // If the radio platform supports it, we delegate it to the radio.
+    // Otherwise, `SubMac` will handle it.
+    //
+    // Under `OPENTHREAD_RADIO` (radio-only build) or when `LinkRaw`
+    // is enabled, there are a set of `OPENTHREAD_CONFIG_MAC_SOFTWARE_*`
+    // configs which control whether `SubMac` should implement each
+    // capability. This is tracked by `kSwEnabledCapabilities`.
 
-    VerifyOrExit(!RadioSupports(kCapTransmitSec), swTxSecurity = false);
+    bool shouldHandle = false;
 
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    if (RadioSupports(aCapability))
+    {
+        ExitNow();
+    }
+
+#if OPENTHREAD_RADIO
+    shouldHandle = ((kSwEnabledCapabilities & aCapability) != 0);
+    ExitNow();
 #endif
 
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
-    swTxSecurity = OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE;
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    if (Get<LinkRaw>().IsEnabled())
+    {
+        shouldHandle = ((kSwEnabledCapabilities & aCapability) != 0);
+        ExitNow();
+    }
+#endif
+
+    shouldHandle = true;
+
 #endif
 
 exit:
-    return swTxSecurity;
+    return shouldHandle;
 }
 
 bool SubMac::ShouldHandleCsmaBackOff(void) const
 {
-    bool swCsma = true;
+    bool shouldHandle = false;
 
-    VerifyOrExit(mTransmitFrame.IsCsmaCaEnabled(), swCsma = false);
-    VerifyOrExit(!RadioSupportsAny(kCapCsmaBackoff | kCapTransmitRetries), swCsma = false);
+    VerifyOrExit(mTransmitFrame.IsCsmaCaEnabled());
 
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
-#endif
+    if (RadioSupports(kCapTransmitRetries))
+    {
+        ExitNow();
+    }
 
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
-    swCsma = OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE;
-#endif
+    shouldHandle = ShouldHandle(kCapCsmaBackoff);
 
 exit:
-    return swCsma;
-}
-
-bool SubMac::ShouldHandleAckTimeout(void) const
-{
-    bool swAckTimeout = true;
-
-    VerifyOrExit(!RadioSupports(kCapAckTimeout), swAckTimeout = false);
-
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
-#endif
-
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
-    swAckTimeout = OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE;
-#endif
-
-exit:
-    return swAckTimeout;
-}
-
-bool SubMac::ShouldHandleRetries(void) const
-{
-    bool swRetries = true;
-
-    VerifyOrExit(!RadioSupports(kCapTransmitRetries), swRetries = false);
-
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
-#endif
-
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
-    swRetries = OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE;
-#endif
-
-exit:
-    return swRetries;
-}
-
-bool SubMac::ShouldHandleEnergyScan(void) const
-{
-    bool swEnergyScan = true;
-
-    VerifyOrExit(!RadioSupports(kCapEnergyScan), swEnergyScan = false);
-
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
-#endif
-
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
-    swEnergyScan = OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE;
-#endif
-
-exit:
-    return swEnergyScan;
-}
-
-bool SubMac::ShouldHandleTransmitTargetTime(void) const
-{
-    bool swTxDelay = true;
-
-    VerifyOrExit(!RadioSupports(kCapTransmitTiming), swTxDelay = false);
-
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
-#endif
-
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
-    swTxDelay = OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE;
-#endif
-
-exit:
-    return swTxDelay;
+    return shouldHandle;
 }
 
 bool SubMac::ShouldHandleTransitionToSleep(void) const { return (mRxOnWhenIdle || !RadioSupports(kCapRxOnWhenIdle)); }
