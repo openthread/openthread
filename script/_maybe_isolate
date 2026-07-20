@@ -1,0 +1,82 @@
+#!/bin/bash
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
+    echo "Error: This script must be sourced, not executed directly." >&2
+    exit 1
+fi
+
+if [[ -n ${OT_ISOLATED_REEXEC:-} ]]; then
+    ip link set lo up
+
+    if [[ -d /run ]]; then
+        mount -t tmpfs tmpfs /run
+    fi
+
+    if [[ -d /var/run && ! -L /var/run ]]; then
+        mount -t tmpfs tmpfs /var/run
+    fi
+
+    sudo()
+    {
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -E)
+                    shift
+                    ;;
+                --)
+                    shift
+                    break
+                    ;;
+                -*)
+                    echo "Error: unsupported mock sudo option: $1" >&2
+                    return 1
+                    ;;
+                *)
+                    break
+                    ;;
+            esac
+        done
+
+        "$@"
+    }
+
+    export -f sudo
+    return 0
+elif [[ $EUID -eq 0 ]]; then
+    # Isolation is not necessary
+    return 0
+elif ! unshare -nmr --kill-child true >/dev/null 2>&1; then
+    # Isolation is not supported or restricted (e.g., non-Linux or unprivileged userns disabled)
+    return 0
+fi
+
+# Unprivileged Linux: Re-exec inside unshare
+export OT_ISOLATED_REEXEC=1
+
+CALLER_SCRIPT="${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]:-$0}"
+exec unshare -nmr --kill-child bash "$CALLER_SCRIPT" "$@"

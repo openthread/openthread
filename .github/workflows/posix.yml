@@ -161,6 +161,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y expect lcov libreadline-dev net-tools ninja-build
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         sudo bash script/install_socat
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
@@ -207,6 +208,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y net-tools ninja-build
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
     - name: Build
       run: |
         script/check-infra-if-index-changed build

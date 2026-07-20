@@ -159,6 +159,8 @@ main()
                 do_build
                 ;;
             check)
+                # shellcheck source=script/_maybe_isolate
+                source script/_maybe_isolate
                 do_check
                 ;;
             *)
