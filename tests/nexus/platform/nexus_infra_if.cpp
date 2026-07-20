@@ -680,10 +680,11 @@ otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstanc
     return OT_ERROR_NONE;
 }
 
-void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+otError otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
 {
     OT_UNUSED_VARIABLE(aInfraIfIndex);
     AsNode(aInstance).mInfraIf.SetDhcp6ListeningEnabled(aEnable);
+    return OT_ERROR_NONE;
 }
 
 void otPlatInfraIfDhcp6PdClientSend(otInstance *aInstance, otMessage *aMessage, otIp6Address *aDest, uint32_t aIfIndex)

@@ -116,22 +116,31 @@ public:
      */
     const DelegatedPrefix *GetDelegatedPrefix(void) const { return mPdPrefixCommited ? &mPdPrefix : nullptr; }
 
+    /**
+     * Indicates whether the client is in error state (e.g. socket bind failed).
+     *
+     * @retval TRUE   The client is in error state.
+     * @retval FALSE  The client is not in error state.
+     */
+    bool IsErrorState(void) const { return mState == kStateError; }
+
 private:
-    // All intervals are in milli-seconds (from RFC 8415 section 7.6)
-    static constexpr uint32_t kMaxDelayFirstSolicit  = Time::kOneSecondInMsec;        // SOL_MAX_DELAY
-    static constexpr uint32_t kInitialSolicitTimeout = Time::kOneSecondInMsec;        // SOL_TIMEOUT
-    static constexpr uint32_t kMaxSolicitTimeout     = 3600 * Time::kOneSecondInMsec; // SOL_MAX_RT
-    static constexpr uint32_t kInitialRequestTimeout = Time::kOneSecondInMsec;        // REQ_TIMEOUT
-    static constexpr uint32_t kMaxRequestTimeout     = 30 * Time::kOneSecondInMsec;   // REQ_MAX_RT
-    static constexpr uint16_t kMaxRequestRetxCount   = 10;                            // REQ_MAX_RC
-    static constexpr uint32_t kInitialRenewTimeout   = 10 * Time::kOneSecondInMsec;   // REN_TIMEOUT
-    static constexpr uint32_t kMaxRenewTimeout       = 600 * Time::kOneSecondInMsec;  // REN_MAX_RT
-    static constexpr uint32_t kInitialRebindTimeout  = 10 * Time::kOneSecondInMsec;   // REB_TIMEOUT
-    static constexpr uint32_t kMaxRebindTimeout      = 600 * Time::kOneSecondInMsec;  // REB_MAX_RT
-    static constexpr uint32_t kInitialReleaseTimeout = 1 * Time::kOneSecondInMsec;    // REL_TIMEOUT
-    static constexpr uint16_t kMaxReleaseRetxCount   = 4;                             // REL_MAX_RC
-    static constexpr uint32_t kInfiniteTimeout       = 0;
-    static constexpr uint16_t kInfiniteRetxCount     = 0;
+    static constexpr uint32_t kMinSocketErrorRetryInterval = 5 * Time::kOneSecondInMsec;    // 5 sec
+    static constexpr uint32_t kMaxSocketErrorRetryInterval = 60 * Time::kOneSecondInMsec;   // 60 sec
+    static constexpr uint32_t kMaxDelayFirstSolicit        = Time::kOneSecondInMsec;        // SOL_MAX_DELAY
+    static constexpr uint32_t kInitialSolicitTimeout       = Time::kOneSecondInMsec;        // SOL_TIMEOUT
+    static constexpr uint32_t kMaxSolicitTimeout           = 3600 * Time::kOneSecondInMsec; // SOL_MAX_RT
+    static constexpr uint32_t kInitialRequestTimeout       = Time::kOneSecondInMsec;        // REQ_TIMEOUT
+    static constexpr uint32_t kMaxRequestTimeout           = 30 * Time::kOneSecondInMsec;   // REQ_MAX_RT
+    static constexpr uint16_t kMaxRequestRetxCount         = 10;                            // REQ_MAX_RC
+    static constexpr uint32_t kInitialRenewTimeout         = 10 * Time::kOneSecondInMsec;   // REN_TIMEOUT
+    static constexpr uint32_t kMaxRenewTimeout             = 600 * Time::kOneSecondInMsec;  // REN_MAX_RT
+    static constexpr uint32_t kInitialRebindTimeout        = 10 * Time::kOneSecondInMsec;   // REB_TIMEOUT
+    static constexpr uint32_t kMaxRebindTimeout            = 600 * Time::kOneSecondInMsec;  // REB_MAX_RT
+    static constexpr uint32_t kInitialReleaseTimeout       = 1 * Time::kOneSecondInMsec;    // REL_TIMEOUT
+    static constexpr uint16_t kMaxReleaseRetxCount         = 4;                             // REL_MAX_RC
+    static constexpr uint32_t kInfiniteTimeout             = 0;
+    static constexpr uint16_t kInfiniteRetxCount           = 0;
 
     static constexpr uint32_t kRetxDelayOnFailedTx = 330; // in msec
 
@@ -160,6 +169,7 @@ private:
     enum State : uint8_t
     {
         kStateStopped,
+        kStateError,
         kStateToSolicit,
         kStateSoliciting,
         kStateRequesting,
@@ -262,6 +272,7 @@ private:
     bool        mPdPrefixCommited;
     RetxTracker mRetxTracker;
     uint32_t    mMaxSolicitTimeout;
+    uint32_t    mSocketErrorRetryInterval;
     PdPrefix    mPdPrefix;
     ServerDuid  mServerDuid;
     DelayTimer  mTimer;

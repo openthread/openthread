@@ -203,9 +203,9 @@ exit:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 
-void InfraIf::SetDhcp6ListeningEnabled(bool aEnable)
+Error InfraIf::SetDhcp6ListeningEnabled(bool aEnable)
 {
-    otPlatInfraIfDhcp6PdClientSetListeningEnabled(&GetInstance(), aEnable, mIfIndex);
+    return otPlatInfraIfDhcp6PdClientSetListeningEnabled(&GetInstance(), aEnable, mIfIndex);
 }
 
 void InfraIf::SendDhcp6(Message &aMessage, Ip6::Address &aDestAddress)

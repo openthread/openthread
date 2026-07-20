@@ -141,6 +141,7 @@ public:
         kDhcp6PdStateStopped  = OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,  ///< Enabled, but currently stopped.
         kDhcp6PdStateRunning  = OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,  ///< Enabled, and running.
         kDhcp6PdStateIdle     = OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE,     ///< Enabled, but is not requesting prefix.
+        kDhcp6PdStateError    = OT_BORDER_ROUTING_DHCP6_PD_STATE_ERROR,    ///< Enabled, but in error state.
     };
 
     /**
@@ -505,6 +506,8 @@ public:
     {
         mPdPrefixManager.ProcessPrefixesFromRa(aRaPacket);
     }
+
+    void HandleDhcp6PdClientStateChanged(void) { mPdPrefixManager.HandleDhcp6PdClientStateChanged(); }
 
     /**
      * Returns the DHCPv6-PD based off-mesh-routable (OMR) prefix.
@@ -1010,14 +1013,15 @@ private:
         bool               HasPrefix(void) const { return !mPrefix.IsEmpty(); }
         bool               HasConflict(void) const { return mOnLinkPrefixConflict || mRoutePrefixConflict; }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
-        State              GetState(void) const { return mState; }
-        void               CheckConflict(ConflictCheckEvent aEvent);
+        State              GetState(void) const;
+        void CheckConflict(ConflictCheckEvent aEvent);
 
         void  ProcessPrefixesFromRa(const InfraIf::Icmp6Packet &aRaPacket);
         void  ProcessPrefix(const Dhcp6PdPrefix &aPrefix);
         Error GetPrefix(Dhcp6PdPrefix &aPrefix) const;
         Error GetCounters(Dhcp6PdCounters &aCounters) const;
         void  HandleTimer(void) { WithdrawPrefix(); }
+        void  HandleDhcp6PdClientStateChanged(void) { SignalEvent(kEventStateChanged); }
         void  SetStateCallback(Dhcp6PdCallback aCallback, void *aContext) { mStateCallback.Set(aCallback, aContext); }
         void  Evaluate(void);
         void  HandleEventTask(void);

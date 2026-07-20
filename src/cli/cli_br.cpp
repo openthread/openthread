@@ -877,12 +877,14 @@ const char *Br::Dhcp6PdStateToString(otBorderRoutingDhcp6PdState aState)
         "stopped",  // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
         "running",  // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
         "idle",     // (3) OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE
+        "error",    // (4) OT_BORDER_ROUTING_DHCP6_PD_STATE_ERROR
     };
 
     static_assert(0 == OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED, "DHCP6_PD_STATE_DISABLED value is incorrect");
     static_assert(1 == OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED, "DHCP6_PD_STATE_STOPPED value is incorrect");
     static_assert(2 == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING, "DHCP6_PD_STATE_RUNNING value is incorrect");
     static_assert(3 == OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE, "DHCP6_PD_STATE_IDLE value is incorrect");
+    static_assert(4 == OT_BORDER_ROUTING_DHCP6_PD_STATE_ERROR, "DHCP6_PD_STATE_ERROR value is incorrect");
 
     return Stringify(aState, kDhcpv6PdStateStrings);
 }

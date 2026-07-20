@@ -248,7 +248,7 @@ public:
      *
      * @param[in] aEnable        A boolean to enable (`true`) or disable (`false`) listening.
      */
-    void SetDhcp6ListeningEnabled(bool aEnable);
+    Error SetDhcp6ListeningEnabled(bool aEnable);
 
     /**
      * Sends a DHCPv6 message to a unicast or multicast destination address.

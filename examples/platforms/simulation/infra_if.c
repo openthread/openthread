@@ -221,11 +221,13 @@ otError otPlatInfraIfDiscoverNat64Prefix(otInstance *aInstance, uint32_t aInfraI
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 
-void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+otError otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aEnable);
     OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    return OT_ERROR_NONE;
 }
 
 void otPlatInfraIfDhcp6PdClientSend(otInstance   *aInstance,

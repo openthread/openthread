@@ -2679,6 +2679,15 @@ void RoutingManager::PdPrefixManager::UpdateState(void)
     }
 }
 
+RoutingManager::PdPrefixManager::State RoutingManager::PdPrefixManager::GetState(void) const
+{
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+    return (mState == kDhcp6PdStateRunning && Get<Dhcp6PdClient>().IsErrorState()) ? kDhcp6PdStateError : mState;
+#else
+    return mState;
+#endif
+}
+
 void RoutingManager::PdPrefixManager::SetState(State aState)
 {
     VerifyOrExit(aState != mState);
@@ -2697,6 +2706,7 @@ void RoutingManager::PdPrefixManager::SetState(State aState)
     case kDhcp6PdStateDisabled:
     case kDhcp6PdStateStopped:
     case kDhcp6PdStateIdle:
+    case kDhcp6PdStateError:
         WithdrawPrefix();
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
         Get<Dhcp6PdClient>().Stop();
@@ -2989,13 +2999,13 @@ void RoutingManager::PdPrefixManager::HandleEventTask(void)
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     if (events & (kEventStateChanged | kEventPdPrefixChanged))
     {
-        Get<HistoryTracker::Local>().RecordDhcp6Pd(mState, mPrefix.GetPrefix());
+        Get<HistoryTracker::Local>().RecordDhcp6Pd(GetState(), mPrefix.GetPrefix());
     }
 #endif
 
     if (events & kEventStateChanged)
     {
-        mStateCallback.InvokeIfSet(MapEnum(mState));
+        mStateCallback.InvokeIfSet(MapEnum(GetState()));
     }
 }
 
@@ -3040,7 +3050,8 @@ const char *RoutingManager::PdPrefixManager::StateToString(State aState)
     _(kDhcp6PdStateDisabled, "Disabled") \
     _(kDhcp6PdStateStopped, "Stopped")   \
     _(kDhcp6PdStateRunning, "Running")   \
-    _(kDhcp6PdStateIdle, "Idle")
+    _(kDhcp6PdStateIdle, "Idle")         \
+    _(kDhcp6PdStateError, "Error")
 
     DefineEnumStringArray(PdPrefixManagerStateMapList);
 

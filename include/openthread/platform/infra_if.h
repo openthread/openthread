@@ -211,8 +211,11 @@ otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstanc
  * @param[in] aInstance      The OpenThread instance.
  * @param[in] aEnable        A boolean to enable (`true`) or disable (`false`) listening.
  * @param[in] aInfraIfIndex  The index of the infrastructure interface to operate on.
+ *
+ * @retval OT_ERROR_NONE    Successfully enabled or disabled listening.
+ * @retval OT_ERROR_FAILED  Failed to open/bind socket or enable listening.
  */
-void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
+otError otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
 
 /**
  * Sends a DHCPv6 message to a unicast or multicast destination address.

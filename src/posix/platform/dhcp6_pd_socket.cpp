@@ -48,11 +48,11 @@
 #include "platform-posix.h"
 #include "common/code_utils.hpp"
 
-extern "C" void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance,
-                                                              bool        aEnable,
-                                                              uint32_t    aInfraIfIndex)
+extern "C" otError otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance,
+                                                                 bool        aEnable,
+                                                                 uint32_t    aInfraIfIndex)
 {
-    ot::Posix::InfraNetif::GetDhcp6PdSocket().SetListeningEnabled(aInstance, aEnable, aInfraIfIndex);
+    return ot::Posix::InfraNetif::GetDhcp6PdSocket().SetListeningEnabled(aInstance, aEnable, aInfraIfIndex);
 }
 
 extern "C" void otPlatInfraIfDhcp6PdClientSend(otInstance   *aInstance,
@@ -139,14 +139,16 @@ exit:
     return;
 }
 
-void Dhcp6PdSocket::SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+otError Dhcp6PdSocket::SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
 {
+    otError error = OT_ERROR_NONE;
+
     VerifyOrExit(aEnable != mEnabled);
     mInstance = aInstance;
 
     if (aEnable)
     {
-        Enable(aInfraIfIndex);
+        error = Enable(aInfraIfIndex);
     }
     else
     {
@@ -154,18 +156,28 @@ void Dhcp6PdSocket::SetListeningEnabled(otInstance *aInstance, bool aEnable, uin
     }
 
 exit:
-    return;
+    return error;
 }
 
-void Dhcp6PdSocket::Enable(uint32_t aInfraIfIndex)
+otError Dhcp6PdSocket::Enable(uint32_t aInfraIfIndex)
 {
-    SuccessOrDie(OpenSocket(aInfraIfIndex));
-    SuccessOrDie(JoinOrLeaveMulticastGroup(/* aJoin */ true, aInfraIfIndex));
+    otError error;
+
+    SuccessOrExit(error = OpenSocket(aInfraIfIndex));
+    SuccessOrExit(error = JoinOrLeaveMulticastGroup(/* aJoin */ true, aInfraIfIndex));
 
     mEnabled      = true;
     mInfraIfIndex = aInfraIfIndex;
 
     LogInfo("Enabled");
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        CloseSocket();
+        LogWarn("Failed to enable DHCPv6 socket on infra ifindex %u: %s", aInfraIfIndex, otThreadErrorToString(error));
+    }
+    return error;
 }
 
 void Dhcp6PdSocket::Disable(uint32_t aInfraIfIndex)

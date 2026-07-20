@@ -513,13 +513,15 @@ OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(otInstance *, uint32_t) { 
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 
-OT_TOOL_WEAK void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance,
-                                                                bool        aEnable,
-                                                                uint32_t    aInfraIfIndex)
+OT_TOOL_WEAK otError otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance,
+                                                                   bool        aEnable,
+                                                                   uint32_t    aInfraIfIndex)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aEnable);
     OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    return OT_ERROR_NONE;
 }
 
 OT_TOOL_WEAK void otPlatInfraIfDhcp6PdClientSend(otInstance   *aInstance,

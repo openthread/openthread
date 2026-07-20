@@ -49,6 +49,7 @@ Dhcp6PdClient::Dhcp6PdClient(Instance &aInstance)
     , mState(kStateStopped)
     , mPdPrefixCommited(false)
     , mMaxSolicitTimeout(kMaxSolicitTimeout)
+    , mSocketErrorRetryInterval(kMinSocketErrorRetryInterval)
     , mTimer(aInstance)
 {
 }
@@ -60,7 +61,14 @@ void Dhcp6PdClient::Start(void)
     switch (mState)
     {
     case kStateStopped:
-        Get<InfraIf>().SetDhcp6ListeningEnabled(true);
+    case kStateError:
+        if (Get<InfraIf>().SetDhcp6ListeningEnabled(true) != kErrorNone)
+        {
+            LogWarn("Failed to enable DHCPv6 listening socket; entering error state");
+            EnterState(kStateError);
+            ExitNow();
+        }
+        mSocketErrorRetryInterval = kMinSocketErrorRetryInterval;
         OT_FALL_THROUGH;
 
     case kStateReleasing:
@@ -89,6 +97,7 @@ void Dhcp6PdClient::Stop(void)
     case kStateStopped:
     case kStateReleasing:
         break;
+    case kStateError:
     case kStateToSolicit:
     case kStateSoliciting:
     case kStateRequesting:
@@ -104,16 +113,33 @@ void Dhcp6PdClient::Stop(void)
 
 void Dhcp6PdClient::EnterState(State aState)
 {
+    State oldState = mState;
+
+    VerifyOrExit(aState != mState || aState == kStateError);
+
     LogInfo("State: %s -> %s", StateToString(mState), StateToString(aState));
 
     mState = aState;
+
+    if (oldState == kStateError || mState == kStateError)
+    {
+        Get<RoutingManager>().HandleDhcp6PdClientStateChanged();
+    }
 
     switch (mState)
     {
     case kStateStopped:
         ClearServerDuid();
         ClearPdPrefix();
-        Get<InfraIf>().SetDhcp6ListeningEnabled(false);
+        mTimer.Stop();
+        IgnoreError(Get<InfraIf>().SetDhcp6ListeningEnabled(false));
+        break;
+
+    case kStateError:
+        ClearServerDuid();
+        ClearPdPrefix();
+        mTimer.Start(Random::NonCrypto::AddJitter(mSocketErrorRetryInterval, kJitterDivisor));
+        mSocketErrorRetryInterval = Min(mSocketErrorRetryInterval * 2, kMaxSocketErrorRetryInterval);
         break;
 
     case kStateToSolicit:
@@ -157,7 +183,13 @@ void Dhcp6PdClient::EnterState(State aState)
         break;
     }
 
-    SendMessage();
+    if (mState != kStateError)
+    {
+        SendMessage();
+    }
+
+exit:
+    return;
 }
 
 void Dhcp6PdClient::HandleTimer(void)
@@ -165,6 +197,10 @@ void Dhcp6PdClient::HandleTimer(void)
     switch (mState)
     {
     case kStateStopped:
+        break;
+
+    case kStateError:
+        Start();
         break;
 
     case kStateToSolicit:
@@ -220,6 +256,7 @@ void Dhcp6PdClient::SendMessage(void)
         msgType = kMsgTypeRelease;
         break;
     case kStateStopped:
+    case kStateError:
     case kStateToSolicit:
     case kStateToRenew:
         ExitNow();
@@ -295,6 +332,7 @@ void Dhcp6PdClient::UpdateStateAfterRetxExhausted(void)
     switch (mState)
     {
     case kStateStopped:
+    case kStateError:
     case kStateToSolicit:
     case kStateSoliciting:
     case kStateToRenew:
@@ -389,6 +427,7 @@ void Dhcp6PdClient::HandleReceived(Message &aMessage)
         break;
 
     case kStateStopped:
+    case kStateError:
     case kStateToSolicit:
     case kStateToRenew:
         ExitNow();
@@ -727,6 +766,7 @@ void Dhcp6PdClient::ReportPdPrefixToRoutingManager(void)
         break;
 
     case kStateStopped:
+    case kStateError:
     case kStateReleasing:
         ExitNow();
     }
@@ -961,6 +1001,7 @@ const char *Dhcp6PdClient::StateToString(State aState)
 {
 #define StateMapList(_)               \
     _(kStateStopped, "Stopped")       \
+    _(kStateError, "Error")           \
     _(kStateToSolicit, "ToSolicit")   \
     _(kStateSoliciting, "Soliciting") \
     _(kStateRequesting, "Requesting") \

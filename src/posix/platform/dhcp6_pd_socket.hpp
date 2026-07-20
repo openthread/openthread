@@ -103,8 +103,8 @@ public:
     void Process(const otSysMainloopContext &aContext);
 
     // otPlatInfraIfDhcp6PdClient APIs
-    void SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
-    void Send(otMessage *aMessage, const otIp6Address *aDstAddress, uint32_t aInfraIfIndex);
+    otError SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
+    void    Send(otMessage *aMessage, const otIp6Address *aDstAddress, uint32_t aInfraIfIndex);
 
 private:
     static constexpr uint16_t kMaxMessageLength = 2000;
@@ -125,11 +125,11 @@ private:
     otIp6Address   mMulticastAddress;
     otInstance    *mInstance;
 
-    void Enable(uint32_t aInfraIfIndex);
-    void Disable(uint32_t aInfraIfIndex);
-    void ClearTxQueue(void);
-    void SendQueuedMessages(void);
-    void ReceiveMessage(void);
+    otError Enable(uint32_t aInfraIfIndex);
+    void    Disable(uint32_t aInfraIfIndex);
+    void    ClearTxQueue(void);
+    void    SendQueuedMessages(void);
+    void    ReceiveMessage(void);
 
     otError OpenSocket(uint32_t aInfraIfIndex);
     otError JoinOrLeaveMulticastGroup(bool aJoin, uint32_t aInfraIfIndex);

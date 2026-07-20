@@ -221,6 +221,7 @@ typedef enum
     OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,  ///< DHCPv6 PD in enabled but won't try to request and publish a prefix.
     OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,  ///< DHCPv6 PD is enabled and will try to request and publish a prefix.
     OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE,     ///< DHCPv6 PD is idle; Higher-prf prefix published by other BRs.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_ERROR,    ///< DHCPv6 PD encountered a platform/socket error.
 } otBorderRoutingDhcp6PdState;
 
 /**

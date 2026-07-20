@@ -797,18 +797,31 @@ void Dhcp6TxMsg::Send(void)
 
 typedef BorderRouter::Dhcp6PdClient::DelegatedPrefix DelegatedPrefix;
 
-static bool                               sDhcp6ListeningEnabled = false;
+static bool                               sDhcp6ListeningEnabled         = false;
+static otError                            sDhcp6SetListeningEnabledError = OT_ERROR_NONE;
 static Array<Dhcp6RxMsg, kMaxDhcp6RxMsgs> sDhcp6RxMsgs;
 
 extern "C" {
 
-void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+otError otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
 {
+    otError error = OT_ERROR_NONE;
+
     Log("otPlatInfraIfDhcp6PdClientSetListeningEnabled(aEnable:%u)", aEnable);
 
     VerifyOrQuit(aInstance == sInstance);
     VerifyOrQuit(aInfraIfIndex == kInfraIfIndex);
+
+    if (aEnable && sDhcp6SetListeningEnabledError != OT_ERROR_NONE)
+    {
+        error = sDhcp6SetListeningEnabledError;
+        ExitNow();
+    }
+
     sDhcp6ListeningEnabled = aEnable;
+
+exit:
+    return error;
 }
 
 void otPlatInfraIfDhcp6PdClientSend(otInstance   *aInstance,
@@ -882,10 +895,12 @@ void InitTest(void)
     sAlarmOn  = false;
     sInstance = static_cast<Instance *>(testInitInstance());
 
-    sDhcp6ListeningEnabled = false;
+    sDhcp6ListeningEnabled         = false;
+    sDhcp6SetListeningEnabledError = OT_ERROR_NONE;
     sDhcp6RxMsgs.Clear();
 
     SuccessOrQuit(otBorderRoutingInit(sInstance, kInfraIfIndex, /* aInfraIfIsRunning */ true));
+    SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, true));
     AdvanceTime(100);
 }
 
@@ -2591,6 +2606,94 @@ void TestDhcp6PdServerReplyWithNoBindingToRelease(void)
     FinalizeTest();
 }
 
+void TestDhcp6PdSocketBindFailureAndRecovery(void)
+{
+    uint32_t heapAllocations;
+
+    Log("---------------------------------------------------------------------------------------------");
+    Log("TestDhcp6PdSocketBindFailureAndRecovery()");
+
+    InitTest();
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    otBorderRoutingDhcp6PdSetEnabled(sInstance, false);
+    sDhcp6SetListeningEnabledError = OT_ERROR_FAILED;
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Start client when socket listening fails");
+
+    otBorderRoutingDhcp6PdSetEnabled(sInstance, true);
+
+    Log("clientState:%u, pdState:%u", sInstance->Get<BorderRouter::Dhcp6PdClient>().IsErrorState(),
+        otBorderRoutingDhcp6PdGetState(sInstance));
+
+    VerifyOrQuit(sInstance->Get<BorderRouter::Dhcp6PdClient>().IsErrorState() == true);
+    VerifyOrQuit(otBorderRoutingDhcp6PdGetState(sInstance) == OT_BORDER_ROUTING_DHCP6_PD_STATE_ERROR);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Advance time past 1st retry interval (5s + jitter) with socket still failing");
+
+    AdvanceTime(6 * 1000);
+    VerifyOrQuit(sInstance->Get<BorderRouter::Dhcp6PdClient>().IsErrorState() == true);
+    VerifyOrQuit(otBorderRoutingDhcp6PdGetState(sInstance) == OT_BORDER_ROUTING_DHCP6_PD_STATE_ERROR);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Fix socket failure and advance time past 2nd retry interval (10s + jitter)");
+
+    sDhcp6SetListeningEnabledError = OT_ERROR_NONE;
+
+    AdvanceTime(12 * 1000);
+
+    VerifyOrQuit(sInstance->Get<BorderRouter::Dhcp6PdClient>().IsErrorState() == false);
+    VerifyOrQuit(otBorderRoutingDhcp6PdGetState(sInstance) == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING);
+
+    otBorderRoutingDhcp6PdSetEnabled(sInstance, false);
+    sDhcp6RxMsgs.Clear();
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestDhcp6PdSocketBindFailureAndRecovery()");
+
+    FinalizeTest();
+}
+
+void TestDhcp6PdSocketBindFailureStop(void)
+{
+    uint32_t heapAllocations;
+
+    Log("---------------------------------------------------------------------------------------------");
+    Log("TestDhcp6PdSocketBindFailureStop()");
+
+    InitTest();
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    otBorderRoutingDhcp6PdSetEnabled(sInstance, false);
+    sDhcp6SetListeningEnabledError = OT_ERROR_FAILED;
+
+    Log("Start client when socket listening fails");
+    otBorderRoutingDhcp6PdSetEnabled(sInstance, true);
+
+    VerifyOrQuit(sInstance->Get<BorderRouter::Dhcp6PdClient>().IsErrorState() == true);
+    VerifyOrQuit(otBorderRoutingDhcp6PdGetState(sInstance) == OT_BORDER_ROUTING_DHCP6_PD_STATE_ERROR);
+
+    Log("Stop client while in error state");
+    otBorderRoutingDhcp6PdSetEnabled(sInstance, false);
+
+    VerifyOrQuit(sInstance->Get<BorderRouter::Dhcp6PdClient>().IsErrorState() == false);
+    VerifyOrQuit(otBorderRoutingDhcp6PdGetState(sInstance) == OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED);
+
+    sDhcp6SetListeningEnabledError = OT_ERROR_NONE;
+
+    AdvanceTime(60 * 1000);
+    VerifyOrQuit(sDhcp6RxMsgs.IsEmpty());
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestDhcp6PdSocketBindFailureStop()");
+
+    FinalizeTest();
+}
+
 #endif // OT_CONFIG_DHCP6_PD_CLIENT_ENABLE
 
 } // namespace ot
@@ -2611,6 +2714,8 @@ int main(void)
     ot::TestDhcp6PdServerNotExtendingLeaseDuringRenew();
     ot::TestDhcp6PdServerReplacingPrefix();
     ot::TestDhcp6PdServerReplyWithNoBindingToRelease();
+    ot::TestDhcp6PdSocketBindFailureAndRecovery();
+    ot::TestDhcp6PdSocketBindFailureStop();
 
     printf("All tests passed\n");
 #else
