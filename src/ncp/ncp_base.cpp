@@ -1715,7 +1715,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RX_AT>(void)
 
         // `otPlatRadioReceiveAt()`'s `aStart` is an absolute radio time (truncated to 32 bits), not a duration
         // relative to `now` - see its documentation in `openthread/platform/radio.h`.
-        error = otPlatRadioReceiveAt(mInstance, channel, Radio::ConvertTime64To32(when), duration);
+        error = otPlatRadioReceiveAt(mInstance, channel, static_cast<otRadioTime32>(when), duration);
     }
 
 exit:
