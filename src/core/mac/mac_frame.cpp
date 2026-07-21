@@ -975,6 +975,8 @@ uint8_t Frame::FindPayloadIndex(void) const
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     if (IsIePresent())
     {
+        VerifyOrExit(GetVersion() >= kVersion2015, index = kInvalidIndex);
+
         uint8_t footerLength = GetFooterLength();
 
         do

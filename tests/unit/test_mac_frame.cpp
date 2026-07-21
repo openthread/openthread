@@ -33,6 +33,7 @@
 #include "radio/radio.hpp"
 
 #include "test_platform.h"
+#include "test_util.h"
 #include "test_util.hpp"
 
 namespace ot {
@@ -862,6 +863,39 @@ void TestMacFrameAckGeneration(void)
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 }
 
+void TestMacFrameIePresentPrior2015(void)
+{
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    // Received Malformed Frame
+    // IEEE 802.15.4 MAC Command
+    //   Frame Control Field: 0x0203 (0x03, 0x02)
+    //     . . . .  . . . .  . . . .  . 0 1 1 = Frame Type: MAC Command (0x3)
+    //     . . . .  . . . .  . . . .  0 . . . = Security Enabled: False
+    //     . . . .  . . . .  . . . 0  . . . . = Frame Pending: False
+    //     . . . .  . . . .  . . 0 .  . . . . = Acknowledge Request: False
+    //     . . . .  . . . .  . 0 . .  . . . . = PAN ID Compression: False
+    //     . . . .  . . . .  0 . . .  . . . . = Sequence Number Suppression: False
+    //     . . . .  . . . 1  . . . .  . . . . = Information Elements Present: True
+    //     . . 0 1  . . . .  . . . .  . . . . = Frame Version: IEEE Std 802.15.4-2006 (1)
+    //   Sequence Number: 11 (0x0b)
+    //   Header Information Elements (0x80, 0x3f)
+    //     Header IE: Header Termination 2
+    //     . . . .  . . . .  . 0 0 0  0 0 0 0 = Length: 0
+    //     . 0 1 1  1 1 1 1  1 . . .  . . . . = Element ID: Header Termination 2 (0x7f)
+    //     0 . . .  . . . .  . . . .  . . . . = Type: Header IE (0x0)
+    //   Payload: (0x04, 0x0d, 0x01)
+    uint8_t psdu[] = {
+        0x03, 0x11, 0x0b, 0x80, 0x3f, 0x04, 0x0d, 0x01,
+    };
+    Mac::RxFrame frame;
+
+    frame.mPsdu   = psdu;
+    frame.mLength = sizeof(psdu);
+
+    VerifyOrQuit(!frame.ValidatePsdu());
+#endif
+}
+
 } // namespace ot
 
 int main(void)
@@ -872,6 +906,7 @@ int main(void)
     ot::TestMacChannelMask();
     ot::TestMacFrameApi();
     ot::TestMacFrameAckGeneration();
+    ot::TestMacFrameIePresentPrior2015();
     printf("All tests passed\n");
     return 0;
 }
