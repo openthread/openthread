@@ -195,8 +195,8 @@ void Statistics::RecordTxDone(Error aError, uint16_t aPsduLength)
 {
     if (aError == kErrorNone || aError == kErrorNoAck)
     {
-        uint32_t txTimeUs    = (aPsduLength + Mac::Frame::kPhyHeaderSize) * kSymbolsPerOctet * kSymbolTime;
-        uint32_t rxAckTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * kPhyUsPerByte;
+        uint32_t txTimeUs    = (aPsduLength + kPhyHeaderSize) * kSymbolsPerOctet * kSymbolTime;
+        uint32_t rxAckTimeUs = (Mac::Frame::GetImmAckLength() + kPhyHeaderSize) * kPhyUsPerByte;
 
         UpdateTime();
         mTimeStats.mTxTime += txTimeUs;
@@ -225,7 +225,7 @@ void Statistics::RecordRxDone(Error aError)
 
     UpdateTime();
     // Currently we cannot know the actual length of ACK. So assume the ACK is an immediate ACK.
-    ackTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * kPhyUsPerByte;
+    ackTimeUs = (Mac::Frame::GetImmAckLength() + kPhyHeaderSize) * kPhyUsPerByte;
     mTimeStats.mTxTime += ackTimeUs;
     if (mStatus == kReceive)
     {

@@ -62,6 +62,11 @@ namespace Radio {
  * @{
  */
 
+constexpr uint8_t kPreambleSize  = 4;                                   ///< Preamble size in bytes.
+constexpr uint8_t kSfdSize       = 1;                                   ///< SFD size in bytes.
+constexpr uint8_t kPhrSize       = 1;                                   ///< PHY Header (PHR) size in bytes.
+constexpr uint8_t kPhyHeaderSize = kPreambleSize + kSfdSize + kPhrSize; ///< Total PHY header size in bytes.
+
 constexpr uint32_t kUsPerTenSymbols   = OT_US_PER_TEN_SYMBOLS; ///< Time for 10 symbols in units of microseconds
 constexpr uint32_t kHeaderShrDuration = 160;                   ///< Duration of SHR in us
 constexpr uint32_t kHeaderPhrDuration = 32;                    ///< Duration of PHR in us

@@ -136,14 +136,6 @@ public:
 
     static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for `InfoString` (ToInfoString()).
 
-    static constexpr uint8_t kPreambleSize  = 4;
-    static constexpr uint8_t kSfdSize       = 1;
-    static constexpr uint8_t kPhrSize       = 1;
-    static constexpr uint8_t kPhyHeaderSize = kPreambleSize + kSfdSize + kPhrSize;
-    static constexpr uint8_t kFcfSize       = sizeof(uint16_t);
-    static constexpr uint8_t kDsnSize       = sizeof(uint8_t);
-    static constexpr uint8_t kImmAckLength  = kFcfSize + kDsnSize + k154FcsSize;
-
     /**
      * Defines the fixed-length `String` object returned from `ToInfoString()` method.
      */
@@ -607,7 +599,18 @@ public:
      */
     uint16_t GetFrameControlField(void) const { return LittleEndian::ReadUint16(mPsdu); }
 
+    /**
+     * Returns the Immediate Acknowledgment (Imm-Ack) frame length in bytes.
+     *
+     * @returns The Imm-Ack frame length in bytes.
+     */
+    static constexpr uint8_t GetImmAckLength(void) { return kImmAckLength; }
+
 protected:
+    static constexpr uint8_t kFcfSize      = sizeof(uint16_t);
+    static constexpr uint8_t kDsnSize      = sizeof(uint8_t);
+    static constexpr uint8_t kImmAckLength = kFcfSize + kDsnSize + k154FcsSize;
+
     static constexpr uint8_t kSecurityControlSize = sizeof(uint8_t);
     static constexpr uint8_t kFrameCounterSize    = sizeof(uint32_t);
     static constexpr uint8_t kCommandIdSize       = sizeof(uint8_t);
