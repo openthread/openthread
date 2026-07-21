@@ -876,7 +876,9 @@ private:
     using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
     using MacTimer      = TimerMilliIn<Mac, &Mac::HandleTimer>;
 
-    static const otExtAddress sMode2ExtAddress;
+    static const otExtAddress kMode2ExtAddress;
+    static const uint8_t      kMode2KeySource[Frame::kKeySourceSizeMode2];
+    static const otMacKey     kMode2Key;
 
     bool mEnabled : 1;
     bool mShouldTxPollBeforeData : 1;

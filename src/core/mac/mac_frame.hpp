@@ -134,6 +134,11 @@ public:
         kMacCmdGtsRequest                 = 9,
     };
 
+    static constexpr uint8_t kKeySourceSizeMode0 = 0; ///< Key Source size in bytes for Key ID Mode 0.
+    static constexpr uint8_t kKeySourceSizeMode1 = 0; ///< Key Source size in bytes for Key ID Mode 1.
+    static constexpr uint8_t kKeySourceSizeMode2 = 4; ///< Key Source size in bytes for Key ID Mode 2.
+    static constexpr uint8_t kKeySourceSizeMode3 = 8; ///< Key Source size in bytes for Key ID Mode 3.
+
     static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for `InfoString` (ToInfoString()).
 
     /**
@@ -650,11 +655,6 @@ protected:
     static constexpr uint8_t kMic64Size  = 64 / kBitsPerByte;
     static constexpr uint8_t kMic128Size = 128 / kBitsPerByte;
     static constexpr uint8_t kMaxMicSize = kMic128Size;
-
-    static constexpr uint8_t kKeySourceSizeMode0 = 0;
-    static constexpr uint8_t kKeySourceSizeMode1 = 0;
-    static constexpr uint8_t kKeySourceSizeMode2 = 4;
-    static constexpr uint8_t kKeySourceSizeMode3 = 8;
 
     static constexpr uint8_t kInvalidIndex = 0xff;
     static constexpr uint8_t kInvalidSize  = kInvalidIndex;
