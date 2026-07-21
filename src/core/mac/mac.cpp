@@ -46,8 +46,12 @@ namespace Mac {
 
 RegisterLogModule("Mac");
 
-const otExtAddress Mac::sMode2ExtAddress = {
-    {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
+const otExtAddress Mac::kMode2ExtAddress = {{0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12}};
+
+const uint8_t Mac::kMode2KeySource[] = {0xff, 0xff, 0xff, 0xff};
+
+const otMacKey Mac::kMode2Key = {
+    {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66},
 };
 
 Mac::Mac(Instance &aInstance)
@@ -106,9 +110,6 @@ Mac::Mac(Instance &aInstance)
 {
     ExtAddress randomExtAddress;
 
-    static const otMacKey sMode2Key = {
-        {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66}};
-
     randomExtAddress.GenerateRandom();
 
     mCcaSuccessRateTracker.Clear();
@@ -123,7 +124,7 @@ Mac::Mac(Instance &aInstance)
     SetAlternateShortAddress(kShortAddrInvalid);
 #endif
 
-    mMode2KeyMaterial.SetFrom(AsCoreType(&sMode2Key));
+    mMode2KeyMaterial.SetFrom(AsCoreType(&kMode2Key));
 }
 
 void Mac::Init(void) { Get<KeyManager>().UpdateKeyMaterial(); }
@@ -865,12 +866,11 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     case Frame::kKeyIdMode2:
-    {
-        uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
-
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
         if (aFrame.IsWakeupFrame())
         {
+            uint8_t keySource[Frame::kKeySourceSizeMode2];
+
             // Just set the key source here, further security processing will happen in SubMac
             BigEndian::WriteUint32(keyManager.GetCurrentKeySequence(), keySource);
             aFrame.SetKeySource(keySource);
@@ -881,11 +881,10 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
-        aFrame.SetKeySource(keySource);
+        aFrame.SetKeySource(kMode2KeySource);
         aFrame.SetKeyIndex(0xff);
-        extAddress = &AsCoreType(&sMode2ExtAddress);
+        extAddress = &AsCoreType(&kMode2ExtAddress);
         break;
-    }
 
     default:
         OT_ASSERT(false);
@@ -1726,7 +1725,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 #endif
         {
             macKey     = &mMode2KeyMaterial;
-            extAddress = &AsCoreType(&sMode2ExtAddress);
+            extAddress = &AsCoreType(&kMode2ExtAddress);
         }
         break;
 
