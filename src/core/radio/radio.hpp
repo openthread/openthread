@@ -844,17 +844,25 @@ public:
      * @returns The bus speed in bits/second between the host and the radio chip.
      *          Return 0 when the MAC and above layer and Radio layer resides on the same chip.
      */
-    uint32_t GetBusSpeed(void);
+    uint32_t GetBusSpeed(void) const;
 
     /**
      * Get the bus latency in microseconds between the host and the radio chip.
      *
-     * @param[in]   aInstance    A pointer to an OpenThread instance.
-     *
      * @returns The bus latency in microseconds between the host and the radio chip.
      *          Return 0 when the MAC and above layer and Radio layer resides on the same chip.
      */
-    uint32_t GetBusLatency(void);
+    uint32_t GetBusLatency(void) const;
+
+    /**
+     * Calculates the radio bus transfer time (in microseconds) for a given frame size based on `GetBusSpeed()` and
+     * `GetBusLatency()`.
+     *
+     * @param[in] aFrameSize   The frame size to calculate for, in bytes.
+     *
+     * @returns The calculated radio bus transfer time in microseconds.
+     */
+    uint32_t CalculateBusTransferTime(uint16_t aFrameSize) const;
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     /**
@@ -1046,9 +1054,9 @@ inline void Radio::ClearSrcMatchShortEntries(void) { otPlatRadioClearSrcMatchSho
 
 inline void Radio::ClearSrcMatchExtEntries(void) { otPlatRadioClearSrcMatchExtEntries(GetInstancePtr()); }
 
-inline uint32_t Radio::GetBusSpeed(void) { return otPlatRadioGetBusSpeed(GetInstancePtr()); }
+inline uint32_t Radio::GetBusSpeed(void) const { return otPlatRadioGetBusSpeed(GetInstancePtr()); }
 
-inline uint32_t Radio::GetBusLatency(void) { return otPlatRadioGetBusLatency(GetInstancePtr()); }
+inline uint32_t Radio::GetBusLatency(void) const { return otPlatRadioGetBusLatency(GetInstancePtr()); }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 inline void Radio::SetDiagMode(bool aMode) { otPlatDiagModeSet(aMode); }
@@ -1141,9 +1149,9 @@ inline void Radio::ClearSrcMatchShortEntries(void) {}
 
 inline void Radio::ClearSrcMatchExtEntries(void) {}
 
-inline uint32_t Radio::GetBusSpeed(void) { return 0; }
+inline uint32_t Radio::GetBusSpeed(void) const { return 0; }
 
-inline uint32_t Radio::GetBusLatency(void) { return 0; }
+inline uint32_t Radio::GetBusLatency(void) const { return 0; }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 inline void Radio::SetDiagMode(bool) {}

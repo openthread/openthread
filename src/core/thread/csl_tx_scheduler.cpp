@@ -51,7 +51,7 @@ void CslTxScheduler::HandleRadioBusLatencyChanged(void)
     // 150 bytes for bus Tx time estimation
     static constexpr uint16_t kMaxFrameSize = 150;
 
-    mCslFrameRequestAheadUs = Mac::kCslRequestAhead + Get<Mac::Mac>().CalculateRadioBusTransferTime(kMaxFrameSize);
+    mCslFrameRequestAheadUs = Mac::kCslRequestAhead + Get<Radio::Radio>().CalculateBusTransferTime(kMaxFrameSize);
 
     LogInfo("Set frame request ahead: %lu usec", ToUlong(mCslFrameRequestAheadUs));
 }
