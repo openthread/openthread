@@ -808,6 +808,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
     switch (keyIdMode)
     {
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     case Frame::kKeyIdMode0:
         aFrame.SetAesKey(keyManager.GetKek());
         extAddress = &GetExtAddress();
@@ -820,19 +821,25 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
         break;
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     case Frame::kKeyIdMode1:
 
-        // For 15.4 radio link, the AES CCM* and frame security counter (under MAC
-        // key ID mode 1) are managed by `SubMac` or `Radio` modules.
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-#if !OPENTHREAD_CONFIG_MULTI_RADIO
-        ExitNow();
-#else
-        VerifyOrExit(aFrame.GetRadioType() != Radio::kTypeIeee802154);
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        if (aFrame.GetRadioType() == Radio::kTypeIeee802154)
 #endif
+        {
+            // For 15.4 radio link, the AES CCM* and frame security
+            // counter (under MAC key ID mode 1) are managed by
+            // `SubMac` or `Radio` modules.
+            ExitNow();
+        }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        if (aFrame.GetRadioType() == Radio::kTypeTrel)
+#endif
         {
             const KeyMaterial *macKey;
 
@@ -853,9 +860,10 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
             aFrame.SetAesKey(*macKey);
             extAddress = &GetExtAddress();
         }
-#endif
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         break;
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     case Frame::kKeyIdMode2:
     {
         uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
