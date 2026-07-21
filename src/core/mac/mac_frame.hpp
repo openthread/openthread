@@ -865,6 +865,15 @@ public:
      */
     Error GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource);
 #endif
+
+private:
+    enum AesCcmOperation : uint8_t
+    {
+        kEncrypt,
+        kDecrypt,
+    };
+
+    Error PerformAesCcm(AesCcmOperation aOperation, const ExtAddress &aExtAddress);
 };
 
 /**

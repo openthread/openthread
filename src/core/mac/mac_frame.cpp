@@ -1154,25 +1154,8 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
-    uint32_t              frameCounter = 0;
-    uint8_t               securityLevel;
-    Crypto::AesCcm        aesCcm;
-    Crypto::AesCcm::Nonce nonce;
-
     VerifyOrExit(GetSecurityEnabled());
-
-    SuccessOrExit(GetSecurityLevel(securityLevel));
-    SuccessOrExit(GetFrameCounter(frameCounter));
-
-    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
-
-    aesCcm.SetKey(GetAesKey());
-    aesCcm.SetNonce(nonce);
-    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
-    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
-
-    SuccessOrExit(aesCcm.Process(Crypto::AesCcm::kEncrypt, GetPayload(), GetPayloadLength()));
-
+    SuccessOrExit(PerformAesCcm(kEncrypt, aExtAddress));
     SetIsSecurityProcessed(true);
 
 exit:
@@ -1185,15 +1168,31 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 void TxFrame::RestoreTransmitSecurity(const ExtAddress &aExtAddress)
 {
-    uint32_t              frameCounter = 0;
+    VerifyOrExit(GetSecurityEnabled() && IsSecurityProcessed());
+    IgnoreError(PerformAesCcm(kDecrypt, aExtAddress));
+    SetIsSecurityProcessed(false);
+
+exit:
+    SetIsHeaderUpdated(false);
+}
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE || \
+    (OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE)
+
+Error TxFrame::PerformAesCcm(AesCcmOperation aOperation, const ExtAddress &aExtAddress)
+{
+    static_assert(static_cast<uint8_t>(kEncrypt) == Crypto::AesCcm::kEncrypt, "kEncrypt enum value is incorrect");
+    static_assert(static_cast<uint8_t>(kDecrypt) == Crypto::AesCcm::kDecrypt, "kDecrypt enum value is incorrect");
+
+    Error                 error;
+    uint32_t              frameCounter;
     uint8_t               securityLevel;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
 
-    VerifyOrExit(GetSecurityEnabled() && IsSecurityProcessed());
-
-    SuccessOrExit(GetSecurityLevel(securityLevel));
-    SuccessOrExit(GetFrameCounter(frameCounter));
+    SuccessOrExit(error = GetSecurityLevel(securityLevel));
+    SuccessOrExit(error = GetFrameCounter(frameCounter));
 
     nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
 
@@ -1202,16 +1201,13 @@ void TxFrame::RestoreTransmitSecurity(const ExtAddress &aExtAddress)
     aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
     aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
 
-    // We expect success because we are only decrypting back to plaintext,
-    // and we know the ciphertext was generated correctly by us previously.
-    IgnoreError(aesCcm.Process(Crypto::AesCcm::kDecrypt, GetPayload(), GetPayloadLength()));
-
-    SetIsSecurityProcessed(false);
+    error = aesCcm.Process(static_cast<Crypto::AesCcm::Operation>(aOperation), GetPayload(), GetPayloadLength());
 
 exit:
-    SetIsHeaderUpdated(false);
+    return error;
 }
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE || ...
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 {
