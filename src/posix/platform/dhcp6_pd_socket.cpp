@@ -73,10 +73,12 @@ const char Dhcp6PdSocket::kLogModuleName[] = "Dhcp6PdSocket";
 
 void Dhcp6PdSocket::Init(void)
 {
-    mEnabled      = false;
-    mInfraIfIndex = 0;
-    mFd6          = -1;
-    mPendingTx    = false;
+    mEnabled         = false;
+    mInfraIfIndex    = 0;
+    mFd6             = -1;
+    mNextRetryTime   = 0;
+    mRetryIntervalMs = kMinRetryIntervalMs;
+    mPendingTx       = false;
 
     // `All_DHCP_Relay_Agents_and_Servers` "ff02::1:2"
     memset(&mMulticastAddress, 0, sizeof(otIp6Address));
@@ -105,6 +107,15 @@ void Dhcp6PdSocket::Update(otSysMainloopContext &aContext)
 {
     VerifyOrExit(mEnabled);
 
+    if (mFd6 < 0)
+    {
+        uint64_t now   = otPlatTimeGet();
+        uint64_t delay = (mNextRetryTime > now) ? (mNextRetryTime - now) : 0;
+
+        Mainloop::SetTimeoutIfEarlier(delay, aContext);
+        ExitNow();
+    }
+
     FD_SET(mFd6, &aContext.mReadFdSet);
 
     if (mPendingTx)
@@ -124,6 +135,26 @@ exit:
 void Dhcp6PdSocket::Process(const otSysMainloopContext &aContext)
 {
     VerifyOrExit(mEnabled);
+
+    if (mFd6 < 0)
+    {
+        VerifyOrExit(otPlatTimeGet() >= mNextRetryTime);
+
+        if (SetupSocket(mInfraIfIndex) == OT_ERROR_NONE)
+        {
+            mRetryIntervalMs = kMinRetryIntervalMs;
+            mNextRetryTime   = 0;
+            LogInfo("DHCPv6 client socket port 546 setup successfully on retry.");
+        }
+        else
+        {
+            mRetryIntervalMs = OT_MIN(mRetryIntervalMs * 2, kMaxRetryIntervalMs);
+            mNextRetryTime   = otPlatTimeGet() + static_cast<uint64_t>(mRetryIntervalMs) * OT_US_PER_MS;
+            LogWarn("Failed to retry setting up DHCPv6 client socket, will retry again in %u ms", mRetryIntervalMs);
+        }
+
+        ExitNow();
+    }
 
     if (FD_ISSET(mFd6, &aContext.mWriteFdSet))
     {
@@ -159,23 +190,33 @@ exit:
 
 void Dhcp6PdSocket::Enable(uint32_t aInfraIfIndex)
 {
-    SuccessOrDie(OpenSocket(aInfraIfIndex));
-    SuccessOrDie(JoinOrLeaveMulticastGroup(/* aJoin */ true, aInfraIfIndex));
+    mEnabled         = true;
+    mInfraIfIndex    = aInfraIfIndex;
+    mRetryIntervalMs = kMinRetryIntervalMs;
 
-    mEnabled      = true;
-    mInfraIfIndex = aInfraIfIndex;
-
-    LogInfo("Enabled");
+    if (SetupSocket(aInfraIfIndex) == OT_ERROR_NONE)
+    {
+        LogInfo("Enabled");
+    }
+    else
+    {
+        mNextRetryTime = otPlatTimeGet() + static_cast<uint64_t>(mRetryIntervalMs) * OT_US_PER_MS;
+        LogWarn("Failed to setup DHCPv6 client socket to port 546, will retry in %u ms", mRetryIntervalMs);
+    }
 }
 
 void Dhcp6PdSocket::Disable(uint32_t aInfraIfIndex)
 {
     ClearTxQueue();
 
-    IgnoreError(JoinOrLeaveMulticastGroup(/* aJoin */ false, aInfraIfIndex));
-    CloseSocket();
+    if (mFd6 >= 0)
+    {
+        IgnoreError(JoinOrLeaveMulticastGroup(/* aJoin */ false, aInfraIfIndex));
+        CloseSocket();
+    }
 
-    mEnabled = false;
+    mEnabled       = false;
+    mNextRetryTime = 0;
 
     LogInfo("Disabled");
 }
@@ -187,6 +228,12 @@ void Dhcp6PdSocket::Send(otMessage *aMessage, const otIp6Address *aAddress, uint
 
     VerifyOrExit(mEnabled);
     VerifyOrExit(aInfraIfIndex == mInfraIfIndex);
+
+    if (mFd6 < 0)
+    {
+        LogWarn("Cannot send DHCPv6 packet: socket port 546 is not bound (port conflict)");
+        ExitNow();
+    }
 
     length = otMessageGetLength(aMessage);
 
@@ -320,15 +367,30 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // Socket helpers
 
+otError Dhcp6PdSocket::SetupSocket(uint32_t aInfraIfIndex)
+{
+    otError error;
+
+    SuccessOrExit(error = OpenSocket(aInfraIfIndex));
+    SuccessOrExit(error = JoinOrLeaveMulticastGroup(/* aJoin */ true, aInfraIfIndex));
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        CloseSocket();
+    }
+
+    return error;
+}
+
 otError Dhcp6PdSocket::OpenSocket(uint32_t aInfraIfIndex)
 {
-    otError             error = OT_ERROR_FAILED;
-    struct sockaddr_in6 addr6;
-    int                 fd;
+    otError             error   = OT_ERROR_FAILED;
     int                 ifindex = static_cast<int>(aInfraIfIndex);
+    struct sockaddr_in6 addr6;
 
-    fd = socket(AF_INET6, SOCK_DGRAM, 0);
-    VerifyOrExit(fd >= 0, LogCrit("Failed to create socket"));
+    mFd6 = socket(AF_INET6, SOCK_DGRAM, 0);
+    VerifyOrExit(mFd6 >= 0, LogCrit("Failed to create socket"));
 
 #ifdef __linux__
     {
@@ -338,38 +400,42 @@ otError Dhcp6PdSocket::OpenSocket(uint32_t aInfraIfIndex)
         ifname = if_indextoname(aInfraIfIndex, nameBuffer);
         VerifyOrExit(ifname != NULL, LogCrit("if_indextoname() failed"));
 
-        error = SetSocketOptionValue(fd, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen(ifname), "SO_BINDTODEVICE");
+        error = SetSocketOptionValue(mFd6, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen(ifname), "SO_BINDTODEVICE");
         SuccessOrExit(error);
     }
 #else
     {
-        SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_BOUND_IF, ifindex, "IPV6_BOUND_IF"));
+        SuccessOrExit(error = SetSocketOption<int>(mFd6, IPPROTO_IPV6, IPV6_BOUND_IF, ifindex, "IPV6_BOUND_IF"));
     }
 #endif
 
-    SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, 255, "IPV6_MULTICAST_HOPS"));
-    SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_UNICAST_HOPS, 255, "IPV6_UNICAST_HOPS"));
-    SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_V6ONLY, 1, "IPV6_V6ONLY"));
-    SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, ifindex, "IPV6_MULTICAST_IF"));
-    SuccessOrExit(error = SetSocketOption<int>(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, 1, "IPV6_MULTICAST_LOOP"));
-    SuccessOrExit(error = SetReuseAddrPortOptions(fd));
+    SuccessOrExit(error = SetSocketOption<int>(mFd6, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, 255, "IPV6_MULTICAST_HOPS"));
+    SuccessOrExit(error = SetSocketOption<int>(mFd6, IPPROTO_IPV6, IPV6_UNICAST_HOPS, 255, "IPV6_UNICAST_HOPS"));
+    SuccessOrExit(error = SetSocketOption<int>(mFd6, IPPROTO_IPV6, IPV6_V6ONLY, 1, "IPV6_V6ONLY"));
+    SuccessOrExit(error = SetSocketOption<int>(mFd6, IPPROTO_IPV6, IPV6_MULTICAST_IF, ifindex, "IPV6_MULTICAST_IF"));
+    SuccessOrExit(error = SetSocketOption<int>(mFd6, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, 1, "IPV6_MULTICAST_LOOP"));
+    SuccessOrExit(error = SetReuseAddrPortOptions(mFd6));
 
     memset(&addr6, 0, sizeof(addr6));
     addr6.sin6_family = AF_INET6;
     addr6.sin6_port   = htons(kClientPort);
 
-    if (bind(fd, reinterpret_cast<struct sockaddr *>(&addr6), sizeof(addr6)) < 0)
+    if (bind(mFd6, reinterpret_cast<struct sockaddr *>(&addr6), sizeof(addr6)) < 0)
     {
         LogCrit("bind() to DHCPv6 Client port for IPv6 socket failed, errno: %s", strerror(errno));
         error = OT_ERROR_FAILED;
         ExitNow();
     }
 
-    mFd6 = fd;
-
+    error = OT_ERROR_NONE;
     LogInfo("Successfully opened IPv6 socket");
 
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+        CloseSocket();
+    }
+
     return error;
 }
 
