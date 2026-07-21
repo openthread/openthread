@@ -895,41 +895,13 @@ void SubMac::SetState(State aState)
     }
 }
 
-void SubMac::SetMacKey(uint8_t    aKeyIdMode,
-                       uint8_t    aKeyIndex,
-                       const Key &aPrevKey,
-                       const Key &aCurKey,
-                       const Key &aNextKey)
+void SubMac::SetMode1MacKeys(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey)
 {
-    const KeyTrio *radioKeys = nullptr;
-    KeyTrio        tempKeyTrio;
-
-    if (aKeyIdMode == Frame::kKeyIdMode1)
-    {
-        mKeyTrio.Set(aKeyIndex, aPrevKey, aCurKey, aNextKey);
-    }
+    mKeyTrio.Set(aKeyIndex, aPrevKey, aCurKey, aNextKey);
 
     VerifyOrExit(!ShouldHandleTransmitSecurity());
 
-    switch (aKeyIdMode)
-    {
-    case Frame::kKeyIdMode0:
-    case Frame::kKeyIdMode2:
-        tempKeyTrio.Set(aKeyIndex, aPrevKey, aCurKey, aNextKey);
-        radioKeys = &tempKeyTrio;
-        break;
-
-    case Frame::kKeyIdMode1:
-        radioKeys = &mKeyTrio;
-        break;
-
-    default:
-        OT_ASSERT(false);
-        break;
-    }
-
-    VerifyOrExit(radioKeys != nullptr);
-    Get<Radio::Radio>().SetMacKey(aKeyIdMode, *radioKeys);
+    Get<Radio::Radio>().SetMode1MacKeys(mKeyTrio);
 
 exit:
     return;

@@ -107,7 +107,7 @@ void Radio::Init(void)
     SetShortAddress(Mac::kShortAddrInvalid);
 
     emptyKeyTrio.Clear();
-    SetMacKey(Mac::Frame::kKeyIdMode1, emptyKeyTrio);
+    SetMode1MacKeys(emptyKeyTrio);
     SetMacFrameCounter(0);
 
     SetPromiscuous(false);

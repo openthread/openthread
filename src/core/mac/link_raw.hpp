@@ -214,9 +214,8 @@ public:
     Error SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
-     * Updates MAC keys and key index.
+     * Updates MAC keys and key index for Key ID Mode 1.
      *
-     * @param[in]   aKeyIdMode        The key ID mode.
      * @param[in]   aKeyIndex         The key index.
      * @param[in]   aPrevKey          The previous MAC key.
      * @param[in]   aCurKey           The current MAC key.
@@ -225,11 +224,7 @@ public:
      * @retval kErrorNone            If successful.
      * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      */
-    Error SetMacKey(uint8_t    aKeyIdMode,
-                    uint8_t    aKeyIndex,
-                    const Key &aPrevKey,
-                    const Key &aCurKey,
-                    const Key &aNextKey);
+    Error SetMode1MacKeys(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
 
     /**
      * Sets the current MAC frame counter value.
