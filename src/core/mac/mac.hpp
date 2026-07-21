@@ -846,6 +846,7 @@ private:
     Error ProcessMultiRadioTxDone(TxFrame &aFrame, Error &aError);
 #endif
 
+    Error CanScan(void) const;
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
     void  PerformActiveScan(void);

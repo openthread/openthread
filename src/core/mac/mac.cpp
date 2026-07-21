@@ -143,12 +143,22 @@ void Mac::SetEnabled(bool aEnable)
     }
 }
 
-Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ScanResult::Handler aHandler, void *aContext)
+Error Mac::CanScan(void) const
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = kErrorBusy);
+
+exit:
+    return error;
+}
+
+Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ScanResult::Handler aHandler, void *aContext)
+{
+    Error error;
+
+    SuccessOrExit(error = CanScan());
 
     mActiveScanCallback.Set(aHandler, aContext);
 
@@ -165,10 +175,9 @@ exit:
 
 Error Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext)
 {
-    Error error = kErrorNone;
+    Error error;
 
-    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
-    VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = kErrorBusy);
+    SuccessOrExit(error = CanScan());
 
     mEnergyScanCallback.Set(aHandler, aContext);
 
