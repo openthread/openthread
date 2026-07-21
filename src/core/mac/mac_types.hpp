@@ -47,8 +47,10 @@
 #include "common/clearable.hpp"
 #include "common/data.hpp"
 #include "common/equatable.hpp"
+#include "common/non_copyable.hpp"
 #include "common/string.hpp"
 #include "crypto/storage.hpp"
+#include "radio/radio_types.hpp"
 
 namespace ot {
 
@@ -80,8 +82,11 @@ typedef otShortAddress ShortAddress;
 
 constexpr ShortAddress kShortAddrBroadcast = OT_RADIO_BROADCAST_SHORT_ADDR; ///< Broadcast Short Address.
 constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///< Invalid Short Address.
-constexpr bool         kDefaultMacKeysExportable =
-    OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE; ///< Default exportability policy for MAC key refs.
+
+/**
+ * Represents the packet capture callback function pointer.
+ */
+typedef otLinkPcapCallback PcapCallback;
 
 /**
  * Represents the wake-up identifier.
@@ -643,159 +648,106 @@ private:
     void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
 };
 
-#if OPENTHREAD_CONFIG_MULTI_RADIO
+class SubMac;
 
 /**
- * Defines the radio link types.
+ * Represents a trio of MAC keys (previous, current, and next) and their associated key index.
  */
-enum RadioType : uint8_t
+class KeyTrio : private NonCopyable
 {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    kRadioTypeIeee802154, ///< IEEE 802.15.4 (2.4GHz) link type.
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    kRadioTypeTrel, ///< Thread Radio Encapsulation link type.
-#endif
-};
+    friend class SubMac;
 
-/**
- * This constant specifies the number of supported radio link types.
- */
-constexpr uint8_t kNumRadioTypes = (((OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE) ? 1 : 0) +
-                                    ((OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE) ? 1 : 0));
-
-/**
- * Represents a set of radio links.
- */
-class RadioTypes
-{
 public:
-    static constexpr uint16_t kInfoStringSize = 32; ///< Max chars for the info string (`ToString()`).
-
     /**
-     * Defines the fixed-length `String` object returned from `ToString()`.
+     * Represents the key type (previous, current, or next).
      */
-    typedef String<kInfoStringSize> InfoString;
-
-    /**
-     * This static class variable defines an array containing all supported radio link types.
-     */
-    static const RadioType kAllRadioTypes[kNumRadioTypes];
-
-    /**
-     * Initializes a `RadioTypes` object as empty set
-     */
-    RadioTypes(void)
-        : mBitMask(0)
+    enum Type : uint8_t
     {
-    }
+        kPrev, ///< Previous MAC key.
+        kCur,  ///< Current MAC key.
+        kNext, ///< Next MAC key.
+    };
 
     /**
-     * Initializes a `RadioTypes` object with a given bit-mask.
-     *
-     * @param[in] aMask   A bit-mask representing the radio types (the first bit corresponds to radio type 0, and so on)
+     * Clears the stored keys and key index.
      */
-    explicit RadioTypes(uint8_t aMask)
-        : mBitMask(aMask)
-    {
-    }
+    void Clear(void);
 
     /**
-     * Clears the set.
+     * Gets a MAC key of a given type from the trio.
+     *
+     * @param[in] aType  The key type (`kPrev`, `kCur`, or `kNext`).
+     *
+     * @returns A reference to the requested MAC key.
      */
-    void Clear(void) { mBitMask = 0; }
+    const KeyMaterial &GetKey(Type aType) const { return mKeys[aType]; }
 
     /**
-     * Indicates whether the set is empty or not
+     * Gets the MAC key index.
      *
-     * @returns TRUE if the set is empty, FALSE otherwise.
+     * @returns The MAC key index.
      */
-    bool IsEmpty(void) const { return (mBitMask == 0); }
+    uint8_t GetKeyIndex(void) const { return mKeyIndex; }
 
     /**
-     *  This method indicates whether the set contains only a single radio type.
+     * Selects the MAC key from the trio for a given key index.
      *
-     * @returns TRUE if the set contains a single radio type, FALSE otherwise.
+     * This method always returns a valid key. If the given key index matches the current, previous, or next key index
+     * in the trio, the corresponding key material is returned. If the given key index does not match any of these,
+     * the current key material is returned by default. This is a safety precaution to ensure that any frame with
+     * security enabled is encrypted using a valid key.
+     *
+     * @param[in] aKeyIndex  The key index to select.
+     *
+     * @returns A reference to the selected MAC key.
      */
-    bool ContainsSingleRadio(void) const { return !IsEmpty() && ((mBitMask & (mBitMask - 1)) == 0); }
-
-    /**
-     * Indicates whether or not the set contains a given radio type.
-     *
-     * @param[in] aType  A radio link type.
-     *
-     * @returns TRUE if the set contains @p aType, FALSE otherwise.
-     */
-    bool Contains(RadioType aType) const { return ((mBitMask & BitFlag(aType)) != 0); }
-
-    /**
-     * Adds a radio type to the set.
-     *
-     * @param[in] aType  A radio link type.
-     */
-    void Add(RadioType aType) { mBitMask |= BitFlag(aType); }
-
-    /**
-     * Adds another radio types set to the current one.
-     *
-     * @param[in] aTypes   A radio link type set to add.
-     */
-    void Add(RadioTypes aTypes) { mBitMask |= aTypes.mBitMask; }
-
-    /**
-     * Adds all radio types supported by device to the set.
-     */
-    void AddAll(void);
-
-    /**
-     * Removes a given radio type from the set.
-     *
-     * @param[in] aType  A radio link type.
-     */
-    void Remove(RadioType aType) { mBitMask &= ~BitFlag(aType); }
-
-    /**
-     * Gets the radio type set as a bitmask.
-     *
-     * The first bit in the mask corresponds to first radio type (radio type with value zero), and so on.
-     *
-     * @returns A bitmask representing the set of radio types.
-     */
-    uint8_t GetAsBitMask(void) const { return mBitMask; }
-
-    /**
-     * Overloads operator `-` to return a new set which is the set difference between current set and
-     * a given set.
-     *
-     * @param[in] aOther  Another radio type set.
-     *
-     * @returns A new set which is set difference between current one and @p aOther.
-     */
-    RadioTypes operator-(const RadioTypes &aOther) const { return RadioTypes(mBitMask & ~aOther.mBitMask); }
-
-    /**
-     * Converts the radio set to human-readable string.
-     *
-     * @return A string representation of the set of radio types.
-     */
-    InfoString ToString(void) const;
+    const KeyMaterial &SelectKey(uint8_t aKeyIndex) const;
 
 private:
-    static uint8_t BitFlag(RadioType aType) { return static_cast<uint8_t>(1U << static_cast<uint8_t>(aType)); }
+    static constexpr bool    kIsExportable = OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE;
+    static constexpr uint8_t kNumTypes     = 3;
 
-    uint8_t mBitMask;
+    void Set(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
+
+    KeyMaterial mKeys[kNumTypes];
+    uint8_t     mKeyIndex;
 };
 
-/**
- * Converts a link type to a string
- *
- * @param[in] aRadioType  A link type value.
- *
- * @returns A string representation of the link type.
- */
-const char *RadioTypeToString(RadioType aRadioType);
+constexpr uint8_t kMinKeyIndex = 1;    ///< Minimum Key Index value.
+constexpr uint8_t kMaxKeyIndex = 0x80; ///< Maximum Key Index value.
 
-#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+/**
+ * Determines the MAC Key Index for a given Key Sequence.
+ *
+ * @param[in] aKeySequence  The Key Sequence value.
+ *
+ * @returns The MAC Key Index corresponding to @p aKeySequence.
+ */
+uint8_t DetermineKeyIndexFor(uint32_t aKeySequence);
+
+/**
+ * Determines the next MAC Key Index (handling 1-128 wrap-around).
+ *
+ * The caller MUST ensure @p aKeyIndex is valid and within range (`kMinKeyIndex` to `kMaxKeyIndex`), otherwise the
+ * behavior is undefined.
+ *
+ * @param[in] aKeyIndex  The current Key Index value.
+ *
+ * @returns The next MAC Key Index value.
+ */
+uint8_t DetermineNextKeyIndex(uint8_t aKeyIndex);
+
+/**
+ * Determines the previous MAC Key Index (handling 1-128 wrap-around).
+ *
+ * The caller MUST ensure @p aKeyIndex is valid and within range (`kMinKeyIndex` to `kMaxKeyIndex`), otherwise the
+ * behavior is undefined.
+ *
+ * @param[in] aKeyIndex  The current Key Index value.
+ *
+ * @returns The previous MAC Key Index value.
+ */
+uint8_t DeterminePrevKeyIndex(uint8_t aKeyIndex);
 
 /**
  * Represents Link Frame Counters for all supported radio links.
@@ -817,7 +769,7 @@ public:
      *
      * @returns The Link Frame Counter for radio link @p aRadioType.
      */
-    uint32_t Get(RadioType aRadioType) const;
+    uint32_t Get(Radio::Type aRadioType) const;
 
     /**
      * Sets the Link Frame Counter for a given radio link.
@@ -825,7 +777,7 @@ public:
      * @param[in] aRadioType  A radio link type.
      * @param[in] aCounter    The new counter value.
      */
-    void Set(RadioType aRadioType, uint32_t aCounter);
+    void Set(Radio::Type aRadioType, uint32_t aCounter);
 
 #else
 

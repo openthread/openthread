@@ -70,12 +70,27 @@ extern "C" {
  */
 
 /**
- * Pointer to call when ble secure connection state changes.
+ * Pointer to a callback function invoked whenever the BLE Secure connection state changes.
+ *
+ * The connection includes two layers that are reported independently: the underlying BLE link
+ * (@p aBleConnectionOpen) and the TLS session carried over it (@p aConnected). Both arguments
+ * report the current state of their respective layer (without disclosing which one(s) changed).
+ *
+ * A TLS session cannot exist without a BLE link to carry it, so @p aConnected being TRUE always
+ * implies @p aBleConnectionOpen being TRUE. The three resulting states are:
+ *
+ *  - (aBleConnectionOpen=FALSE, aConnected=FALSE): Fully disconnected; no BLE link and no TLS session.
+ *  - (aBleConnectionOpen=TRUE,  aConnected=FALSE): BLE link is up; TLS session not (yet) established.
+ *  - (aBleConnectionOpen=TRUE,  aConnected=TRUE):  BLE link is up and the TLS session is established.
+ *
+ * The callback is invoked exactly once per change of the (@p aBleConnectionOpen, @p aConnected) pair
+ * and is never invoked twice in a row with identical argument values. If the BLE link drops while a
+ * TLS session is active, the TLS session is treated as closed at that same instant: a single call with
+ * (FALSE, FALSE) is made.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
- * @param[in]  aConnected           TRUE, if a secure connection was established, FALSE otherwise.
- * @param[in]  aBleConnectionOpen   TRUE if a BLE connection was established to carry a TLS data stream, FALSE
- *                                  otherwise.
+ * @param[in]  aConnected           TRUE if a secure TLS session is established, FALSE otherwise.
+ * @param[in]  aBleConnectionOpen   TRUE if a BLE link is open to carry the TLS data stream, FALSE otherwise.
  * @param[in]  aContext             A pointer to arbitrary context information.
  */
 typedef void (*otHandleBleSecureConnect)(otInstance *aInstance,

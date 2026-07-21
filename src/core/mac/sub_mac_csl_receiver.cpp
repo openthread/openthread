@@ -56,7 +56,7 @@ void SubMac::CslInit(void)
 void SubMac::RestartCslTimerAfterSyncUpdate(void)
 {
     // Only applies for the case where radio supports receive timing.
-    if (RadioSupportsReceiveTiming() && mCslTimer.IsRunning())
+    if (RadioSupports(kCapReceiveTiming) && mCslTimer.IsRunning())
     {
         uint32_t periodUs = mCslPeriod * Radio::kUsPerTenSymbols;
 
@@ -78,9 +78,8 @@ void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
     if (aAckFrame != nullptr && aFrame.Has<CslIe>())
     {
         mCslLastSync = TimeMicro(GetLocalTime());
+        RestartCslTimerAfterSyncUpdate();
     }
-
-    RestartCslTimerAfterSyncUpdate();
 }
 
 void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
@@ -92,16 +91,15 @@ void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
 #endif
 
     // Assuming the risk of the parent missing the Enh-ACK in favor of smaller CSL receive window
-    if ((mCslPeriod > 0) && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+    if ((mCslPeriod > 0) && aFrame->IsAckedWithSecEnhAck())
     {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
         mCslLastSync = TimerMicro::GetNow();
 #else
         mCslLastSync = TimeMicro(Radio::ConvertTime64To32(aFrame->GetTimestamp()));
 #endif
+        RestartCslTimerAfterSyncUpdate();
     }
-
-    RestartCslTimerAfterSyncUpdate();
 
 exit:
     return;
@@ -135,7 +133,7 @@ void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShor
 
         HandleCslTimer();
     }
-    else if (!RadioSupportsReceiveTiming())
+    else if (!RadioSupports(kCapReceiveTiming))
     {
         UpdateRadioSampleState();
     }
@@ -144,8 +142,6 @@ exit:
     return;
 }
 
-void SubMac::HandleCslTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleCslTimer(); }
-
 void SubMac::HandleCslTimer(void)
 {
     uint32_t timeAhead, timeAfter;
@@ -153,7 +149,7 @@ void SubMac::HandleCslTimer(void)
     GetCslWindowEdges(timeAhead, timeAfter);
 
     // The handler works in different ways when the radio supports receive-timing and doesn't.
-    if (RadioSupportsReceiveTiming())
+    if (RadioSupports(kCapReceiveTiming))
     {
         HandleCslReceiveAt(timeAhead, timeAfter);
     }
@@ -194,7 +190,8 @@ void SubMac::HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter)
 
     // Schedule reception window for any state except RX - so that CSL RX Window has lower priority
     // than scanning or RX after the data poll.
-    if ((mState != kStateDisabled) && (mState != kStateReceive))
+    if ((mState != kStateDisabled) && (mState != kStateReceive) &&
+        Radio::IsTimeStrictlyBefore(Get<Radio::Radio>().GetNowAsTime32(), winStart + winDuration))
     {
         IgnoreError(Get<Radio::Radio>().ReceiveAt(mCslChannel, winStart, winDuration));
     }

@@ -37,6 +37,7 @@
 
 #include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -202,90 +203,20 @@ void PanIds::SetBothSourceDestination(PanId aPanId)
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
-const RadioType RadioTypes::kAllRadioTypes[kNumRadioTypes] = {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    kRadioTypeIeee802154,
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    kRadioTypeTrel,
-#endif
-};
-
-void RadioTypes::AddAll(void)
-{
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    Add(kRadioTypeIeee802154);
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    Add(kRadioTypeTrel);
-#endif
-}
-
-RadioTypes::InfoString RadioTypes::ToString(void) const
-{
-    InfoString string;
-    bool       addComma = false;
-
-    string.Append("{");
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (Contains(kRadioTypeIeee802154))
-    {
-        string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeIeee802154));
-        addComma = true;
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    if (Contains(kRadioTypeTrel))
-    {
-        string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeTrel));
-        addComma = true;
-    }
-#endif
-
-    OT_UNUSED_VARIABLE(addComma);
-
-    string.Append(" }");
-
-    return string;
-}
-
-const char *RadioTypeToString(RadioType aRadioType)
-{
-    const char *str = "unknown";
-
-    switch (aRadioType)
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case kRadioTypeIeee802154:
-        str = "15.4";
-        break;
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case kRadioTypeTrel:
-        str = "trel";
-        break;
-#endif
-    }
-
-    return str;
-}
-
-uint32_t LinkFrameCounters::Get(RadioType aRadioType) const
+uint32_t LinkFrameCounters::Get(Radio::Type aRadioType) const
 {
     uint32_t counter = 0;
 
     switch (aRadioType)
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case kRadioTypeIeee802154:
+    case Radio::kTypeIeee802154:
         counter = m154Counter;
         break;
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case kRadioTypeTrel:
+    case Radio::kTypeTrel:
         counter = mTrelCounter;
         break;
 #endif
@@ -294,18 +225,18 @@ uint32_t LinkFrameCounters::Get(RadioType aRadioType) const
     return counter;
 }
 
-void LinkFrameCounters::Set(RadioType aRadioType, uint32_t aCounter)
+void LinkFrameCounters::Set(Radio::Type aRadioType, uint32_t aCounter)
 {
     switch (aRadioType)
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case kRadioTypeIeee802154:
+    case Radio::kTypeIeee802154:
         m154Counter = aCounter;
         break;
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case kRadioTypeTrel:
+    case Radio::kTypeTrel:
         mTrelCounter = aCounter;
         break;
 #endif
@@ -424,6 +355,78 @@ bool KeyMaterial::operator==(const KeyMaterial &aOther) const
 #else
         (GetKey() == aOther.GetKey());
 #endif
+}
+
+void KeyTrio::Clear(void)
+{
+    mKeyIndex = 0;
+
+    for (KeyMaterial &key : mKeys)
+    {
+        key.Clear();
+    }
+}
+
+void KeyTrio::Set(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey)
+{
+    mKeyIndex = aKeyIndex;
+    mKeys[kPrev].SetFrom(aPrevKey, kIsExportable);
+    mKeys[kCur].SetFrom(aCurKey, kIsExportable);
+    mKeys[kNext].SetFrom(aNextKey, kIsExportable);
+}
+
+const KeyMaterial &KeyTrio::SelectKey(uint8_t aKeyIndex) const
+{
+    const KeyMaterial *key = &GetKey(kCur);
+
+    if (aKeyIndex == mKeyIndex)
+    {
+        ExitNow();
+    }
+
+    VerifyOrExit(IsValueInRange(mKeyIndex, kMinKeyIndex, kMaxKeyIndex));
+
+    if (aKeyIndex == DeterminePrevKeyIndex(mKeyIndex))
+    {
+        key = &GetKey(kPrev);
+    }
+    else if (aKeyIndex == DetermineNextKeyIndex(mKeyIndex))
+    {
+        key = &GetKey(kNext);
+    }
+
+exit:
+    return *key;
+}
+
+uint8_t DetermineKeyIndexFor(uint32_t aKeySequence) { return static_cast<uint8_t>((aKeySequence & 0x7f) + 1); }
+
+uint8_t DetermineNextKeyIndex(uint8_t aKeyIndex)
+{
+    uint8_t nextIndex = aKeyIndex;
+
+    nextIndex++;
+
+    if (nextIndex > kMaxKeyIndex)
+    {
+        nextIndex = kMinKeyIndex;
+    }
+
+    return nextIndex;
+}
+
+uint8_t DeterminePrevKeyIndex(uint8_t aKeyIndex)
+{
+    uint8_t prevIndex = aKeyIndex;
+
+    prevIndex--;
+
+    if (prevIndex < kMinKeyIndex)
+    {
+        prevIndex = kMaxKeyIndex;
+    }
+
+    return prevIndex;
 }
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

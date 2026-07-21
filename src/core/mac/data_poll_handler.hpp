@@ -99,8 +99,8 @@ public:
         uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
         void     SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
 
-        uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
-        void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
+        uint8_t GetIndirectKeyIndex(void) const { return mIndirectKeyIndex; }
+        void    SetIndirectKeyIndex(uint8_t aKeyIndex) { mIndirectKeyIndex = aKeyIndex; }
 
         uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
         void    ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
@@ -116,19 +116,19 @@ public:
         void SetFrameReplacePending(bool aReplacePending) { mFrameReplacePending = aReplacePending; }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        Mac::RadioType GetLastPollRadioType(void) const { return mLastPollRadioType; }
-        void           SetLastPollRadioType(Mac::RadioType aRadioType) { mLastPollRadioType = aRadioType; }
+        Radio::Type GetLastPollRadioType(void) const { return mLastPollRadioType; }
+        void        SetLastPollRadioType(Radio::Type aRadioType) { mLastPollRadioType = aRadioType; }
 #endif
 
         uint32_t mIndirectFrameCounter;    // Frame counter for current indirect frame (used for retx).
-        uint8_t  mIndirectKeyId;           // Key Id for current indirect frame (used for retx).
+        uint8_t  mIndirectKeyIndex;        // Key Index for current indirect frame (used for retx).
         uint8_t  mIndirectDsn;             // MAC level Data Sequence Number (DSN) for retx attempts.
         uint8_t  mIndirectTxAttempts : 5;  // Number of data poll triggered tx attempts.
         bool     mDataPollPending : 1;     // Indicates whether or not a Data Poll was received.
         bool     mFramePurgePending : 1;   // Indicates a pending purge request for the current indirect frame.
         bool     mFrameReplacePending : 1; // Indicates a pending replace request for the current indirect frame.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        Mac::RadioType mLastPollRadioType; // The radio link last data poll frame was received on.
+        Radio::Type mLastPollRadioType; // The radio link last data poll frame was received on.
 #endif
 
         static_assert(kMaxPollTriggeredTxAttempts < (1 << 5), "mIndirectTxAttempts cannot fit max!");

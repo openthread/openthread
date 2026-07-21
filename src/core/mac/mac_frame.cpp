@@ -41,7 +41,6 @@
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "crypto/aes_ccm.hpp"
-#include "radio/trel_link.hpp"
 
 namespace ot {
 namespace Mac {
@@ -708,7 +707,7 @@ void Frame::SetKeySource(const uint8_t *aKeySource)
     memcpy(&mPsdu[index + kSecurityControlSize + kFrameCounterSize], aKeySource, keySourceSize);
 }
 
-Error Frame::GetKeyId(uint8_t &aKeyId) const
+Error Frame::GetKeyIndex(uint8_t &aKeyIndex) const
 {
     Error   error = kErrorNone;
     uint8_t keySourceSize;
@@ -718,13 +717,13 @@ Error Frame::GetKeyId(uint8_t &aKeyId) const
 
     keySourceSize = CalculateKeySourceSize(mPsdu[index]);
 
-    aKeyId = mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize];
+    aKeyIndex = mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize];
 
 exit:
     return error;
 }
 
-void Frame::SetKeyId(uint8_t aKeyId)
+void Frame::SetKeyIndex(uint8_t aKeyIndex)
 {
     uint8_t keySourceSize;
     uint8_t index = FindSecurityHeaderIndex();
@@ -733,7 +732,7 @@ void Frame::SetKeyId(uint8_t aKeyId)
 
     keySourceSize = CalculateKeySourceSize(mPsdu[index]);
 
-    mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize] = aKeyId;
+    mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize] = aKeyIndex;
 }
 
 Error Frame::GetCommandId(uint8_t &aCommandId) const
@@ -1113,57 +1112,6 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-uint16_t Frame::GetMtu(void) const
-{
-    uint16_t mtu = 0;
-
-    switch (GetRadioType())
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case kRadioTypeIeee802154:
-        mtu = OT_RADIO_FRAME_MAX_SIZE;
-        break;
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case kRadioTypeTrel:
-        mtu = Trel::Link::kMtuSize;
-        break;
-#endif
-    }
-
-    return mtu;
-}
-
-uint8_t Frame::GetFcsSize(void) const
-{
-    uint8_t fcsSize = 0;
-
-    switch (GetRadioType())
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case kRadioTypeIeee802154:
-        fcsSize = k154FcsSize;
-        break;
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case kRadioTypeTrel:
-        fcsSize = Trel::Link::kFcsSize;
-        break;
-#endif
-    }
-
-    return fcsSize;
-}
-
-#elif OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-uint16_t Frame::GetMtu(void) const { return Trel::Link::kMtuSize; }
-
-uint8_t Frame::GetFcsSize(void) const { return Trel::Link::kFcsSize; }
-#endif
-
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
     uint8_t       *psduBuffer   = mPsdu;
@@ -1348,10 +1296,10 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
 
     if (aRxFrame.GetSecurityEnabled())
     {
-        uint8_t keyId;
+        uint8_t keyIndex;
 
-        SuccessOrExit(error = aRxFrame.GetKeyId(keyId));
-        SetKeyId(keyId);
+        SuccessOrExit(error = aRxFrame.GetKeyIndex(keyIndex));
+        SetKeyIndex(keyIndex);
     }
 
     if (aIeLength > 0)
@@ -1518,7 +1466,7 @@ Frame::InfoString Frame::ToInfoString(void) const
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    string.Append(", radio:%s", RadioTypeToString(GetRadioType()));
+    string.Append(", radio:%s", Radio::TypeToString(GetRadioType()));
 #endif
 
     return string;

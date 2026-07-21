@@ -151,12 +151,12 @@ void Test_1_4_TREL_TC_2(void)
     {
         const Neighbor *neighbor = leader.Get<NeighborTable>().FindNeighbor(router1.Get<Mac::Mac>().GetExtAddress());
         VerifyOrQuit(neighbor != nullptr);
-        VerifyOrQuit(neighbor->GetSupportedRadioTypes().Contains(Mac::kRadioTypeTrel));
+        VerifyOrQuit(neighbor->GetSupportedRadioTypes().Contains(ot::Radio::kTypeTrel));
     }
     {
         const Neighbor *neighbor = router1.Get<NeighborTable>().FindNeighbor(router4.Get<Mac::Mac>().GetExtAddress());
         VerifyOrQuit(neighbor != nullptr);
-        VerifyOrQuit(neighbor->GetSupportedRadioTypes().Contains(Mac::kRadioTypeTrel));
+        VerifyOrQuit(neighbor->GetSupportedRadioTypes().Contains(ot::Radio::kTypeTrel));
     }
     VerifyOrQuit(leader.Get<NeighborTable>().FindNeighbor(router2.Get<Mac::Mac>().GetExtAddress()) != nullptr);
     VerifyOrQuit(router2.Get<NeighborTable>().FindNeighbor(leader.Get<Mac::Mac>().GetExtAddress()) != nullptr);

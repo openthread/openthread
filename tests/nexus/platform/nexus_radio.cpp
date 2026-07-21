@@ -243,7 +243,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance) { AsNode(aInstanc
 
 void otPlatRadioSetMacKey(otInstance             *aInstance,
                           uint8_t                 aKeyIdMode,
-                          uint8_t                 aKeyId,
+                          uint8_t                 aKeyIndex,
                           const otMacKeyMaterial *aPrevKey,
                           const otMacKeyMaterial *aCurrKey,
                           const otMacKeyMaterial *aNextKey,
@@ -253,7 +253,7 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 
     OT_UNUSED_VARIABLE(aKeyIdMode);
 
-    radio.mRadioContext.mKeyId   = aKeyId;
+    radio.mRadioContext.mKeyId   = aKeyIndex;
     radio.mRadioContext.mKeyType = aKeyType;
 
     if (!radio.mMacFrameCounterReset)

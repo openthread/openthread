@@ -244,6 +244,27 @@ class DisconnectCommand(Command):
         return CommandResultNone()
 
 
+class SimulationBleDisconnectCommand(Command):
+
+    def get_help_string(self) -> str:
+        return 'Simulate a BLE link break to a simulated TCAT device (no Disconnect TLV, no TLS shutdown).'
+
+    async def execute_default(self, args, context) -> CommandResult:
+        ble_stream = context['ble_stream']
+        if not isinstance(ble_stream, UdpStream):
+            return CommandResultError('only available for a simulation connection (use \'simulation <id>\' first).')
+
+        print('Disconnecting simulated BLE link...')
+        # Signal the abrupt link break to the device, then drop local stream state without a TLS
+        # shutdown (no close-notify), mirroring a real abrupt disconnect on the client side too.
+        await ble_stream.simulation_ble_disconnect()
+        await ble_stream.disconnect()
+        context['ble_stream'] = None
+        context['ble_sstream'] = None
+        print('Done')
+        return CommandResultNone()
+
+
 class ExtractDatasetCommand(BleCommand):
 
     def get_log_string(self) -> str:

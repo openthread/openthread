@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,68 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_UNIT_TEST_PLATFORM_H_
-#define OT_UNIT_TEST_PLATFORM_H_
+/**
+ * @file
+ *   This file implements helper methods for a radio frame.
+ */
 
-#include <string.h>
+#include "radio_frame.hpp"
 
-#include <openthread/config.h>
-#include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/diag.h>
-#include <openthread/platform/dns.h>
-#include <openthread/platform/dnssd.h>
-#include <openthread/platform/dso_transport.h>
-#include <openthread/platform/entropy.h>
-#include <openthread/platform/logging.h>
-#include <openthread/platform/mdns_socket.h>
-#include <openthread/platform/misc.h>
-#include <openthread/platform/multipan.h>
-#include <openthread/platform/radio.h>
-#include <openthread/platform/tcp.h>
-#include <openthread/platform/trel.h>
+#include "radio/trel_link.hpp"
 
-#include "common/code_utils.hpp"
-#include "instance/instance.hpp"
+namespace ot {
+namespace Radio {
 
-#include "test_util.h"
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+uint16_t Frame::GetMtu(void) const
+{
+    uint16_t mtu = 0;
 
-ot::Instance *testInitInstance(void);
-ot::Instance *testResetInstance(ot::Instance *aInstance);
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
-ot::Instance *testInitAdditionalInstance(uint8_t id);
+    switch (GetRadioType())
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    case kTypeIeee802154:
+        mtu = k154MtuSize;
+        break;
 #endif
-void testFreeInstance(otInstance *aInstance);
 
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-#include <openthread/tcat.h>
-#ifdef __cplusplus
-extern "C" {
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    case kTypeTrel:
+        mtu = Trel::Link::kMtuSize;
+        break;
 #endif
-extern uint8_t  sPlatBleLastAdvSetData[OT_TCAT_ADVERTISEMENT_MAX_LEN];
-extern uint16_t sPlatBleLastAdvSetDataLen;
-extern bool     sPlatBleAdvertising;
-#ifdef __cplusplus
+    }
+
+    return mtu;
 }
-#endif
+
+uint8_t Frame::GetFcsSize(void) const
+{
+    uint8_t fcsSize = 0;
+
+    switch (GetRadioType())
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    case kTypeIeee802154:
+        fcsSize = k154FcsSize;
+        break;
 #endif
 
-#endif // OT_UNIT_TEST_PLATFORM_H_
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    case kTypeTrel:
+        fcsSize = Trel::Link::kFcsSize;
+        break;
+#endif
+    }
+
+    return fcsSize;
+}
+
+#elif OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+uint16_t Frame::GetMtu(void) const { return Trel::Link::kMtuSize; }
+
+uint8_t Frame::GetFcsSize(void) const { return Trel::Link::kFcsSize; }
+#endif
+
+} // namespace Radio
+} // namespace ot

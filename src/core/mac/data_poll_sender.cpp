@@ -124,7 +124,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const
+Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest, Radio::Type &aRadioType) const
 #else
 Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
 #endif
@@ -329,7 +329,7 @@ void DataPollSender::ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFram
     VerifyOrExit(aFrame.GetSecurityEnabled());
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aFrame.mInfo.mTxInfo.mIsARetx && aFrame.Has<Mac::CslIe>())
+    if (aFrame.IsARetransmission() && aFrame.Has<Mac::CslIe>())
     {
         // For retransmission frame, use a data poll to resync its parent with correct CSL phase
         sendDataPoll = true;
@@ -543,7 +543,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
     Mac::TxFrame::BuildInfo buildInfo;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    Mac::RadioType radio;
+    Radio::Type radio;
 
     SuccessOrExit(GetPollDestinationAddress(buildInfo.mAddrs.mDestination, radio));
     frame = &aTxFrames.GetTxFrame(radio);

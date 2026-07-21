@@ -54,6 +54,7 @@
 #include "mac/mac_types.hpp"
 #include "mac/scan_result.hpp"
 #include "mac/sub_mac.hpp"
+#include "radio/radio_types.hpp"
 #include "radio/trel_link.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
@@ -436,16 +437,12 @@ public:
     bool IsInTransmitState(void) const;
 
     /**
-     * Registers a callback to provide received raw IEEE 802.15.4 frames.
+     * Registers a callback to provide received packet capture for IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     *                               or `nullptr` to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     * @param[in]  aCallback   The packet capture callback, or `nullptr` to disable packet capture.
+     * @param[in]  aContext    A pointer to application-specific context.
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
-    {
-        mLinks.SetPcapCallback(aPcapCallback, aCallbackContext);
-    }
+    void SetPcapCallback(PcapCallback aCallback, void *aContext) { mLinks.SetPcapCallback(aCallback, aContext); }
 
     /**
      * Indicates whether or not promiscuous mode is enabled at the link layer.
@@ -822,6 +819,8 @@ private:
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     Error ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
 #endif
+    const KeyMaterial *DetermineMode1Key(const Frame &aFrame) const;
+    const KeyMaterial *DetermineMode1KeyAndSequence(const Frame &aFrame, uint32_t &aKeySequence) const;
 
     void     UpdateIdleMode(void);
     bool     IsPending(Operation aOperation) const { return mPendingOperations & (1U << aOperation); }
@@ -941,9 +940,9 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioTypes mTxPendingRadioLinks;
-    RadioTypes mTxBeaconRadioLinks;
-    Error      mTxError;
+    Radio::Types mTxPendingRadioLinks;
+    Radio::Types mTxBeaconRadioLinks;
+    Error        mTxError;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

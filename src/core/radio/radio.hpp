@@ -46,6 +46,8 @@
 #include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
+#include "radio/radio_frame.hpp"
 #include "radio/radio_types.hpp"
 
 namespace ot {
@@ -131,6 +133,29 @@ static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG
               "must be set to 1 to specify the radio mode");
 
 /**
+ * Represents a radio capability.
+ */
+enum Capability : uint16_t
+{
+    kCapAckTimeout         = OT_RADIO_CAPS_ACK_TIMEOUT,          ///< Supports ack timeout event.
+    kCapEnergyScan         = OT_RADIO_CAPS_ENERGY_SCAN,          ///< Supports energy scan.
+    kCapTransmitRetries    = OT_RADIO_CAPS_TRANSMIT_RETRIES,     ///< Supports tx retry logic (and CSMA).
+    kCapCsmaBackoff        = OT_RADIO_CAPS_CSMA_BACKOFF,         ///< Supports CSMA backoff for frame tx (but no retry).
+    kCapSleepToTx          = OT_RADIO_CAPS_SLEEP_TO_TX,          ///< Supports transition from sleep to TX.
+    kCapTransmitSec        = OT_RADIO_CAPS_TRANSMIT_SEC,         ///< Supports tx security.
+    kCapTransmitTiming     = OT_RADIO_CAPS_TRANSMIT_TIMING,      ///< Supports tx at specific time.
+    kCapReceiveTiming      = OT_RADIO_CAPS_RECEIVE_TIMING,       ///< Supports rx at specific time.
+    kCapRxOnWhenIdle       = OT_RADIO_CAPS_RX_ON_WHEN_IDLE,      ///< Supports RxOnWhenIdle handling.
+    kCapTransmitFramePower = OT_RADIO_CAPS_TRANSMIT_FRAME_POWER, ///< Supports setting per-frame transmit power.
+    kCapAltShortAddr       = OT_RADIO_CAPS_ALT_SHORT_ADDR,       ///< Supports setting alternate short address.
+};
+
+/**
+ * Represents a bit vector of radio capabilities (`Capability`).
+ */
+typedef otRadioCaps Capabilities;
+
+/**
  * Indicates whether a given channel page is supported based on the current configurations.
  *
  * @param[in] aChannelPage The channel page to check.
@@ -210,8 +235,7 @@ public:
     /**
      * This callback method handles "Energy Scan Done" event from radio platform.
      *
-     * Is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability. It is called from
-     * `otPlatRadioEnergyScanDone()`.
+     * Is used when radio provides the `kCapEnergyScan` capability. It is called from `otPlatRadioEnergyScanDone()`.
      *
      * @param[in]  aMaxRssi  The maximum RSSI encountered on the scanned channel.
      */
@@ -356,9 +380,9 @@ public:
     /**
      * Gets the radio capabilities.
      *
-     * @returns The radio capability bit vector (see `OT_RADIO_CAP_*` definitions).
+     * @returns The radio capability bit vector (see `Capability` definitions).
      */
-    otRadioCaps GetCaps(void);
+    Capabilities GetCaps(void);
 
     /**
      * Gets the radio receive sensitivity value.
@@ -396,26 +420,19 @@ public:
     void SetShortAddress(Mac::ShortAddress aShortAddress);
 
     /**
-     * Set the altrnate short address.
+     * Set the alternate short address.
      *
      * @param[in] aShortAddress  The alternate short address.
      */
     void SetAlternateShortAddress(Mac::ShortAddress aShortAddress);
 
     /**
-     * Sets MAC key and key ID.
+     * Sets MAC keys and key index.
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
-     * @param[in] aKeyId      Current MAC key index.
-     * @param[in] aPrevKey    The previous MAC key.
-     * @param[in] aCurrKey    The current MAC key.
-     * @param[in] aNextKey    The next MAC key.
+     * @param[in] aKeyTrio    The `KeyTrio` set (prev, cur, next) along with the key index.
      */
-    void SetMacKey(uint8_t                 aKeyIdMode,
-                   uint8_t                 aKeyId,
-                   const Mac::KeyMaterial &aPrevKey,
-                   const Mac::KeyMaterial &aCurrKey,
-                   const Mac::KeyMaterial &aNextKey);
+    void SetMacKey(uint8_t aKeyIdMode, const Mac::KeyTrio &aKeyTrio);
 
     /**
      * Sets the current MAC Frame Counter value.
@@ -665,7 +682,7 @@ public:
     /**
      * Begins the energy scan sequence on the radio.
      *
-     * Is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
+     * Is used when radio provides the `kCapEnergyScan` capability.
      *
      * @param[in] aScanChannel   The channel to perform the energy scan on.
      * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
@@ -879,7 +896,7 @@ inline uint32_t Radio::GetPreferredChannelMask(void) { return otPlatRadioGetPref
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
-inline otRadioCaps Radio::GetCaps(void) { return otPlatRadioGetCaps(GetInstancePtr()); }
+inline Capabilities Radio::GetCaps(void) { return otPlatRadioGetCaps(GetInstancePtr()); }
 
 inline int8_t Radio::GetReceiveSensitivity(void) const { return otPlatRadioGetReceiveSensitivity(GetInstancePtr()); }
 
@@ -890,11 +907,7 @@ inline void Radio::SetAlternateShortAddress(Mac::ShortAddress aShortAddress)
     otPlatRadioSetAlternateShortAddress(GetInstancePtr(), aShortAddress);
 }
 
-inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
-                             uint8_t                 aKeyId,
-                             const Mac::KeyMaterial &aPrevKey,
-                             const Mac::KeyMaterial &aCurrKey,
-                             const Mac::KeyMaterial &aNextKey)
+inline void Radio::SetMacKey(uint8_t aKeyIdMode, const Mac::KeyTrio &aKeyTrio)
 {
     otRadioKeyType keyType;
 
@@ -904,7 +917,8 @@ inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
     keyType = OT_KEY_TYPE_LITERAL_KEY;
 #endif
 
-    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey, keyType);
+    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyTrio.GetKeyIndex(), &aKeyTrio.GetKey(Mac::KeyTrio::kPrev),
+                         &aKeyTrio.GetKey(Mac::KeyTrio::kCur), &aKeyTrio.GetKey(Mac::KeyTrio::kNext), keyType);
 }
 
 inline Error Radio::GetTransmitPower(int8_t &aPower) { return otPlatRadioGetTransmitPower(GetInstancePtr(), &aPower); }
@@ -1037,10 +1051,7 @@ inline bool Radio::GetDiagMode(void) { return otPlatDiagModeGet(); }
 #endif
 #else //----------------------------------------------------------------------------------------------------------------
 
-inline otRadioCaps Radio::GetCaps(void)
-{
-    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES;
-}
+inline Capabilities Radio::GetCaps(void) { return kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries; }
 
 inline int8_t Radio::GetReceiveSensitivity(void) const { return kDefaultReceiveSensitivity; }
 
@@ -1052,13 +1063,7 @@ inline void Radio::SetShortAddress(Mac::ShortAddress) {}
 
 inline void Radio::SetAlternateShortAddress(Mac::ShortAddress) {}
 
-inline void Radio::SetMacKey(uint8_t,
-                             uint8_t,
-                             const Mac::KeyMaterial &,
-                             const Mac::KeyMaterial &,
-                             const Mac::KeyMaterial &)
-{
-}
+inline void Radio::SetMacKey(uint8_t, const Mac::KeyTrio &) {}
 
 inline Error Radio::GetTransmitPower(int8_t &) { return kErrorNotImplemented; }
 

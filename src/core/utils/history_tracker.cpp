@@ -149,12 +149,12 @@ void Local::RecordMessage(const Message      &aMessage,
         switch (aMessage.GetRadioType())
         {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        case Mac::kRadioTypeIeee802154:
+        case Radio::kTypeIeee802154:
             entry->mRadioIeee802154 = true;
             break;
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-        case Mac::kRadioTypeTrel:
+        case Radio::kTypeTrel:
             entry->mRadioTrelUdp6 = true;
             break;
 #endif

@@ -713,7 +713,7 @@ public:
      * Sets MAC key and key index to RCP.
      *
      * @param[in] aKeyIdMode  The key ID mode.
-     * @param[in] aKeyId      The key index.
+     * @param[in] aKeyIndex   The key index.
      * @param[in] aPrevKey    Pointer to previous MAC key.
      * @param[in] aCurrKey    Pointer to current MAC key.
      * @param[in] aNextKey    Pointer to next MAC key.
@@ -724,7 +724,7 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      */
     otError SetMacKey(uint8_t                 aKeyIdMode,
-                      uint8_t                 aKeyId,
+                      uint8_t                 aKeyIndex,
                       const otMacKeyMaterial *aPrevKey,
                       const otMacKeyMaterial *aCurrKey,
                       const otMacKeyMaterial *aNextKey);
@@ -1199,7 +1199,7 @@ private:
     }
 
     otError SetMacKey(uint8_t         aKeyIdMode,
-                      uint8_t         aKeyId,
+                      uint8_t         aKeyIndex,
                       const otMacKey &aPrevKey,
                       const otMacKey &aCurrKey,
                       const otMacKey &NextKey);
@@ -1308,7 +1308,7 @@ private:
 
     // Properties set by core.
     uint8_t  mKeyIdMode;
-    uint8_t  mKeyId;
+    uint8_t  mKeyIndex;
     otMacKey mPrevKey;
     otMacKey mCurrKey;
     otMacKey mNextKey;

@@ -54,19 +54,19 @@ TxFrames::TxFrames(Instance &aInstance)
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
-TxFrame &TxFrames::GetTxFrame(RadioType aRadioType)
+TxFrame &TxFrames::GetTxFrame(Radio::Type aRadioType)
 {
     TxFrame *frame = nullptr;
 
     switch (aRadioType)
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case kRadioTypeIeee802154:
+    case Radio::kTypeIeee802154:
         frame = &mTxFrame802154;
         break;
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case kRadioTypeTrel:
+    case Radio::kTypeTrel:
         frame = &mTxFrameTrel;
         break;
 #endif
@@ -77,7 +77,7 @@ TxFrame &TxFrames::GetTxFrame(RadioType aRadioType)
     return *frame;
 }
 
-TxFrame &TxFrames::GetTxFrame(RadioTypes aRadioTypes)
+TxFrame &TxFrames::GetTxFrame(Radio::Types aRadioTypes)
 {
     // Return the TxFrame among all set of `aRadioTypes` with the smallest MTU.
     // Note that this is `TxFrame` to be sent out in parallel over multiple radio
@@ -87,14 +87,14 @@ TxFrame &TxFrames::GetTxFrame(RadioTypes aRadioTypes)
     TxFrame *frame = nullptr;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (aRadioTypes.Contains(kRadioTypeIeee802154))
+    if (aRadioTypes.Contains(Radio::kTypeIeee802154))
     {
         frame = &mTxFrame802154;
     }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    if (aRadioTypes.Contains(kRadioTypeTrel) && ((frame == nullptr) || (frame->GetMtu() > mTxFrameTrel.GetMtu())))
+    if (aRadioTypes.Contains(Radio::kTypeTrel) && ((frame == nullptr) || (frame->GetMtu() > mTxFrameTrel.GetMtu())))
     {
         frame = &mTxFrameTrel;
     }
@@ -107,7 +107,7 @@ TxFrame &TxFrames::GetTxFrame(RadioTypes aRadioTypes)
 
 TxFrame &TxFrames::GetBroadcastTxFrame(void)
 {
-    RadioTypes allRadios;
+    Radio::Types allRadios;
 
     allRadios.AddAll();
     return GetTxFrame(allRadios);
@@ -137,29 +137,29 @@ Links::Links(Instance &aInstance)
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
-void Links::Send(TxFrame &aFrame, RadioTypes aRadioTypes)
+void Links::Send(TxFrame &aFrame, Radio::Types aRadioTypes)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (aRadioTypes.Contains(kRadioTypeIeee802154) && mTxFrames.mTxFrame802154.IsEmpty())
+    if (aRadioTypes.Contains(Radio::kTypeIeee802154) && mTxFrames.mTxFrame802154.IsEmpty())
     {
         mTxFrames.mTxFrame802154.CopyFrom(aFrame);
     }
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    if (aRadioTypes.Contains(kRadioTypeTrel) && mTxFrames.mTxFrameTrel.IsEmpty())
+    if (aRadioTypes.Contains(Radio::kTypeTrel) && mTxFrames.mTxFrameTrel.IsEmpty())
     {
         mTxFrames.mTxFrameTrel.CopyFrom(aFrame);
     }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (aRadioTypes.Contains(kRadioTypeIeee802154))
+    if (aRadioTypes.Contains(Radio::kTypeIeee802154))
     {
         SuccessOrAssert(mSubMac.Send());
     }
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    if (aRadioTypes.Contains(kRadioTypeTrel))
+    if (aRadioTypes.Contains(Radio::kTypeTrel))
     {
         mTrel.Send();
     }
@@ -168,94 +168,16 @@ void Links::Send(TxFrame &aFrame, RadioTypes aRadioTypes)
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
-const KeyMaterial *Links::GetCurrentMacKey(const Frame &aFrame) const
-{
-    // Gets the security MAC key (for Key Mode 1) based on radio link type of `aFrame`.
-
-    const KeyMaterial *key = nullptr;
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioType radioType = aFrame.GetRadioType();
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (radioType == kRadioTypeIeee802154)
-#endif
-    {
-        ExitNow(key = &Get<SubMac>().GetCurrentMacKey());
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (radioType == kRadioTypeTrel)
-#endif
-    {
-        ExitNow(key = &Get<KeyManager>().GetCurrentTrelMacKey());
-    }
-#endif
-
-    OT_UNUSED_VARIABLE(aFrame);
-
-exit:
-    return key;
-}
-
-const KeyMaterial *Links::GetTemporaryMacKey(const Frame &aFrame, uint32_t aKeySequence) const
-{
-    // Gets the security MAC key (for Key Mode 1) based on radio link
-    // type of `aFrame` and given Key Sequence.
-
-    const KeyMaterial *key = nullptr;
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioType radioType = aFrame.GetRadioType();
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (radioType == kRadioTypeIeee802154)
-#endif
-    {
-        if (aKeySequence == Get<KeyManager>().GetCurrentKeySequence() - 1)
-        {
-            ExitNow(key = &Get<SubMac>().GetPreviousMacKey());
-        }
-        else if (aKeySequence == Get<KeyManager>().GetCurrentKeySequence() + 1)
-        {
-            ExitNow(key = &Get<SubMac>().GetNextMacKey());
-        }
-        else
-        {
-            OT_ASSERT(false);
-        }
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (radioType == kRadioTypeTrel)
-#endif
-    {
-        ExitNow(key = &Get<KeyManager>().GetTemporaryTrelMacKey(aKeySequence));
-    }
-#endif
-
-    OT_UNUSED_VARIABLE(aFrame);
-
-exit:
-    return key;
-}
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 void Links::SetMacFrameCounter(TxFrame &aFrame)
 {
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioType radioType = aFrame.GetRadioType();
+    Radio::Type radioType = aFrame.GetRadioType();
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (radioType == kRadioTypeTrel)
+    if (radioType == Radio::kTypeTrel)
 #endif
     {
         aFrame.SetFrameCounter(Get<KeyManager>().GetTrelMacFrameCounter());

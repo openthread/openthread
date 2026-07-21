@@ -59,5 +59,84 @@ void SyncedTime::SetToNow(Radio &aRadio)
 
 #endif
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+
+//---------------------------------------------------------------------------------------------------------------------
+// Types
+
+const Type Types::kAllTypes[kNumTypes] = {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    kTypeIeee802154,
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    kTypeTrel,
+#endif
+};
+
+void Types::AddAll(void)
+{
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    Add(kTypeIeee802154);
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    Add(kTypeTrel);
+#endif
+}
+
+Types::InfoString Types::ToString(void) const
+{
+    InfoString string;
+    bool       addComma = false;
+
+    string.Append("{");
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    if (Contains(kTypeIeee802154))
+    {
+        string.Append("%s%s", addComma ? ", " : " ", TypeToString(kTypeIeee802154));
+        addComma = true;
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    if (Contains(kTypeTrel))
+    {
+        string.Append("%s%s", addComma ? ", " : " ", TypeToString(kTypeTrel));
+        addComma = true;
+    }
+#endif
+
+    OT_UNUSED_VARIABLE(addComma);
+
+    string.Append(" }");
+
+    return string;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+const char *TypeToString(Type aType)
+{
+    const char *str = "unknown";
+
+    switch (aType)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    case kTypeIeee802154:
+        str = "15.4";
+        break;
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    case kTypeTrel:
+        str = "trel";
+        break;
+#endif
+    }
+
+    return str;
+}
+
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
 } // namespace Radio
 } // namespace ot

@@ -555,7 +555,7 @@ EXAMPLES:
     $0 clean build expect
     "
 
-    exit "$1"
+    exit "${1:-0}"
 }
 
 do_prepare_coredump_upload()
@@ -749,8 +749,9 @@ main()
                 do_combine_coverage
                 ;;
             *)
-                echo
-                echo -e "${OT_COLOR_FAIL}Warning:${OT_COLOR_NONE} Ignoring: '$1'"
+                echo >&2
+                echo -e "${OT_COLOR_FAIL}Error:${OT_COLOR_NONE} Unrecognized command: '$1'" >&2
+                print_usage 1 >&2
                 ;;
         esac
         shift
