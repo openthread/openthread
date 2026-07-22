@@ -108,7 +108,7 @@ do_check()
         # macOS cannot explicitly set network interface name
         NETIF_NAME=$(grep -o 'Thread interface: .\+' "${OT_OUTPUT}" | cut -d: -f2 | tr -d ' \r\n')
         OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
-        if [[ ${OT_DAEMON_ALLOW_ALL} == 1 ]]; then
+        if [[ ${OT_DAEMON_ALLOW_ALL} == 1 ]] || [[ -n ${OT_ISOLATED_REEXEC:-} ]]; then
             OT_CTL=("${OT_CTL_PATH}")
         else
             OT_CTL=(sudo "${OT_CTL_PATH}")
@@ -217,7 +217,7 @@ EOF
         sudo killall -9 expect || true
         sudo killall -9 ot-ctl || true
         NETIF_INDEX=$(ip link show "${NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
-        sudo PATH="$(dirname "${OT_CTL_PATH}"):${PATH}" \
+        sudo env PATH="$(dirname "${OT_CTL_PATH}"):${PATH}" \
             python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" "${NETIF_NAME}" \
             || die 'multicast group join failed'
     fi
@@ -256,6 +256,8 @@ main()
                 do_build
                 ;;
             check)
+                # shellcheck source=script/_maybe_isolate
+                source script/_maybe_isolate
                 do_check
                 ;;
             *)

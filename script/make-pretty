@@ -250,7 +250,7 @@ do_shell_check()
         | xargs -n10 -P"$OT_BUILD_JOBS" shfmt -i 4 -bn -ci -fn -s -d
 
     git ls-files | xargs shfmt -f | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" shellcheck
+        | xargs -n10 -P"$OT_BUILD_JOBS" shellcheck -x
 }
 
 do_check()
