@@ -39,6 +39,7 @@
 #include "common/time.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
+#include "radio/radio.hpp"
 #include "thread/indirect_sender_frame_context.hpp"
 
 namespace ot {
@@ -60,6 +61,7 @@ class CslNeighbor;
 class CslTxScheduler : public InstanceLocator, private NonCopyable
 {
     friend class Mac::Mac;
+    friend class Radio::Callbacks;
     friend class IndirectSender;
 
 public:
@@ -177,11 +179,6 @@ public:
      */
     void Clear(void);
 
-    /**
-     * Updates the value of `mCslFrameRequestAheadUs`, based on bus speed, bus latency and `Mac::kCslRequestAhead`.
-     */
-    void UpdateFrameRequestAhead(void);
-
 private:
     // Guard time in usec to add when checking delay while preparing the CSL frame for tx.
     static constexpr uint32_t kFramePreparationGuardInterval = 1500;
@@ -197,6 +194,9 @@ private:
     // Callbacks from `Mac`
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
     void          HandleSentFrame(const Mac::TxFrame &aFrame, Error aError);
+
+    // Callback from `Radio`
+    void HandleRadioBusLatencyChanged(void);
 
     void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, CslNeighbor &aaCslNeighbor);
 

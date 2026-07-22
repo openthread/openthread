@@ -42,10 +42,10 @@ CslTxScheduler::CslTxScheduler(Instance &aInstance)
     , mCslTxMessage(nullptr)
     , mFrameContext()
 {
-    UpdateFrameRequestAhead();
+    HandleRadioBusLatencyChanged();
 }
 
-void CslTxScheduler::UpdateFrameRequestAhead(void)
+void CslTxScheduler::HandleRadioBusLatencyChanged(void)
 {
     // Longest frame on bus is 127 bytes with some metadata, we use
     // 150 bytes for bus Tx time estimation
