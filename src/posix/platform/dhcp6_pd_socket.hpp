@@ -41,6 +41,7 @@
 #if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
 
 #include <openthread/ip6.h>
+#include <openthread/platform/time.h>
 
 #include "logger.hpp"
 #include "mainloop.hpp"
@@ -107,9 +108,11 @@ public:
     void Send(otMessage *aMessage, const otIp6Address *aDstAddress, uint32_t aInfraIfIndex);
 
 private:
-    static constexpr uint16_t kMaxMessageLength = 2000;
-    static constexpr uint16_t kClientPort       = 546;
-    static constexpr uint16_t kServerPort       = 547;
+    static constexpr uint16_t kMaxMessageLength   = 2000;
+    static constexpr uint16_t kClientPort         = 546;
+    static constexpr uint16_t kServerPort         = 547;
+    static constexpr uint32_t kMinRetryIntervalMs = 5000;
+    static constexpr uint32_t kMaxRetryIntervalMs = 60000;
 
     struct Metadata
     {
@@ -121,6 +124,8 @@ private:
     bool           mPendingTx;
     uint32_t       mInfraIfIndex;
     int            mFd6;
+    uint64_t       mNextRetryTime;
+    uint32_t       mRetryIntervalMs;
     otMessageQueue mTxQueue;
     otIp6Address   mMulticastAddress;
     otInstance    *mInstance;
@@ -131,6 +136,7 @@ private:
     void SendQueuedMessages(void);
     void ReceiveMessage(void);
 
+    otError SetupSocket(uint32_t aInfraIfIndex);
     otError OpenSocket(uint32_t aInfraIfIndex);
     otError JoinOrLeaveMulticastGroup(bool aJoin, uint32_t aInfraIfIndex);
     void    CloseSocket(void);
