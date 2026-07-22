@@ -550,7 +550,7 @@ static constexpr uint8_t kTlvDeviceTypeAndStatusLength = 1;
 
 enum TcatAdvertisementTlvType : uint8_t
 {
-    kTlvVendorOui             = 1, ///< TCAT vendor OUI 24
+    kTlvVendorOui             = 1, ///< TCAT vendor OUI (OUI-24, OUI-28, or OUI-36)
     kTlvDeviceDiscriminator   = 3, ///< TCAT random vendor discriminator
     kTlvDeviceTypeAndStatus   = 4, ///< TCAT Thread device type and status
     kTlvBleLinkCapabilities   = 5, ///< TCAT BLE link capabilities of device
