@@ -62,15 +62,29 @@ void CslTxScheduler::Update(void)
     if (mCslTxMessage == nullptr)
     {
         RescheduleCslTx();
+        ExitNow();
     }
-    else if ((mCslTxNeighbor != nullptr) && (mCslTxNeighbor->GetIndirectMessage() != mCslTxMessage))
+
+    // A non-null `mCslTxMessage` indicates we are in the middle of MAC
+    // CSL TX, i.e., a frame was prepared for `Mac` and we are waiting
+    // for the TX done callback which will call `RescheduleCslTx()`.
+    //
+    // While in this state, if the indirect message being sent for the
+    // currently chosen neighbor is modified or removed, we clear
+    // `mCslTxNeighbor` to avoid processing it in the TX done
+    // callback.
+
+    VerifyOrExit(mCslTxNeighbor != nullptr);
+
+    if (mCslTxNeighbor->GetIndirectMessage() != mCslTxMessage)
     {
-        // `Mac` has already started the CSL tx, so wait for tx done callback
-        // to call `RescheduleCslTx`
         mCslTxNeighbor->ResetCslTxAttempts();
         mCslTxNeighbor                   = nullptr;
         mFrameContext.mMessageNextOffset = 0;
     }
+
+exit:
+    return;
 }
 
 void CslTxScheduler::Clear(void)
@@ -296,41 +310,27 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &) { return nullp
 
 void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError)
 {
-    CslNeighbor *neighbor = mCslTxNeighbor;
+    VerifyOrExit(mCslTxNeighbor != nullptr);
 
-    mCslTxMessage = nullptr;
-
-    VerifyOrExit(neighbor != nullptr);
-
-    mCslTxNeighbor = nullptr;
-
-    HandleSentFrame(aFrame, aError, *neighbor);
-
-exit:
-    RescheduleCslTx();
-}
-
-void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, CslNeighbor &aCslNeighbor)
-{
     switch (aError)
     {
     case kErrorNone:
-        aCslNeighbor.ResetCslTxAttempts();
-        aCslNeighbor.ResetIndirectTxAttempts();
+        mCslTxNeighbor->ResetCslTxAttempts();
+        mCslTxNeighbor->ResetIndirectTxAttempts();
         break;
 
     case kErrorNoAck:
         OT_ASSERT(!aFrame.GetSecurityEnabled() || aFrame.IsHeaderUpdated());
 
-        aCslNeighbor.IncrementCslTxAttempts();
-        LogInfo("CSL tx to %04x failed, attempt %d/%d", aCslNeighbor.GetRloc16(), aCslNeighbor.GetCslTxAttempts(),
+        mCslTxNeighbor->IncrementCslTxAttempts();
+        LogInfo("CSL tx to %04x failed, attempt %d/%d", mCslTxNeighbor->GetRloc16(), mCslTxNeighbor->GetCslTxAttempts(),
                 kMaxCslTriggeredTxAttempts);
 
-        if (aCslNeighbor.GetCslTxAttempts() >= kMaxCslTriggeredTxAttempts)
+        if (mCslTxNeighbor->GetCslTxAttempts() >= kMaxCslTriggeredTxAttempts)
         {
             // CSL transmission attempts reach max, consider child out of sync
-            aCslNeighbor.SetCslSynchronized(false);
-            aCslNeighbor.ResetCslTxAttempts();
+            mCslTxNeighbor->SetCslSynchronized(false);
+            mCslTxNeighbor->ResetCslTxAttempts();
         }
 
         OT_FALL_THROUGH;
@@ -344,7 +344,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
 
         if (!aFrame.IsEmpty())
         {
-            aCslNeighbor.SetIndirectDataSequenceNumber(aFrame.GetSequence());
+            mCslTxNeighbor->SetIndirectDataSequenceNumber(aFrame.GetSequence());
 
             if (aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated())
             {
@@ -352,10 +352,10 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
                 uint8_t  keyIndex;
 
                 IgnoreError(aFrame.GetFrameCounter(frameCounter));
-                aCslNeighbor.SetIndirectFrameCounter(frameCounter);
+                mCslTxNeighbor->SetIndirectFrameCounter(frameCounter);
 
                 IgnoreError(aFrame.GetKeyIndex(keyIndex));
-                aCslNeighbor.SetIndirectKeyIndex(keyIndex);
+                mCslTxNeighbor->SetIndirectKeyIndex(keyIndex);
             }
         }
 
@@ -366,10 +366,12 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         OT_UNREACHABLE_CODE(break);
     }
 
-    Get<IndirectSender>().HandleSentFrameToCslNeighbor(aFrame, mFrameContext, aError, aCslNeighbor);
+    Get<IndirectSender>().HandleSentFrameToCslNeighbor(aFrame, mFrameContext, aError, *mCslTxNeighbor);
 
 exit:
-    return;
+    mCslTxMessage  = nullptr;
+    mCslTxNeighbor = nullptr;
+    RescheduleCslTx();
 }
 
 } // namespace ot

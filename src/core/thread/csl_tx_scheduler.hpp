@@ -251,8 +251,6 @@ private:
     // Callback from `Radio`
     void HandleRadioBusLatencyChanged(void);
 
-    void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, CslNeighbor &aaCslNeighbor);
-
     using CslTxTimer = TimerMilliIn<CslTxScheduler, &CslTxScheduler::HandleTimer>;
 
     uint32_t     mCslFrameRequestAheadUs;
