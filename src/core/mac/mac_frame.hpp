@@ -623,10 +623,11 @@ protected:
 
     static constexpr uint16_t kFcfFrameTypeMask = 7 << 0;
 
-    static constexpr uint16_t kFcfAddrNone  = 0;
-    static constexpr uint16_t kFcfAddrShort = 2;
-    static constexpr uint16_t kFcfAddrExt   = 3;
-    static constexpr uint16_t kFcfAddrMask  = 3;
+    static constexpr uint16_t kFcfAddrNone     = 0;
+    static constexpr uint16_t kFcfAddrReserved = 1;
+    static constexpr uint16_t kFcfAddrShort    = 2;
+    static constexpr uint16_t kFcfAddrExt      = 3;
+    static constexpr uint16_t kFcfAddrMask     = 3;
 
     // Frame Control field format for general MAC frame
     static constexpr uint16_t kFcfSecurityEnabled     = 1 << 3;
@@ -692,7 +693,6 @@ protected:
     static bool     IsDstPanIdPresent(uint16_t aFcf);
     static bool     IsSrcPanIdPresent(uint16_t aFcf);
     static uint16_t DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift);
-    static uint8_t  CalculateAddrFieldSize(uint16_t aFcf);
     static uint8_t  CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t  CalculateKeySourceSize(uint8_t aSecurityControl);
     static uint8_t  CalculateMicSize(uint8_t aSecurityControl);

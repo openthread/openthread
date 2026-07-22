@@ -903,6 +903,38 @@ void TestMacFrameAckGeneration(void)
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 }
 
+void TestMacFrameValidation(void)
+{
+    // Simple IEEE 802.15.4-2003 Data Frame (FCF: 0x0001, DSN: 0x01, FCS: 2 bytes)
+    uint8_t    psdu[] = {0x01, 0x00, 0x01, 0x00, 0x00};
+    Mac::Frame frame;
+
+    frame.mPsdu   = psdu;
+    frame.mLength = sizeof(psdu);
+
+    // Verify valid 2003 Data frame passes validation
+    SuccessOrQuit(frame.ValidatePsdu());
+
+    // Verify unsupported frame types fail validation (Multipurpose = 5, Reserved = 4)
+    psdu[0] = (psdu[0] & ~0x07) | 5;
+    VerifyOrQuit(frame.ValidatePsdu() == kErrorParse);
+
+    psdu[0] = (psdu[0] & ~0x07) | 4;
+    VerifyOrQuit(frame.ValidatePsdu() == kErrorParse);
+
+    // Restore valid frame type (Data = 1)
+    psdu[0] = (psdu[0] & ~0x07) | 1;
+    SuccessOrQuit(frame.ValidatePsdu());
+
+    // Verify unsupported frame version fails validation (Version 3 = 3 << 4 in high byte of FCF)
+    psdu[1] = (psdu[1] & ~0x30) | (3 << 4);
+    VerifyOrQuit(frame.ValidatePsdu() == kErrorParse);
+
+    // Restore valid frame version (2003 = 0)
+    psdu[1] = (psdu[1] & ~0x30) | (0 << 4);
+    SuccessOrQuit(frame.ValidatePsdu());
+}
+
 } // namespace ot
 
 int main(void)
@@ -913,6 +945,7 @@ int main(void)
     ot::TestMacChannelMask();
     ot::TestMacFrameApi();
     ot::TestMacFrameAckGeneration();
+    ot::TestMacFrameValidation();
     printf("All tests passed\n");
     return 0;
 }
