@@ -585,6 +585,7 @@ private:
     bool ShouldHandleTransitionToSleep(void) const;
 
     void ProcessTransmitSecurity(void);
+    void ReprocessSecurityForRetx(TxFrame &aFrame);
     void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyIndex);
     void StartCsmaBackoff(void);
     void StartTimerForBackoff(uint8_t aBackoffExponent);

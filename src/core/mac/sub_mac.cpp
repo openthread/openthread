@@ -577,12 +577,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         aFrame.SetIsARetransmission(true);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
-        if (aFrame.GetSecurityEnabled() && aFrame.HasAnyHeaderIe())
-        {
-            aFrame.RestoreTransmitSecurity(GetExtAddress());
-        }
-
-        ProcessTransmitSecurity();
+        ReprocessSecurityForRetx(aFrame);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
@@ -620,6 +615,41 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+
+void SubMac::ReprocessSecurityForRetx(TxFrame &aFrame)
+{
+    // Re-processes transmit security on a frame being retransmitted if
+    // it contains Header IEs. The frame is first restored back to
+    // plaintext and then re-encrypted with a new frame counter value.
+
+    VerifyOrExit(aFrame.GetSecurityEnabled() && aFrame.HasAnyHeaderIe());
+
+    // When transmit security is handled by `SubMac`, the AES key is already set
+    // on `aFrame`. However, when transmit security is delegated to the radio
+    // platform, the radio is not required to set or preserve the AES key on
+    // `aFrame`. To ensure `RestoreTransmitSecurity()` can properly decrypt the
+    // frame back to plaintext, we determine and set the key on `aFrame` using
+    // its key index.
+
+    if (!ShouldHandleTransmitSecurity())
+    {
+        uint8_t keyIndex;
+
+        SuccessOrExit(aFrame.GetKeyIndex(keyIndex));
+        aFrame.SetAesKey(mKeyTrio.SelectKey(keyIndex));
+    }
+
+    aFrame.RestoreTransmitSecurity(GetExtAddress());
+
+    ProcessTransmitSecurity();
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
 void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
 {
