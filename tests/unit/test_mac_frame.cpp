@@ -423,7 +423,15 @@ void TestMacHeader(void)
         {
             VerifyOrQuit(!frame.IsSequencePresent());
         }
+
         DumpBuffer(string, frame.GetPsdu(), frame.GetLength());
+
+        // Verify that the IE Present bit in FCF is only recognized for
+        // IEEE 802.15.4-2015 frame version, and is ignored for older
+        // versions (2003/2006).
+
+        frame.SetIePresent(true);
+        VerifyOrQuit(frame.IsIePresent() == (testCase.mVersion == Mac::Frame::kVersion2015));
     }
 }
 
@@ -722,6 +730,9 @@ void TestMacFrameApi(void)
     VerifyOrQuit(frame.GetType() == Mac::Frame::kTypeMacCmd);
     SuccessOrQuit(frame.GetCommandId(commandId));
     VerifyOrQuit(commandId == Mac::Frame::kMacCmdDataRequest);
+    VerifyOrQuit(!frame.IsIePresent());
+    frame.SetIePresent(true);
+    VerifyOrQuit(!frame.IsIePresent());
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     // IEEE 802.15.4-2015 Mac Command

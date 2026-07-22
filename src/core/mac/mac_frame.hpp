@@ -192,7 +192,7 @@ public:
      *
      * @returns The IEEE 802.15.4 Frame Version.
      */
-    uint16_t GetVersion(void) const { return GetFrameControlField() & kFcfFrameVersionMask; }
+    uint16_t GetVersion(void) const { return GetVersion(GetFrameControlField()); }
 
     /**
      * Returns if this IEEE 802.15.4 frame's version is 2015.
@@ -682,9 +682,10 @@ protected:
     static bool     IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != 0; }
     static bool     IsSecurityEnabled(uint16_t aFcf) { return (aFcf & kFcfSecurityEnabled) != 0; }
     static bool     IsFramePending(uint16_t aFcf) { return (aFcf & kFcfFramePending) != 0; }
-    static bool     IsIePresent(uint16_t aFcf) { return (aFcf & kFcfIePresent) != 0; }
+    static bool     IsIePresent(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfIePresent) != 0); }
     static bool     IsAckRequest(uint16_t aFcf) { return (aFcf & kFcfAckRequest) != 0; }
-    static bool     IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kVersion2015; }
+    static uint16_t GetVersion(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask); }
+    static bool     IsVersion2015(uint16_t aFcf) { return GetVersion(aFcf) == kVersion2015; }
     static bool     IsDstPanIdPresent(uint16_t aFcf);
     static bool     IsSrcPanIdPresent(uint16_t aFcf);
     static uint16_t DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift);
