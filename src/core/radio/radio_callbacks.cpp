@@ -61,10 +61,10 @@ void Callbacks::HandleEnergyScanDone(int8_t aMaxRssi) { Get<Mac::SubMac>().Handl
 void Callbacks::HandleBusLatencyChanged(void)
 {
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    Get<CslTxScheduler>().UpdateFrameRequestAhead();
+    Get<CslTxScheduler>().HandleRadioBusLatencyChanged();
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    Get<WakeupTxScheduler>().UpdateFrameRequestAhead();
+    Get<WakeupTxScheduler>().HandleRadioBusLatencyChanged();
 #endif
 }
 

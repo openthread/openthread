@@ -37,6 +37,7 @@
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
+#include "radio/radio.hpp"
 
 namespace ot {
 
@@ -48,6 +49,7 @@ class Child;
 class WakeupTxScheduler : public InstanceLocator, private NonCopyable
 {
     friend class Mac::Mac;
+    friend class Radio::Callbacks;
 
 public:
     /**
@@ -95,11 +97,6 @@ public:
     void Stop(void);
 
     /**
-     * Updates the value of `mTxRequestAheadTimeUs`, based on bus speed, bus latency and `Mac::kCslRequestAhead`.
-     */
-    void UpdateFrameRequestAhead(void);
-
-    /**
      * Returns the wake-up request.
      */
     const Mac::WakeupRequest &GetWakeupRequest(void) const { return mWakeupRequest; }
@@ -113,6 +110,9 @@ private:
 
     // Called by the MAC layer when a wake-up frame transmission is about to be started.
     Mac::TxFrame *PrepareWakeupFrame(Mac::TxFrames &aTxFrames);
+
+    // Callback from `Radio`
+    void HandleRadioBusLatencyChanged(void);
 
     // Called at the beginning of a wake-up sequence and right after a wake-up frame has been prepared for transmission.
     void ScheduleTimer(void);

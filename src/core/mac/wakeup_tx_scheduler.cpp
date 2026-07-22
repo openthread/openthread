@@ -48,7 +48,7 @@ WakeupTxScheduler::WakeupTxScheduler(Instance &aInstance)
     , mTimer(aInstance)
     , mIsRunning(false)
 {
-    UpdateFrameRequestAhead();
+    HandleRadioBusLatencyChanged();
 }
 
 Error WakeupTxScheduler::WakeUp(const Mac::WakeupRequest &aWakeupRequest, uint16_t aIntervalUs, uint16_t aDurationMs)
@@ -156,7 +156,7 @@ void WakeupTxScheduler::Stop(void)
     mTimer.Stop();
 }
 
-void WakeupTxScheduler::UpdateFrameRequestAhead(void)
+void WakeupTxScheduler::HandleRadioBusLatencyChanged(void)
 {
     // A rough estimate of the size of data that has to be exchanged with the radio to schedule a wake-up frame TX.
     // This is used to make sure that a wake-up frame is received by the radio early enough to be transmitted on time.
