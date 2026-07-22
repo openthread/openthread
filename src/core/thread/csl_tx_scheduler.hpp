@@ -75,85 +75,133 @@ public:
     class NeighborInfo
     {
     public:
+        /**
+         * Returns the number of CSL triggered tx attempts.
+         *
+         * @returns The number of CSL triggered tx attempts.
+         */
         uint8_t GetCslTxAttempts(void) const { return mCslTxAttempts; }
-        void    IncrementCslTxAttempts(void) { mCslTxAttempts++; }
-        void    ResetCslTxAttempts(void) { mCslTxAttempts = 0; }
-
-        bool IsCslSynchronized(void) const { return mCslSynchronized && mCslPeriod > 0; }
-        void SetCslSynchronized(bool aCslSynchronized) { mCslSynchronized = aCslSynchronized; }
-
-        uint8_t GetCslChannel(void) const { return mCslChannel; }
-        void    SetCslChannel(uint8_t aChannel) { mCslChannel = aChannel; }
-
-        uint32_t GetCslTimeout(void) const { return mCslTimeout; }
-        void     SetCslTimeout(uint32_t aTimeout) { mCslTimeout = aTimeout; }
-
-        uint16_t GetCslPeriod(void) const { return mCslPeriod; }
-        void     SetCslPeriod(uint16_t aPeriod) { mCslPeriod = aPeriod; }
-
-        uint16_t GetCslPhase(void) const { return mCslPhase; }
-        void     SetCslPhase(uint16_t aPhase) { mCslPhase = aPhase; }
-
-        TimeMilli GetCslLastHeard(void) const { return mCslLastHeard; }
-        void      SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
-
-        Radio::Time64 GetLastRxTimestamp(void) const { return mLastRxTimestamp; }
-        void          SetLastRxTimestamp(Radio::Time64 aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
-
-    private:
-        uint8_t  mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
-        bool     mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
-        uint8_t  mCslChannel;          ///< The channel the device will listen on.
-        uint32_t mCslTimeout;          ///< The sync timeout, in seconds.
-        uint16_t mCslPeriod; ///< CSL sampled listening period between consecutive channel samples in units of 10
-                             ///< symbols (160 microseconds).
 
         /**
-         * The time in units of 10 symbols from the first symbol of the frame
-         * containing the CSL IE was transmitted until the next channel sample,
-         * see IEEE 802.15.4-2015, section 6.12.2.
-         *
-         * The Thread standard further defines the CSL phase (see Thread 1.4,
-         * section 3.2.6.3.4, also conforming to IEEE 802.15.4-2020, section
-         * 6.12.2.1):
-         *  * The "first symbol" from the definition SHALL be interpreted as the
-         *    first symbol of the MAC Header.
-         *  * "until the next channel sample":
-         *     * The CSL Receiver SHALL be ready to receive when the preamble
-         *       time T_pa as specified below is reached.
-         *     * The CSL Receiver SHOULD be ready to receive earlier than T_pa
-         *       and SHOULD stay ready to receive until after the time specified
-         *       in CSL Phase, according to the implementation and accuracy
-         *       expectations.
-         *     * The CSL Transmitter SHALL start transmitting the first symbol
-         *       of the preamble of the frame to transmit at the preamble time
-         *       T_pa = (CSL-Phase-Time – 192 us) (that is, CCA must be
-         *       performed before time T_pa). Here, CSL-Phase-Time is the time
-         *       duration specified by the CslPhase field value (in units of 10
-         *       symbol periods).
-         *     * This implies that the CSL Transmitter SHALL start transmitting
-         *       the first symbol of the MAC Header at the time T_mh =
-         *       CSL-Phase-Time.
-         *
-         * Derivation of the next TX timestamp based on this definition and the
-         * RX timestamp of the packet containing the CSL IE:
-         *
-         * Note that RX and TX timestamps are defined to point to the end of the
-         * synchronization header (SHR).
-         *
-         * lastTmh = lastRxTimestamp + phrDuration
-         *
-         * nextTmh = lastTmh + symbolPeriod * 10 * (n * cslPeriod + cslPhase)
-         *         = lastTmh + 160us * (n * cslPeriod + cslPhase)
-         *
-         * nextTxTimestamp
-         *         = nextTmh - phrDuration
-         *         = lastRxTimestamp + 160us * (n * cslPeriod + cslPhase)
+         * Increments the number of CSL triggered tx attempts.
          */
-        uint16_t  mCslPhase;
-        TimeMilli mCslLastHeard; ///< Radio clock time when last frame containing CSL IE was heard.
-        uint64_t
-            mLastRxTimestamp; ///< Radio clock time when last frame containing CSL IE was received, in microseconds.
+        void IncrementCslTxAttempts(void) { mCslTxAttempts++; }
+
+        /**
+         * Resets the number of CSL triggered tx attempts to zero.
+         */
+        void ResetCslTxAttempts(void) { mCslTxAttempts = 0; }
+
+        /**
+         * Indicates whether or not the neighbor is CSL synchronized.
+         *
+         * @retval TRUE   If the neighbor is CSL synchronized.
+         * @retval FALSE  If the neighbor is not CSL synchronized.
+         */
+        bool IsCslSynchronized(void) const { return mCslSynchronized && mCslPeriod > 0; }
+
+        /**
+         * Sets whether or not the neighbor is CSL synchronized.
+         *
+         * @param[in] aCslSynchronized  TRUE if the neighbor is CSL synchronized, FALSE otherwise.
+         */
+        void SetCslSynchronized(bool aCslSynchronized) { mCslSynchronized = aCslSynchronized; }
+
+        /**
+         * Returns the CSL channel the neighbor listens on.
+         *
+         * @returns The CSL channel.
+         */
+        uint8_t GetCslChannel(void) const { return mCslChannel; }
+
+        /**
+         * Sets the CSL channel the neighbor listens on.
+         *
+         * @param[in] aChannel  The CSL channel.
+         */
+        void SetCslChannel(uint8_t aChannel) { mCslChannel = aChannel; }
+
+        /**
+         * Returns the CSL sync timeout in seconds.
+         *
+         * @returns The CSL sync timeout in seconds.
+         */
+        uint32_t GetCslTimeout(void) const { return mCslTimeout; }
+
+        /**
+         * Sets the CSL sync timeout in seconds.
+         *
+         * @param[in] aTimeout  The CSL sync timeout in seconds.
+         */
+        void SetCslTimeout(uint32_t aTimeout) { mCslTimeout = aTimeout; }
+
+        /**
+         * Returns the CSL sampled listening period in units of 10 symbols (160 microseconds).
+         *
+         * @returns The CSL sampled listening period.
+         */
+        uint16_t GetCslPeriod(void) const { return mCslPeriod; }
+
+        /**
+         * Sets the CSL sampled listening period in units of 10 symbols (160 microseconds).
+         *
+         * @param[in] aPeriod  The CSL sampled listening period.
+         */
+        void SetCslPeriod(uint16_t aPeriod) { mCslPeriod = aPeriod; }
+
+        /**
+         * Returns the CSL phase in units of 10 symbols (160 microseconds).
+         *
+         * @returns The CSL phase.
+         */
+        uint16_t GetCslPhase(void) const { return mCslPhase; }
+
+        /**
+         * Sets the CSL phase in units of 10 symbols (160 microseconds).
+         *
+         * @param[in] aPhase  The CSL phase.
+         */
+        void SetCslPhase(uint16_t aPhase) { mCslPhase = aPhase; }
+
+        /**
+         * Returns the time (local milliseconds `TimeMilli`) when the last frame containing a CSL IE was heard.
+         *
+         * @returns The last heard time.
+         */
+        TimeMilli GetCslLastHeard(void) const { return mCslLastHeard; }
+
+        /**
+         * Sets the time (local milliseconds `TimeMilli`) when the last frame containing a CSL IE was heard.
+         *
+         * @param[in] aCslLastHeard  The last heard time.
+         */
+        void SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
+
+        /**
+         * Returns the radio clock timestamp (microseconds `Radio::Time64`) when the last frame containing a CSL IE
+         * was received.
+         *
+         * @returns The last RX timestamp.
+         */
+        Radio::Time64 GetLastRxTimestamp(void) const { return mLastRxTimestamp; }
+
+        /**
+         * Sets the radio clock timestamp (microseconds `Radio::Time64`) when the last frame containing a CSL IE
+         * was received.
+         *
+         * @param[in] aLastRxTimestamp  The last RX timestamp.
+         */
+        void SetLastRxTimestamp(Radio::Time64 aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
+
+    private:
+        uint8_t       mCslTxAttempts : 7;
+        bool          mCslSynchronized : 1;
+        uint8_t       mCslChannel;
+        uint32_t      mCslTimeout;      // In seconds
+        uint16_t      mCslPeriod;       // In units of 10 symbols
+        uint16_t      mCslPhase;        // In units of 10 symbols
+        TimeMilli     mCslLastHeard;    // Local milliseconds clock time
+        Radio::Time64 mLastRxTimestamp; // Radio microseconds clock time
 
         static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
@@ -166,11 +214,14 @@ public:
     explicit CslTxScheduler(Instance &aInstance);
 
     /**
-     * Updates the next CSL transmission (finds the nearest child).
+     * Updates the CSL transmission schedule.
      *
-     * It would then request the `Mac` to do the CSL tx. If the last CSL tx has been fired at `Mac` but hasn't been
-     * done yet, and it's aborted, this method would clear current tx CSL neighbor to notify the `HandleTransmitDone`
-     * that the operation has been aborted.
+     * If no CSL transmission is currently in progress, this method finds the CSL neighbor with the earliest
+     * upcoming receive window that also has a pending indirect message, and schedules its frame transmission.
+     *
+     * If a CSL transmission is ongoing at the MAC layer but the corresponding indirect message being transmitted
+     * is modified or removed, this method updates the scheduler's internal state to indicate that the active CSL
+     * transmission has been aborted.
      */
     void Update(void);
 
