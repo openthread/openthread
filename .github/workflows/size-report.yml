@@ -59,8 +59,26 @@ jobs:
         script: |
           const fs = require('fs')
 
-          const report = fs.readFileSync('/tmp/ot-size-report/report_pr', 'utf8');
-          const pr_number = parseInt(fs.readFileSync('/tmp/ot-size-report/pr_number', 'utf8').trim());
+          const report = fs.readFileSync('/tmp/ot-size-report/report_pr', 'utf8')
+
+          let pr_number = context.payload.workflow_run.pull_requests[0]?.number
+
+          if (!pr_number) {
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.payload.workflow_run.head_sha,
+            })
+            const open_pr = prs.find(pr => pr.state === 'open') || prs[0]
+            if (open_pr) {
+              pr_number = open_pr.number
+            }
+          }
+
+          if (!pr_number) {
+            core.setFailed('Could not determine PR number for workflow run')
+            return
+          }
 
           const params = {
               issue_number: pr_number,
@@ -73,7 +91,7 @@ jobs:
             issue_number: pr_number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-          });
+          })
 
           const kMagicHeader = '<!-- Size Report of **OpenThread** -->'
           const comment = response.data.find(comment => comment.body.startsWith(kMagicHeader))
