@@ -183,7 +183,7 @@ void TxFrame::BuildInfo::PrepareHeadersIn(TxFrame &aTxFrame) const
     builder.Init(aTxFrame.mPsdu, aTxFrame.GetMtu());
     IgnoreError(builder.AppendUint<kLittleEndian>(fcf));
 
-    if (IsSequencePresent(fcf))
+    if (!IsSequenceSuppressed(fcf))
     {
         builder.Append<uint8_t>(); // Place holder for seq number
     }
@@ -305,7 +305,7 @@ uint8_t Frame::SkipSequenceIndex(void) const
     uint16_t fcf   = GetFrameControlField();
     uint8_t  index = kFcfSize;
 
-    if (IsSequencePresent(fcf))
+    if (!IsSequenceSuppressed(fcf))
     {
         index += kDsnSize;
     }
@@ -906,7 +906,7 @@ exit:
 
 uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
 {
-    uint8_t size = kFcfSize + (IsSequencePresent(aFcf) ? kDsnSize : 0);
+    uint8_t size = kFcfSize + (IsSequenceSuppressed(aFcf) ? 0 : kDsnSize);
 
     // This static method calculates the size (number of bytes) of
     // Address header field for a given Frame Control `aFcf` value.

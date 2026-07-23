@@ -752,6 +752,36 @@ void TestMacFrameApi(void)
     printf("commandId:%d\n", commandId);
 
 #endif
+
+    {
+        uint8_t psdu2003WithBit8[] = {0x00, 0x01, 0x11};
+        uint8_t psdu2006WithBit8[] = {0x00, 0x11, 0x22};
+        uint8_t psdu2015WithBit8[] = {0x00, 0x21, 0x33};
+        uint8_t psdu2015NoBit8[]   = {0x00, 0x20, 0x44};
+
+        frame.mPsdu   = psdu2003WithBit8;
+        frame.mLength = sizeof(psdu2003WithBit8);
+        VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2003);
+        VerifyOrQuit(frame.IsSequencePresent());
+        VerifyOrQuit(frame.GetSequence() == 0x11);
+
+        frame.mPsdu   = psdu2006WithBit8;
+        frame.mLength = sizeof(psdu2006WithBit8);
+        VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2006);
+        VerifyOrQuit(frame.IsSequencePresent());
+        VerifyOrQuit(frame.GetSequence() == 0x22);
+
+        frame.mPsdu   = psdu2015WithBit8;
+        frame.mLength = sizeof(psdu2015WithBit8);
+        VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2015);
+        VerifyOrQuit(!frame.IsSequencePresent());
+
+        frame.mPsdu   = psdu2015NoBit8;
+        frame.mLength = sizeof(psdu2015NoBit8);
+        VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2015);
+        VerifyOrQuit(frame.IsSequencePresent());
+        VerifyOrQuit(frame.GetSequence() == 0x44);
+    }
 }
 
 void TestMacFrameAckGeneration(void)

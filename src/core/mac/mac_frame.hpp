@@ -281,7 +281,7 @@ public:
      *
      * @returns TRUE if the Sequence Number is present, FALSE otherwise.
      */
-    uint8_t IsSequencePresent(void) const { return IsSequencePresent(GetFrameControlField()); }
+    uint8_t IsSequencePresent(void) const { return !IsSequenceSuppressed(GetFrameControlField()); }
 
     /**
      * Indicates whether or not the Destination PAN ID is present.
@@ -677,7 +677,10 @@ protected:
 
     static uint16_t GetFcfDstAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfDstAddrMask>(aFcf); }
     static uint16_t GetFcfSrcAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf); }
-    static bool     IsSequencePresent(uint16_t aFcf) { return (aFcf & kFcfSequenceSuppression) == 0; }
+    static bool     IsSequenceSuppressed(uint16_t aFcf)
+    {
+        return IsVersion2015(aFcf) && ((aFcf & kFcfSequenceSuppression) != 0);
+    }
     static bool     IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != 0; }
     static bool     IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != 0; }
     static bool     IsSecurityEnabled(uint16_t aFcf) { return (aFcf & kFcfSecurityEnabled) != 0; }
