@@ -135,13 +135,55 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const CslNeighbor &aCslNeig
                                                      uint32_t          &aDelayFromLastRx,
                                                      uint32_t           aAheadUs) const
 {
-    // See CslTxScheduler::NeighborInfo::mCslPhase
+    // CSL phase is in units of 10 symbols from the first symbol of the frame
+    // containing the CSL IE was transmitted until the next channel sample,
+    // see IEEE 802.15.4-2015, section 6.12.2.
+    //
+    // The Thread standard further defines the CSL phase (see Thread 1.4,
+    // section 3.2.6.3.4, also conforming to IEEE 802.15.4-2020, section
+    // 6.12.2.1):
+    //  - The "first symbol" from the definition SHALL be interpreted as the
+    //    first symbol of the MAC Header.
+    //  - "until the next channel sample":
+    //     - The CSL Receiver SHALL be ready to receive when the preamble
+    //       time T_pa as specified below is reached.
+    //     - The CSL Receiver SHOULD be ready to receive earlier than T_pa
+    //       and SHOULD stay ready to receive until after the time specified
+    //       in CSL Phase, according to the implementation and accuracy
+    //       expectations.
+    //     - The CSL Transmitter SHALL start transmitting the first symbol
+    //       of the preamble of the frame to transmit at the preamble time
+    //       T_pa = (CSL-Phase-Time - 192 us) (that is, CCA must be
+    //       performed before time T_pa). Here, CSL-Phase-Time is the time
+    //       duration specified by the CslPhase field value (in units of 10
+    //       symbol periods).
+    //     - This implies that the CSL Transmitter SHALL start transmitting
+    //       the first symbol of the MAC Header at the time T_mh =
+    //       CSL-Phase-Time.
+    //
+    // Derivation of the next TX timestamp based on this definition and the
+    // RX timestamp of the packet containing the CSL IE:
+    //
+    // Note that RX and TX timestamps are defined to point to the end of the
+    // synchronization header (SHR).
+    //
+    // lastTmh = lastRxTimestamp + phrDuration
+    //
+    // nextTmh = lastTmh + symbolPeriod * 10 * (n * cslPeriod + cslPhase)
+    //         = lastTmh + 160us * (n * cslPeriod + cslPhase)
+    //
+    // nextTxTimestamp
+    //         = nextTmh - phrDuration
+    //         = lastRxTimestamp + 160us * (n * cslPeriod + cslPhase)
 
-    Radio::Time64 radioNow   = Get<Radio::Radio>().GetNow();
-    uint32_t      periodInUs = aCslNeighbor.GetCslPeriod() * Radio::kUsPerTenSymbols;
-    Radio::Time64 firstTxWindow =
-        aCslNeighbor.GetLastRxTimestamp() + aCslNeighbor.GetCslPhase() * Radio::kUsPerTenSymbols;
-    Radio::Time64 nextTxWindow = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
+    Radio::Time64 radioNow = Get<Radio::Radio>().GetNow();
+    uint32_t      periodInUs;
+    Radio::Time64 firstTxWindow;
+    Radio::Time64 nextTxWindow;
+
+    periodInUs    = aCslNeighbor.GetCslPeriod() * Radio::kUsPerTenSymbols;
+    firstTxWindow = aCslNeighbor.GetLastRxTimestamp() + aCslNeighbor.GetCslPhase() * Radio::kUsPerTenSymbols;
+    nextTxWindow  = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
 
     while (nextTxWindow < radioNow + aAheadUs)
     {
