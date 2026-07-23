@@ -99,6 +99,10 @@ typedef otEnergyScanResult EnergyScanResult;
 class Mac : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
+    friend class SubMac::Callbacks;
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    friend class ot::Trel::Link;
+#endif
 
 public:
     /**
@@ -148,13 +152,6 @@ public:
      * @retval kErrorBusy  Could not start the energy scan.
      */
     Error EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext);
-
-    /**
-     * Indicates the energy scan for the current channel is complete.
-     *
-     * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
-     */
-    void EnergyScanDone(int8_t aEnergyScanMaxRssi);
 
     /**
      * Indicates whether or not IEEE 802.15.4 Beacon transmissions are enabled.
@@ -361,52 +358,6 @@ public:
         mMaxFrameRetriesIndirect = aMaxFrameRetriesIndirect;
     }
 #endif
-
-    /**
-     * Is called to handle a received frame.
-     *
-     * @param[in]  aFrame  A pointer to the received frame, or `nullptr` if the receive operation was aborted.
-     * @param[in]  aError  kErrorNone when successfully received a frame,
-     *                     kErrorAbort when reception was aborted and a frame was not received.
-     */
-    void HandleReceivedFrame(RxFrame *aFrame, Error aError);
-
-    /**
-     * Records CCA status (success/failure) for a frame transmission attempt.
-     *
-     * @param[in] aCcaSuccess   TRUE if the CCA succeeded, FALSE otherwise.
-     * @param[in] aChannel      The channel on which CCA was performed.
-     */
-    void RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel);
-
-    /**
-     * Records the status of a frame transmission attempt, updating MAC counters.
-     *
-     * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status
-     * of a frame transmission request, this method is invoked on all frame transmission attempts.
-     *
-     * @param[in] aFrame      The transmitted frame.
-     * @param[in] aError      kErrorNone when the frame was transmitted successfully,
-     *                        kErrorNoAck when the frame was transmitted but no ACK was received,
-     *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
-     *                        kErrorAbort when transmission was aborted for other reasons.
-     * @param[in] aRetryCount Indicates number of transmission retries for this frame.
-     * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
-     *                        when there was an error in transmission (i.e., `aError` is not NONE).
-     */
-    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
-
-    /**
-     * Is called to handle transmit events.
-     *
-     * @param[in]  aFrame      The frame that was transmitted.
-     * @param[in]  aAckFrame   A pointer to the ACK frame, `nullptr` if no ACK was received.
-     * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
-     *                         kErrorNoAck when the frame was transmitted but no ACK was received,
-     *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,
-     *                         kErrorAbort when transmission was aborted for other reasons.
-     */
-    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
 
     /**
      * Returns if an active scan is in progress.
@@ -813,6 +764,13 @@ private:
 #endif
     };
 #endif
+
+    // Callbacks from `SubMac` or `Trel::Link`
+    void HandleReceivedFrame(RxFrame *aFrame, Error aError);
+    void RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel);
+    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
+    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+    void EnergyScanDone(int8_t aEnergyScanMaxRssi);
 
     Error ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void  ProcessTransmitSecurity(TxFrame &aFrame);
