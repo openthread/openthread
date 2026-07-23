@@ -894,73 +894,63 @@ exit:
 
 uint8_t Frame::SkipAddrFieldIndex(void) const
 {
-    uint8_t index;
+    // Returns the index after the MAC address header fields (Frame Control,
+    // Sequence Number, Destination/Source PAN ID, and Destination/Source
+    // Addresses). If the header is invalid, returns `kInvalidIndex`.
 
-    VerifyOrExit(kFcfSize + GetFcsSize() <= mLength, index = kInvalidIndex);
+    static constexpr uint8_t kSizeForAddrMode[] = {
+        /* [0] kFcfAddrNone     */ 0,
+        /* [1] kFcfAddrReserved */ kInvalidSize,
+        /* [2] kFcfAddrShort    */ sizeof(ShortAddress),
+        /* [3] kFcfAddrExt      */ sizeof(ExtAddress),
+    };
 
-    index = CalculateAddrFieldSize(GetFrameControlField());
+    static_assert(kSizeForAddrMode[kFcfAddrNone] == 0, "kSizeForAddrMode[] array is incorrect");
+    static_assert(kSizeForAddrMode[kFcfAddrReserved] == kInvalidSize, "kSizeForAddrMode[] array is incorrect");
+    static_assert(kSizeForAddrMode[kFcfAddrShort] == sizeof(ShortAddress), "kSizeForAddrMode[] array is incorrect");
+    static_assert(kSizeForAddrMode[kFcfAddrExt] == sizeof(ExtAddress), "kSizeForAddrMode[] array is incorrect");
+
+    uint8_t  index = kInvalidIndex;
+    uint8_t  size;
+    uint16_t fcf;
+    uint16_t addrMode;
+
+    VerifyOrExit(kFcfSize + GetFcsSize() <= GetLength());
+
+    // Only accept standard frame types (Beacon, Data, Ack, MAC Command).
+    // Other types (e.g., Multipurpose) use a different FCF/header layout.
+    VerifyOrExit(GetType() <= kTypeMacCmd);
+
+    fcf = GetFrameControlField();
+
+    // Only accept supported frame versions (2003, 2006, 2015).
+    // Future frame versions can alter the MAC header layout.
+    VerifyOrExit(GetVersion(fcf) <= kVersion2015);
+
+    size = kFcfSize + (IsSequenceSuppressed(fcf) ? 0 : kDsnSize);
+
+    if (IsDstPanIdPresent(fcf))
+    {
+        size += sizeof(PanId);
+    }
+
+    addrMode = GetFcfDstAddr(fcf);
+    VerifyOrExit(addrMode != kFcfAddrReserved);
+    size += kSizeForAddrMode[addrMode];
+
+    if (IsSrcPanIdPresent(fcf))
+    {
+        size += sizeof(PanId);
+    }
+
+    addrMode = GetFcfSrcAddr(fcf);
+    VerifyOrExit(addrMode != kFcfAddrReserved);
+    size += kSizeForAddrMode[addrMode];
+
+    index = size;
 
 exit:
     return index;
-}
-
-uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
-{
-    uint8_t size = kFcfSize + (IsSequenceSuppressed(aFcf) ? 0 : kDsnSize);
-
-    // This static method calculates the size (number of bytes) of
-    // Address header field for a given Frame Control `aFcf` value.
-    // The size includes the Frame Control and Sequence Number fields
-    // along with Destination and Source PAN ID and Short/Extended
-    // Addresses. If the `aFcf` is not valid, this method returns
-    // `kInvalidSize`.
-
-    if (IsDstPanIdPresent(aFcf))
-    {
-        size += sizeof(PanId);
-    }
-
-    switch (GetFcfDstAddr(aFcf))
-    {
-    case kFcfAddrNone:
-        break;
-
-    case kFcfAddrShort:
-        size += sizeof(ShortAddress);
-        break;
-
-    case kFcfAddrExt:
-        size += sizeof(ExtAddress);
-        break;
-
-    default:
-        ExitNow(size = kInvalidSize);
-    }
-
-    if (IsSrcPanIdPresent(aFcf))
-    {
-        size += sizeof(PanId);
-    }
-
-    switch (GetFcfSrcAddr(aFcf))
-    {
-    case kFcfAddrNone:
-        break;
-
-    case kFcfAddrShort:
-        size += sizeof(ShortAddress);
-        break;
-
-    case kFcfAddrExt:
-        size += sizeof(ExtAddress);
-        break;
-
-    default:
-        ExitNow(size = kInvalidSize);
-    }
-
-exit:
-    return size;
 }
 
 uint8_t Frame::FindPayloadIndex(void) const
