@@ -39,18 +39,21 @@
 namespace ot {
 namespace Spinel {
 
-otError RadioSpinel::VendorHandleValueIs(spinel_prop_key_t aPropKey)
+otError RadioSpinel::VendorHandleValueIs(spinel_prop_key_t aPropKey, const uint8_t *aBuffer, uint16_t aLength);
 {
     otError error = OT_ERROR_NONE;
 
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aLength);
+
     switch (aPropKey)
     {
-        // TODO: Implement your property get handlers here.
+        // TODO: Implement your vendor property VALUE_IS handlers here.
         //
-        // Get handler should retrieve the property value and then encode and write the
-        // value into the NCP buffer. If the "get" operation itself fails, handler should
-        // write a `LAST_STATUS` with the error status into the NCP buffer. `OT_ERROR_NO_BUFS`
-        // should be returned if NCP buffer is full and response cannot be written.
+        // This hook is invoked when RadioSpinel receives a `SPINEL_CMD_PROP_VALUE_IS` for
+        // a vendor property. Decode the value from `aBuffer`/`aLength` and process it.
+        // Return `OT_ERROR_NOT_FOUND` if the property key is not supported. Return
+        // another error (e.g., `OT_ERROR_PARSE`) if decoding or handling of the value fails.
     default:
         error = OT_ERROR_NOT_FOUND;
         break;
