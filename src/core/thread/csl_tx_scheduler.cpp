@@ -41,6 +41,7 @@ CslTxScheduler::CslTxScheduler(Instance &aInstance)
     , mCslTxNeighbor(nullptr)
     , mCslTxMessage(nullptr)
     , mFrameContext()
+    , mTimer(aInstance)
 {
     HandleRadioBusLatencyChanged();
 }
@@ -90,6 +91,7 @@ void CslTxScheduler::Clear(void)
     mFrameContext.mMessageNextOffset = 0;
     mCslTxNeighbor                   = nullptr;
     mCslTxMessage                    = nullptr;
+    mTimer.Stop();
 }
 
 /**
@@ -125,10 +127,24 @@ void CslTxScheduler::RescheduleCslTx(void)
 
     if (bestNeighbor != nullptr)
     {
-        Get<Mac::Mac>().RequestCslFrameTransmission(minDelayTime / 1000UL);
+        mTimer.Start(Time::UsecToMsec(minDelayTime));
+    }
+    else
+    {
+        mTimer.Stop();
     }
 
     mCslTxNeighbor = bestNeighbor;
+}
+
+void CslTxScheduler::HandleTimer(void)
+{
+    VerifyOrExit(mCslTxNeighbor != nullptr);
+
+    Get<Mac::Mac>().RequestCslFrameTransmission();
+
+exit:
+    return;
 }
 
 uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const CslNeighbor &aCslNeighbor,

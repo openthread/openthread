@@ -83,9 +83,6 @@ Mac::Mac(Instance &aInstance)
     , mMaxFrameRetriesDirect(kDefaultMaxFrameRetriesDirect)
 #if OPENTHREAD_FTD
     , mMaxFrameRetriesIndirect(kDefaultMaxFrameRetriesIndirect)
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    , mCslTxFireTime(TimeMilli::kMaxDuration)
-#endif
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mIsCslEnabled(false)
@@ -478,11 +475,10 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-void Mac::RequestCslFrameTransmission(uint32_t aDelay)
+void Mac::RequestCslFrameTransmission(void)
 {
     VerifyOrExit(mEnabled);
-
-    mCslTxFireTime = TimerMilli::GetNow() + aDelay;
+    VerifyOrExit(!IsActiveOrPending(kOperationTransmitDataCsl));
 
     StartOperation(kOperationTransmitDataCsl);
 
@@ -544,12 +540,6 @@ void Mac::UpdateIdleMode(void)
         }
 #endif
     }
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (IsPending(kOperationTransmitDataCsl))
-    {
-        mTimer.FireAt(mCslTxFireTime);
-    }
-#endif
 
     if (shouldSleep)
     {
@@ -622,7 +612,7 @@ void Mac::PerformNextOperation(void)
     }
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (IsPending(kOperationTransmitDataCsl) && TimerMilli::GetNow() >= mCslTxFireTime)
+    else if (IsPending(kOperationTransmitDataCsl))
     {
         mOperation = kOperationTransmitDataCsl;
     }
