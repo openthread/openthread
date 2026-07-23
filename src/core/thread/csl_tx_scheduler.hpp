@@ -37,6 +37,7 @@
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/time.hpp"
+#include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
@@ -186,6 +187,7 @@ private:
     typedef IndirectSenderBase::FrameContext FrameContext;
 
     void RescheduleCslTx(void);
+    void HandleTimer(void);
 
     uint32_t GetNextCslTransmissionDelay(const CslNeighbor &aCslNeighbor,
                                          uint32_t          &aDelayFromLastRx,
@@ -200,10 +202,13 @@ private:
 
     void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, CslNeighbor &aaCslNeighbor);
 
+    using CslTxTimer = TimerMilliIn<CslTxScheduler, &CslTxScheduler::HandleTimer>;
+
     uint32_t     mCslFrameRequestAheadUs;
     CslNeighbor *mCslTxNeighbor;
     Message     *mCslTxMessage;
     FrameContext mFrameContext;
+    CslTxTimer   mTimer;
 };
 
 /**

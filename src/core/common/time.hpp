@@ -258,6 +258,15 @@ public:
      */
     static uint32_t constexpr MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
+    /**
+     * Converts a given number of microseconds to milliseconds.
+     *
+     * @param[in] aMicroseconds  The microseconds value to convert to milliseconds.
+     *
+     * @returns The number of milliseconds.
+     */
+    static uint32_t constexpr UsecToMsec(uint32_t aMicroseconds) { return aMicroseconds / 1000u; }
+
 private:
     static constexpr uint32_t kDistantInterval = (1UL << 31) - 1;
 

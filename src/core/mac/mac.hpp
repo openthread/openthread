@@ -200,11 +200,9 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
-     * Requests `Mac` to start a CSL tx operation after a delay of @p aDelay time.
-     *
-     * @param[in]  aDelay  Delay time for `Mac` to start a CSL tx, in units of milliseconds.
+     * Requests `Mac` to start a CSL TX operation.
      */
-    void RequestCslFrameTransmission(uint32_t aDelay);
+    void RequestCslFrameTransmission(void);
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
@@ -908,9 +906,6 @@ private:
     uint8_t     mMaxFrameRetriesDirect;
 #if OPENTHREAD_FTD
     uint8_t mMaxFrameRetriesIndirect;
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    TimeMilli mCslTxFireTime;
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     bool mIsCslEnabled : 1;
