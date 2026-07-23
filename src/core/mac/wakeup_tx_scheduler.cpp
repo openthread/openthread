@@ -162,7 +162,7 @@ void WakeupTxScheduler::HandleRadioBusLatencyChanged(void)
     // This is used to make sure that a wake-up frame is received by the radio early enough to be transmitted on time.
     constexpr uint32_t kWakeupFrameSize = 100;
 
-    mTxRequestAheadTimeUs = Mac::kCslRequestAhead + Get<Mac::Mac>().CalculateRadioBusTransferTime(kWakeupFrameSize);
+    mTxRequestAheadTimeUs = Mac::kCslRequestAhead + Get<Radio::Radio>().CalculateBusTransferTime(kWakeupFrameSize);
 }
 
 } // namespace ot

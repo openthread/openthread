@@ -2751,20 +2751,5 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
-uint32_t Mac::CalculateRadioBusTransferTime(uint16_t aFrameSize) const
-{
-    uint32_t busSpeed     = Get<Radio::Radio>().GetBusSpeed();
-    uint32_t trasnferTime = 0;
-
-    if (busSpeed != 0)
-    {
-        trasnferTime = DivideAndRoundUp<uint32_t>(aFrameSize * kBitsPerByte * Time::kOneSecondInUsec, busSpeed);
-    }
-
-    trasnferTime += Get<Radio::Radio>().GetBusLatency();
-
-    return trasnferTime;
-}
-
 } // namespace Mac
 } // namespace ot

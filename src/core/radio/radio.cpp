@@ -163,7 +163,23 @@ Error Radio::Transmit(Mac::TxFrame &aFrame)
 
     return otPlatRadioTransmit(GetInstancePtr(), &aFrame);
 }
+
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+
+uint32_t Radio::CalculateBusTransferTime(uint16_t aFrameSize) const
+{
+    uint32_t busSpeed     = GetBusSpeed();
+    uint32_t transferTime = 0;
+
+    if (busSpeed != 0)
+    {
+        transferTime = DivideAndRoundUp<uint32_t>(aFrameSize * kBitsPerByte * Time::kOneSecondInUsec, busSpeed);
+    }
+
+    transferTime += GetBusLatency();
+
+    return transferTime;
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 
