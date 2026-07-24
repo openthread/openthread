@@ -570,7 +570,7 @@ void Mac::StartOperation(Operation aOperation)
     {
         SetPending(aOperation);
 
-        LogDebg("Request to start operation \"%s\"", OperationToString(aOperation));
+        LogOperation(kRequest, aOperation);
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
         if (mDelayingSleep)
@@ -647,7 +647,7 @@ void Mac::PerformNextOperation(void)
     if (mOperation != kOperationIdle)
     {
         ClearPending(mOperation);
-        LogDebg("Starting operation \"%s\"", OperationToString(mOperation));
+        LogOperation(kStarting, mOperation);
         mTimer.Stop(); // Stop the timer before any non-idle operation, have the operation itself be responsible to
                        // start the timer (if it wants to).
     }
@@ -693,7 +693,7 @@ exit:
 
 void Mac::FinishOperation(void)
 {
-    LogDebg("Finishing operation \"%s\"", OperationToString(mOperation));
+    LogOperation(kFinishing, mOperation);
     mOperation = kOperationIdle;
 }
 
@@ -2309,7 +2309,7 @@ uint8_t Mac::ComputeLinkMargin(int8_t aRss) const { return ot::ComputeLinkMargin
 
 // LCOV_EXCL_START
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
 
 const char *Mac::OperationToString(Operation aOperation)
 {
@@ -2345,6 +2345,31 @@ const char *Mac::OperationToString(Operation aOperation)
 
     return kStrings[aOperation];
 }
+
+const char *Mac::OperationActionToString(OperationAction aAction)
+{
+#define OperationActionMapList(_)   \
+    _(kRequest, "Request to start") \
+    _(kStarting, "Starting")        \
+    _(kFinishing, "Finishing")
+
+    DefineEnumStringArray(OperationActionMapList);
+
+    return kStrings[aAction];
+}
+
+void Mac::LogOperation(OperationAction aAction, Operation aOperation) const
+{
+    LogDebg("%s operation \"%s\"", OperationActionToString(aAction), OperationToString(aOperation));
+}
+
+#else // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
+
+void Mac::LogOperation(OperationAction, Operation) const {}
+
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
 {

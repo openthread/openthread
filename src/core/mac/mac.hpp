@@ -753,6 +753,13 @@ private:
     };
 #endif
 
+    enum OperationAction : uint8_t // Used in `LogOperation`
+    {
+        kRequest,
+        kStarting,
+        kFinishing,
+    };
+
     // Callbacks from `SubMac` or `Trel::Link`
     void HandleReceivedFrame(RxFrame *aFrame, Error aError);
     void RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel);
@@ -803,6 +810,10 @@ private:
     void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
     void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText) const;
+    void LogOperation(OperationAction aAction, Operation aOperation) const;
+
+    static const char *OperationToString(Operation aOperation);
+    static const char *OperationActionToString(OperationAction aAction);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
@@ -818,7 +829,6 @@ private:
     Error HandleWakeupFrame(const RxFrame &aFrame);
     void  UpdateWakeupListening(void);
 #endif
-    static const char *OperationToString(Operation aOperation);
 
     using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
     using MacTimer      = TimerMilliIn<Mac, &Mac::HandleTimer>;
