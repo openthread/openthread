@@ -281,7 +281,7 @@ public:
      *
      * @returns TRUE if the Sequence Number is present, FALSE otherwise.
      */
-    uint8_t IsSequencePresent(void) const { return !IsSequenceSuppressed(GetFrameControlField()); }
+    bool IsSequencePresent(void) const { return !IsSeqSuppressed(GetFrameControlField()); }
 
     /**
      * Indicates whether or not the Destination PAN ID is present.
@@ -630,23 +630,23 @@ protected:
     static constexpr uint16_t kFcfAddrMask     = 3;
 
     // Frame Control field format for general MAC frame
-    static constexpr uint16_t kFcfSecurityEnabled     = 1 << 3;
-    static constexpr uint16_t kFcfFramePending        = 1 << 4;
-    static constexpr uint16_t kFcfAckRequest          = 1 << 5;
-    static constexpr uint16_t kFcfPanidCompression    = 1 << 6;
-    static constexpr uint16_t kFcfSequenceSuppression = 1 << 8;
-    static constexpr uint16_t kFcfIePresent           = 1 << 9;
-    static constexpr uint16_t kFcfDstAddrShift        = 10;
-    static constexpr uint16_t kFcfDstAddrNone         = kFcfAddrNone << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfDstAddrShort        = kFcfAddrShort << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfDstAddrExt          = kFcfAddrExt << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfDstAddrMask         = kFcfAddrMask << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfFrameVersionMask    = 3 << 12;
-    static constexpr uint16_t kFcfSrcAddrShift        = 14;
-    static constexpr uint16_t kFcfSrcAddrNone         = kFcfAddrNone << kFcfSrcAddrShift;
-    static constexpr uint16_t kFcfSrcAddrShort        = kFcfAddrShort << kFcfSrcAddrShift;
-    static constexpr uint16_t kFcfSrcAddrExt          = kFcfAddrExt << kFcfSrcAddrShift;
-    static constexpr uint16_t kFcfSrcAddrMask         = kFcfAddrMask << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSecurityEnabled  = 1 << 3;
+    static constexpr uint16_t kFcfFramePending     = 1 << 4;
+    static constexpr uint16_t kFcfAckRequest       = 1 << 5;
+    static constexpr uint16_t kFcfPanidCompression = 1 << 6;
+    static constexpr uint16_t kFcfSeqSuppression   = 1 << 8;
+    static constexpr uint16_t kFcfIePresent        = 1 << 9;
+    static constexpr uint16_t kFcfDstAddrShift     = 10;
+    static constexpr uint16_t kFcfDstAddrNone      = kFcfAddrNone << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrShort     = kFcfAddrShort << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrExt       = kFcfAddrExt << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrMask      = kFcfAddrMask << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfFrameVersionMask = 3 << 12;
+    static constexpr uint16_t kFcfSrcAddrShift     = 14;
+    static constexpr uint16_t kFcfSrcAddrNone      = kFcfAddrNone << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrShort     = kFcfAddrShort << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrExt       = kFcfAddrExt << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrMask      = kFcfAddrMask << kFcfSrcAddrShift;
 
     static constexpr uint8_t kSecLevelMask  = 7 << 0;
     static constexpr uint8_t kKeyIdModeMask = 3 << 3;
@@ -678,10 +678,7 @@ protected:
 
     static uint16_t GetFcfDstAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfDstAddrMask>(aFcf); }
     static uint16_t GetFcfSrcAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf); }
-    static bool     IsSequenceSuppressed(uint16_t aFcf)
-    {
-        return IsVersion2015(aFcf) && ((aFcf & kFcfSequenceSuppression) != 0);
-    }
+    static bool     IsSeqSuppressed(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfSeqSuppression) != 0); }
     static bool     IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != 0; }
     static bool     IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != 0; }
     static bool     IsSecurityEnabled(uint16_t aFcf) { return (aFcf & kFcfSecurityEnabled) != 0; }
