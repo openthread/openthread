@@ -44,6 +44,23 @@ static bool       sTransmitHookCalled           = false;
 static bool       sReproductionResponseReceived = false;
 static otCoapCode sReproductionResponseCode     = OT_COAP_CODE_EMPTY;
 
+enum EtagMode : uint8_t
+{
+    kEtagSame,
+    kEtagAbsent,
+    kEtagMaxLength,
+    kEtagChanges,
+    kEtagDisappears,
+    kEtagEmpty,
+    kEtagTooLong,
+};
+
+static uint16_t sEtagReceiveHookCallCount = 0;
+static bool     sEtagResponseReceived     = false;
+static otError  sEtagResponseError        = OT_ERROR_NONE;
+static EtagMode sEtagMode                 = kEtagSame;
+static uint32_t sEtagFirstBlockNumber     = 0;
+
 static void HandleReproductionResponse(void                *aContext,
                                        otMessage           *aMessage,
                                        const otMessageInfo *aMessageInfo,
@@ -144,6 +161,175 @@ static otError TransmitHook(void *aContext, uint8_t *aBlock, uint32_t aPosition,
 
     sTransmitHookCalled = true;
     return OT_ERROR_NONE;
+}
+
+static void HandleEtagResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    sEtagResponseReceived = true;
+    sEtagResponseError    = aResult;
+}
+
+static otError EtagReceiveHook(void          *aContext,
+                               const uint8_t *aBlock,
+                               uint32_t       aPosition,
+                               uint16_t       aBlockLength,
+                               bool           aMore,
+                               uint32_t       aTotalLength)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aBlock);
+    OT_UNUSED_VARIABLE(aPosition);
+    OT_UNUSED_VARIABLE(aBlockLength);
+    OT_UNUSED_VARIABLE(aMore);
+    OT_UNUSED_VARIABLE(aTotalLength);
+    sEtagReceiveHookCallCount++;
+    return OT_ERROR_NONE;
+}
+
+static void HandleEtagRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    Instance      &instance = *static_cast<Instance *>(aContext);
+    Coap::Message &message  = AsCoapMessage(aMessage);
+    Coap::Message *response = instance.Get<Coap::ApplicationCoap>().NewMessage();
+    uint32_t       blockNum = 0;
+    uint8_t        etag[OT_COAP_MAX_ETAG_LENGTH + 1];
+    uint16_t       etagLength = 1;
+    bool           appendEtag = true;
+
+    VerifyOrQuit(response != nullptr);
+    SuccessOrQuit(response->InitAsResponse(Coap::kTypeAck, Coap::kCodeContent, message));
+
+    Coap::Option::Iterator iterator;
+    SuccessOrQuit(iterator.Init(message, Coap::kOptionBlock2));
+    if (iterator.GetOption() != nullptr)
+    {
+        uint64_t blockValue = 0;
+        SuccessOrQuit(iterator.ReadOptionValue(blockValue));
+        blockNum = static_cast<uint32_t>(blockValue >> 4);
+    }
+
+    memset(etag, 0x11, sizeof(etag));
+
+    switch (sEtagMode)
+    {
+    case kEtagSame:
+        break;
+    case kEtagAbsent:
+        appendEtag = false;
+        break;
+    case kEtagMaxLength:
+        etagLength = OT_COAP_MAX_ETAG_LENGTH;
+        break;
+    case kEtagChanges:
+        etag[0] = (blockNum == sEtagFirstBlockNumber) ? 0x11 : 0x22;
+        break;
+    case kEtagDisappears:
+        appendEtag = (blockNum == sEtagFirstBlockNumber);
+        break;
+    case kEtagEmpty:
+        etagLength = 0;
+        break;
+    case kEtagTooLong:
+        etagLength = sizeof(etag);
+        break;
+    }
+
+    if (appendEtag)
+    {
+        SuccessOrQuit(response->AppendOption(Coap::kOptionETag, etagLength, etag));
+    }
+
+    Coap::BlockInfo blockInfo;
+    blockInfo.mBlockNumber = blockNum;
+    blockInfo.mBlockSzx    = Coap::kBlockSzx16;
+    blockInfo.mMoreBlocks  = (blockNum < 2); // We send 3 blocks in total (0, 1, 2)
+    SuccessOrQuit(response->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
+
+    SuccessOrQuit(instance.Get<Coap::ApplicationCoap>().SendMessage(*response, AsCoreType(aMessageInfo)));
+}
+
+static void RunEtagTestCase(Core                   &aNexus,
+                            Node                   &aRouter,
+                            const Ip6::MessageInfo &aMessageInfo,
+                            uint32_t                aFirstBlockNumber,
+                            EtagMode                aMode,
+                            uint16_t                aExpectedReceiveCount,
+                            otError                 aExpectedError)
+{
+    Coap::Message *message = aRouter.Get<Coap::ApplicationCoap>().NewMessage();
+
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(message->Init(Coap::kTypeConfirmable, Coap::kCodeGet));
+    SuccessOrQuit(message->AppendUriPathOptions("etest"));
+
+    Coap::BlockInfo blockInfo;
+    blockInfo.mBlockNumber = aFirstBlockNumber;
+    blockInfo.mBlockSzx    = Coap::kBlockSzx16;
+    blockInfo.mMoreBlocks  = false;
+    SuccessOrQuit(message->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
+
+    sEtagMode                 = aMode;
+    sEtagFirstBlockNumber     = aFirstBlockNumber;
+    sEtagReceiveHookCallCount = 0;
+    sEtagResponseReceived     = false;
+    sEtagResponseError        = OT_ERROR_NONE;
+
+    SuccessOrQuit(aRouter.Get<Coap::ApplicationCoap>().SendMessageWithResponseHandlerSeparateParams(
+        *message, aMessageInfo, nullptr, &HandleEtagResponse, nullptr, &EtagReceiveHook, nullptr));
+
+    aNexus.AdvanceTime(5 * 1000);
+
+    VerifyOrQuit(sEtagReceiveHookCallCount == aExpectedReceiveCount);
+    VerifyOrQuit(sEtagResponseReceived);
+    VerifyOrQuit(sEtagResponseError == aExpectedError);
+}
+
+void TestCoapBlockEtag(void)
+{
+    Core nexus;
+
+    Node &leader = nexus.CreateNode();
+    Node &router = nexus.CreateNode();
+
+    nexus.AdvanceTime(0);
+
+    Log("Form network (ETag test)");
+    leader.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    router.Join(leader);
+    nexus.AdvanceTime(10 * 1000);
+    VerifyOrQuit(router.Get<Mle::Mle>().IsChild() || router.Get<Mle::Mle>().IsRouter());
+
+    SuccessOrQuit(leader.Get<Coap::ApplicationCoap>().Start(OT_DEFAULT_COAP_PORT));
+
+    Coap::Resource resource("etest", &HandleEtagRequest, &leader.GetInstance());
+    leader.Get<Coap::ApplicationCoap>().AddResource(resource);
+
+    SuccessOrQuit(router.Get<Coap::ApplicationCoap>().Start(OT_DEFAULT_COAP_PORT));
+
+    Ip6::MessageInfo messageInfo;
+    messageInfo.SetPeerAddr(leader.Get<Mle::Mle>().GetMeshLocalEid());
+    messageInfo.SetPeerPort(OT_DEFAULT_COAP_PORT);
+
+    RunEtagTestCase(nexus, router, messageInfo, 0, kEtagSame, 3, OT_ERROR_NONE);
+    RunEtagTestCase(nexus, router, messageInfo, 0, kEtagAbsent, 3, OT_ERROR_NONE);
+    RunEtagTestCase(nexus, router, messageInfo, 0, kEtagMaxLength, 3, OT_ERROR_NONE);
+    RunEtagTestCase(nexus, router, messageInfo, 0, kEtagChanges, 1, OT_ERROR_ABORT);
+    RunEtagTestCase(nexus, router, messageInfo, 0, kEtagDisappears, 1, OT_ERROR_ABORT);
+    RunEtagTestCase(nexus, router, messageInfo, 1, kEtagSame, 2, OT_ERROR_NONE);
+    RunEtagTestCase(nexus, router, messageInfo, 1, kEtagChanges, 1, OT_ERROR_ABORT);
+    RunEtagTestCase(nexus, router, messageInfo, 0, kEtagEmpty, 0, OT_ERROR_ABORT);
+    RunEtagTestCase(nexus, router, messageInfo, 0, kEtagTooLong, 0, OT_ERROR_ABORT);
+
+    leader.Get<Coap::ApplicationCoap>().RemoveResource(resource);
+    IgnoreError(leader.Get<Coap::ApplicationCoap>().Stop());
+    IgnoreError(router.Get<Coap::ApplicationCoap>().Stop());
 }
 
 void TestCoapBlock(void)
@@ -264,6 +450,7 @@ void TestCoapBlock(void)
 int main(void)
 {
     ot::Nexus::TestCoapBlock();
+    ot::Nexus::TestCoapBlockEtag();
     printf("All tests passed\n");
     return 0;
 }

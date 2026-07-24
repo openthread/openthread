@@ -802,7 +802,8 @@ protected:
     void SetResourceHandler(ResourceHandler aHandler) { mResourceHandler = aHandler; }
 
 private:
-    static constexpr uint16_t kMaxBlockSize = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
+    static constexpr uint16_t kMaxBlockSize  = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
+    static constexpr uint8_t  kMaxEtagLength = OT_COAP_MAX_ETAG_LENGTH;
 
     struct SendCallbacks
     {
@@ -821,6 +822,8 @@ private:
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         BlockwiseReceiveHook  mBlockwiseReceiveHook;
         BlockwiseTransmitHook mBlockwiseTransmitHook;
+        uint8_t               mEtag[kMaxEtagLength]; // To remember ETag value over a set of Block2 responses.
+        uint8_t               mEtagLength;
 #endif
     };
 
