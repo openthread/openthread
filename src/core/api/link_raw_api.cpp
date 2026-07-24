@@ -209,8 +209,10 @@ otError otLinkRawSetMacKey(otInstance     *aInstance,
                            const otMacKey *aCurrKey,
                            const otMacKey *aNextKey)
 {
-    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetMacKey(aKeyIdMode, aKeyIndex, AsCoreType(aPrevKey),
-                                                               AsCoreType(aCurrKey), AsCoreType(aNextKey));
+    OT_UNUSED_VARIABLE(aKeyIdMode);
+
+    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetMode1MacKeys(aKeyIndex, AsCoreType(aPrevKey),
+                                                                     AsCoreType(aCurrKey), AsCoreType(aNextKey));
 }
 
 otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)

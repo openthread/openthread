@@ -719,17 +719,28 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
 void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable);
 
 /**
- * Update MAC keys and key index
+ * Update MAC keys and key index.
  *
- * Is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ * Is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
+ *
+ * Radio platform implementations MUST ignore the @p aKeyIdMode parameter entirely and treat the keys configured via
+ * this API as Key ID Mode 1 (standard Thread security).
+ *
+ * This API was originally introduced with the @p aKeyIdMode parameter for potential future extensions, and it is
+ * retained in the function signature for backward compatibility. However, in practice, platform transmit security
+ * is only intended and used for Key ID Mode 1. Attempting to support or interpret other Key ID modes in the radio
+ * platform introduces complexity and ambiguity regarding how @p aKeyIdMode values are represented (e.g.,
+ * bit-shifted as it appears in the IEEE 802.15.4 Security Control field vs. simple sequential mode values 0, 1, 2).
+ *
+ * A call to this API replaces any previously set MAC keys.
  *
  * The radio platform should reset the current security MAC frame counter tracked by the radio on this call. While this
  * is highly recommended, the OpenThread stack, as a safeguard, will also reset the frame counter using the
  * `otPlatRadioSetMacFrameCounter()` before calling this API.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[in]   aKeyIdMode   The key ID mode.
- * @param[in]   aKeyIndex       Current MAC key index.
+ * @param[in]   aKeyIdMode   The key ID mode (must be ignored by the radio platform).
+ * @param[in]   aKeyIndex    Current MAC key index.
  * @param[in]   aPrevKey     A pointer to the previous MAC key.
  * @param[in]   aCurrKey     A pointer to the current MAC key.
  * @param[in]   aNextKey     A pointer to the next MAC key.

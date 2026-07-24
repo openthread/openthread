@@ -346,8 +346,8 @@ void KeyManager::UpdateKeyMaterial(void)
         ComputeKeys(mKeySequence - 1, prevHashKeys);
         ComputeKeys(mKeySequence + 1, nextHashKeys);
 
-        Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, Mac::DetermineKeyIndexFor(mKeySequence),
-                                     prevHashKeys.GetMacKey(), hashKeys.GetMacKey(), nextHashKeys.GetMacKey());
+        Get<Mac::SubMac>().SetMode1MacKeys(Mac::DetermineKeyIndexFor(mKeySequence), prevHashKeys.GetMacKey(),
+                                           hashKeys.GetMacKey(), nextHashKeys.GetMacKey());
     }
 #endif
 

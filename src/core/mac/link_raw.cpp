@@ -240,17 +240,13 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
     }
 }
 
-Error LinkRaw::SetMacKey(uint8_t    aKeyIdMode,
-                         uint8_t    aKeyIndex,
-                         const Key &aPrevKey,
-                         const Key &aCurKey,
-                         const Key &aNextKey)
+Error LinkRaw::SetMode1MacKeys(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
 
-    mSubMac.SetMacKey(aKeyIdMode, aKeyIndex, aPrevKey, aCurKey, aNextKey);
+    mSubMac.SetMode1MacKeys(aKeyIndex, aPrevKey, aCurKey, aNextKey);
 
 exit:
     return error;

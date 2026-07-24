@@ -432,12 +432,11 @@ public:
     void SetAlternateShortAddress(Mac::ShortAddress aShortAddress);
 
     /**
-     * Sets MAC keys and key index.
+     * Sets MAC keys and key index for Key ID Mode 1.
      *
-     * @param[in] aKeyIdMode  MAC key ID mode.
-     * @param[in] aKeyTrio    The `KeyTrio` set (prev, cur, next) along with the key index.
+     * @param[in] aKeyTrio  The `KeyTrio` set (prev, cur, next) along with the key index.
      */
-    void SetMacKey(uint8_t aKeyIdMode, const Mac::KeyTrio &aKeyTrio);
+    void SetMode1MacKeys(const Mac::KeyTrio &aKeyTrio);
 
     /**
      * Sets the current MAC Frame Counter value.
@@ -920,7 +919,7 @@ inline void Radio::SetAlternateShortAddress(Mac::ShortAddress aShortAddress)
     otPlatRadioSetAlternateShortAddress(GetInstancePtr(), aShortAddress);
 }
 
-inline void Radio::SetMacKey(uint8_t aKeyIdMode, const Mac::KeyTrio &aKeyTrio)
+inline void Radio::SetMode1MacKeys(const Mac::KeyTrio &aKeyTrio)
 {
     otRadioKeyType keyType;
 
@@ -930,8 +929,9 @@ inline void Radio::SetMacKey(uint8_t aKeyIdMode, const Mac::KeyTrio &aKeyTrio)
     keyType = OT_KEY_TYPE_LITERAL_KEY;
 #endif
 
-    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyTrio.GetKeyIndex(), &aKeyTrio.GetKey(Mac::KeyTrio::kPrev),
-                         &aKeyTrio.GetKey(Mac::KeyTrio::kCur), &aKeyTrio.GetKey(Mac::KeyTrio::kNext), keyType);
+    otPlatRadioSetMacKey(GetInstancePtr(), Mac::Frame::kKeyIdMode1, aKeyTrio.GetKeyIndex(),
+                         &aKeyTrio.GetKey(Mac::KeyTrio::kPrev), &aKeyTrio.GetKey(Mac::KeyTrio::kCur),
+                         &aKeyTrio.GetKey(Mac::KeyTrio::kNext), keyType);
 }
 
 inline Error Radio::GetTransmitPower(int8_t &aPower) { return otPlatRadioGetTransmitPower(GetInstancePtr(), &aPower); }
@@ -1076,7 +1076,7 @@ inline void Radio::SetShortAddress(Mac::ShortAddress) {}
 
 inline void Radio::SetAlternateShortAddress(Mac::ShortAddress) {}
 
-inline void Radio::SetMacKey(uint8_t, const Mac::KeyTrio &) {}
+inline void Radio::SetMode1MacKeys(const Mac::KeyTrio &) {}
 
 inline Error Radio::GetTransmitPower(int8_t &) { return kErrorNotImplemented; }
 

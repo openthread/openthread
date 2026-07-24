@@ -416,15 +416,14 @@ public:
     const KeyMaterial &GetMacKey(KeyTrio::Type aType) const { return mKeyTrio.GetKey(aType); }
 
     /**
-     * Sets MAC keys and key index.
+     * Sets MAC keys and key index for Key ID Mode 1.
      *
-     * @param[in] aKeyIdMode  MAC key ID mode.
      * @param[in] aKeyIndex   The key index.
      * @param[in] aPrevKey    The previous MAC key.
      * @param[in] aCurKey     The current MAC key.
      * @param[in] aNextKey    The next MAC key.
      */
-    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
+    void SetMode1MacKeys(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
 
     /**
      * Clears the stored MAC keys.
