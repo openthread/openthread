@@ -87,6 +87,53 @@ public:
     void SetFrom(const Parent &aParent);
 
     /**
+     * Generates and stores a new challenge to include in a Link Request sent to this router
+     * while its link is already established (router is in `kStateValid`).
+     *
+     * Unlike `Neighbor::GenerateChallenge()`, which shares its storage with the neighbor's
+     * frame counters and is therefore only usable in pending states, this challenge uses
+     * dedicated storage and does not disturb the frame counters of a valid neighbor.
+     */
+    void GenerateLinkRequestChallenge(void)
+    {
+        mLinkRequestChallenge.GenerateRandom();
+        mHasLinkRequestChallenge = true;
+    }
+
+    /**
+     * Returns the stored Link Request challenge.
+     *
+     * @returns The stored Link Request challenge.
+     */
+    const Mle::TxChallenge &GetLinkRequestChallenge(void) const { return mLinkRequestChallenge; }
+
+    /**
+     * Indicates whether a Link Request challenge is stored, i.e., a solicited Link Request
+     * sent to this router while in `kStateValid` is outstanding.
+     *
+     * @retval TRUE   A Link Request challenge is stored.
+     * @retval FALSE  No Link Request challenge is stored.
+     */
+    bool HasLinkRequestChallenge(void) const { return mHasLinkRequestChallenge; }
+
+    /**
+     * Clears the stored Link Request challenge.
+     */
+    void ClearLinkRequestChallenge(void) { mHasLinkRequestChallenge = false; }
+
+    /**
+     * Sets the stored Link Request challenge (and its outstanding state) from another `Router`
+     * entry.
+     *
+     * @param[in] aRouter   The `Router` entry to copy the stored challenge from.
+     */
+    void SetLinkRequestChallengeFrom(const Router &aRouter)
+    {
+        mLinkRequestChallenge    = aRouter.mLinkRequestChallenge;
+        mHasLinkRequestChallenge = aRouter.mHasLinkRequestChallenge;
+    }
+
+    /**
      * Restarts the Link Accept timeout (setting it to max value).
      *
      * This method is used after sending a Link Request to the router to restart the timeout and start waiting to
@@ -235,6 +282,9 @@ private:
     static_assert(Mle::kParentReselectTimeout <= (1U << 15) - 1,
                   "kParentReselectTimeout won't fit in mParentReselectTimeout (15-bit filed)");
 #endif
+
+    Mle::TxChallenge mLinkRequestChallenge;    // Challenge sent in a Link Request to this valid router.
+    bool             mHasLinkRequestChallenge; // Whether `mLinkRequestChallenge` is outstanding.
 
     uint8_t mNextHop;                 // The next hop towards this router
     uint8_t mLinkRequestAttempts : 2; // Number of Link Request attempts
