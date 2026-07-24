@@ -128,6 +128,9 @@ void TestCoapObserveCancelInHandler(void)
     sNodeA = &nodeA;
     sNodeB = &nodeB;
 
+    sNotificationSeen = false;
+    sCancelSent       = false;
+
     nodeA.Form();
     nexus.AdvanceTime(kFormNetworkTime);
     VerifyOrQuit(nodeA.Get<Mle::Mle>().IsLeader());
