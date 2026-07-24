@@ -74,7 +74,7 @@ jobs:
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build & Run
@@ -109,7 +109,7 @@ jobs:
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build & Run
@@ -146,7 +146,7 @@ jobs:
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
     - name: Build & Run
       run: |

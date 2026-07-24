@@ -64,7 +64,7 @@ jobs:
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get install -y avahi-daemon avahi-utils lcov
         script/git-tool clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch main
     - name: Build
@@ -149,7 +149,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
