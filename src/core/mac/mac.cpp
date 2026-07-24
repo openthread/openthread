@@ -1780,7 +1780,23 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     Neighbor          *neighbor = nullptr;
     const KeyMaterial *macKey;
 
-    VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
+    if (!aAckFrame.GetSecurityEnabled())
+    {
+        // A secured IEEE 802.15.4-2015 frame must be acknowledged with a
+        // secured Enh-Ack: an unsecured ack carries no sender
+        // authentication, and accepting one for a secured transmission
+        // can suppress retransmissions of secured traffic (silent data
+        // loss) and feed unverified radio metadata into neighbor link
+        // info. OpenThread's own `TxFrame::GenerateEnhAck()` always
+        // mirrors the acknowledged frame's security, so no interoperable
+        // peer sends an unsecured Enh-Ack for a secured frame. Unsecured
+        // acks remain acceptable for unsecured transmissions and for
+        // pre-2015 frames (Imm-Acks carry no security).
+        VerifyOrExit(!(aTxFrame.GetSecurityEnabled() && aTxFrame.IsVersion2015()));
+
+        ExitNow(error = kErrorNone);
+    }
+
     VerifyOrExit(aAckFrame.IsVersion2015());
 
     SuccessOrExit(aAckFrame.ValidatePsdu());
