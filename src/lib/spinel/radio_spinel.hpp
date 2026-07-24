@@ -1019,11 +1019,13 @@ public:
      * the `VendorGetPropertyHandler()` for the same property key to prepare the response.
      *
      * @param[in] aPropKey  The spinel property key.
+     * @param[in] aBuffer   A pointer to the buffer containing the property value.
+     * @param[in] aLength   The length of the @p aBuffer.
      *
      * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, otherwise the error in either parsing
      *          of the input or the "set" operation.
      */
-    otError VendorHandleValueIs(spinel_prop_key_t aPropKey);
+    otError VendorHandleValueIs(spinel_prop_key_t aPropKey, const uint8_t *aBuffer, uint16_t aLength);
 
     /**
      *  A callback type for restoring vendor properties.
