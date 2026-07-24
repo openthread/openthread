@@ -159,7 +159,23 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
 
 Error MessagePool::ReclaimBuffers(Message::Priority aPriority)
 {
-    return Get<MeshForwarder>().EvictMessage(aPriority, MeshForwarder::kEvictReasonNoMessageBuffer);
+    Error error = kErrorNotFound;
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    error = Get<MeshMonitor::Server>().EvictCache(true);
+
+    if (error != kErrorNone)
+    {
+        error = Get<MeshMonitor::Server>().EvictCache(false);
+    }
+#endif
+
+    if (error != kErrorNone)
+    {
+        error = Get<MeshForwarder>().EvictMessage(aPriority, MeshForwarder::kEvictReasonNoMessageBuffer);
+    }
+
+    return error;
 }
 
 uint16_t MessagePool::GetFreeBufferCount(void) const
