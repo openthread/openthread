@@ -1864,8 +1864,11 @@ exit:
 
 #ifdef __linux__
 
+// Note: the byte offsets must be added to the `char *` pointer BEFORE the cast
+// to `struct rtattr *`; otherwise the additions are scaled by
+// `sizeof(struct rtattr)` and the resulting pointer is out of bounds.
 #define ERR_RTA(errmsg, requestPayloadLength) \
-    ((struct rtattr *)((char *)(errmsg)) + NLMSG_ALIGN(sizeof(struct nlmsgerr)) + NLMSG_ALIGN(requestPayloadLength))
+    ((struct rtattr *)((char *)(errmsg) + NLMSG_ALIGN(sizeof(struct nlmsgerr)) + NLMSG_ALIGN(requestPayloadLength)))
 
 // The format of NLMSG_ERROR is described below:
 //
@@ -1885,7 +1888,7 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
 {
     const struct nlmsgerr *err;
     const char            *errorMsg;
-    size_t                 rtaLength;
+    bool                   malformed            = false;
     size_t                 requestPayloadLength = 0;
     uint32_t               requestSeq           = 0;
 
@@ -1911,27 +1914,68 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
     // The payload of the request is omitted if NLM_F_CAPPED is set
     if (!(msg->nlmsg_flags & NLM_F_CAPPED))
     {
-        requestPayloadLength = NLMSG_PAYLOAD(&err->msg, 0);
+        // The embedded (echoed) request header is part of the received message
+        // payload and cannot be trusted: reject a short embedded length before
+        // using it in the `NLMSG_PAYLOAD` computation below.
+        if (err->msg.nlmsg_len < NLMSG_HDRLEN)
+        {
+            malformed = true;
+        }
+        else
+        {
+            requestPayloadLength = NLMSG_PAYLOAD(&err->msg, 0);
+        }
     }
 
     // Only extract inner TLV error if flag is set
-    if (msg->nlmsg_flags & NLM_F_ACK_TLVS)
+    if (!malformed && (msg->nlmsg_flags & NLM_F_ACK_TLVS))
     {
-        rtaLength = NLMSG_PAYLOAD(msg, sizeof(struct nlmsgerr)) - requestPayloadLength;
+        size_t errPayloadLength = NLMSG_PAYLOAD(msg, sizeof(struct nlmsgerr));
 
-        for (struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
-             rta                = RTA_NEXT(rta, rtaLength))
+        // Guard the subtraction below against underflow (the echoed request
+        // length comes from the received message and cannot be assumed
+        // consistent with the outer message length).
+        if (errPayloadLength < NLMSG_ALIGN(requestPayloadLength))
         {
-            if (rta->rta_type == NLMSGERR_ATTR_MSG)
+            malformed = true;
+        }
+        else
+        {
+            // `rtaLength` must be a signed type: `RTA_OK` relies on the
+            // remaining length going negative to terminate the walk
+            // (`RTA_NEXT` may overstep the remaining length by up to the
+            // alignment padding of the last attribute), so an unsigned type
+            // would wrap and the walk would run unbounded.
+            int rtaLength = static_cast<int>(errPayloadLength - NLMSG_ALIGN(requestPayloadLength));
+
+            for (struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
+                 rta                = RTA_NEXT(rta, rtaLength))
             {
-                errorMsg = reinterpret_cast<const char *>(RTA_DATA(rta));
-                break;
-            }
-            else
-            {
-                LogDebg("Ignoring netlink response attribute %d (request#%u)", rta->rta_type, requestSeq);
+                if (rta->rta_type == NLMSGERR_ATTR_MSG)
+                {
+                    const char *attrMsg = reinterpret_cast<const char *>(RTA_DATA(rta));
+
+                    // The kernel always NUL-terminates the extended ACK string,
+                    // but the attribute payload is untrusted input: only use it
+                    // if a terminator is present within its own bounds.
+                    if (memchr(attrMsg, '\0', RTA_PAYLOAD(rta)) != nullptr)
+                    {
+                        errorMsg = attrMsg;
+                    }
+
+                    break;
+                }
+                else
+                {
+                    LogDebg("Ignoring netlink response attribute %d (request#%u)", rta->rta_type, requestSeq);
+                }
             }
         }
+    }
+
+    if (malformed)
+    {
+        LogWarn("Malformed netlink error reply of request#%u", requestSeq);
     }
 
     LogWarn("Failed to process request#%u: %s", requestSeq, errorMsg);
