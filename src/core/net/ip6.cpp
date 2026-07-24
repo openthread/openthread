@@ -1368,6 +1368,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
                 ExtensionHeader extHeader;
 
                 SuccessOrExit(error = aMessagePtr->Read(upperOffset, extHeader));
+                VerifyOrExit(extHeader.GetSize() <= aMessagePtr->GetLength() - upperOffset, error = kErrorParse);
                 upperProto = extHeader.GetNextHeader();
                 upperOffset += extHeader.GetSize();
             }
