@@ -1934,8 +1934,11 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
 
         // Guard the subtraction below against underflow (the echoed request
         // length comes from the received message and cannot be assumed
-        // consistent with the outer message length).
-        if (errPayloadLength < NLMSG_ALIGN(requestPayloadLength))
+        // consistent with the outer message length). The direct comparison of
+        // the unaligned lengths comes first so that the result does not depend
+        // on the addition inside `NLMSG_ALIGN`, which could wrap for values
+        // near the top of the `size_t` range.
+        if (requestPayloadLength > errPayloadLength || errPayloadLength < NLMSG_ALIGN(requestPayloadLength))
         {
             malformed = true;
         }
