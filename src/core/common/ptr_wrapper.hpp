@@ -48,7 +48,7 @@ namespace ot {
  *
  * @tparam Type  The pointer type.
  */
-template <class Type> class Ptr
+template <class Type> class OT_GSL_POINTER Ptr
 {
 public:
     /**
@@ -82,28 +82,28 @@ public:
      *
      * @returns The wrapped pointer.
      */
-    Type *Get(void) { return mPointer; }
+    Type *Get(void) OT_LIFETIME_BOUND { return mPointer; }
 
     /**
      * Gets the wrapped pointer.
      *
      * @returns The wrapped pointer.
      */
-    const Type *Get(void) const { return mPointer; }
+    const Type *Get(void) const OT_LIFETIME_BOUND { return mPointer; }
 
     /**
      * Overloads the `->` dereference operator and returns the pointer.
      *
      * @returns The wrapped pointer.
      */
-    Type *operator->(void) { return mPointer; }
+    Type *operator->(void) OT_LIFETIME_BOUND { return mPointer; }
 
     /**
      * Overloads the `->` dereference operator and returns the pointer.
      *
      * @returns The wrapped pointer.
      */
-    const Type *operator->(void) const { return mPointer; }
+    const Type *operator->(void) const OT_LIFETIME_BOUND { return mPointer; }
 
     /**
      * Overloads the `*` dereference operator and returns a reference to the pointed object.
@@ -112,7 +112,7 @@ public:
      *
      * @returns A reference to the pointed object.
      */
-    Type &operator*(void) { return *mPointer; }
+    Type &operator*(void) OT_LIFETIME_BOUND { return *mPointer; }
 
     /**
      * Overloads the `*` dereference operator and returns a reference to the pointed object.
@@ -121,7 +121,7 @@ public:
      *
      * @returns A reference to the pointed object.
      */
-    const Type &operator*(void) const { return *mPointer; }
+    const Type &operator*(void) const OT_LIFETIME_BOUND { return *mPointer; }
 
     /**
      * Overloads the operator `==` to compare the `Ptr` with a given pointer.

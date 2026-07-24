@@ -54,7 +54,7 @@ namespace ot {
  *
  * @tparam Type  The pointer type.
  */
-template <class Type> class RetainPtr : public Ptr<Type>
+template <class Type> class OT_GSL_OWNER RetainPtr : public Ptr<Type>
 {
     using Ptr<Type>::mPointer;
 
