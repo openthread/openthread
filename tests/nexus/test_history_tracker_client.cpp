@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /*
  * Verifies TLV parsing in `HistoryTracker::Client::ProcessNetInfoAnswer()`.
  *
@@ -76,8 +74,9 @@ static void SendAnswer(Node &aServer, uint16_t aClientRloc16, uint16_t aQueryId,
 
     {
         // QueryId TLV (type 0, len 2, big-endian value), Answer TLV (type 1, len 2, index 0).
-        uint8_t tlvs[] = {0x00, 0x02, static_cast<uint8_t>(aQueryId >> 8), static_cast<uint8_t>(aQueryId & 0xff),
-                          0x01, 0x02, 0x00, 0x00};
+        uint8_t tlvs[] = {
+            0x00, 0x02, static_cast<uint8_t>(aQueryId >> 8), static_cast<uint8_t>(aQueryId & 0xff), 0x01, 0x02,
+            0x00, 0x00};
 
         SuccessOrQuit(message->AppendBytes(tlvs, sizeof(tlvs)));
     }
@@ -104,7 +103,7 @@ void TestHistoryAnswerMalformedTlv(void)
 {
     Core  nexus;
     Node &server = nexus.CreateNode(); // leader; the node the client queries
-    Node &client   = nexus.CreateNode();
+    Node &client = nexus.CreateNode();
 
     server.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -115,7 +114,7 @@ void TestHistoryAnswerMalformedTlv(void)
     VerifyOrQuit(client.Get<Mle::Mle>().IsAttached());
 
     uint16_t serverRloc = server.Get<Mle::Mle>().GetRloc16();
-    uint16_t clientRloc   = client.Get<Mle::Mle>().GetRloc16();
+    uint16_t clientRloc = client.Get<Mle::Mle>().GetRloc16();
 
     Log("Round 1: client queries server; server answers with malformed TLV [0x77 0xFF]");
     sNetInfoCallbackInvoked = false;
