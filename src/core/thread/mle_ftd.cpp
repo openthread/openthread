@@ -725,10 +725,15 @@ void Mle::SendLinkRequest(Router *aRouter)
         }
         else
         {
-            TxChallenge challenge;
-
-            challenge.GenerateRandom();
-            SuccessOrExit(error = message->AppendChallengeTlv(challenge));
+            // The Link Accept's Response TLV is verified against this
+            // challenge so that only a solicited and fresh Link Accept
+            // can be classified as an authoritative message for key
+            // sequence adoption. The challenge uses dedicated storage
+            // in `Router`: the `Neighbor` challenge shares storage
+            // with the frame counters and MUST NOT be used while the
+            // neighbor is in valid state.
+            aRouter->GenerateLinkRequestChallenge();
+            SuccessOrExit(error = message->AppendChallengeTlv(aRouter->GetLinkRequestChallenge()));
         }
 
         destination.InitAsLinkLocalAddress(aRouter->GetExtAddress());
@@ -951,6 +956,7 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
 
     Error           error = kErrorNone;
     Router         *router;
+    bool            responseVerified = true;
     Neighbor::State neighborState;
     uint16_t        version;
     RxChallenge     response;
@@ -991,6 +997,21 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
     case Neighbor::kStateValid:
         extAddress.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
         VerifyOrExit(router->GetExtAddress() == extAddress, error = kErrorSecurity);
+
+        // A Link Accept from a valid neighbor is processed even when
+        // it is unsolicited or its Response TLV does not match the
+        // outstanding Link Request challenge, but only a verified
+        // response may classify the message as authoritative below:
+        // the authoritative class exempts the message from the
+        // key-switch guard in `ProcessKeySequence()`, so it must be
+        // reserved for solicited and fresh responses.
+        responseVerified =
+            router->HasLinkRequestChallenge() && (response == router->GetLinkRequestChallenge());
+
+        if (responseVerified)
+        {
+            router->ClearLinkRequestChallenge();
+        }
         break;
 
     default:
@@ -1115,6 +1136,7 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData));
         router->SetKeySequence(aRxInfo.mKeySequence);
+        router->ClearLinkRequestChallenge();
         router->SetState(Neighbor::kStateValid);
     }
     else
@@ -1139,7 +1161,7 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         mRouterTable.UpdateRoutes(routeTlvData, routerId);
     }
 
-    aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
+    aRxInfo.mClass = responseVerified ? RxInfo::kAuthoritativeMessage : RxInfo::kPeerMessage;
     ProcessKeySequence(aRxInfo);
 
     if (aMessageType == kTypeLinkAcceptAndRequest)
@@ -3403,6 +3425,12 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     if (mParent.GetVersion() < kThreadVersion1p3)
     {
         SendLinkRequest(&mParent);
+
+        // `SendLinkRequest()` stores its challenge on `mParent`, while
+        // the Link Accept will be verified against the router table
+        // entry (copied from `mParent` above), so mirror the stored
+        // challenge onto that entry.
+        router->SetLinkRequestChallengeFrom(mParent);
     }
 
     // We send an Advertisement to inform our former parent of our

@@ -598,6 +598,10 @@ void Mle::SetStateDetached(void)
 
 void Mle::SetStateChild(uint16_t aRloc16)
 {
+    // Refresh the stored challenge so a Response TLV can never be matched
+    // against a predictable (never-generated) value.
+    mPrevRoleRestorer.GenerateRandomChallenge();
+
 #if OPENTHREAD_FTD
     if (IsLeader())
     {
@@ -2409,6 +2413,19 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
 
     case kRoleChild:
         VerifyOrExit((aRxInfo.mNeighbor == &mParent) && mParent.IsStateValid(), error = kErrorSecurity);
+
+        // A present Response TLV must match the challenge this device sent
+        // to its parent (the `kAppendChallengeTlv` re-sync flow): the
+        // Response TLV is what later classifies this message as
+        // authoritative for key-sequence adoption (exempting it from the
+        // key-switch guard), so it must be verified against the challenge
+        // actually sent rather than accepted as-is. Mirrors the
+        // parent-side verification in
+        // `HandleChildUpdateResponseOnParent()`.
+        if (!response.IsEmpty())
+        {
+            VerifyOrExit(response == mPrevRoleRestorer.GetChallenge(), error = kErrorSecurity);
+        }
         break;
 
     default:
