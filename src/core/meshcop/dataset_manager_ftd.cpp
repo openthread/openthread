@@ -372,10 +372,26 @@ void PendingDatasetManager::ApplyActiveDataset(Dataset &aDataset)
     // Generates and applies Pending Dataset from an Active Dataset.
 
     Timestamp activeTimestamp;
+    uint32_t  delayTimer;
 
     SuccessOrExit(aDataset.Read<ActiveTimestampTlv>(activeTimestamp));
     SuccessOrExit(aDataset.Write<PendingTimestampTlv>(activeTimestamp));
-    SuccessOrExit(aDataset.Write<DelayTimerTlv>(GetDelayTimerMinimal()));
+
+    // Respect a Delay Timer value already validated and floored by
+    // `ProcessSetOrReplaceRequest()` (which enforces `kDefaultDelay`
+    // for Network-Key-affecting changes). Unconditionally overwriting
+    // it here made that floor dead code on the MGMT_ACTIVE_SET path,
+    // and a request that simply OMITTED the Delay Timer TLV would
+    // apply a key change after only the minimal delay, skipping the
+    // intended default delay.
+
+    if (aDataset.Read<DelayTimerTlv>(delayTimer) != kErrorNone)
+    {
+        delayTimer = aDataset.AffectsNetworkKey(GetInstance()) ? DelayTimerTlv::kDefaultDelay : GetDelayTimerMinimal();
+    }
+
+    delayTimer = Max(delayTimer, GetDelayTimerMinimal());
+    SuccessOrExit(aDataset.Write<DelayTimerTlv>(delayTimer));
 
     IgnoreError(DatasetManager::Save(aDataset));
     StartDelayTimer(aDataset);
