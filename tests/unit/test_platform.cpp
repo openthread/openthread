@@ -319,7 +319,7 @@ OT_TOOL_WEAK otError otPlatSettingsGet(otInstance *, uint16_t aKey, int aIndex, 
         return OT_ERROR_NOT_FOUND;
     }
 
-    if (aIndex > setting->second.size())
+    if (aIndex < 0 || static_cast<size_t>(aIndex) >= setting->second.size())
     {
         return OT_ERROR_NOT_FOUND;
     }
@@ -373,7 +373,13 @@ OT_TOOL_WEAK otError otPlatSettingsDelete(otInstance *, uint16_t aKey, int aInde
         return OT_ERROR_NOT_FOUND;
     }
 
-    if (aIndex >= setting->second.size())
+    if (aIndex == -1) // per API contract, all values will be removed.
+    {
+        setting->second.clear();
+        return OT_ERROR_NONE;
+    }
+
+    if (aIndex < 0 || static_cast<size_t>(aIndex) >= setting->second.size())
     {
         return OT_ERROR_NOT_FOUND;
     }

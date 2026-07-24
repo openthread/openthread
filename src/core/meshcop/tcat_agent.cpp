@@ -80,8 +80,9 @@ void TcatAgent::ClearCommissionerState(void)
     mPskdVerified                  = false;
     mPskcVerified                  = false;
     mInstallCodeVerified           = false;
-    mIsCommissioned                = false;
+    mCanOverwriteDataset           = false;
     mApplicationResponsePending    = false;
+    mHasWrittenActiveDataset       = false;
 }
 
 Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aJoinHandler, void *aContext)
@@ -242,8 +243,8 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     NotifyStateChange();
     LogInfo("Connected");
 
-    // This specifically stores the state IsCommissioned at _start_ of session:
-    mIsCommissioned = Get<ActiveDatasetManager>().IsCommissioned();
+    // If already commissioned at start of session, overwriting is never allowed.
+    mCanOverwriteDataset = !Get<ActiveDatasetManager>().IsCommissioned();
 
 exit:
     return error;
@@ -402,7 +403,7 @@ exit:
 
 bool TcatAgent::IsSetActiveDatasetAuthorized(const Dataset *aDataset) const
 {
-    return !mIsCommissioned &&
+    return mCanOverwriteDataset &&
            IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mCommissioningFlags,
                                              mDeviceAuthorizationField.mCommissioningFlags, aDataset);
 }
@@ -584,18 +585,24 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessa
     uint8_t buf[kCommissionerCertMaxLength];
     size_t  bufLen = sizeof(buf);
 
-    VerifyOrExit(!mIsCommissioned, error = kErrorAlready);
+    VerifyOrExit(mCanOverwriteDataset, error = kErrorAlready);
 
     SuccessOrExit(error = dataset.SetFrom(aIncomingMessage, aOffsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
     VerifyOrExit(dataset.ContainsTlv(Tlv::kNetworkKey), error = kErrorInvalidArgs);
 
+    VerifyOrExit(Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
     VerifyOrExit(IsSetActiveDatasetAuthorized(&dataset), error = kErrorRejected);
 
     SuccessOrExit(error = Get<Ble::BleSecure>().GetPeerCertificateDer(buf, &bufLen, bufLen));
     Get<Settings>().SaveTcatCommissionerCertificate(buf, static_cast<uint16_t>(bufLen));
 
     Get<ActiveDatasetManager>().SaveLocal(dataset);
+
+    // Flag lets HandleNotifierEvents() know that the Agent is the source of the change. In theory, this could be
+    // coalesced with another module's dataset write at exactly the same time, but this is in practice impossible
+    // to exploit as an attack vector by the TCAT Commissioner.
+    mHasWrittenActiveDataset = true;
 
 exit:
     return error;
@@ -712,7 +719,7 @@ Error TcatAgent::HandleDecommission(void)
 #endif
 
     mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
-    mIsCommissioned = false; // enable repeated commissioning/decommissioning in a session
+    mCanOverwriteDataset = true; // enable repeated commissioning/decommissioning cycles in a session
 
 exit:
     return error;
@@ -1004,6 +1011,7 @@ Error TcatAgent::HandleStartThreadInterface(void)
     VerifyOrExit(IsCommandClassAuthorized(kCommissioning), error = kErrorRejected);
     VerifyOrExit(Get<ActiveDatasetManager>().Read(datasetInfo) == kErrorNone, error = kErrorInvalidState);
     VerifyOrExit(datasetInfo.IsPresent<Dataset::kNetworkKey>(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsDisabled(), error = kErrorAlready);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(!Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
@@ -1013,8 +1021,16 @@ Error TcatAgent::HandleStartThreadInterface(void)
     SuccessOrExit(error = Get<Mle::Mle>().Start());
 
 exit:
-    // error values for callback MUST be limited to the allowed set, see #JoinCallback
-    mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ true, error);
+    if (error != kErrorAlready)
+    {
+        // error values for callback MUST be limited to the allowed set, see #JoinCallback
+        mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ true, error);
+    }
+    else
+    {
+        error = kErrorNone; // TCAT spec: success resp if already started. No callback in this case.
+    }
+
     return error;
 }
 
@@ -1023,6 +1039,7 @@ Error TcatAgent::HandleStopThreadInterface(void)
     Error error = kErrorNone;
 
     VerifyOrExit(IsCommandClassAuthorized(kCommissioning), error = kErrorRejected);
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorAlready);
 
     Get<Mle::Mle>().Stop();
 
@@ -1032,7 +1049,14 @@ Error TcatAgent::HandleStopThreadInterface(void)
     }
 
 exit:
-    mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
+    if (error != kErrorAlready)
+    {
+        mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
+    }
+    else
+    {
+        error = kErrorNone; // TCAT spec: success resp if already stopped. No callback in this case.
+    }
     return error;
 }
 
@@ -1083,15 +1107,27 @@ void TcatAgent::HandleNotifierEvents(Events aEvents)
     VerifyOrExit(IsStarted());
     VerifyOrExit(mVendorInfo != nullptr);
 
-    if (aEvents.ContainsAny(kEventThreadRoleChanged))
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
         if (!mVendorInfo->mKeepActiveAfterJoining && Get<Mle::Mle>().IsAttached() &&
             (mLastDeviceRole == Mle::kRoleDisabled || mLastDeviceRole == Mle::kRoleDetached))
         {
             IgnoreError(Standby());
         }
-
         mLastDeviceRole = Get<Mle::Mle>().GetRole();
+    }
+
+    // Change of network key or ExtPanId by another process: it wrote a dataset for *another* Thread Network.
+    // This event revokes the Commissioner's existing authorization (if any) to rewrite datasets.
+    if (!mHasWrittenActiveDataset && aEvents.ContainsAny(kEventNetworkKeyChanged | kEventThreadExtPanIdChanged))
+    {
+        mCanOverwriteDataset = false;
+    }
+    mHasWrittenActiveDataset = false;
+
+    if (aEvents.Contains(kEventPskcChanged))
+    {
+        mPskcVerified = false; // if changed: require new proof-of-PSKc-possession by Commissioner
     }
 
 exit:
