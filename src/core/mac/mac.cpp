@@ -455,6 +455,12 @@ void Mac::RequestDirectFrameTransmission(void)
     VerifyOrExit(IsEnabled());
     VerifyOrExit(!IsActiveOrPending(kOperationTransmitDataDirect));
 
+    // Ensure direct data frame and data poll TX requests are handled in the
+    // order they are requested. If a poll TX request is already pending, it
+    // should be sent before this direct data frame.
+
+    mShouldTxPollBeforeData = IsPending(kOperationTransmitPoll);
+
     StartOperation(kOperationTransmitDataDirect);
 
 exit:
@@ -505,9 +511,9 @@ Error Mac::RequestDataPollTransmission(void)
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
     VerifyOrExit(!IsActiveOrPending(kOperationTransmitPoll));
 
-    // We ensure data frame and data poll tx requests are handled in the
-    // order they are requested. So if we have a pending direct data frame
-    // tx request, it should be sent before the poll frame.
+    // Ensure direct data frame and data poll TX requests are handled in the
+    // order they are requested. If a direct data frame TX request is already
+    // pending, it should be sent before this poll frame.
 
     mShouldTxPollBeforeData = !IsPending(kOperationTransmitDataDirect);
 
@@ -585,6 +591,32 @@ void Mac::StartOperation(Operation aOperation)
 
 void Mac::PerformNextOperation(void)
 {
+    // Operation priority list to determine the next MAC operation
+
+    static constexpr Operation kOperationPriorityList[] = {
+        // `WaitingForData` has the highest priority so that the radio
+        // remains in receive mode after a data poll ACK indicating a
+        // pending frame from the parent.
+        kOperationWaitingForData,
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        kOperationTransmitWakeup,
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        kOperationTransmitDataCsl,
+#endif
+        kOperationActiveScan,
+        kOperationEnergyScan,
+        kOperationTransmitBeacon,
+#if OPENTHREAD_FTD
+        kOperationTransmitDataIndirect,
+#endif
+        // `TransmitDataDirect` is listed ahead of `TransmitPoll`, but
+        // if both are pending and the poll request was received
+        // first, the `mShouldTxPollBeforeData` can flip the order.
+        kOperationTransmitDataDirect,
+        kOperationTransmitPoll,
+    };
+
     VerifyOrExit(mOperation == kOperationIdle);
 
     if (!IsEnabled())
@@ -598,57 +630,18 @@ void Mac::PerformNextOperation(void)
         ExitNow();
     }
 
-    // `WaitingForData` should be checked before any other pending
-    // operations since radio should remain in receive mode after
-    // a data poll ack indicating a pending frame from parent.
-    if (IsPending(kOperationWaitingForData))
+    for (Operation operation : kOperationPriorityList)
     {
-        mOperation = kOperationWaitingForData;
+        if (IsPending(operation))
+        {
+            mOperation = operation;
+            break;
+        }
     }
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    else if (IsPending(kOperationTransmitWakeup))
-    {
-        mOperation = kOperationTransmitWakeup;
-    }
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (IsPending(kOperationTransmitDataCsl))
-    {
-        mOperation = kOperationTransmitDataCsl;
-    }
-#endif
-    else if (IsPending(kOperationActiveScan))
-    {
-        mOperation = kOperationActiveScan;
-    }
-    else if (IsPending(kOperationEnergyScan))
-    {
-        mOperation = kOperationEnergyScan;
-    }
-    else if (IsPending(kOperationTransmitBeacon))
-    {
-        mOperation = kOperationTransmitBeacon;
-    }
-#if OPENTHREAD_FTD
-    else if (IsPending(kOperationTransmitDataIndirect))
-    {
-        mOperation = kOperationTransmitDataIndirect;
-    }
-#endif // OPENTHREAD_FTD
-    else if (IsPending(kOperationTransmitPoll) && (!IsPending(kOperationTransmitDataDirect) || mShouldTxPollBeforeData))
+
+    if (mShouldTxPollBeforeData && (mOperation == kOperationTransmitDataDirect) && IsPending(kOperationTransmitPoll))
     {
         mOperation = kOperationTransmitPoll;
-    }
-    else if (IsPending(kOperationTransmitDataDirect))
-    {
-        mOperation = kOperationTransmitDataDirect;
-
-        if (IsPending(kOperationTransmitPoll))
-        {
-            // Ensure that a pending "transmit poll" operation request
-            // is prioritized over any future "transmit data" requests.
-            mShouldTxPollBeforeData = true;
-        }
     }
 
     if (mOperation != kOperationIdle)
