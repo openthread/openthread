@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /*
  * Regression test: an unsecured Enh-Ack must not be accepted for a SECURED IEEE
  * 802.15.4-2015 transmission (`Mac::ProcessEnhAckSecurity()`).
@@ -62,11 +61,11 @@
 namespace ot {
 namespace Nexus {
 
-static constexpr uint32_t kFormNetworkTime = 13 * 1000;
-static constexpr uint32_t kAttachAsSsedTime = 20 * 1000;
-static constexpr uint32_t kCslPeriodMs = 100;
-static constexpr uint32_t kCslPeriod   = kCslPeriodMs * 1000 / OT_US_PER_TEN_SYMBOLS;
-static constexpr uint32_t kCslSyncTime = 5 * 1000;
+static constexpr uint32_t kFormNetworkTime    = 13 * 1000;
+static constexpr uint32_t kAttachAsSsedTime   = 20 * 1000;
+static constexpr uint32_t kCslPeriodMs        = 100;
+static constexpr uint32_t kCslPeriod          = kCslPeriodMs * 1000 / OT_US_PER_TEN_SYMBOLS;
+static constexpr uint32_t kCslSyncTime        = 5 * 1000;
 static constexpr int8_t   kReplacementAckRssi = -15;
 
 static bool     sUdpReceived;
@@ -79,7 +78,7 @@ static void HandleUdpReceive(void *, otMessage *, const otMessageInfo *) { sUdpR
 
 static Core::AckInterceptResult AckHook(Node &aTxNode, Radio::Frame &aReplacementAck)
 {
-    Core::AckInterceptResult result = Core::kPass;
+    Core::AckInterceptResult result  = Core::kPass;
     Mac::TxFrame            &txFrame = aTxNode.mRadio.mTxFrame;
 
     VerifyOrExit(sInterceptArmed);
@@ -139,8 +138,7 @@ static void SendUdpTo(Node &aSender, const Ip6::Address &aDst, const char *aText
 
 static int8_t GetParentAverageRssToSsed(Node &aParent, Node &aSsed)
 {
-    Child *child =
-        aParent.Get<ChildTable>().FindChild(aSsed.Get<Mac::Mac>().GetExtAddress(), Child::kInStateValid);
+    Child *child = aParent.Get<ChildTable>().FindChild(aSsed.Get<Mac::Mac>().GetExtAddress(), Child::kInStateValid);
 
     VerifyOrQuit(child != nullptr);
     return child->GetLinkInfo().GetAverageRss();
@@ -177,7 +175,7 @@ void TestUnsecuredEnhAckRejected(void)
     SuccessOrQuit(otUdpOpen(&ssed.GetInstance(), &ssedSocket, HandleUdpReceive, nullptr));
     SuccessOrQuit(otUdpBind(&ssed.GetInstance(), &ssedSocket, &sockName, OT_NETIF_THREAD_INTERNAL));
 
-    sParentNode = &parent;
+    sParentNode             = &parent;
     Core::sAckInterceptHook = AckHook;
 
     Log("--------------------------------------------------------------");
@@ -197,7 +195,7 @@ void TestUnsecuredEnhAckRejected(void)
 
     sUdpReceived         = false;
     sInterceptedAttempts = 0;
-    sReplaceMode           = true;
+    sReplaceMode         = true;
     sInterceptArmed      = true;
 
     SendUdpTo(parent, ssed.Get<Mle::Mle>().GetMeshLocalEid(), "C2-CASE");

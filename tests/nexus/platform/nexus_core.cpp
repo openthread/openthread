@@ -43,7 +43,6 @@ namespace Nexus {
 
 Core::AckInterceptHook Core::sAckInterceptHook = nullptr;
 
-
 Core *Core::sCore  = nullptr;
 bool  Core::sInUse = false;
 

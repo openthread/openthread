@@ -56,7 +56,12 @@ public:
     // processing; kBlockNoAck = frame does not reach any receiver and no ack
     // (missed window); kReplaceAck = frame does not reach any receiver and
     // aReplacementAck (filled by hook) is delivered to the transmitter.
-    enum AckInterceptResult : uint8_t { kPass, kBlockNoAck, kReplaceAck };
+    enum AckInterceptResult : uint8_t
+    {
+        kPass,
+        kBlockNoAck,
+        kReplaceAck
+    };
     typedef AckInterceptResult (*AckInterceptHook)(Node &aTxNode, Radio::Frame &aReplacementAck);
     static AckInterceptHook sAckInterceptHook;
 
