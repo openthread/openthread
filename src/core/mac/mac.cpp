@@ -2187,13 +2187,25 @@ exit:
             // saved in the corresponding TREL peer, and signal this to
             // the platform layer.
             //
-            // If the frame used link security and was successfully
-            // processed, we allow the `Peer` entry socket information
-            // to be updated directly.
+            // Only frames secured with the network key (key ID mode 1)
+            // or the KEK (key ID mode 0) may authorize a direct update
+            // of the `Peer` entry socket information. Key ID mode 2
+            // uses a well-known key and provides no sender
+            // authentication (any party can construct a valid mode-2
+            // frame), so it must not be trusted for peer socket address
+            // updates (same policy as `ThreadLinkInfo::SetFrom()`).
+            // MLE-secured messages are checked through the MLE
+            // receive path (`Mle::CheckTrelPeerAddrOnSecureMleRx()`
+            // call sites), where a direct update additionally requires
+            // the MLE-verified source identity to match the selected
+            // peer and the message to have passed the MLE frame-counter
+            // checks (see `Trel::Link::CheckPeerAddrOnSecureMleRx()`),
+            // preserving same-peer mobility.
 
-            Get<Trel::Link>().CheckPeerAddrOnRxSuccess(aFrame->GetSecurityEnabled()
-                                                           ? Trel::Link::kAllowPeerSockAddrUpdate
-                                                           : Trel::Link::kDisallowPeerSockAddrUpdate);
+            Get<Trel::Link>().CheckPeerAddrOnRxSuccess(
+                aFrame->IsSecuredWith(RxFrame::kAllowKeyIdMode0 | RxFrame::kAllowKeyIdMode1)
+                    ? Trel::Link::kAllowPeerSockAddrUpdate
+                    : Trel::Link::kDisallowPeerSockAddrUpdate);
         }
     }
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

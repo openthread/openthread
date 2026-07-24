@@ -462,6 +462,9 @@ ot_nexus_test(cli_basic "core;cli;nexus")
 
 # Trel
 ot_nexus_test(trel "trel;nexus")
+ot_nexus_test(trel_peer_addr_cross_peer "trel;nexus")
+ot_nexus_test(trel_peer_addr_mle_lane "trel;nexus")
+ot_nexus_test(trel_peer_addr_update "trel;nexus")
 
 # Long-routes
 ot_nexus_test(long_routes "long_routes;nexus")

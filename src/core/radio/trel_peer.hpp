@@ -126,6 +126,23 @@ public:
     const Ip6::SockAddr &GetSockAddr(void) const { return AsCoreType(&mSockAddr); }
 
     /**
+     * Sets the peer identity and socket address directly, for use by unit and nexus
+     * tests to emulate a DNS-SD-discovered peer without a platform DNS-SD stack.
+     *
+     * @param[in] aExtAddress  The peer extended address.
+     * @param[in] aExtPanId    The peer Extended PAN Identifier.
+     * @param[in] aSockAddr    The peer socket address.
+     */
+    void SetInfoForTesting(const Mac::ExtAddress        &aExtAddress,
+                           const MeshCoP::ExtendedPanId &aExtPanId,
+                           const Ip6::SockAddr          &aSockAddr)
+    {
+        SetExtAddress(aExtAddress);
+        SetExtPanId(aExtPanId);
+        SetSockAddr(aSockAddr);
+    }
+
+    /**
      * Indicates whether or not the IPv6 socket address associated with the TREL peer is valid.
      *
      * During peer discovery (mDNS service and host resolution), the peer address may not yet be known and can be

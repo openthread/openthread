@@ -407,6 +407,43 @@ void Link::CheckPeerAddrOnRxSuccess(PeerSockAddrUpdateMode aMode)
 
     VerifyOrExit(mRxPacketPeer != nullptr);
 
+    // Cross-peer binding (source-consistency) check: the peer entry was selected
+    // from the UNAUTHENTICATED TREL header Source field, while the authorization
+    // to update comes from the received frame's security. Only allow the socket
+    // address update when the frame's own (security-verified) source address
+    // matches the selected peer; otherwise a mismatched TREL header Source
+    // field could rebind a DIFFERENT peer's socket address.
+    if (aMode == kAllowPeerSockAddrUpdate)
+    {
+        Mac::Address    frameSrc;
+        Mac::ExtAddress srcExtAddress;
+        bool            haveSrc = false;
+
+        if (mRxFrame.GetSrcAddr(frameSrc) == kErrorNone)
+        {
+            if (frameSrc.IsExtended())
+            {
+                srcExtAddress = frameSrc.GetExtended();
+                haveSrc       = true;
+            }
+            else if (frameSrc.IsShort())
+            {
+                Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(frameSrc);
+
+                if (neighbor != nullptr)
+                {
+                    srcExtAddress = neighbor->GetExtAddress();
+                    haveSrc       = true;
+                }
+            }
+        }
+
+        if (!haveSrc || (srcExtAddress != mRxPacketPeer->GetExtAddress()))
+        {
+            aMode = kDisallowPeerSockAddrUpdate;
+        }
+    }
+
     prevSockAddr = mRxPacketPeer->GetSockAddr();
     VerifyOrExit(prevSockAddr != mRxPacketSenderAddr);
 
@@ -425,6 +462,28 @@ void Link::CheckPeerAddrOnRxSuccess(PeerSockAddrUpdateMode aMode)
 
 exit:
     mRxPacketPeer = nullptr;
+}
+
+void Link::CheckPeerAddrOnSecureMleRx(const Mac::ExtAddress &aMleSourceExtAddress, bool aIsReplayProtected)
+{
+    PeerSockAddrUpdateMode mode = kDisallowPeerSockAddrUpdate;
+
+    // The peer entry (`mRxPacketPeer`) was selected from the unauthenticated TREL
+    // encapsulation header Source field, and MLE-secured messages can ride
+    // MAC-unsecured frames whose MAC source address is also unauthenticated. The
+    // only identity MLE security verifies is the IPv6 source IID (bound in the
+    // MLE AAD and nonce). Allow a direct socket address update only when that
+    // verified identity matches the selected peer and the message passed the MLE
+    // frame-counter checks against its sender's currently valid neighbor record
+    // (`aIsReplayProtected`); otherwise only signal the address difference so the
+    // peer can be re-resolved through DNS-SD.
+
+    if (aIsReplayProtected && (mRxPacketPeer != nullptr) && (mRxPacketPeer->GetExtAddress() == aMleSourceExtAddress))
+    {
+        mode = kAllowPeerSockAddrUpdate;
+    }
+
+    CheckPeerAddrOnRxSuccess(mode);
 }
 
 void Link::HandleAck(Packet &aAckPacket)

@@ -2454,7 +2454,9 @@ private:
     void UpdateRoleTimeCounters(DeviceRole aRole);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    void CheckTrelPeerAddrOnSecureMleRx(const Message &aMessage);
+    void CheckTrelPeerAddrOnSecureMleRx(const Message         &aMessage,
+                                        const Mac::ExtAddress &aMleSourceExtAddress,
+                                        bool                   aIsReplayProtected);
 #endif
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
