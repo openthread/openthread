@@ -39,15 +39,15 @@
 /* Initializes a bitmap to all zeros. */
 void bmp_init(uint8_t* buf, size_t numbytes);
 
-/* Sets the specified range of bits. START is the index
-   of the first bit to be set. LEN is the number of bits
+/* Sets the specified range of bits. BUF has length BUFLEN, in bytes.
+   START is the index of the first bit to be set. LEN is the number of bits
    to be set. */
-void bmp_setrange(uint8_t* buf, size_t start, size_t len);
+void bmp_setrange(uint8_t* buf, size_t buflen, size_t start, size_t len);
 
-/* Clears the specified range of bits. START is the index
-   of the first bit to be cleared. LEN is the number of bits
+/* Clears the specified range of bits. BUF has length BUFLEN, in bytes.
+   START is the index of the first bit to be cleared. LEN is the number of bits
    to be cleared. */
-void bmp_clrrange(uint8_t* buf, size_t start, size_t len);
+void bmp_clrrange(uint8_t* buf, size_t buflen, size_t start, size_t len);
 
 /* Counts the number of set bits in BUF starting at START. BUF has length
    BUFLEN, in bytes. Counts the number of set bits until it either (1) finds
@@ -60,7 +60,7 @@ size_t bmp_countset(uint8_t* buf, size_t buflen, size_t start, size_t limit);
 /* Swaps two non-overlapping regions of the bitmap. START_1 is the index of
    the first region, START_2 is the index of the secoind region, and LEN is
    the length of each region, in bits. */
-void bmp_swap(uint8_t* buf, size_t start_1, size_t start_2, size_t len);
+void bmp_swap(uint8_t* buf, size_t buflen, size_t start_1, size_t start_2, size_t len);
 
 /* Returns 1 if the bitmap is all zeros, and 0 otherwise. */
 int bmp_isempty(uint8_t* buf, size_t buflen);

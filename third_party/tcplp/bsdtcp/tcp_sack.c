@@ -113,14 +113,14 @@ struct sackhole* sackhole_alloc(struct tcpcb* tp) {
     if (freeindex >= SACKHOLE_BMP_SIZE) {
     	return NULL; // all sackholes are allocated already!
     }
-    bmp_setrange(tp->sackhole_bmp, freeindex, 1);
+    bmp_setrange(tp->sackhole_bmp, SACKHOLE_BMP_SIZE, freeindex, 1);
     return &tp->sackhole_pool[freeindex];
 }
 
 void sackhole_free(struct tcpcb* tp, struct sackhole* tofree) {
 	size_t freeindex = (size_t) (tofree - &tp->sackhole_pool[0]);
 	KASSERT(tofree == &tp->sackhole_pool[freeindex], ("sackhole pool unaligned"));
-	bmp_clrrange(tp->sackhole_bmp, freeindex, 1);
+	bmp_clrrange(tp->sackhole_bmp, SACKHOLE_BMP_SIZE, freeindex, 1);
 }
 
 /*
