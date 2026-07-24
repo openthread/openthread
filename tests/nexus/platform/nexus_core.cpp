@@ -41,6 +41,8 @@
 namespace ot {
 namespace Nexus {
 
+Core::AckInterceptHook Core::sAckInterceptHook = nullptr;
+
 Core *Core::sCore  = nullptr;
 bool  Core::sInUse = false;
 
@@ -782,6 +784,33 @@ void Core::ProcessRadio(Node &aNode)
     }
 
     otPlatRadioTxStarted(&aNode.GetInstance(), &aNode.mRadio.mTxFrame);
+
+    // TEST-ONLY ack interception (see nexus_core.hpp).
+    if (sAckInterceptHook != nullptr)
+    {
+        Radio::Frame       replacementAck;
+        AckInterceptResult hookResult = sAckInterceptHook(aNode, replacementAck);
+
+        if (hookResult != kPass)
+        {
+            aNode.mRadio.mChannel = aNode.mRadio.mTxFrame.mChannel;
+            aNode.mRadio.mState   = Radio::kStateReceive;
+
+            if (hookResult == kReplaceAck)
+            {
+                replacementAck.UpdateFcs();
+                mPcap.WriteFrame(replacementAck, mNow);
+                otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, &replacementAck, kErrorNone);
+            }
+            else
+            {
+                otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, nullptr,
+                                  aNode.mRadio.mTxFrame.GetAckRequest() ? kErrorNoAck : kErrorNone);
+            }
+
+            ExitNow();
+        }
+    }
 
     for (Node &rxNode : mNodes)
     {

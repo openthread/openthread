@@ -51,6 +51,20 @@ class Node;
 class Core
 {
 public:
+    // TEST-ONLY ack-intercept hook (lets a test observe a transmission and
+    // block it or substitute the delivered ack): return kPass = normal
+    // processing; kBlockNoAck = frame does not reach any receiver and no ack
+    // (missed window); kReplaceAck = frame does not reach any receiver and
+    // aReplacementAck (filled by hook) is delivered to the transmitter.
+    enum AckInterceptResult : uint8_t
+    {
+        kPass,
+        kBlockNoAck,
+        kReplaceAck
+    };
+    typedef AckInterceptResult (*AckInterceptHook)(Node &aTxNode, Radio::Frame &aReplacementAck);
+    static AckInterceptHook sAckInterceptHook;
+
     Core(void);
     ~Core(void);
 
