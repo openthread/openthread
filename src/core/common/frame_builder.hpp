@@ -47,7 +47,7 @@ class Message;
 /**
  * The `FrameBuilder` can be used to construct frame content in a given data buffer.
  */
-class FrameBuilder
+class OT_GSL_POINTER FrameBuilder
 {
 public:
     /**
@@ -65,7 +65,7 @@ public:
      *
      * @returns A pointer to the frame buffer.
      */
-    const uint8_t *GetBytes(void) const { return mBuffer; }
+    const uint8_t *GetBytes(void) const OT_LIFETIME_BOUND { return mBuffer; }
 
     /**
      * Returns the current length of frame (number of bytes appended so far).
@@ -199,7 +199,7 @@ public:
      * @returns A pointer to the start of the appended bytes if successful, or `nullptr` if there are not enough
      *          remaining bytes to append @p aLength bytes.
      */
-    void *AppendLength(uint16_t aLength);
+    void *AppendLength(uint16_t aLength) OT_LIFETIME_BOUND;
 
     /**
      * Appends an object to the `FrameBuilder`.
@@ -212,7 +212,7 @@ public:
      * @returns A pointer the appended `ObjectType` if successful, or `nullptr` if there are not enough remaining
      *          bytes to append an `ObjectType`.
      */
-    template <typename ObjectType> ObjectType *Append(void)
+    template <typename ObjectType> ObjectType *Append(void) OT_LIFETIME_BOUND
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
@@ -309,7 +309,7 @@ public:
      *
      * @returns A pointer to the `ObjectType` at @p aOffset.
      */
-    template <typename ObjectType> ObjectType *Read(uint16_t aOffset)
+    template <typename ObjectType> ObjectType *Read(uint16_t aOffset) OT_LIFETIME_BOUND
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
