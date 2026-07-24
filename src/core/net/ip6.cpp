@@ -1347,11 +1347,79 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
 
         aMessagePtr->Write<uint8_t>(Header::kHopLimitFieldOffset, header.GetHopLimit());
 
-        if (nextHeader == kProtoIcmp6)
+        // Resolve any extension headers that were intentionally left
+        // unprocessed for not-received (forwarded) messages, so the
+        // checks below apply to the FINAL upper-layer protocol.
+        // Otherwise a Destination Options (or atomic Fragment) header
+        // inserted before the upper-layer header would cause both the
+        // forwarded-ICMPv6 type allowlist and the untrusted-origin TMF
+        // port filter to be skipped.
+
+        constexpr uint8_t kMaxExtHeaderChain = 8;
+
+        uint8_t  upperProto             = nextHeader;
+        uint16_t upperOffset            = aMessagePtr->GetOffset();
+        bool     isContinuationFragment = false;
+
+        for (uint8_t numHeaders = 0; numHeaders < kMaxExtHeaderChain; numHeaders++)
+        {
+            if ((upperProto == kProtoHopOpts) || (upperProto == kProtoDstOpts) || (upperProto == kProtoRouting))
+            {
+                ExtensionHeader extHeader;
+
+                SuccessOrExit(error = aMessagePtr->Read(upperOffset, extHeader));
+                VerifyOrExit(extHeader.GetSize() <= aMessagePtr->GetLength() - upperOffset, error = kErrorParse);
+                upperProto = extHeader.GetNextHeader();
+                upperOffset += extHeader.GetSize();
+            }
+            else if (upperProto == kProtoFragment)
+            {
+                FragmentHeader fragHeader;
+
+                SuccessOrExit(error = aMessagePtr->Read(upperOffset, fragHeader));
+
+                if (fragHeader.GetOffset() != 0)
+                {
+                    // A continuation fragment does not contain the upper-layer
+                    // header and is forwarded as-is: it cannot complete
+                    // reassembly anywhere unless its FIRST fragment also
+                    // passed through this filter.
+                    isContinuationFragment = true;
+                    break;
+                }
+
+                upperProto = fragHeader.GetNextHeader();
+                upperOffset += sizeof(FragmentHeader);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if (!isContinuationFragment)
+        {
+            // FAIL CLOSED: if the chain is still unresolved after the cap
+            // (stacked extension headers), the checks below cannot be
+            // applied; drop rather than forward unchecked.
+            VerifyOrExit((upperProto != kProtoHopOpts) && (upperProto != kProtoDstOpts) &&
+                             (upperProto != kProtoRouting) && (upperProto != kProtoFragment),
+                         error = kErrorDrop);
+
+            // An IPv6-in-IPv6 tunnel from an untrusted host origin cannot be
+            // inspected here and is decapsulated at the receiving node; treat
+            // it as unverifiable for the untrusted-origin filter.
+            if (aMessagePtr->IsOriginHostUntrusted())
+            {
+                VerifyOrExit(upperProto != kProtoIp6, error = kErrorDrop);
+            }
+        }
+
+        if (!isContinuationFragment && (upperProto == kProtoIcmp6))
         {
             uint8_t icmpType;
 
-            SuccessOrExit(error = aMessagePtr->Read(aMessagePtr->GetOffset(), icmpType));
+            SuccessOrExit(error = aMessagePtr->Read(upperOffset, icmpType));
 
             VerifyOrExit(DoesArrayContain(kForwardIcmpTypes, icmpType), error = kErrorDrop);
         }
@@ -1359,11 +1427,11 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
         if (mTmfOriginFilterEnabled)
 #endif
         {
-            if (aMessagePtr->IsOriginHostUntrusted() && (nextHeader == kProtoUdp))
+            if (!isContinuationFragment && aMessagePtr->IsOriginHostUntrusted() && (upperProto == kProtoUdp))
             {
                 UdpHeader udpHeader;
 
-                SuccessOrExit(error = aMessagePtr->Read(aMessagePtr->GetOffset(), udpHeader));
+                SuccessOrExit(error = aMessagePtr->Read(upperOffset, udpHeader));
 
                 if (udpHeader.GetDestinationPort() == Tmf::kUdpPort)
                 {
