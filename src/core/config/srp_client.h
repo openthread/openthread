@@ -55,6 +55,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+ *
+ * Define to 1 to enable SRP Client counters APIs (`otSrpClientGetCounters` and `otSrpClientResetCounters`).
+ *
+ * Defaults to enabled when both `OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE` and `OPENTHREAD_CONFIG_UPTIME_ENABLE` are
+ * enabled, and disabled otherwise. Requires `OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE` and
+ * `OPENTHREAD_CONFIG_UPTIME_ENABLE`.
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+#define OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE \
+    (OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE && OPENTHREAD_CONFIG_UPTIME_ENABLE)
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
  *
  * Define to 1 to enable SRP Client auto-start feature and its APIs.
