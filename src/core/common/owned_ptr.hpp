@@ -50,7 +50,7 @@ namespace ot {
  *
  * @tparam Type  The pointer type.
  */
-template <class Type> class OwnedPtr : public Ptr<Type>
+template <class Type> class OT_GSL_OWNER OwnedPtr : public Ptr<Type>
 {
     using Ptr<Type>::mPointer;
 
@@ -141,7 +141,7 @@ public:
      *
      * @returns An rvalue reference of the pointer to move from.
      */
-    OwnedPtr &&PassOwnership(void) { return static_cast<OwnedPtr &&>(*this); }
+    OwnedPtr &&PassOwnership(void) OT_LIFETIME_BOUND { return static_cast<OwnedPtr &&>(*this); }
 
     /**
      * Overload the assignment operator `=` to replace the object owned by the `OwnedPtr` with another one
