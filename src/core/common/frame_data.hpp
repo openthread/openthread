@@ -48,7 +48,7 @@ namespace ot {
  * It provide helper method to parse the content. As data is parsed and read, the `FrameData` is updated to skip over
  * the read content.
  */
-class FrameData : public Data<kWithUint16Length>
+class OT_GSL_POINTER FrameData : public Data<kWithUint16Length>
 {
 public:
     /**
@@ -130,7 +130,7 @@ public:
      * @returns A pointer to the object in the `FrameData` buffer and skips over it, or `nullptr` if not enough bytes
      *          remain to read the entire object.
      */
-    template <typename ObjectType> const ObjectType *Read(void)
+    template <typename ObjectType> const ObjectType *Read(void) OT_LIFETIME_BOUND
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
@@ -148,7 +148,7 @@ public:
     void SkipOver(uint16_t aLength);
 
 private:
-    const void *ReadLength(uint16_t aLength);
+    const void *ReadLength(uint16_t aLength) OT_LIFETIME_BOUND;
 };
 
 } // namespace ot
