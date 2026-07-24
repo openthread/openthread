@@ -65,7 +65,7 @@
 namespace ot {
 namespace Nexus {
 
-static constexpr uint16_t kMlePort                 = 19788;
+static constexpr uint16_t kMlePort                  = 19788;
 static constexpr uint32_t kMaxAdvertisementInterval = 32 * 1000;
 
 static uint16_t UdpChecksum(const otIp6Address &aSrc, const otIp6Address &aDst, const uint8_t *aUdp, uint16_t aUdpLen)
@@ -222,11 +222,11 @@ static void InjectMle(Node               &aReceiver,
 // Builds and injects a unsolicited Child Update Response (parent link-local source
 // source) whose Response TLV carries `aResponseBytes`.
 static void InjectUnsolicitedChildUpdateResponse(Node    &aChild,
-                                            Node    &aParent,
-                                            Core    &aNexus,
-                                            uint8_t  aResponseByte,
-                                            uint32_t aKeySequence,
-                                            uint32_t aFrameCounter)
+                                                 Node    &aParent,
+                                                 Core    &aNexus,
+                                                 uint8_t  aResponseByte,
+                                                 uint32_t aKeySequence,
+                                                 uint32_t aFrameCounter)
 {
     otIp6Address srcIp6;
     otIp6Address dstIp6 = aChild.Get<Mle::Mle>().GetLinkLocalAddress();
@@ -311,7 +311,7 @@ void TestChildUpdateResponseChallenge(void)
     Log("Case 1: unsolicited Child Update Response (arbitrary Response TLV) must be rejected");
 
     InjectUnsolicitedChildUpdateResponse(child, leader, nexus, /* aResponseByte */ 0xA5,
-                                    /* aKeySequence */ seq0 + 5, /* aFrameCounter */ 0x1000);
+                                         /* aKeySequence */ seq0 + 5, /* aFrameCounter */ 0x1000);
 
     // The unsolicited message must NOT adopt the injected key sequence.
     VerifyOrQuit(child.Get<KeyManager>().GetCurrentKeySequence() == seq0);
@@ -321,7 +321,7 @@ void TestChildUpdateResponseChallenge(void)
     Log("Case 2: unsolicited all-zero Response TLV (never-generated challenge value) must be rejected");
 
     InjectUnsolicitedChildUpdateResponse(child, leader, nexus, /* aResponseByte */ 0x00,
-                                    /* aKeySequence */ seq0 + 9, /* aFrameCounter */ 0x1001);
+                                         /* aKeySequence */ seq0 + 9, /* aFrameCounter */ 0x1001);
 
     VerifyOrQuit(child.Get<KeyManager>().GetCurrentKeySequence() == seq0);
     VerifyOrQuit(child.Get<Mle::Mle>().IsChild());

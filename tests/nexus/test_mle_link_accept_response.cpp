@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /*
  * Regression test for Link Accept Response-TLV verification (router variant): a Link
  * Accept from a `kStateValid` neighbor router may only be classified as an
@@ -346,8 +345,8 @@ void TestLinkAcceptResponseVerification(void)
             nexus.AdvanceTime(1000);
             waited += 1000;
         }
-        Log("P adopted key sequence %lu -> %lu after %lu ms (solicited Link Accept resync)",
-            (unsigned long)(base), (unsigned long)(p.Get<KeyManager>().GetCurrentKeySequence()), (unsigned long)(waited));
+        Log("P adopted key sequence %lu -> %lu after %lu ms (solicited Link Accept resync)", (unsigned long)(base),
+            (unsigned long)(p.Get<KeyManager>().GetCurrentKeySequence()), (unsigned long)(waited));
     }
 
     VerifyOrQuit(p.Get<KeyManager>().GetCurrentKeySequence() == base + 20);
@@ -454,8 +453,8 @@ void TestLinkAcceptResponseVerification(void)
             nexus.AdvanceTime(1000);
             waited += 1000;
         }
-        Log("P re-synced to key sequence %lu after %lu ms", (unsigned long)(p.Get<KeyManager>().GetCurrentKeySequence()),
-            (unsigned long)(waited));
+        Log("P re-synced to key sequence %lu after %lu ms",
+            (unsigned long)(p.Get<KeyManager>().GetCurrentKeySequence()), (unsigned long)(waited));
     }
 
     VerifyOrQuit(p.Get<KeyManager>().GetCurrentKeySequence() == cur + 30);

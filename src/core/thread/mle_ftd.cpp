@@ -1005,8 +1005,7 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         // the authoritative class exempts the message from the
         // key-switch guard in `ProcessKeySequence()`, so it must be
         // reserved for solicited and fresh responses.
-        responseVerified =
-            router->HasLinkRequestChallenge() && (response == router->GetLinkRequestChallenge());
+        responseVerified = router->HasLinkRequestChallenge() && (response == router->GetLinkRequestChallenge());
 
         if (responseVerified)
         {
