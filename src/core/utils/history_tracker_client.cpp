@@ -163,23 +163,30 @@ void Client::ProcessNetInfoAnswer(const Coap::Message &aMessage)
 {
     Error          error = kErrorNone;
     OffsetRange    offsetRange;
-    Tlv            tlv;
+    Tlv::Info      tlvInfo;
     NetworkInfoTlv netInfoTlv;
     NetworkInfo    netInfo;
 
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
 
-    for (; !offsetRange.IsEmpty(); offsetRange.AdvanceOffset(tlv.GetSize()))
+    for (; !offsetRange.IsEmpty(); offsetRange.AdvanceOffset(tlvInfo.GetSize()))
     {
-        SuccessOrExit(error = aMessage.Read(offsetRange, tlv));
-        VerifyOrExit(offsetRange.Contains(tlv.GetSize()), error = kErrorParse);
+        // Parse the TLV header with `Tlv::Info`, which reads any extended-length
+        // field from the message and validates that the full TLV is contained
+        // within `offsetRange`.
+        SuccessOrExit(error = tlvInfo.ParseFrom(aMessage, offsetRange));
 
-        if (tlv.GetType() != Tlv::kNetworkInfo)
+        if (tlvInfo.IsExtended())
         {
             continue;
         }
 
-        if (tlv.GetLength() == 0)
+        if (tlvInfo.GetType() != Tlv::kNetworkInfo)
+        {
+            continue;
+        }
+
+        if (tlvInfo.GetLength() == 0)
         {
             Finalize(kErrorNone);
             ExitNow();
