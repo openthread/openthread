@@ -788,32 +788,27 @@ exit:
 
 uint8_t Frame::CalculateMicSize(uint8_t aSecurityControl)
 {
-    uint8_t micSize = 0;
+    static constexpr uint8_t kMicSize[] = {
+        /* [0] kSecurityNone      */ kMic0Size,
+        /* [1] kSecurityMic32     */ kMic32Size,
+        /* [2] kSecurityMic64     */ kMic64Size,
+        /* [3] kSecurityMic128    */ kMic128Size,
+        /* [4] kSecurityEnc       */ kMic0Size,
+        /* [5] kSecurityEncMic32  */ kMic32Size,
+        /* [6] kSecurityEncMic64  */ kMic64Size,
+        /* [7] kSecurityEncMic128 */ kMic128Size,
+    };
 
-    switch (aSecurityControl & kSecLevelMask)
-    {
-    case kSecurityNone:
-    case kSecurityEnc:
-        micSize = kMic0Size;
-        break;
+    static_assert(kMicSize[kSecurityNone] == kMic0Size, "kMicSize[] array is incorrect");
+    static_assert(kMicSize[kSecurityMic32] == kMic32Size, "kMicSize[] array is incorrect");
+    static_assert(kMicSize[kSecurityMic64] == kMic64Size, "kMicSize[] array is incorrect");
+    static_assert(kMicSize[kSecurityMic128] == kMic128Size, "kMicSize[] array is incorrect");
+    static_assert(kMicSize[kSecurityEnc] == kMic0Size, "kMicSize[] array is incorrect");
+    static_assert(kMicSize[kSecurityEncMic32] == kMic32Size, "kMicSize[] array is incorrect");
+    static_assert(kMicSize[kSecurityEncMic64] == kMic64Size, "kMicSize[] array is incorrect");
+    static_assert(kMicSize[kSecurityEncMic128] == kMic128Size, "kMicSize[] array is incorrect");
 
-    case kSecurityMic32:
-    case kSecurityEncMic32:
-        micSize = kMic32Size;
-        break;
-
-    case kSecurityMic64:
-    case kSecurityEncMic64:
-        micSize = kMic64Size;
-        break;
-
-    case kSecurityMic128:
-    case kSecurityEncMic128:
-        micSize = kMic128Size;
-        break;
-    }
-
-    return micSize;
+    return kMicSize[aSecurityControl & kSecLevelMask];
 }
 
 uint16_t Frame::GetMaxPayloadLength(void) const { return GetMtu() - (GetHeaderLength() + GetFooterLength()); }
