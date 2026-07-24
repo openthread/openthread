@@ -75,6 +75,8 @@ public:
      */
     class NeighborInfo
     {
+        friend class CslTxScheduler;
+
     public:
         /**
          * Returns the number of CSL triggered tx attempts.
@@ -195,6 +197,8 @@ public:
         void SetLastRxTimestamp(Radio::Time64 aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
 
     private:
+        Radio::Time64 DetermineNextCslWindow(Radio::Time64 aRadioNow, uint32_t aLeadTime) const;
+
         uint8_t       mCslTxAttempts : 7;
         bool          mCslSynchronized : 1;
         uint8_t       mCslChannel;
@@ -232,17 +236,10 @@ public:
     void Clear(void);
 
 private:
-    // Guard time in usec to add when checking delay while preparing the CSL frame for tx.
-    static constexpr uint32_t kFramePreparationGuardInterval = 1500;
-
     typedef IndirectSenderBase::FrameContext FrameContext;
 
     void RescheduleCslTx(void);
     void HandleTimer(void);
-
-    uint32_t GetNextCslTransmissionDelay(const CslNeighbor &aCslNeighbor,
-                                         uint32_t          &aDelayFromLastRx,
-                                         uint32_t           aAheadUs) const;
 
     // Callbacks from `Mac`
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
@@ -253,11 +250,12 @@ private:
 
     using CslTxTimer = TimerMilliIn<CslTxScheduler, &CslTxScheduler::HandleTimer>;
 
-    uint32_t     mCslFrameRequestAheadUs;
-    CslNeighbor *mCslTxNeighbor;
-    Message     *mCslTxMessage;
-    FrameContext mFrameContext;
-    CslTxTimer   mTimer;
+    uint32_t      mCslFrameRequestAheadUs;
+    CslNeighbor  *mCslTxNeighbor;
+    Message      *mCslTxMessage;
+    Radio::Time64 mNeighborCslWindow;
+    FrameContext  mFrameContext;
+    CslTxTimer    mTimer;
 };
 
 /**

@@ -108,47 +108,47 @@ void CslTxScheduler::Clear(void)
     mTimer.Stop();
 }
 
-/**
- * Always finds the most recent CSL tx among all children,
- * and requests `Mac` to do CSL tx at specific time. It shouldn't be called
- * when `Mac` is already starting to do the CSL tx (indicated by `mCslTxMessage`).
- */
 void CslTxScheduler::RescheduleCslTx(void)
 {
-    uint32_t     minDelayTime = Time::kMaxDuration;
-    CslNeighbor *bestNeighbor = nullptr;
+    // Finds the CSL neighbor with the earliest upcoming CSL window
+    // and a pending indirect message, and schedules a timer for its
+    // transmission.
+
+    Radio::Time64 radioNow = Get<Radio::Radio>().GetNow();
+    TimeMilli     localNow = TimerMilli::GetNow();
+
+    mCslTxNeighbor = nullptr;
 
 #if OPENTHREAD_FTD
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        uint32_t delay;
-        uint32_t cslTxDelay;
+        Radio::Time64 txWindow;
 
         if (!child.IsCslSynchronized() || child.GetIndirectMessageCount() == 0)
         {
             continue;
         }
 
-        delay = GetNextCslTransmissionDelay(child, cslTxDelay, mCslFrameRequestAheadUs);
+        txWindow = child.DetermineNextCslWindow(radioNow, mCslFrameRequestAheadUs);
 
-        if (delay < minDelayTime)
+        if ((mCslTxNeighbor == nullptr) || (txWindow < mNeighborCslWindow))
         {
-            minDelayTime = delay;
-            bestNeighbor = &child;
+            mCslTxNeighbor     = &child;
+            mNeighborCslWindow = txWindow;
         }
     }
 #endif
 
-    if (bestNeighbor != nullptr)
+    if (mCslTxNeighbor != nullptr)
     {
-        mTimer.Start(Time::UsecToMsec(minDelayTime));
+        uint32_t interval = static_cast<uint32_t>(mNeighborCslWindow - radioNow - mCslFrameRequestAheadUs);
+
+        mTimer.FireAt(localNow + Time::UsecToMsec(interval));
     }
     else
     {
         mTimer.Stop();
     }
-
-    mCslTxNeighbor = bestNeighbor;
 }
 
 void CslTxScheduler::HandleTimer(void)
@@ -161,9 +161,7 @@ exit:
     return;
 }
 
-uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const CslNeighbor &aCslNeighbor,
-                                                     uint32_t          &aDelayFromLastRx,
-                                                     uint32_t           aAheadUs) const
+Radio::Time64 CslTxScheduler::NeighborInfo::DetermineNextCslWindow(Radio::Time64 aRadioNow, uint32_t aLeadTime) const
 {
     // CSL phase is in units of 10 symbols from the first symbol of the frame
     // containing the CSL IE was transmitted until the next channel sample,
@@ -206,23 +204,16 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const CslNeighbor &aCslNeig
     //         = nextTmh - phrDuration
     //         = lastRxTimestamp + 160us * (n * cslPeriod + cslPhase)
 
-    Radio::Time64 radioNow = Get<Radio::Radio>().GetNow();
-    uint32_t      periodInUs;
-    Radio::Time64 firstTxWindow;
-    Radio::Time64 nextTxWindow;
+    uint32_t      periodInUs    = GetCslPeriod() * Radio::kUsPerTenSymbols;
+    Radio::Time64 firstTxWindow = GetLastRxTimestamp() + GetCslPhase() * Radio::kUsPerTenSymbols;
+    Radio::Time64 nextTxWindow  = aRadioNow - (aRadioNow % periodInUs) + (firstTxWindow % periodInUs);
 
-    periodInUs    = aCslNeighbor.GetCslPeriod() * Radio::kUsPerTenSymbols;
-    firstTxWindow = aCslNeighbor.GetLastRxTimestamp() + aCslNeighbor.GetCslPhase() * Radio::kUsPerTenSymbols;
-    nextTxWindow  = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
-
-    while (nextTxWindow < radioNow + aAheadUs)
+    while (nextTxWindow < aRadioNow + aLeadTime)
     {
         nextTxWindow += periodInUs;
     }
 
-    aDelayFromLastRx = static_cast<uint32_t>(nextTxWindow - aCslNeighbor.GetLastRxTimestamp());
-
-    return static_cast<uint32_t>(nextTxWindow - radioNow - aAheadUs);
+    return nextTxWindow;
 }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -230,8 +221,6 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const CslNeighbor &aCslNeig
 Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
 {
     Mac::TxFrame *frame = nullptr;
-    uint32_t      txDelay;
-    uint32_t      delay;
 
     VerifyOrExit(mCslTxNeighbor != nullptr);
     VerifyOrExit(mCslTxNeighbor->IsCslSynchronized());
@@ -275,27 +264,18 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
         frame->SetRxChannelAfterTxDone(Get<Mac::Mac>().GetPanChannel());
     }
 
-    delay = GetNextCslTransmissionDelay(*mCslTxNeighbor, txDelay, /* aAheadUs */ 0);
+    // Verify that the CSL target window has not already passed.
+    // If MAC was delayed by other operations and started the CSL TX
+    // operation late, the target window may be missed, so we abort.
 
-    // We make sure that delay is less than `mCslFrameRequestAheadUs`
-    // plus some guard time. Note that we used `mCslFrameRequestAheadUs`
-    // in `RescheduleCslTx()` when determining the next CSL delay to
-    // schedule CSL tx with `Mac` but here we calculate the delay with
-    // zero `aAheadUs`. All the timings are in usec but when passing
-    // delay to `Mac` we divide by `1000` (to convert to msec) which
-    // can round the value down and cause `Mac` to start operation a
-    // bit (some usec) earlier. This is covered by adding the guard
-    // time `kFramePreparationGuardInterval`.
-    //
-    // In general this check handles the case where `Mac` is busy with
-    // other operations and therefore late to start the CSL tx operation
-    // and by the time `HandleFrameRequest()` is invoked, we miss the
-    // current CSL window and move to the next window.
+    if (mNeighborCslWindow < Get<Radio::Radio>().GetNow())
+    {
+        frame = nullptr;
+        ExitNow();
+    }
 
-    VerifyOrExit(delay <= mCslFrameRequestAheadUs + kFramePreparationGuardInterval, frame = nullptr);
-
-    frame->SetTxDelay(txDelay);
     frame->SetTxDelayBaseTime(Radio::ConvertTime64To32(mCslTxNeighbor->GetLastRxTimestamp()));
+    frame->SetTxDelay(static_cast<uint32_t>(mNeighborCslWindow - mCslTxNeighbor->GetLastRxTimestamp()));
     frame->SetCsmaCaEnabled(true);
 
 exit:
