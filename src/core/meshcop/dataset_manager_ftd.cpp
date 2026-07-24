@@ -387,8 +387,7 @@ void PendingDatasetManager::ApplyActiveDataset(Dataset &aDataset)
 
     if (aDataset.Read<DelayTimerTlv>(delayTimer) != kErrorNone)
     {
-        delayTimer = aDataset.AffectsNetworkKey(GetInstance()) ? DelayTimerTlv::kDefaultDelay
-                                                               : GetDelayTimerMinimal();
+        delayTimer = aDataset.AffectsNetworkKey(GetInstance()) ? DelayTimerTlv::kDefaultDelay : GetDelayTimerMinimal();
     }
 
     delayTimer = Max(delayTimer, GetDelayTimerMinimal());
