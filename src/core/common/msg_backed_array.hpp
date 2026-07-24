@@ -284,6 +284,90 @@ public:
         return Read(aIndexedEntry);
     }
 
+    /**
+     * Removes an element from the array at a given index.
+     *
+     * To remove the element, it is replaced by the last element in the array. So the order of items in the array
+     * can change after a call to this method.
+     *
+     * @param[in] aIndex  The index of the element to remove.
+     *
+     * @retval kErrorNone         Successfully removed the element.
+     * @retval kErrorInvalidArgs  The @p aIndex is out of bounds (beyond current array length).
+     */
+    Error RemoveAt(uint16_t aIndex)
+    {
+        Error    error  = kErrorNone;
+        uint16_t length = GetLength();
+
+        VerifyOrExit(aIndex < length, error = kErrorInvalidArgs);
+
+        if (aIndex < length - 1)
+        {
+            mMessage->WriteBytesFromMessage(/* aWriteOffset */ aIndex * sizeof(Type), *mMessage,
+                                            /* aReadOffset */ (length - 1) * sizeof(Type), /* aLength */ sizeof(Type));
+        }
+
+        if (length == 1)
+        {
+            Clear();
+        }
+        else
+        {
+            mMessage->RemoveFooter(sizeof(Type));
+        }
+
+    exit:
+        return error;
+    }
+
+    /**
+     * Removes an element from the array.
+     *
+     * To remove the element, it is replaced by the last element in the array. So the order of items in the array
+     * can change after a call to this method.
+     *
+     * @param[in,out] aIndexedEntry  A reference to an `IndexedEntry` specifying the element to remove. On success, its
+     *                               index is set to invalid.
+     *
+     * @retval kErrorNone         Successfully removed the element.
+     * @retval kErrorInvalidArgs  The `GetIndex()` in @p aIndexedEntry is out of bounds.
+     */
+    Error Remove(IndexedEntry &aIndexedEntry)
+    {
+        Error error = RemoveAt(aIndexedEntry.GetIndex());
+
+        if (error == kErrorNone)
+        {
+            aIndexedEntry.SetIndexToInvalid();
+        }
+
+        return error;
+    }
+
+    /**
+     * Removes the first entry in the array matching a set of conditions.
+     *
+     * Behaves similar to `RemoveAt()`, i.e., the matched entry (if found) is replaced with the last entry in the
+     * array. So the order of items in the array can change after a call to this method.
+     *
+     * @param[in]  aArgs  The args to pass to `Matches()` to find the matching entry.
+     *
+     * @retval kErrorNone      A matching entry was found and removed.
+     * @retval kErrorNotFound  Could not find a matching entry in the array.
+     */
+    template <typename... Args> Error RemoveMatching(Args &&...aArgs)
+    {
+        Error        error;
+        IndexedEntry entry;
+
+        SuccessOrExit(error = FindMatching(entry, aArgs...));
+        error = Remove(entry);
+
+    exit:
+        return error;
+    }
+
 private:
     Message *mMessage;
 };
