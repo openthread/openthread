@@ -254,8 +254,7 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Msg &aMsg)
         }
         else
         {
-            LogWarn("Ignoring server data removal for un-owned rloc16 0x%04x (sender 0x%04x)", rloc16,
-                    senderRloc16);
+            LogWarn("Ignoring server data removal for un-owned rloc16 0x%04x (sender 0x%04x)", rloc16, senderRloc16);
         }
 
         break;
