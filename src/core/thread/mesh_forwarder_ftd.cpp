@@ -220,7 +220,8 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvic
     for (uint8_t priority = aPriority; priority < Message::kNumPriorities; priority++)
     {
         // search for an equal or higher priority indirect message to evict
-        for (Message *message = mSendQueue.GetHeadForPriority(aPriority); message; message = message->GetNext())
+        for (Message *message = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority)); message;
+             message          = message->GetNext())
         {
             if (message->GetPriority() != priority)
             {
