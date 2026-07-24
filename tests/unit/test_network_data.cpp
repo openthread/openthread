@@ -1065,7 +1065,6 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
     testFreeInstance(instance);
 }
 
-
 void TestNetworkDataContextLength(void)
 {
     Instance *instance;
