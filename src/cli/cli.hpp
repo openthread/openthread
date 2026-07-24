@@ -143,6 +143,18 @@ public:
      */
     explicit Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
+    /**
+     * Destructor
+     */
+    ~Interpreter(void);
+
+    /**
+     * Gets the head of the linked list of all initialized CLI interpreters.
+     *
+     * @returns A pointer to the first CLI interpreter, or `nullptr` if none are initialized.
+     */
+    static Interpreter *GetInterpreterList(void) { return sInterpreterList; }
+
 #if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
     /**
      * Returns a reference to the static CLI interpreter.
@@ -393,6 +405,8 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
+    static bool DoesInterpreterListContain(Interpreter &aInterpreter);
+
     struct UserCommandsEntry
     {
         const otCliCommand *mCommands;
@@ -400,6 +414,9 @@ private:
         void               *mContext;
     };
 
+    static Interpreter *sInterpreterList;
+
+    Interpreter      *mNext;
     UserCommandsEntry mUserCommands[kMaxUserCommandEntries];
     bool              mCommandIsPending;
     bool              mInternalDebugCommand;
