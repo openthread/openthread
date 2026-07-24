@@ -35,6 +35,7 @@
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 #include "instance/instance.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 namespace Trel {
@@ -43,17 +44,22 @@ RegisterLogModule("TrelInterface");
 
 Interface::Interface(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mUserEnabled(true)
+    , mUserEnabled(false)
     , mStackEnabled(false)
     , mFiltered(false)
     , mState(kStateUninitialized)
+    , mUdpPort(0)
+    , mCallbackTask(aInstance)
 {
 }
+
+void Interface::AssignDefaultUdpPortFromEphemeral(void) { mUdpPort = Get<Ip6::Udp>().GetEphemeralPort(); }
 
 void Interface::Init(void)
 {
     VerifyOrExit(mState == kStateUninitialized);
     mState = kStateDisabled;
+
     UpdateState();
 
 exit:
@@ -67,6 +73,7 @@ void Interface::SetEnabled(bool aEnable, Requester aRequester)
     case kRequesterUser:
         VerifyOrExit(mUserEnabled != aEnable);
         mUserEnabled = aEnable;
+        AssignDefaultUdpPortFromEphemeral();
         LogInfo("User %sabled interface", aEnable ? "en" : "dis");
         break;
 
@@ -95,6 +102,7 @@ void Interface::UpdateState(void)
         Get<PeerDiscoverer>().Start();
 
         LogInfo("Enabled interface, local port:%u", mUdpPort);
+        mCallbackTask.Post();
     }
     else
     {
@@ -105,11 +113,14 @@ void Interface::UpdateState(void)
         Get<PeerDiscoverer>().Stop();
 
         LogInfo("Disabled interface");
+        mCallbackTask.Post();
     }
 
 exit:
     return;
 }
+
+void Interface::HandleTask(void) { mCallback.InvokeIfSet(); }
 
 const Counters *Interface::GetCounters(void) const { return otPlatTrelGetCounters(&GetInstance()); }
 
