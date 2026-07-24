@@ -337,13 +337,10 @@ exit:
 void SubMac::ProcessTransmitSecurity(void)
 {
     const ExtAddress *extAddress = nullptr;
-    uint8_t           keyIdMode;
     uint8_t           keyIndex;
 
     VerifyOrExit(mTransmitFrame.GetSecurityEnabled());
     VerifyOrExit(!mTransmitFrame.IsSecurityProcessed());
-
-    SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
@@ -360,12 +357,12 @@ void SubMac::ProcessTransmitSecurity(void)
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     if (mTransmitFrame.GetType() == Frame::kTypeMultipurpose)
     {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode2);
+        VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode2));
     }
     else
 #endif
     {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+        VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode1));
     }
 
     mTransmitFrame.SetAesKey(mKeyTrio.SelectKey(keyIndex));
@@ -652,10 +649,10 @@ exit:
 
 void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
 {
-    uint8_t  keyIdMode;
-    uint8_t  keyIndex;
-    uint32_t frameCounter;
-    bool     allowError = false;
+    Frame::KeyIdMode keyIdMode;
+    uint8_t          keyIndex;
+    uint32_t         frameCounter;
+    bool             allowError = false;
 
     OT_UNUSED_VARIABLE(allowError);
 

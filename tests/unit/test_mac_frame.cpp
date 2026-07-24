@@ -399,14 +399,16 @@ void TestMacHeader(void)
 
         if (frame.GetSecurityEnabled())
         {
-            uint8_t security;
-            uint8_t keyIdMode;
+            Mac::Frame::SecurityLevel security;
+            Mac::Frame::KeyIdMode     keyIdMode;
 
             SuccessOrQuit(frame.GetSecurityLevel(security));
             VerifyOrQuit(security == testCase.mSecurity);
+            VerifyOrQuit(frame.HasSecurityLevel(testCase.mSecurity));
 
             SuccessOrQuit(frame.GetKeyIdMode(keyIdMode));
             VerifyOrQuit(keyIdMode == testCase.mKeyIdMode);
+            VerifyOrQuit(frame.HasKeyIdMode(testCase.mKeyIdMode));
         }
 
         offset = snprintf(string, sizeof(string), "\nver:%s, src[addr:%s, pan:%s], dst[addr:%s, pan:%s], sec:%s",

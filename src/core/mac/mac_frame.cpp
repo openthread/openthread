@@ -206,7 +206,7 @@ void TxFrame::BuildInfo::PrepareHeadersIn(TxFrame &aTxFrame) const
 
     if (mSecurityLevel != kSecurityNone)
     {
-        uint8_t secCtl = static_cast<uint8_t>(mSecurityLevel) | static_cast<uint8_t>(mKeyIdMode);
+        uint8_t secCtl = ConstructSecurityControlField(mSecurityLevel, mKeyIdMode);
 
         IgnoreError(builder.AppendUint8(secCtl));
         builder.AppendLength(CalculateSecurityHeaderSize(secCtl) - sizeof(secCtl));
@@ -604,30 +604,54 @@ exit:
     return index;
 }
 
-Error Frame::GetSecurityLevel(uint8_t &aSecurityLevel) const
+Error Frame::GetSecurityLevel(SecurityLevel &aSecurityLevel) const
 {
     Error   error = kErrorNone;
     uint8_t index = FindSecurityHeaderIndex();
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
-    aSecurityLevel = mPsdu[index] & kSecLevelMask;
+    aSecurityLevel = ReadSecurityLevel(mPsdu[index]);
 
 exit:
     return error;
 }
 
-Error Frame::GetKeyIdMode(uint8_t &aKeyIdMode) const
+bool Frame::HasSecurityLevel(SecurityLevel aSecurityLevel) const
+{
+    bool          has = false;
+    SecurityLevel securityLevel;
+
+    SuccessOrExit(GetSecurityLevel(securityLevel));
+    has = (securityLevel == aSecurityLevel);
+
+exit:
+    return has;
+}
+
+Error Frame::GetKeyIdMode(KeyIdMode &aKeyIdMode) const
 {
     Error   error = kErrorNone;
     uint8_t index = FindSecurityHeaderIndex();
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
-    aKeyIdMode = mPsdu[index] & kKeyIdModeMask;
+    aKeyIdMode = ReadKeyIdMode(mPsdu[index]);
 
 exit:
     return error;
+}
+
+bool Frame::HasKeyIdMode(KeyIdMode aKeyIdMode) const
+{
+    bool      has = false;
+    KeyIdMode keyIdMode;
+
+    SuccessOrExit(GetKeyIdMode(keyIdMode));
+    has = (keyIdMode == aKeyIdMode);
+
+exit:
+    return has;
 }
 
 Error Frame::GetFrameCounter(uint32_t &aFrameCounter) const
@@ -673,7 +697,7 @@ uint8_t Frame::CalculateKeySourceSize(uint8_t aSecurityControl)
 {
     uint8_t size = 0;
 
-    switch (aSecurityControl & kKeyIdModeMask)
+    switch (ReadKeyIdMode(aSecurityControl))
     {
     case kKeyIdMode0:
         size = kKeySourceSizeMode0;
@@ -808,7 +832,7 @@ uint8_t Frame::CalculateMicSize(uint8_t aSecurityControl)
     static_assert(kMicSize[kSecurityEncMic64] == kMic64Size, "kMicSize[] array is incorrect");
     static_assert(kMicSize[kSecurityEncMic128] == kMic128Size, "kMicSize[] array is incorrect");
 
-    return kMicSize[aSecurityControl & kSecLevelMask];
+    return kMicSize[ReadSecurityLevel(aSecurityControl)];
 }
 
 uint16_t Frame::GetMaxPayloadLength(void) const { return GetMtu() - (GetHeaderLength() + GetFooterLength()); }
@@ -870,15 +894,25 @@ uint16_t Frame::DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift
     return fcfAddrType;
 }
 
+Frame::SecurityLevel Frame::ReadSecurityLevel(uint8_t aSecCtl)
+{
+    return static_cast<SecurityLevel>(ReadBits<uint8_t, kScfSecLevelMask>(aSecCtl));
+}
+
+Frame::KeyIdMode Frame::ReadKeyIdMode(uint8_t aSecCtl)
+{
+    return static_cast<KeyIdMode>(ReadBits<uint8_t, kScfKeyIdModeMask>(aSecCtl));
+}
+
 uint8_t Frame::CalculateSecurityHeaderSize(uint8_t aSecurityControl)
 {
     uint8_t size;
 
-    VerifyOrExit((aSecurityControl & kSecLevelMask) != kSecurityNone, size = kInvalidSize);
+    VerifyOrExit(ReadSecurityLevel(aSecurityControl) != kSecurityNone, size = kInvalidSize);
 
     size = kSecurityControlSize + kFrameCounterSize + CalculateKeySourceSize(aSecurityControl);
 
-    if ((aSecurityControl & kKeyIdModeMask) != kKeyIdMode0)
+    if (ReadKeyIdMode(aSecurityControl) != kKeyIdMode0)
     {
         size += kKeyIndexSize;
     }
@@ -1172,7 +1206,7 @@ Error TxFrame::PerformAesCcm(AesCcmOperation aOperation, const ExtAddress &aExtA
 
     Error                 error;
     uint32_t              frameCounter;
-    uint8_t               securityLevel;
+    SecurityLevel         securityLevel;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
 
@@ -1215,12 +1249,12 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
 {
-    Error     error = kErrorNone;
-    BuildInfo buildInfo;
-    Address   address;
-    PanId     panId;
-    uint8_t   securityLevel = kSecurityNone;
-    uint8_t   keyIdMode     = kKeyIdMode0;
+    Error         error = kErrorNone;
+    BuildInfo     buildInfo;
+    Address       address;
+    PanId         panId;
+    SecurityLevel securityLevel = kSecurityNone;
+    KeyIdMode     keyIdMode     = kKeyIdMode0;
 
     // Validate the received frame.
 
@@ -1242,8 +1276,8 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
 
     if (aRxFrame.GetSecurityEnabled())
     {
-        SuccessOrExit(error = aRxFrame.GetSecurityLevel(securityLevel));
-        VerifyOrExit(securityLevel == kSecurityEncMic32, error = kErrorParse);
+        VerifyOrExit(aRxFrame.HasSecurityLevel(kSecurityEncMic32), error = kErrorParse);
+        securityLevel = kSecurityEncMic32;
 
         SuccessOrExit(error = aRxFrame.GetKeyIdMode(keyIdMode));
     }
@@ -1266,8 +1300,8 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
 
     buildInfo.mType          = kTypeAck;
     buildInfo.mVersion       = kVersion2015;
-    buildInfo.mSecurityLevel = static_cast<SecurityLevel>(securityLevel);
-    buildInfo.mKeyIdMode     = static_cast<KeyIdMode>(keyIdMode);
+    buildInfo.mSecurityLevel = securityLevel;
+    buildInfo.mKeyIdMode     = keyIdMode;
 
     buildInfo.PrepareHeadersIn(*this);
 
@@ -1309,8 +1343,8 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupReq
 
 bool RxFrame::IsSecuredWith(KeyIdModeFlags aFlags) const
 {
-    bool    isSecure = false;
-    uint8_t keyIdMode;
+    bool      isSecure = false;
+    KeyIdMode keyIdMode;
 
     VerifyOrExit(GetSecurityEnabled());
     SuccessOrExit(GetKeyIdMode(keyIdMode));
@@ -1339,7 +1373,7 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
 {
     Error                 error        = kErrorSecurity;
     uint32_t              frameCounter = 0;
-    uint8_t               securityLevel;
+    SecurityLevel         securityLevel;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
 

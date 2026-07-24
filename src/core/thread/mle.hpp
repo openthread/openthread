@@ -1859,7 +1859,7 @@ private:
 
     private:
         static constexpr uint8_t kKeyIdMode2Mic32 =
-            static_cast<uint8_t>(Mac::Frame::kKeyIdMode2) | static_cast<uint8_t>(Mac::Frame::kSecurityEncMic32);
+            Mac::Frame::ConstructSecurityControlField(Mac::Frame::kSecurityEncMic32, Mac::Frame::kKeyIdMode2);
 
         uint8_t  mSecurityControl;
         uint32_t mFrameCounter;
