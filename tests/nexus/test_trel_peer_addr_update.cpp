@@ -36,6 +36,8 @@
 namespace ot {
 namespace Nexus {
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
 static constexpr uint32_t kFormNetworkTime = 13 * 1000;
 static constexpr uint32_t kJoinTime        = 30 * 1000;
 
@@ -229,12 +231,19 @@ void TestTrelPeerSockAddrUpdateSecurity(void)
     Log("TestTrelPeerSockAddrUpdateSecurity passed");
 }
 
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
 } // namespace Nexus
 } // namespace ot
 
 int main(void)
 {
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     ot::Nexus::TestTrelPeerSockAddrUpdateSecurity();
     printf("All tests passed\n");
+#else
+    printf("TREL is not enabled - test skipped\n");
+#endif
+
     return 0;
 }
