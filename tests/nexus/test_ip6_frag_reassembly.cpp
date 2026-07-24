@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /*
  * Verifies IPv6 fragment reassembly buffer sizing and payload placement when fragments
  * of the same datagram carry different-length unfragmentable parts.
@@ -240,21 +239,29 @@ static void BuildAndSendFragments(Node               &aSender,
     {
         uint16_t idx = 0;
 
-        pkt[idx++] = 0x60; pkt[idx++] = 0; pkt[idx++] = 0; pkt[idx++] = 0;
+        pkt[idx++] = 0x60;
+        pkt[idx++] = 0;
+        pkt[idx++] = 0;
+        pkt[idx++] = 0;
         pkt[idx++] = static_cast<uint8_t>((8 + kPay1) >> 8);
         pkt[idx++] = static_cast<uint8_t>((8 + kPay1) & 0xff);
         pkt[idx++] = 44; // fragment header
         pkt[idx++] = 64;
-        memcpy(&pkt[idx], aSrc.mFields.m8, 16); idx += 16;
-        memcpy(&pkt[idx], aDst.mFields.m8, 16); idx += 16;
+        memcpy(&pkt[idx], aSrc.mFields.m8, 16);
+        idx += 16;
+        memcpy(&pkt[idx], aDst.mFields.m8, 16);
+        idx += 16;
         // fragment header: NH=58, rsv, offset 0 | M=1, id
-        pkt[idx++] = 58; pkt[idx++] = 0;
-        pkt[idx++] = 0; pkt[idx++] = 1; // offset 0, M
+        pkt[idx++] = 58;
+        pkt[idx++] = 0;
+        pkt[idx++] = 0;
+        pkt[idx++] = 1; // offset 0, M
         pkt[idx++] = static_cast<uint8_t>(aFragId >> 24);
         pkt[idx++] = static_cast<uint8_t>(aFragId >> 16);
         pkt[idx++] = static_cast<uint8_t>(aFragId >> 8);
         pkt[idx++] = static_cast<uint8_t>(aFragId & 0xff);
-        memcpy(&pkt[idx], icmp, kPay1); idx += kPay1;
+        memcpy(&pkt[idx], icmp, kPay1);
+        idx += kPay1;
 
         SendRawIp6(aSender, pkt, idx);
     }
@@ -270,35 +277,47 @@ static void BuildAndSendFragments(Node               &aSender,
 
     // ---- fragment 2 (final): optional HBH header widens the unfragmentable part
     {
-        uint16_t idx     = 0;
-        uint16_t extLen  = aWithHole ? 8 : 0;
-        uint16_t payLen  = extLen + 8 + kPay2;
+        uint16_t idx      = 0;
+        uint16_t extLen   = aWithHole ? 8 : 0;
+        uint16_t payLen   = extLen + 8 + kPay2;
         uint16_t offUnits = kPay1 / 8;
 
-        pkt[idx++] = 0x60; pkt[idx++] = 0; pkt[idx++] = 0; pkt[idx++] = 0;
+        pkt[idx++] = 0x60;
+        pkt[idx++] = 0;
+        pkt[idx++] = 0;
+        pkt[idx++] = 0;
         pkt[idx++] = static_cast<uint8_t>(payLen >> 8);
         pkt[idx++] = static_cast<uint8_t>(payLen & 0xff);
         pkt[idx++] = aWithHole ? 0 : 44; // HBH first if widening
         pkt[idx++] = 64;
-        memcpy(&pkt[idx], aSrc.mFields.m8, 16); idx += 16;
-        memcpy(&pkt[idx], aDst.mFields.m8, 16); idx += 16;
+        memcpy(&pkt[idx], aSrc.mFields.m8, 16);
+        idx += 16;
+        memcpy(&pkt[idx], aDst.mFields.m8, 16);
+        idx += 16;
 
         if (aWithHole)
         {
             // HBH: NH=44, HdrExtLen=0, PadN(4)
-            pkt[idx++] = 44; pkt[idx++] = 0;
-            pkt[idx++] = 0x01; pkt[idx++] = 0x04;
-            pkt[idx++] = 0; pkt[idx++] = 0; pkt[idx++] = 0; pkt[idx++] = 0;
+            pkt[idx++] = 44;
+            pkt[idx++] = 0;
+            pkt[idx++] = 0x01;
+            pkt[idx++] = 0x04;
+            pkt[idx++] = 0;
+            pkt[idx++] = 0;
+            pkt[idx++] = 0;
+            pkt[idx++] = 0;
         }
 
-        pkt[idx++] = 58; pkt[idx++] = 0;
+        pkt[idx++] = 58;
+        pkt[idx++] = 0;
         pkt[idx++] = static_cast<uint8_t>((offUnits * 8) >> 8);
         pkt[idx++] = static_cast<uint8_t>((offUnits * 8) & 0xff); // M=0
         pkt[idx++] = static_cast<uint8_t>(aFragId >> 24);
         pkt[idx++] = static_cast<uint8_t>(aFragId >> 16);
         pkt[idx++] = static_cast<uint8_t>(aFragId >> 8);
         pkt[idx++] = static_cast<uint8_t>(aFragId & 0xff);
-        memcpy(&pkt[idx], tail, kPay2); idx += kPay2;
+        memcpy(&pkt[idx], tail, kPay2);
+        idx += kPay2;
 
         SendRawIp6(aSender, pkt, idx);
     }
@@ -307,8 +326,8 @@ static void BuildAndSendFragments(Node               &aSender,
 void TestFragmentReassemblyHole(void)
 {
     Core  nexus;
-    Node &leader   = nexus.CreateNode();
-    Node &child = nexus.CreateNode();
+    Node &leader = nexus.CreateNode();
+    Node &child  = nexus.CreateNode();
 
     otIcmp6Handler handler;
 
@@ -329,7 +348,8 @@ void TestFragmentReassemblyHole(void)
     otIp6Address dst = *reinterpret_cast<const otIp6Address *>(&leader.Get<Mle::Mle>().GetMeshLocalEid());
 
     Log("Case A (positive control): consistent-header fragmented echo must be answered");
-    sGotReply = false; sReplyHasMarkerRun = false;
+    sGotReply          = false;
+    sReplyHasMarkerRun = false;
     BuildAndSendFragments(child, nexus, src, dst, 0x11111111, /* aWithHole */ false, 0, false, 1);
     nexus.AdvanceTime(3 * 1000);
     VerifyOrQuit(sGotReply);
@@ -353,10 +373,10 @@ void TestFragmentReassemblyHole(void)
 
     for (uint8_t i = 0; i < 3; i++)
     {
-        sGotReply = false; sReplyHasMarkerRun = false;
-        BuildAndSendFragments(child, nexus, src, dst, 0x22220000u + i, /* aWithHole */ true,
-                              attempts[i].mGapAssume, attempts[i].mPrimeBetween,
-                              static_cast<uint16_t>(10 + i));
+        sGotReply          = false;
+        sReplyHasMarkerRun = false;
+        BuildAndSendFragments(child, nexus, src, dst, 0x22220000u + i, /* aWithHole */ true, attempts[i].mGapAssume,
+                              attempts[i].mPrimeBetween, static_cast<uint16_t>(10 + i));
         nexus.AdvanceTime(3 * 1000);
 
         Log("attempt %u (gap assumption 0x%02x, prime-between %u): %s", i, attempts[i].mGapAssume,
