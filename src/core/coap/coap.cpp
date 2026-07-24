@@ -618,9 +618,18 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
             if (shouldObserve)
             {
                 // This is a RFC7641 notification.  The request is *not* done!
-                mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
-
+                //
+                // Update the request metadata BEFORE invoking the response
+                // handler: the handler may cancel the observation (same-token
+                // GET with Observe=1, `otCoapStop()`, or abort APIs), which
+                // finalizes and frees the tracked request message, so the
+                // metadata must be written while the message is still owned
+                // by the pending-requests list. The metadata is not visible
+                // to the handler (`GetDispatchingRequest()` clones without
+                // it).
                 request.MarkAsAcknowledged();
+
+                mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
                 ExitNow();
             }
 #endif
@@ -648,17 +657,23 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         if (shouldObserve)
         {
-            mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
-
             // When any Observe response is seen, consider a NON observe
             // request "acknowledged" at this point. This will keep the
             // Observe request active indefinitely until it is
             // canceled.
+            //
+            // The metadata update is performed BEFORE invoking the response
+            // handler: the handler may cancel the observation, which
+            // finalizes and frees the tracked request message, so the
+            // metadata must be written while the message is still owned by
+            // the pending-requests list.
 
             if (!request.IsConfirmable())
             {
                 request.MarkAsAcknowledged();
             }
+
+            mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
 
             ExitNow();
         }

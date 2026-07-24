@@ -508,3 +508,5 @@ if(TARGET nexus_live_demo)
         target_compile_definitions(nexus_live_demo PRIVATE OPENTHREAD_NEXUS_CONFIG_GRPC_ENABLE=1)
     endif()
 endif()
+
+ot_nexus_test(coap_observe_cancel "nexus")
