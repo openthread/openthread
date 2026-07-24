@@ -102,7 +102,9 @@ template <DataLengthType kDataLengthType> class MutableData;
  * @tparam kDataLengthType   Determines the data length type (`uint8_t` or `uint16_t`).
  */
 template <DataLengthType kDataLengthType>
-class Data : public Clearable<Data<kDataLengthType>>, public Unequatable<Data<kDataLengthType>>, private DataUtils
+class OT_GSL_POINTER Data : public Clearable<Data<kDataLengthType>>,
+                            public Unequatable<Data<kDataLengthType>>,
+                            private DataUtils
 {
     friend class MutableData<kDataLengthType>;
 
@@ -156,7 +158,7 @@ public:
      *
      * @returns A pointer to the data bytes buffer (can be `nullptr` if `Data` is cleared).
      */
-    const uint8_t *GetBytes(void) const { return mBuffer; }
+    const uint8_t *GetBytes(void) const OT_LIFETIME_BOUND { return mBuffer; }
 
     /**
      * Returns the data length.
@@ -262,7 +264,7 @@ private:
  * (e.g., `GetBytes()` or `GetLength()`), otherwise the behavior is undefined.
 
  */
-template <DataLengthType kDataLengthType> class MutableData : public Data<kDataLengthType>
+template <DataLengthType kDataLengthType> class OT_GSL_POINTER MutableData : public Data<kDataLengthType>
 {
     using Base = Data<kDataLengthType>;
     using Base::mBuffer;
@@ -311,14 +313,14 @@ public:
      *
      * @returns A pointer to the data bytes buffer (can be `nullptr` if `Data` is empty or uninitialized).
      */
-    uint8_t *GetBytes(void) { return AsNonConst(Base::GetBytes()); }
+    uint8_t *GetBytes(void) OT_LIFETIME_BOUND { return AsNonConst(Base::GetBytes()); }
 
     /**
      * Returns a pointer to the data bytes buffer.
      *
      * @returns A pointer to the data bytes buffer (can be `nullptr` if `Data` is empty or uninitialized).
      */
-    const uint8_t *GetBytes(void) const { return Base::GetBytes(); }
+    const uint8_t *GetBytes(void) const OT_LIFETIME_BOUND { return Base::GetBytes(); }
 
     /**
      * Clears all the bytes (sets them to zero) in the buffer pointed by the `MutableData`.
