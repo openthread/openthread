@@ -186,11 +186,86 @@ void TestFlash(void)
 #endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 }
 
+void TestFlashWipe(void)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+    uint8_t readBuffer[256];
+    uint8_t writeBuffer[32];
+
+    Instance *instance = testInitInstance();
+    Flash     flash(*instance);
+
+    flash.Init();
+
+    // Add enough records to force at least one swap, so that both swap areas
+    // contain (possibly superseded) settings data.
+
+    for (uint16_t index = 0; index < 400; index++)
+    {
+        memset(writeBuffer, index & 0xff, sizeof(writeBuffer));
+        SuccessOrQuit(flash.Set(index & 0x0f, writeBuffer, sizeof(writeBuffer)));
+    }
+
+    flash.Wipe();
+
+    // After `Wipe()` no swap area may retain residual settings data: area 0
+    // holds only the active swap marker (first four bytes), everything else
+    // must be fully erased (0xff).
+
+    for (uint8_t swapIndex = 0; swapIndex < 2; swapIndex++)
+    {
+        uint32_t swapSize = otPlatFlashGetSwapSize(instance);
+
+        for (uint32_t offset = (swapIndex == 0) ? sizeof(uint32_t) : 0; offset < swapSize;)
+        {
+            uint32_t size = swapSize - offset;
+
+            if (size > sizeof(readBuffer))
+            {
+                size = sizeof(readBuffer);
+            }
+
+            otPlatFlashRead(instance, swapIndex, offset, readBuffer, size);
+
+            for (uint32_t i = 0; i < size; i++)
+            {
+                VerifyOrQuit(readBuffer[i] == 0xff, "Wipe() left residual data in a swap area");
+            }
+
+            offset += size;
+        }
+    }
+
+    // Blank flash: `Init()` finds no active swap marker and falls back to
+    // `Wipe()` with an out-of-range `mSwapIndex`. It must recover into a
+    // usable state without passing an invalid swap index to the platform
+    // (the platform APIs only accept swap indices 0 and 1).
+
+    otPlatFlashErase(instance, 0);
+    otPlatFlashErase(instance, 1);
+
+    flash.Init();
+
+    {
+        uint16_t length = sizeof(readBuffer);
+
+        memset(writeBuffer, 0x5a, sizeof(writeBuffer));
+        SuccessOrQuit(flash.Set(1, writeBuffer, sizeof(writeBuffer)));
+        SuccessOrQuit(flash.Get(1, 0, readBuffer, &length));
+        VerifyOrQuit(length == sizeof(writeBuffer), "Get() did not return expected length");
+        VerifyOrQuit(memcmp(readBuffer, writeBuffer, length) == 0, "Get() did not return expected value");
+    }
+
+    testFreeInstance(instance);
+#endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+}
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestFlash();
+    ot::TestFlashWipe();
     printf("All tests passed\n");
     return 0;
 }

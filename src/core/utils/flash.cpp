@@ -297,7 +297,24 @@ Error Flash::Delete(uint16_t aKey, int aIndex)
 
 void Flash::Wipe(void)
 {
-    otPlatFlashErase(&GetInstance(), 0);
+    // Erase ALL swap pages, not only page 0: stored settings (including the
+    // network key, PSKc, and SRP keys) can persist in the other page - the
+    // superseded copies left behind by `Swap()`, or the full active data set
+    // when page 1 is the active page at reset time - and would otherwise
+    // survive a factory reset. The non-active page is erased first so that
+    // an interrupted wipe can never leave a stale-but-active secondary page
+    // to be resurrected on the next `Init()`.
+    //
+    // Note: `Init()` invokes `Wipe()` with `mSwapIndex == 2` when no active
+    // page is found (blank or corrupted flash), so the active page index is
+    // determined defensively before any erase (`otPlatFlashErase` accepts
+    // only indices 0 and 1).
+
+    uint8_t activeIndex = (mSwapIndex <= 1) ? mSwapIndex : 0;
+
+    otPlatFlashErase(&GetInstance(), !activeIndex);
+    otPlatFlashErase(&GetInstance(), activeIndex);
+
     otPlatFlashWrite(&GetInstance(), 0, 0, &sSwapActive, sizeof(sSwapActive));
 
     mSwapIndex = 0;
