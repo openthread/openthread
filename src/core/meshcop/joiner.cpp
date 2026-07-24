@@ -403,14 +403,26 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Msg *aMsg, Error aResult)
 
     SuccessOrExit(Tlv::Find<StateTlv>(aMsg->mMessage, state));
 
-    SetState(kStateEntrust);
-    mTimer.Start(kResponseTimeout);
-
     LogInfo("Received %s %d", UriToString<kUriJoinerFinalize>(), state);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.rsp |", aMsg->mMessage);
 #endif
+
+    // Fail closed: only an explicit Accept continues the joining process. Any
+    // other state (Reject, Pending, or an unknown value) is a rejection by
+    // the commissioner and MUST end the joining process; previously the state
+    // value was only logged and the joiner proceeded to wait for (and accept)
+    // a Joiner Entrust regardless.
+    if (state != StateTlv::kAccept)
+    {
+        LogWarn("Commissioner rejected %s (state %d)", UriToString<kUriJoinerFinalize>(), state);
+        Finish(kErrorRejected);
+        ExitNow();
+    }
+
+    SetState(kStateEntrust);
+    mTimer.Start(kResponseTimeout);
 
 exit:
     Get<Tmf::SecureAgent>().Disconnect();

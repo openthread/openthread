@@ -911,6 +911,15 @@ template <> void Commissioner::HandleTmf<kUriJoinerFinalize>(Coap::Msg &aMsg)
         break;
 
     case kErrorNotFound:
+        // Fail closed: when the commissioner has a provisioning URL
+        // configured, a `JOIN_FIN.req` that omits the Provisioning URL TLV
+        // must be rejected as well; otherwise the URL check is joiner-opt-in
+        // and omitting the TLV skips it. Joiners that predate the TLV can
+        // still join commissioners with no provisioning URL configured.
+        if (mProvisioningUrl[0] != kNullChar)
+        {
+            state = StateTlv::kReject;
+        }
         break;
 
     default:
@@ -936,7 +945,15 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetOffset(message->GetLength());
-    message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
+
+    // Only an ACCEPTED finalize response may trigger the Joiner Entrust
+    // (the finalize-response subtype is what makes the relay attach the
+    // Joiner Router KEK); a rejected joiner must not be entrusted with
+    // the network credentials.
+    if (aState == StateTlv::kAccept)
+    {
+        message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
+    }
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
