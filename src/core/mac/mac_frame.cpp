@@ -168,7 +168,7 @@ void TxFrame::BuildInfo::PrepareHeadersIn(TxFrame &aTxFrame) const
 
     if (mSuppressSequence)
     {
-        fcf |= kFcfSequenceSuppression;
+        fcf |= kFcfSeqSuppression;
     }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -183,7 +183,7 @@ void TxFrame::BuildInfo::PrepareHeadersIn(TxFrame &aTxFrame) const
     builder.Init(aTxFrame.mPsdu, aTxFrame.GetMtu());
     IgnoreError(builder.AppendUint<kLittleEndian>(fcf));
 
-    if (!IsSequenceSuppressed(fcf))
+    if (!IsSeqSuppressed(fcf))
     {
         builder.Append<uint8_t>(); // Place holder for seq number
     }
@@ -305,7 +305,7 @@ uint8_t Frame::SkipSequenceIndex(void) const
     uint16_t fcf   = GetFrameControlField();
     uint8_t  index = kFcfSize;
 
-    if (!IsSequenceSuppressed(fcf))
+    if (!IsSeqSuppressed(fcf))
     {
         index += kDsnSize;
     }
@@ -927,7 +927,7 @@ uint8_t Frame::SkipAddrFieldIndex(void) const
     // Future frame versions can alter the MAC header layout.
     VerifyOrExit(GetVersion(fcf) <= kVersion2015);
 
-    size = kFcfSize + (IsSequenceSuppressed(fcf) ? 0 : kDsnSize);
+    size = kFcfSize + (IsSeqSuppressed(fcf) ? 0 : kDsnSize);
 
     if (IsDstPanIdPresent(fcf))
     {
