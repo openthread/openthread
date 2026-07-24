@@ -310,9 +310,10 @@ void Flash::Wipe(void)
     // determined defensively before any erase (`otPlatFlashErase` accepts
     // only indices 0 and 1).
 
-    uint8_t activeIndex = (mSwapIndex <= 1) ? mSwapIndex : 0;
+    uint8_t activeIndex   = (mSwapIndex <= 1) ? mSwapIndex : 0;
+    uint8_t inactiveIndex = !activeIndex;
 
-    otPlatFlashErase(&GetInstance(), !activeIndex);
+    otPlatFlashErase(&GetInstance(), inactiveIndex);
     otPlatFlashErase(&GetInstance(), activeIndex);
 
     otPlatFlashWrite(&GetInstance(), 0, 0, &sSwapActive, sizeof(sSwapActive));
