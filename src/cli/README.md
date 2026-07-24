@@ -1711,7 +1711,7 @@ TransportProtocol: tcp
 Done
 ```
 
-We can leave some of the fields as unspecified (or use value zero). The unspecified fields are replaced by the corresponding OT config option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config.
+We can leave some of the fields as unspecified (or use value zero or "def"). The unspecified fields are replaced by the corresponding OT config option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config. Note that specifying a zero value for a boolean argument will mean _disabled_ and cannot be used to imply default behavior. For a boolean value "def" is the only option to specify the default value.
 
 ```bash
 > dns config fd00::2
@@ -1727,10 +1727,10 @@ TransportProtocol: udp
 Done
 ```
 
-This final example shows how only 'recursion desired' and the service mode are set, and all other parameters are set to their defaults:
+This final example shows how only the 'service mode' is set, and all other parameters are set to their defaults. Especially note, that the boolean value 'recursion required' is set to its default by using the `def` value.
 
 ```bash
-> dns config :: 0 0 0 1 srv_txt_sep
+> dns config :: 0 0 0 def srv_txt_sep
 Done
 
 > dns config

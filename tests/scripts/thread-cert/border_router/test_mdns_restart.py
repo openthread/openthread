@@ -151,7 +151,19 @@ class MdnsRestart(thread_cert.TestCase):
         self.assertEqual(len(host.browse_mdns_services('_ed1._tcp')), 1)
         self.assertEqual(len(host.browse_mdns_services('_ed2._tcp')), 1)
 
-        ed1.dns_set_config(br1.get_ip6_address(config.ADDRESS_TYPE.ML_EID))
+        # Explicitly set every field, using "def" to request the default
+        # value for the port, response timeout, max tx attempts, and
+        # recursion desired fields, while still setting the service
+        # mode and transport protocol explicitly (previously "def" did
+        # not exist, so leaving a field unspecified also forced every
+        # field after it to remain unspecified).
+        ed1.dns_set_config(f'{br1.get_ip6_address(config.ADDRESS_TYPE.ML_EID)} def def def def srv_txt_sep udp')
+        dns_config = ed1.dns_get_config()
+        self.assertEqual(dns_config['ResponseTimeout'], '7000 ms')
+        self.assertEqual(dns_config['MaxTxAttempts'], '3')
+        self.assertEqual(dns_config['RecursionDesired'], 'yes')
+        self.assertEqual(dns_config['ServiceMode'], 'srv_txt_sep')
+        self.assertEqual(dns_config['TransportProtocol'], 'udp')
 
         # Since there is only one match, server should include
         # service info in additional section of its response.
