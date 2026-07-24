@@ -247,6 +247,7 @@ private:
     // Callbacks from `Mac`
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
     void          HandleSentFrame(const Mac::TxFrame &aFrame, Error aError);
+    void          HandleMacEnableStatusChanged(void) { Update(); }
 
     // Callback from `Radio`
     void HandleRadioBusLatencyChanged(void);

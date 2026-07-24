@@ -59,6 +59,8 @@ void CslTxScheduler::HandleRadioBusLatencyChanged(void)
 
 void CslTxScheduler::Update(void)
 {
+    VerifyOrExit(Get<Mac::Mac>().IsEnabled());
+
     if (mCslTxMessage == nullptr)
     {
         RescheduleCslTx();
