@@ -339,6 +339,48 @@ public:
     void DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver);
 
     /**
+     * Starts a TXT resolver.
+     *
+     * @param[in] aResolver  The resolver to be started.
+     */
+    void DnssdStartTxtResolver(const otPlatDnssdTxtResolver *aResolver);
+
+    /**
+     * Stops a TXT resolver.
+     *
+     * @param[in] aResolver  The resolver to be stopped.
+     */
+    void DnssdStopTxtResolver(const otPlatDnssdTxtResolver *aResolver);
+
+    /**
+     * Starts an IPv6 address resolver.
+     *
+     * @param[in] aResolver  The resolver to be started.
+     */
+    void DnssdStartIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver);
+
+    /**
+     * Stops an IPv6 address resolver.
+     *
+     * @param[in] aResolver  The resolver to be stopped.
+     */
+    void DnssdStopIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver);
+
+    /**
+     * Starts an IPv4 address resolver.
+     *
+     * @param[in] aResolver  The resolver to be started.
+     */
+    void DnssdStartIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver);
+
+    /**
+     * Stops an IPv4 address resolver.
+     *
+     * @param[in] aResolver  The resolver to be stopped.
+     */
+    void DnssdStopIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver);
+
+    /**
      * Gets the Dnssd state.
      *
      * Returns the platform dnssd state.
@@ -585,6 +627,7 @@ protected:
                                        uint16_t      aSockPort,
                                        void         *aContext);
     void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
+
 #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
@@ -883,6 +926,11 @@ protected:
 
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
+    static constexpr uint16_t kDnssdMaxAddressResultEntries = OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES;
+
+    static_assert(kDnssdMaxAddressResultEntries >= 1,
+                  "OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES must be >= 1");
+
     template <typename DnssdObjType> struct DnssdDiscoveryPropKeyFor;
 
     template <typename DnssdObjType>
@@ -903,7 +951,7 @@ protected:
         SuccessOrExit(error = mEncoder.EndFrame());
 
     exit:
-        if (error != OT_ERROR_NONE)
+        if (error != OT_ERROR_NONE && aCallback != nullptr)
         {
             aCallback(mInstance, aRequestId, error);
         }
@@ -912,10 +960,14 @@ protected:
     /**
      * Template for making service discovery.
      *
-     * DnssdDiscoveryType can be: otPlatDnssdBrowser, otPlatDnssdSrvResolver, otPlatDnssdTxtResolver,
-     * otPlatDnssdAddressResolver and otPlatDnssdRecordQuerier.
+     * `DnssdDiscoveryType` can be `otPlatDnssdBrowser`, `otPlatDnssdSrvResolver`, `otPlatDnssdTxtResolver`,
+     * or `otPlatDnssdAddressResolver`.
+     *
+     * Use the 2-parameter overload for browser/SRV/TXT resolvers (one C type, one Spinel property).
+     * For address resolvers (one C type, two Spinel properties), pass the Spinel property key explicitly.
      */
-    template <typename DnssdDiscoveryType> void DnssdUpdateDiscovery(const DnssdDiscoveryType *aDiscovery, bool aStart)
+    template <typename DnssdDiscoveryType>
+    void DnssdUpdateDiscovery(const DnssdDiscoveryType *aDiscovery, bool aStart, spinel_prop_key_t aPropKey)
     {
         uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
         spinel_command_t cmd    = aStart ? SPINEL_CMD_PROP_VALUE_INSERTED : SPINEL_CMD_PROP_VALUE_REMOVED;
@@ -923,13 +975,23 @@ protected:
         VerifyOrExit(aDiscovery != nullptr);
         VerifyOrExit(mDnssdState == OT_PLAT_DNSSD_READY);
 
-        SuccessOrExit(mEncoder.BeginFrame(header, cmd, DnssdDiscoveryPropKeyFor<DnssdDiscoveryType>::Key));
+        SuccessOrExit(mEncoder.BeginFrame(header, cmd, aPropKey));
         SuccessOrExit(Spinel::EncodeDnssdDiscovery(mEncoder, *aDiscovery));
         SuccessOrExit(mEncoder.EndFrame());
 
     exit:
         return;
     }
+
+    template <typename DnssdDiscoveryType> void DnssdUpdateDiscovery(const DnssdDiscoveryType *aDiscovery, bool aStart)
+    {
+        DnssdUpdateDiscovery(aDiscovery, aStart, DnssdDiscoveryPropKeyFor<DnssdDiscoveryType>::Key);
+    }
+
+    /**
+     * Handles `SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT` and `SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT` property sets.
+     */
+    otError HandleDnssdAddressResultPropertySet(void);
 
     otPlatDnssdState mDnssdState;
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
@@ -964,6 +1026,11 @@ template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdBrowser>
 template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdSrvResolver>
 {
     static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_SRV_RESOLVER;
+};
+
+template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdTxtResolver>
+{
+    static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_TXT_RESOLVER;
 };
 #endif
 
