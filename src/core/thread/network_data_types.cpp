@@ -253,7 +253,10 @@ void LowpanContextInfo::SetFrom(const PrefixTlv &aPrefixTlv, const ContextTlv &a
     mCompressFlag = aContextTlv.IsCompress();
     mStable       = aContextTlv.IsStable();
     aPrefixTlv.CopyPrefixTo(GetPrefix());
-    GetPrefix().SetLength(aContextTlv.GetContextLength());
+
+    // Defense in depth: never store a prefix length above `kMaxLength`
+    // even if a malformed Context TLV slipped past validation.
+    GetPrefix().SetLength(Min(aContextTlv.GetContextLength(), Ip6::Prefix::kMaxLength));
 }
 
 } // namespace NetworkData

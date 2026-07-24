@@ -1065,6 +1065,76 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
     testFreeInstance(instance);
 }
 
+
+void TestNetworkDataContextLength(void)
+{
+    Instance *instance;
+    Iterator  iter;
+
+    printf("\n\n-------------------------------------------------");
+    printf("\nTestNetworkDataContextLength()\n");
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
+
+    // Prefix TLV (stable) for 2001:db8:0:1::/64 carrying a 6LoWPAN Context sub-TLV
+    // (context id 1, compress flag set). The trailing Context Length byte is varied
+    // by the test cases below. Context Length is expressed in bits and is used as
+    // an `Ip6::Prefix` length by consumers, so values above `Ip6::Prefix::kMaxLength`
+    // (128) are not well-formed and must be rejected.
+
+    uint8_t networkData[] = {
+        0x03, 0x0E, 0x00, 0x40, 0x20, 0x01, 0x0D, 0xB8, 0x00, 0x00, 0x00, 0x01, 0x07, 0x02, 0x11, 0x00,
+    };
+
+    const uint16_t kContextLengthOffset = sizeof(networkData) - 1;
+
+    const uint8_t kValidContextLengths[]   = {64, Ip6::Prefix::kMaxLength};
+    const uint8_t kInvalidContextLengths[] = {129, 255};
+
+    for (uint8_t contextLength : kValidContextLengths)
+    {
+        LowpanContextInfo info;
+
+        networkData[kContextLengthOffset] = contextLength;
+
+        NetworkData netData(*instance, networkData, sizeof(networkData));
+
+        printf("\nContext Length %-3u -> expect accepted", contextLength);
+
+        SuccessOrQuit(netData.ValidateTlvs());
+
+        iter = kIteratorInit;
+        SuccessOrQuit(netData.GetNext(iter, info));
+        VerifyOrQuit(info.mContextId == 1);
+        VerifyOrQuit(info.mPrefix.mLength == contextLength);
+        VerifyOrQuit(info.mPrefix.mLength <= Ip6::Prefix::kMaxLength);
+        VerifyOrQuit(netData.GetNext(iter, info) == kErrorNotFound);
+    }
+
+    for (uint8_t contextLength : kInvalidContextLengths)
+    {
+        LowpanContextInfo info;
+
+        networkData[kContextLengthOffset] = contextLength;
+
+        NetworkData netData(*instance, networkData, sizeof(networkData));
+
+        printf("\nContext Length %-3u -> expect rejected", contextLength);
+
+        VerifyOrQuit(netData.ValidateTlvs() == kErrorParse,
+                     "ValidateTlvs() accepted a Context TLV with out-of-range Context Length");
+
+        iter = kIteratorInit;
+        VerifyOrQuit(netData.GetNext(iter, info) == kErrorNotFound,
+                     "GetNext() returned a context with out-of-range Context Length");
+    }
+
+    printf("\n");
+
+    testFreeInstance(instance);
+}
+
 } // namespace NetworkData
 } // namespace ot
 
@@ -1076,6 +1146,7 @@ int main(void)
 #endif
     ot::NetworkData::TestNetworkDataDsnSrpServices();
     ot::NetworkData::TestNetworkDataDsnSrpAnycastSeqNumSelection();
+    ot::NetworkData::TestNetworkDataContextLength();
 
     printf("\nAll tests passed\n");
     return 0;

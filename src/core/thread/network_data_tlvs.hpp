@@ -1122,7 +1122,11 @@ public:
      */
     bool IsValid(void) const
     {
-        return (GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) && (GetContextId() != 0);
+        // The Context Length is expressed in bits and is used as an
+        // `Ip6::Prefix` length by consumers; an unbounded value leads to
+        // out-of-bounds accesses in prefix handling (e.g., `Prefix::Tidy()`).
+        return (GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) && (GetContextId() != 0) &&
+               (GetContextLength() <= Ip6::Prefix::kMaxLength);
     }
 
     /**
