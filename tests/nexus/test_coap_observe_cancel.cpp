@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /*
  * Verifies in-handler cancellation of a CoAP observation.
  *
@@ -53,21 +52,23 @@ static constexpr uint32_t kFormNetworkTime = 13 * 1000;
 static constexpr uint32_t kJoinTime        = 30 * 1000;
 static constexpr uint16_t kCoapPort        = OT_DEFAULT_COAP_PORT;
 
-static Node *sNodeA;
-static Node *sNodeB;
+static Node        *sNodeA;
+static Node        *sNodeB;
 static otIp6Address sNodeBAddr;
-static bool  sNotificationSeen;
-static bool  sCancelSent;
+static bool         sNotificationSeen;
+static bool         sCancelSent;
 
 static void HandleSecondResponse(void *, otMessage *, const otMessageInfo *, otError) {}
 
-static void HandleObserveResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError)
+static void HandleObserveResponse(void                *aContext,
+                                  otMessage           *aMessage,
+                                  const otMessageInfo *aMessageInfo,
+                                  otError              aError)
 {
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    Log("A: observe response handler invoked (error=%d, msg=%s)", aError,
-        (aMessage != nullptr) ? "yes" : "null");
+    Log("A: observe response handler invoked (error=%d, msg=%s)", aError, (aMessage != nullptr) ? "yes" : "null");
 
     // The in-handler cancellation reentrantly finalizes this same request (handler invoked
     // again with a null message); only act on the first, genuine notification.
@@ -86,8 +87,8 @@ static void HandleObserveResponse(void *aContext, otMessage *aMessage, const otM
 
         VerifyOrQuit(req != nullptr);
         otCoapMessageInit(req, OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET);
-        SuccessOrQuit(otCoapMessageSetToken(req, otCoapMessageGetToken(aMessage),
-                                            otCoapMessageGetTokenLength(aMessage)));
+        SuccessOrQuit(
+            otCoapMessageSetToken(req, otCoapMessageGetToken(aMessage), otCoapMessageGetTokenLength(aMessage)));
         SuccessOrQuit(otCoapMessageAppendObserveOption(req, 1));
         SuccessOrQuit(otCoapMessageAppendUriPathOptions(req, "obs"));
 
@@ -165,8 +166,7 @@ void TestCoapObserveCancelInHandler(void)
 
     nexus.AdvanceTime(10 * 1000);
 
-    Log("notification seen: %s, cancel sent: %s", sNotificationSeen ? "YES" : "NO",
-        sCancelSent ? "YES" : "NO");
+    Log("notification seen: %s, cancel sent: %s", sNotificationSeen ? "YES" : "NO", sCancelSent ? "YES" : "NO");
     VerifyOrQuit(sNotificationSeen && sCancelSent);
 
     Log("TestCoapObserveCancelInHandler completed");
