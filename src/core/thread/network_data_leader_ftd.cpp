@@ -245,10 +245,11 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Msg &aMsg)
         // flows are not delayed.
 
         uint16_t senderRloc16 = aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator();
+        uint8_t  routerId     = Mle::RouterIdFromRloc16(rloc16);
 
         if ((rloc16 == senderRloc16) ||
             (Mle::IsRouterRloc16(senderRloc16) && Mle::RouterIdMatch(senderRloc16, rloc16)) ||
-            !Get<RouterTable>().IsAllocated(Mle::RouterIdFromRloc16(rloc16)))
+            !Mle::IsRouterIdValid(routerId) || !Get<RouterTable>().IsAllocated(routerId))
         {
             RemoveBorderRouter(rloc16, kMatchModeRloc16);
         }
