@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /*
  * Regression test for JOIN_FIN.rsp state handling and Provisioning URL requirements:
  *
@@ -118,9 +117,8 @@ static void RunJoin(const char *aCommissionerUrl, const char *aJoinerUrl, bool a
 
     Log("commissioner url=%s joiner url=%s: callback=%s result=%d sawEntrustState=%s",
         (aCommissionerUrl != nullptr) ? aCommissionerUrl : "(none)",
-        (aJoinerUrl != nullptr) ? aJoinerUrl : "(TLV omitted)",
-        sJoinerCallbackInvoked ? "invoked" : "NOT-invoked", static_cast<int>(sJoinerResult),
-        sawEntrustState ? "YES" : "no");
+        (aJoinerUrl != nullptr) ? aJoinerUrl : "(TLV omitted)", sJoinerCallbackInvoked ? "invoked" : "NOT-invoked",
+        static_cast<int>(sJoinerResult), sawEntrustState ? "YES" : "no");
 
     VerifyOrQuit(sJoinerCallbackInvoked);
 
