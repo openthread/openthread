@@ -233,8 +233,33 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Msg &aMsg)
     switch (Tlv::Find<ThreadRloc16Tlv>(aMsg.mMessage, rloc16))
     {
     case kErrorNone:
-        RemoveBorderRouter(rloc16, kMatchModeRloc16);
+    {
+        // Ownership check: the RLOC16 being removed must relate to the
+        // sender; otherwise any on-mesh device could strip another
+        // device's Network Data entries. Permitted: the sender's own
+        // RLOC16; a child of the sending router (stale-child cleanup);
+        // or an RLOC16 under a router ID that is no longer allocated
+        // (stale partition remnants). On failure only the REMOVAL is
+        // skipped: the rest of the message (registration) is still
+        // processed and acknowledged, so legitimate re-registration
+        // flows are not delayed.
+
+        uint16_t senderRloc16 = aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator();
+        uint8_t  routerId     = Mle::RouterIdFromRloc16(rloc16);
+
+        if ((rloc16 == senderRloc16) ||
+            (Mle::IsRouterRloc16(senderRloc16) && Mle::RouterIdMatch(senderRloc16, rloc16)) ||
+            !Mle::IsRouterIdValid(routerId) || !Get<RouterTable>().IsAllocated(routerId))
+        {
+            RemoveBorderRouter(rloc16, kMatchModeRloc16);
+        }
+        else
+        {
+            LogWarn("Ignoring server data removal for un-owned rloc16 0x%04x (sender 0x%04x)", rloc16, senderRloc16);
+        }
+
         break;
+    }
     case kErrorNotFound:
         break;
     default:
