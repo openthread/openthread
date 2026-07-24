@@ -56,7 +56,7 @@ const otMacKey Mac::kMode2Key = {
 
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mEnabled(false)
+    , mEnabled(true)
     , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
     , mPromiscuous(false)
@@ -112,7 +112,13 @@ Mac::Mac(Instance &aInstance)
     mCcaSuccessRateTracker.Clear();
     ResetCounters();
 
-    SetEnabled(true);
+    // MAC starts in the enabled state (`mEnabled` is set to `true`).
+    // Enable `mLinks` directly instead of calling `SetEnabled()` to
+    // avoid invoking callbacks on other modules (e.g., `CslTxScheduler`)
+    // before they are fully initialized during `Instance` initialization
+    // and constructor calls.
+
+    mLinks.Enable();
 
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
@@ -128,6 +134,8 @@ void Mac::Init(void) { Get<KeyManager>().UpdateKeyMaterial(); }
 
 void Mac::SetEnabled(bool aEnable)
 {
+    VerifyOrExit(mEnabled != aEnable);
+
     mEnabled = aEnable;
 
     if (aEnable)
@@ -138,6 +146,13 @@ void Mac::SetEnabled(bool aEnable)
     {
         mLinks.Disable();
     }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    Get<CslTxScheduler>().HandleMacEnableStatusChanged();
+#endif
+
+exit:
+    return;
 }
 
 Error Mac::CanScan(void) const
