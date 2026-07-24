@@ -1657,7 +1657,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
                 Get<RadioSelector>().UpdateOnReceive(*neighbor, aMessage.GetRadioType(), /* IsDuplicate */ true);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-                CheckTrelPeerAddrOnSecureMleRx(aMessage);
+                // The message is an exact duplicate of the last accepted one
+                // (one-off frame counter), so it is replayable by definition
+                // and cannot directly authorize a peer sock-addr update.
+                CheckTrelPeerAddrOnSecureMleRx(aMessage, extAddr, /* aIsReplayProtected */ false);
 #endif
 
                 // We intentionally exit without setting the error to
@@ -1684,7 +1687,8 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    CheckTrelPeerAddrOnSecureMleRx(aMessage);
+    CheckTrelPeerAddrOnSecureMleRx(aMessage, extAddr,
+                                   /* aIsReplayProtected */ (neighbor != nullptr) && neighbor->IsStateValid());
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -1920,7 +1924,9 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-void Mle::CheckTrelPeerAddrOnSecureMleRx(const Message &aMessage)
+void Mle::CheckTrelPeerAddrOnSecureMleRx(const Message         &aMessage,
+                                         const Mac::ExtAddress &aMleSourceExtAddress,
+                                         bool                   aIsReplayProtected)
 {
     OT_UNUSED_VARIABLE(aMessage);
 
@@ -1928,7 +1934,7 @@ void Mle::CheckTrelPeerAddrOnSecureMleRx(const Message &aMessage)
     if (aMessage.IsRadioTypeSet() && aMessage.GetRadioType() == Radio::kTypeTrel)
 #endif
     {
-        Get<Trel::Link>().CheckPeerAddrOnRxSuccess(Trel::Link::kAllowPeerSockAddrUpdate);
+        Get<Trel::Link>().CheckPeerAddrOnSecureMleRx(aMleSourceExtAddress, aIsReplayProtected);
     }
 }
 #endif

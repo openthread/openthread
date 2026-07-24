@@ -160,6 +160,26 @@ public:
      */
     void CheckPeerAddrOnRxSuccess(PeerSockAddrUpdateMode aMode);
 
+    /**
+     * Checks the address/port from the last received TREL packet against the ones recorded in the corresponding
+     * `Peer` entry after an MLE-secured receive, and acts if there is a discrepancy.
+     *
+     * The `Peer` entry was selected from the unauthenticated TREL encapsulation header, and on MAC-unsecured
+     * frames the MAC source address is also unauthenticated. The `Peer` entry is therefore updated directly only
+     * when the identity verified by MLE security (the extended address derived from the message's IPv6 source
+     * IID) matches the selected peer AND the message was subject to MLE frame-counter replay protection.
+     * Otherwise the discrepancy is only signaled to the platform (so the peer can be re-resolved via DNS-SD).
+     *
+     * @param[in] aMleSourceExtAddress   The extended address derived from the MLE message's IPv6 source IID.
+     * @param[in] aIsReplayProtected     Whether the MLE message passed the frame-counter checks against its
+     *                                   sender's currently valid neighbor record. Note that this is counter-based
+     *                                   duplicate protection (relative to messages already processed from that
+     *                                   sender), not full anti-replay: a captured genuine message the receiver
+     *                                   never processed can still pass. The identity-match requirement caps such
+     *                                   a replay to re-asserting the sender's own peer entry.
+     */
+    void CheckPeerAddrOnSecureMleRx(const Mac::ExtAddress &aMleSourceExtAddress, bool aIsReplayProtected);
+
 private:
     static constexpr uint16_t kMaxHeaderSize   = sizeof(Header);
     static constexpr uint16_t k154AckFrameSize = 3 + kFcsSize;

@@ -462,6 +462,8 @@ ot_nexus_test(cli_basic "core;cli;nexus")
 
 # Trel
 ot_nexus_test(trel "trel;nexus")
+ot_nexus_test(trel_peer_addr_cross_peer "trel;nexus")
+ot_nexus_test(trel_peer_addr_mle_lane "trel;nexus")
 
 # Long-routes
 ot_nexus_test(long_routes "long_routes;nexus")
@@ -508,3 +510,5 @@ if(TARGET nexus_live_demo)
         target_compile_definitions(nexus_live_demo PRIVATE OPENTHREAD_NEXUS_CONFIG_GRPC_ENABLE=1)
     endif()
 endif()
+
+ot_nexus_test(trel_peer_addr_update "nexus")
