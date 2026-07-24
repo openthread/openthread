@@ -198,8 +198,8 @@ void TestTrelPeerAddrCrossPeer(void)
 
         p = nodeA.Get<::ot::Trel::PeerTable>().AllocateAndAddNewPeer();
         VerifyOrQuit(p != nullptr);
-        p->SetInfoForTesting(nodeB.Get<Mac::Mac>().GetExtAddress(),
-                             nodeA.Get<MeshCoP::NetworkIdentity>().GetExtPanId(), sockAddrB);
+        p->SetInfoForTesting(nodeB.Get<Mac::Mac>().GetExtAddress(), nodeA.Get<MeshCoP::NetworkIdentity>().GetExtPanId(),
+                             sockAddrB);
     }
 
     Log("Case 1 (fix): TREL header Source = P, fresh mode-1 frame verified as B, new");

@@ -272,10 +272,10 @@ void TestTrelPeerAddrMleLane(void)
 
     // Parent Request TLVs: Mode(0x0f) + Challenge(8B) + Scan Mask(routers) + Version(4)
     static const uint8_t kParentRequestTlvs[] = {
-        1,  1, 0x0f,                                            // Mode
-        3,  8, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8,  // Challenge
-        14, 1, 0x80,                                            // Scan Mask = routers
-        18, 2, 0x00, 0x04                                       // Version = 4
+        1,  1, 0x0f,                                           // Mode
+        3,  8, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, // Challenge
+        14, 1, 0x80,                                           // Scan Mask = routers
+        18, 2, 0x00, 0x04                                      // Version = 4
     };
 
     SuccessOrQuit(nodeA.GetInstance().SetLogLevel(kLogLevelInfo));
@@ -317,8 +317,8 @@ void TestTrelPeerAddrMleLane(void)
 
         p = nodeA.Get<::ot::Trel::PeerTable>().AllocateAndAddNewPeer();
         VerifyOrQuit(p != nullptr);
-        p->SetInfoForTesting(nodeB.Get<Mac::Mac>().GetExtAddress(),
-                             nodeA.Get<MeshCoP::NetworkIdentity>().GetExtPanId(), sockAddrB);
+        p->SetInfoForTesting(nodeB.Get<Mac::Mac>().GetExtAddress(), nodeA.Get<MeshCoP::NetworkIdentity>().GetExtPanId(),
+                             sockAddrB);
     }
 
     // ---- Case 1 (CONTROL): corrupted MLE MIC must NOT rebind anything. ----
