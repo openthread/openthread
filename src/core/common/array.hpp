@@ -142,7 +142,7 @@ template <typename Type,
           uint16_t kMaxSize,
           typename SizeType =
               typename TypeTraits::Conditional<kMaxSize <= NumericLimits<uint8_t>::kMax, uint8_t, uint16_t>::Type>
-class Array
+class OT_GSL_OWNER Array
 {
     static_assert(kMaxSize != 0, "Array `kMaxSize` cannot be zero");
 
@@ -236,14 +236,14 @@ public:
      *
      * @return The pointer to start of underlying C array buffer.
      */
-    Type *GetArrayBuffer(void) { return mElements; }
+    Type *GetArrayBuffer(void) OT_LIFETIME_BOUND { return mElements; }
 
     /**
      * Returns the pointer to the start of underlying C array buffer serving as `Array` storage.
      *
      * @return The pointer to start of underlying C array buffer.
      */
-    const Type *GetArrayBuffer(void) const { return mElements; }
+    const Type *GetArrayBuffer(void) const OT_LIFETIME_BOUND { return mElements; }
 
     /**
      * Overloads the `[]` operator to get the element at a given index.
@@ -254,7 +254,7 @@ public:
      *
      * @returns A reference to the element in array at @p aIndex.
      */
-    Type &operator[](IndexType aIndex) { return mElements[aIndex]; }
+    Type &operator[](IndexType aIndex) OT_LIFETIME_BOUND { return mElements[aIndex]; }
 
     /**
      * Overloads the `[]` operator to get the element at a given index.
@@ -265,7 +265,7 @@ public:
      *
      * @returns A reference to the element in array at @p aIndex.
      */
-    const Type &operator[](IndexType aIndex) const { return mElements[aIndex]; }
+    const Type &operator[](IndexType aIndex) const OT_LIFETIME_BOUND { return mElements[aIndex]; }
 
     /**
      * Gets a pointer to the element at a given index.
@@ -276,7 +276,7 @@ public:
      *
      * @returns A pointer to element in array at @p aIndex or `nullptr` if @p aIndex is not valid.
      */
-    Type *At(IndexType aIndex) { return (aIndex < mLength) ? &mElements[aIndex] : nullptr; }
+    Type *At(IndexType aIndex) OT_LIFETIME_BOUND { return (aIndex < mLength) ? &mElements[aIndex] : nullptr; }
 
     /**
      * Gets a pointer to the element at a given index.
@@ -287,35 +287,38 @@ public:
      *
      * @returns A pointer to element in array at @p aIndex or `nullptr` if @p aIndex is not valid.
      */
-    const Type *At(IndexType aIndex) const { return (aIndex < mLength) ? &mElements[aIndex] : nullptr; }
+    const Type *At(IndexType aIndex) const OT_LIFETIME_BOUND
+    {
+        return (aIndex < mLength) ? &mElements[aIndex] : nullptr;
+    }
 
     /**
      * Gets a pointer to the element at the front of the array (first element).
      *
      * @returns A pointer to the front element or `nullptr` if array is empty.
      */
-    Type *Front(void) { return At(0); }
+    Type *Front(void) OT_LIFETIME_BOUND { return At(0); }
 
     /**
      * Gets a pointer to the element at the front of the array (first element).
      *
      * @returns A pointer to the front element or `nullptr` if array is empty.
      */
-    const Type *Front(void) const { return At(0); }
+    const Type *Front(void) const OT_LIFETIME_BOUND { return At(0); }
 
     /**
      * Gets a pointer to the element at the back of the array (last element).
      *
      * @returns A pointer to the back element or `nullptr` if array is empty.
      */
-    Type *Back(void) { return At(mLength - 1); }
+    Type *Back(void) OT_LIFETIME_BOUND { return At(mLength - 1); }
 
     /**
      * Gets a pointer to the element at the back of the array (last element).
      *
      * @returns A pointer to the back element or `nullptr` if array is empty.
      */
-    const Type *Back(void) const { return At(mLength - 1); }
+    const Type *Back(void) const OT_LIFETIME_BOUND { return At(mLength - 1); }
 
     /**
      * Appends a new entry to the end of the array.
@@ -337,14 +340,14 @@ public:
      *
      * @return A pointer to the newly appended element or `nullptr` if array is full.
      */
-    Type *PushBack(void) { return IsFull() ? nullptr : &mElements[mLength++]; }
+    Type *PushBack(void) OT_LIFETIME_BOUND { return IsFull() ? nullptr : &mElements[mLength++]; }
 
     /**
      * Removes the last element in the array.
      *
      * @returns A pointer to the removed element from the array, or `nullptr` if array is empty.
      */
-    Type *PopBack(void) { return IsEmpty() ? nullptr : &mElements[--mLength]; }
+    Type *PopBack(void) OT_LIFETIME_BOUND { return IsEmpty() ? nullptr : &mElements[--mLength]; }
 
     /**
      * Returns the index of an element in the array.
@@ -386,7 +389,7 @@ public:
      *
      * @returns A pointer to matched array element, or `nullptr` if a match could not be found.
      */
-    Type *Find(const Type &aEntry) { return AsNonConst(AsConst(this)->Find(aEntry)); }
+    Type *Find(const Type &aEntry) OT_LIFETIME_BOUND { return AsNonConst(AsConst(this)->Find(aEntry)); }
 
     /**
      * Finds the first match of a given entry in the array.
@@ -397,7 +400,7 @@ public:
      *
      * @returns A pointer to matched array element, or `nullptr` if a match could not be found.
      */
-    const Type *Find(const Type &aEntry) const
+    const Type *Find(const Type &aEntry) const OT_LIFETIME_BOUND
     {
         const Type *matched = nullptr;
 
@@ -438,7 +441,7 @@ public:
      *
      * @returns A pointer to the matched array element, or `nullptr` if a match could not be found.
      */
-    template <typename Indicator> Type *FindMatching(const Indicator &aIndicator)
+    template <typename Indicator> Type *FindMatching(const Indicator &aIndicator) OT_LIFETIME_BOUND
     {
         return AsNonConst(AsConst(this)->FindMatching(aIndicator));
     }
@@ -456,7 +459,7 @@ public:
      *
      * @returns A pointer to the matched array element, or `nullptr` if a match could not be found.
      */
-    template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const
+    template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const OT_LIFETIME_BOUND
     {
         const Type *matched = nullptr;
 
@@ -619,10 +622,10 @@ public:
     // loop iteration over the array elements and should not be used
     // directly.
 
-    Type       *begin(void) { return &mElements[0]; }
-    Type       *end(void) { return &mElements[mLength]; }
-    const Type *begin(void) const { return &mElements[0]; }
-    const Type *end(void) const { return &mElements[mLength]; }
+    Type       *begin(void) OT_LIFETIME_BOUND { return &mElements[0]; }
+    Type       *end(void) OT_LIFETIME_BOUND { return &mElements[mLength]; }
+    const Type *begin(void) const OT_LIFETIME_BOUND { return &mElements[0]; }
+    const Type *end(void) const OT_LIFETIME_BOUND { return &mElements[mLength]; }
 
 private:
     Type      mElements[kMaxSize];
