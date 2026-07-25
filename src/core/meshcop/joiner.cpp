@@ -411,15 +411,13 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Msg *aMsg, Error aResult)
     LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.rsp |", aMsg->mMessage);
 #endif
 
-    // Fail closed on the join outcome: only an explicit Accept lets the
+    // Only an explicit Accept state in the Finalize Response lets the
     // joining process succeed. Any other state (Reject, Pending, or an
     // unknown value) is a rejection by the commissioner and ends the
-    // joining process with `kErrorRejected`; previously the state value
-    // was only logged and the joiner adopted a subsequent Joiner Entrust
-    // regardless. The Joiner Entrust exchange itself still takes place
-    // after a reject (certification test 1.1.8.1.6, steps 10-11): the
-    // joiner waits for and acknowledges the entrust, but no longer adopts
-    // its content.
+    // joining process with `kErrorRejected`. The Joiner Entrust exchange
+    // itself still takes place after a reject (certification test
+    // 1.1.8.1.6, steps 10-11): the joiner waits for and acknowledges the
+    // entrust, but does not adopt its content.
     if (state != StateTlv::kAccept)
     {
         LogWarn("Commissioner rejected %s (state %d)", UriToString<kUriJoinerFinalize>(), state);
