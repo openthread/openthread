@@ -30,8 +30,10 @@
  * Regression test for JOIN_FIN.rsp state handling and Provisioning URL requirements:
  *
  * 1) A joiner whose JOIN_FIN.req the commissioner REJECTS (provisioning URL mismatch)
- *    must NOT complete joining: the commissioner must not send the Joiner Entrust
- *    (network credentials) and the joiner must finish with an error.
+ *    must NOT complete joining: it must finish with `kErrorRejected` and must not
+ *    adopt the credentials delivered in the Joiner Entrust. The entrust exchange
+ *    itself still takes place and is acknowledged (certification test 1.1.8.1.6,
+ *    steps 10-11).
  * 2) A joiner that OMITS the Provisioning URL TLV while the commissioner HAS a
  *    provisioning URL configured must be rejected too (the URL check must not be
  *    joiner-opt-in).
@@ -40,23 +42,22 @@
  * 4) Interop control: a joiner that omits the TLV still joins a commissioner with
  *    NO provisioning URL configured (joiners predating the TLV keep working).
  *
- * FAILS without the fix (a rejected joiner still receives the entrust and joins;
- * an omitted TLV is accepted despite a configured URL); PASSES with it (the joiner
- * half fails closed on any non-Accept state; the commissioner half only marks an
- * ACCEPTED finalize response as the entrust-triggering subtype and rejects an omitted
- * Provisioning URL TLV when one is configured).
+ * FAILS without the fix (a rejected joiner adopts the entrust and reports a
+ * successful join; an omitted TLV is accepted despite a configured URL); PASSES
+ * with it (the joiner reports `kErrorRejected` on any non-Accept state and leaves
+ * the delivered dataset unadopted; the commissioner rejects an omitted Provisioning
+ * URL TLV when one is configured).
  */
 
 #include <stdio.h>
 #include <string.h>
 
 #include <openthread/commissioner.h>
+#include <openthread/dataset.h>
 #include <openthread/joiner.h>
 
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
-
-#include "meshcop/joiner.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -103,34 +104,35 @@ static void RunJoin(const char *aCommissionerUrl, const char *aJoinerUrl, bool a
     SuccessOrQuit(otJoinerStart(&joiner.GetInstance(), "J01NME", aJoinerUrl, "VendorX", "ModelY", "1.0", nullptr,
                                 HandleJoinerComplete, nullptr));
 
-    bool sawEntrustState = false;
-
     for (int i = 0; (i < 600) && !sJoinerCallbackInvoked; i++)
     {
         nexus.AdvanceTime(100);
+    }
 
-        if (joiner.Get<MeshCoP::Joiner>().GetState() == MeshCoP::Joiner::kStateEntrust)
+    {
+        otOperationalDataset dataset;
+        bool                 hasNetworkKey = (otDatasetGetActive(&joiner.GetInstance(), &dataset) == OT_ERROR_NONE) &&
+                             dataset.mComponents.mIsNetworkKeyPresent;
+
+        Log("commissioner url=%s joiner url=%s: callback=%s result=%d networkKeyAdopted=%s",
+            (aCommissionerUrl != nullptr) ? aCommissionerUrl : "(none)",
+            (aJoinerUrl != nullptr) ? aJoinerUrl : "(TLV omitted)", sJoinerCallbackInvoked ? "invoked" : "NOT-invoked",
+            static_cast<int>(sJoinerResult), hasNetworkKey ? "YES" : "no");
+
+        VerifyOrQuit(sJoinerCallbackInvoked);
+
+        if (aExpectSuccess)
         {
-            sawEntrustState = true;
+            VerifyOrQuit(sJoinerResult == kErrorNone);
+            VerifyOrQuit(hasNetworkKey);
         }
-    }
-
-    Log("commissioner url=%s joiner url=%s: callback=%s result=%d sawEntrustState=%s",
-        (aCommissionerUrl != nullptr) ? aCommissionerUrl : "(none)",
-        (aJoinerUrl != nullptr) ? aJoinerUrl : "(TLV omitted)", sJoinerCallbackInvoked ? "invoked" : "NOT-invoked",
-        static_cast<int>(sJoinerResult), sawEntrustState ? "YES" : "no");
-
-    VerifyOrQuit(sJoinerCallbackInvoked);
-
-    if (aExpectSuccess)
-    {
-        VerifyOrQuit(sJoinerResult == kErrorNone);
-    }
-    else
-    {
-        // A rejected joiner must not be entrusted and must not report success.
-        VerifyOrQuit(sJoinerResult != kErrorNone);
-        VerifyOrQuit(!sawEntrustState);
+        else
+        {
+            // A rejected joiner must report `kErrorRejected` and must not
+            // have adopted the credentials delivered in the Joiner Entrust.
+            VerifyOrQuit(sJoinerResult == kErrorRejected);
+            VerifyOrQuit(!hasNetworkKey);
+        }
     }
 }
 

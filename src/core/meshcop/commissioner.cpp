@@ -945,15 +945,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetOffset(message->GetLength());
-
-    // Only an ACCEPTED finalize response may trigger the Joiner Entrust
-    // (the finalize-response subtype is what makes the relay attach the
-    // Joiner Router KEK); a rejected joiner must not be entrusted with
-    // the network credentials.
-    if (aState == StateTlv::kAccept)
-    {
-        message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
-    }
+    message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
