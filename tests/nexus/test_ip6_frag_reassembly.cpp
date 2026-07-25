@@ -41,7 +41,9 @@
  *
  * This test asserts the corrected behavior:
  *  case A (positive control): a normally fragmented echo (consistent 40-byte headers,
- *          no length mismatch) still reassembles and is answered;
+ *          no length mismatch) still reassembles and is answered; its data carries a
+ *          deliberate run of marker bytes which must be reflected in the reply,
+ *          proving the reply-content (marker run) inspection used in case B executes;
  *  case B: fragments shaped so that the old placement would leave such a region (with
  *          checksums precomputed against several possible region contents) must NOT
  *          produce an echo reply, since a reply only appears when the reassembled
@@ -69,12 +71,15 @@ namespace Nexus {
 
 static constexpr uint32_t kFormNetworkTime = 13 * 1000;
 
-static constexpr uint16_t kPay1     = 200; // fragment 1 payload (echo header + data)
-static constexpr uint16_t kPay2     = 8;   // final fragment payload
-static constexpr uint16_t kHole     = 8;   // hole size = HBH header length delta
-static constexpr uint8_t  kMarker   = 0xC3;
-static constexpr uint8_t  kPayByte  = 0xAA;
-static constexpr uint8_t  kPay2Byte = 0x55;
+static constexpr uint16_t kPay1            = 200; // fragment 1 payload (echo header + data)
+static constexpr uint16_t kPay2            = 8;   // final fragment payload
+static constexpr uint16_t kHole            = 8;   // hole size = HBH header length delta
+static constexpr uint16_t kMarkerRunOffset = 16;  // marker run position within control echo message
+static constexpr uint8_t  kPadOptionSize   = 6;   // PadN size filling the 8-byte HBH header
+static constexpr uint8_t  kHopLimit        = 64;
+static constexpr uint8_t  kMarker          = 0xC3;
+static constexpr uint8_t  kPayByte         = 0xAA;
+static constexpr uint8_t  kPay2Byte        = 0x55;
 
 static bool     sGotReply;
 static bool     sReplyHasMarkerRun;
@@ -97,7 +102,7 @@ static void HandleIcmp(void *, otMessage *aMessage, const otMessageInfo *, const
     sGotReply    = true;
     sReplyLength = len;
 
-    // look for a run of kHole marker bytes (the reflected hole)
+    // look for a run of kHole marker bytes (a reflected hole, or the control's seeded run)
     for (uint16_t i = 0; i + kHole <= len; i++)
     {
         bool run = true;
@@ -129,8 +134,8 @@ static uint32_t ChecksumAdd(uint32_t aSum, const uint8_t *aData, uint16_t aLengt
     return aSum;
 }
 
-static uint16_t IcmpChecksum(const otIp6Address &aSrc,
-                             const otIp6Address &aDst,
+static uint16_t IcmpChecksum(const Ip6::Address &aSrc,
+                             const Ip6::Address &aDst,
                              const uint8_t      *aIcmp,
                              uint16_t            aLen1,
                              const uint8_t      *aHole,
@@ -141,10 +146,10 @@ static uint16_t IcmpChecksum(const otIp6Address &aSrc,
     uint32_t sum   = 0;
     uint16_t total = aLen1 + aHoleLen + aTailLen;
 
-    sum = ChecksumAdd(sum, aSrc.mFields.m8, 16);
-    sum = ChecksumAdd(sum, aDst.mFields.m8, 16);
+    sum = ChecksumAdd(sum, aSrc.GetBytes(), sizeof(otIp6Address));
+    sum = ChecksumAdd(sum, aDst.GetBytes(), sizeof(otIp6Address));
     sum += total;
-    sum += 58;
+    sum += Ip6::kProtoIcmp6;
     sum = ChecksumAdd(sum, aIcmp, aLen1);
     sum = ChecksumAdd(sum, aHole, aHoleLen);
     sum = ChecksumAdd(sum, aTail, aTailLen);
@@ -157,16 +162,17 @@ static uint16_t IcmpChecksum(const otIp6Address &aSrc,
     return static_cast<uint16_t>(~sum);
 }
 
-static void SendRawIp6(Node &aNode, const uint8_t *aBuf, uint16_t aLen)
+static Message *NewIp6Message(Node &aNode)
 {
-    otMessage *message = otIp6NewMessage(&aNode.GetInstance(), nullptr);
+    Message *message = aNode.Get<MessagePool>().Allocate(Message::kTypeIp6);
 
     VerifyOrQuit(message != nullptr);
-    SuccessOrQuit(otMessageAppend(message, aBuf, aLen));
-    SuccessOrQuit(otIp6Send(&aNode.GetInstance(), message));
+    SuccessOrQuit(message->SetPriority(Message::kPriorityNormal));
+
+    return message;
 }
 
-static void SendPrimers(Node &aSender, const otIp6Address &aDst, uint8_t aFill)
+static void SendPrimers(Node &aSender, const Ip6::Address &aDst, uint8_t aFill)
 {
     for (int i = 0; i < 3; i++)
     {
@@ -195,75 +201,78 @@ static void SendPrimers(Node &aSender, const otIp6Address &aDst, uint8_t aFill)
 
 static void BuildAndSendFragments(Node               &aSender,
                                   Core               &aNexus,
-                                  const otIp6Address &aSrc,
-                                  const otIp6Address &aDst,
+                                  const Ip6::Address &aSrc,
+                                  const Ip6::Address &aDst,
                                   uint32_t            aFragId,
                                   bool                aWithHole,
                                   uint8_t             aGapAssume,
                                   bool                aPrimeBetween,
                                   uint16_t            aEchoSeq)
 {
-    static uint8_t pkt[512];
-    uint8_t        icmp[kPay1];
-    uint8_t        hole[kHole];
-    uint8_t        tail[kPay2];
-    uint16_t       csum;
+    uint8_t          icmp[kPay1];
+    uint8_t          hole[kHole];
+    uint8_t          tail[kPay2];
+    uint16_t         csum;
+    Ip6::Icmp6Header echoHeader;
 
-    // ICMP echo request: header + patterned data
+    // ICMP Echo Request message: header + patterned data. The control request
+    // (`aWithHole` false) carries a deliberate run of kMarker bytes so that the
+    // reply-content inspection in `HandleIcmp()` is exercised and can be asserted.
     memset(icmp, kPayByte, sizeof(icmp));
-    icmp[0] = 128; // echo request
-    icmp[1] = 0;
-    icmp[2] = 0; // checksum placeholder
-    icmp[3] = 0;
-    icmp[4] = 0x12;
-    icmp[5] = 0x34;
-    icmp[6] = static_cast<uint8_t>(aEchoSeq >> 8);
-    icmp[7] = static_cast<uint8_t>(aEchoSeq & 0xff);
+
+    if (!aWithHole)
+    {
+        memset(&icmp[kMarkerRunOffset], kMarker, kHole);
+    }
+
+    echoHeader.Clear();
+    echoHeader.SetType(Ip6::Icmp6Header::kTypeEchoRequest);
+    echoHeader.SetId(0x1234);
+    echoHeader.SetSequence(aEchoSeq);
+    memcpy(icmp, &echoHeader, sizeof(echoHeader));
 
     memset(hole, aGapAssume, sizeof(hole));
     memset(tail, kPay2Byte, sizeof(tail));
 
     if (aWithHole)
     {
-        // checksum computed assuming the unwritten region would read back the seeded marker bytes
+        // checksum computed assuming the unwritten region would read back the assumed bytes
         csum = IcmpChecksum(aSrc, aDst, icmp, kPay1, hole, kHole, tail, kPay2);
     }
     else
     {
         csum = IcmpChecksum(aSrc, aDst, icmp, kPay1, nullptr, 0, tail, kPay2);
     }
-    icmp[2] = static_cast<uint8_t>(csum >> 8);
-    icmp[3] = static_cast<uint8_t>(csum & 0xff);
 
-    // ---- fragment 1: plain 40-byte header, offset 0, M=1, payload = icmp[kPay1]
+    echoHeader.SetChecksum(csum);
+    memcpy(icmp, &echoHeader, sizeof(echoHeader));
+
+    // ---- fragment 1: base IPv6 header only (40-byte unfragmentable part), offset 0,
+    // M flag set, payload = icmp[kPay1]
+
     {
-        uint16_t idx = 0;
+        Message            *message = NewIp6Message(aSender);
+        Ip6::Header         ip6Header;
+        Ip6::FragmentHeader fragmentHeader;
 
-        pkt[idx++] = 0x60;
-        pkt[idx++] = 0;
-        pkt[idx++] = 0;
-        pkt[idx++] = 0;
-        pkt[idx++] = static_cast<uint8_t>((8 + kPay1) >> 8);
-        pkt[idx++] = static_cast<uint8_t>((8 + kPay1) & 0xff);
-        pkt[idx++] = 44; // fragment header
-        pkt[idx++] = 64;
-        memcpy(&pkt[idx], aSrc.mFields.m8, 16);
-        idx += 16;
-        memcpy(&pkt[idx], aDst.mFields.m8, 16);
-        idx += 16;
-        // fragment header: NH=58, rsv, offset 0 | M=1, id
-        pkt[idx++] = 58;
-        pkt[idx++] = 0;
-        pkt[idx++] = 0;
-        pkt[idx++] = 1; // offset 0, M
-        pkt[idx++] = static_cast<uint8_t>(aFragId >> 24);
-        pkt[idx++] = static_cast<uint8_t>(aFragId >> 16);
-        pkt[idx++] = static_cast<uint8_t>(aFragId >> 8);
-        pkt[idx++] = static_cast<uint8_t>(aFragId & 0xff);
-        memcpy(&pkt[idx], icmp, kPay1);
-        idx += kPay1;
+        ip6Header.InitVersionTrafficClassFlow();
+        ip6Header.SetPayloadLength(static_cast<uint16_t>(sizeof(Ip6::FragmentHeader) + kPay1));
+        ip6Header.SetNextHeader(Ip6::kProtoFragment);
+        ip6Header.SetHopLimit(kHopLimit);
+        ip6Header.SetSource(aSrc);
+        ip6Header.SetDestination(aDst);
+        SuccessOrQuit(message->Append(ip6Header));
 
-        SendRawIp6(aSender, pkt, idx);
+        fragmentHeader.Init();
+        fragmentHeader.SetNextHeader(Ip6::kProtoIcmp6);
+        fragmentHeader.SetOffset(0);
+        fragmentHeader.SetMoreFlag();
+        fragmentHeader.SetIdentification(aFragId);
+        SuccessOrQuit(message->Append(fragmentHeader));
+
+        SuccessOrQuit(message->AppendBytes(icmp, kPay1));
+
+        SuccessOrQuit(aSender.Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(message)));
     }
 
     aNexus.AdvanceTime(400);
@@ -275,51 +284,46 @@ static void BuildAndSendFragments(Node               &aSender,
         aNexus.AdvanceTime(400);
     }
 
-    // ---- fragment 2 (final): optional HBH header widens the unfragmentable part
-    {
-        uint16_t idx      = 0;
-        uint16_t extLen   = aWithHole ? 8 : 0;
-        uint16_t payLen   = extLen + 8 + kPay2;
-        uint16_t offUnits = kPay1 / 8;
+    // ---- fragment 2 (final): an optional Hop-by-Hop extension header widens the
+    // unfragmentable part
 
-        pkt[idx++] = 0x60;
-        pkt[idx++] = 0;
-        pkt[idx++] = 0;
-        pkt[idx++] = 0;
-        pkt[idx++] = static_cast<uint8_t>(payLen >> 8);
-        pkt[idx++] = static_cast<uint8_t>(payLen & 0xff);
-        pkt[idx++] = aWithHole ? 0 : 44; // HBH first if widening
-        pkt[idx++] = 64;
-        memcpy(&pkt[idx], aSrc.mFields.m8, 16);
-        idx += 16;
-        memcpy(&pkt[idx], aDst.mFields.m8, 16);
-        idx += 16;
+    {
+        Message            *message = NewIp6Message(aSender);
+        Ip6::Header         ip6Header;
+        Ip6::FragmentHeader fragmentHeader;
+        uint16_t extLength = aWithHole ? static_cast<uint16_t>(sizeof(Ip6::HopByHopHeader) + kPadOptionSize) : 0;
+
+        ip6Header.InitVersionTrafficClassFlow();
+        ip6Header.SetPayloadLength(static_cast<uint16_t>(extLength + sizeof(Ip6::FragmentHeader) + kPay2));
+        ip6Header.SetNextHeader(aWithHole ? Ip6::kProtoHopOpts : Ip6::kProtoFragment);
+        ip6Header.SetHopLimit(kHopLimit);
+        ip6Header.SetSource(aSrc);
+        ip6Header.SetDestination(aDst);
+        SuccessOrQuit(message->Append(ip6Header));
 
         if (aWithHole)
         {
-            // HBH: NH=44, HdrExtLen=0, PadN(4)
-            pkt[idx++] = 44;
-            pkt[idx++] = 0;
-            pkt[idx++] = 0x01;
-            pkt[idx++] = 0x04;
-            pkt[idx++] = 0;
-            pkt[idx++] = 0;
-            pkt[idx++] = 0;
-            pkt[idx++] = 0;
+            Ip6::HopByHopHeader hbhHeader;
+            Ip6::PadOption      padOption;
+
+            hbhHeader.SetNextHeader(Ip6::kProtoFragment);
+            hbhHeader.SetLength(0); // one 8-byte unit in total
+            SuccessOrQuit(message->Append(hbhHeader));
+
+            padOption.InitForPadSize(kPadOptionSize);
+            SuccessOrQuit(message->AppendBytes(&padOption, padOption.GetSize()));
         }
 
-        pkt[idx++] = 58;
-        pkt[idx++] = 0;
-        pkt[idx++] = static_cast<uint8_t>((offUnits * 8) >> 8);
-        pkt[idx++] = static_cast<uint8_t>((offUnits * 8) & 0xff); // M=0
-        pkt[idx++] = static_cast<uint8_t>(aFragId >> 24);
-        pkt[idx++] = static_cast<uint8_t>(aFragId >> 16);
-        pkt[idx++] = static_cast<uint8_t>(aFragId >> 8);
-        pkt[idx++] = static_cast<uint8_t>(aFragId & 0xff);
-        memcpy(&pkt[idx], tail, kPay2);
-        idx += kPay2;
+        fragmentHeader.Init();
+        fragmentHeader.SetNextHeader(Ip6::kProtoIcmp6);
+        fragmentHeader.SetOffset(Ip6::FragmentHeader::BytesToFragmentOffset(kPay1));
+        fragmentHeader.ClearMoreFlag();
+        fragmentHeader.SetIdentification(aFragId);
+        SuccessOrQuit(message->Append(fragmentHeader));
 
-        SendRawIp6(aSender, pkt, idx);
+        SuccessOrQuit(message->AppendBytes(tail, kPay2));
+
+        SuccessOrQuit(aSender.Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(message)));
     }
 }
 
@@ -344,8 +348,8 @@ void TestFragmentReassemblyHole(void)
 
     SuccessOrQuit(otIcmp6RegisterHandler(&child.GetInstance(), &handler));
 
-    otIp6Address src = *reinterpret_cast<const otIp6Address *>(&child.Get<Mle::Mle>().GetMeshLocalEid());
-    otIp6Address dst = *reinterpret_cast<const otIp6Address *>(&leader.Get<Mle::Mle>().GetMeshLocalEid());
+    const Ip6::Address &src = child.Get<Mle::Mle>().GetMeshLocalEid();
+    const Ip6::Address &dst = leader.Get<Mle::Mle>().GetMeshLocalEid();
 
     Log("Case A (positive control): consistent-header fragmented echo must be answered");
     sGotReply          = false;
@@ -353,8 +357,10 @@ void TestFragmentReassemblyHole(void)
     BuildAndSendFragments(child, nexus, src, dst, 0x11111111, /* aWithHole */ false, 0, false, 1);
     nexus.AdvanceTime(3 * 1000);
     VerifyOrQuit(sGotReply);
-    VerifyOrQuit(!sReplyHasMarkerRun);
-    Log("control reply received (len %u)", sReplyLength);
+
+    // the reply must reflect the seeded marker run, proving the reply-content inspection works
+    VerifyOrQuit(sReplyHasMarkerRun);
+    Log("control reply received (len %u, seeded marker run reflected)", sReplyLength);
 
     Log("Case B: final fragment carries an extra HBH header (longer unfragmentable part).");
     Log("A reply arrives only when the reassembled datagram content matches one of the");
@@ -402,6 +408,7 @@ void TestFragmentReassemblyHole(void)
     // none of the region-assuming checksums can match and no reply is produced for any
     // attempt.
     VerifyOrQuit(!replied);
+    VerifyOrQuit(!sReplyHasMarkerRun);
 
     Log("TestFragmentReassemblyHole passed");
 }
