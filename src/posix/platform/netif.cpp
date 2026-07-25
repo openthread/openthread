@@ -1867,8 +1867,10 @@ exit:
 // Note: the byte offsets must be added to the `char *` pointer BEFORE the cast
 // to `struct rtattr *`; otherwise the additions are scaled by
 // `sizeof(struct rtattr)` and the resulting pointer is out of bounds.
-#define ERR_RTA(errmsg, requestPayloadLength) \
-    ((struct rtattr *)((char *)(errmsg) + NLMSG_ALIGN(sizeof(struct nlmsgerr)) + NLMSG_ALIGN(requestPayloadLength)))
+#define ERR_RTA(errmsg, requestPayloadLength)                                         \
+    (reinterpret_cast<const struct rtattr *>(reinterpret_cast<const char *>(errmsg) + \
+                                             NLMSG_ALIGN(sizeof(struct nlmsgerr)) +   \
+                                             NLMSG_ALIGN(requestPayloadLength)))
 
 // The format of NLMSG_ERROR is described below:
 //
@@ -1951,19 +1953,24 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
             // would wrap and the walk would run unbounded.
             int rtaLength = static_cast<int>(errPayloadLength - NLMSG_ALIGN(requestPayloadLength));
 
-            for (struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
-                 rta                = RTA_NEXT(rta, rtaLength))
+            for (const struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
+                 rta                      = RTA_NEXT(rta, rtaLength))
             {
                 if (rta->rta_type == NLMSGERR_ATTR_MSG)
                 {
                     const char *attrMsg = reinterpret_cast<const char *>(RTA_DATA(rta));
 
-                    // The kernel always NUL-terminates the extended ACK string,
-                    // but the attribute payload is untrusted input: only use it
-                    // if a terminator is present within its own bounds.
+                    // The kernel always NUL-terminates the extended ACK
+                    // string; an attribute without a terminator within its
+                    // own bounds (or with an empty payload) is a malformed
+                    // netlink reply.
                     if (memchr(attrMsg, '\0', RTA_PAYLOAD(rta)) != nullptr)
                     {
                         errorMsg = attrMsg;
+                    }
+                    else
+                    {
+                        malformed = true;
                     }
 
                     break;
