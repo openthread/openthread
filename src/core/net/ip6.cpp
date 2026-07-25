@@ -657,6 +657,22 @@ Error Ip6::HandleFragment(Message &aMessage)
     LogInfo("Fragment with id %lu received > %u bytes, offset %u", ToUlong(fragmentHeader.GetIdentification()),
             payloadFragment, offset);
 
+    // The unfragmentable part of the reassembled datagram comes from the first
+    // fragment (copied at reassembly start). For an existing reassembly, use the
+    // first fragment's unfragmentable length: using the current fragment's
+    // unfragmentable-part length (which can differ when a later fragment carries
+    // a different extension header stack) left a never-written gap in the
+    // reassembled datagram, exposing stale message-buffer bytes. For a
+    // prospective first fragment (message == nullptr), use the current
+    // fragment's offset.
+    unfragLength = (message != nullptr) ? (message->GetLength() - message->GetOffset()) : aMessage.GetOffset();
+
+    if (offset + payloadFragment + unfragLength > kMaxAssembledDatagramLength)
+    {
+        LogWarn("Packet too large for fragment buffer");
+        ExitNow(error = kErrorNoBufs);
+    }
+
     if (message == nullptr)
     {
         LogDebg("start reassembly");
@@ -676,20 +692,6 @@ Error Ip6::HandleFragment(Message &aMessage)
     else
     {
         VerifyOrExit(offset == message->GetOffset(), error = kErrorDrop);
-    }
-
-    // The unfragmentable part of the reassembled datagram comes from the FIRST
-    // fragment (copied at reassembly start). Size the buffer and place writes
-    // using ITS length: using the current fragment's unfragmentable-part length
-    // (which can differ when a later fragment carries a different extension
-    // header stack) left a never-written hole in the reassembled datagram,
-    // exposing recycled message-buffer bytes.
-    unfragLength = message->GetLength() - message->GetOffset();
-
-    if (offset + payloadFragment + unfragLength > kMaxAssembledDatagramLength)
-    {
-        LogWarn("Packet too large for fragment buffer");
-        ExitNow(error = kErrorNoBufs);
     }
 
     // increase message buffer if necessary
