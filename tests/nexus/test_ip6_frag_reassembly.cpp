@@ -32,22 +32,23 @@
  *
  * `Ip6::HandleFragment()` tracks contiguity in fragment-payload space only. It must size
  * the reassembly buffer and place fragment-payload writes using the FIRST fragment's
- * unfragmentable-part length (the one actually copied into the reassembled datagram).
- * Using the current fragment's length instead (e.g., when the final fragment carries an
- * extra Hop-by-Hop extension header) left a never-written region in the reassembled
- * datagram, and the buffer growth path (`SetLength()` -> `MessagePool::NewBuffer()`)
- * reuses pool buffers without clearing, so that region held stale bytes of previously
+ * unfragmentable-part length (the one actually copied into the reassembled datagram),
+ * so that no region of the reassembled datagram is left unwritten. This matters because
+ * the buffer growth path (`SetLength()` -> `MessagePool::NewBuffer()`) reuses pool
+ * buffers without clearing, so any unwritten region would hold stale bytes of previously
  * freed messages.
  *
- * This test asserts the corrected behavior:
+ * This test asserts:
  *  case A (positive control): a normally fragmented echo (consistent 40-byte headers,
- *          no length mismatch) still reassembles and is answered; its data carries a
+ *          no length mismatch) reassembles and is answered; its data carries a
  *          deliberate run of marker bytes which must be reflected in the reply,
  *          proving the reply-content (marker run) inspection used in case B executes;
- *  case B: fragments shaped so that the old placement would leave such a region (with
- *          checksums precomputed against several possible region contents) must NOT
- *          produce an echo reply, since a reply only appears when the reassembled
- *          datagram incorporated bytes matching the checksum assumption.
+ *  case B: fragments whose unfragmentable-part lengths differ (the final fragment
+ *          carries an extra Hop-by-Hop extension header), constructed so that any
+ *          unwritten region would be exposed (with checksums precomputed against
+ *          several possible region contents), must NOT produce an echo reply, since a
+ *          reply only appears when the reassembled datagram incorporated bytes matching
+ *          the checksum assumption.
  *
  * Gates: OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE (default 0; 1 in this nexus config),
  * default static message pool (heap builds zero via calloc).
