@@ -42,6 +42,17 @@
  */
 
 /**
+ * @def PACKAGE_VERSION
+ *
+ * The version string reported by `ot-ctl --version`. The OpenThread build
+ * systems define it; this fallback keeps the client compiling in custom
+ * build environments that do not.
+ */
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION "unknown"
+#endif
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
  *
  * Define as 1 to enable PTY RCP support.
