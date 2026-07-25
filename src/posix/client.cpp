@@ -210,7 +210,8 @@ constexpr char kOptHelp          = 'h';
 
 const struct option kOptions[] = {
     {"interface-name", required_argument, NULL, kOptInterfaceName},
-    {"help", required_argument, NULL, kOptHelp},
+    {"help", no_argument, NULL, kOptHelp},
+    {nullptr, 0, nullptr, 0},
 };
 
 void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
