@@ -353,6 +353,7 @@ void TestFragmentReassemblyHole(void)
     BuildAndSendFragments(child, nexus, src, dst, 0x11111111, /* aWithHole */ false, 0, false, 1);
     nexus.AdvanceTime(3 * 1000);
     VerifyOrQuit(sGotReply);
+    VerifyOrQuit(!sReplyHasMarkerRun);
     Log("control reply received (len %u)", sReplyLength);
 
     Log("Case B: final fragment carries an extra HBH header (longer unfragmentable part).");
@@ -393,7 +394,8 @@ void TestFragmentReassemblyHole(void)
     if (replied)
     {
         Log("mismatched-length request answered; region bytes == 0x%02x pattern", repliedVal);
-        Log("(reply len %u; unwritten region content was incorporated and reflected)", sReplyLength);
+        Log("(reply len %u, marker run %s; unwritten region content was incorporated and reflected)", sReplyLength,
+            sReplyHasMarkerRun ? "present" : "absent");
     }
 
     // Corrected behavior: no unwritten region exists in the reassembled datagram, so
