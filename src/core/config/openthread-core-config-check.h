@@ -707,4 +707,9 @@
        "It was originally implemented as a provisional solution for the wake mechanism."
 #endif
 
+#ifdef OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE
+#error "OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE was removed. " \
+       "Software support for RxOnWhenIdle in SubMac was never implemented."
+#endif
+
 #endif // OT_CORE_CONFIG_OPENTHREAD_CORE_CONFIG_CHECK_H_

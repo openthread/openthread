@@ -374,15 +374,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE
- *
- * Define to 1 to enable software rx off when idle switching.
- */
-#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE
-#define OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
  *
  * Define to 1 to enable software retransmission security logic.
