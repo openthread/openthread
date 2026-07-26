@@ -718,18 +718,8 @@ void Mle::SendLinkRequest(Router *aRouter)
     }
     else
     {
-        if (!aRouter->IsStateValid())
-        {
-            aRouter->GenerateChallenge();
-            SuccessOrExit(error = message->AppendChallengeTlv(aRouter->GetChallenge()));
-        }
-        else
-        {
-            TxChallenge challenge;
-
-            challenge.GenerateRandom();
-            SuccessOrExit(error = message->AppendChallengeTlv(challenge));
-        }
+        aRouter->GenerateChallenge();
+        SuccessOrExit(error = message->AppendChallengeTlv(aRouter->GetChallenge()));
 
         destination.InitAsLinkLocalAddress(aRouter->GetExtAddress());
         aRouter->RestartLinkAcceptTimeout();
@@ -979,10 +969,6 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
 
     switch (neighborState)
     {
-    case Neighbor::kStateLinkRequest:
-        VerifyOrExit(response == router->GetChallenge(), error = kErrorSecurity);
-        break;
-
     case Neighbor::kStateInvalid:
         VerifyOrExit(mPrevRoleRestorer.IsRestoringRouterOrLeaderRole(), error = kErrorSecurity);
         VerifyOrExit(response == mPrevRoleRestorer.GetChallenge(), error = kErrorSecurity);
@@ -991,6 +977,13 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
     case Neighbor::kStateValid:
         extAddress.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
         VerifyOrExit(router->GetExtAddress() == extAddress, error = kErrorSecurity);
+
+        OT_FALL_THROUGH;
+
+    case Neighbor::kStateLinkRequest:
+        VerifyOrExit(response == router->GetChallenge(), error = kErrorSecurity);
+        break;
+
         break;
 
     default:

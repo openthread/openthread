@@ -389,14 +389,14 @@ public:
      *
      * @returns A reference to `Mac::LinkFrameCounters` containing link frame counter for all supported radio links.
      */
-    Mac::LinkFrameCounters &GetLinkFrameCounters(void) { return mValidPending.mValid.mLinkFrameCounters; }
+    Mac::LinkFrameCounters &GetLinkFrameCounters(void) { return mLinkFrameCounters; }
 
     /**
      * Gets the link frame counters.
      *
      * @returns A reference to `Mac::LinkFrameCounters` containing link frame counter for all supported radio links.
      */
-    const Mac::LinkFrameCounters &GetLinkFrameCounters(void) const { return mValidPending.mValid.mLinkFrameCounters; }
+    const Mac::LinkFrameCounters &GetLinkFrameCounters(void) const { return mLinkFrameCounters; }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
@@ -404,7 +404,7 @@ public:
      *
      * @returns The link ACK frame counter value.
      */
-    uint32_t GetLinkAckFrameCounter(void) const { return mValidPending.mValid.mLinkAckFrameCounter; }
+    uint32_t GetLinkAckFrameCounter(void) const { return mLinkAckFrameCounter; }
 #endif
 
     /**
@@ -415,7 +415,7 @@ public:
     void SetLinkAckFrameCounter(uint32_t aAckFrameCounter)
     {
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        mValidPending.mValid.mLinkAckFrameCounter = aAckFrameCounter;
+        mLinkAckFrameCounter = aAckFrameCounter;
 #else
         OT_UNUSED_VARIABLE(aAckFrameCounter);
 #endif
@@ -426,14 +426,14 @@ public:
      *
      * @returns The MLE frame counter value.
      */
-    uint32_t GetMleFrameCounter(void) const { return mValidPending.mValid.mMleFrameCounter; }
+    uint32_t GetMleFrameCounter(void) const { return mMleFrameCounter; }
 
     /**
      * Sets the MLE frame counter value.
      *
      * @param[in]  aFrameCounter  The MLE frame counter value.
      */
-    void SetMleFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mMleFrameCounter = aFrameCounter; }
+    void SetMleFrameCounter(uint32_t aFrameCounter) { mMleFrameCounter = aFrameCounter; }
 
     /**
      * Gets the RLOC16 value.
@@ -587,18 +587,6 @@ public:
     LinkQuality GetLinkQualityIn(void) const { return GetLinkInfo().GetLinkQualityIn(); }
 
     /**
-     * Generates a new challenge value for MLE Link Request/Response exchanges.
-     */
-    void GenerateChallenge(void) { mValidPending.mPending.mChallenge.GenerateRandom(); }
-
-    /**
-     * Returns the current challenge value for MLE Link Request/Response exchanges.
-     *
-     * @returns The current challenge value.
-     */
-    const Mle::TxChallenge &GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
-
-    /**
      * Returns the connection time (in seconds) of the neighbor (seconds since entering `kStateValid`).
      *
      * @returns The connection time (in seconds), zero if device is not currently in `kStateValid`.
@@ -715,41 +703,32 @@ protected:
 private:
     static constexpr uint32_t kLastRxFragmentTagTimeout = OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT; // in msec
 
-    Mac::ExtAddress mMacAddr;
-    TimeMilli       mLastHeard;
-    union
-    {
-        struct
-        {
-            Mac::LinkFrameCounters mLinkFrameCounters;
-            uint32_t               mMleFrameCounter;
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-            uint32_t mLinkAckFrameCounter;
-#endif
-        } mValid;
-        struct
-        {
-            Mle::TxChallenge mChallenge;
-        } mPending;
-    } mValidPending;
-
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    uint16_t  mLastRxFragmentTag;
-    TimeMilli mLastRxFragmentTagTime;
-#endif
-
-    uint32_t mKeySequence;
-    uint16_t mRloc16;
-    uint8_t  mState : 4;
-    uint8_t  mMode : 4;
+    uint8_t mState : 4;
+    uint8_t mMode : 4;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t mLinkFailures : 7;
     bool    mTimeSyncEnabled : 1;
 #else
     uint8_t mLinkFailures;
 #endif
-    uint16_t        mVersion;
-    LinkQualityInfo mLinkInfo;
+    uint16_t mRloc16;
+    uint16_t mVersion;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    uint16_t mLastRxFragmentTag;
+#endif
+    TimeMilli mLastHeard;
+    UptimeSec mConnectionStart;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    TimeMilli mLastRxFragmentTagTime;
+#endif
+    uint32_t mKeySequence;
+    uint32_t mMleFrameCounter;
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    uint32_t mLinkAckFrameCounter;
+#endif
+    Mac::LinkFrameCounters mLinkFrameCounters;
+    Mac::ExtAddress        mMacAddr;
+    LinkQualityInfo        mLinkInfo;
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     // A list of Link Metrics Forward Tracking Series that is being
     // tracked for this neighbor. Note that this device is the
@@ -761,7 +740,6 @@ private:
     // and this neighbor is the Subject.
     LinkMetrics::Metrics mEnhAckProbingMetrics;
 #endif
-    UptimeSec mConnectionStart;
 };
 
 DefineCoreType(otNeighborInfo, Neighbor::Info);
