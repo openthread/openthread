@@ -448,6 +448,7 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
     fd = FdFromHandle(aUdpSocket->mHandle);
 
     len = otMessageGetLength(aMessage);
+    VerifyOrExit(len <= sizeof(payload), error = OT_ERROR_NO_BUFS);
     VerifyOrExit(len == otMessageRead(aMessage, 0, payload, len), error = OT_ERROR_INVALID_ARGS);
 
     if (aMessageInfo->mMulticastLoop)
