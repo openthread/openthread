@@ -397,8 +397,6 @@ exit:
 
 void SubMac::StartCsmaBackoff(void)
 {
-    uint8_t backoffExponent = kCsmaMinBe + mCsmaBackoffs;
-
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (mTransmitFrame.GetTxDelay() != 0 || mTransmitFrame.GetTxDelayBaseTime() != 0)
     {
@@ -430,11 +428,16 @@ void SubMac::StartCsmaBackoff(void)
 
     SetState(kStateCsmaBackoff);
 
-    VerifyOrExit(mTransmitFrame.GetMaxCsmaBackoffs() > 0 && ShouldHandleCsmaBackOff(), BeginTransmit());
+    if (mTransmitFrame.GetMaxCsmaBackoffs() > 0 && ShouldHandleCsmaBackOff())
+    {
+        uint8_t backoffExponent = kCsmaMinBe + mCsmaBackoffs;
 
-    backoffExponent = Min(backoffExponent, kCsmaMaxBe);
+        backoffExponent = Min(backoffExponent, kCsmaMaxBe);
+        StartTimerForBackoff(backoffExponent);
+        ExitNow();
+    }
 
-    StartTimerForBackoff(backoffExponent);
+    BeginTransmit();
 
 exit:
     return;
@@ -734,7 +737,11 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     }
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    VerifyOrExit(!mRadioFilterEnabled, HandleEnergyScanDone(Radio::kInvalidRssi));
+    if (mRadioFilterEnabled)
+    {
+        HandleEnergyScanDone(Radio::kInvalidRssi);
+        ExitNow();
+    }
 #endif
 
     if (RadioSupports(kCapEnergyScan))
@@ -969,10 +976,15 @@ void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
 void SubMac::RadioSample(void)
 {
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    VerifyOrExit(!mRadioFilterEnabled, IgnoreError(Get<Radio::Radio>().Sleep()));
+    if (mRadioFilterEnabled)
+    {
+        IgnoreError(Get<Radio::Radio>().Sleep());
+        ExitNow();
+    }
 #endif
 
     SetState(kStateRadioSample);
@@ -982,9 +994,9 @@ void SubMac::RadioSample(void)
         UpdateRadioSampleState();
     }
 
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    ExitNow();
+
 exit:
-#endif
     return;
 }
 
@@ -1059,6 +1071,7 @@ void SubMac::UpdateRadioSampleState(void)
 exit:
     return;
 }
+
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 // LCOV_EXCL_START
