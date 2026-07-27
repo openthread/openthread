@@ -215,21 +215,17 @@ Error SubMac::Sleep(void)
     if (IsRadioSampleEnabled())
     {
         RadioSample();
+        ExitNow();
     }
-    else
 #endif
-    {
-        error = RadioSleep();
-    }
 
-    return error;
-}
+    // Even if the radio platform supports `kCapRxOnWhenIdle`, when
+    // `SubMac::Sleep()` is explicitly called while `mRxOnWhenIdle`
+    // is true, we still call `Radio::Sleep()`. This supports radio
+    // validation and test scenarios where the radio is being forced
+    // to sleep.
 
-Error SubMac::RadioSleep(void)
-{
-    Error error = kErrorNone;
-
-    if (ShouldHandleTransitionToSleep())
+    if (!RadioSupports(kCapRxOnWhenIdle) || mRxOnWhenIdle)
     {
         SuccessOrExit(error = Get<Radio::Radio>().Sleep());
     }
@@ -237,7 +233,7 @@ Error SubMac::RadioSleep(void)
     SetState(kStateSleep);
 
 exit:
-    LogWarnOnError(error, "RadioSleep()");
+    LogWarnOnError(error, "Sleep()");
     return error;
 }
 
@@ -890,8 +886,6 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
 exit:
     return shouldHandle;
 }
-
-bool SubMac::ShouldHandleTransitionToSleep(void) const { return (mRxOnWhenIdle || !RadioSupports(kCapRxOnWhenIdle)); }
 
 void SubMac::SetState(State aState)
 {

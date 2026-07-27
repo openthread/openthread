@@ -581,7 +581,6 @@ private:
     bool ShouldHandleEnergyScan(void) const { return ShouldHandle(kCapEnergyScan); }
     bool ShouldHandleTransmitTargetTime(void) const { return ShouldHandle(kCapTransmitTiming); }
     bool ShouldHandleCsmaBackOff(void) const;
-    bool ShouldHandleTransitionToSleep(void) const;
 
     void ProcessTransmitSecurity(void);
     void ReprocessSecurityForRetx(TxFrame &aFrame);
@@ -599,8 +598,6 @@ private:
     void SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame);
     void HandleEnergyScanDone(int8_t aMaxRssi);
     void HandleTimer(void);
-
-    Error RadioSleep(void);
 
     void               SetState(State aState);
     static const char *StateToString(State aState);
