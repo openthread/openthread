@@ -1065,6 +1065,58 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
     testFreeInstance(instance);
 }
 
+void TestNetworkDataContextLength(void)
+{
+    Instance *instance;
+    Iterator  iter;
+
+    printf("\n\n-------------------------------------------------");
+    printf("\nTestNetworkDataContextLength()\n");
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
+
+    // Prefix TLV (stable) for 2001:db8:0:1::/64 carrying a 6LoWPAN Context sub-TLV
+    // (context id 1, compress flag set). The trailing Context Length byte is varied
+    // by the test cases below. The Context Length is required to equal the prefix
+    // length of the outer Prefix TLV and is otherwise not used: the rendered
+    // `LowpanContextInfo` prefix length must come from the outer Prefix TLV for any
+    // Context Length value, including malformed values above
+    // `Ip6::Prefix::kMaxLength` (128).
+
+    uint8_t networkData[] = {
+        0x03, 0x0E, 0x00, 0x40, 0x20, 0x01, 0x0D, 0xB8, 0x00, 0x00, 0x00, 0x01, 0x07, 0x02, 0x11, 0x00,
+    };
+
+    const uint16_t kContextLengthOffset  = sizeof(networkData) - 1;
+    const uint8_t  kOuterPrefixLength    = 64;
+    const uint8_t  kContextLengthCases[] = {32, 64, Ip6::Prefix::kMaxLength, 129, 255};
+
+    for (uint8_t contextLength : kContextLengthCases)
+    {
+        LowpanContextInfo info;
+
+        networkData[kContextLengthOffset] = contextLength;
+
+        NetworkData netData(*instance, networkData, sizeof(networkData));
+
+        printf("\nContext Length %-3u -> expect prefix length %u (from outer Prefix TLV)", contextLength,
+               kOuterPrefixLength);
+
+        SuccessOrQuit(netData.ValidateTlvs());
+
+        iter = kIteratorInit;
+        SuccessOrQuit(netData.GetNext(iter, info));
+        VerifyOrQuit(info.mContextId == 1);
+        VerifyOrQuit(AsConst(info).GetPrefix().GetLength() == kOuterPrefixLength);
+        VerifyOrQuit(netData.GetNext(iter, info) == kErrorNotFound);
+    }
+
+    printf("\n");
+
+    testFreeInstance(instance);
+}
+
 } // namespace NetworkData
 } // namespace ot
 
@@ -1076,6 +1128,7 @@ int main(void)
 #endif
     ot::NetworkData::TestNetworkDataDsnSrpServices();
     ot::NetworkData::TestNetworkDataDsnSrpAnycastSeqNumSelection();
+    ot::NetworkData::TestNetworkDataContextLength();
 
     printf("\nAll tests passed\n");
     return 0;
