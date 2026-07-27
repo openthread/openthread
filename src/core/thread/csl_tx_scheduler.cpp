@@ -57,8 +57,22 @@ void CslTxScheduler::HandleRadioBusLatencyChanged(void)
     LogInfo("Set frame request ahead: %lu usec", ToUlong(mCslFrameRequestAheadUs));
 }
 
+void CslTxScheduler::HandleMacEnableStatusChanged(void)
+{
+    if (Get<Mac::Mac>().IsEnabled())
+    {
+        Update();
+    }
+    else
+    {
+        mTimer.Stop();
+    }
+}
+
 void CslTxScheduler::Update(void)
 {
+    VerifyOrExit(Get<Mac::Mac>().IsEnabled());
+
     if (mCslTxMessage == nullptr)
     {
         RescheduleCslTx();
@@ -371,7 +385,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError)
 exit:
     mCslTxMessage  = nullptr;
     mCslTxNeighbor = nullptr;
-    RescheduleCslTx();
+    Update();
 }
 
 } // namespace ot
