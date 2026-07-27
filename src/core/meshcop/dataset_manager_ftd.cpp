@@ -375,7 +375,7 @@ void PendingDatasetManager::ApplyActiveDataset(Dataset &aDataset)
 
     SuccessOrExit(aDataset.Read<ActiveTimestampTlv>(activeTimestamp));
     SuccessOrExit(aDataset.Write<PendingTimestampTlv>(activeTimestamp));
-    SuccessOrExit(aDataset.Write<DelayTimerTlv>(GetDelayTimerMinimal()));
+    SuccessOrExit(aDataset.Write<DelayTimerTlv>(DelayTimerTlv::kDefaultDelay));
 
     IgnoreError(DatasetManager::Save(aDataset));
     StartDelayTimer(aDataset);
