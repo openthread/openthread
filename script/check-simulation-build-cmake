@@ -182,6 +182,12 @@ build_all_features()
         -DOT_THREAD_VERSION=1.1 \
         -DOT_VENDOR_EXTENSION=../../src/core/instance/extension_example.cpp
 
+    # Build with Spinel Radio vendor hook
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation \
+        -DOT_SPINEL_VENDOR_HOOK_SOURCE=example_vendor_hook.cpp \
+        -DOT_SPINEL_VENDOR_HOOK_HEADER=example_vendor_hook.hpp
+
     # Build Thread 1.4 with no additional features
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.4

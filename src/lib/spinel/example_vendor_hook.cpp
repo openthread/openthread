@@ -32,14 +32,14 @@
 
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 
-#include OPENTRHEAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
+#include OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
 #include "common/log.hpp"
 #include "lib/platform/exit_code.h"
 
 namespace ot {
 namespace Spinel {
 
-otError RadioSpinel::VendorHandleValueIs(spinel_prop_key_t aPropKey, const uint8_t *aBuffer, uint16_t aLength);
+otError RadioSpinel::VendorHandleValueIs(spinel_prop_key_t aPropKey, const uint8_t *aBuffer, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -50,15 +50,14 @@ otError RadioSpinel::VendorHandleValueIs(spinel_prop_key_t aPropKey, const uint8
     {
         // TODO: Implement your vendor property VALUE_IS handlers here.
         //
-        // This hook is invoked when RadioSpinel receives a `SPINEL_CMD_PROP_VALUE_IS` for
-        // a vendor property. Decode the value from `aBuffer`/`aLength` and process it.
+        // This hook is invoked when RadioSpinel receives a `SPINEL_CMD_PROP_VALUE_IS` command
+        // for a vendor property. Decode the value from `aBuffer`/`aLength` and process it.
         // Return `OT_ERROR_NOT_FOUND` if the property key is not supported. Return
         // another error (e.g., `OT_ERROR_PARSE`) if decoding or handling of the value fails.
     default:
         error = OT_ERROR_NOT_FOUND;
         break;
     }
-exit:
     return error;
 }
 
