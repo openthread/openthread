@@ -191,7 +191,7 @@ static void cbuf_swap(struct cbufhead* chdr, uint8_t* bitmap, size_t start_1, si
 
     /* Swap the bitmaps. */
     if (bitmap) {
-        bmp_swap(bitmap, start_1, start_2, length);
+        bmp_swap(bitmap, BITS_TO_BYTES(chdr->size), start_1, start_2, length);
     }
 }
 
@@ -299,15 +299,15 @@ size_t cbuf_reass_write(struct cbufhead* chdr, size_t offset, const void* data, 
     if (numbytes <= chdr->size - start_index) {
         copy_from(buf_data, start_index, data, data_offset, numbytes);
         if (bitmap) {
-            bmp_setrange(bitmap, start_index, numbytes);
+            bmp_setrange(bitmap, BITS_TO_BYTES(chdr->size), start_index, numbytes);
         }
     } else {
         bytes_to_end = chdr->size - start_index;
         copy_from(buf_data, start_index, data, data_offset, bytes_to_end);
         copy_from(buf_data, 0, data, data_offset + bytes_to_end, numbytes - bytes_to_end);
         if (bitmap) {
-            bmp_setrange(bitmap, start_index, bytes_to_end);
-            bmp_setrange(bitmap, 0, numbytes - bytes_to_end);
+            bmp_setrange(bitmap, BITS_TO_BYTES(chdr->size), start_index, bytes_to_end);
+            bmp_setrange(bitmap, BITS_TO_BYTES(chdr->size), 0, numbytes - bytes_to_end);
         }
     }
     if (firstindex) {
@@ -326,10 +326,10 @@ size_t cbuf_reass_merge(struct cbufhead* chdr, size_t numbytes, uint8_t* bitmap)
     if (bitmap) {
         bytes_to_end = chdr->size - old_w;
         if (numbytes <= bytes_to_end) {
-            bmp_clrrange(bitmap, old_w, numbytes);
+            bmp_clrrange(bitmap, BITS_TO_BYTES(chdr->size), old_w, numbytes);
         } else {
-            bmp_clrrange(bitmap, old_w, bytes_to_end);
-            bmp_clrrange(bitmap, 0, numbytes - bytes_to_end);
+            bmp_clrrange(bitmap, BITS_TO_BYTES(chdr->size), old_w, bytes_to_end);
+            bmp_clrrange(bitmap, BITS_TO_BYTES(chdr->size), 0, numbytes - bytes_to_end);
         }
     }
     chdr->used += numbytes;
