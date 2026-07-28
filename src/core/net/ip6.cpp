@@ -626,6 +626,7 @@ Error Ip6::HandleFragment(Message &aMessage)
     Message       *message         = nullptr;
     uint16_t       offset          = 0;
     uint16_t       payloadFragment = 0;
+    uint16_t       unfragLength    = 0;
     bool           isFragmented    = true;
 
     SuccessOrExit(error = aMessage.Read(0, header));
@@ -656,7 +657,17 @@ Error Ip6::HandleFragment(Message &aMessage)
     LogInfo("Fragment with id %lu received > %u bytes, offset %u", ToUlong(fragmentHeader.GetIdentification()),
             payloadFragment, offset);
 
-    if (offset + payloadFragment + aMessage.GetOffset() > kMaxAssembledDatagramLength)
+    // The unfragmentable part of the reassembled datagram comes from the first
+    // fragment (copied at reassembly start). For an existing reassembly, use the
+    // first fragment's unfragmentable length: using the current fragment's
+    // unfragmentable-part length (which can differ when a later fragment carries
+    // a different extension header stack) left a never-written gap in the
+    // reassembled datagram, exposing stale message-buffer bytes. For a
+    // prospective first fragment (message == nullptr), use the current
+    // fragment's offset.
+    unfragLength = (message != nullptr) ? (message->GetLength() - message->GetOffset()) : aMessage.GetOffset();
+
+    if (offset + payloadFragment + unfragLength > kMaxAssembledDatagramLength)
     {
         LogWarn("Packet too large for fragment buffer");
         ExitNow(error = kErrorNoBufs);
@@ -684,14 +695,14 @@ Error Ip6::HandleFragment(Message &aMessage)
     }
 
     // increase message buffer if necessary
-    if (message->GetLength() < offset + payloadFragment + aMessage.GetOffset())
+    if (message->GetLength() < offset + payloadFragment + unfragLength)
     {
-        SuccessOrExit(error = message->SetLength(offset + payloadFragment + aMessage.GetOffset()));
+        SuccessOrExit(error = message->SetLength(offset + payloadFragment + unfragLength));
     }
 
     // copy the fragment payload into the message buffer
     message->WriteBytesFromMessage(
-        /* aWriteOffset */ aMessage.GetOffset() + offset, aMessage,
+        /* aWriteOffset */ unfragLength + offset, aMessage,
         /* aReadOffset */ aMessage.GetOffset() + sizeof(fragmentHeader), /* aLength */ payloadFragment);
 
     message->SetOffset(offset + payloadFragment);
@@ -700,7 +711,7 @@ Error Ip6::HandleFragment(Message &aMessage)
     if (!fragmentHeader.IsMoreFlagSet())
     {
         // use the offset value for the whole ip message length
-        message->SetOffset(aMessage.GetOffset() + offset + payloadFragment);
+        message->SetOffset(unfragLength + offset + payloadFragment);
 
         // creates the header for the reassembled ipv6 package
         SuccessOrExit(error = aMessage.Read(0, header));
