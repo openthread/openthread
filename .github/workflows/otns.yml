@@ -75,7 +75,7 @@ jobs:
         python-version: "3.9"
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y lcov ninja-build
     - name: Run
       run: |
@@ -118,7 +118,7 @@ jobs:
           python-version: "3.9"
       - name: Bootstrap
         run: |
-          sudo apt-get update
+          sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
           sudo apt-get --no-install-recommends install -y lcov ninja-build
       - name: Run
         run: |
@@ -183,7 +183,7 @@ jobs:
           python-version: "3.9"
       - name: Bootstrap
         run: |
-          sudo apt-get update
+          sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
           sudo apt-get --no-install-recommends install -y lcov ninja-build
       - name: Run
         run: |

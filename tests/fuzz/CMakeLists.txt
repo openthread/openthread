@@ -87,8 +87,10 @@ endmacro()
 #----------------------------------------------------------------------------------------------------------------------
 
 ot_nexus_test(cli)
+ot_nexus_test(dnssd_server)
 ot_nexus_test(icmp6)
 ot_nexus_test(ip6)
 ot_nexus_test(mdns)
 ot_nexus_test(radio-one-node)
+ot_nexus_test(srp_server)
 ot_nexus_test(trel)
