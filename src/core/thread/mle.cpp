@@ -201,6 +201,10 @@ Error Mle::Start(StartMode aMode)
 
     SetStateDetached();
 
+    // Safeguard so a Response TLV can never match an uninitialized
+    // (predictable) challenge.
+    mPrevRoleRestorer.GenerateRandomChallenge();
+
     Get<ThreadNetif>().AddUnicastAddress(mMeshLocalEid);
 
     Get<ThreadNetif>().SubscribeMulticast(mLinkLocalAllThreadNodes);
@@ -2411,6 +2415,11 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
 
     case kRoleChild:
         VerifyOrExit((aRxInfo.mNeighbor == &mParent) && mParent.IsStateValid(), error = kErrorSecurity);
+
+        if (!response.IsEmpty())
+        {
+            VerifyOrExit(response == mPrevRoleRestorer.GetChallenge(), error = kErrorSecurity);
+        }
         break;
 
     default:
