@@ -252,8 +252,8 @@ void LowpanContextInfo::SetFrom(const PrefixTlv &aPrefixTlv, const ContextTlv &a
     mContextId    = aContextTlv.GetContextId();
     mCompressFlag = aContextTlv.IsCompress();
     mStable       = aContextTlv.IsStable();
+    // Context Length field is deprecated; prefix length is taken directly from `aPrefixTlv`.
     aPrefixTlv.CopyPrefixTo(GetPrefix());
-    GetPrefix().SetLength(aContextTlv.GetContextLength());
 }
 
 } // namespace NetworkData
