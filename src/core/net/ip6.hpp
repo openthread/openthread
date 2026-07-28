@@ -353,6 +353,7 @@ private:
                                  const Header      &aHeader,
                                  uint8_t           &aNextHeader,
                                  bool              &aReceive);
+    Error ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHeader, OffsetRange &aOffsetRange) const;
     bool  HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const;
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
     Error HandleFragment(Message &aMessage);
