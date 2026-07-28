@@ -618,9 +618,9 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
             if (shouldObserve)
             {
                 // This is a RFC7641 notification.  The request is *not* done!
-                mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
-
                 request.MarkAsAcknowledged();
+
+                mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
                 ExitNow();
             }
 #endif
@@ -648,8 +648,6 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         if (shouldObserve)
         {
-            mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
-
             // When any Observe response is seen, consider a NON observe
             // request "acknowledged" at this point. This will keep the
             // Observe request active indefinitely until it is
@@ -659,6 +657,8 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
             {
                 request.MarkAsAcknowledged();
             }
+
+            mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
 
             ExitNow();
         }
