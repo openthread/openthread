@@ -1795,7 +1795,18 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     Neighbor          *neighbor = nullptr;
     const KeyMaterial *macKey;
 
-    VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
+    if (!aAckFrame.GetSecurityEnabled())
+    {
+        // Reject an unsecured ACK carrying IEs in response to a secured 2015 frame.
+
+        if (aTxFrame.GetSecurityEnabled() && aTxFrame.IsVersion2015() && aAckFrame.IsIePresent())
+        {
+            ExitNow(error = kErrorSecurity);
+        }
+
+        ExitNow(error = kErrorNone);
+    }
+
     VerifyOrExit(aAckFrame.IsVersion2015());
 
     SuccessOrExit(aAckFrame.ValidatePsdu());
