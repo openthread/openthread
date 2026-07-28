@@ -29,6 +29,7 @@
 name: Size Report
 
 on:
+  # zizmor: ignore[dangerous-triggers] - {workflow_run is required to comment on PRs from forks and does not execute untrusted code}
   workflow_run:
     workflows: ["Size Check"]
     types:
