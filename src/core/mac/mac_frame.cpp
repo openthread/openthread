@@ -354,22 +354,20 @@ bool Frame::IsDstPanIdPresent(uint16_t aFcf)
         // | 14 | Short        | Short        |      1       || Present      |
         // +----+--------------+--------------+--------------++--------------+
 
-        switch (aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask | kFcfPanidCompression))
-        {
-        case (kFcfDstAddrNone | kFcfSrcAddrNone):                         // 1
-        case (kFcfDstAddrShort | kFcfSrcAddrNone | kFcfPanidCompression): // 4 (short dst)
-        case (kFcfDstAddrExt | kFcfSrcAddrNone | kFcfPanidCompression):   // 4 (ext dst)
-        case (kFcfDstAddrNone | kFcfSrcAddrShort):                        // 5 (short src)
-        case (kFcfDstAddrNone | kFcfSrcAddrExt):                          // 5 (ext src)
-        case (kFcfDstAddrNone | kFcfSrcAddrShort | kFcfPanidCompression): // 6 (short src)
-        case (kFcfDstAddrNone | kFcfSrcAddrExt | kFcfPanidCompression):   // 6 (ext src)
-        case (kFcfDstAddrExt | kFcfSrcAddrExt | kFcfPanidCompression):    // 8
-            present = false;
-            break;
-        default:
-            present = true;
-            break;
-        }
+        static constexpr uint16_t kNonPresentFcfs[] = {
+            kFcfDstAddrNone | kFcfSrcAddrNone,                         // 1
+            kFcfDstAddrShort | kFcfSrcAddrNone | kFcfPanidCompression, // 4 (short dst)
+            kFcfDstAddrExt | kFcfSrcAddrNone | kFcfPanidCompression,   // 4 (ext dst)
+            kFcfDstAddrNone | kFcfSrcAddrShort,                        // 5 (short src)
+            kFcfDstAddrNone | kFcfSrcAddrExt,                          // 5 (ext src)
+            kFcfDstAddrNone | kFcfSrcAddrShort | kFcfPanidCompression, // 6 (short src)
+            kFcfDstAddrNone | kFcfSrcAddrExt | kFcfPanidCompression,   // 6 (ext src)
+            kFcfDstAddrExt | kFcfSrcAddrExt | kFcfPanidCompression,    // 8
+        };
+
+        uint16_t fcfMasked = aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask | kFcfPanidCompression);
+
+        present = !DoesArrayContain(kNonPresentFcfs, fcfMasked);
     }
     else
     {
