@@ -1019,7 +1019,7 @@ public:
      * @param[in] aBuffer   A pointer to the buffer containing the property value.
      * @param[in] aLength   The length of the @p aBuffer.
      *
-     * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, otherwise the error in either decoding
+     * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, or the error status if decoding
      *          or handling of the value fails.
      */
     otError VendorHandleValueIs(spinel_prop_key_t aPropKey, const uint8_t *aBuffer, uint16_t aLength);
