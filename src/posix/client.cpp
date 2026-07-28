@@ -209,8 +209,8 @@ constexpr char kOptInterfaceName = 'I';
 constexpr char kOptHelp          = 'h';
 
 const struct option kOptions[] = {
-    {"interface-name", required_argument, NULL, kOptInterfaceName},
-    {"help", no_argument, NULL, kOptHelp},
+    {"interface-name", required_argument, nullptr, kOptInterfaceName},
+    {"help", no_argument, nullptr, kOptHelp},
     {nullptr, 0, nullptr, 0},
 };
 
