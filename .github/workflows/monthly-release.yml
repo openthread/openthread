@@ -84,6 +84,6 @@ jobs:
         # Uses the built-in GitHub CLI to create the tag and release simultaneously
         run: |
           gh release create "$TAG_NAME" \
-            --target "${{ github.ref_name }}" \
+            --target "${GITHUB_REF_NAME}" \
             --title "OpenThread $TAG_NAME" \
             --generate-notes
