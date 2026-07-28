@@ -116,7 +116,7 @@ SubMac::Capabilities SubMac::GetCaps(void) const
 #endif
     {
         caps |= (kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec |
-                 kCapTransmitTiming | kCapReceiveTiming | kCapRxOnWhenIdle);
+                 kCapTransmitTiming | kCapReceiveTiming);
     }
 
     return caps;

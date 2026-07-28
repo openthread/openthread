@@ -521,7 +521,6 @@ private:
         ConditionalCap(kCapTransmitSec, OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE) |
         ConditionalCap(kCapTransmitTiming, OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE) |
         ConditionalCap(kCapReceiveTiming, OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE) |
-        ConditionalCap(kCapRxOnWhenIdle, OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE) |
         ConditionalCap(kCapSleepToTx, OPENTHREAD_RADIO);
 
 #undef ConditionalCap
