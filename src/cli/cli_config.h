@@ -76,6 +76,22 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_LINK_METRICS_ENH_ACK_VERBOSE_ENABLE
+ *
+ * Define to 1 to enable unsolicited CLI output of Link Metrics data
+ * received in Enhanced-ACK frames. When disabled (default), no Enhanced-ACK
+ * IE callback is registered with otLinkMetricsConfigEnhAckProbing(), so the
+ * callback and its CLI output are compiled out entirely.
+ *
+ * Enabling this option adds OutputFormat() calls inside the time-critical
+ * Mac::HandleTransmitDone() path. On platforms with synchronous/blocking
+ * CLI transport, this may break SED fast-poll timing.
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_LINK_METRICS_ENH_ACK_VERBOSE_ENABLE
+#define OPENTHREAD_CONFIG_CLI_LINK_METRICS_ENH_ACK_VERBOSE_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
  *
  * Indicates whether TCAT should be enabled in the CLI tool.
