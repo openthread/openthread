@@ -1178,11 +1178,10 @@ Error CoapBase::SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t a
         }
     }
 
-    if (oldCallbacks.mEtagLength != 0)
+    if (oldCallbacks.mBlock2ResponseSeen)
     {
-        // Compare this ETag with the one remembered from the first response.
-        VerifyOrExit((etagLength == oldCallbacks.mEtagLength) && (memcmp(etag, oldCallbacks.mEtag, etagLength) == 0),
-                     error = kErrorAbort);
+        VerifyOrExit(etagLength == oldCallbacks.mEtagLength, error = kErrorAbort);
+        VerifyOrExit((etagLength == 0) || (memcmp(etag, oldCallbacks.mEtag, etagLength) == 0), error = kErrorAbort);
     }
 
     offsetRange.InitFromMessageOffsetToEnd(aRxMsg.mMessage);
@@ -1219,11 +1218,12 @@ Error CoapBase::SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t a
 
     callbacks                        = aRequest.GetCallbacks();
     callbacks.mBlockwiseTransmitHook = nullptr;
+    callbacks.mBlock2ResponseSeen    = true;
+    callbacks.mEtagLength            = etagLength;
+    ClearAllBytes(callbacks.mEtag);
 
-    if ((callbacks.mEtagLength == 0) && (etagLength != 0))
+    if (etagLength != 0)
     {
-        // Remember the ETag from the first response that provides one.
-        callbacks.mEtagLength = etagLength;
         memcpy(callbacks.mEtag, etag, etagLength);
     }
 
@@ -1462,7 +1462,9 @@ void CoapBase::SendCallbacks::Clear(void)
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     mBlockwiseReceiveHook  = nullptr;
     mBlockwiseTransmitHook = nullptr;
-    mEtagLength            = 0;
+    ClearAllBytes(mEtag);
+    mEtagLength         = 0;
+    mBlock2ResponseSeen = false;
 #endif
 }
 

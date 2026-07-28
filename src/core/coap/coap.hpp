@@ -824,6 +824,7 @@ private:
         BlockwiseTransmitHook mBlockwiseTransmitHook;
         uint8_t               mEtag[kMaxEtagLength]; // To remember ETag value over a set of Block2 responses.
         uint8_t               mEtagLength;
+        bool                  mBlock2ResponseSeen;
 #endif
     };
 

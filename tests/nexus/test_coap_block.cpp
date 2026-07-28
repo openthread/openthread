@@ -50,16 +50,23 @@ enum EtagMode : uint8_t
     kEtagAbsent,
     kEtagMaxLength,
     kEtagChanges,
+    kEtagAppears,
     kEtagDisappears,
     kEtagEmpty,
     kEtagTooLong,
 };
 
-static uint16_t sEtagReceiveHookCallCount = 0;
-static bool     sEtagResponseReceived     = false;
-static otError  sEtagResponseError        = OT_ERROR_NONE;
-static EtagMode sEtagMode                 = kEtagSame;
-static uint32_t sEtagFirstBlockNumber     = 0;
+static uint16_t           sEtagReceiveHookCallCount = 0;
+static bool               sEtagResponseReceived     = false;
+static otError            sEtagResponseError        = OT_ERROR_NONE;
+static EtagMode           sEtagMode                 = kEtagSame;
+static uint32_t           sEtagFirstBlockNumber     = 0;
+static constexpr uint16_t kEtagBlockLength          = 16;
+static const uint8_t      kEtagPayload[]            = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+    0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+};
 
 static void HandleReproductionResponse(void                *aContext,
                                        otMessage           *aMessage,
@@ -181,11 +188,13 @@ static otError EtagReceiveHook(void          *aContext,
                                uint32_t       aTotalLength)
 {
     OT_UNUSED_VARIABLE(aContext);
-    OT_UNUSED_VARIABLE(aBlock);
-    OT_UNUSED_VARIABLE(aPosition);
-    OT_UNUSED_VARIABLE(aBlockLength);
     OT_UNUSED_VARIABLE(aMore);
     OT_UNUSED_VARIABLE(aTotalLength);
+
+    VerifyOrQuit(aBlockLength == kEtagBlockLength);
+    VerifyOrQuit(aPosition + aBlockLength <= sizeof(kEtagPayload));
+    VerifyOrQuit(memcmp(aBlock, &kEtagPayload[aPosition], aBlockLength) == 0);
+
     sEtagReceiveHookCallCount++;
     return OT_ERROR_NONE;
 }
@@ -227,6 +236,9 @@ static void HandleEtagRequest(void *aContext, otMessage *aMessage, const otMessa
     case kEtagChanges:
         etag[0] = (blockNum == sEtagFirstBlockNumber) ? 0x11 : 0x22;
         break;
+    case kEtagAppears:
+        appendEtag = (blockNum != sEtagFirstBlockNumber);
+        break;
     case kEtagDisappears:
         appendEtag = (blockNum == sEtagFirstBlockNumber);
         break;
@@ -248,6 +260,8 @@ static void HandleEtagRequest(void *aContext, otMessage *aMessage, const otMessa
     blockInfo.mBlockSzx    = Coap::kBlockSzx16;
     blockInfo.mMoreBlocks  = (blockNum < 2); // We send 3 blocks in total (0, 1, 2)
     SuccessOrQuit(response->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
+    SuccessOrQuit(response->AppendPayloadMarker());
+    SuccessOrQuit(response->AppendBytes(&kEtagPayload[blockNum * kEtagBlockLength], kEtagBlockLength));
 
     SuccessOrQuit(instance.Get<Coap::ApplicationCoap>().SendMessage(*response, AsCoreType(aMessageInfo)));
 }
@@ -321,6 +335,7 @@ void TestCoapBlockEtag(void)
     RunEtagTestCase(nexus, router, messageInfo, 0, kEtagAbsent, 3, OT_ERROR_NONE);
     RunEtagTestCase(nexus, router, messageInfo, 0, kEtagMaxLength, 3, OT_ERROR_NONE);
     RunEtagTestCase(nexus, router, messageInfo, 0, kEtagChanges, 1, OT_ERROR_ABORT);
+    RunEtagTestCase(nexus, router, messageInfo, 0, kEtagAppears, 1, OT_ERROR_ABORT);
     RunEtagTestCase(nexus, router, messageInfo, 0, kEtagDisappears, 1, OT_ERROR_ABORT);
     RunEtagTestCase(nexus, router, messageInfo, 1, kEtagSame, 2, OT_ERROR_NONE);
     RunEtagTestCase(nexus, router, messageInfo, 1, kEtagChanges, 1, OT_ERROR_ABORT);
