@@ -75,6 +75,10 @@ jobs:
             const pr = prs?.find(pr => pr.base.repo.full_name === base_full_name && pr.state === 'open') ||
                        prs?.find(pr => pr.base.repo.full_name === base_full_name);
             if (pr) {
+              if (!pr_number) {
+                core.setFailed('No associated pull request found for this workflow run.');
+                return;
+              }
               pr_number = pr.number
             }
           }
