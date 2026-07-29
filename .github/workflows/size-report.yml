@@ -65,6 +65,11 @@ jobs:
           let pr_number = context.payload.workflow_run.pull_requests?.[0]?.number
 
           if (!pr_number) {
+            const head_repo = context.payload.workflow_run.head_repository?.full_name;
+            if (!head_repo) {
+              core.setFailed('Head repository not found in workflow run context payload.');
+              return;
+            }
             const [owner, repo] = context.payload.workflow_run.head_repository.full_name.split('/')
             const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner,
