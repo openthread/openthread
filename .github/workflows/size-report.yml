@@ -72,7 +72,8 @@ jobs:
               commit_sha: context.payload.workflow_run.head_sha,
             })
             const base_full_name = `${context.repo.owner}/${context.repo.repo}`
-            const pr = prs.find(pr => pr.base.repo.full_name === base_full_name)
+            const pr = prs?.find(pr => pr.base.repo.full_name === base_full_name && pr.state === 'open') ||
+                       prs?.find(pr => pr.base.repo.full_name === base_full_name);
             if (pr) {
               pr_number = pr.number
             }
