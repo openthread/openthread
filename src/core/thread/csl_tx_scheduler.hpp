@@ -199,14 +199,14 @@ public:
     private:
         Radio::Time64 DetermineNextCslWindow(Radio::Time64 aRadioNow, uint32_t aLeadTime) const;
 
-        uint8_t       mCslTxAttempts : 7;
-        bool          mCslSynchronized : 1;
-        uint8_t       mCslChannel;
+        Radio::Time64 mLastRxTimestamp; // Radio microseconds clock time
+        TimeMilli     mCslLastHeard;    // Local milliseconds clock time
         uint32_t      mCslTimeout;      // In seconds
         uint16_t      mCslPeriod;       // In units of 10 symbols
         uint16_t      mCslPhase;        // In units of 10 symbols
-        TimeMilli     mCslLastHeard;    // Local milliseconds clock time
-        Radio::Time64 mLastRxTimestamp; // Radio microseconds clock time
+        uint8_t       mCslChannel;
+        uint8_t       mCslTxAttempts : 7;
+        bool          mCslSynchronized : 1;
 
         static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
