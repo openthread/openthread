@@ -333,25 +333,21 @@ public:
 private:
     typedef BitSet<kNumIp6Addresses> ChildIp6AddressSet;
 
-    uint32_t mTimeout;
-
+    uint32_t                 mTimeout;
+    uint16_t                 mSupervisionInterval;
+    uint16_t                 mSecondsSinceSupervision;
     Ip6::InterfaceIdentifier mMeshLocalIid;
     Ip6AddressArray          mIp6Addresses;
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     ChildIp6AddressSet mMlrRegisteredSet;
 #endif
-
     bool    mBlockParentDowngrade;
     uint8_t mNetworkDataVersion;
-
     union
     {
         uint8_t          mRequestTlvs[kMaxRequestTlvs];
         Mle::TxChallenge mAttachChallenge;
     };
-
-    uint16_t mSupervisionInterval;
-    uint16_t mSecondsSinceSupervision;
 };
 
 DefineCoreType(otChildInfo, Child::Info);
