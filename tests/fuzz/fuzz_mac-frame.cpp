@@ -27,14 +27,13 @@
  */
 
 #include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <openthread/platform/radio.h>
 
 #include "mac_frame.h"
+#include "common/code_utils.hpp"
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
 
@@ -58,19 +57,6 @@ public:
         mSize -= aLength;
     }
 
-    uint8_t *ConsumeRemainingBytes(void)
-    {
-        uint8_t *buf = static_cast<uint8_t *>(malloc(mSize));
-
-        if (buf != nullptr)
-        {
-            memcpy(buf, mData, mSize);
-        }
-
-        mSize = 0;
-        return buf;
-    }
-
     size_t RemainingBytes(void) { return mSize; }
 
 private:
@@ -80,21 +66,12 @@ private:
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    if (size < sizeof(uint16_t) || size > OT_RADIO_FRAME_MAX_SIZE)
+    {
+        return 0;
+    }
+
     FuzzDataProvider fdp(data, size);
-
-    unsigned int seed;
-
-    if (size < sizeof(seed))
-    {
-        return 0;
-    }
-
-    if (size > sizeof(seed) + OT_RADIO_FRAME_MAX_SIZE)
-    {
-        return 0;
-    }
-
-    fdp.ConsumeData(&seed, sizeof(seed));
 
     Core nexus;
 
@@ -106,12 +83,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     nexus.AdvanceTime(60 * 1000);
 
     uint16_t psduLength = fdp.RemainingBytes();
-    uint8_t *psdu       = fdp.ConsumeRemainingBytes();
+    uint8_t *psdu       = static_cast<uint8_t *>(malloc(psduLength));
 
     if (psdu == nullptr)
     {
         return 0;
     }
+
+    fdp.ConsumeData(psdu, psduLength);
 
     otRadioFrame rxFrame;
     otRadioFrame ackFrame;
@@ -127,7 +106,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     ackFrame.mPsdu   = ackPsdu;
     ackFrame.mLength = 0;
 
-    otMacFrameGenerateEnhAck(&rxFrame, false, nullptr, 0, &ackFrame);
+    IgnoreError(otMacFrameGenerateEnhAck(&rxFrame, false, nullptr, 0, &ackFrame));
 
     nexus.AdvanceTime(10 * 1000);
 
