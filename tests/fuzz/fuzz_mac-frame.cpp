@@ -32,8 +32,8 @@
 
 #include <openthread/platform/radio.h>
 
-#include "common/code_utils.hpp"
 #include "mac_frame.h"
+#include "common/code_utils.hpp"
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
 
