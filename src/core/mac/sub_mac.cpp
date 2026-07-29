@@ -293,7 +293,7 @@ Error SubMac::Send(void)
     {
     case kStateDisabled:
     case kStateCsmaBackoff:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
 #endif
     case kStateTransmit:
@@ -390,7 +390,7 @@ exit:
 
 void SubMac::StartCsmaBackoff(void)
 {
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (mTransmitFrame.GetTxDelay() != 0 || mTransmitFrame.GetTxDelayBaseTime() != 0)
     {
         SetState(kStateCslTransmit);
@@ -417,7 +417,7 @@ void SubMac::StartCsmaBackoff(void)
         BeginTransmit();
         ExitNow();
     }
-#endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
     SetState(kStateCsmaBackoff);
 
@@ -466,7 +466,7 @@ void SubMac::BeginTransmit(void)
 {
     Error error;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit);
 #else
     VerifyOrExit(mState == kStateCsmaBackoff);
@@ -712,7 +712,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     case kStateDisabled:
     case kStateCsmaBackoff:
     case kStateTransmit:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
 #endif
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
@@ -794,7 +794,7 @@ void SubMac::HandleTimer(void)
 {
     switch (mState)
     {
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
         BeginTransmit();
         break;
@@ -1084,7 +1084,7 @@ const char *SubMac::StateToString(State aState)
 #define DelayBeforeRetxStateMapList(_)
 #endif
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 #define CslTxStateMapList(_) _(kStateCslTransmit, "CslTransmit")
 #else
 #define CslTxStateMapList(_)
