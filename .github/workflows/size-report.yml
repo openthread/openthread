@@ -65,14 +65,16 @@ jobs:
           let pr_number = context.payload.workflow_run.pull_requests?.[0]?.number
 
           if (!pr_number) {
+            const [owner, repo] = context.payload.workflow_run.head_repository.full_name.split('/')
             const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               commit_sha: context.payload.workflow_run.head_sha,
             })
-            const open_pr = prs?.find(pr => pr.state === 'open') || prs?.[0]
-            if (open_pr) {
-              pr_number = open_pr.number
+            const base_full_name = `${context.repo.owner}/${context.repo.repo}`
+            const pr = prs.find(pr => pr.base.repo.full_name === base_full_name)
+            if (pr) {
+              pr_number = pr.number
             }
           }
 
