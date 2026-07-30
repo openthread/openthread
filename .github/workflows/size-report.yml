@@ -70,7 +70,7 @@ jobs:
               core.setFailed('Head repository not found in workflow run context payload.');
               return;
             }
-            const [owner, repo] = context.payload.workflow_run.head_repository.full_name.split('/')
+            const [owner, repo] = head_repo.split('/')
             const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner,
               repo,
@@ -80,10 +80,6 @@ jobs:
             const pr = prs?.find(pr => pr.base.repo.full_name === base_full_name && pr.state === 'open') ||
                        prs?.find(pr => pr.base.repo.full_name === base_full_name);
             if (pr) {
-              if (!pr_number) {
-                core.setFailed('No associated pull request found for this workflow run.');
-                return;
-              }
               pr_number = pr.number
             }
           }
