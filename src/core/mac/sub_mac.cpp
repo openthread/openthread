@@ -1079,7 +1079,7 @@ const char *SubMac::StateToString(State aState)
     _(kStateCsmaBackoff, "CsmaBackoff") \
     _(kStateTransmit, "Transmit")       \
     _(kStateEnergyScan, "EnergyScan")   \
-    DelayBeforeRetxStateMapList(_) ClsTxStateMapList(_) RadioSampleMapList(_)
+    DelayBeforeRetxStateMapList(_) CslTxStateMapList(_) RadioSampleMapList(_)
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
 #define DelayBeforeRetxStateMapList(_) _(kStateDelayBeforeRetx, "DelayBeforeRetx")
@@ -1088,9 +1088,9 @@ const char *SubMac::StateToString(State aState)
 #endif
 
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-#define ClsTxStateMapList(_) _(kStateCslTransmit, "CslTransmit")
+#define CslTxStateMapList(_) _(kStateCslTransmit, "CslTransmit")
 #else
-#define ClsTxStateMapList(_)
+#define CslTxStateMapList(_)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
