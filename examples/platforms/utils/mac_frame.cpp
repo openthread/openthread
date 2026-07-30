@@ -216,22 +216,12 @@ bool otMacFrameIsSecurityEnabled(otRadioFrame *aFrame)
 
 bool otMacFrameIsKeyIdMode1(otRadioFrame *aFrame)
 {
-    uint8_t keyIdMode;
-    otError error;
-
-    error = static_cast<const Mac::Frame *>(aFrame)->GetKeyIdMode(keyIdMode);
-
-    return (error == OT_ERROR_NONE) ? (keyIdMode == Mac::Frame::kKeyIdMode1) : false;
+    return static_cast<const Mac::Frame *>(aFrame)->HasKeyIdMode(Mac::Frame::kKeyIdMode1);
 }
 
 bool otMacFrameIsKeyIdMode2(otRadioFrame *aFrame)
 {
-    uint8_t keyIdMode;
-    otError error;
-
-    error = static_cast<const Mac::Frame *>(aFrame)->GetKeyIdMode(keyIdMode);
-
-    return (error == OT_ERROR_NONE) ? (keyIdMode == Mac::Frame::kKeyIdMode2) : false;
+    return static_cast<const Mac::Frame *>(aFrame)->HasKeyIdMode(Mac::Frame::kKeyIdMode2);
 }
 
 uint8_t otMacFrameGetKeyId(otRadioFrame *aFrame)
