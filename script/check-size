@@ -42,7 +42,7 @@ OT_REPORT_FILE_TABLE="${OT_TMP_DIR}/report_table"
 readonly OT_REPORT_FILE_TABLE
 
 OT_REPORT_FILE_PR="${OT_TMP_DIR}/report_pr"
-readonly OT_REPORT_FILE_TABLE
+readonly OT_REPORT_FILE_PR
 
 PR_NUMBER="${PR_NUMBER:-}"
 
