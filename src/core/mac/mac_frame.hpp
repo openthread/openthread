@@ -662,11 +662,15 @@ protected:
 
     static constexpr uint16_t kFcfFrameTypeMask = 7 << 0;
 
-    static constexpr uint16_t kFcfAddrNone     = 0;
-    static constexpr uint16_t kFcfAddrReserved = 1;
-    static constexpr uint16_t kFcfAddrShort    = 2;
-    static constexpr uint16_t kFcfAddrExt      = 3;
-    static constexpr uint16_t kFcfAddrMask     = 3;
+    enum AddrMode : uint8_t
+    {
+        kAddrModeNone     = 0,
+        kAddrModeReserved = 1,
+        kAddrModeShort    = 2,
+        kAddrModeExt      = 3,
+    };
+
+    static constexpr uint16_t kFcfAddrMask = 3;
 
     // Frame Control field format for general MAC frame
     static constexpr uint16_t kFcfSecurityEnabled  = 1 << 3;
@@ -676,15 +680,15 @@ protected:
     static constexpr uint16_t kFcfSeqSuppression   = 1 << 8;
     static constexpr uint16_t kFcfIePresent        = 1 << 9;
     static constexpr uint16_t kFcfDstAddrShift     = 10;
-    static constexpr uint16_t kFcfDstAddrNone      = kFcfAddrNone << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfDstAddrShort     = kFcfAddrShort << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfDstAddrExt       = kFcfAddrExt << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrNone      = kAddrModeNone << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrShort     = kAddrModeShort << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrExt       = kAddrModeExt << kFcfDstAddrShift;
     static constexpr uint16_t kFcfDstAddrMask      = kFcfAddrMask << kFcfDstAddrShift;
     static constexpr uint16_t kFcfFrameVersionMask = 3 << 12;
     static constexpr uint16_t kFcfSrcAddrShift     = 14;
-    static constexpr uint16_t kFcfSrcAddrNone      = kFcfAddrNone << kFcfSrcAddrShift;
-    static constexpr uint16_t kFcfSrcAddrShort     = kFcfAddrShort << kFcfSrcAddrShift;
-    static constexpr uint16_t kFcfSrcAddrExt       = kFcfAddrExt << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrNone      = kAddrModeNone << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrShort     = kAddrModeShort << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrExt       = kAddrModeExt << kFcfSrcAddrShift;
     static constexpr uint16_t kFcfSrcAddrMask      = kFcfAddrMask << kFcfSrcAddrShift;
 
     // Security Control field
@@ -717,12 +721,12 @@ protected:
     uint8_t FindHeaderIeIndex(void) const;
 #endif
 
-    static uint16_t GetFcfDstAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfDstAddrMask>(aFcf); }
-    static uint16_t GetFcfSrcAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf); }
+    static AddrMode ReadDstAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfDstAddrMask>(aFcf)); }
+    static AddrMode ReadSrcAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf)); }
     static bool     IsSeqSuppressed(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfSeqSuppression) != 0); }
     static bool     IsSeqPresent(uint16_t aFcf) { return !IsSeqSuppressed(aFcf); }
-    static bool     IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != 0; }
-    static bool     IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != 0; }
+    static bool     IsDstAddrPresent(uint16_t aFcf) { return ReadDstAddrMode(aFcf) != kAddrModeNone; }
+    static bool     IsSrcAddrPresent(uint16_t aFcf) { return ReadSrcAddrMode(aFcf) != kAddrModeNone; }
     static bool     IsSecurityEnabled(uint16_t aFcf) { return (aFcf & kFcfSecurityEnabled) != 0; }
     static bool     IsFramePending(uint16_t aFcf) { return (aFcf & kFcfFramePending) != 0; }
     static bool     IsIePresent(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfIePresent) != 0); }
@@ -731,7 +735,8 @@ protected:
     static bool     IsVersion2015(uint16_t aFcf) { return GetVersion(aFcf) == kVersion2015; }
     static bool     IsDstPanIdPresent(uint16_t aFcf);
     static bool     IsSrcPanIdPresent(uint16_t aFcf);
-    static uint16_t DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift);
+    static AddrMode DetermineAddrMode(const Address &aAddress);
+    static Error    AddAddrSizeTo(uint8_t &aIndex, AddrMode aAddrMode);
     static uint8_t  CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t  CalculateKeySourceSize(uint8_t aSecurityControl);
     static uint8_t  CalculateMicSize(uint8_t aSecurityControl);
@@ -741,12 +746,15 @@ protected:
     static KeyIdMode     ReadKeyIdMode(uint8_t aSecCtl);
 
 private:
+    template <typename EnumType> static EnumType As(uint16_t aValue) { return static_cast<EnumType>(aValue); }
+
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     typedef bool (&HeaderIeMatcher)(const HeaderIe &aHeaderIe);
 
     const HeaderIe *FindHeaderIe(HeaderIeMatcher aMatcher) const;
     HeaderIe       *FindHeaderIe(HeaderIeMatcher aMatcher) { return AsNonConst(AsConst(this)->FindHeaderIe(aMatcher)); }
 #endif
+    Error ReadAddressAt(uint8_t aIndex, AddrMode aAddrMode, Address &aAddress) const;
 };
 
 /**
