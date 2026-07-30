@@ -659,28 +659,19 @@ const uint8_t *Frame::GetKeySource(void) const
 
 uint8_t Frame::CalculateKeySourceSize(uint8_t aSecurityControl)
 {
-    uint8_t size = 0;
+    static constexpr uint8_t kKeySourceSize[] = {
+        /* [0] kKeyIdMode0 */ kKeySourceSizeMode0,
+        /* [1] kKeyIdMode1 */ kKeySourceSizeMode1,
+        /* [2] kKeyIdMode2 */ kKeySourceSizeMode2,
+        /* [3] kKeyIdMode3 */ kKeySourceSizeMode3,
+    };
 
-    switch (ReadKeyIdMode(aSecurityControl))
-    {
-    case kKeyIdMode0:
-        size = kKeySourceSizeMode0;
-        break;
+    static_assert(kKeySourceSize[kKeyIdMode0] == kKeySourceSizeMode0, "kKeySourceSize[] array is incorrect");
+    static_assert(kKeySourceSize[kKeyIdMode1] == kKeySourceSizeMode1, "kKeySourceSize[] array is incorrect");
+    static_assert(kKeySourceSize[kKeyIdMode2] == kKeySourceSizeMode2, "kKeySourceSize[] array is incorrect");
+    static_assert(kKeySourceSize[kKeyIdMode3] == kKeySourceSizeMode3, "kKeySourceSize[] array is incorrect");
 
-    case kKeyIdMode1:
-        size = kKeySourceSizeMode1;
-        break;
-
-    case kKeyIdMode2:
-        size = kKeySourceSizeMode2;
-        break;
-
-    case kKeyIdMode3:
-        size = kKeySourceSizeMode3;
-        break;
-    }
-
-    return size;
+    return kKeySourceSize[ReadKeyIdMode(aSecurityControl)];
 }
 
 void Frame::SetKeySource(const uint8_t *aKeySource)
