@@ -614,7 +614,8 @@ private:
     void     UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
     void     HandleCslTimer(void);
     void     GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
-    uint32_t GetNextCycleDrift(void);
+    uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
+    uint32_t GetNextCycleDrift(void) const;
     uint32_t GetLocalTime(void);
     bool     IsCslEnabled(void) const { return mCslPeriod > 0; }
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
