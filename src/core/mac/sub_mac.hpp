@@ -519,8 +519,8 @@ private:
         ConditionalCap(kCapTransmitRetries, OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE) |
         ConditionalCap(kCapCsmaBackoff, OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE) |
         ConditionalCap(kCapTransmitSec, OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE) |
-        ConditionalCap(kCapTransmitTiming, OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE) |
-        ConditionalCap(kCapReceiveTiming, OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE) |
+        ConditionalCap(kCapTransmitTiming,
+                       OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE &&OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) |
         ConditionalCap(kCapSleepToTx, OPENTHREAD_RADIO);
 
 #undef ConditionalCap
