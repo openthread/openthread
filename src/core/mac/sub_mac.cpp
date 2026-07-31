@@ -115,8 +115,10 @@ SubMac::Capabilities SubMac::GetCaps(void) const
     else
 #endif
     {
-        caps |= (kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec |
-                 kCapTransmitTiming | kCapReceiveTiming);
+        caps |= (kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec);
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        caps |= kCapTransmitTiming;
+#endif
     }
 
     return caps;
