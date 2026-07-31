@@ -449,34 +449,47 @@ public:
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     /**
-     * Gets the TX delay field for the frame.
+     * Indicates whether or not a target transmission time is specified for the frame.
      *
-     * @returns The delay time for the TX frame in microseconds.
+     * @retval TRUE   If a target transmission time is specified.
+     * @retval FALSE  If no target transmission time is specified.
      */
-    uint32_t GetTxDelay(void) const { return AsFrame().mInfo.mTxInfo.mTxDelay; }
+    bool IsTargetTxTimeSpecified(void) const { return GetTxDelay() != 0 || GetTxDelayBaseTime() != 0; }
 
     /**
-     * Set TX delay field for the frame.
+     * Gets the target transmission time for the frame as a `Time32`.
      *
-     * @param[in]    aTxDelay    The delay time for the TX frame.
+     * @returns The target transmission time.
      */
-    void SetTxDelay(uint32_t aTxDelay) { AsFrame().mInfo.mTxInfo.mTxDelay = aTxDelay; }
+    Time32 GetTargetTxTime(void) const { return GetTxDelayBaseTime() + GetTxDelay(); }
 
     /**
-     * Gets the TX delay base time field for the frame.
-     *
-     * @returns The delay base time for the TX frame as a `Time32`.
+     * Clears the target transmission time for the frame (sets delay and base time to zero).
      */
-    Time32 GetTxDelayBaseTime(void) const { return AsFrame().mInfo.mTxInfo.mTxDelayBaseTime; }
+    void ClearTargetTxTime(void)
+    {
+        SetTxDelayBaseTime(0);
+        SetTxDelay(0);
+    }
 
     /**
-     * Set TX delay base time field for the frame.
+     * Sets the target transmission time and base reference time for the frame.
      *
-     * @param[in]    aTxDelayBaseTime    The delay base time for the TX frame.
+     * @param[in] aTargetTxTime  The target transmission time.
+     * @param[in] aBaseTime      The base reference time.
      */
-    void SetTxDelayBaseTime(Time32 aTxDelayBaseTime) { AsFrame().mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
+    void SetTargetTxTime(Time64 aTargetTxTime, Time64 aBaseTime)
+    {
+        SetTxDelayBaseTime(ConvertTime64To32(aBaseTime));
+        SetTxDelay(static_cast<uint32_t>(aTargetTxTime - aBaseTime));
+    }
 
 private:
+    uint32_t GetTxDelay(void) const { return AsFrame().mInfo.mTxInfo.mTxDelay; }
+    void     SetTxDelay(uint32_t aTxDelay) { AsFrame().mInfo.mTxInfo.mTxDelay = aTxDelay; }
+    Time32   GetTxDelayBaseTime(void) const { return AsFrame().mInfo.mTxInfo.mTxDelayBaseTime; }
+    void SetTxDelayBaseTime(Time32 aTxDelayBaseTime) { AsFrame().mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
+
     Frame       &AsFrame(void) { return *static_cast<TxFrameType *>(this); }
     const Frame &AsFrame(void) const { return *static_cast<const TxFrameType *>(this); }
 };

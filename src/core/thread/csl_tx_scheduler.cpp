@@ -290,8 +290,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
         ExitNow();
     }
 
-    frame->SetTxDelayBaseTime(Radio::ConvertTime64To32(mCslTxNeighbor->GetLastRxTimestamp()));
-    frame->SetTxDelay(static_cast<uint32_t>(mNeighborCslWindow - mCslTxNeighbor->GetLastRxTimestamp()));
+    frame->SetTargetTxTime(mNeighborCslWindow, mCslTxNeighbor->GetLastRxTimestamp());
     frame->SetCsmaCaEnabled(true);
 
 exit:
