@@ -1224,10 +1224,10 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
 
     // Validate the received frame.
 
+    SuccessOrExit(error = aRxFrame.ValidatePsdu());
     VerifyOrExit(aRxFrame.IsVersion2015(), error = kErrorParse);
     VerifyOrExit(aRxFrame.GetAckRequest(), error = kErrorParse);
     VerifyOrExit(aRxFrame.IsSequencePresent(), error = kErrorParse);
-    SuccessOrExit(error = aRxFrame.ValidatePsdu());
 
     // Check `aRxFrame` has a valid destination address. The ack frame
     // will not use this as its source though and will always use no
