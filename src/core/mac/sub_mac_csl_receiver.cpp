@@ -260,22 +260,23 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
     curTime = GetLocalTime();
     elapsed = curTime - mCslLastSync.GetValue();
 
-    semiWindow = static_cast<uint32_t>(static_cast<uint64_t>(elapsed) *
-                                       (Get<Radio::Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) /
-                                       Time::kOneSecondInUsec);
+    semiWindow = DetermineClockDrift(elapsed);
     semiWindow += mCslParentAccuracy.GetUncertaintyInMicrosec() + Get<Radio::Radio>().GetCslUncertainty() * 10;
 
     aAhead = Min(semiPeriod, semiWindow + kMinReceiveOnAhead + kCslReceiveTimeAhead);
     aAfter = Min(semiPeriod, semiWindow + kMinReceiveOnAfter);
 }
 
-uint32_t SubMac::GetNextCycleDrift(void)
+uint32_t SubMac::DetermineClockDrift(uint32_t aIntervalUs) const
 {
-    uint64_t periodUs = mCslPeriod * Radio::kUsPerTenSymbols;
+    uint16_t clockAccuracy = Get<Radio::Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy();
 
-    return static_cast<uint32_t>(periodUs *
-                                 (Get<Radio::Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) /
-                                 Time::kOneSecondInUsec);
+    return Radio::DetermineClockDrift(clockAccuracy, aIntervalUs);
+}
+
+uint32_t SubMac::GetNextCycleDrift(void) const
+{
+    return DetermineClockDrift(static_cast<uint32_t>(mCslPeriod) * Radio::kUsPerTenSymbols);
 }
 
 uint32_t SubMac::GetLocalTime(void)

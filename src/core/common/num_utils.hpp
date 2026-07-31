@@ -127,6 +127,20 @@ template <typename UintType> uint16_t ClampToUint16(UintType aValue)
 }
 
 /**
+ * Returns a clamped version of given integer to a `uint32_t`.
+ *
+ * If @p aValue is greater than max value of a `uint32_t`, the max value is returned.
+ *
+ * @param[in] aValue  The value to clamp.
+ *
+ * @returns The clamped version of @p aValue to `uint32_t`.
+ */
+inline uint32_t ClampToUint32(uint64_t aValue)
+{
+    return static_cast<uint32_t>(Min(aValue, static_cast<uint64_t>(NumericLimits<uint32_t>::kMax)));
+}
+
+/**
  * Returns a clamped version of given integer to a `int8_t`.
  *
  * If @p aValue is smaller than min value of a `int8_t`, the min value of `int8_t` is returned.
