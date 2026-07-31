@@ -1642,7 +1642,7 @@ otError RadioSpinel::Transmit(otRadioFrame &aFrame)
             uint32_t transmitDelay = 0;
 
             // If supported, add a delay and transmit the network time at a precise moment
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
             transmitDelay                                  = kTxWaitUs / 10;
             mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime = static_cast<otRadioTime32>(netRadioTime);
             mTransmitFrame->mInfo.mTxInfo.mTxDelay         = transmitDelay;

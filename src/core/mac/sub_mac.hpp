@@ -538,7 +538,7 @@ private:
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
         kStateDelayBeforeRetx, // Delay before retx
 #endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kStateCslTransmit, // CSL transmission.
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
@@ -614,7 +614,8 @@ private:
     void     UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
     void     HandleCslTimer(void);
     void     GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
-    uint32_t GetNextCycleDrift(void);
+    uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
+    uint32_t GetNextCycleDrift(void) const;
     uint32_t GetLocalTime(void);
     bool     IsCslEnabled(void) const { return mCslPeriod > 0; }
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE

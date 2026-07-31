@@ -67,6 +67,9 @@ target_compile_definitions(ot-ctl PRIVATE
     $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>)
 endif()
 
+target_compile_definitions(ot-ctl PRIVATE
+    "PACKAGE_VERSION=\"${OT_PACKAGE_VERSION}\"")
+
 target_compile_options(ot-ctl PRIVATE
     ${OT_CFLAGS}
 )

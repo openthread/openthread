@@ -807,7 +807,7 @@ bool Mac::IsJoinable(void) const
 void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 {
     KeyManager       &keyManager = Get<KeyManager>();
-    uint8_t           keyIdMode;
+    Frame::KeyIdMode  keyIdMode;
     const ExtAddress *extAddress = nullptr;
 
     VerifyOrExit(aFrame.GetSecurityEnabled());
@@ -1651,8 +1651,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 {
     KeyManager        &keyManager = Get<KeyManager>();
     Error              error      = kErrorSecurity;
-    uint8_t            securityLevel;
-    uint8_t            keyIdMode;
+    Frame::KeyIdMode   keyIdMode;
     uint32_t           frameCounter;
     uint32_t           keySequence = 0;
     const KeyMaterial *macKey;
@@ -1660,13 +1659,12 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = kErrorNone);
 
-    IgnoreError(aFrame.GetSecurityLevel(securityLevel));
-    VerifyOrExit(securityLevel == Frame::kSecurityEncMic32);
+    VerifyOrExit(aFrame.HasSecurityLevel(Frame::kSecurityEncMic32));
 
     IgnoreError(aFrame.GetFrameCounter(frameCounter));
     LogDebg("Rx security - frame counter %lu", ToUlong(frameCounter));
 
-    IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
+    SuccessOrExit(aFrame.GetKeyIdMode(keyIdMode));
 
     switch (keyIdMode)
     {
@@ -1785,10 +1783,8 @@ exit:
 Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 {
     Error              error = kErrorSecurity;
-    uint8_t            securityLevel;
     uint8_t            txKeyIndex;
     uint8_t            ackKeyIndex;
-    uint8_t            keyIdMode;
     uint32_t           frameCounter;
     Address            srcAddr;
     Address            dstAddr;
@@ -1811,11 +1807,9 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     SuccessOrExit(aAckFrame.ValidatePsdu());
 
-    IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
-    VerifyOrExit(securityLevel == Frame::kSecurityEncMic32);
+    VerifyOrExit(aAckFrame.HasSecurityLevel(Frame::kSecurityEncMic32));
 
-    IgnoreError(aAckFrame.GetKeyIdMode(keyIdMode));
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+    VerifyOrExit(aAckFrame.HasKeyIdMode(Frame::kKeyIdMode1));
 
     IgnoreError(aTxFrame.GetKeyIndex(txKeyIndex));
     IgnoreError(aAckFrame.GetKeyIndex(ackKeyIndex));
@@ -2035,11 +2029,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
         if (aFrame->GetSecurityEnabled())
         {
-            uint8_t keyIdMode;
-
-            IgnoreError(aFrame->GetKeyIdMode(keyIdMode));
-
-            if (keyIdMode == Frame::kKeyIdMode1)
+            if (aFrame->HasKeyIdMode(Frame::kKeyIdMode1))
             {
                 switch (neighbor->GetState())
                 {
