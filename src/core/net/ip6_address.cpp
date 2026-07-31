@@ -97,8 +97,9 @@ bool Prefix::ContainsPrefix(const NetworkPrefix &aSubPrefix) const
 
 void Prefix::Tidy(void)
 {
-    uint8_t byteLength      = GetBytesSize();
-    uint8_t lastByteBitMask = static_cast<uint8_t>(~(static_cast<uint8_t>(1 << (byteLength * 8 - mLength)) - 1));
+    uint8_t length          = Min(mLength, kMaxLength);
+    uint8_t byteLength      = SizeForLength(length);
+    uint8_t lastByteBitMask = static_cast<uint8_t>(~(static_cast<uint8_t>(1 << (byteLength * 8 - length)) - 1));
 
     if (byteLength != 0)
     {
@@ -186,13 +187,14 @@ void Prefix::ToString(char *aBuffer, uint16_t aSize) const
 
 void Prefix::ToString(StringWriter &aWriter) const
 {
-    uint8_t sizeInUint16 = DivideAndRoundUp<uint8_t>(GetBytesSize(), sizeof(uint16_t));
+    uint8_t byteSize     = Min(GetBytesSize(), kMaxSize);
+    uint8_t sizeInUint16 = DivideAndRoundUp<uint8_t>(byteSize, sizeof(uint16_t));
     Prefix  tidyPrefix   = *this;
 
     tidyPrefix.Tidy();
     AsCoreType(&tidyPrefix.mPrefix).AppendHexWords(aWriter, sizeInUint16);
 
-    if (GetBytesSize() < Address::kSize - 1)
+    if (byteSize < Address::kSize - 1)
     {
         aWriter.Append("::");
     }
