@@ -617,7 +617,7 @@ void SubMac::ReprocessSecurityForRetx(TxFrame &aFrame)
     // it contains Header IEs. The frame is first restored back to
     // plaintext and then re-encrypted with a new frame counter value.
 
-    VerifyOrExit(aFrame.GetSecurityEnabled() && aFrame.HasAnyHeaderIe());
+    VerifyOrExit(aFrame.GetSecurityEnabled() && aFrame.IsIePresent());
 
     // When transmit security is handled by `SubMac`, the AES key is already set
     // on `aFrame`. However, when transmit security is delegated to the radio

@@ -725,7 +725,7 @@ TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
     buildInfo.mCommandId = Frame::kMacCmdBeaconRequest;
     buildInfo.mVersion   = Frame::kVersion2003;
 
-    buildInfo.PrepareHeadersIn(frame);
+    frame.PrepareHeadersWithEmptyPayload(buildInfo);
 
     LogInfo("Sending Beacon Request");
 
@@ -734,9 +734,9 @@ TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
 
 TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 {
-    TxFrame           *frame;
-    TxFrame::BuildInfo buildInfo;
-    FrameBuilder       builder;
+    TxFrame                *frame;
+    TxFrame::BuildInfo      buildInfo;
+    TxFrame::PayloadBuilder builder;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
@@ -753,16 +753,15 @@ TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
     buildInfo.mType    = Frame::kTypeBeacon;
     buildInfo.mVersion = Frame::kVersion2003;
 
-    buildInfo.PrepareHeadersIn(*frame);
+    frame->PrepareHeaders(buildInfo, builder);
 
-    builder.Init(frame->GetPayload(), frame->GetMaxPayloadLength());
     builder.Append<BeaconHeader>()->Init();
 
 #if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     builder.Append<BeaconPayload>()->Init(Get<MeshCoP::NetworkIdentity>(), IsJoinable());
 #endif
 
-    frame->SetPayloadLength(builder.GetLength());
+    frame->FinishPayload(builder);
 
     LogBeacon("Sending");
 
@@ -1184,7 +1183,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t
     if (aError != kErrorNone)
     {
         LogFrameTxFailure(aFrame, aError, aRetryCount, aWillRetx);
-        DumpDebg("TX ERR", aFrame.GetHeader(), 16);
+        DumpDebg("TX ERR", aFrame.GetPsdu(), 16);
 
         if (aWillRetx)
         {
@@ -1475,7 +1474,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         }
 #endif
 
-        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
+        DumpDebg("TX", aFrame.GetPsdu(), aFrame.GetLength());
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -1488,7 +1487,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
     case kOperationTransmitDataCsl:
         mCounters.mTxData++;
 
-        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
+        DumpDebg("TX", aFrame.GetPsdu(), aFrame.GetLength());
         FinishOperation();
         Get<CslTxScheduler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
@@ -1511,7 +1510,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         }
 #endif
 
-        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
+        DumpDebg("TX", aFrame.GetPsdu(), aFrame.GetLength());
         FinishOperation();
         Get<DataPollHandler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
@@ -1714,13 +1713,15 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
         if (aFrame.IsWakeupFrame())
         {
-            uint32_t sequence;
-            uint8_t  keyIndex;
+            uint32_t  sequence;
+            uint8_t   keyIndex;
+            FrameData keySource;
 
             // TODO: Avoid generating a new key if a wake-up frame was recently received already
 
             IgnoreError(aFrame.GetKeyIndex(keyIndex));
-            sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
+            aFrame.GetKeySource(keySource);
+            sequence = BigEndian::ReadUint32(keySource.GetBytes());
             VerifyOrExit(DetermineKeyIndexFor(sequence) == keyIndex, error = kErrorSecurity);
 
             macKey     = &keyManager.GetTemporaryMacKey(sequence);
@@ -2139,7 +2140,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         ExitNow();
     }
 
-    DumpDebg("RX", aFrame->GetHeader(), aFrame->GetLength());
+    DumpDebg("RX", aFrame->GetPsdu(), aFrame->GetLength());
     Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
 
     UpdateIdleMode();

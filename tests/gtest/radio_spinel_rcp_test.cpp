@@ -76,7 +76,7 @@ TEST(RadioSpinelTransmit, shouldPassDesiredTxPowerToRadioPlatform)
         buildInfo.mPanIds.SetDestination(kDstPanId);
         buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        buildInfo.PrepareHeadersIn(txFrame);
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
     }
 
     txFrame.mInfo.mTxInfo.mTxPower = kTxPower;
@@ -120,7 +120,7 @@ TEST(RadioSpinelTransmit, shouldCauseSwitchingToRxChannelAfterTxDone)
         buildInfo.mPanIds.SetDestination(kDstPanId);
         buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        buildInfo.PrepareHeadersIn(txFrame);
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
     }
 
     txFrame.mInfo.mTxInfo.mTxPower              = kTxPower;
@@ -166,7 +166,7 @@ TEST(RadioSpinelTransmit, shouldSkipCsmaCaWhenDisabled)
         buildInfo.mPanIds.SetDestination(kDstPanId);
         buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        buildInfo.PrepareHeadersIn(txFrame);
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
     }
 
     txFrame.mInfo.mTxInfo.mCsmaCaEnabled = false;
@@ -222,7 +222,7 @@ TEST(RadioSpinelTransmit, shouldPerformCsmaCaWhenEnabled)
         buildInfo.mPanIds.SetDestination(kDstPanId);
         buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        buildInfo.PrepareHeadersIn(txFrame);
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
     }
 
     txFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
@@ -272,7 +272,7 @@ TEST(RadioSpinelTransmit, shouldNotCauseSwitchingToRxAfterTxDoneIfNotRxOnWhenIdl
         buildInfo.mPanIds.SetDestination(kDstPanId);
         buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        buildInfo.PrepareHeadersIn(txFrame);
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
     }
 
     txFrame.mInfo.mTxInfo.mTxPower              = kTxPower;
@@ -348,7 +348,7 @@ TEST(RadioSpinelTransmit, shouldSkipCsmaBackoffWhenCsmaCaIsEnabledAndMaxBackoffs
         buildInfo.mPanIds.SetDestination(kDstPanId);
         buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        buildInfo.PrepareHeadersIn(txFrame);
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
     }
 
     txFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
