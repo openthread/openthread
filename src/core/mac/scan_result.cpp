@@ -68,7 +68,7 @@ Error ScanResult::PopulateFromBeacon(const Mac::RxFrame *aBeaconFrame)
         const Mac::BeaconHeader  *beaconHeader;
         const Mac::BeaconPayload *beaconPayload;
 
-        frameData.Init(aBeaconFrame->GetPayload(), aBeaconFrame->GetPayloadLength());
+        SuccessOrExit(aBeaconFrame->GetPayload(frameData));
 
         beaconHeader = frameData.Read<Mac::BeaconHeader>();
         VerifyOrExit((beaconHeader != nullptr) && beaconHeader->IsValid());

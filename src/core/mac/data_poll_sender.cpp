@@ -568,7 +568,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
     buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
     buildInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
 
-    Get<MessageFramer>().PrepareMacHeaders(*frame, buildInfo, nullptr);
+    Get<MessageFramer>().PrepareMacHeaders(*frame, buildInfo);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (frame->Has<Mac::CslIe>())

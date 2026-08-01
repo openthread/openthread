@@ -100,6 +100,24 @@ public:
      */
     const uint8_t *GetPsdu(void) const { return mPsdu; }
 
+    /**
+     * Returns a pointer to the PSDU starting at a given index.
+     *
+     * @param[in] aIndex   The index to start from.
+     *
+     * @returns A pointer to the PSDU starting at @p aIndex.
+     */
+    uint8_t *GetPsduStartingAt(uint16_t aIndex) { return mPsdu + aIndex; }
+
+    /**
+     * Returns a pointer to the PSDU starting at a given index.
+     *
+     * @param[in] aIndex   The index to start from.
+     *
+     * @returns A pointer to the PSDU starting at @p aIndex.
+     */
+    const uint8_t *GetPsduStartingAt(uint16_t aIndex) const { return mPsdu + aIndex; }
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     /**
      * Gets the radio link type of the frame.
