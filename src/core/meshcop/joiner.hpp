@@ -210,6 +210,7 @@ private:
     Mac::ExtAddress              mId;
     JoinerDiscerner              mDiscerner;
     State                        mState;
+    bool                         mFinalizeRejected;
     Callback<CompletionCallback> mCompletionCallback;
     Coap::Message               *mFinalizeMessage;
     JoinerTimer                  mTimer;
