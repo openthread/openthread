@@ -73,16 +73,15 @@ class Ipv6Addr(Bytes):
 
     def __init__(self, addr: Union[str, bytearray, 'Bytes']):
         if isinstance(addr, str):
-            # try to parse compacted ipv6 address
             try:
-                addr = Ipv6Addr._expand(addr)
+                addr = ipaddress.IPv6Address(addr).packed
             except ipaddress.AddressValueError:
                 pass
 
         super().__init__(addr)
         if len(self) != 16:
             raise ValueError(addr)
-        self._addr = ipaddress.IPv6Address(self)
+        self._addr = ipaddress.IPv6Address(bytes(self))
 
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.format_hextets())
