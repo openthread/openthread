@@ -88,6 +88,17 @@ inline Time32 ConvertTime64To32(Time64 aTime64) { return static_cast<Time32>(aTi
  */
 bool IsTimeStrictlyBefore(Time32 aFirstTime, Time32 aSecondTime);
 
+/**
+ * Calculates clock drift in microseconds for a given interval and clock accuracy.
+ *
+ * @param[in] aClockAccuracy  The clock accuracy in ppm (can be for a single device or combined accuracy of transmitter
+ *                            and receiver).
+ * @param[in] aIntervalUs     The interval duration in microseconds.
+ *
+ * @returns The calculated clock drift in microseconds (rounded up).
+ */
+uint32_t DetermineClockDrift(uint16_t aClockAccuracy, uint32_t aIntervalUs);
+
 #if OT_CONFIG_RADIO_TIME_ENABLE && OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 /**

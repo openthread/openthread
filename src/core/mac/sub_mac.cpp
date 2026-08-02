@@ -115,8 +115,10 @@ SubMac::Capabilities SubMac::GetCaps(void) const
     else
 #endif
     {
-        caps |= (kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec |
-                 kCapTransmitTiming | kCapReceiveTiming);
+        caps |= (kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec);
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        caps |= kCapTransmitTiming;
+#endif
     }
 
     return caps;
@@ -293,7 +295,7 @@ Error SubMac::Send(void)
     {
     case kStateDisabled:
     case kStateCsmaBackoff:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
 #endif
     case kStateTransmit:
@@ -337,13 +339,10 @@ exit:
 void SubMac::ProcessTransmitSecurity(void)
 {
     const ExtAddress *extAddress = nullptr;
-    uint8_t           keyIdMode;
     uint8_t           keyIndex;
 
     VerifyOrExit(mTransmitFrame.GetSecurityEnabled());
     VerifyOrExit(!mTransmitFrame.IsSecurityProcessed());
-
-    SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
@@ -360,12 +359,12 @@ void SubMac::ProcessTransmitSecurity(void)
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     if (mTransmitFrame.GetType() == Frame::kTypeMultipurpose)
     {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode2);
+        VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode2));
     }
     else
 #endif
     {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+        VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode1));
     }
 
     mTransmitFrame.SetAesKey(mKeyTrio.SelectKey(keyIndex));
@@ -393,7 +392,7 @@ exit:
 
 void SubMac::StartCsmaBackoff(void)
 {
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (mTransmitFrame.GetTxDelay() != 0 || mTransmitFrame.GetTxDelayBaseTime() != 0)
     {
         SetState(kStateCslTransmit);
@@ -420,7 +419,7 @@ void SubMac::StartCsmaBackoff(void)
         BeginTransmit();
         ExitNow();
     }
-#endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
     SetState(kStateCsmaBackoff);
 
@@ -469,7 +468,7 @@ void SubMac::BeginTransmit(void)
 {
     Error error;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit);
 #else
     VerifyOrExit(mState == kStateCsmaBackoff);
@@ -652,10 +651,10 @@ exit:
 
 void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
 {
-    uint8_t  keyIdMode;
-    uint8_t  keyIndex;
-    uint32_t frameCounter;
-    bool     allowError = false;
+    Frame::KeyIdMode keyIdMode;
+    uint8_t          keyIndex;
+    uint32_t         frameCounter;
+    bool             allowError = false;
 
     OT_UNUSED_VARIABLE(allowError);
 
@@ -715,7 +714,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     case kStateDisabled:
     case kStateCsmaBackoff:
     case kStateTransmit:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
 #endif
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
@@ -797,7 +796,7 @@ void SubMac::HandleTimer(void)
 {
     switch (mState)
     {
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
         BeginTransmit();
         break;
@@ -1079,7 +1078,7 @@ const char *SubMac::StateToString(State aState)
     _(kStateCsmaBackoff, "CsmaBackoff") \
     _(kStateTransmit, "Transmit")       \
     _(kStateEnergyScan, "EnergyScan")   \
-    DelayBeforeRetxStateMapList(_) ClsTxStateMapList(_) RadioSampleMapList(_)
+    DelayBeforeRetxStateMapList(_) CslTxStateMapList(_) RadioSampleMapList(_)
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
 #define DelayBeforeRetxStateMapList(_) _(kStateDelayBeforeRetx, "DelayBeforeRetx")
@@ -1087,10 +1086,10 @@ const char *SubMac::StateToString(State aState)
 #define DelayBeforeRetxStateMapList(_)
 #endif
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-#define ClsTxStateMapList(_) _(kStateCslTransmit, "CslTransmit")
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#define CslTxStateMapList(_) _(kStateCslTransmit, "CslTransmit")
 #else
-#define ClsTxStateMapList(_)
+#define CslTxStateMapList(_)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

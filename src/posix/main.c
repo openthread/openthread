@@ -135,6 +135,7 @@ enum
     OT_POSIX_OPT_PERSISTENT_INTERFACE    = 'p',
     OT_POSIX_OPT_TIME_SPEED              = 's',
     OT_POSIX_OPT_VERBOSE                 = 'v',
+    OT_POSIX_OPT_VERSION                 = 'V',
 
     OT_POSIX_OPT_SHORT_MAX = 128,
 
@@ -163,6 +164,7 @@ static const struct option kOptions[] = {
     {"tun-device", required_argument, NULL, OT_POSIX_OPT_TUN_DEVICE},
 #endif
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
+    {"version", no_argument, NULL, OT_POSIX_OPT_VERSION},
     {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -184,7 +186,8 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "        --radio-version           Print radio firmware version.\n"
             "    -p  --persistent-interface    Persistent the created thread network interface\n"
             "    -s  --time-speed factor       Time speed up factor.\n"
-            "    -v  --verbose                 Also log to stderr.\n",
+            "    -v  --verbose                 Also log to stderr.\n"
+            "    -V  --version                 Display version information.\n",
             aProgramName);
 #ifdef SIGRTMIN
     fprintf(aStream,
@@ -217,7 +220,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:nps:v", kOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:nps:vV", kOptions, &index);
 
         if (option == -1)
         {
@@ -259,6 +262,10 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         }
         case OT_POSIX_OPT_VERBOSE:
             aConfig->mIsVerbose = true;
+            break;
+        case OT_POSIX_OPT_VERSION:
+            printf("%s\n", otGetVersionString());
+            exit(OT_EXIT_SUCCESS);
             break;
         case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;

@@ -247,7 +247,7 @@ template <> otError RcpCapsDiag::HandleSpinelCommand<SPINEL_CMD_PROP_VALUE_SET, 
 
 template <> otError RcpCapsDiag::HandleSpinelCommand<SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_RCP_MAC_KEY>(void)
 {
-    static constexpr uint8_t keyIdMode1 = 1 << 3;
+    static constexpr uint8_t keyIdMode1 = 1;
     static constexpr uint8_t keyIndex   = 100;
     otMacKeyMaterial         prevKey;
     otMacKeyMaterial         curKey;

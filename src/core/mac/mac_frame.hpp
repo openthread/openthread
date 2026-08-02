@@ -91,7 +91,8 @@ public:
     /**
      * Represents the MAC frame security level.
      *
-     * Values match the Security Level field in Security Control Field as an `uint8_t`.
+     * Values represent the raw (unshifted) Security Level sub-field (3-bit wide) from the Security Control field.
+     * The enum covers all possible 3-bit values.
      */
     enum SecurityLevel : uint8_t
     {
@@ -108,14 +109,15 @@ public:
     /**
      * Represents the MAC frame security key identifier mode.
      *
-     * Values match the Key Identifier Mode field in Security Control Field as an `uint8_t`.
+     * Values represent the raw (unshifted) Key ID Mode sub-field (2-bit wide) from the Security Control field.
+     * The enum covers all possible 2-bit values.
      */
     enum KeyIdMode : uint8_t
     {
-        kKeyIdMode0 = 0 << 3, ///< Key ID Mode 0 - Key is determined implicitly.
-        kKeyIdMode1 = 1 << 3, ///< Key ID Mode 1 - Key is determined from Key Index field.
-        kKeyIdMode2 = 2 << 3, ///< Key ID Mode 2 - Key is determined from 4-bytes Key Source and Index fields.
-        kKeyIdMode3 = 3 << 3, ///< Key ID Mode 3 - Key is determined from 8-bytes Key Source and Index fields.
+        kKeyIdMode0 = 0, ///< Key ID Mode 0 - Key is determined implicitly.
+        kKeyIdMode1 = 1, ///< Key ID Mode 1 - Key is determined from Key Index field.
+        kKeyIdMode2 = 2, ///< Key ID Mode 2 - Key is determined from 4-bytes Key Source and Index fields.
+        kKeyIdMode3 = 3, ///< Key ID Mode 3 - Key is determined from 8-bytes Key Source and Index fields.
     };
 
     /**
@@ -366,25 +368,48 @@ public:
      *
      * @param[out]  aSecurityLevel  The Security Level Identifier.
      *
-     * @retval kErrorNone  Successfully retrieved the Security Level Identifier.
+     * @retval kErrorNone   Successfully retrieved the Security Level Identifier.
+     * @retval kErrorParse  Failed to parse MAC or security header.
      */
-    Error GetSecurityLevel(uint8_t &aSecurityLevel) const;
+    Error GetSecurityLevel(SecurityLevel &aSecurityLevel) const;
+
+    /**
+     * Indicates whether or not the frame has a specific Security Level.
+     *
+     * @param[in]  aSecurityLevel  The Security Level to check.
+     *
+     * @retval TRUE   The frame contains a valid security header matching @p aSecurityLevel.
+     * @retval FALSE  The frame does not match @p aSecurityLevel or fails to parse MAC or security header.
+     */
+    bool HasSecurityLevel(SecurityLevel aSecurityLevel) const;
 
     /**
      * Gets the Key Identifier Mode.
      *
      * @param[out]  aKeyIdMode  The Key Identifier Mode.
      *
-     * @retval kErrorNone  Successfully retrieved the Key Identifier Mode.
+     * @retval kErrorNone   Successfully retrieved the Key Identifier Mode.
+     * @retval kErrorParse  Failed to parse MAC or security header.
      */
-    Error GetKeyIdMode(uint8_t &aKeyIdMode) const;
+    Error GetKeyIdMode(KeyIdMode &aKeyIdMode) const;
+
+    /**
+     * Indicates whether or not the frame has a specific Key Identifier Mode.
+     *
+     * @param[in]  aKeyIdMode  The Key Identifier Mode to check.
+     *
+     * @retval TRUE   The frame contains a valid security header matching @p aKeyIdMode.
+     * @retval FALSE  The frame does not match @p aKeyIdMode or fails to parse MAC or security header.
+     */
+    bool HasKeyIdMode(KeyIdMode aKeyIdMode) const;
 
     /**
      * Gets the Frame Counter.
      *
      * @param[out]  aFrameCounter  The Frame Counter.
      *
-     * @retval kErrorNone  Successfully retrieved the Frame Counter.
+     * @retval kErrorNone   Successfully retrieved the Frame Counter.
+     * @retval kErrorParse  Failed to parse MAC or security header.
      */
     Error GetFrameCounter(uint32_t &aFrameCounter) const;
 
@@ -611,6 +636,20 @@ public:
      */
     static constexpr uint8_t GetImmAckLength(void) { return kImmAckLength; }
 
+    /**
+     * Constructs a Security Control byte from a given Security Level and Key ID Mode.
+     *
+     * @param[in]  aSecurityLevel   The Security Level.
+     * @param[in]  aKeyIdMode       The Key Identifier Mode.
+     *
+     * @returns The constructed Security Control byte.
+     */
+    static constexpr uint8_t ConstructSecurityControlField(SecurityLevel aSecurityLevel, KeyIdMode aKeyIdMode)
+    {
+        return static_cast<uint8_t>(static_cast<uint8_t>(aSecurityLevel) |
+                                    (static_cast<uint8_t>(aKeyIdMode) << kScfKeyIdModeShift));
+    }
+
 protected:
     static constexpr uint8_t kFcfSize      = sizeof(uint16_t);
     static constexpr uint8_t kDsnSize      = sizeof(uint8_t);
@@ -623,11 +662,15 @@ protected:
 
     static constexpr uint16_t kFcfFrameTypeMask = 7 << 0;
 
-    static constexpr uint16_t kFcfAddrNone     = 0;
-    static constexpr uint16_t kFcfAddrReserved = 1;
-    static constexpr uint16_t kFcfAddrShort    = 2;
-    static constexpr uint16_t kFcfAddrExt      = 3;
-    static constexpr uint16_t kFcfAddrMask     = 3;
+    enum AddrMode : uint8_t
+    {
+        kAddrModeNone     = 0,
+        kAddrModeReserved = 1,
+        kAddrModeShort    = 2,
+        kAddrModeExt      = 3,
+    };
+
+    static constexpr uint16_t kFcfAddrMask = 3;
 
     // Frame Control field format for general MAC frame
     static constexpr uint16_t kFcfSecurityEnabled  = 1 << 3;
@@ -637,19 +680,21 @@ protected:
     static constexpr uint16_t kFcfSeqSuppression   = 1 << 8;
     static constexpr uint16_t kFcfIePresent        = 1 << 9;
     static constexpr uint16_t kFcfDstAddrShift     = 10;
-    static constexpr uint16_t kFcfDstAddrNone      = kFcfAddrNone << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfDstAddrShort     = kFcfAddrShort << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfDstAddrExt       = kFcfAddrExt << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrNone      = kAddrModeNone << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrShort     = kAddrModeShort << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrExt       = kAddrModeExt << kFcfDstAddrShift;
     static constexpr uint16_t kFcfDstAddrMask      = kFcfAddrMask << kFcfDstAddrShift;
     static constexpr uint16_t kFcfFrameVersionMask = 3 << 12;
     static constexpr uint16_t kFcfSrcAddrShift     = 14;
-    static constexpr uint16_t kFcfSrcAddrNone      = kFcfAddrNone << kFcfSrcAddrShift;
-    static constexpr uint16_t kFcfSrcAddrShort     = kFcfAddrShort << kFcfSrcAddrShift;
-    static constexpr uint16_t kFcfSrcAddrExt       = kFcfAddrExt << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrNone      = kAddrModeNone << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrShort     = kAddrModeShort << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrExt       = kAddrModeExt << kFcfSrcAddrShift;
     static constexpr uint16_t kFcfSrcAddrMask      = kFcfAddrMask << kFcfSrcAddrShift;
 
-    static constexpr uint8_t kSecLevelMask  = 7 << 0;
-    static constexpr uint8_t kKeyIdModeMask = 3 << 3;
+    // Security Control field
+    static constexpr uint8_t kScfKeyIdModeShift = 3;
+    static constexpr uint8_t kScfSecLevelMask   = 7 << 0;
+    static constexpr uint8_t kScfKeyIdModeMask  = 3 << kScfKeyIdModeShift;
 
     static constexpr uint8_t kMic0Size   = 0;
     static constexpr uint8_t kMic32Size  = 32 / kBitsPerByte;
@@ -676,12 +721,12 @@ protected:
     uint8_t FindHeaderIeIndex(void) const;
 #endif
 
-    static uint16_t GetFcfDstAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfDstAddrMask>(aFcf); }
-    static uint16_t GetFcfSrcAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf); }
+    static AddrMode ReadDstAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfDstAddrMask>(aFcf)); }
+    static AddrMode ReadSrcAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf)); }
     static bool     IsSeqSuppressed(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfSeqSuppression) != 0); }
     static bool     IsSeqPresent(uint16_t aFcf) { return !IsSeqSuppressed(aFcf); }
-    static bool     IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != 0; }
-    static bool     IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != 0; }
+    static bool     IsDstAddrPresent(uint16_t aFcf) { return ReadDstAddrMode(aFcf) != kAddrModeNone; }
+    static bool     IsSrcAddrPresent(uint16_t aFcf) { return ReadSrcAddrMode(aFcf) != kAddrModeNone; }
     static bool     IsSecurityEnabled(uint16_t aFcf) { return (aFcf & kFcfSecurityEnabled) != 0; }
     static bool     IsFramePending(uint16_t aFcf) { return (aFcf & kFcfFramePending) != 0; }
     static bool     IsIePresent(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfIePresent) != 0); }
@@ -690,18 +735,26 @@ protected:
     static bool     IsVersion2015(uint16_t aFcf) { return GetVersion(aFcf) == kVersion2015; }
     static bool     IsDstPanIdPresent(uint16_t aFcf);
     static bool     IsSrcPanIdPresent(uint16_t aFcf);
-    static uint16_t DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift);
+    static AddrMode DetermineAddrMode(const Address &aAddress);
+    static Error    AddAddrSizeTo(uint8_t &aIndex, AddrMode aAddrMode);
     static uint8_t  CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t  CalculateKeySourceSize(uint8_t aSecurityControl);
     static uint8_t  CalculateMicSize(uint8_t aSecurityControl);
 
+    // Security Control fields
+    static SecurityLevel ReadSecurityLevel(uint8_t aSecCtl);
+    static KeyIdMode     ReadKeyIdMode(uint8_t aSecCtl);
+
 private:
+    template <typename EnumType> static EnumType As(uint16_t aValue) { return static_cast<EnumType>(aValue); }
+
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     typedef bool (&HeaderIeMatcher)(const HeaderIe &aHeaderIe);
 
     const HeaderIe *FindHeaderIe(HeaderIeMatcher aMatcher) const;
     HeaderIe       *FindHeaderIe(HeaderIeMatcher aMatcher) { return AsNonConst(AsConst(this)->FindHeaderIe(aMatcher)); }
 #endif
+    Error ReadAddressAt(uint8_t aIndex, AddrMode aAddrMode, Address &aAddress) const;
 };
 
 /**
