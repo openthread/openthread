@@ -41,6 +41,12 @@
 #error "OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE conflicts with OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT."
 #endif
 
+#if OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE && \
+    (OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE || OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT)
+#error "OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE requires OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE and " \
+       "OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT to both be disabled."
+#endif
+
 namespace ot {
 
 RegisterLogModule("Message");
@@ -52,6 +58,9 @@ MessagePool::MessagePool(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mNumAllocated(0)
     , mMaxAllocated(0)
+#if OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE
+    , mBufferHighThresholdReached(false)
+#endif
 {
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     otPlatMessagePoolInit(&GetInstance(), kNumBuffers, sizeof(Buffer));
@@ -130,6 +139,10 @@ Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
 
     buffer->SetNextBuffer(nullptr);
 
+#if OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE
+    UpdateBufferThreshold();
+#endif
+
 exit:
     if (buffer == nullptr)
     {
@@ -155,6 +168,10 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
 
         aBuffer = next;
     }
+
+#if OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE
+    UpdateBufferThreshold();
+#endif
 }
 
 Error MessagePool::ReclaimBuffers(Message::Priority aPriority)
@@ -197,6 +214,35 @@ uint16_t MessagePool::GetTotalBufferCount(void) const
 
     return rval;
 }
+
+#if OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE
+void MessagePool::SetBufferThresholdCallback(otMessageBufferThresholdCallback aLowCallback,
+                                             otMessageBufferThresholdCallback aHighCallback,
+                                             void                            *aContext)
+{
+    mBufferLowThresholdCallback.Set(aLowCallback, aContext);
+    mBufferHighThresholdCallback.Set(aHighCallback, aContext);
+}
+
+void MessagePool::UpdateBufferThreshold(void)
+{
+    // `mBufferHighThresholdReached` tracks the hysteresis state independently of whether the low/high
+    // callbacks are actually set, so that the state machine remains correct even if only one of the two
+    // callbacks is registered (e.g. the high callback fires only once even if no low callback is set to
+    // reset the state through a call to `InvokeIfSet()`).
+
+    if (!mBufferHighThresholdReached && (mNumAllocated > kBufferUsageHigh))
+    {
+        mBufferHighThresholdReached = true;
+        mBufferHighThresholdCallback.InvokeIfSet();
+    }
+    else if (mBufferHighThresholdReached && (mNumAllocated < kBufferUsageLow))
+    {
+        mBufferHighThresholdReached = false;
+        mBufferLowThresholdCallback.InvokeIfSet();
+    }
+}
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // Message::Settings
