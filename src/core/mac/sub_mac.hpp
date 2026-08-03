@@ -612,11 +612,11 @@ private:
     void     RestartCslTimerAfterSyncUpdate(void);
     void     UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
     void     UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
+    void     SetCslLastSyncToNow(void);
     void     HandleCslTimer(void);
     void     GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
     uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
     uint32_t GetNextCycleDrift(void) const;
-    uint32_t GetLocalTime(void);
     bool     IsCslEnabled(void) const { return mCslPeriod > 0; }
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
@@ -671,9 +671,13 @@ private:
                                           // for platforms not supporting `Radio::ReceiveAt()`.
     uint16_t          mCslPeerShort;      // The CSL peer short address.
     Radio::SyncedTime mCslSampleTime;     // The CSL sample time for current period.
-    TimeMicro         mCslLastSync;       // The timestamp of the last successful CSL synchronization.
     CslAccuracy       mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
     CslTimer          mCslTimer;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+    TimeMicro mCslLastSync; // The timestamp of the last successful CSL synchronization.
+#else
+    Radio::Time64 mCslLastSync;
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

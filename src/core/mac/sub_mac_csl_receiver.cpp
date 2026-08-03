@@ -49,8 +49,12 @@ void SubMac::CslInit(void)
     mCslPeerShort  = 0;
     mIsCslSampling = false;
     mCslSampleTime.Clear();
-    mCslLastSync.SetValue(0);
     mCslTimer.Stop();
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+    mCslLastSync.SetValue(0);
+#else
+    mCslLastSync = 0;
+#endif
 }
 
 void SubMac::RestartCslTimerAfterSyncUpdate(void)
@@ -77,7 +81,7 @@ void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
     // Assuming the error here since it is bounded and has very small effect on the final window duration.
     if (aAckFrame != nullptr && aFrame.Has<CslIe>())
     {
-        mCslLastSync = TimeMicro(GetLocalTime());
+        SetCslLastSyncToNow();
         RestartCslTimerAfterSyncUpdate();
     }
 }
@@ -94,9 +98,9 @@ void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
     if ((mCslPeriod > 0) && aFrame->IsAckedWithSecEnhAck())
     {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
-        mCslLastSync = TimerMicro::GetNow();
+        SetCslLastSyncToNow();
 #else
-        mCslLastSync = TimeMicro(Radio::ConvertTime64To32(aFrame->GetTimestamp()));
+        mCslLastSync = aFrame->GetTimestamp();
 #endif
         RestartCslTimerAfterSyncUpdate();
     }
@@ -128,9 +132,11 @@ void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShor
     {
         mCslSampleTime.SetToNow(Get<Radio::Radio>());
 
-        // Update CSL sync time whenever CSL parameters are re-initialized.
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
         mCslLastSync = mCslSampleTime.GetAsLocalTimeMicro();
-
+#else
+        mCslLastSync = mCslSampleTime.GetAsTime64();
+#endif
         HandleCslTimer();
     }
     else if (!RadioSupports(kCapReceiveTiming))
@@ -255,10 +261,14 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
      * -timeAhead                           CslPhase                             +timeAfter             -timeAhead
      */
     uint32_t semiPeriod = mCslPeriod * Radio::kUsPerTenSymbols / 2;
-    uint32_t curTime, elapsed, semiWindow;
+    uint32_t elapsed;
+    uint32_t semiWindow;
 
-    curTime = GetLocalTime();
-    elapsed = curTime - mCslLastSync.GetValue();
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+    elapsed = TimerMicro::GetNow() - mCslLastSync;
+#else
+    elapsed = ClampToUint32(Get<Radio::Radio>().GetNow() - mCslLastSync);
+#endif
 
     semiWindow = DetermineClockDrift(elapsed);
     semiWindow += mCslParentAccuracy.GetUncertaintyInMicrosec() + Get<Radio::Radio>().GetCslUncertainty() * 10;
@@ -279,17 +289,13 @@ uint32_t SubMac::GetNextCycleDrift(void) const
     return DetermineClockDrift(static_cast<uint32_t>(mCslPeriod) * Radio::kUsPerTenSymbols);
 }
 
-uint32_t SubMac::GetLocalTime(void)
+void SubMac::SetCslLastSyncToNow(void)
 {
-    uint32_t now;
-
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
-    now = TimerMicro::GetNow().GetValue();
+    mCslLastSync = TimerMicro::GetNow();
 #else
-    now = Get<Radio::Radio>().GetNowAsTime32();
+    mCslLastSync = Get<Radio::Radio>().GetNow();
 #endif
-
-    return now;
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
