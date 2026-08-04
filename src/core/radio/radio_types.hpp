@@ -56,6 +56,8 @@ namespace Radio {
 
 class Radio;
 
+constexpr uint32_t kUncertaintyUnit = 10; ///< Clock uncertainty unit in microseconds.
+
 /**
  * Represents a 64-bit radio time in microseconds referenced to a continuous monotonic local radio clock.
  */
@@ -98,6 +100,15 @@ bool IsTimeStrictlyBefore(Time32 aFirstTime, Time32 aSecondTime);
  * @returns The calculated clock drift in microseconds (rounded up).
  */
 uint32_t DetermineClockDrift(uint16_t aClockAccuracy, uint32_t aIntervalUs);
+
+/**
+ * Converts CSL uncertainty value to microseconds.
+ *
+ * @param[in] aUncertainty  The uncertainty in units of 10 microseconds (`kUncertaintyUnit`).
+ *
+ * @returns The uncertainty duration in microseconds.
+ */
+inline uint32_t ConvertUncertaintyToUsec(uint16_t aUncertainty) { return aUncertainty * kUncertaintyUnit; }
 
 #if OT_CONFIG_RADIO_TIME_ENABLE && OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 

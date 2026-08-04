@@ -903,27 +903,18 @@ public:
     /**
      * Returns the CSL uncertainty.
      *
-     * @returns The uncertainty in units 10 microseconds.
+     * @returns The uncertainty in units of 10 microseconds (`Radio::kUncertaintyUnit`).
      */
     uint8_t GetUncertainty(void) const { return mUncertainty; }
 
     /**
-     * Gets the CLS uncertainty in microseconds.
-     *
-     * @returns the CLS uncertainty in microseconds.
-     */
-    uint16_t GetUncertaintyInMicrosec(void) const { return static_cast<uint16_t>(mUncertainty) * kUsPerUncertUnit; }
-
-    /**
      * Sets the CSL uncertainty.
      *
-     * @param[in]  aUncertainty  The CSL uncertainty in units 10 microseconds.
+     * @param[in]  aUncertainty  The CSL uncertainty in units of 10 microseconds.
      */
     void SetUncertainty(uint8_t aUncertainty) { mUncertainty = aUncertainty; }
 
 private:
-    static constexpr uint8_t kUsPerUncertUnit = 10;
-
     uint8_t mClockAccuracy;
     uint8_t mUncertainty;
 };

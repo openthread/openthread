@@ -3041,7 +3041,7 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
     uint64_t k            = cslTimeoutUs / cslPeriodUs;
 
     return k * (k + 1) * cslPeriodUs / usInSecond * aCslAccuracy.GetClockAccuracy() +
-           aCslAccuracy.GetUncertaintyInMicrosec() * k;
+           Radio::ConvertUncertaintyToUsec(aCslAccuracy.GetUncertainty()) * k;
 }
 #endif
 
