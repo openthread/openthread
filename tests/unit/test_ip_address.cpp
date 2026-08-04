@@ -480,25 +480,42 @@ void TestIp6Prefix(void)
             VerifyOrQuit(prefix == prefix);
             VerifyOrQuit(!(prefix < prefix));
 
-            for (uint8_t subPrefixLength = 1; subPrefixLength <= prefixLength; subPrefixLength++)
+            for (uint8_t shorterPrefixLength = 0; shorterPrefixLength <= prefixLength; shorterPrefixLength++)
             {
-                Ip6::Prefix subPrefix;
+                Ip6::Prefix shorterPrefix;
 
-                subPrefix.InitFrom(prefixBytes, subPrefixLength);
+                shorterPrefix.InitFrom(prefixBytes, shorterPrefixLength);
 
-                VerifyOrQuit(prefix.ContainsPrefix(subPrefix));
+                VerifyOrQuit(prefix.IsCoveredBy(shorterPrefix));
 
-                if (prefixLength == subPrefixLength)
+                if (prefixLength == shorterPrefixLength)
                 {
-                    VerifyOrQuit(prefix == subPrefix);
-                    VerifyOrQuit(prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()));
-                    VerifyOrQuit(!(subPrefix < prefix));
+                    VerifyOrQuit(prefix == shorterPrefix);
+                    VerifyOrQuit(prefix.IsEqual(shorterPrefix.GetBytes(), shorterPrefix.GetLength()));
+                    VerifyOrQuit(!(shorterPrefix < prefix));
                 }
                 else
                 {
-                    VerifyOrQuit(prefix != subPrefix);
-                    VerifyOrQuit(!prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()));
-                    VerifyOrQuit(subPrefix < prefix);
+                    VerifyOrQuit(prefix != shorterPrefix);
+                    VerifyOrQuit(!prefix.IsEqual(shorterPrefix.GetBytes(), shorterPrefix.GetLength()));
+                    VerifyOrQuit(shorterPrefix < prefix);
+                }
+
+                for (uint8_t bitNumber = 0; bitNumber < shorterPrefixLength; bitNumber++)
+                {
+                    Ip6::Prefix alteredShorterPrefix;
+                    uint8_t     mask  = static_cast<uint8_t>(1U << (7 - (bitNumber & 7)));
+                    uint8_t     index = (bitNumber / 8);
+
+                    alteredShorterPrefix = shorterPrefix;
+                    VerifyOrQuit(alteredShorterPrefix == shorterPrefix);
+
+                    // Flip the `bitNumber` bit.
+
+                    alteredShorterPrefix.mPrefix.mFields.m8[index] ^= mask;
+                    VerifyOrQuit(alteredShorterPrefix != shorterPrefix);
+
+                    VerifyOrQuit(!prefix.IsCoveredBy(alteredShorterPrefix));
                 }
             }
 

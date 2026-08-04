@@ -45,7 +45,7 @@ static bool IsPrefixValid(Instance &aInstance, const Ip6::Prefix &aPrefix)
     // Check that prefix length is within the valid range and the prefix
     // does not overlap with the mesh-local prefix.
 
-    return aPrefix.IsValid() && !aPrefix.ContainsPrefix(aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
+    return aPrefix.IsValid() && !aPrefix.IsCoveredBy(aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
 }
 
 bool OnMeshPrefixConfig::IsValid(Instance &aInstance) const
