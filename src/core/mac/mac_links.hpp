@@ -171,8 +171,7 @@ public:
         mTxFrame802154.SetIsSecurityProcessed(false);
         mTxFrame802154.SetCsmaCaEnabled(true); // Set to true by default, only set to `false` for CSL transmission
         mTxFrame802154.SetIsHeaderUpdated(false);
-        mTxFrame802154.SetTxDelay(0);
-        mTxFrame802154.SetTxDelayBaseTime(0);
+        mTxFrame802154.ClearTargetTxTime();
         mTxFrame802154.SetTxPower(Radio::kInvalidPower);
         mTxFrame802154.SetCslIePresent(false);
 #endif

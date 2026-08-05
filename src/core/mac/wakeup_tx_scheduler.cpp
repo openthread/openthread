@@ -83,7 +83,8 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     Mac::Address       source;
     uint32_t           radioTxDelay;
     uint32_t           rendezvousTimeUs;
-    TimeMicro          nowUs = TimerMicro::GetNow();
+    TimeMicro          nowUs    = TimerMicro::GetNow();
+    Radio::Time64      radioNow = Get<Radio::Radio>().GetNow();
     Mac::ConnectionIe *connectionIe;
 
     VerifyOrExit(mIsRunning);
@@ -100,8 +101,8 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
 
     VerifyOrExit(frame->GenerateWakeupFrame(Get<Mac::Mac>().GetPanId(), mWakeupRequest, source) == kErrorNone,
                  frame = nullptr);
-    frame->SetTxDelayBaseTime(Get<Radio::Radio>().GetNowAsTime32());
-    frame->SetTxDelay(radioTxDelay);
+
+    frame->SetTargetTxTime(radioNow + radioTxDelay, radioNow);
     frame->SetCsmaCaEnabled(kWakeupFrameTxCca);
     frame->SetMaxCsmaBackoffs(0);
     frame->SetMaxFrameRetries(0);
