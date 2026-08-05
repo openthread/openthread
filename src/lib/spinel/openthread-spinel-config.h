@@ -89,6 +89,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_SPINEL_CONFIG_RCP_KEY_ID_MODE_CHECK_COMPATIBILITY_WORKAROUND_ENABLE
+ *
+ * Define to 1 to enable backward compatibility workaround for Key ID Mode check in RCP.
+ *
+ * Older RCP builds enforce a validation check in `NcpBase` expecting the legacy bit-shifted value `(1 << 3)` for
+ * Key ID Mode 1. When enabled, `RadioSpinel` maps `aKeyIdMode` to the legacy bit-shifted value `(1 << 3)` when
+ * setting `SPINEL_PROP_RCP_MAC_KEY` to maintain compatibility with older RCP builds.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_KEY_ID_MODE_CHECK_COMPATIBILITY_WORKAROUND_ENABLE
+#define OPENTHREAD_SPINEL_CONFIG_RCP_KEY_ID_MODE_CHECK_COMPATIBILITY_WORKAROUND_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES
  *
  * Defines size of the local source match table used by RadioSpinel
