@@ -978,9 +978,15 @@ void SubMac::RadioSample(void)
     if (!RadioSupports(kCapReceiveTiming))
     {
         UpdateRadioSampleState();
+        ExitNow();
     }
 
-    ExitNow();
+#if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+    if (!RadioSupports(kCapRxOnWhenIdle))
+    {
+        IgnoreError(Get<Radio::Radio>().Sleep());
+    }
+#endif
 
 exit:
     return;
