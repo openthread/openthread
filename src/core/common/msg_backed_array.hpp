@@ -141,6 +141,29 @@ public:
     bool IsFull(void) const { return GetLength() == kMaxSize; }
 
     /**
+     * Adjusts (reduces) the array length to a given length.
+     *
+     * This method can only be used to reduce the length of the array. If @p aLength is greater than `GetLength()`,
+     * the array length remains unchanged.
+     *
+     * @param[in] aLength  The new length (number of elements).
+     */
+    void AdjustLength(uint16_t aLength)
+    {
+        if (aLength < GetLength())
+        {
+            if (aLength == 0)
+            {
+                Clear();
+            }
+            else
+            {
+                IgnoreError(mMessage->SetLength(aLength * sizeof(Type)));
+            }
+        }
+    }
+
+    /**
      * Reads an element from the array at a given index.
      *
      * @param[in]  aIndex  The index to read from.
