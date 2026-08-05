@@ -47,6 +47,7 @@
 #include "common/numeric_limits.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
+#include "common/uptime.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/dns_types.hpp"
 #include "net/ip6.hpp"
@@ -64,6 +65,14 @@ namespace Srp {
 
 #if !OPENTHREAD_CONFIG_ECDSA_ENABLE
 #error "SRP Client feature requires ECDSA support (OPENTHREAD_CONFIG_ECDSA_ENABLE)."
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE && !OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#error "OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE requires OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE."
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE && !OPENTHREAD_CONFIG_UPTIME_ENABLE
+#error "OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE requires OPENTHREAD_CONFIG_UPTIME_ENABLE."
 #endif
 
 /**
@@ -757,6 +766,25 @@ public:
 
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    /**
+     * Represents the SRP client counters (matches `otSrpClientCounters`).
+     */
+    typedef otSrpClientCounters Counters;
+
+    /**
+     * Gets the SRP client counters.
+     *
+     * @returns A reference to the SRP client counters.
+     */
+    const Counters &GetCounters(void);
+
+    /**
+     * Resets the SRP client counters.
+     */
+    void ResetCounters(void);
+#endif
+
 private:
     // Number of fast data polls after SRP Update tx (11x 188ms = ~2 seconds)
     static constexpr uint8_t kFastPollsAfterUpdateTx = 11;
@@ -960,7 +988,7 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    class AutoStart : public Clearable<AutoStart>
+    class AutoStart : public InstanceLocator
     {
     public:
         enum State : uint8_t
@@ -973,7 +1001,7 @@ private:
             kSelectedUnicast,          // Has selected a unicast entry (address in server data).
         };
 
-        AutoStart(void);
+        explicit AutoStart(Instance &aInstance);
         bool    HasSelectedServer(void) const;
         State   GetState(void) const { return mState; }
         void    SetState(State aState);
@@ -1077,6 +1105,10 @@ private:
 #endif
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    void UpdateTimeCounters(void);
+#endif
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *StateToString(State aState);
     void               LogRetryWaitInterval(void) const;
@@ -1126,6 +1158,10 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     GuardTimer mGuardTimer;
     AutoStart  mAutoStart;
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    Counters   mCounters;
+    UptimeMsec mLastUpdatedTimestamp;
 #endif
 };
 
