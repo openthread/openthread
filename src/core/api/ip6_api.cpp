@@ -136,11 +136,12 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
 
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
-    otError error;
+    otError           error;
+    OwnedPtr<Message> messagePtr(AsCoreTypePtr(aMessage));
 
-    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
+    VerifyOrExit(!messagePtr->IsOriginThreadNetif(), error = kErrorInvalidArgs);
 
-    error = AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(AsCoreTypePtr(aMessage)));
+    error = AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(messagePtr.PassOwnership());
 
 exit:
     return error;

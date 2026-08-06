@@ -721,7 +721,7 @@ struct Dhcp6TxMsg : public Dhcp6Msg
     void PrepareAdvertise(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr);
     void PrepareReply(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr);
     void AddIaPrefix(const PrefixInfo &aInfo);
-    void Send(void);
+    void Send(uint32_t aInfraIfIndex = kInfraIfIndex);
 };
 
 void Dhcp6TxMsg::PrepareAdvertise(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr)
@@ -779,7 +779,7 @@ void Dhcp6TxMsg::AddIaPrefix(const PrefixInfo &aInfo)
     iaPrefix->mValidLifetime     = aInfo.mValidLifetime;
 }
 
-void Dhcp6TxMsg::Send(void)
+void Dhcp6TxMsg::Send(uint32_t aInfraIfIndex)
 {
     Message *message;
 
@@ -789,7 +789,7 @@ void Dhcp6TxMsg::Send(void)
 
     LogMsg("Sending");
 
-    otPlatInfraIfDhcp6PdClientHandleReceived(sInstance, message, kInfraIfIndex);
+    otPlatInfraIfDhcp6PdClientHandleReceived(sInstance, message, aInfraIfIndex);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -2591,6 +2591,78 @@ void TestDhcp6PdServerReplyWithNoBindingToRelease(void)
     FinalizeTest();
 }
 
+void TestDhcp6PdMsgFreedWhenInfraIfIsNotRunning(void)
+{
+    uint16_t               heapAllocations;
+    uint16_t               freeBufferCount;
+    Dhcp6TxMsg             txMsg;
+    Dhcp6TxMsg::PrefixInfo prefixInfo;
+    Mac::ExtAddress        serverMacAddr;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDhcp6PdMsgFreedWhenInfraIfIsNotRunning");
+
+    InitTest();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    serverMacAddr.GenerateRandom();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Start the client and wait for the first Solicit message");
+
+    sInstance->Get<BorderRouter::Dhcp6PdClient>().Start();
+    VerifyOrQuit(sDhcp6ListeningEnabled);
+
+    AdvanceTime(1000);
+
+    VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
+    sDhcp6RxMsgs[0].ValidateAsSolicit();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Signal that the infra interface is no longer running while the platform is still listening");
+
+    SuccessOrQuit(otPlatInfraIfStateChanged(sInstance, kInfraIfIndex, /* aIsRunning */ false));
+    VerifyOrQuit(sDhcp6ListeningEnabled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Send an Advertise and validate that the dropped message is freed");
+
+    freeBufferCount = sInstance->Get<MessagePool>().GetFreeBufferCount();
+
+    txMsg.PrepareAdvertise(sDhcp6RxMsgs[0], serverMacAddr);
+
+    prefixInfo.mIaid              = sDhcp6RxMsgs[0].mIaPds[0].mIaid;
+    prefixInfo.mT1                = 2000;
+    prefixInfo.mT2                = 3200;
+    prefixInfo.mPreferredLifetime = 3600;
+    prefixInfo.mValidLifetime     = 4000;
+    prefixInfo.mPrefix            = PrefixFromString("2001:2222::", 64);
+    txMsg.AddIaPrefix(prefixInfo);
+
+    txMsg.Send();
+
+    VerifyOrQuit(sInstance->Get<MessagePool>().GetFreeBufferCount() == freeBufferCount);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Validate that a message received on a different interface index is also freed");
+
+    txMsg.Send(kInfraIfIndex + 1);
+
+    VerifyOrQuit(sInstance->Get<MessagePool>().GetFreeBufferCount() == freeBufferCount);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sInstance->Get<BorderRouter::Dhcp6PdClient>().Stop();
+    AdvanceTime(10 * 1000);
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestDhcp6PdMsgFreedWhenInfraIfIsNotRunning");
+
+    FinalizeTest();
+}
+
 #endif // OT_CONFIG_DHCP6_PD_CLIENT_ENABLE
 
 } // namespace ot
@@ -2611,6 +2683,7 @@ int main(void)
     ot::TestDhcp6PdServerNotExtendingLeaseDuringRenew();
     ot::TestDhcp6PdServerReplacingPrefix();
     ot::TestDhcp6PdServerReplyWithNoBindingToRelease();
+    ot::TestDhcp6PdMsgFreedWhenInfraIfIsNotRunning();
 
     printf("All tests passed\n");
 #else
