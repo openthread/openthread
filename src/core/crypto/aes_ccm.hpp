@@ -260,24 +260,26 @@ private:
         Error ProcessOneShot(Operation aOperation, const Config &aConfig, const uint8_t *aHeader, uint8_t *aData);
 
         // Multi-part
-        void Start(const Config &aConfig);
-        void AddHeader(const void *aHeader, uint32_t aHeaderLength);
-        void AddPayload(void *aPlainText, void *aCipherText, uint32_t aLength, Operation aOperation);
-        void Finalize(void *aTag);
+        void  Start(Operation aOperation, const Config &aConfig);
+        void  AddHeader(const uint8_t *aHeader, uint32_t aHeaderLength);
+        void  AddPayload(const uint8_t *aInput, uint8_t *aOutput, uint32_t aLength);
+        void  Finalize(uint8_t *aTag);
+        Error Verify(const uint8_t *aTag);
 
     private:
-        AesEcb   mEcb;
-        uint8_t  mBlock[AesEcb::kBlockSize];
-        uint8_t  mCtr[AesEcb::kBlockSize];
-        uint8_t  mCtrPad[AesEcb::kBlockSize];
-        uint32_t mHeaderLength;
-        uint32_t mHeaderCur;
-        uint32_t mPlainTextLength;
-        uint32_t mPlainTextCur;
-        uint16_t mBlockLength;
-        uint16_t mCtrLength;
-        uint8_t  mNonceLength;
-        uint8_t  mTagLength;
+        AesEcb    mEcb;
+        uint8_t   mBlock[AesEcb::kBlockSize];
+        uint8_t   mCtr[AesEcb::kBlockSize];
+        uint8_t   mCtrPad[AesEcb::kBlockSize];
+        uint32_t  mHeaderLength;
+        uint32_t  mHeaderCur;
+        uint32_t  mPlainTextLength;
+        uint32_t  mPlainTextCur;
+        uint16_t  mBlockLength;
+        uint16_t  mCtrLength;
+        uint8_t   mNonceLength;
+        uint8_t   mTagLength;
+        Operation mOperation;
     };
 
     Config         mConfig;
