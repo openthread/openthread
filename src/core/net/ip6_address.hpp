@@ -217,24 +217,31 @@ public:
     bool IsEqual(const uint8_t *aPrefixBytes, uint8_t aPrefixLength) const;
 
     /**
-     * Indicates whether the prefix contains a sub-prefix.
+     * Indicates whether the prefix is covered by a given prefix.
      *
-     * @param[in] aSubPrefix  A sub-prefix.
+     * The prefix is considered covered by @p aPrefix if its length is greater than or equal to @p aPrefix's length and
+     * its leading bits match @p aPrefix. For example, `2001:db8:1:2::/64` is covered by `2001:db8:1::/48`, and any
+     * prefix is covered by `::/0`.
      *
-     * @retval TRUE   The prefix contains the @p aSubPrefix
-     * @retval FALSE  The prefix does not contains the @p aSubPrefix.
+     * @param[in] aPrefix  A prefix.
+     *
+     * @retval TRUE   The prefix is covered by @p aPrefix.
+     * @retval FALSE  The prefix is not covered by @p aPrefix.
      */
-    bool ContainsPrefix(const Prefix &aSubPrefix) const;
+    bool IsCoveredBy(const Prefix &aPrefix) const;
 
     /**
-     * Indicates whether the prefix contains a sub-prefix (given as a `NetworkPrefix`).
+     * Indicates whether the prefix is covered by a given `NetworkPrefix`.
      *
-     * @param[in] aSubPrefix  A sub-prefix (as a `NetworkPrefix`).
+     * The prefix is considered covered by @p aNetworkPrefix if its length is greater than or equal to
+     * `NetworkPrefix::kLength` (64 bits) and its leading 64 bits match @p aNetworkPrefix.
      *
-     * @retval TRUE   The prefix contains the @p aSubPrefix
-     * @retval FALSE  The prefix does not contains the @p aSubPrefix.
+     * @param[in] aNetworkPrefix  A `NetworkPrefix`.
+     *
+     * @retval TRUE   The prefix is covered by @p aNetworkPrefix.
+     * @retval FALSE  The prefix is not covered by @p aNetworkPrefix.
      */
-    bool ContainsPrefix(const NetworkPrefix &aSubPrefix) const;
+    bool IsCoveredBy(const NetworkPrefix &aNetworkPrefix) const;
 
     /**
      * Overloads operator `==` to evaluate whether or not two prefixes are equal.

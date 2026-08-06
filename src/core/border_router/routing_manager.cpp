@@ -641,7 +641,7 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
 {
     // Determine whether leader Network Data contains a route
     // prefix which is either the ULA prefix `fc00::/7` or
-    // a sub-prefix of it (e.g., default route).
+    // a broader prefix covering it (e.g., default route).
 
     NetworkData::Iterator            iterator = NetworkData::kIteratorInit;
     NetworkData::ExternalRouteConfig routeConfig;
@@ -649,7 +649,7 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
 
     while (Get<NetworkData::Leader>().GetNext(iterator, routeConfig) == kErrorNone)
     {
-        if (routeConfig.mStable && RoutePublisher::GetUlaPrefix().ContainsPrefix(routeConfig.GetPrefix()))
+        if (routeConfig.mStable && RoutePublisher::GetUlaPrefix().IsCoveredBy(routeConfig.GetPrefix()))
         {
             contains = true;
             break;
@@ -1488,12 +1488,12 @@ void RoutingManager::OnLinkPrefixManager::PublishAndAdvertise(void)
     SetState(kPublishing);
     ResetExpireTime(TimerMilli::GetNow());
 
-    // We wait for the ULA `fc00::/7` route or a sub-prefix of it (e.g.,
-    // default route) to be added in Network Data before
-    // starting to advertise the local on-link prefix in RAs.
-    // However, if it is already present in Network Data (e.g.,
-    // added by another BR on the same Thread mesh), we can
-    // immediately start advertising it.
+    // We wait for the ULA `fc00::/7` route or a broader prefix
+    // covering it (e.g., default route) to be added in Network Data
+    // before starting to advertise the local on-link prefix in RAs.
+    // However, if it is already present in Network Data (e.g., added
+    // by another BR on the same Thread mesh), we can immediately
+    // start advertising it.
 
     if (Get<RoutingManager>().NetworkDataContainsUlaRoute())
     {
