@@ -93,6 +93,11 @@ void SubMac::Init(void)
     mFrameCounter = 0;
     mTimer.Stop();
 
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    mActiveTimedRx.Clear();
+    mPendingTimedRx.Clear();
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     CslInit();
 #endif
@@ -197,6 +202,11 @@ Error SubMac::Disable(void)
 {
     Error error;
 
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    mActiveTimedRx.Clear();
+    mPendingTimedRx.Clear();
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslTimer.Stop();
 #endif
@@ -217,26 +227,37 @@ Error SubMac::Sleep(void)
 {
     Error error = kErrorNone;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    if (IsRadioSampleEnabled())
-    {
-        RadioSample();
-        ExitNow();
-    }
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    // `ProcessTimedRx()` evaluates active and pending timed RX windows.
+    //
+    // If the current time is within a timed reception window, it transitions
+    // the state to `kStateTimedReceive`.
+    //
+    // `ProcessTimedRx()` does not put the radio to sleep unless we were
+    // already in `kStateTimedReceive` and the RX window has ended.
+    //
+    // Therefore, after calling `ProcessTimedRx()`, we verify that `mState` is
+    // not `kStateTimedReceive` before proceeding to transition the radio to sleep.
+
+    ProcessTimedRx();
+
+    VerifyOrExit(mState != kStateTimedReceive);
 #endif
 
-    // Even if the radio platform supports `kCapRxOnWhenIdle`, when
-    // `SubMac::Sleep()` is explicitly called while `mRxOnWhenIdle`
-    // is true, we still call `Radio::Sleep()`. This supports radio
-    // validation and test scenarios where the radio is being forced
-    // to sleep.
+    // If the radio platform layer supports `kCapRxOnWhenIdle`, it is
+    // responsible for putting the radio to sleep, so we skip calling
+    // `Radio::Sleep()`.
+    //
+    // However, if `SubMac::Sleep()` is explicitly called while `mRxOnWhenIdle`
+    // is true, we still call `Radio::Sleep()` to support test scenarios where
+    // the radio is forced to sleep.
+
+    SetState(kStateSleep);
 
     if (!RadioSupports(kCapRxOnWhenIdle) || mRxOnWhenIdle)
     {
         SuccessOrExit(error = Get<Radio::Radio>().Sleep());
     }
-
-    SetState(kStateSleep);
 
 exit:
     LogWarnOnError(error, "Sleep()");
@@ -308,14 +329,16 @@ Error SubMac::Send(void)
 #endif
     case kStateSleep:
     case kStateReceive:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    case kStateRadioSample:
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    case kStateTimedReceive:
 #endif
         break;
 
     case kStateEnergyScan:
         ExitNow(error = kErrorInvalidState);
     }
+
+    mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     if (mRadioFilterEnabled)
@@ -702,6 +725,13 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 
     switch (mState)
     {
+    case kStateSleep:
+    case kStateReceive:
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    case kStateTimedReceive:
+#endif
+        break;
+
     case kStateDisabled:
     case kStateCsmaBackoff:
     case kStateTransmit:
@@ -713,14 +743,9 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 #endif
     case kStateEnergyScan:
         ExitNow(error = kErrorInvalidState);
-
-    case kStateReceive:
-    case kStateSleep:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    case kStateRadioSample:
-#endif
-        break;
     }
+
+    mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     if (mRadioFilterEnabled)
@@ -783,6 +808,202 @@ void SubMac::HandleEnergyScanDone(int8_t aMaxRssi)
     mCallbacks.EnergyScanDone(aMaxRssi);
 }
 
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+
+void SubMac::ReceiveAt(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel)
+{
+    Radio::SyncedTime now;
+    TimedRx           timedRx;
+
+    VerifyOrExit(mState != kStateDisabled);
+
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    if (mRadioFilterEnabled)
+    {
+        ExitNow();
+    }
+#endif
+
+    timedRx.Init(aStartTime, aDuration, aChannel);
+
+    now.SetToNow(Get<Radio::Radio>());
+
+    VerifyOrExit(!timedRx.HasEnded(now));
+
+    if (!ShouldHandle(kCapReceiveTiming))
+    {
+        timedRx.ScheduleOnRadio(Get<Radio::Radio>());
+        ExitNow();
+    }
+
+    if (mPendingTimedRx.IsSpecified() && mPendingTimedRx.HasStarted(now) && !mPendingTimedRx.HasEnded(now))
+    {
+        // Before replacing `mPendingTimedRx` check if the existing one
+        // should be started, and start if we can (we are in right states).
+        // Otherwise copy it as `mActiveTimedRx` (resume/start it once
+        // state changes and timed-rx is allowed).
+
+        switch (mState)
+        {
+        case kStateSleep:
+        case kStateTimedReceive:
+            StartPendingTimedRx();
+            break;
+        default:
+            mActiveTimedRx = mPendingTimedRx;
+            break;
+        }
+    }
+
+    mPendingTimedRx = timedRx;
+
+    switch (mState)
+    {
+    case kStateSleep:
+    case kStateTimedReceive:
+        ProcessTimedRx();
+        break;
+    default:
+        break;
+    }
+
+exit:
+    return;
+}
+
+void SubMac::CancelPendingReceiveAt(void)
+{
+    VerifyOrExit(mPendingTimedRx.IsSpecified());
+    mPendingTimedRx.Clear();
+
+    switch (mState)
+    {
+    case kStateSleep:
+    case kStateTimedReceive:
+        ProcessTimedRx();
+        break;
+    default:
+        break;
+    }
+
+exit:
+    return;
+}
+
+void SubMac::StartPendingTimedRx(void)
+{
+    if ((mState == kStateTimedReceive) && (mActiveTimedRx.GetChannel() == mPendingTimedRx.GetChannel()))
+    {
+        // Skip transitioning the radio if already receiving on the same
+        // channel
+    }
+    else
+    {
+        IgnoreError(Get<Radio::Radio>().Receive(mPendingTimedRx.GetChannel()));
+    }
+
+    mActiveTimedRx = mPendingTimedRx;
+    SetState(kStateTimedReceive);
+}
+
+void SubMac::ProcessTimedRx(void)
+{
+    // Processes the timed RX state machine, starting any due pending
+    // timed RX, scheduling the timer for upcoming windows, or putting
+    // the radio to sleep when active reception window ends.
+
+    Radio::Time64     fireTime = Radio::kMaxTime64;
+    Radio::SyncedTime now;
+
+    mTimer.Stop();
+
+    now.SetToNow(Get<Radio::Radio>());
+
+    // Start pending `TimedRx` if due, or clear it if missed.
+
+    if (mPendingTimedRx.IsSpecified())
+    {
+        if (mPendingTimedRx.HasStarted(now))
+        {
+            if (!mPendingTimedRx.HasEnded(now))
+            {
+                StartPendingTimedRx();
+            }
+
+            mPendingTimedRx.Clear();
+        }
+        else
+        {
+            fireTime = mPendingTimedRx.GetStartTime();
+        }
+    }
+
+    VerifyOrExit(mActiveTimedRx.IsSpecified());
+
+    if (!mActiveTimedRx.HasEnded(now))
+    {
+        if (mState != kStateTimedReceive)
+        {
+            IgnoreError(Get<Radio::Radio>().Receive(mActiveTimedRx.GetChannel()));
+            SetState(kStateTimedReceive);
+        }
+
+        fireTime = Min(fireTime, mActiveTimedRx.GetEndTime());
+        ExitNow();
+    }
+
+    // Active `TimedRx` has ended. clear it and transition the radio
+    // to sleep if it was actively receiving.
+
+    mActiveTimedRx.Clear();
+
+    if (mState == kStateTimedReceive)
+    {
+        SetState(kStateSleep);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+        // Don't actually sleep for debugging when `MAC_CSL_DEBUG_ENABLE`.
+        ExitNow();
+#endif
+        IgnoreError(Get<Radio::Radio>().Sleep());
+    }
+
+exit:
+
+    if (fireTime != Radio::kMaxTime64)
+    {
+        // Schedule the timer to fire at a target radio time `fireTime`,
+        // using the synced reference `now` to translate radio time to
+        // local time.
+
+        uint32_t delay = 0;
+
+        if (fireTime > now.GetAsTime64())
+        {
+            delay = ClampToUint32(fireTime - now.GetAsTime64());
+        }
+
+        StartTimerAt(now.GetAsLocalTimeMicro(), delay);
+    }
+}
+
+void SubMac::TimedRx::Init(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel)
+{
+    mStartTime   = aStartTime;
+    mDuration    = aDuration;
+    mChannel     = aChannel;
+    mIsSpecified = true;
+}
+
+void SubMac::TimedRx::ScheduleOnRadio(Radio::Radio &aRadio) const
+{
+    Error error = aRadio.ReceiveAt(mChannel, Radio::ConvertTime64To32(mStartTime), mDuration);
+
+    LogWarnOnError(error, "Radio::ReceiveAt()");
+}
+
+#endif // OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+
 void SubMac::HandleTimer(void)
 {
     switch (mState)
@@ -809,6 +1030,13 @@ void SubMac::HandleTimer(void)
     case kStateEnergyScan:
         SampleRssi();
         break;
+
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    case kStateTimedReceive:
+    case kStateSleep:
+        ProcessTimedRx();
+        break;
+#endif
 
     default:
         break;
@@ -957,117 +1185,6 @@ void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 #endif
 }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-
-void SubMac::RadioSample(void)
-{
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    if (mRadioFilterEnabled)
-    {
-        IgnoreError(Get<Radio::Radio>().Sleep());
-        ExitNow();
-    }
-#endif
-
-    SetState(kStateRadioSample);
-
-    if (!RadioSupports(kCapReceiveTiming))
-    {
-        UpdateRadioSampleState();
-        ExitNow();
-    }
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-    // Don't sleep for debugging when `MAC_CSL_DEBUG_ENABLE`.
-    ExitNow();
-#endif
-
-    if (!RadioSupports(kCapRxOnWhenIdle))
-    {
-        IgnoreError(Get<Radio::Radio>().Sleep());
-    }
-
-exit:
-    return;
-}
-
-bool SubMac::IsRadioSampleEnabled(void) const
-{
-    bool ret = false;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    ret = IsCslEnabled();
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    ret = ret || mIsWedEnabled;
-#endif
-
-    return ret;
-}
-
-/*
- * The radio state (receive/sleep) is determined by the request from both CSL and WED:
- * 1. If both CSL and WED request to enter sleep state, the radio is set to sleep state.
- * 2. If either CSL or WED requests to enter the receive state and the other requests to enter sleep state, the radio
- *    is set to receive state using the channel that is requested to enter the receive state.
- * 3. If both CSL and WED request to enter the receive state, the radio is set to the receive state using the CSL
- *    channel.
- *
- * The diagram below illustrates how to set the radio state based on the request of WED and CSL.
- *
- * CSL   ------========------------========------------========------------========---
- *             ^       ^
- *             |       |
- *             | mIsCslSampling=false
- *     mIsCslSampling=true
- *
- * WED   -----------++++++++----------------++++++++----------------++++++++----------
- *                  ^       ^
- *                  |       |
- *                  | mIsWedSampling=false
- *         mIsWedSampling=true
- *
- * Radio ------========+++++-------========-++++++++---========-----+++++++========---
- *             ^       ^    ^
- *             |       |    |
- *             |       | Radio::Sleep()
- *             |  Radio::Receive(WedCh)
- *      Radio::Receive(CslCh)
- */
-void SubMac::UpdateRadioSampleState(void)
-{
-    VerifyOrExit(mState == kStateRadioSample);
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (mIsCslSampling)
-    {
-        IgnoreError(Get<Radio::Radio>().Receive(mCslChannel));
-        ExitNow();
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    if (mIsWedSampling)
-    {
-        IgnoreError(Get<Radio::Radio>().Receive(mWakeupChannel));
-        ExitNow();
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-    // Don't sleep for debugging when `MAC_CSL_DEBUG_ENABLE`.
-    ExitNow();
-#endif
-
-    IgnoreError(Get<Radio::Radio>().Sleep());
-
-exit:
-    return;
-}
-
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-
 // LCOV_EXCL_START
 
 const char *SubMac::StateToString(State aState)
@@ -1079,7 +1196,7 @@ const char *SubMac::StateToString(State aState)
     _(kStateCsmaBackoff, "CsmaBackoff") \
     _(kStateTransmit, "Transmit")       \
     _(kStateEnergyScan, "EnergyScan")   \
-    DelayBeforeRetxStateMapList(_) TimedTxStateMapList(_) RadioSampleMapList(_)
+    DelayBeforeRetxStateMapList(_) TimedTxStateMapList(_) TimedRxStateMapList(_)
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
 #define DelayBeforeRetxStateMapList(_) _(kStateDelayBeforeRetx, "DelayBeforeRetx")
@@ -1093,10 +1210,10 @@ const char *SubMac::StateToString(State aState)
 #define TimedTxStateMapList(_)
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-#define RadioSampleMapList(_) _(kStateRadioSample, "RadioSample")
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+#define TimedRxStateMapList(_) _(kStateTimedReceive, "TimedReceive")
 #else
-#define RadioSampleMapList(_)
+#define TimedRxStateMapList(_)
 #endif
 
     DefineEnumStringArray(StateMapList);
