@@ -1727,7 +1727,7 @@ TransportProtocol: udp
 Done
 ```
 
-This final example shows how only the 'service mode' is set, and all other parameters are set to their defaults. Especially note, that the boolean value 'recursion required' is set to its default by using the `def` value.
+This final example shows how only the 'service mode' is set, and all other parameters are set to their defaults. Especially note, that the boolean value 'recursion desired' is set to its default by using the `def` value.
 
 ```bash
 > dns config :: 0 0 0 def srv_txt_sep
