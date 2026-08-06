@@ -895,6 +895,22 @@ otError RadioSpinel::SetMacKey(uint8_t         aKeyIdMode,
 {
     otError error;
 
+#if OPENTHREAD_SPINEL_CONFIG_RCP_KEY_ID_MODE_CHECK_COMPATIBILITY_WORKAROUND_ENABLE
+    static constexpr uint8_t kLegacyKeyIdMode1 = (1 << 3);
+
+    // Older RCP builds enforce a validation check in `NcpBase`
+    // (`HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>()`) expecting the
+    // legacy bit-shifted value `(1 << 3)` for Key ID Mode 1. This
+    // check is removed so future RCP builds ignore `aKeyIdMode`
+    // as documented/expected for the `otPlatRadioSetMacKey()` API.
+    //
+    // To maintain backward compatibility with older RCP firmware
+    // builds, we map `aKeyIdMode` to the legacy bit-shifted value
+    // `kLegacyKeyIdMode1` when setting `SPINEL_PROP_RCP_MAC_KEY`.
+
+    aKeyIdMode = kLegacyKeyIdMode1;
+#endif
+
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY,
                               SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
                                   SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
