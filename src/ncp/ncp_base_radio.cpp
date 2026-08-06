@@ -555,7 +555,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
     const uint8_t *nextKey;
 
     SuccessOrExit(error = mDecoder.ReadUint8(keyIdMode));
-    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = mDecoder.ReadUint8(keyIndex));
 
