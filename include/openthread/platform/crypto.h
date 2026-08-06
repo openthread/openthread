@@ -224,6 +224,16 @@ typedef struct otPlatCryptoEcdsaSignature otPlatCryptoEcdsaSignature;
 void otPlatCryptoInit(void);
 
 /**
+ * Check if the key ref passed is valid.
+ *
+ * @param[in]  aKeyRef          The Key Ref to check.
+ *
+ * @retval TRUE                 @p aKeyRef is valid.
+ * @retval FALSE                @p aKeyRef is not valid.
+ */
+bool otPlatCryptoIsKeyRefValid(otCryptoKeyRef aKeyRef);
+
+/**
  * Import a key into PSA ITS.
  *
  * @param[in,out] aKeyRef           Pointer to the key ref to be used for crypto operations.
