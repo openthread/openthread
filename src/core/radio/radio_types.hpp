@@ -52,9 +52,12 @@ namespace Radio {
 #define OT_CONFIG_RADIO_TIME_ENABLE                                                               \
     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
      OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE || OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || \
-     OPENTHREAD_CONFIG_TIME_SYNC_ENABLE)
+     OPENTHREAD_CONFIG_TIME_SYNC_ENABLE ||                                                        \
+     ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE))
 
 class Radio;
+
+constexpr uint32_t kUncertaintyUnit = 10; ///< Clock uncertainty unit in microseconds.
 
 /**
  * Represents a 64-bit radio time in microseconds referenced to a continuous monotonic local radio clock.
@@ -87,6 +90,26 @@ inline Time32 ConvertTime64To32(Time64 aTime64) { return static_cast<Time32>(aTi
  * @retval FALSE  @p aFirstTime is not strictly before @p aSecondTime.
  */
 bool IsTimeStrictlyBefore(Time32 aFirstTime, Time32 aSecondTime);
+
+/**
+ * Calculates clock drift in microseconds for a given interval and clock accuracy.
+ *
+ * @param[in] aClockAccuracy  The clock accuracy in ppm (can be for a single device or combined accuracy of transmitter
+ *                            and receiver).
+ * @param[in] aIntervalUs     The interval duration in microseconds.
+ *
+ * @returns The calculated clock drift in microseconds (rounded up).
+ */
+uint32_t DetermineClockDrift(uint16_t aClockAccuracy, uint32_t aIntervalUs);
+
+/**
+ * Converts CSL uncertainty value to microseconds.
+ *
+ * @param[in] aUncertainty  The uncertainty in units of 10 microseconds (`kUncertaintyUnit`).
+ *
+ * @returns The uncertainty duration in microseconds.
+ */
+inline uint32_t ConvertUncertaintyToUsec(uint16_t aUncertainty) { return aUncertainty * kUncertaintyUnit; }
 
 #if OT_CONFIG_RADIO_TIME_ENABLE && OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 

@@ -115,8 +115,10 @@ SubMac::Capabilities SubMac::GetCaps(void) const
     else
 #endif
     {
-        caps |= (kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec |
-                 kCapTransmitTiming | kCapReceiveTiming);
+        caps |= (kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries | kCapEnergyScan | kCapTransmitSec);
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+        caps |= kCapTransmitTiming;
+#endif
     }
 
     return caps;
@@ -293,8 +295,8 @@ Error SubMac::Send(void)
     {
     case kStateDisabled:
     case kStateCsmaBackoff:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    case kStateCslTransmit:
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    case kStateTimedTransmit:
 #endif
     case kStateTransmit:
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
@@ -337,13 +339,10 @@ exit:
 void SubMac::ProcessTransmitSecurity(void)
 {
     const ExtAddress *extAddress = nullptr;
-    uint8_t           keyIdMode;
     uint8_t           keyIndex;
 
     VerifyOrExit(mTransmitFrame.GetSecurityEnabled());
     VerifyOrExit(!mTransmitFrame.IsSecurityProcessed());
-
-    SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
@@ -360,12 +359,12 @@ void SubMac::ProcessTransmitSecurity(void)
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     if (mTransmitFrame.GetType() == Frame::kTypeMultipurpose)
     {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode2);
+        VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode2));
     }
     else
 #endif
     {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+        VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode1));
     }
 
     mTransmitFrame.SetAesKey(mKeyTrio.SelectKey(keyIndex));
@@ -393,24 +392,19 @@ exit:
 
 void SubMac::StartCsmaBackoff(void)
 {
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (mTransmitFrame.GetTxDelay() != 0 || mTransmitFrame.GetTxDelayBaseTime() != 0)
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    if (mTransmitFrame.IsTargetTxTimeSpecified())
     {
-        SetState(kStateCslTransmit);
+        SetState(kStateTimedTransmit);
 
-        if (ShouldHandleTransmitTargetTime())
+        if (ShouldHandle(kCapTransmitTiming))
         {
-            static constexpr uint32_t kAheadTime =
-                kCcaSampleInterval + kCslTransmitTimeAhead + Radio::kHeaderShrDuration;
+            Radio::Time32 txStart  = mTransmitFrame.GetTargetTxTime() - kTimedTxLeadTime;
+            Radio::Time32 radioNow = Get<Radio::Radio>().GetNowAsTime32();
 
-            Radio::Time32 radioNow    = Get<Radio::Radio>().GetNowAsTime32();
-            Radio::Time32 txStartTime = mTransmitFrame.GetTxDelayBaseTime();
-
-            txStartTime += (mTransmitFrame.GetTxDelay() - kAheadTime);
-
-            if (Radio::IsTimeStrictlyBefore(radioNow, txStartTime))
+            if (Radio::IsTimeStrictlyBefore(radioNow, txStart))
             {
-                StartTimer(txStartTime - radioNow);
+                StartTimer(txStart - radioNow);
                 ExitNow();
             }
 
@@ -420,7 +414,7 @@ void SubMac::StartCsmaBackoff(void)
         BeginTransmit();
         ExitNow();
     }
-#endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
 
     SetState(kStateCsmaBackoff);
 
@@ -469,8 +463,8 @@ void SubMac::BeginTransmit(void)
 {
     Error error;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit);
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateTimedTransmit);
 #else
     VerifyOrExit(mState == kStateCsmaBackoff);
 #endif
@@ -484,14 +478,14 @@ void SubMac::BeginTransmit(void)
 
     error = Get<Radio::Radio>().Transmit(mTransmitFrame);
 
-    if (error == kErrorInvalidState && mTransmitFrame.GetTxDelay() > 0)
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    if (error == kErrorInvalidState && mTransmitFrame.IsTargetTxTimeSpecified())
     {
         // Platform `transmit_at` fails and we send the frame directly.
-        mTransmitFrame.SetTxDelay(0);
-        mTransmitFrame.SetTxDelayBaseTime(0);
-
+        mTransmitFrame.ClearTargetTxTime();
         error = Get<Radio::Radio>().Transmit(mTransmitFrame);
     }
+#endif
 
     SuccessOrAssert(error);
 
@@ -623,7 +617,7 @@ void SubMac::ReprocessSecurityForRetx(TxFrame &aFrame)
     // it contains Header IEs. The frame is first restored back to
     // plaintext and then re-encrypted with a new frame counter value.
 
-    VerifyOrExit(aFrame.GetSecurityEnabled() && aFrame.HasAnyHeaderIe());
+    VerifyOrExit(aFrame.GetSecurityEnabled() && aFrame.IsIePresent());
 
     // When transmit security is handled by `SubMac`, the AES key is already set
     // on `aFrame`. However, when transmit security is delegated to the radio
@@ -652,10 +646,10 @@ exit:
 
 void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
 {
-    uint8_t  keyIdMode;
-    uint8_t  keyIndex;
-    uint32_t frameCounter;
-    bool     allowError = false;
+    Frame::KeyIdMode keyIdMode;
+    uint8_t          keyIndex;
+    uint32_t         frameCounter;
+    bool             allowError = false;
 
     OT_UNUSED_VARIABLE(allowError);
 
@@ -715,8 +709,8 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     case kStateDisabled:
     case kStateCsmaBackoff:
     case kStateTransmit:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    case kStateCslTransmit:
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    case kStateTimedTransmit:
 #endif
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     case kStateDelayBeforeRetx:
@@ -797,10 +791,8 @@ void SubMac::HandleTimer(void)
 {
     switch (mState)
     {
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    case kStateCslTransmit:
-        BeginTransmit();
-        break;
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    case kStateTimedTransmit:
 #endif
     case kStateCsmaBackoff:
         BeginTransmit();
@@ -1079,7 +1071,7 @@ const char *SubMac::StateToString(State aState)
     _(kStateCsmaBackoff, "CsmaBackoff") \
     _(kStateTransmit, "Transmit")       \
     _(kStateEnergyScan, "EnergyScan")   \
-    DelayBeforeRetxStateMapList(_) ClsTxStateMapList(_) RadioSampleMapList(_)
+    DelayBeforeRetxStateMapList(_) TimedTxStateMapList(_) RadioSampleMapList(_)
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
 #define DelayBeforeRetxStateMapList(_) _(kStateDelayBeforeRetx, "DelayBeforeRetx")
@@ -1087,10 +1079,10 @@ const char *SubMac::StateToString(State aState)
 #define DelayBeforeRetxStateMapList(_)
 #endif
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-#define ClsTxStateMapList(_) _(kStateCslTransmit, "CslTransmit")
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+#define TimedTxStateMapList(_) _(kStateTimedTransmit, "TimedTransmit")
 #else
-#define ClsTxStateMapList(_)
+#define TimedTxStateMapList(_)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

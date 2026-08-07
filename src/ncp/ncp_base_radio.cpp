@@ -195,9 +195,16 @@ void NcpBase::LinkRawTransmitDone(uint8_t aIid, otRadioFrame *aFrame, otRadioFra
             uint8_t  keyIndex;
             uint32_t frameCounter;
 
-            // Transmit frame auxiliary key index and frame counter
-            SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetKeyIndex(keyIndex));
             SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetFrameCounter(frameCounter));
+
+            // If the frame uses Key ID Mode 0, there is no Key Index field in
+            // the Security Header, so `GetKeyIndex()` may return an error.
+            // We default `keyIndex` to 0 in this case.
+
+            if (static_cast<Mac::TxFrame *>(aFrame)->GetKeyIndex(keyIndex) != OT_ERROR_NONE)
+            {
+                keyIndex = 0;
+            }
 
             SuccessOrExit(mEncoder.WriteUint8(keyIndex));
             SuccessOrExit(mEncoder.WriteUint32(frameCounter));
@@ -548,7 +555,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
     const uint8_t *nextKey;
 
     SuccessOrExit(error = mDecoder.ReadUint8(keyIdMode));
-    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = mDecoder.ReadUint8(keyIndex));
 

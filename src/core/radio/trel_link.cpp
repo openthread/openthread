@@ -172,10 +172,7 @@ void Link::BeginTransmit(void)
         }
         else
         {
-            uint8_t keyIdMode;
-
-            IgnoreError(mTxFrame.GetKeyIdMode(keyIdMode));
-            isDiscovery = (keyIdMode == Mac::Frame::kKeyIdMode2);
+            isDiscovery = mTxFrame.HasKeyIdMode(Mac::Frame::kKeyIdMode2);
         }
     }
 

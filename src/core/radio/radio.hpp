@@ -649,7 +649,7 @@ public:
     /**
      * Get the fixed uncertainty of the Device for scheduling CSL operations in units of 10 microseconds.
      *
-     * @returns The CSL Uncertainty in units of 10 us.
+     * @returns The CSL Uncertainty in units of 10 microseconds (`kUncertaintyUnit`).
      */
     uint8_t GetCslUncertainty(void);
 #endif // OT_CONFIG_RADIO_TIME_ENABLE
