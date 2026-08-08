@@ -315,6 +315,45 @@ TEST(RadioSpinelReceiveAt, shouldReceiveAtGiveRadioTime)
     EXPECT_EQ(platform.GetReceiveChannel(), 0);
 }
 
+TEST(RadioSpinelReceiveAt, shouldAcceptMaximumFutureRadioTime)
+{
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(INT32_MAX, 1, 11), kErrorNone);
+    platform.GoInUs(INT32_MAX);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 11);
+}
+
+TEST(RadioSpinelReceiveAt, shouldRejectRadioTimeBeyondSignedDifferenceRange)
+{
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(static_cast<uint64_t>(INT32_MAX) + 1, 1, 11), kErrorInvalidArgs);
+}
+
+TEST(RadioSpinelReceiveAt, shouldReconstructRadioTimeAcross32BitRollover)
+{
+    FakeCoprocessorPlatform platform;
+
+    constexpr uint64_t kNow   = static_cast<uint64_t>(UINT32_MAX) - 5;
+    constexpr uint64_t kStart = static_cast<uint64_t>(UINT32_MAX) + 5;
+
+    platform.GoInUs(kNow);
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(kStart, 1, 11), kErrorNone);
+    platform.GoInUs(kStart - kNow);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 11);
+}
+
 TEST(RadioSpinelTransmit, shouldSkipCsmaBackoffWhenCsmaCaIsEnabledAndMaxBackoffsIsZero)
 {
     class MockPlatform : public FakeCoprocessorPlatform
