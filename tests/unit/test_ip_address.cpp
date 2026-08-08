@@ -773,6 +773,23 @@ void TestIp6PrefixTidy(void)
             }
         }
     }
+
+    printf("Tidy Prefixes with length longer than max:\n");
+
+    for (uint16_t length = Ip6::Prefix::kMaxLength + 1; length <= NumericLimits<uint8_t>::kMax; length++)
+    {
+        Ip6::Prefix prefix;
+
+        prefix.InitFrom(kPrefixes[0].originalPrefix, Ip6::Prefix::kMaxLength);
+        prefix.SetLength(static_cast<uint8_t>(length));
+        prefix.Tidy();
+
+        printf("Prefix length: %-5u TidyResult: %-42s\n", length, prefix.ToString().AsCString());
+
+        VerifyOrQuit(
+            memcmp(prefix.mPrefix.mFields.m8, kPrefixes[0].originalPrefix, sizeof(prefix.mPrefix.mFields.m8)) == 0);
+        VerifyOrQuit(prefix.GetLength() == length);
+    }
 }
 
 void TestIp4MappedIp6Address(void)
