@@ -87,6 +87,18 @@ public:
     void SetFrom(const Parent &aParent);
 
     /**
+     * Generates a new challenge value for MLE Link Request/Response exchanges.
+     */
+    void GenerateChallenge(void) { mChallenge.GenerateRandom(); }
+
+    /**
+     * Returns the current challenge value for MLE Link Request/Response exchanges.
+     *
+     * @returns The current challenge value.
+     */
+    const Mle::TxChallenge &GetChallenge(void) const { return mChallenge; }
+
+    /**
      * Restarts the Link Accept timeout (setting it to max value).
      *
      * This method is used after sending a Link Request to the router to restart the timeout and start waiting to
@@ -235,10 +247,10 @@ private:
     static_assert(Mle::kParentReselectTimeout <= (1U << 15) - 1,
                   "kParentReselectTimeout won't fit in mParentReselectTimeout (15-bit filed)");
 #endif
-
-    uint8_t mNextHop;                 // The next hop towards this router
-    uint8_t mLinkRequestAttempts : 2; // Number of Link Request attempts
-    uint8_t mLinkAcceptTimeout : 2;   // Timeout (in seconds) after sending Link Request waiting for Link Accept
+    Mle::TxChallenge mChallenge;
+    uint8_t          mNextHop;                 // The next hop towards this router
+    uint8_t          mLinkRequestAttempts : 2; // Number of Link Request attempts
+    uint8_t          mLinkAcceptTimeout : 2;   // Timeout (in sec) after sending Link Request waiting for Link Accept
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
     uint8_t mCost : 4; // The cost to this router via neighbor router
 #else
