@@ -342,13 +342,12 @@ public:
     const Mac::KeyMaterial &GetCurrentTrelMacKey(void) const { return mTrelKey; }
 
     /**
-     * Returns a temporary MAC key for TREL radio link computed from the given key sequence.
+     * Computes the temporary MAC key for TREL radio link from the given key sequence.
      *
      * @param[in]  aKeySequence  The key sequence value.
-     *
-     * @returns The temporary TREL MAC key.
+     * @param[out] aKey          A reference to a `Mac::KeyMaterial` to output the temporary TREL MAC key.
      */
-    const Mac::KeyMaterial &GetTemporaryTrelMacKey(uint32_t aKeySequence);
+    void GetTemporaryTrelMacKey(uint32_t aKeySequence, Mac::KeyMaterial &aKey) const;
 #endif
 
     /**
@@ -359,22 +358,22 @@ public:
     const Mle::KeyMaterial &GetCurrentMleKey(void) const { return mMleKey; }
 
     /**
-     * Returns a temporary MLE key Material computed from the given key sequence.
+     * Computes a temporary MLE key Material from the given key sequence.
      *
      * @param[in]  aKeySequence  The key sequence value.
-     *
-     * @returns The temporary MLE key.
+     * @param[out] aKey          A reference to a `Mle::KeyMaterial` to output the temporary MLE key.
      */
-    const Mle::KeyMaterial &GetTemporaryMleKey(uint32_t aKeySequence);
+    void GetTemporaryMleKey(uint32_t aKeySequence, Mle::KeyMaterial &aKey) const;
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     /**
-     * Returns a temporary MAC key Material computed from the given key sequence.
+     * Computes a temporary MAC key Material from the given key sequence.
      *
      * @param[in]  aKeySequence  The key sequence value.
-     *
-     * @returns The temporary MAC key.
+     * @param[out] aKey          A reference to a `Mac::KeyMaterial` to output the temporary MAC key.
      */
-    const Mle::KeyMaterial &GetTemporaryMacKey(uint32_t aKeySequence);
+    void GetTemporaryMacKey(uint32_t aKeySequence, Mac::KeyMaterial &aKey) const;
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     /**
@@ -626,15 +625,9 @@ private:
 
     uint32_t         mKeySequence;
     Mle::KeyMaterial mMleKey;
-    Mle::KeyMaterial mTemporaryMleKey;
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    Mle::KeyMaterial mTemporaryMacKey;
-#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Mac::KeyMaterial mTrelKey;
-    Mac::KeyMaterial mTemporaryTrelKey;
 #endif
 
     Mac::LinkFrameCounters mMacFrameCounters;

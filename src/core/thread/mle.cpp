@@ -1535,9 +1535,17 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Operation aOperation,
 
     keySequence = aAuthData.mSecurityHeader.GetKeyId();
 
-    aesCcm.SetKey(keySequence == Get<KeyManager>().GetCurrentKeySequence()
-                      ? Get<KeyManager>().GetCurrentMleKey()
-                      : Get<KeyManager>().GetTemporaryMleKey(keySequence));
+    if (keySequence == Get<KeyManager>().GetCurrentKeySequence())
+    {
+        aesCcm.SetKey(Get<KeyManager>().GetCurrentMleKey());
+    }
+    else
+    {
+        KeyMaterial key;
+
+        Get<KeyManager>().GetTemporaryMleKey(keySequence, key);
+        aesCcm.SetKey(key);
+    }
 
     aesCcm.SetNonce(nonce);
     aesCcm.SetAuthData(&aAuthData, sizeof(AesCcmAuthData));

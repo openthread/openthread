@@ -414,37 +414,31 @@ exit:
     return;
 }
 
-const Mle::KeyMaterial &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
+void KeyManager::GetTemporaryMleKey(uint32_t aKeySequence, Mle::KeyMaterial &aKey) const
 {
     HashKeys hashKeys;
 
     ComputeKeys(aKeySequence, hashKeys);
-    mTemporaryMleKey.SetFrom(hashKeys.GetMleKey());
-
-    return mTemporaryMleKey;
+    aKey.SetFrom(hashKeys.GetMleKey());
 }
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-const Mle::KeyMaterial &KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)
+void KeyManager::GetTemporaryMacKey(uint32_t aKeySequence, Mac::KeyMaterial &aKey) const
 {
     HashKeys hashKeys;
 
     ComputeKeys(aKeySequence, hashKeys);
-    mTemporaryMacKey.SetFrom(hashKeys.GetMacKey());
-
-    return mTemporaryMacKey;
+    aKey.SetFrom(hashKeys.GetMacKey());
 }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-const Mac::KeyMaterial &KeyManager::GetTemporaryTrelMacKey(uint32_t aKeySequence)
+void KeyManager::GetTemporaryTrelMacKey(uint32_t aKeySequence, Mac::KeyMaterial &aKey) const
 {
     Mac::Key key;
 
     ComputeTrelKey(aKeySequence, key);
-    mTemporaryTrelKey.SetFrom(key);
-
-    return mTemporaryTrelKey;
+    aKey.SetFrom(key);
 }
 #endif
 

@@ -848,6 +848,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         if (aFrame.GetRadioType() == Radio::kTypeTrel)
 #endif
         {
+            KeyMaterial        temporaryMacKey;
             const KeyMaterial *macKey;
 
             // If the frame header is marked as updated, `MeshForwarder` which
@@ -862,7 +863,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
                 aFrame.SetKeyIndex(DetermineKeyIndexFor(keyManager.GetCurrentKeySequence()));
             }
 
-            macKey = DetermineMode1Key(aFrame);
+            macKey = DetermineMode1Key(aFrame, temporaryMacKey);
             VerifyOrExit(macKey != nullptr);
             aFrame.SetAesKey(*macKey);
             extAddress = &GetExtAddress();
@@ -1574,14 +1575,14 @@ void Mac::HandleTimer(void)
     }
 }
 
-const KeyMaterial *Mac::DetermineMode1Key(const Frame &aFrame) const
+const KeyMaterial *Mac::DetermineMode1Key(const Frame &aFrame, KeyMaterial &aKey) const
 {
     uint32_t keySequence;
 
-    return DetermineMode1KeyAndSequence(aFrame, keySequence);
+    return DetermineMode1KeyAndSequence(aFrame, keySequence, aKey);
 }
 
-const KeyMaterial *Mac::DetermineMode1KeyAndSequence(const Frame &aFrame, uint32_t &aKeySequence) const
+const KeyMaterial *Mac::DetermineMode1KeyAndSequence(const Frame &aFrame, uint32_t &aKeySequence, KeyMaterial &aKey) const
 {
     // Determines the MAC key and key sequence for given `aFrame`.
     // The caller MUST already ensure that the frame's Key ID Mode
@@ -1634,13 +1635,16 @@ const KeyMaterial *Mac::DetermineMode1KeyAndSequence(const Frame &aFrame, uint32
             break;
         case KeyTrio::kNext:
         case KeyTrio::kPrev:
-            key = &Get<KeyManager>().GetTemporaryTrelMacKey(aKeySequence);
+            Get<KeyManager>().GetTemporaryTrelMacKey(aKeySequence, aKey);
+            key = &aKey;
             break;
         }
 
         ExitNow();
     }
 #endif
+
+    OT_UNUSED_VARIABLE(aKey);
 
 exit:
     return key;
@@ -1653,6 +1657,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     Frame::KeyIdMode   keyIdMode;
     uint32_t           frameCounter;
     uint32_t           keySequence = 0;
+    KeyMaterial        temporaryMacKey;
     const KeyMaterial *macKey;
     const ExtAddress  *extAddress;
 
@@ -1676,7 +1681,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     case Frame::kKeyIdMode1:
         VerifyOrExit(aNeighbor != nullptr);
 
-        macKey = DetermineMode1KeyAndSequence(aFrame, keySequence);
+        macKey = DetermineMode1KeyAndSequence(aFrame, keySequence, temporaryMacKey);
         VerifyOrExit(macKey != nullptr);
 
         // If the frame is from a neighbor not in valid state (e.g., it is from a child being
@@ -1724,7 +1729,8 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
             sequence = BigEndian::ReadUint32(keySource.GetBytes());
             VerifyOrExit(DetermineKeyIndexFor(sequence) == keyIndex, error = kErrorSecurity);
 
-            macKey     = &keyManager.GetTemporaryMacKey(sequence);
+            keyManager.GetTemporaryMacKey(sequence, temporaryMacKey);
+            macKey     = &temporaryMacKey;
             extAddress = &aSrcAddr.GetExtended();
         }
         else
@@ -1790,6 +1796,7 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     Address            srcAddr;
     Address            dstAddr;
     Neighbor          *neighbor = nullptr;
+    KeyMaterial        temporaryMacKey;
     const KeyMaterial *macKey;
 
     if (!aAckFrame.GetSecurityEnabled())
@@ -1844,7 +1851,7 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     VerifyOrExit(srcAddr.IsExtended() && neighbor != nullptr);
 
-    macKey = DetermineMode1Key(aAckFrame);
+    macKey = DetermineMode1Key(aAckFrame, temporaryMacKey);
     VerifyOrExit(macKey != nullptr);
 
     if (neighbor->IsStateValid())
