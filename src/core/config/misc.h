@@ -218,6 +218,44 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE
+ *
+ * Define to 1 to enable message buffer pool threshold callbacks, allowing the application/platform to be notified
+ * (via `otMessageSetBufferThresholdCallback()`) when the message buffer pool utilization crosses configured low and
+ * high watermark levels.
+ *
+ * This is only supported when OpenThread manages the message buffer pool itself, i.e. when
+ * `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` and `OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE` are both disabled.
+ */
+#ifndef OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE
+#define OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MESSAGE_BUFFER_HIGH_THRESHOLD
+ *
+ * The message buffer pool utilization level (in percent) above which the high threshold callback (registered via
+ * `otMessageSetBufferThresholdCallback()`) is invoked.
+ *
+ * Applicable only when `OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE` is enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_MESSAGE_BUFFER_HIGH_THRESHOLD
+#define OPENTHREAD_CONFIG_MESSAGE_BUFFER_HIGH_THRESHOLD 75
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MESSAGE_BUFFER_LOW_THRESHOLD
+ *
+ * The message buffer pool utilization level (in percent) below which the low threshold callback (registered via
+ * `otMessageSetBufferThresholdCallback()`) is invoked, once the high threshold has previously been reached.
+ *
+ * Applicable only when `OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE` is enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_MESSAGE_BUFFER_LOW_THRESHOLD
+#define OPENTHREAD_CONFIG_MESSAGE_BUFFER_LOW_THRESHOLD 45
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
  *
  * The default IEEE 802.15.4 transmit power (dBm).

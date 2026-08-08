@@ -526,6 +526,39 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo);
 void otMessageResetBufferInfo(otInstance *aInstance);
 
 /**
+ * Pointer to a function that is called to notify a change in the message buffer pool utilization level.
+ *
+ * @param[in] aContext  A pointer to arbitrary context information.
+ */
+typedef void (*otMessageBufferThresholdCallback)(void *aContext);
+
+/**
+ * Registers callbacks to be notified when the message buffer pool utilization crosses the low and high
+ * threshold levels configured by `OPENTHREAD_CONFIG_MESSAGE_BUFFER_LOW_THRESHOLD` and
+ * `OPENTHREAD_CONFIG_MESSAGE_BUFFER_HIGH_THRESHOLD`.
+ *
+ * Requires `OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE` to be enabled, which in turn requires
+ * `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` and `OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE` to both be
+ * disabled (i.e. OpenThread must manage the message buffer pool itself).
+ *
+ * The high threshold callback is invoked (at most once) when the number of buffers in use rises above the high
+ * threshold level. Once invoked, it will not be invoked again until the number of buffers in use has dropped
+ * below the low threshold level, at which point the low threshold callback is invoked (at most once). This
+ * hysteresis behavior avoids repeated callback invocations while usage fluctuates around a single threshold.
+ *
+ * Either callback can be `nullptr` to unregister it.
+ *
+ * @param[in] aInstance         A pointer to the OpenThread instance.
+ * @param[in] aLowCallback      A pointer to a function that is called when usage drops below the low threshold.
+ * @param[in] aHighCallback     A pointer to a function that is called when usage rises above the high threshold.
+ * @param[in] aContext          A pointer to arbitrary context information passed to the callbacks.
+ */
+void otMessageSetBufferThresholdCallback(otInstance                      *aInstance,
+                                         otMessageBufferThresholdCallback aLowCallback,
+                                         otMessageBufferThresholdCallback aHighCallback,
+                                         void                            *aContext);
+
+/**
  * @}
  */
 
