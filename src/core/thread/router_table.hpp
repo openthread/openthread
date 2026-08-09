@@ -465,7 +465,10 @@ private:
         // remaining reuse delay time (in seconds).
 
         RouterIdMap(void) { Clear(); }
-        bool    IsAllocated(uint8_t aRouterId) const { return (mIndexes[aRouterId] & kAllocatedFlag); }
+        bool IsAllocated(uint8_t aRouterId) const
+        {
+            return (aRouterId <= Mle::kMaxRouterId) && ((mIndexes[aRouterId] & kAllocatedFlag) != 0);
+        }
         uint8_t GetIndex(uint8_t aRouterId) const { return (mIndexes[aRouterId] & kIndexMask); }
         void    SetIndex(uint8_t aRouterId, uint8_t aIndex) { mIndexes[aRouterId] = kAllocatedFlag | aIndex; }
         bool    CanAllocate(uint8_t aRouterId) const { return (mIndexes[aRouterId] == 0); }

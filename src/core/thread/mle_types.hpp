@@ -666,7 +666,10 @@ public:
      * @retval TRUE   If the Router ID bit is set in the mask.
      * @retval FALSE  If the Router ID bit is not set in the mask.
      */
-    bool IsAllocated(uint8_t aRouterId) const { return (mMask[aRouterId / 8] & MaskFor(aRouterId)) != 0; }
+    bool IsAllocated(uint8_t aRouterId) const
+    {
+        return (aRouterId <= kMaxRouterId) && ((mMask[aRouterId / 8] & MaskFor(aRouterId)) != 0);
+    }
 
     /**
      * Sets a given Router ID in the mask.

@@ -609,12 +609,54 @@ void TestLeaderWeightCalculation(void)
 
 #endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
+void TestRouterIdRangeChecks(void)
+{
+    Mle::RouterIdMask mask;
+
+    // `RouterIdMask` (carried in `RouteTlv`/`ThreadRouterMaskTlv`) indexes
+    // its bitmask by Router ID. A Router ID taken from a received message
+    // (e.g., the Leader Router ID from a Leader Data TLV) can exceed
+    // `kMaxRouterId`, so the lookup must reject out-of-range IDs instead of
+    // reading past the mask.
+
+    mask.Clear();
+    mask.Add(0);
+    mask.Add(Mle::kMaxRouterId);
+
+    VerifyOrQuit(mask.IsAllocated(0));
+    VerifyOrQuit(mask.IsAllocated(Mle::kMaxRouterId));
+    VerifyOrQuit(!mask.IsAllocated(1));
+
+    VerifyOrQuit(!mask.IsAllocated(Mle::kInvalidRouterId));
+    VerifyOrQuit(!mask.IsAllocated(64));
+    VerifyOrQuit(!mask.IsAllocated(NumericLimits<uint8_t>::kMax));
+
+#if OPENTHREAD_FTD
+    {
+        Instance *instance = static_cast<Instance *>(testInitInstance());
+
+        VerifyOrQuit(instance != nullptr);
+
+        // `RouterTable` maps Router IDs to entries and must reject
+        // out-of-range IDs the same way `FindRouterById()` already does.
+
+        VerifyOrQuit(!instance->Get<RouterTable>().IsAllocated(Mle::kInvalidRouterId));
+        VerifyOrQuit(!instance->Get<RouterTable>().IsAllocated(NumericLimits<uint8_t>::kMax));
+
+        testFreeInstance(instance);
+    }
+#endif
+
+    printf("TestRouterIdRangeChecks passed\n");
+}
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestDeviceMode();
     ot::UnitTester::TestChildIdResponseNetworkDataHandling();
+    ot::TestRouterIdRangeChecks();
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     ot::TestDefaultDeviceProperties();
