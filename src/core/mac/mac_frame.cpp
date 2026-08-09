@@ -1271,23 +1271,21 @@ exit:
 Frame::InfoString Frame::ToInfoString(void) const
 {
     InfoString string;
-    uint8_t    commandId, type;
-    Address    src, dst;
-    uint32_t   frameCounter;
-    bool       sequencePresent;
+    ParseInfo  info;
+    uint16_t   type;
 
-    string.Append("len:%d", mLength);
+    string.Append("len:%u", mLength);
 
-    sequencePresent = IsSequencePresent();
+    SuccessOrExit(info.ParseFrom(*this, kParseFully));
 
-    if (sequencePresent)
+    if (IsSeqPresent(info.mFcf))
     {
-        string.Append(", seqnum:%d", GetSequence());
+        string.Append(", seqnum:%u", info.mSequenceNum);
     }
 
     string.Append(", type:");
 
-    type = GetType();
+    type = GetType(info.mFcf);
 
     switch (type)
     {
@@ -1304,12 +1302,7 @@ Frame::InfoString Frame::ToInfoString(void) const
         break;
 
     case kTypeMacCmd:
-        if (GetCommandId(commandId) != kErrorNone)
-        {
-            commandId = 0xff;
-        }
-
-        switch (commandId)
+        switch (info.mCommandId)
         {
         case kMacCmdDataRequest:
             string.Append("Cmd(DataReq)");
@@ -1320,28 +1313,27 @@ Frame::InfoString Frame::ToInfoString(void) const
             break;
 
         default:
-            string.Append("Cmd(%d)", commandId);
+            string.Append("Cmd(%u)", info.mCommandId);
             break;
         }
 
         break;
 
     default:
-        string.Append("%d", type);
+        string.Append("%u", type);
         break;
     }
 
-    IgnoreError(GetSrcAddr(src));
-    IgnoreError(GetDstAddr(dst));
+    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", info.mAddrs.mSource.ToString().AsCString(),
+                  info.mAddrs.mDestination.ToString().AsCString(), ToYesNo(IsSecurityEnabled(info.mFcf)),
+                  ToYesNo(IsAckRequest(info.mFcf)));
 
-    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
-                  ToYesNo(GetSecurityEnabled()), ToYesNo(GetAckRequest()));
-
-    if (!sequencePresent && GetFrameCounter(frameCounter) == kErrorNone)
+    if (IsSecurityEnabled(info.mFcf))
     {
-        string.Append(", fc:%lu", ToUlong(frameCounter));
+        string.Append(", fc:%lu", ToUlong(info.mFrameCounter));
     }
 
+exit:
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     string.Append(", radio:%s", Radio::TypeToString(GetRadioType()));
 #endif
