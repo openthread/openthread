@@ -44,6 +44,8 @@
 #include "common/error.hpp"
 #include "common/heap.hpp"
 #include "common/new.hpp"
+#include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 
 namespace ot {
 namespace Heap {
@@ -283,7 +285,7 @@ public:
 
         if (mLength == mCapacity)
         {
-            SuccessOrExit(error = Allocate(mCapacity + kCapacityIncrements));
+            SuccessOrExit(error = Grow());
         }
 
         new (&mArray[mLength++]) Type(aEntry);
@@ -309,7 +311,7 @@ public:
 
         if (mLength == mCapacity)
         {
-            SuccessOrExit(error = Allocate(mCapacity + kCapacityIncrements));
+            SuccessOrExit(error = Grow());
         }
 
         new (&mArray[mLength++]) Type(static_cast<Type &&>(aEntry));
@@ -335,7 +337,7 @@ public:
 
         if (mLength == mCapacity)
         {
-            SuccessOrExit(Allocate(mCapacity + kCapacityIncrements));
+            SuccessOrExit(Grow());
         }
 
         newEntry = new (&mArray[mLength++]) Type();
@@ -502,13 +504,33 @@ public:
     Array &operator=(const Array &) = delete;
 
 private:
+    Error Grow(void)
+    {
+        Error     error       = kErrorNone;
+        IndexType newCapacity = NumericLimits<IndexType>::kMax;
+
+        VerifyOrExit((kCapacityIncrements > 0) && (mCapacity < newCapacity), error = kErrorNoBufs);
+
+        if (kCapacityIncrements <= newCapacity - mCapacity)
+        {
+            newCapacity = static_cast<IndexType>(mCapacity + kCapacityIncrements);
+        }
+
+        error = Allocate(newCapacity);
+
+    exit:
+        return error;
+    }
+
     Error Allocate(IndexType aCapacity)
     {
-        Error error = kErrorNone;
-        Type *newArray;
+        Error  error = kErrorNone;
+        Type  *newArray;
+        size_t allocationSize;
 
         VerifyOrExit((aCapacity != mCapacity) && (aCapacity >= mLength));
-        newArray = static_cast<Type *>(Heap::CAlloc(aCapacity, sizeof(Type)));
+        VerifyOrExit(SafeMultiply<size_t>(aCapacity, sizeof(Type), allocationSize) == kErrorNone, error = kErrorNoBufs);
+        newArray = static_cast<Type *>(Heap::CAlloc(1, allocationSize));
         VerifyOrExit(newArray != nullptr, error = kErrorNoBufs);
 
         for (IndexType index = 0; index < mLength; index++)

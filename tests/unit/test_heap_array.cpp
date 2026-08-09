@@ -28,6 +28,7 @@
 
 #include "test_platform.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #include <openthread/config.h>
@@ -36,6 +37,24 @@
 
 #include "common/heap_array.hpp"
 #include "common/type_traits.hpp"
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+static bool   sFailHeapAllocation;
+static size_t sHeapAllocationCount;
+static size_t sLastHeapAllocationCount;
+static size_t sLastHeapAllocationSize;
+
+extern "C" void *otPlatCAlloc(size_t aNum, size_t aSize)
+{
+    sHeapAllocationCount++;
+    sLastHeapAllocationCount = aNum;
+    sLastHeapAllocationSize  = aSize;
+
+    return sFailHeapAllocation ? nullptr : calloc(aNum, aSize);
+}
+
+extern "C" void otPlatFree(void *aPtr) { free(aPtr); }
+#endif
 
 namespace ot {
 
@@ -81,6 +100,11 @@ public:
 private:
     uint16_t mValue;
     bool     mInitialized;
+};
+
+struct LargeEntry
+{
+    uint8_t mBytes[65538];
 };
 
 template <typename EntryType>
@@ -507,12 +531,115 @@ void TestHeapArray(void)
     printf("\n -- PASS\n");
 }
 
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+void TestHeapArrayCapacityLimit(void)
+{
+    constexpr uint16_t      kMaxCapacity = NumericLimits<uint16_t>::kMax;
+    Heap::Array<uint8_t, 2> array;
+    const uint8_t           value = 0xa5;
+    uint8_t                *arrayBuffer;
+    size_t                  allocationCount;
+
+    printf("\n\n====================================================================================\n");
+    printf("TestHeapArrayCapacityLimit\n\n");
+
+    // Verify growth across the signed 16-bit boundary remains supported.
+    SuccessOrQuit(array.ReserveCapacity(32767));
+
+    for (uint32_t index = 0; index < 32769; index++)
+    {
+        SuccessOrQuit(array.PushBack(static_cast<uint8_t>(index)));
+    }
+
+    VerifyOrQuit(array.GetLength() == 32769);
+    VerifyOrQuit(array.GetCapacity() == 32769);
+
+    array.Free();
+    SuccessOrQuit(array.ReserveCapacity(kMaxCapacity));
+
+    for (uint32_t index = 0; index < kMaxCapacity; index++)
+    {
+        SuccessOrQuit(array.PushBack(static_cast<uint8_t>(index)));
+    }
+
+    VerifyOrQuit(array.GetLength() == kMaxCapacity);
+    VerifyOrQuit(array.GetCapacity() == kMaxCapacity);
+    arrayBuffer = const_cast<uint8_t *>(array.AsCArray());
+
+    // Two source entries beyond the representable limit must both be rejected
+    // without changing the buffer, length, capacity, or existing contents.
+    VerifyOrQuit(array.PushBack(value) == kErrorNoBufs);
+    VerifyOrQuit(array.PushBack(value) == kErrorNoBufs);
+    VerifyOrQuit(array.PushBack(uint8_t{value}) == kErrorNoBufs);
+    VerifyOrQuit(array.PushBack() == nullptr);
+    VerifyOrQuit(array.GetLength() == kMaxCapacity);
+    VerifyOrQuit(array.GetCapacity() == kMaxCapacity);
+    VerifyOrQuit(array.AsCArray() == arrayBuffer);
+    VerifyOrQuit(array.Back() != nullptr && *array.Back() == 0xfe);
+
+    // Removing an entry restores room in the existing buffer and all PushBack
+    // overloads remain usable without another allocation.
+    array.PopBack();
+    SuccessOrQuit(array.PushBack(value));
+    VerifyOrQuit(array.Back() != nullptr && *array.Back() == value);
+    array.PopBack();
+    SuccessOrQuit(array.PushBack(uint8_t{0x5a}));
+    VerifyOrQuit(array.Back() != nullptr && *array.Back() == 0x5a);
+    array.PopBack();
+    VerifyOrQuit(array.PushBack() != nullptr);
+    VerifyOrQuit(array.GetLength() == kMaxCapacity);
+
+    // Allocation failure during ordinary growth must be reported without
+    // mutating the existing allocation, and a later valid growth must work.
+    array.Free();
+    SuccessOrQuit(array.PushBack(value));
+    SuccessOrQuit(array.PushBack(value));
+    arrayBuffer         = const_cast<uint8_t *>(array.AsCArray());
+    sFailHeapAllocation = true;
+    VerifyOrQuit(array.PushBack(value) == kErrorNoBufs);
+    sFailHeapAllocation = false;
+    VerifyOrQuit(array.GetLength() == 2);
+    VerifyOrQuit(array.GetCapacity() == 2);
+    VerifyOrQuit(array.AsCArray() == arrayBuffer);
+    SuccessOrQuit(array.PushBack(value));
+    VerifyOrQuit(array.GetLength() == 3);
+    VerifyOrQuit(array.GetCapacity() == 4);
+
+    // Allocate() must check the full byte-size multiplication before handing
+    // it to the platform allocator. On 32-bit size_t the request overflows and
+    // never reaches the allocator; on wider hosts the exact size is retained.
+    Heap::Array<LargeEntry, 2> largeArray;
+    allocationCount     = sHeapAllocationCount;
+    sFailHeapAllocation = true;
+    VerifyOrQuit(largeArray.ReserveCapacity(kMaxCapacity) == kErrorNoBufs);
+    sFailHeapAllocation = false;
+    VerifyOrQuit(largeArray.GetLength() == 0);
+    VerifyOrQuit(largeArray.GetCapacity() == 0);
+
+    if (sizeof(size_t) == sizeof(uint32_t))
+    {
+        VerifyOrQuit(sHeapAllocationCount == allocationCount);
+    }
+    else
+    {
+        VerifyOrQuit(sHeapAllocationCount == allocationCount + 1);
+        VerifyOrQuit(sLastHeapAllocationCount == 1);
+        VerifyOrQuit(sLastHeapAllocationSize == static_cast<size_t>(kMaxCapacity) * sizeof(LargeEntry));
+    }
+
+    printf("\n -- PASS\n");
+}
+#endif
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestHeapArrayOfUint16();
     ot::TestHeapArray();
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    ot::TestHeapArrayCapacityLimit();
+#endif
     printf("\nAll tests passed.\n");
     return 0;
 }
