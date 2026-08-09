@@ -31,11 +31,69 @@
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "instance/instance.hpp"
+#include "mac/mac_frame.hpp"
+#include "thread/message_framer.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"
 
 namespace ot {
+
+void TestMeshFrameMessageSize(void)
+{
+    static constexpr uint16_t kOversizeLength = 240;
+
+    Instance      *instance = static_cast<Instance *>(testInitInstance());
+    Message       *message;
+    Mac::Addresses addresses;
+    Mac::TxFrame   frame{};
+    uint8_t        psdu[OT_RADIO_FRAME_MAX_SIZE];
+    uint16_t       maxPayloadLength;
+    uint16_t       lengths[3];
+
+    VerifyOrQuit(instance != nullptr);
+
+    frame.mPsdu = psdu;
+    frame.SetRadioType(Radio::kTypeIeee802154);
+    addresses.mSource.SetShort(0x1111);
+    addresses.mDestination.SetShort(0x2222);
+
+    VerifyOrQuit((message = instance->Get<MessagePool>().Allocate(Message::kType6lowpan)) != nullptr);
+    SuccessOrQuit(message->SetLength(kOversizeLength));
+
+    // An oversized forwarded mesh message must be rejected before its payload is copied.
+    VerifyOrQuit(instance->Get<MessageFramer>().PrepareMeshFrame(frame, *message, addresses) == kErrorNoBufs);
+    message->Free();
+
+    // Prepare an empty frame to determine the payload capacity for these MAC headers.
+    VerifyOrQuit((message = instance->Get<MessagePool>().Allocate(Message::kType6lowpan)) != nullptr);
+    SuccessOrQuit(instance->Get<MessageFramer>().PrepareMeshFrame(frame, *message, addresses));
+    maxPayloadLength = frame.GetMtu() - frame.GetLength();
+    message->Free();
+
+    lengths[0] = maxPayloadLength - 1;
+    lengths[1] = maxPayloadLength;
+    lengths[2] = maxPayloadLength + 1;
+
+    for (uint16_t length : lengths)
+    {
+        VerifyOrQuit((message = instance->Get<MessagePool>().Allocate(Message::kType6lowpan)) != nullptr);
+        SuccessOrQuit(message->SetLength(length));
+
+        VerifyOrQuit(instance->Get<MessageFramer>().PrepareMeshFrame(frame, *message, addresses) ==
+                     ((length <= maxPayloadLength) ? kErrorNone : kErrorNoBufs));
+        message->Free();
+    }
+
+    // Rejection must not prevent a subsequent valid frame from being prepared.
+    VerifyOrQuit((message = instance->Get<MessagePool>().Allocate(Message::kType6lowpan)) != nullptr);
+    SuccessOrQuit(message->SetLength(maxPayloadLength));
+    SuccessOrQuit(instance->Get<MessageFramer>().PrepareMeshFrame(frame, *message, addresses));
+    VerifyOrQuit(frame.GetLength() == frame.GetMtu());
+    message->Free();
+
+    testFreeInstance(instance);
+}
 
 void TestMessage(uint16_t aReservedLength)
 {
@@ -542,6 +600,8 @@ void TestAppender(void)
 int main(void)
 {
     static const uint16_t kReserveLengths[] = {0, 33, 400};
+
+    ot::TestMeshFrameMessageSize();
 
     for (uint16_t reservedLength : kReserveLengths)
     {

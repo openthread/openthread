@@ -712,7 +712,9 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
 #if OPENTHREAD_FTD
 
     case Message::kType6lowpan:
-        mMessageNextOffset = Get<MessageFramer>().PrepareMeshFrame(*frame, *mSendMessage, mMacAddrs);
+        mMessageNextOffset = mSendMessage->GetLength();
+        VerifyOrExit(Get<MessageFramer>().PrepareMeshFrame(*frame, *mSendMessage, mMacAddrs) == kErrorNone,
+                     frame = nullptr);
         break;
 
     case Message::kTypeSupervision:
