@@ -506,10 +506,12 @@ public:
 private:
     Error Grow(void)
     {
+        static_assert(kCapacityIncrements > 0, "kCapacityIncrements must be greater than zero");
+
         Error     error       = kErrorNone;
         IndexType newCapacity = NumericLimits<IndexType>::kMax;
 
-        VerifyOrExit((kCapacityIncrements > 0) && (mCapacity < newCapacity), error = kErrorNoBufs);
+        VerifyOrExit(mCapacity < newCapacity, error = kErrorNoBufs);
 
         if (kCapacityIncrements <= newCapacity - mCapacity)
         {
