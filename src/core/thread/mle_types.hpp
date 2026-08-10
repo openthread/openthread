@@ -769,6 +769,13 @@ public:
     Error ReadFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
     /**
+     * Initializes the `RxChallenge` from a given `TxChallenge`.
+     *
+     * @param[in] aTxChallenge  The `TxChallenge` to initialize from.
+     */
+    void InitFrom(const TxChallenge &aTxChallenge);
+
+    /**
      * Compares the `RxChallenge` with a given `TxChallenge`.
      *
      * @param[in] aTxChallenge  The `TxChallenge` to compare with.

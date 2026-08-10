@@ -45,6 +45,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
+#include "common/msg_backed_array.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/time_ticker.hpp"
@@ -1927,7 +1928,6 @@ private:
         Error Start(void);
         void  Stop(void);
         bool  IsRestoringChildRole(void) const { return mState == kRestoringChildRole; }
-        bool  IsRestoringRouterOrLeaderRole(void) const { return mState == kRestoringRouterOrLeaderRole; }
         void  HandleTimer(void);
         void  HandleChildUpdateRequest(RxInfo &aRxInfo) { CheckIfMessageIsFromParent(aRxInfo); }
 
@@ -2328,6 +2328,43 @@ private:
         uint8_t mDowngradeThreshold;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class TxChallengeTable : public InstanceLocator
+    {
+        // Track challenges used in Link Request tx to routers
+
+    public:
+        static constexpr uint8_t kTimeout = kLinkAcceptTimeout + 1; // + 1 for extra margin before removing entry
+
+        explicit TxChallengeTable(Instance &aInstance);
+
+        void  Clear(void);
+        Error GenerateFor(uint8_t aRouterId, TxChallenge &aChallenge);
+        Error GenerateForMulticast(TxChallenge &aChallenge) { return GenerateFor(kAnyRouterId, aChallenge); }
+        bool  ContainsMatching(const RxChallenge &aRxChallenge, uint8_t aRouterId) const;
+        void  HandleTimeTick(void);
+
+    private:
+        static constexpr uint8_t  kAnyRouterId = kInvalidRouterId;
+        static constexpr uint16_t kMaxEntries  = kMaxRouters + 1; // + 1 for multicast (kAnyRouterId)
+
+        struct Entry
+        {
+            bool Matches(uint8_t aRouterId) const { return (mRouterId == aRouterId); }
+            bool Matches(const RxChallenge &aRxChallenge, uint8_t aRouterId) const;
+
+            TxChallenge mChallenge;
+            uint8_t     mRouterId;
+            uint8_t     mTimeout;
+        };
+
+        using EntryArray   = MessageBackedArray<Entry, kMaxEntries>;
+        using IndexedEntry = EntryArray::IndexedEntry;
+
+        EntryArray mEntries;
+    };
+
 #endif // OPENTHREAD_FTD
 
     //------------------------------------------------------------------------------------------------------------------
@@ -2656,6 +2693,7 @@ private:
     ChildTable                 mChildTable;
     RouterTable                mRouterTable;
     RoleTransitioner           mRoleTransitioner;
+    TxChallengeTable           mTxChallengeTable;
     Ip6::Netif::UnicastAddress mLeaderAloc;
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     DeviceProperties mDeviceProperties;

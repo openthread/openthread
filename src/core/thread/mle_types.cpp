@@ -192,6 +192,12 @@ exit:
     return error;
 }
 
+void RxChallenge::InitFrom(const TxChallenge &aTxChallenge)
+{
+    memcpy(mArray.GetArrayBuffer(), aTxChallenge.m8, sizeof(aTxChallenge.m8));
+    mArray.SetLength(sizeof(aTxChallenge.m8));
+}
+
 bool RxChallenge::operator==(const TxChallenge &aTxChallenge) const
 {
     return (mArray.GetLength() == kMaxSize) && (memcmp(mArray.GetArrayBuffer(), aTxChallenge.m8, kMaxSize) == 0);

@@ -265,6 +265,246 @@ public:
         printf("TestChildIdResponseNetworkDataHandling passed\n");
     }
 
+#if OPENTHREAD_FTD
+    class TxChallenge : public Mle::TxChallenge
+    {
+    public:
+        Mle::RxChallenge AsRx(void) const
+        {
+            Mle::RxChallenge rxChallenge;
+
+            rxChallenge.InitFrom(*this);
+            return rxChallenge;
+        }
+    };
+
+    static void TestTxChallengeTable(void)
+    {
+        Instance                   *instance = static_cast<Instance *>(testInitInstance());
+        Mle::Mle::TxChallengeTable *table;
+
+        printf("TestTxChallengeTable\n");
+
+        VerifyOrQuit(instance != nullptr);
+
+        table = &instance->Get<Mle::Mle>().mTxChallengeTable;
+
+        // Generate one challenge for router ID 1 and check matching & aging
+        {
+            static constexpr uint8_t kRouterId      = 1;
+            static constexpr uint8_t kWrongRouterId = 2;
+
+            TxChallenge challenge;
+            TxChallenge badChallenge;
+
+            table->Clear();
+
+            SuccessOrQuit(table->GenerateFor(kRouterId, challenge));
+
+            badChallenge.GenerateRandom();
+
+            // Positive match
+            VerifyOrQuit(table->ContainsMatching(challenge.AsRx(), kRouterId));
+
+            // Negative matches
+            VerifyOrQuit(!table->ContainsMatching(challenge.AsRx(), kWrongRouterId)); // Wrong router ID
+            VerifyOrQuit(!table->ContainsMatching(badChallenge.AsRx(), kRouterId));   // Wrong challenge
+            VerifyOrQuit(!table->ContainsMatching(badChallenge.AsRx(), kWrongRouterId));
+
+            // Aging
+
+            for (uint8_t i = 0; i < Mle::Mle::TxChallengeTable::kTimeout - 1; i++)
+            {
+                table->HandleTimeTick();
+                VerifyOrQuit(table->ContainsMatching(challenge.AsRx(), kRouterId));
+            }
+
+            table->HandleTimeTick();
+            VerifyOrQuit(!table->ContainsMatching(challenge.AsRx(), kRouterId));
+        }
+
+        // Multicast challenge
+        {
+            static constexpr uint8_t kRouterId = 5;
+
+            TxChallenge challenge;
+            TxChallenge multiChallenge;
+
+            table->Clear();
+
+            SuccessOrQuit(table->GenerateFor(kRouterId, challenge));
+
+            SuccessOrQuit(table->GenerateForMulticast(multiChallenge));
+
+            // Multicast challenge matches any router ID
+
+            for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+            {
+                VerifyOrQuit(table->ContainsMatching(multiChallenge.AsRx(), routerId));
+
+                if (routerId != kRouterId)
+                {
+                    VerifyOrQuit(!table->ContainsMatching(challenge.AsRx(), routerId));
+                }
+                else
+                {
+                    VerifyOrQuit(table->ContainsMatching(challenge.AsRx(), routerId));
+                }
+            }
+        }
+
+        // Overwriting & Timeout Reset
+        {
+            static constexpr uint8_t kRouterIdR1 = 3;
+            static constexpr uint8_t kRouterIdR2 = 12;
+
+            TxChallenge challengeR1;
+            TxChallenge challengeR2;
+            TxChallenge challengeMulti;
+            TxChallenge newChallengeR2;
+            TxChallenge newChallengeMulti;
+
+            table->Clear();
+
+            SuccessOrQuit(table->GenerateFor(kRouterIdR1, challengeR1));
+            SuccessOrQuit(table->GenerateFor(kRouterIdR2, challengeR2));
+            SuccessOrQuit(table->GenerateForMulticast(challengeMulti));
+
+            // Tick 2 times
+            table->HandleTimeTick();
+            table->HandleTimeTick();
+
+            VerifyOrQuit(table->ContainsMatching(challengeR1.AsRx(), kRouterIdR1));
+            VerifyOrQuit(table->ContainsMatching(challengeR2.AsRx(), kRouterIdR2));
+
+            for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+            {
+                VerifyOrQuit(table->ContainsMatching(challengeMulti.AsRx(), routerId));
+            }
+
+            // Regenerate challenge for Router ID 2 (overwrites old entry and resets timeout)
+
+            SuccessOrQuit(table->GenerateFor(kRouterIdR2, newChallengeR2));
+
+            // Check that old challenge for R2 no longer matches, but new challenge for R2 matches
+            VerifyOrQuit(!table->ContainsMatching(challengeR2.AsRx(), kRouterIdR2));
+            VerifyOrQuit(table->ContainsMatching(newChallengeR2.AsRx(), kRouterIdR2));
+
+            // Tick 1 time
+            table->HandleTimeTick();
+
+            VerifyOrQuit(table->ContainsMatching(challengeR1.AsRx(), kRouterIdR1));
+            VerifyOrQuit(table->ContainsMatching(newChallengeR2.AsRx(), kRouterIdR2));
+
+            for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+            {
+                VerifyOrQuit(table->ContainsMatching(challengeMulti.AsRx(), routerId));
+            }
+
+            // Regenerate multicast challenge
+            SuccessOrQuit(table->GenerateForMulticast(newChallengeMulti));
+
+            VerifyOrQuit(table->ContainsMatching(challengeR1.AsRx(), kRouterIdR1));
+            VerifyOrQuit(table->ContainsMatching(newChallengeR2.AsRx(), kRouterIdR2));
+
+            for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+            {
+                VerifyOrQuit(!table->ContainsMatching(challengeMulti.AsRx(), routerId));
+                VerifyOrQuit(table->ContainsMatching(newChallengeMulti.AsRx(), routerId));
+            }
+
+            table->HandleTimeTick();
+
+            // R1 entry should have aged
+            VerifyOrQuit(!table->ContainsMatching(challengeR1.AsRx(), kRouterIdR1));
+
+            VerifyOrQuit(table->ContainsMatching(newChallengeR2.AsRx(), kRouterIdR2));
+            VerifyOrQuit(table->ContainsMatching(newChallengeMulti.AsRx(), 0));
+
+            // Wait two ticks - Now new R2 entry must have aged
+            table->HandleTimeTick();
+            table->HandleTimeTick();
+            VerifyOrQuit(!table->ContainsMatching(newChallengeR2.AsRx(), kRouterIdR2));
+            VerifyOrQuit(table->ContainsMatching(newChallengeMulti.AsRx(), 1));
+
+            table->HandleTimeTick();
+            VerifyOrQuit(!table->ContainsMatching(newChallengeMulti.AsRx(), 1));
+        }
+
+        // Fill Capacity & Clear
+        {
+            static constexpr uint8_t kChosenRouterId = 10;
+
+            TxChallenge challenges[Mle::kMaxRouters];
+            TxChallenge multicastChallenge;
+            TxChallenge updatedChallenge;
+
+            table->Clear();
+
+            // Fill all router IDs (0 to kMaxRouters-1) and 1 multicast entry
+            for (uint8_t routerId = 0; routerId < Mle::kMaxRouters; routerId++)
+            {
+                SuccessOrQuit(table->GenerateFor(routerId, challenges[routerId]));
+                VerifyOrQuit(table->ContainsMatching(challenges[routerId].AsRx(), routerId));
+            }
+
+            SuccessOrQuit(table->GenerateForMulticast(multicastChallenge));
+
+            table->HandleTimeTick();
+
+            // Verify all entries match correctly
+            for (uint8_t routerId = 0; routerId < Mle::kMaxRouters; routerId++)
+            {
+                VerifyOrQuit(table->ContainsMatching(challenges[routerId].AsRx(), routerId));
+                VerifyOrQuit(table->ContainsMatching(multicastChallenge.AsRx(), routerId));
+            }
+
+            // Overwrite an existing router ID when full (should succeed)
+            SuccessOrQuit(table->GenerateFor(kChosenRouterId, updatedChallenge));
+
+            VerifyOrQuit(table->ContainsMatching(updatedChallenge.AsRx(), kChosenRouterId));
+            VerifyOrQuit(!table->ContainsMatching(challenges[kChosenRouterId].AsRx(), kChosenRouterId));
+
+            for (uint8_t i = 0; i < Mle::Mle::TxChallengeTable::kTimeout - 1; i++)
+            {
+                table->HandleTimeTick();
+            }
+
+            for (uint8_t routerId = 0; routerId < Mle::kMaxRouters; routerId++)
+            {
+                if (routerId == kChosenRouterId)
+                {
+                    VerifyOrQuit(table->ContainsMatching(updatedChallenge.AsRx(), routerId));
+                }
+                else
+                {
+                    VerifyOrQuit(!table->ContainsMatching(challenges[routerId].AsRx(), routerId));
+                }
+
+                VerifyOrQuit(!table->ContainsMatching(multicastChallenge.AsRx(), routerId));
+            }
+
+            // Fill table again
+            for (uint8_t routerId = 0; routerId < Mle::kMaxRouters; routerId++)
+            {
+                SuccessOrQuit(table->GenerateFor(routerId, challenges[routerId]));
+                VerifyOrQuit(table->ContainsMatching(challenges[routerId].AsRx(), routerId));
+            }
+
+            // Clear table and verify no matches
+            table->Clear();
+
+            for (uint8_t routerId = 0; routerId < Mle::kMaxRouters; routerId++)
+            {
+                VerifyOrQuit(!table->ContainsMatching(challenges[routerId].AsRx(), routerId));
+            }
+        }
+
+        testFreeInstance(instance);
+        printf("TestTxChallengeTable passed\n");
+    }
+#endif // OPENTHREAD_FTD
+
 private:
     static void SetNetworkData(Instance      &aInstance,
                                uint8_t        aDataVersion,
@@ -615,6 +855,10 @@ int main(void)
 {
     ot::TestDeviceMode();
     ot::UnitTester::TestChildIdResponseNetworkDataHandling();
+
+#if OPENTHREAD_FTD
+    ot::UnitTester::TestTxChallengeTable();
+#endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     ot::TestDefaultDeviceProperties();
