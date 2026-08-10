@@ -31,8 +31,6 @@
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_frame.hpp"
-#include "thread/message_framer.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"
