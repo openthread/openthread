@@ -163,11 +163,12 @@ public:
      *
      * @param[in]  aMessage   An owned pointer to a message (ownership is transferred to the method).
      *
-     * @retval kErrorNone     Successfully processed the message.
-     * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
-     * @retval kErrorNoBufs   Could not allocate necessary message buffers when processing the datagram.
-     * @retval kErrorNoRoute  No route to host.
-     * @retval kErrorParse    Encountered a malformed header when processing the message.
+     * @retval kErrorNone         Successfully processed the message.
+     * @retval kErrorDrop         Message was well-formed but not fully processed due to packet processing rules.
+     * @retval kErrorInvalidArgs  The message origin is the Thread network interface.
+     * @retval kErrorNoBufs       Could not allocate necessary message buffers when processing the datagram.
+     * @retval kErrorNoRoute      No route to host.
+     * @retval kErrorParse        Encountered a malformed header when processing the message.
      */
     Error SendRaw(OwnedPtr<Message> aMessage);
 

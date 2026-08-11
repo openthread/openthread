@@ -1121,6 +1121,8 @@ Error Ip6::SendRaw(OwnedPtr<Message> aMessagePtr)
     Error  error = kErrorNone;
     Header header;
 
+    VerifyOrExit(!aMessagePtr->IsOriginThreadNetif(), error = kErrorInvalidArgs);
+
     SuccessOrExit(error = header.ParseFrom(*aMessagePtr));
     VerifyOrExit(!header.GetSource().IsMulticast(), error = kErrorInvalidSourceAddress);
 
