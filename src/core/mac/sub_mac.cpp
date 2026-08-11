@@ -163,14 +163,18 @@ void SubMac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     mRxOnWhenIdle = aRxOnWhenIdle;
 
-    if (RadioSupports(kCapRxOnWhenIdle))
-    {
-#if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-        Get<Radio::Radio>().SetRxOnWhenIdle(mRxOnWhenIdle);
-#endif
-    }
+    LogDebg("RxOnWhenIdle: %u", mRxOnWhenIdle);
 
-    LogDebg("RxOnWhenIdle: %d", mRxOnWhenIdle);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+    // Keep radio rx-on-when-idle enabled for debugging when `MAC_CSL_DEBUG_ENABLE`.
+    ExitNow();
+#endif
+
+    VerifyOrExit(RadioSupports(kCapRxOnWhenIdle));
+    Get<Radio::Radio>().SetRxOnWhenIdle(mRxOnWhenIdle);
+
+exit:
+    return;
 }
 
 Error SubMac::Enable(void)
@@ -981,12 +985,15 @@ void SubMac::RadioSample(void)
         ExitNow();
     }
 
-#if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+    // Don't sleep for debugging when `MAC_CSL_DEBUG_ENABLE`.
+    ExitNow();
+#endif
+
     if (!RadioSupports(kCapRxOnWhenIdle))
     {
         IgnoreError(Get<Radio::Radio>().Sleep());
     }
-#endif
 
 exit:
     return;
@@ -1056,9 +1063,12 @@ void SubMac::UpdateRadioSampleState(void)
     }
 #endif
 
-#if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-    IgnoreError(Get<Radio::Radio>().Sleep()); // Don't actually sleep for debugging
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+    // Don't sleep for debugging when `MAC_CSL_DEBUG_ENABLE`.
+    ExitNow();
 #endif
+
+    IgnoreError(Get<Radio::Radio>().Sleep());
 
 exit:
     return;

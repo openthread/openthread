@@ -360,7 +360,7 @@ void SubMac::LogReceived(RxFrame *aFrame)
 exit:
     return;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
 
 } // namespace Mac
 } // namespace ot
