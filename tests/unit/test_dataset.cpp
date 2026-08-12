@@ -28,6 +28,10 @@
 
 #include <openthread/config.h>
 
+#include <string.h>
+
+#include <openthread/dataset.h>
+
 #include "test_platform.h"
 #include "test_util.hpp"
 
@@ -320,12 +324,58 @@ void TestDataset(void)
     }
 }
 
+// `otDatasetAffectsConnectivity()` builds its working `Dataset` from raw caller
+// bytes via `SetFrom()`, which only checks the overall buffer length, not that each
+// TLV's declared length matches what its type requires. Without a `ValidateTlvs()`
+// call, a `NetworkKeyTlv` (type 5, needs 16 bytes) declared with length 0 lets
+// `Read<NetworkKeyTlv>()` read 16 bytes past the TLV header regardless -- past the
+// `mTlvs` array and the `Dataset` object itself. This checks the malformed case is
+// now safely rejected, and that a validly-formed dataset containing a real 16-byte
+// `NetworkKeyTlv` is still accepted (no regression for legitimate callers).
+void TestDatasetAffectsConnectivityRejectsMalformedTlvs(void)
+{
+    otInstance *instance = testInitInstance();
+
+    {
+        // Malformed: type 222 filler TLV (length 250) fills bytes [0..251], then a
+        // NetworkKeyTlv (type 5) with declared length 0 sits at [252..253]. The
+        // 254-byte buffer is internally consistent (every TLV's own header+declared
+        // length fits), but the NetworkKeyTlv's declared length is short of the 16
+        // bytes `NetworkKeyTlv::ValueType` requires.
+        otOperationalDatasetTlvs tlvs;
+
+        tlvs.mLength = 254;
+        memset(tlvs.mTlvs, 0x41, sizeof(tlvs.mTlvs));
+        tlvs.mTlvs[0]   = 222;
+        tlvs.mTlvs[1]   = 250;
+        tlvs.mTlvs[252] = OT_MESHCOP_TLV_NETWORKKEY;
+        tlvs.mTlvs[253] = 0;
+
+        VerifyOrQuit(!otDatasetAffectsConnectivity(instance, &tlvs));
+    }
+
+    {
+        // Well-formed: a single, correctly-sized `NetworkKeyTlv` (type 5, length 16).
+        otOperationalDatasetTlvs tlvs;
+
+        tlvs.mTlvs[0] = OT_MESHCOP_TLV_NETWORKKEY;
+        tlvs.mTlvs[1] = sizeof(otNetworkKey);
+        memset(&tlvs.mTlvs[2], 0x11, sizeof(otNetworkKey));
+        tlvs.mLength = 2 + sizeof(otNetworkKey);
+
+        // Must not crash; the returned value only depends on whether this key
+        // differs from the instance's own, which this test does not assert.
+        otDatasetAffectsConnectivity(instance, &tlvs);
+    }
+}
+
 } // namespace MeshCoP
 } // namespace ot
 
 int main(void)
 {
     ot::MeshCoP::TestDataset();
+    ot::MeshCoP::TestDatasetAffectsConnectivityRejectsMalformedTlvs();
 
     printf("All tests passed\n");
     return 0;
