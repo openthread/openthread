@@ -294,6 +294,7 @@ void TestMacHeader(void)
         Mac::TxFrame::BuildInfo buildInfo;
         Mac::Address            address;
         Mac::PanId              panId;
+        Mac::Frame::Lengths     lengths;
 
         frame.mPsdu      = psdu;
         frame.mLength    = 0;
@@ -360,10 +361,12 @@ void TestMacHeader(void)
         buildInfo.mKeyIdMode        = testCase.mKeyIdMode;
         buildInfo.mSuppressSequence = testCase.mSuppressSequence;
 
-        buildInfo.PrepareHeadersIn(frame);
+        frame.PrepareHeadersWithEmptyPayload(buildInfo);
 
-        VerifyOrQuit(frame.GetHeaderLength() == testCase.mHeaderLength);
-        VerifyOrQuit(frame.GetFooterLength() == testCase.mFooterLength);
+        SuccessOrQuit(frame.DetermineLengths(lengths));
+
+        VerifyOrQuit(lengths.mHeader == testCase.mHeaderLength);
+        VerifyOrQuit(lengths.mFooter == testCase.mFooterLength);
         VerifyOrQuit(frame.GetLength() == testCase.mHeaderLength + testCase.mFooterLength);
 
         VerifyOrQuit(frame.GetType() == Mac::Frame::kTypeData);
@@ -399,14 +402,16 @@ void TestMacHeader(void)
 
         if (frame.GetSecurityEnabled())
         {
-            uint8_t security;
-            uint8_t keyIdMode;
+            Mac::Frame::SecurityLevel security;
+            Mac::Frame::KeyIdMode     keyIdMode;
 
             SuccessOrQuit(frame.GetSecurityLevel(security));
             VerifyOrQuit(security == testCase.mSecurity);
+            VerifyOrQuit(frame.HasSecurityLevel(testCase.mSecurity));
 
             SuccessOrQuit(frame.GetKeyIdMode(keyIdMode));
             VerifyOrQuit(keyIdMode == testCase.mKeyIdMode);
+            VerifyOrQuit(frame.HasKeyIdMode(testCase.mKeyIdMode));
         }
 
         offset = snprintf(string, sizeof(string), "\nver:%s, src[addr:%s, pan:%s], dst[addr:%s, pan:%s], sec:%s",
@@ -664,8 +669,10 @@ void TestMacFrameApi(void)
     Mac::Frame frame;
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    uint8_t data_psdu1[]    = {0x29, 0xee, 0x53, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x05,
-                               0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x0d, 0x01, 0x00, 0x00, 0x00, 0x01};
+    uint8_t data_psdu1[] = {0x29, 0xee, 0x53, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a,
+                            0x6e, 0x16, 0x05, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x0d,
+                            0x01, 0x00, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00};
+
     uint8_t mac_cmd_psdu2[] = {0x6b, 0xaa, 0x8d, 0xce, 0xfa, 0x00, 0x68, 0x01, 0x68, 0x0d,
                                0x08, 0x00, 0x00, 0x00, 0x01, 0x04, 0x0d, 0xed, 0x0b, 0x35,
                                0x0c, 0x80, 0x3f, 0x04, 0x4b, 0x88, 0x89, 0xd6, 0x59, 0xe1};

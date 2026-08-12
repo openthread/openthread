@@ -725,7 +725,7 @@ TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
     buildInfo.mCommandId = Frame::kMacCmdBeaconRequest;
     buildInfo.mVersion   = Frame::kVersion2003;
 
-    buildInfo.PrepareHeadersIn(frame);
+    frame.PrepareHeadersWithEmptyPayload(buildInfo);
 
     LogInfo("Sending Beacon Request");
 
@@ -734,9 +734,9 @@ TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
 
 TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 {
-    TxFrame           *frame;
-    TxFrame::BuildInfo buildInfo;
-    FrameBuilder       builder;
+    TxFrame                *frame;
+    TxFrame::BuildInfo      buildInfo;
+    TxFrame::PayloadBuilder builder;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
@@ -753,16 +753,15 @@ TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
     buildInfo.mType    = Frame::kTypeBeacon;
     buildInfo.mVersion = Frame::kVersion2003;
 
-    buildInfo.PrepareHeadersIn(*frame);
+    frame->PrepareHeaders(buildInfo, builder);
 
-    builder.Init(frame->GetPayload(), frame->GetMaxPayloadLength());
     builder.Append<BeaconHeader>()->Init();
 
 #if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     builder.Append<BeaconPayload>()->Init(Get<MeshCoP::NetworkIdentity>(), IsJoinable());
 #endif
 
-    frame->SetPayloadLength(builder.GetLength());
+    frame->FinishPayload(builder);
 
     LogBeacon("Sending");
 
@@ -807,7 +806,7 @@ bool Mac::IsJoinable(void) const
 void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 {
     KeyManager       &keyManager = Get<KeyManager>();
-    uint8_t           keyIdMode;
+    Frame::KeyIdMode  keyIdMode;
     const ExtAddress *extAddress = nullptr;
 
     VerifyOrExit(aFrame.GetSecurityEnabled());
@@ -1184,7 +1183,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t
     if (aError != kErrorNone)
     {
         LogFrameTxFailure(aFrame, aError, aRetryCount, aWillRetx);
-        DumpDebg("TX ERR", aFrame.GetHeader(), 16);
+        DumpDebg("TX ERR", aFrame.GetPsdu(), 16);
 
         if (aWillRetx)
         {
@@ -1475,7 +1474,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         }
 #endif
 
-        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
+        DumpDebg("TX", aFrame.GetPsdu(), aFrame.GetLength());
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -1488,7 +1487,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
     case kOperationTransmitDataCsl:
         mCounters.mTxData++;
 
-        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
+        DumpDebg("TX", aFrame.GetPsdu(), aFrame.GetLength());
         FinishOperation();
         Get<CslTxScheduler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
@@ -1511,7 +1510,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         }
 #endif
 
-        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
+        DumpDebg("TX", aFrame.GetPsdu(), aFrame.GetLength());
         FinishOperation();
         Get<DataPollHandler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
@@ -1651,8 +1650,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 {
     KeyManager        &keyManager = Get<KeyManager>();
     Error              error      = kErrorSecurity;
-    uint8_t            securityLevel;
-    uint8_t            keyIdMode;
+    Frame::KeyIdMode   keyIdMode;
     uint32_t           frameCounter;
     uint32_t           keySequence = 0;
     const KeyMaterial *macKey;
@@ -1660,13 +1658,12 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = kErrorNone);
 
-    IgnoreError(aFrame.GetSecurityLevel(securityLevel));
-    VerifyOrExit(securityLevel == Frame::kSecurityEncMic32);
+    VerifyOrExit(aFrame.HasSecurityLevel(Frame::kSecurityEncMic32));
 
     IgnoreError(aFrame.GetFrameCounter(frameCounter));
     LogDebg("Rx security - frame counter %lu", ToUlong(frameCounter));
 
-    IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
+    SuccessOrExit(aFrame.GetKeyIdMode(keyIdMode));
 
     switch (keyIdMode)
     {
@@ -1716,13 +1713,15 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
         if (aFrame.IsWakeupFrame())
         {
-            uint32_t sequence;
-            uint8_t  keyIndex;
+            uint32_t  sequence;
+            uint8_t   keyIndex;
+            FrameData keySource;
 
             // TODO: Avoid generating a new key if a wake-up frame was recently received already
 
             IgnoreError(aFrame.GetKeyIndex(keyIndex));
-            sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
+            aFrame.GetKeySource(keySource);
+            sequence = BigEndian::ReadUint32(keySource.GetBytes());
             VerifyOrExit(DetermineKeyIndexFor(sequence) == keyIndex, error = kErrorSecurity);
 
             macKey     = &keyManager.GetTemporaryMacKey(sequence);
@@ -1785,26 +1784,33 @@ exit:
 Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 {
     Error              error = kErrorSecurity;
-    uint8_t            securityLevel;
     uint8_t            txKeyIndex;
     uint8_t            ackKeyIndex;
-    uint8_t            keyIdMode;
     uint32_t           frameCounter;
     Address            srcAddr;
     Address            dstAddr;
     Neighbor          *neighbor = nullptr;
     const KeyMaterial *macKey;
 
-    VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
+    if (!aAckFrame.GetSecurityEnabled())
+    {
+        // Reject an unsecured ACK carrying IEs in response to a secured 2015 frame.
+
+        if (aTxFrame.GetSecurityEnabled() && aTxFrame.IsVersion2015() && aAckFrame.IsIePresent())
+        {
+            ExitNow(error = kErrorSecurity);
+        }
+
+        ExitNow(error = kErrorNone);
+    }
+
     VerifyOrExit(aAckFrame.IsVersion2015());
 
     SuccessOrExit(aAckFrame.ValidatePsdu());
 
-    IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
-    VerifyOrExit(securityLevel == Frame::kSecurityEncMic32);
+    VerifyOrExit(aAckFrame.HasSecurityLevel(Frame::kSecurityEncMic32));
 
-    IgnoreError(aAckFrame.GetKeyIdMode(keyIdMode));
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+    VerifyOrExit(aAckFrame.HasKeyIdMode(Frame::kKeyIdMode1));
 
     IgnoreError(aTxFrame.GetKeyIndex(txKeyIndex));
     IgnoreError(aAckFrame.GetKeyIndex(ackKeyIndex));
@@ -2024,11 +2030,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
         if (aFrame->GetSecurityEnabled())
         {
-            uint8_t keyIdMode;
-
-            IgnoreError(aFrame->GetKeyIdMode(keyIdMode));
-
-            if (keyIdMode == Frame::kKeyIdMode1)
+            if (aFrame->HasKeyIdMode(Frame::kKeyIdMode1))
             {
                 switch (neighbor->GetState())
                 {
@@ -2138,7 +2140,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         ExitNow();
     }
 
-    DumpDebg("RX", aFrame->GetHeader(), aFrame->GetLength());
+    DumpDebg("RX", aFrame->GetPsdu(), aFrame->GetLength());
     Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
 
     UpdateIdleMode();

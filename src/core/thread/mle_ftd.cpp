@@ -333,6 +333,7 @@ void Mle::StopLeader(void)
 void Mle::HandleDetachStart(void)
 {
     mRouterTable.ClearNeighbors();
+    mTxChallengeTable.Clear();
     StopLeader();
     Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMle);
 }
@@ -449,6 +450,7 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
     Get<ThreadNetif>().SubscribeAllRoutersMulticast();
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
     Get<Mac::Mac>().SetBeaconEnabled(true);
+    mTxChallengeTable.Clear();
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kMle);
 
     // Avoid informing an old parent when attaching next as a child after becoming an active router
@@ -672,6 +674,7 @@ void Mle::SendLinkRequest(Router *aRouter)
     Error        error   = kErrorNone;
     TxMessage   *message = nullptr;
     Ip6::Address destination;
+    TxChallenge  challenge;
 
     destination.Clear();
 
@@ -712,28 +715,17 @@ void Mle::SendLinkRequest(Router *aRouter)
 
     if (aRouter == nullptr)
     {
-        mPrevRoleRestorer.GenerateRandomChallenge();
-        SuccessOrExit(error = message->AppendChallengeTlv(mPrevRoleRestorer.GetChallenge()));
+        SuccessOrExit(error = mTxChallengeTable.GenerateForMulticast(challenge));
         destination = Ip6::Address::GetLinkLocalAllRoutersMulticast();
     }
     else
     {
-        if (!aRouter->IsStateValid())
-        {
-            aRouter->GenerateChallenge();
-            SuccessOrExit(error = message->AppendChallengeTlv(aRouter->GetChallenge()));
-        }
-        else
-        {
-            TxChallenge challenge;
-
-            challenge.GenerateRandom();
-            SuccessOrExit(error = message->AppendChallengeTlv(challenge));
-        }
-
+        SuccessOrExit(error = mTxChallengeTable.GenerateFor(aRouter->GetRouterId(), challenge));
         destination.InitAsLinkLocalAddress(aRouter->GetExtAddress());
         aRouter->RestartLinkAcceptTimeout();
     }
+
+    SuccessOrExit(error = message->AppendChallengeTlv(challenge));
 
     SuccessOrExit(error = message->SendTo(destination));
 
@@ -917,9 +909,10 @@ Error Mle::SendLinkAccept(const LinkAcceptInfo &aInfo)
 
     if (command == kCommandLinkAcceptAndRequest)
     {
-        router->GenerateChallenge();
+        TxChallenge challenge;
 
-        SuccessOrExit(error = message->AppendChallengeTlv(router->GetChallenge()));
+        SuccessOrExit(error = mTxChallengeTable.GenerateFor(router->GetRouterId(), challenge));
+        SuccessOrExit(error = message->AppendChallengeTlv(challenge));
         SuccessOrExit(error = message->AppendTlvRequestTlv(kRouterTlvs));
     }
 
@@ -976,16 +969,12 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
     neighborState = (router != nullptr) ? router->GetState() : Neighbor::kStateInvalid;
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadResponseTlv(response));
+    VerifyOrExit(mTxChallengeTable.ContainsMatching(response, routerId), error = kErrorSecurity);
 
     switch (neighborState)
     {
     case Neighbor::kStateLinkRequest:
-        VerifyOrExit(response == router->GetChallenge(), error = kErrorSecurity);
-        break;
-
     case Neighbor::kStateInvalid:
-        VerifyOrExit(mPrevRoleRestorer.IsRestoringRouterOrLeaderRole(), error = kErrorSecurity);
-        VerifyOrExit(response == mPrevRoleRestorer.GetChallenge(), error = kErrorSecurity);
         break;
 
     case Neighbor::kStateValid:
@@ -1756,7 +1745,9 @@ void Mle::HandleTimeTick(void)
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Update `RouterTable`
+    // Update `mTxChallengeTable` and `RouterTable`
+
+    mTxChallengeTable.HandleTimeTick();
 
     for (Router &router : Get<RouterTable>())
     {
@@ -2250,11 +2241,17 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         ExitNow();
     }
 
-    // Ignore "Child Update Request" from a child that is present in the
-    // child table but it is not yet in valid state. For example, a
-    // child which is being restored (due to parent reset) or is in the
-    // middle of the attach process (in `kStateParentRequest` or
-    // `kStateChildIdRequest`).
+    // If the child is in the restoring state (due to parent reset), we
+    // schedule a "Child Update Request" to the child after a short random
+    // delay. We ignore "Child Update Request" if the child is not yet in
+    // a valid state (e.g., it is in the middle of the attach process).
+
+    if (child->IsStateRestoring() && child->IsRxOnWhenIdle())
+    {
+        mDelayedSender.ScheduleChildUpdateRequestToChild(*child,
+                                                         GenerateRandomDelay(kChildUpdateRestoreAfterRxMaxDelay));
+        ExitNow();
+    }
 
     VerifyOrExit(child->IsStateValid());
 
@@ -4061,6 +4058,72 @@ void Mle::RoleTransitioner::HandleTimeTick(void)
 
 exit:
     return;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// TxChallengeTable
+
+Mle::TxChallengeTable::TxChallengeTable(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mEntries(aInstance)
+{
+}
+
+void Mle::TxChallengeTable::Clear(void) { mEntries.Clear(); }
+
+Error Mle::TxChallengeTable::GenerateFor(uint8_t aRouterId, TxChallenge &aChallenge)
+{
+    IndexedEntry entry;
+    bool         shouldPushAsNew;
+
+    shouldPushAsNew = (mEntries.FindMatching(entry, aRouterId) != kErrorNone);
+
+    aChallenge.GenerateRandom();
+
+    entry.mChallenge = aChallenge;
+    entry.mRouterId  = aRouterId;
+    entry.mTimeout   = kTimeout;
+
+    return shouldPushAsNew ? mEntries.Push(entry) : mEntries.Write(entry);
+}
+
+bool Mle::TxChallengeTable::ContainsMatching(const RxChallenge &aRxChallenge, uint8_t aRouterId) const
+{
+    IndexedEntry entry;
+
+    return (mEntries.FindMatching(entry, aRxChallenge, aRouterId) == kErrorNone);
+}
+
+bool Mle::TxChallengeTable::Entry::Matches(const RxChallenge &aRxChallenge, uint8_t aRouterId) const
+{
+    bool matches = false;
+
+    VerifyOrExit((mRouterId == aRouterId) || (mRouterId == kAnyRouterId));
+    matches = (aRxChallenge == mChallenge);
+
+exit:
+    return matches;
+}
+
+void Mle::TxChallengeTable::HandleTimeTick(void)
+{
+    uint16_t     writeIndex = 0;
+    IndexedEntry entry;
+
+    entry.InitForIteration();
+
+    while (mEntries.ReadNext(entry) == kErrorNone)
+    {
+        entry.mTimeout--;
+
+        if (entry.mTimeout > 0)
+        {
+            IgnoreError(mEntries.WriteAt(writeIndex, entry));
+            writeIndex++;
+        }
+    }
+
+    mEntries.AdjustLength(writeIndex);
 }
 
 } // namespace Mle

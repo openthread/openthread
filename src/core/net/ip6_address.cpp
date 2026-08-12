@@ -83,16 +83,16 @@ bool Prefix::IsEqual(const uint8_t *aPrefixBytes, uint8_t aPrefixLength) const
     return (mLength == aPrefixLength) && (CountMatchingBits(GetBytes(), aPrefixBytes, mLength) >= mLength);
 }
 
-bool Prefix::ContainsPrefix(const Prefix &aSubPrefix) const
+bool Prefix::IsCoveredBy(const Prefix &aPrefix) const
 {
-    return (mLength >= aSubPrefix.mLength) &&
-           (CountMatchingBits(GetBytes(), aSubPrefix.GetBytes(), aSubPrefix.GetLength()) >= aSubPrefix.GetLength());
+    return (mLength >= aPrefix.mLength) &&
+           (CountMatchingBits(GetBytes(), aPrefix.GetBytes(), aPrefix.GetLength()) >= aPrefix.GetLength());
 }
 
-bool Prefix::ContainsPrefix(const NetworkPrefix &aSubPrefix) const
+bool Prefix::IsCoveredBy(const NetworkPrefix &aNetworkPrefix) const
 {
     return (mLength >= NetworkPrefix::kLength) &&
-           (CountMatchingBits(GetBytes(), aSubPrefix.m8, NetworkPrefix::kLength) >= NetworkPrefix::kLength);
+           (CountMatchingBits(GetBytes(), aNetworkPrefix.m8, NetworkPrefix::kLength) >= NetworkPrefix::kLength);
 }
 
 void Prefix::Tidy(void)

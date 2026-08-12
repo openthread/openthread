@@ -131,7 +131,11 @@ private:
     // (requiring one hop) and one as additional guard increment.
     static constexpr uint8_t kMeshHeaderHopsLeft = Mle::kMaxRouteCost + 3;
 
-    void PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::BuildInfo &aBuildInfo, const Message *aMessage);
+    void PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::BuildInfo &aBuildInfo);
+    void PrepareMacHeaders(Mac::TxFrame                 &aTxFrame,
+                           Mac::TxFrame::BuildInfo      &aBuildInfo,
+                           Mac::TxFrame::PayloadBuilder &aPayloadBuilder,
+                           const Message                *aMessage);
 
     uint16_t mFragTag;
 };

@@ -147,6 +147,16 @@ public:
      */
     void SkipOver(uint16_t aLength);
 
+    /**
+     * Removes a footer of a given length from the end of the `FrameData`.
+     *
+     * @param[in] aLength   The length of the footer (number of bytes) to remove.
+     *
+     * @retval kErrorNone   Successfully removed the footer.
+     * @retval kErrorParse  The current data length is smaller than @p aLength.
+     */
+    Error RemoveFooter(uint16_t aLength);
+
 private:
     const void *ReadLength(uint16_t aLength) OT_LIFETIME_BOUND;
 };

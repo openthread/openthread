@@ -60,8 +60,34 @@ jobs:
         script: |
           const fs = require('fs')
 
-          const report = fs.readFileSync('/tmp/ot-size-report/report_pr', 'utf8');
-          const pr_number = parseInt(fs.readFileSync('/tmp/ot-size-report/pr_number', 'utf8').trim());
+          const report = fs.readFileSync('/tmp/ot-size-report/report_pr', 'utf8')
+
+          let pr_number = context.payload.workflow_run.pull_requests?.[0]?.number
+
+          if (!pr_number) {
+            const head_repo = context.payload.workflow_run.head_repository?.full_name;
+            if (!head_repo) {
+              core.setFailed('Head repository not found in workflow run context payload.');
+              return;
+            }
+            const [owner, repo] = head_repo.split('/')
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner,
+              repo,
+              commit_sha: context.payload.workflow_run.head_sha,
+            })
+            const base_full_name = `${context.repo.owner}/${context.repo.repo}`
+            const pr = prs?.find(pr => pr.base.repo.full_name === base_full_name && pr.state === 'open') ||
+                       prs?.find(pr => pr.base.repo.full_name === base_full_name);
+            if (pr) {
+              pr_number = pr.number
+            }
+          }
+
+          if (!pr_number) {
+            core.setFailed('Could not determine PR number for workflow run')
+            return
+          }
 
           const params = {
               issue_number: pr_number,
@@ -74,7 +100,7 @@ jobs:
             issue_number: pr_number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-          });
+          })
 
           const kMagicHeader = '<!-- Size Report of **OpenThread** -->'
           const comment = response.data.find(comment => comment.body.startsWith(kMagicHeader))

@@ -1012,7 +1012,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
 
     VerifyOrExit(mEnabled, error = kErrorInvalidState);
 
-    rxInfo.mFrameData.Init(aFrame.GetPayload(), aFrame.GetPayloadLength());
+    SuccessOrExit(error = aFrame.GetPayload(rxInfo.mFrameData));
 
     SuccessOrExit(error = aFrame.GetSrcAddr(rxInfo.mMacAddrs.mSource));
     SuccessOrExit(error = aFrame.GetDstAddr(rxInfo.mMacAddrs.mDestination));

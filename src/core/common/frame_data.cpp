@@ -86,4 +86,15 @@ exit:
     return data;
 }
 
+Error FrameData::RemoveFooter(uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(GetLength() >= aLength, error = kErrorParse);
+    SetLength(GetLength() - aLength);
+
+exit:
+    return error;
+}
+
 } // namespace ot

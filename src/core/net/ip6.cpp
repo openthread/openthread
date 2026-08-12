@@ -854,37 +854,50 @@ exit:
     return error;
 }
 
-bool Ip6::HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const
+Error Ip6::ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHeader, OffsetRange &aOffsetRange) const
 {
-    bool        hasTunnel = false;
-    OffsetRange offsetRange;
+    // Walks the extension header chain starting at the message offset,
+    // updating `aNextHeader` in place to the final upper-layer
+    // protocol carried in `aMessage`, with `aOffsetRange` starting at
+    // the corresponding upper-layer header.
+    //
+    // A continuation (non-first) fragment does not contain the
+    // upper-layer header; in this case `aNextHeader` is left as
+    // `kProtoFragment`.
+    //
+    // Returns `kErrorParse` if the chain is malformed (an extension
+    // header does not fit within the message) or cannot be resolved
+    // within `kMaxExtHeaderChain` headers.
 
-    offsetRange.InitFromMessageOffsetToEnd(aMessage);
+    static constexpr uint8_t kMaxExtHeaderChain = 8;
 
-    while (!offsetRange.IsEmpty())
+    Error error = kErrorNone;
+
+    aOffsetRange.InitFromMessageOffsetToEnd(aMessage);
+
+    for (uint8_t numHeaders = 0;; numHeaders++)
     {
-        if (aNextHeader == kProtoIp6)
-        {
-            hasTunnel = true;
-            break;
-        }
-
-        if (aNextHeader == kProtoHopOpts || aNextHeader == kProtoDstOpts || aNextHeader == kProtoRouting)
+        if ((aNextHeader == kProtoHopOpts) || (aNextHeader == kProtoDstOpts) || (aNextHeader == kProtoRouting))
         {
             ExtensionHeader extHeader;
-            uint16_t        size;
 
-            SuccessOrExit(aMessage.Read(offsetRange, extHeader));
-            size = extHeader.GetSize();
-            VerifyOrExit(offsetRange.Contains(size));
-            offsetRange.AdvanceOffset(size);
+            VerifyOrExit(numHeaders < kMaxExtHeaderChain, error = kErrorParse);
+            SuccessOrExit(error = aMessage.Read(aOffsetRange, extHeader));
+            VerifyOrExit(aOffsetRange.Contains(extHeader.GetSize()), error = kErrorParse);
+            aOffsetRange.AdvanceOffset(extHeader.GetSize());
             aNextHeader = extHeader.GetNextHeader();
         }
         else if (aNextHeader == kProtoFragment)
         {
             FragmentHeader fragHeader;
 
-            SuccessOrExit(aMessage.ReadAndAdvance(offsetRange, fragHeader));
+            VerifyOrExit(numHeaders < kMaxExtHeaderChain, error = kErrorParse);
+            SuccessOrExit(error = aMessage.ReadAndAdvance(aOffsetRange, fragHeader));
+
+            // A continuation fragment does not contain the upper-layer
+            // header; leave `aNextHeader` as `kProtoFragment`.
+            VerifyOrExit(fragHeader.GetOffset() == 0);
+
             aNextHeader = fragHeader.GetNextHeader();
         }
         else
@@ -892,6 +905,23 @@ bool Ip6::HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const
             break;
         }
     }
+
+exit:
+    return error;
+}
+
+bool Ip6::HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const
+{
+    // Fails closed: a chain that cannot be resolved is treated the
+    // same as a tunnel, since it cannot be verified not to contain
+    // one. This filter is only applied to host-untrusted messages
+    // (see `SendRaw()`).
+
+    bool        hasTunnel = true;
+    OffsetRange offsetRange;
+
+    SuccessOrExit(ResolveUpperLayerProtocol(aMessage, aNextHeader, offsetRange));
+    hasTunnel = (aNextHeader == kProtoIp6);
 
 exit:
     return hasTunnel;
@@ -1337,6 +1367,8 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
 
     if (forwardThread)
     {
+        OffsetRange upperOffsetRange;
+
         if (aMessagePtr->IsOriginThreadNetif())
         {
             VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
@@ -1347,11 +1379,17 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
 
         aMessagePtr->Write<uint8_t>(Header::kHopLimitFieldOffset, header.GetHopLimit());
 
+        // Resolve any extension headers left unprocessed on the
+        // forward path so the checks below apply to the final
+        // upper-layer protocol.
+
+        SuccessOrExit(error = ResolveUpperLayerProtocol(*aMessagePtr, nextHeader, upperOffsetRange));
+
         if (nextHeader == kProtoIcmp6)
         {
             uint8_t icmpType;
 
-            SuccessOrExit(error = aMessagePtr->Read(aMessagePtr->GetOffset(), icmpType));
+            SuccessOrExit(error = aMessagePtr->Read(upperOffsetRange, icmpType));
 
             VerifyOrExit(DoesArrayContain(kForwardIcmpTypes, icmpType), error = kErrorDrop);
         }
@@ -1363,7 +1401,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
             {
                 UdpHeader udpHeader;
 
-                SuccessOrExit(error = aMessagePtr->Read(aMessagePtr->GetOffset(), udpHeader));
+                SuccessOrExit(error = aMessagePtr->Read(upperOffsetRange, udpHeader));
 
                 if (udpHeader.GetDestinationPort() == Tmf::kUdpPort)
                 {

@@ -53,9 +53,17 @@ void MessageFramer::DetermineMacSourceAddress(const Ip6::Address &aIp6Addr, Mac:
     }
 }
 
-void MessageFramer::PrepareMacHeaders(Mac::TxFrame            &aTxFrame,
-                                      Mac::TxFrame::BuildInfo &aBuildInfo,
-                                      const Message           *aMessage)
+void MessageFramer::PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::BuildInfo &aBuildInfo)
+{
+    Mac::TxFrame::PayloadBuilder builder;
+
+    PrepareMacHeaders(aTxFrame, aBuildInfo, builder, nullptr);
+}
+
+void MessageFramer::PrepareMacHeaders(Mac::TxFrame                 &aTxFrame,
+                                      Mac::TxFrame::BuildInfo      &aBuildInfo,
+                                      Mac::TxFrame::PayloadBuilder &aPayloadBuilder,
+                                      const Message                *aMessage)
 {
     const Neighbor *neighbor;
 
@@ -110,9 +118,9 @@ void MessageFramer::PrepareMacHeaders(Mac::TxFrame            &aTxFrame,
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Prepare MAC headers
+    // Prepare MAC headers and init `aPayloadBuilder`.
 
-    aBuildInfo.PrepareHeadersIn(aTxFrame);
+    aTxFrame.PrepareHeaders(aBuildInfo, aPayloadBuilder);
 
     OT_UNUSED_VARIABLE(aMessage);
     OT_UNUSED_VARIABLE(neighbor);
@@ -136,10 +144,9 @@ void MessageFramer::PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &
     buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
     buildInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
 
-    PrepareMacHeaders(aFrame, buildInfo, nullptr);
+    PrepareMacHeaders(aFrame, buildInfo);
 
     aFrame.SetAckRequest(aAckRequest);
-    aFrame.SetPayloadLength(0);
 }
 
 uint16_t MessageFramer::PrepareFrame(Mac::TxFrame         &aFrame,
@@ -150,11 +157,11 @@ uint16_t MessageFramer::PrepareFrame(Mac::TxFrame         &aFrame,
                                      uint16_t              aMeshDest,
                                      bool                  aAddFragHeader)
 {
-    Mac::TxFrame::BuildInfo buildInfo;
-    uint16_t                payloadLength;
-    uint16_t                origMsgOffset;
-    uint16_t                nextOffset;
-    FrameBuilder            frameBuilder;
+    Mac::TxFrame::BuildInfo      buildInfo;
+    Mac::TxFrame::PayloadBuilder frameBuilder;
+    uint16_t                     payloadLength;
+    uint16_t                     origMsgOffset;
+    uint16_t                     nextOffset;
 
 start:
     buildInfo.Clear();
@@ -202,9 +209,7 @@ start:
     buildInfo.mType  = Mac::Frame::kTypeData;
     buildInfo.mAddrs = aMacAddrs;
 
-    PrepareMacHeaders(aFrame, buildInfo, &aMessage);
-
-    frameBuilder.Init(aFrame.GetPayload(), aFrame.GetMaxPayloadLength());
+    PrepareMacHeaders(aFrame, buildInfo, frameBuilder, &aMessage);
 
 #if OPENTHREAD_FTD
 
@@ -229,10 +234,10 @@ start:
         // then adding the fixed `kMeshHeaderFrameFcsSize` instead
         // (updating the FCS size in the calculation of footer length).
 
-        maxPayloadLength = kMeshHeaderFrameMtu - aFrame.GetHeaderLength() -
-                           (aFrame.GetFooterLength() - aFrame.GetFcsSize() + kMeshHeaderFrameFcsSize);
+        maxPayloadLength = kMeshHeaderFrameMtu - frameBuilder.GetHeaderLength() -
+                           (frameBuilder.GetFooterLength() - aFrame.GetFcsSize() + kMeshHeaderFrameFcsSize);
 
-        frameBuilder.Init(aFrame.GetPayload(), maxPayloadLength);
+        frameBuilder.SetMaxLength(Min(maxPayloadLength, frameBuilder.GetMaxLength()));
 
         meshHeader.Init(aMeshSource, aMeshDest, kMeshHeaderHopsLeft);
 
@@ -331,7 +336,8 @@ start:
 
     // Copy IPv6 Payload
     SuccessOrAssert(frameBuilder.AppendBytesFromMessage(aMessage, aMessage.GetOffset(), payloadLength));
-    aFrame.SetPayloadLength(frameBuilder.GetLength());
+
+    aFrame.FinishPayload(frameBuilder);
 
     nextOffset = aMessage.GetOffset() + payloadLength;
 
@@ -352,7 +358,8 @@ start:
 
 uint16_t MessageFramer::PrepareMeshFrame(Mac::TxFrame &aFrame, Message &aMessage, const Mac::Addresses &aMacAddrs)
 {
-    Mac::TxFrame::BuildInfo buildInfo;
+    Mac::TxFrame::BuildInfo      buildInfo;
+    Mac::TxFrame::PayloadBuilder frameBuilder;
 
     buildInfo.mType          = Mac::Frame::kTypeData;
     buildInfo.mAddrs         = aMacAddrs;
@@ -360,12 +367,10 @@ uint16_t MessageFramer::PrepareMeshFrame(Mac::TxFrame &aFrame, Message &aMessage
     buildInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
     buildInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
-    PrepareMacHeaders(aFrame, buildInfo, &aMessage);
+    PrepareMacHeaders(aFrame, buildInfo, frameBuilder, &aMessage);
 
-    // write payload
-    OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
-    aMessage.ReadBytes(0, aFrame.GetPayload(), aMessage.GetLength());
-    aFrame.SetPayloadLength(aMessage.GetLength());
+    SuccessOrAssert(frameBuilder.AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
+    aFrame.FinishPayload(frameBuilder);
 
     return aMessage.GetLength();
 }

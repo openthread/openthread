@@ -40,6 +40,8 @@
 #include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
+#include "common/frame_builder.hpp"
+#include "common/frame_data.hpp"
 #include "common/numeric_limits.hpp"
 #include "mac/mac_header_ie.hpp"
 #include "mac/mac_types.hpp"
@@ -91,7 +93,8 @@ public:
     /**
      * Represents the MAC frame security level.
      *
-     * Values match the Security Level field in Security Control Field as an `uint8_t`.
+     * Values represent the raw (unshifted) Security Level sub-field (3-bit wide) from the Security Control field.
+     * The enum covers all possible 3-bit values.
      */
     enum SecurityLevel : uint8_t
     {
@@ -108,14 +111,15 @@ public:
     /**
      * Represents the MAC frame security key identifier mode.
      *
-     * Values match the Key Identifier Mode field in Security Control Field as an `uint8_t`.
+     * Values represent the raw (unshifted) Key ID Mode sub-field (2-bit wide) from the Security Control field.
+     * The enum covers all possible 2-bit values.
      */
     enum KeyIdMode : uint8_t
     {
-        kKeyIdMode0 = 0 << 3, ///< Key ID Mode 0 - Key is determined implicitly.
-        kKeyIdMode1 = 1 << 3, ///< Key ID Mode 1 - Key is determined from Key Index field.
-        kKeyIdMode2 = 2 << 3, ///< Key ID Mode 2 - Key is determined from 4-bytes Key Source and Index fields.
-        kKeyIdMode3 = 3 << 3, ///< Key ID Mode 3 - Key is determined from 8-bytes Key Source and Index fields.
+        kKeyIdMode0 = 0, ///< Key ID Mode 0 - Key is determined implicitly.
+        kKeyIdMode1 = 1, ///< Key ID Mode 1 - Key is determined from Key Index field.
+        kKeyIdMode2 = 2, ///< Key ID Mode 2 - Key is determined from 4-bytes Key Source and Index fields.
+        kKeyIdMode3 = 3, ///< Key ID Mode 3 - Key is determined from 8-bytes Key Source and Index fields.
     };
 
     /**
@@ -145,6 +149,17 @@ public:
      * Defines the fixed-length `String` object returned from `ToInfoString()` method.
      */
     typedef String<kInfoStringSize> InfoString;
+
+    /**
+     * Represents the length breakdown of a MAC frame.
+     */
+    struct Lengths
+    {
+        uint16_t mHeader;     ///< Header length (in bytes).
+        uint16_t mPayload;    ///< Payload length (in bytes).
+        uint16_t mFooter;     ///< Footer length (in bytes).
+        uint16_t mMaxPayload; ///< Maximum allowed payload length (in bytes).
+    };
 
     /**
      * Validates the frame.
@@ -181,10 +196,12 @@ public:
     /**
      * This method returns whether the frame is an IEEE 802.15.4 Wake-up frame.
      *
+     * This is a placeholder implementation following removal of legacy Multipurpose frame format.
+     *
      * @retval TRUE   If this is a Wake-up frame.
      * @retval FALSE  If this is not a Wake-up frame.
      */
-    bool IsWakeupFrame(void) const;
+    bool IsWakeupFrame(void) const { return false; }
 #endif
 
     /**
@@ -295,8 +312,9 @@ public:
      *
      * @param[out]  aPanId  The Destination PAN Identifier.
      *
-     * @retval kErrorNone   Successfully retrieved the Destination PAN Identifier.
-     * @retval kErrorParse  Failed to parse the PAN Identifier.
+     * @retval kErrorNone      Successfully retrieved the Destination PAN Identifier.
+     * @retval kErrorNotFound  Destination PAN Identifier is not present in the frame.
+     * @retval kErrorParse     Failed to parse the frame.
      */
     Error GetDstPanId(PanId &aPanId) const;
 
@@ -313,7 +331,8 @@ public:
      *
      * @param[out]  aAddress  The Destination Address.
      *
-     * @retval kErrorNone  Successfully retrieved the Destination Address.
+     * @retval kErrorNone      Successfully retrieved the Destination Address.
+     * @retval kErrorParse     Failed to parse the frame.
      */
     Error GetDstAddr(Address &aAddress) const;
 
@@ -330,7 +349,9 @@ public:
      *
      * @param[out]  aPanId  The Source PAN Identifier.
      *
-     * @retval kErrorNone   Successfully retrieved the Source PAN Identifier.
+     * @retval kErrorNone      Successfully retrieved the Source PAN Identifier.
+     * @retval kErrorNotFound  Source PAN Identifier is not present in the frame.
+     * @retval kErrorParse     Failed to parse the frame.
      */
     Error GetSrcPanId(PanId &aPanId) const;
 
@@ -347,7 +368,8 @@ public:
      *
      * @param[out]  aAddress  The Source Address.
      *
-     * @retval kErrorNone  Successfully retrieved the Source Address.
+     * @retval kErrorNone      Successfully retrieved the Source Address.
+     * @retval kErrorParse     Failed to parse the frame.
      */
     Error GetSrcAddr(Address &aAddress) const;
 
@@ -356,8 +378,9 @@ public:
      *
      * @param[out]  aSecurityControlField  The Security Control Field.
      *
-     * @retval kErrorNone   Successfully retrieved the Security Level Identifier.
-     * @retval kErrorParse  Failed to find the security control field in the frame.
+     * @retval kErrorNone      Successfully retrieved the Security Control Field.
+     * @retval kErrorNotFound  Frame does not have a security header (security is not enabled)
+     * @retval kErrorParse     Failed to parse the frame.
      */
     Error GetSecurityControlField(uint8_t &aSecurityControlField) const;
 
@@ -366,25 +389,49 @@ public:
      *
      * @param[out]  aSecurityLevel  The Security Level Identifier.
      *
-     * @retval kErrorNone  Successfully retrieved the Security Level Identifier.
+     * @retval kErrorNone      Successfully retrieved the Security Level Identifier.
+     * @retval kErrorNotFound  Frame does not have a security header (security is not enabled)
+     * @retval kErrorParse     Failed to parse MAC or security header.
      */
-    Error GetSecurityLevel(uint8_t &aSecurityLevel) const;
+    Error GetSecurityLevel(SecurityLevel &aSecurityLevel) const;
+
+    /**
+     * Indicates whether or not the frame has a specific Security Level.
+     *
+     * @param[in]  aSecurityLevel  The Security Level to check.
+     *
+     * @retval TRUE   The frame contains a valid security header matching @p aSecurityLevel.
+     * @retval FALSE  The frame does not match @p aSecurityLevel or fails to parse MAC or security header.
+     */
+    bool HasSecurityLevel(SecurityLevel aSecurityLevel) const;
 
     /**
      * Gets the Key Identifier Mode.
      *
      * @param[out]  aKeyIdMode  The Key Identifier Mode.
      *
-     * @retval kErrorNone  Successfully retrieved the Key Identifier Mode.
+     * @retval kErrorNone   Successfully retrieved the Key Identifier Mode.
+     * @retval kErrorParse  Failed to parse MAC or security header.
      */
-    Error GetKeyIdMode(uint8_t &aKeyIdMode) const;
+    Error GetKeyIdMode(KeyIdMode &aKeyIdMode) const;
+
+    /**
+     * Indicates whether or not the frame has a specific Key Identifier Mode.
+     *
+     * @param[in]  aKeyIdMode  The Key Identifier Mode to check.
+     *
+     * @retval TRUE   The frame contains a valid security header matching @p aKeyIdMode.
+     * @retval FALSE  The frame does not match @p aKeyIdMode or fails to parse MAC or security header.
+     */
+    bool HasKeyIdMode(KeyIdMode aKeyIdMode) const;
 
     /**
      * Gets the Frame Counter.
      *
      * @param[out]  aFrameCounter  The Frame Counter.
      *
-     * @retval kErrorNone  Successfully retrieved the Frame Counter.
+     * @retval kErrorNone   Successfully retrieved the Frame Counter.
+     * @retval kErrorParse  Failed to parse MAC or security header.
      */
     Error GetFrameCounter(uint32_t &aFrameCounter) const;
 
@@ -398,9 +445,9 @@ public:
     /**
      * Returns a pointer to the Key Source.
      *
-     * @returns A pointer to the Key Source.
+     * @param[out]  aKeySource   A `FrameData` to point to key source data bytes.
      */
-    const uint8_t *GetKeySource(void) const;
+    void GetKeySource(FrameData &aKeySource) const;
 
     /**
      * Sets the Key Source.
@@ -414,8 +461,9 @@ public:
      *
      * @param[out]  aKeyIndex  The Key Index
      *
-     * @retval kErrorNone   Successfully retrieved the Key Index.
-     * @retval kErrorParse  Failed to parse MAC or security header.
+     * @retval kErrorNone      Successfully retrieved the Key Index.
+     * @retval kErrorNotFound  Frame is using `kKeyIdMode0` which does not have any Key Index.
+     * @retval kErrorParse     Failed to parse MAC or security header.
      */
     Error GetKeyIndex(uint8_t &aKeyIndex) const;
 
@@ -431,7 +479,9 @@ public:
      *
      * @param[out]  aCommandId  The Command ID.
      *
-     * @retval kErrorNone  Successfully retrieved the Command ID.
+     * @retval kErrorNone      Successfully retrieved the Command ID.
+     * @retval kErrorNotFound  The frame is not a MAC command.
+     * @retval kErrorParse     Failed to parse frame.
      */
     Error GetCommandId(uint8_t &aCommandId) const;
 
@@ -445,89 +495,31 @@ public:
     bool IsDataRequestCommand(void) const;
 
     /**
-     * Returns the MAC header size.
+     * Gets the frame payload as `FrameData`.
      *
-     * @returns The MAC header size.
+     * For MAC Command frames (`kTypeMacCmd`), the treatment of the Command ID field depends on the frame version:
+     *   - For 2015 version , the Command ID is part of the payload, so @p aPayloadData includes it.
+     *   - For earlier versions (2003/2006), the Command ID is part of the MAC header, so @p aPayloadData starts after
+     *     the Command ID.
+     *
+     * @param[out] aPayloadData  A reference to a `FrameData` to return the frame payload.
+     *
+     * @retval kErrorNone   Successfully retrieved the frame payload.
+     * @retval kErrorParse  Failed to parse the frame.
      */
-    uint8_t GetHeaderLength(void) const;
+    Error GetPayload(FrameData &aPayloadData) const;
 
     /**
-     * Returns the MAC footer size.
+     * Determines the length breakdown of the frame.
      *
-     * @returns The MAC footer size.
-     */
-    uint8_t GetFooterLength(void) const;
-
-    /**
-     * Returns the current MAC Payload length.
+     * @param[out] aLengths  A reference to a `Lengths` structure to return the frame lengths.
      *
-     * @returns The current MAC Payload length.
+     * @retval kErrorNone   Successfully calculated frame lengths.
+     * @retval kErrorParse  Failed to parse the frame.
      */
-    uint16_t GetPayloadLength(void) const;
-
-    /**
-     * Returns the maximum MAC Payload length for the given MAC header and footer.
-     *
-     * @returns The maximum MAC Payload length for the given MAC header and footer.
-     */
-    uint16_t GetMaxPayloadLength(void) const;
-
-    /**
-     * Sets the MAC Payload length.
-     */
-    void SetPayloadLength(uint16_t aLength);
-
-    /**
-     * Returns a pointer to the MAC Header.
-     *
-     * @returns A pointer to the MAC Header.
-     */
-    uint8_t *GetHeader(void) { return GetPsdu(); }
-
-    /**
-     * Returns a pointer to the MAC Header.
-     *
-     * @returns A pointer to the MAC Header.
-     */
-    const uint8_t *GetHeader(void) const { return GetPsdu(); }
-
-    /**
-     * Returns a pointer to the MAC Payload.
-     *
-     * @returns A pointer to the MAC Payload.
-     */
-    uint8_t *GetPayload(void) { return AsNonConst(AsConst(this)->GetPayload()); }
-
-    /**
-     * Returns a pointer to the MAC Payload.
-     *
-     * @returns A pointer to the MAC Payload.
-     */
-    const uint8_t *GetPayload(void) const;
-
-    /**
-     * Returns a pointer to the MAC Footer.
-     *
-     * @returns A pointer to the MAC Footer.
-     */
-    uint8_t *GetFooter(void) { return AsNonConst(AsConst(this)->GetFooter()); }
-
-    /**
-     * Returns a pointer to the MAC Footer.
-     *
-     * @returns A pointer to the MAC Footer.
-     */
-    const uint8_t *GetFooter(void) const;
+    Error DetermineLengths(Lengths &aLengths) const;
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    /**
-     * Indicates whether the frame contains header IEs.
-     *
-     * @retval TRUE   The frame contains header IEs.
-     * @retval FALSE  The frame contains no header IEs.
-     */
-    bool HasAnyHeaderIe(void) const { return FindHeaderIeIndex() != kInvalidIndex; }
-
     /**
      * Finds a specific Information Element (IE) in the frame.
      *
@@ -611,6 +603,20 @@ public:
      */
     static constexpr uint8_t GetImmAckLength(void) { return kImmAckLength; }
 
+    /**
+     * Constructs a Security Control byte from a given Security Level and Key ID Mode.
+     *
+     * @param[in]  aSecurityLevel   The Security Level.
+     * @param[in]  aKeyIdMode       The Key Identifier Mode.
+     *
+     * @returns The constructed Security Control byte.
+     */
+    static constexpr uint8_t ConstructSecurityControlField(SecurityLevel aSecurityLevel, KeyIdMode aKeyIdMode)
+    {
+        return static_cast<uint8_t>(static_cast<uint8_t>(aSecurityLevel) |
+                                    (static_cast<uint8_t>(aKeyIdMode) << kScfKeyIdModeShift));
+    }
+
 protected:
     static constexpr uint8_t kFcfSize      = sizeof(uint16_t);
     static constexpr uint8_t kDsnSize      = sizeof(uint8_t);
@@ -623,11 +629,15 @@ protected:
 
     static constexpr uint16_t kFcfFrameTypeMask = 7 << 0;
 
-    static constexpr uint16_t kFcfAddrNone     = 0;
-    static constexpr uint16_t kFcfAddrReserved = 1;
-    static constexpr uint16_t kFcfAddrShort    = 2;
-    static constexpr uint16_t kFcfAddrExt      = 3;
-    static constexpr uint16_t kFcfAddrMask     = 3;
+    enum AddrMode : uint8_t
+    {
+        kAddrModeNone     = 0,
+        kAddrModeReserved = 1,
+        kAddrModeShort    = 2,
+        kAddrModeExt      = 3,
+    };
+
+    static constexpr uint16_t kFcfAddrMask = 3;
 
     // Frame Control field format for general MAC frame
     static constexpr uint16_t kFcfSecurityEnabled  = 1 << 3;
@@ -637,19 +647,21 @@ protected:
     static constexpr uint16_t kFcfSeqSuppression   = 1 << 8;
     static constexpr uint16_t kFcfIePresent        = 1 << 9;
     static constexpr uint16_t kFcfDstAddrShift     = 10;
-    static constexpr uint16_t kFcfDstAddrNone      = kFcfAddrNone << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfDstAddrShort     = kFcfAddrShort << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfDstAddrExt       = kFcfAddrExt << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrNone      = kAddrModeNone << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrShort     = kAddrModeShort << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrExt       = kAddrModeExt << kFcfDstAddrShift;
     static constexpr uint16_t kFcfDstAddrMask      = kFcfAddrMask << kFcfDstAddrShift;
     static constexpr uint16_t kFcfFrameVersionMask = 3 << 12;
     static constexpr uint16_t kFcfSrcAddrShift     = 14;
-    static constexpr uint16_t kFcfSrcAddrNone      = kFcfAddrNone << kFcfSrcAddrShift;
-    static constexpr uint16_t kFcfSrcAddrShort     = kFcfAddrShort << kFcfSrcAddrShift;
-    static constexpr uint16_t kFcfSrcAddrExt       = kFcfAddrExt << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrNone      = kAddrModeNone << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrShort     = kAddrModeShort << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrExt       = kAddrModeExt << kFcfSrcAddrShift;
     static constexpr uint16_t kFcfSrcAddrMask      = kFcfAddrMask << kFcfSrcAddrShift;
 
-    static constexpr uint8_t kSecLevelMask  = 7 << 0;
-    static constexpr uint8_t kKeyIdModeMask = 3 << 3;
+    // Security Control field
+    static constexpr uint8_t kScfKeyIdModeShift = 3;
+    static constexpr uint8_t kScfSecLevelMask   = 7 << 0;
+    static constexpr uint8_t kScfKeyIdModeMask  = 3 << kScfKeyIdModeShift;
 
     static constexpr uint8_t kMic0Size   = 0;
     static constexpr uint8_t kMic32Size  = 32 / kBitsPerByte;
@@ -661,27 +673,63 @@ protected:
     static constexpr uint8_t kInvalidSize  = kInvalidIndex;
     static constexpr uint8_t kMaxPsduSize  = kInvalidSize - 1;
 
-    void    SetFrameControlField(uint16_t aFcf) { LittleEndian::WriteUint16(aFcf, mPsdu); }
-    void    UpdateFcfFlag(bool aSet, uint16_t aBitFlag);
-    uint8_t SkipSequenceIndex(void) const;
-    uint8_t FindDstPanIdIndex(void) const;
-    uint8_t FindDstAddrIndex(void) const;
-    uint8_t FindSrcPanIdIndex(void) const;
-    uint8_t FindSrcAddrIndex(void) const;
-    uint8_t SkipAddrFieldIndex(void) const;
-    uint8_t FindSecurityHeaderIndex(void) const;
-    uint8_t SkipSecurityHeaderIndex(void) const;
-    uint8_t FindPayloadIndex(void) const;
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    uint8_t FindHeaderIeIndex(void) const;
-#endif
+    enum ParseMode : uint8_t
+    {
+        kParseAddrFields,
+        kParseSecurityHeader,
+        kParseFully,
+    };
 
-    static uint16_t GetFcfDstAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfDstAddrMask>(aFcf); }
-    static uint16_t GetFcfSrcAddr(uint16_t aFcf) { return ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf); }
+    class ParseInfo
+    {
+    public:
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Mac Header Address Info
+        uint16_t  mFcf;
+        PanIds    mPanIds;
+        Addresses mAddrs;
+        uint8_t   mSequenceNum;
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Aux Security Header
+        uint8_t       mSecCtl;
+        SecurityLevel mSecurityLevel;
+        KeyIdMode     mKeyIdMode;
+        uint8_t       mKeyIndex;
+        uint8_t       mMicSize;
+        uint32_t      mFrameCounter;
+        FrameData     mKeySource;
+        uint8_t      *mFrameCounterBytes;
+        uint8_t      *mKeyIndexByte;
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Header IEs
+        FrameData mIeData;
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+        // MAC Command ID
+        uint8_t mCommandId;
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Header and Payload breakdown
+        FrameData mHeader;
+        FrameData mPayload;
+
+        Error ParseFrom(const Frame &aFrame, ParseMode aMode);
+
+    private:
+        static Error ParseAddress(FrameData &aFrameData, AddrMode aAddrMode, Address &aAddress);
+    };
+
+    void UpdateFcfFlag(bool aSet, uint16_t aBitFlag);
+
+    static uint16_t GetType(uint16_t aFcf) { return (aFcf & kFcfFrameTypeMask); }
+    static AddrMode ReadDstAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfDstAddrMask>(aFcf)); }
+    static AddrMode ReadSrcAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf)); }
     static bool     IsSeqSuppressed(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfSeqSuppression) != 0); }
     static bool     IsSeqPresent(uint16_t aFcf) { return !IsSeqSuppressed(aFcf); }
-    static bool     IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != 0; }
-    static bool     IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != 0; }
+    static bool     IsDstAddrPresent(uint16_t aFcf) { return ReadDstAddrMode(aFcf) != kAddrModeNone; }
+    static bool     IsSrcAddrPresent(uint16_t aFcf) { return ReadSrcAddrMode(aFcf) != kAddrModeNone; }
     static bool     IsSecurityEnabled(uint16_t aFcf) { return (aFcf & kFcfSecurityEnabled) != 0; }
     static bool     IsFramePending(uint16_t aFcf) { return (aFcf & kFcfFramePending) != 0; }
     static bool     IsIePresent(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfIePresent) != 0); }
@@ -690,12 +738,19 @@ protected:
     static bool     IsVersion2015(uint16_t aFcf) { return GetVersion(aFcf) == kVersion2015; }
     static bool     IsDstPanIdPresent(uint16_t aFcf);
     static bool     IsSrcPanIdPresent(uint16_t aFcf);
-    static uint16_t DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift);
+    static AddrMode DetermineAddrMode(const Address &aAddress);
+    static Error    AddAddrSizeTo(uint8_t &aIndex, AddrMode aAddrMode);
     static uint8_t  CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t  CalculateKeySourceSize(uint8_t aSecurityControl);
     static uint8_t  CalculateMicSize(uint8_t aSecurityControl);
 
+    // Security Control fields
+    static SecurityLevel ReadSecurityLevel(uint8_t aSecCtl);
+    static KeyIdMode     ReadKeyIdMode(uint8_t aSecCtl);
+
 private:
+    template <typename EnumType> static EnumType As(uint16_t aValue) { return static_cast<EnumType>(aValue); }
+
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     typedef bool (&HeaderIeMatcher)(const HeaderIe &aHeaderIe);
 
@@ -760,35 +815,15 @@ public:
     /**
      * Represents the information to use to build the frame.
      */
-    struct BuildInfo : public Clearable<BuildInfo>
+    class BuildInfo : public Clearable<BuildInfo>
     {
+        friend class TxFrame;
+
+    public:
         /**
          * Initializes the `BuildInfo` by clearing all its fields (setting all bytes to zero).
          */
         BuildInfo(void) { Clear(); }
-
-        /**
-         * Prepares MAC headers based on `BuildInfo` fields in a given `TxFrame`.
-         *
-         * This method uses the `BuildInfo` structure to construct the MAC address and security headers in @p aTxFrame.
-         * It determines the Frame Control Field (FCF), including setting the appropriate frame type, security level,
-         * and addressing mode flags. It populates the source and destination addresses and PAN IDs within the MAC
-         * header based on the information provided in the `BuildInfo` structure.
-         *
-         * It sets the Ack Request bit in the FCF if the following criteria are met:
-         *   - A destination address is present
-         *   - The destination address is not the broadcast address
-         *   - The frame type is not an ACK frame
-         *
-         * The header IE entries are prepared based on `mAppendTimeIe` and `mAppendCslIe` flags and the IE Present
-         * flag in FCF is determined accordingly.
-         *
-         * The Frame Pending flag in FCF is not set. It may need to be set separately depending on the specific
-         * requirements of the frame being transmitted.
-         *
-         * @param[in,out] aTxFrame  The `TxFrame` instance in which to prepare and append the MAC headers.
-         */
-        void PrepareHeadersIn(TxFrame &aTxFrame) const;
 
         Type          mType;                 ///< Frame type.
         Version       mVersion;              ///< Frame version.
@@ -808,7 +843,91 @@ public:
 #endif
         bool mEmptyPayload : 1; ///< Whether payload is empty (to decide about appending Termination2 IE).
 #endif
+
+    private:
+        void PrepareHeadersIn(TxFrame &aTxFrame) const;
     };
+
+    /**
+     * Helper class for building the payload of a `TxFrame`.
+     */
+    class PayloadBuilder : public FrameBuilder
+    {
+        friend class TxFrame;
+
+    public:
+        /**
+         * Gets the header length of the frame being built.
+         *
+         * @returns The header length (in bytes).
+         */
+        uint16_t GetHeaderLength(void) const { return mLengths.mHeader; }
+
+        /**
+         * Gets the footer length of the frame being built.
+         *
+         * @returns The footer length (in bytes).
+         */
+        uint16_t GetFooterLength(void) const { return mLengths.mFooter; }
+
+    private:
+        void     InitFrom(TxFrame &aFrame);
+        uint16_t GetTotalLength(void) const { return GetLength() + mLengths.mHeader + mLengths.mFooter; }
+
+        Lengths mLengths;
+    };
+
+    /**
+     * Prepares MAC headers in the frame based on `BuildInfo` settings and initializes a `PayloadBuilder`.
+     *
+     * This method uses the `BuildInfo` structure to construct the MAC address and security headers in the frame.
+     * It determines the Frame Control Field (FCF), including setting the appropriate frame type, security level,
+     * and addressing mode flags. It populates the source and destination addresses and PAN IDs within the MAC
+     * header based on the information provided in the `BuildInfo` structure.
+     *
+     * It sets the Ack Request bit in the FCF if the following criteria are met:
+     *   - A destination address is present
+     *   - The destination address is not the broadcast address
+     *   - The frame type is not an ACK frame
+     *
+     * The header IE entries are prepared based on `mAppendTimeIe` and `mAppendCslIe` flags and the IE Present
+     * flag in FCF is determined accordingly.
+     *
+     * The Frame Pending flag in FCF is not set. It may need to be set separately depending on the specific
+     * requirements of the frame being transmitted.
+     *
+     * The provided @p aPayloadBuilder is initialized to allow building and appending payload bytes directly
+     * into the frame buffer following the prepared headers. It is set up with the maximum available payload
+     * capacity based on the frame header and footer lengths and its MTU. Callers can use @p aPayloadBuilder to
+     * construct the frame payload. Once payload construction is complete, `FinishPayload()` can be called to update
+     * and finalize the total frame length.
+     *
+     * For MAC Command frames (`kTypeMacCmd`), whether the Command ID field is treated as part of the header or
+     * payload depends on the frame version (see `GetPayload()`). The same rules apply to @p aPayloadBuilder here:
+     *   - For 2015 version, the Command ID is part of the payload, so @p aPayloadBuilder starts before the Command ID.
+     *   - For earlier versions (2003/2006), the Command ID is part of the MAC header, so @p aPayloadBuilder starts
+     *     after the Command ID.
+     *
+     * @param[in]  aBuildInfo       The `BuildInfo` containing settings for the MAC headers.
+     * @param[out] aPayloadBuilder  A reference to a `PayloadBuilder` to initialize for payload construction.
+     */
+    void PrepareHeaders(const BuildInfo &aBuildInfo, PayloadBuilder &aPayloadBuilder);
+
+    /**
+     * Finishes building the frame payload and updates the total frame length.
+     *
+     * @param[in] aPayloadBuilder  The `PayloadBuilder` used to construct the payload.
+     */
+    void FinishPayload(const PayloadBuilder &aPayloadBuilder) { SetLength(aPayloadBuilder.GetTotalLength()); }
+
+    /**
+     * Prepares MAC headers in the frame assuming an empty payload.
+     *
+     * See `PrepareHeaders()` for more details on how the MAC headers are constructed.
+     *
+     * @param[in] aBuildInfo  The `BuildInfo` structure containing settings for the MAC headers.
+     */
+    void PrepareHeadersWithEmptyPayload(const BuildInfo &aBuildInfo) { aBuildInfo.PrepareHeadersIn(*this); }
 
     /**
      * Copies the PSDU and all attributes (except for frame link type) from another frame.

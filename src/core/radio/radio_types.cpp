@@ -46,6 +46,15 @@ bool IsTimeStrictlyBefore(Time32 aFirstTime, Time32 aSecondTime)
     return (firstTime < secondTime);
 }
 
+uint32_t DetermineClockDrift(uint16_t aClockAccuracy, uint32_t aIntervalUs)
+{
+    static constexpr uint64_t kPpmDivisor = 1000000u;
+
+    uint64_t drift = static_cast<uint64_t>(aIntervalUs) * static_cast<uint64_t>(aClockAccuracy);
+
+    return ClampToUint32(DivideAndRoundUp<uint64_t>(drift, kPpmDivisor));
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // SyncedTime
 

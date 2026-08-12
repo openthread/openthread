@@ -60,6 +60,20 @@ namespace ot {
 
 namespace Mac {
 
+//----------------------------------------------------------------------------------------------------------------------
+// Derived configs
+
+#ifdef OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+#error "OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE MUST NOT be defined directly. It is derived from other configs"
+#endif
+
+#define OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE                                                         \
+    (OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || \
+     ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE))
+
+//----------------------------------------------------------------------------------------------------------------------
+// Config validity checks
+
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE."
 #endif
@@ -77,9 +91,7 @@ namespace Mac {
 
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE && !OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-#error "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE is required for OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE."
-#endif
+//----------------------------------------------------------------------------------------------------------------------
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 class LinkRaw;
@@ -519,8 +531,7 @@ private:
         ConditionalCap(kCapTransmitRetries, OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE) |
         ConditionalCap(kCapCsmaBackoff, OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE) |
         ConditionalCap(kCapTransmitSec, OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE) |
-        ConditionalCap(kCapTransmitTiming, OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE) |
-        ConditionalCap(kCapReceiveTiming, OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE) |
+        ConditionalCap(kCapTransmitTiming, OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE) |
         ConditionalCap(kCapSleepToTx, OPENTHREAD_RADIO);
 
 #undef ConditionalCap
@@ -538,8 +549,8 @@ private:
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
         kStateDelayBeforeRetx, // Delay before retx
 #endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        kStateCslTransmit, // CSL transmission.
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+        kStateTimedTransmit, // Timed TX (e.g., for CSL)
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
         kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
@@ -563,11 +574,12 @@ private:
     static constexpr uint32_t kWedReceiveTimeAfter = OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER;
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    // CSL transmitter would schedule delayed transmission `kCslTransmitTimeAhead` earlier
-    // than expected delayed transmit time. The value is in usec.
-    // Only for radios not supporting kCapTransmitTiming.
-    static constexpr uint32_t kCslTransmitTimeAhead = OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD;
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    // Lead time (in microseconds) to schedule a delayed tx earlier
+    // than expected target tx time. Only used when radio does not
+    // itself support `kCapTransmitTiming`.
+    static constexpr uint32_t kTimedTxLeadTime =
+        OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD + kCcaSampleInterval + Radio::kHeaderShrDuration;
 #endif
 
     void Init(void);
@@ -578,7 +590,6 @@ private:
     bool ShouldHandleAckTimeout(void) const { return ShouldHandle(kCapAckTimeout); }
     bool ShouldHandleRetries(void) const { return ShouldHandle(kCapTransmitRetries); }
     bool ShouldHandleEnergyScan(void) const { return ShouldHandle(kCapEnergyScan); }
-    bool ShouldHandleTransmitTargetTime(void) const { return ShouldHandle(kCapTransmitTiming); }
     bool ShouldHandleCsmaBackOff(void) const;
 
     void ProcessTransmitSecurity(void);
@@ -612,10 +623,11 @@ private:
     void     RestartCslTimerAfterSyncUpdate(void);
     void     UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
     void     UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
+    void     SetCslLastSyncToNow(void);
     void     HandleCslTimer(void);
     void     GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
-    uint32_t GetNextCycleDrift(void);
-    uint32_t GetLocalTime(void);
+    uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
+    uint32_t GetNextCycleDrift(void) const;
     bool     IsCslEnabled(void) const { return mCslPeriod > 0; }
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
@@ -670,9 +682,13 @@ private:
                                           // for platforms not supporting `Radio::ReceiveAt()`.
     uint16_t          mCslPeerShort;      // The CSL peer short address.
     Radio::SyncedTime mCslSampleTime;     // The CSL sample time for current period.
-    TimeMicro         mCslLastSync;       // The timestamp of the last successful CSL synchronization.
     CslAccuracy       mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
     CslTimer          mCslTimer;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+    TimeMicro mCslLastSync; // The timestamp of the last successful CSL synchronization.
+#else
+    Radio::Time64 mCslLastSync;
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

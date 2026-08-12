@@ -100,6 +100,7 @@ Mle::Mle(Instance &aInstance)
     , mChildTable(aInstance)
     , mRouterTable(aInstance)
     , mRoleTransitioner(aInstance)
+    , mTxChallengeTable(aInstance)
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_P2P_ENABLE
     , mP2p(aInstance)
@@ -709,6 +710,7 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
     if (!aDeviceMode.IsFullThreadDevice())
     {
         ClearAlternateRloc16();
+        mTxChallengeTable.Clear();
     }
 
     mRoleTransitioner.UpdateRouterRoleAllowed(RoleTransitioner::kReasonDeviceModeChanged);
@@ -3041,7 +3043,7 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
     uint64_t k            = cslTimeoutUs / cslPeriodUs;
 
     return k * (k + 1) * cslPeriodUs / usInSecond * aCslAccuracy.GetClockAccuracy() +
-           aCslAccuracy.GetUncertaintyInMicrosec() * k;
+           Radio::ConvertUncertaintyToUsec(aCslAccuracy.GetUncertainty()) * k;
 }
 #endif
 
