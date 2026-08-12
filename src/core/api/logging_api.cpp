@@ -75,6 +75,12 @@ otError otLoggingSetLevel(otLogLevel aLogLevel)
 
 #endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
+// When `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, `otLog{Level}Plat()`/`otDump{Level}Plat()` are defined
+// as macros in `<openthread/logging.h>` instead, expanding directly to the platform-provided `OT_LOG_PLATFORM_*`
+// macros at every call site. In that case, no caller anywhere ever calls through these symbols, so the
+// `Logger`-based implementations below are neither needed nor (being macros elsewhere) definable here.
+#if !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+
 static const char kPlatformModuleName[] = "Platform";
 
 void otLogCritPlat(const char *aFormat, ...)
@@ -197,6 +203,8 @@ void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength)
     OT_UNUSED_VARIABLE(aDataLength);
 #endif
 }
+
+#endif // !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
 
 void otLogPlat(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, ...)
 {
