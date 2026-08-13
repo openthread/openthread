@@ -58,6 +58,7 @@ void SubMac::CslInit(void)
 
 void SubMac::RestartCslTimerAfterSyncUpdate(void)
 {
+/*
     if (mCslTimer.IsRunning())
     {
         uint32_t periodUs = mCslPeriod * Radio::kUsPerTenSymbols;
@@ -71,6 +72,7 @@ void SubMac::RestartCslTimerAfterSyncUpdate(void)
 
         HandleCslTimer();
     }
+*/
 }
 
 void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
