@@ -80,7 +80,7 @@ jobs:
     - name: Run
       run: |
         export OT_DIR=$PWD
-        ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
+        ./script/git-tool clone --depth 1 --branch test/add-logs https://github.com/abtink/ot-ns.git /tmp/otns
         (
           cd /tmp/otns
           ./script/test py-unittests
