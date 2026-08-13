@@ -911,6 +911,15 @@ template <> void Commissioner::HandleTmf<kUriJoinerFinalize>(Coap::Msg &aMsg)
         break;
 
     case kErrorNotFound:
+        // Fail closed: when the commissioner has a provisioning URL
+        // configured, a `JOIN_FIN.req` that omits the Provisioning URL TLV
+        // must be rejected as well; otherwise the URL check is joiner-opt-in
+        // and omitting the TLV skips it. Joiners that predate the TLV can
+        // still join commissioners with no provisioning URL configured.
+        if (mProvisioningUrl[0] != kNullChar)
+        {
+            state = StateTlv::kReject;
+        }
         break;
 
     default:

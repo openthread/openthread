@@ -45,6 +45,7 @@ RegisterLogModule("Joiner");
 Joiner::Joiner(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateIdle)
+    , mFinalizeRejected(false)
     , mFinalizeMessage(nullptr)
     , mTimer(aInstance)
 {
@@ -145,6 +146,7 @@ Error Joiner::Start(const char      *aPskd,
                                                        aVendorData));
 
     mCompletionCallback.Set(aCallback, aContext);
+    mFinalizeRejected = false;
     SetState(kStateDiscover);
 
     error = Get<Seeker>().Start(EvaluateScanResult, this);
@@ -403,14 +405,27 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Msg *aMsg, Error aResult)
 
     SuccessOrExit(Tlv::Find<StateTlv>(aMsg->mMessage, state));
 
-    SetState(kStateEntrust);
-    mTimer.Start(kResponseTimeout);
-
     LogInfo("Received %s %d", UriToString<kUriJoinerFinalize>(), state);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.rsp |", aMsg->mMessage);
 #endif
+
+    // Only an explicit Accept state in the Finalize Response lets the
+    // joining process succeed. Any other state (Reject, Pending, or an
+    // unknown value) is a rejection by the commissioner and ends the
+    // joining process with `kErrorRejected`. The Joiner Entrust exchange
+    // itself still takes place after a reject (certification test
+    // 1.1.8.1.6, steps 10-11): the joiner waits for and acknowledges the
+    // entrust, but does not adopt its content.
+    if (state != StateTlv::kAccept)
+    {
+        LogWarn("Commissioner rejected %s (state %d)", UriToString<kUriJoinerFinalize>(), state);
+        mFinalizeRejected = true;
+    }
+
+    SetState(kStateEntrust);
+    mTimer.Start(kResponseTimeout);
 
 exit:
     Get<Tmf::SecureAgent>().Disconnect();
@@ -427,6 +442,18 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)
 
     LogInfo("Received %s", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=recv | type=JOIN_ENT.ntf");
+
+    if (mFinalizeRejected)
+    {
+        // The commissioner rejected the JOIN_FIN.req: acknowledge the
+        // entrust message (the exchange is part of the certified message
+        // flow) without adopting the delivered credentials. The joining
+        // process then completes with `kErrorRejected` from the timer.
+        error = kErrorNone;
+        SendJoinerEntrustResponse(aMsg);
+        mTimer.Start(kConfigExtAddressDelay);
+        ExitNow();
+    }
 
     datasetInfo.Clear();
 
@@ -462,7 +489,10 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
     responseInfo.GetSockAddr().Clear();
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, responseInfo));
 
-    SetState(kStateJoined);
+    if (!mFinalizeRejected)
+    {
+        SetState(kStateJoined);
+    }
 
     LogInfo("Sent %s response", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=send | type=JOIN_ENT.rsp");
@@ -478,8 +508,14 @@ void Joiner::HandleTimer(void)
     switch (mState)
     {
     case kStateConnected:
-    case kStateEntrust:
         error = kErrorResponseTimeout;
+        break;
+
+    case kStateEntrust:
+        // After a rejected JOIN_FIN.rsp the joining process always ends
+        // with `kErrorRejected`, whether the entrust was acknowledged
+        // (short delay) or never arrived (response timeout).
+        error = mFinalizeRejected ? kErrorRejected : kErrorResponseTimeout;
         break;
 
     case kStateJoined:
