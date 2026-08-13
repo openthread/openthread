@@ -511,7 +511,12 @@ class VirtualTime(BaseSimulator):
         else:
             sock = self.devices[port].get('sock', None)
             if sock:
-                sent = sock.send(message)
+                try:
+                    sent = sock.send(message)
+                except (BrokenPipeError, ConnectionResetError):
+                    assert port in self._maybeoff_ports, f'The node {port} is unexpectedly off'
+                    dbg_print('skip sending message to off node', port)
+                    return
             else:
                 assert port in self._maybeoff_ports, f'The node {port} is unexpectedly off'
                 dbg_print('skip sending message to off node', port)
