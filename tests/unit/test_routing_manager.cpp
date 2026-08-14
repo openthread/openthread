@@ -63,7 +63,6 @@ static constexpr uint32_t kInfiniteLifetime  = NumericLimits<uint32_t>::kMax;
 static constexpr uint32_t kRioValidLifetime       = 1800;
 static constexpr uint32_t kRioDeprecatingLifetime = 300;
 
-static constexpr uint16_t kMaxRaSize              = 800;
 static constexpr uint16_t kMaxDeprecatingPrefixes = 16;
 
 static constexpr otOperationalDataset kDataset = {
@@ -730,23 +729,30 @@ void VerifyOmrPrefixInNetData(const Ip6::Prefix &aOmrPrefix, bool aDefaultRoute,
 {
     otNetworkDataIterator           iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     NetworkData::OnMeshPrefixConfig prefixConfig;
+    bool                            foundOmr = false;
 
     Log("VerifyOmrPrefixInNetData(%s, def-route:%s)", aOmrPrefix.ToString().AsCString(), aDefaultRoute ? "yes" : "no");
 
-    SuccessOrQuit(otNetDataGetNextOnMeshPrefix(sInstance, &iterator, &prefixConfig));
-    VerifyOrQuit(prefixConfig.GetPrefix() == aOmrPrefix);
-    VerifyOrQuit(prefixConfig.mStable == true);
-    VerifyOrQuit(prefixConfig.mSlaac == true);
-    VerifyOrQuit(prefixConfig.mPreferred == true);
-    VerifyOrQuit(prefixConfig.mOnMesh == true);
-    VerifyOrQuit(prefixConfig.mDefaultRoute == aDefaultRoute);
-
-    if (aPreference != nullptr)
+    while (otNetDataGetNextOnMeshPrefix(sInstance, &iterator, &prefixConfig) == OT_ERROR_NONE)
     {
-        VerifyOrQuit(prefixConfig.mPreference == *aPreference);
+        if (prefixConfig.mOnMesh)
+        {
+            VerifyOrQuit(!foundOmr);
+            foundOmr = true;
+            VerifyOrQuit(prefixConfig.GetPrefix() == aOmrPrefix);
+            VerifyOrQuit(prefixConfig.mStable == true);
+            VerifyOrQuit(prefixConfig.mSlaac == true);
+            VerifyOrQuit(prefixConfig.mPreferred == true);
+            VerifyOrQuit(prefixConfig.mDefaultRoute == aDefaultRoute);
+
+            if (aPreference != nullptr)
+            {
+                VerifyOrQuit(prefixConfig.mPreference == *aPreference);
+            }
+        }
     }
 
-    VerifyOrQuit(otNetDataGetNextOnMeshPrefix(sInstance, &iterator, &prefixConfig) == kErrorNotFound);
+    VerifyOrQuit(foundOmr);
 }
 
 void VerifyNoOmrPrefixInNetData(void)
@@ -755,7 +761,10 @@ void VerifyNoOmrPrefixInNetData(void)
     NetworkData::OnMeshPrefixConfig prefixConfig;
 
     Log("VerifyNoOmrPrefixInNetData()");
-    VerifyOrQuit(otNetDataGetNextOnMeshPrefix(sInstance, &iterator, &prefixConfig) != kErrorNone);
+    while (otNetDataGetNextOnMeshPrefix(sInstance, &iterator, &prefixConfig) == OT_ERROR_NONE)
+    {
+        VerifyOrQuit(!prefixConfig.mOnMesh);
+    }
 }
 
 enum ExternalRouteMode : uint8_t
@@ -3736,7 +3745,6 @@ void TestLearnRaHeader(void)
 {
     Ip6::Prefix localOnLink;
     Ip6::Prefix localOmr;
-    Ip6::Prefix onLinkPrefix = PrefixFromString("2000:abba:baba::", 64);
     uint16_t    heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");

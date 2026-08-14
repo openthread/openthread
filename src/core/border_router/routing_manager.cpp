@@ -64,6 +64,9 @@ RoutingManager::RoutingManager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     , mPdPrefixManager(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+    , mAilPrefixLowpanPublisher(aInstance)
+#endif
     , mRoutingPolicyTimer(aInstance)
 {
     mBrUlaPrefix.Clear();
@@ -266,6 +269,9 @@ void RoutingManager::Start(void)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mNat64PrefixManager.Start();
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+        mAilPrefixLowpanPublisher.Start();
+#endif
     }
 }
 
@@ -280,6 +286,9 @@ void RoutingManager::Stop(void)
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Stop();
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+    mAilPrefixLowpanPublisher.Stop();
 #endif
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
@@ -388,6 +397,9 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     mPdPrefixManager.Evaluate();
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+    mAilPrefixLowpanPublisher.Evaluate();
 #endif
 
     if (IsInitialPolicyEvaluationDone())
@@ -604,6 +616,9 @@ void RoutingManager::HandleRxRaTrackerEvents(const RxRaTracker::Events &aEvents)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mNat64PrefixManager.HandleRxRaTrackerChanged();
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+        mAilPrefixLowpanPublisher.HandleRxRaTrackerChanged();
+#endif
         mRoutePublisher.Evaluate();
     }
 
@@ -630,6 +645,9 @@ void RoutingManager::HandleLocalOnLinkPrefixChanged(void)
     VerifyOrExit(mIsRunning);
 
     mRoutePublisher.Evaluate();
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+    mAilPrefixLowpanPublisher.Evaluate();
+#endif
     Get<RxRaTracker>().HandleLocalOnLinkPrefixChanged();
     ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 
@@ -2534,6 +2552,92 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// AilPrefixLowpanPublisher
+
+RoutingManager::AilPrefixLowpanPublisher::AilPrefixLowpanPublisher(Instance &aInstance)
+    : InstanceLocator(aInstance)
+{
+}
+
+void RoutingManager::AilPrefixLowpanPublisher::Stop(void)
+{
+    for (const Ip6::Prefix &prefix : mPublishedPrefixes)
+    {
+        Unpublish(prefix);
+    }
+
+    mPublishedPrefixes.Clear();
+}
+
+void RoutingManager::AilPrefixLowpanPublisher::Evaluate(void)
+{
+    AilPrefixArray newPrefixes;
+
+    VerifyOrExit(Get<RoutingManager>().IsRunning());
+    VerifyOrExit(Get<RxRaTracker>().IsInitialRouterDiscoveryFinished());
+
+    Get<RxRaTracker>().GetAilPrefixes(newPrefixes);
+
+    if (Get<RoutingManager>().mOnLinkPrefixManager.IsPublishingOrAdvertising())
+    {
+        newPrefixes.Add(Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix());
+    }
+
+    for (const Ip6::Prefix &prefix : mPublishedPrefixes)
+    {
+        if (!newPrefixes.Contains(prefix))
+        {
+            Unpublish(prefix);
+        }
+    }
+
+    for (const Ip6::Prefix &prefix : newPrefixes)
+    {
+        if (!mPublishedPrefixes.Contains(prefix))
+        {
+            Publish(prefix);
+        }
+    }
+
+    mPublishedPrefixes = newPrefixes;
+
+exit:
+    return;
+}
+
+void RoutingManager::AilPrefixLowpanPublisher::Publish(const Ip6::Prefix &aPrefix)
+{
+    NetworkData::OnMeshPrefixConfig config;
+
+    config.Clear();
+    config.mPrefix       = aPrefix;
+    config.mStable       = true;
+    config.mOnMesh       = false;
+    config.mSlaac        = false;
+    config.mDhcp         = false;
+    config.mConfigure    = false;
+    config.mDefaultRoute = false;
+    config.mPreferred    = false;
+    config.mPreference   = NetworkData::kRoutePreferenceMedium;
+
+    LogInfo("Publishing AIL on-link prefix %s in NetData for compression", aPrefix.ToString().AsCString());
+
+    SuccessOrAssert(
+        Get<NetworkData::Publisher>().PublishOnMeshPrefix(config, NetworkData::Publisher::kFromRoutingManager));
+}
+
+void RoutingManager::AilPrefixLowpanPublisher::Unpublish(const Ip6::Prefix &aPrefix)
+{
+    LogInfo("Unpublishing AIL on-link prefix %s from NetData", aPrefix.ToString().AsCString());
+
+    IgnoreError(Get<NetworkData::Publisher>().UnpublishPrefix(aPrefix));
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // RaInfo
