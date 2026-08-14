@@ -206,7 +206,7 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
     semiWindow +=
         Radio::ConvertUncertaintyToUsec(mCslParentAccuracy.GetUncertainty() + Get<Radio::Radio>().GetCslUncertainty());
 
-    aAhead = Min(semiPeriod, semiWindow + kMinReceiveOnAhead + kCslReceiveTimeAhead);
+    aAhead = Min(semiPeriod, semiWindow + kMinReceiveOnAhead + kCslReceiveTimeAhead + 3000);
     aAfter = Min(semiPeriod, semiWindow + kMinReceiveOnAfter);
 }
 
