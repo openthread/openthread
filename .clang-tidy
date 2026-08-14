@@ -20,5 +20,5 @@ Checks: >
   readability-simplify-boolean-expr,
   readability-static-accessed-through-instance
 WarningsAsErrors: '*'
-HeaderFilterRegex: '(examples|include|src).*(?<!third_party.*repo)'
+HeaderFilterRegex: '(examples|include|src)'
 ExcludeHeaderFilterRegex: '(^|/)third_party/'
