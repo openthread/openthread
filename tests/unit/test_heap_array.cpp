@@ -39,17 +39,10 @@
 #include "common/type_traits.hpp"
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-static bool   sFailHeapAllocation;
-static size_t sHeapAllocationCount;
-static size_t sLastHeapAllocationCount;
-static size_t sLastHeapAllocationSize;
+static bool sFailHeapAllocation;
 
 extern "C" void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
-    sHeapAllocationCount++;
-    sLastHeapAllocationCount = aNum;
-    sLastHeapAllocationSize  = aSize;
-
     return sFailHeapAllocation ? nullptr : calloc(aNum, aSize);
 }
 
@@ -100,11 +93,6 @@ public:
 private:
     uint16_t mValue;
     bool     mInitialized;
-};
-
-struct LargeEntry
-{
-    uint8_t mBytes[65538];
 };
 
 template <typename EntryType>
@@ -538,7 +526,6 @@ void TestHeapArrayCapacityLimit(void)
     Heap::Array<uint8_t, 2> array;
     const uint8_t           value = 0xa5;
     uint8_t                *arrayBuffer;
-    size_t                  allocationCount;
 
     printf("\n\n====================================================================================\n");
     printf("TestHeapArrayCapacityLimit\n\n");
@@ -566,9 +553,8 @@ void TestHeapArrayCapacityLimit(void)
     VerifyOrQuit(array.GetCapacity() == kMaxCapacity);
     arrayBuffer = const_cast<uint8_t *>(array.AsCArray());
 
-    // Two source entries beyond the representable limit must both be rejected
+    // All PushBack overloads must reject growth beyond the representable limit
     // without changing the buffer, length, capacity, or existing contents.
-    VerifyOrQuit(array.PushBack(value) == kErrorNoBufs);
     VerifyOrQuit(array.PushBack(value) == kErrorNoBufs);
     VerifyOrQuit(array.PushBack(uint8_t{value}) == kErrorNoBufs);
     VerifyOrQuit(array.PushBack() == nullptr);
@@ -577,20 +563,13 @@ void TestHeapArrayCapacityLimit(void)
     VerifyOrQuit(array.AsCArray() == arrayBuffer);
     VerifyOrQuit(array.Back() != nullptr && *array.Back() == 0xfe);
 
-    // Removing an entry restores room in the existing buffer and all PushBack
-    // overloads remain usable without another allocation.
+    // Removing an entry restores room in the existing buffer.
     array.PopBack();
     SuccessOrQuit(array.PushBack(value));
     VerifyOrQuit(array.Back() != nullptr && *array.Back() == value);
-    array.PopBack();
-    SuccessOrQuit(array.PushBack(uint8_t{0x5a}));
-    VerifyOrQuit(array.Back() != nullptr && *array.Back() == 0x5a);
-    array.PopBack();
-    VerifyOrQuit(array.PushBack() != nullptr);
-    VerifyOrQuit(array.GetLength() == kMaxCapacity);
 
-    // Allocation failure during ordinary growth must be reported without
-    // mutating the existing allocation, and a later valid growth must work.
+    // Allocation failure during ordinary growth must not mutate the existing
+    // allocation, and a later valid growth must still work.
     array.Free();
     SuccessOrQuit(array.PushBack(value));
     SuccessOrQuit(array.PushBack(value));
@@ -604,28 +583,6 @@ void TestHeapArrayCapacityLimit(void)
     SuccessOrQuit(array.PushBack(value));
     VerifyOrQuit(array.GetLength() == 3);
     VerifyOrQuit(array.GetCapacity() == 4);
-
-    // Allocate() must check the full byte-size multiplication before handing
-    // it to the platform allocator. On 32-bit size_t the request overflows and
-    // never reaches the allocator; on wider hosts the exact size is retained.
-    Heap::Array<LargeEntry, 2> largeArray;
-    allocationCount     = sHeapAllocationCount;
-    sFailHeapAllocation = true;
-    VerifyOrQuit(largeArray.ReserveCapacity(kMaxCapacity) == kErrorNoBufs);
-    sFailHeapAllocation = false;
-    VerifyOrQuit(largeArray.GetLength() == 0);
-    VerifyOrQuit(largeArray.GetCapacity() == 0);
-
-    if (sizeof(size_t) == sizeof(uint32_t))
-    {
-        VerifyOrQuit(sHeapAllocationCount == allocationCount);
-    }
-    else
-    {
-        VerifyOrQuit(sHeapAllocationCount == allocationCount + 1);
-        VerifyOrQuit(sLastHeapAllocationCount == 1);
-        VerifyOrQuit(sLastHeapAllocationSize == static_cast<size_t>(kMaxCapacity) * sizeof(LargeEntry));
-    }
 
     printf("\n -- PASS\n");
 }

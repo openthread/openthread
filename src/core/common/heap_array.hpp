@@ -45,7 +45,6 @@
 #include "common/heap.hpp"
 #include "common/new.hpp"
 #include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
 
 namespace ot {
 namespace Heap {
@@ -60,6 +59,8 @@ namespace Heap {
  * The `Type` class MUST provide a move constructor `Type(Type &&aOther)` (or a copy constructor if no move constructor
  * is provided). This constructor is used to move existing elements when array buffer is grown (new buffer is
  * allocated) to make room for new elements.
+ *
+ * The array length and capacity are represented by `uint16_t` and cannot exceed `UINT16_MAX` (2^16 - 1).
  *
  * @tparam  Type                  The array element type.
  * @tparam  kCapacityIncrements   Number of elements to allocate at a time when updating the array buffer.
@@ -506,19 +507,12 @@ public:
 private:
     Error Grow(void)
     {
+        Error error = kErrorNone;
+
         static_assert(kCapacityIncrements > 0, "kCapacityIncrements must be greater than zero");
 
-        Error     error       = kErrorNone;
-        IndexType newCapacity = NumericLimits<IndexType>::kMax;
-
-        VerifyOrExit(mCapacity < newCapacity, error = kErrorNoBufs);
-
-        if (kCapacityIncrements <= newCapacity - mCapacity)
-        {
-            newCapacity = static_cast<IndexType>(mCapacity + kCapacityIncrements);
-        }
-
-        error = Allocate(newCapacity);
+        VerifyOrExit(CanAddSafely<IndexType>(mCapacity, kCapacityIncrements), error = kErrorNoBufs);
+        error = Allocate(static_cast<IndexType>(mCapacity + kCapacityIncrements));
 
     exit:
         return error;
@@ -526,13 +520,11 @@ private:
 
     Error Allocate(IndexType aCapacity)
     {
-        Error  error = kErrorNone;
-        Type  *newArray;
-        size_t allocationSize;
+        Error error = kErrorNone;
+        Type *newArray;
 
         VerifyOrExit((aCapacity != mCapacity) && (aCapacity >= mLength));
-        VerifyOrExit(SafeMultiply<size_t>(aCapacity, sizeof(Type), allocationSize) == kErrorNone, error = kErrorNoBufs);
-        newArray = static_cast<Type *>(Heap::CAlloc(1, allocationSize));
+        newArray = static_cast<Type *>(Heap::CAlloc(aCapacity, sizeof(Type)));
         VerifyOrExit(newArray != nullptr, error = kErrorNoBufs);
 
         for (IndexType index = 0; index < mLength; index++)
