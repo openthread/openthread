@@ -619,6 +619,7 @@ private:
         bool          HasStarted(const Radio::SyncedTime &aNow) const { return mStartTime <= aNow.GetAsTime64(); }
         bool          HasEnded(const Radio::SyncedTime &aNow) const { return GetEndTime() <= aNow.GetAsTime64(); }
         void          ScheduleOnRadio(Radio::Radio &aRadio) const;
+        uint32_t GetDuration(void) const { return mDuration;}
 
     private:
         Radio::Time64 mStartTime;

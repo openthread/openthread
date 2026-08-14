@@ -227,6 +227,8 @@ Error SubMac::Sleep(void)
 {
     Error error = kErrorNone;
 
+    fprintf(stderr, "ABTIN - SubMac::Sleep() state:%s\n", StateToString(mState));
+
 #if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
     // `ProcessTimedRx()` evaluates active and pending timed RX windows.
     //
@@ -291,6 +293,9 @@ exit:
 
 void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
 {
+    fprintf(stderr, "ABTIN - SubMac::HandleReceiveDone(err:%s, frame:%p)\n",
+            ErrorToString(aError), (void *)aFrame);
+
     if (mPcapCallback.IsSet() && (aFrame != nullptr) && (aError == kErrorNone))
     {
         mPcapCallback.Invoke(aFrame, false);
@@ -316,6 +321,8 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
 Error SubMac::Send(void)
 {
     Error error = kErrorNone;
+
+    fprintf(stderr, "ABTIN - SubMac::Send() state:%s\n", StateToString(mState));
 
     switch (mState)
     {
@@ -538,6 +545,9 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 {
     bool ccaSuccess = true;
     bool shouldRetx;
+
+    fprintf(stderr, "ABTIN - SubMac::HandleTransmitDone(err:%s, ack:%p)\n",
+            ErrorToString(aError), (void *)aAckFrame);
 
     // Stop ack timeout timer.
 
@@ -824,6 +834,10 @@ void SubMac::ReceiveAt(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aCh
     Radio::SyncedTime now;
     TimedRx           timedRx;
 
+    fprintf(stderr, "ABTIN - SubMac::ReceiveAt(%lu, dur:%lu)\n", ToUlong(Radio::ConvertTime64To32(aStartTime)),
+            ToUlong(aDuration));
+
+
     VerifyOrExit(mState != kStateDisabled);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -882,6 +896,8 @@ exit:
 
 void SubMac::CancelPendingReceiveAt(void)
 {
+    fprintf(stderr, "ABTIN - SubMac::CancelPendingReceiveAt()\n");
+
     VerifyOrExit(mPendingTimedRx.IsSpecified());
     mPendingTimedRx.Clear();
 
@@ -901,6 +917,10 @@ exit:
 
 void SubMac::StartPendingTimedRx(void)
 {
+    fprintf(stderr, "ABTIN - SubMac::StartPendingTimedRx() ch:%u start:%lu dur:%lu\n",
+            mPendingTimedRx.GetChannel(), ToUlong(Radio::ConvertTime64To32(mPendingTimedRx.GetStartTime())),
+            ToUlong(mPendingTimedRx.GetDuration()));
+
     if ((mState == kStateTimedReceive) && (mActiveTimedRx.GetChannel() == mPendingTimedRx.GetChannel()))
     {
         // Skip transitioning the radio if already receiving on the same
@@ -923,6 +943,9 @@ void SubMac::ProcessTimedRx(void)
 
     Radio::Time64     fireTime = Radio::kMaxTime64;
     Radio::SyncedTime now;
+
+    fprintf(stderr, "ABTIN - SubMac::ProcessTimedRx() state:%s pending:%d active:%d\n", StateToString(mState),
+            mPendingTimedRx.IsSpecified(), mActiveTimedRx.IsSpecified());
 
     mTimer.Stop();
 
@@ -992,6 +1015,7 @@ exit:
             delay = ClampToUint32(fireTime - now.GetAsTime64());
         }
 
+        fprintf(stderr, "ABTIN - SubMac::ProcessTimedRx() scheduled delay:%lu\n", ToUlong(delay));
         StartTimerAt(now.GetAsLocalTimeMicro(), delay);
     }
 }
@@ -1015,6 +1039,7 @@ void SubMac::TimedRx::ScheduleOnRadio(Radio::Radio &aRadio) const
 
 void SubMac::HandleTimer(void)
 {
+    fprintf(stderr, "ABTIN - SubMac::HandleTimer() state:%s\n", StateToString(mState));
     switch (mState)
     {
 #if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
@@ -1178,6 +1203,8 @@ exit:
 
 void SubMac::StartTimer(uint32_t aDelayUs)
 {
+    fprintf(stderr, "ABTIN - SubMac::StartTimer(delay:%lu)\n", ToUlong(aDelayUs));
+
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     mTimer.Start(aDelayUs);
 #else
@@ -1187,6 +1214,8 @@ void SubMac::StartTimer(uint32_t aDelayUs)
 
 void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 {
+    fprintf(stderr, "ABTIN - SubMac::StartTimer(startTime:%lu, delay:%lu)\n", ToUlong(aStartTime.GetValue()), ToUlong(aDelayUs));
+
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     mTimer.StartAt(aStartTime, aDelayUs);
 #else

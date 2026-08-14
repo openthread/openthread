@@ -77,6 +77,9 @@ void SubMac::RestartCslTimerAfterSyncUpdate(void)
 
 void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
 {
+    fprintf(stderr, "ABTIN - SubMac::UpdateCslLastSyncTimestamp(TxFrame, ack:%p, hasCslIe:%d)\n",
+            (void *)aAckFrame, aFrame.Has<CslIe>());
+
     // Actual synchronization timestamp should be from the sent frame instead of the current time.
     // Assuming the error here since it is bounded and has very small effect on the final window duration.
     if (aAckFrame != nullptr && aFrame.Has<CslIe>())
@@ -88,6 +91,9 @@ void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
 
 void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
 {
+    fprintf(stderr, "ABTIN - SubMac::UpdateCslLastSyncTimestamp(RxFrame, err:%s, period:%u, secEnhAck:%d)\n",
+            ErrorToString(aError), mCslPeriod, (aFrame ? aFrame->IsAckedWithSecEnhAck() : 0));
+
     VerifyOrExit(aFrame != nullptr && aError == kErrorNone);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
@@ -115,6 +121,8 @@ void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShor
     bool diffChannel = aChannel != mCslChannel;
     bool diffPeer    = aShortAddr != mCslPeerShort;
     bool retval      = diffPeriod || diffChannel || diffPeer;
+
+    fprintf(stderr, "ABTIN - SubMac::SetCslParams(period:%u, channel:%u)\n", aPeriod, aChannel);
 
     VerifyOrExit(retval);
     mCslChannel = aChannel;
@@ -164,6 +172,9 @@ void SubMac::HandleCslTimer(void)
     uint32_t      timeAhead, timeAfter;
     Radio::Time64 winStart;
     uint32_t      winDuration;
+
+    fprintf(stderr, "ABTIN - SubMac::HandleCslTimer()\n");
+
 
     GetCslWindowEdges(timeAhead, timeAfter);
 
