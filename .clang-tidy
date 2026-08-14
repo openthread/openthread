@@ -21,3 +21,4 @@ Checks: >
   readability-static-accessed-through-instance
 WarningsAsErrors: '*'
 HeaderFilterRegex: '(examples|include|src).*(?<!third_party.*repo)'
+ExcludeHeaderFilterRegex: '(^|/)third_party/'
