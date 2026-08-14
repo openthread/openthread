@@ -284,8 +284,6 @@ Error DatasetManager::Save(const Dataset &aDataset, bool aAllowOlderTimestamp)
         mTimer.Start(kSendSetDelay);
     }
 
-    SignalDatasetChange();
-
 exit:
     return error;
 }
@@ -339,8 +337,6 @@ void DatasetManager::SaveLocal(const Dataset &aDataset)
     default:
         break;
     }
-
-    SignalDatasetChange();
 }
 
 void DatasetManager::LocalSave(const Dataset &aDataset)
@@ -383,6 +379,8 @@ void DatasetManager::LocalSave(const Dataset &aDataset)
     {
         Get<PendingDatasetManager>().StartDelayTimer(aDataset);
     }
+
+    SignalDatasetChange();
 }
 
 void DatasetManager::SignalDatasetChange(void) const
