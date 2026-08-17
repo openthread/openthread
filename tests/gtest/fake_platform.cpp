@@ -225,7 +225,7 @@ otError FakePlatform::SettingsGet(uint16_t aKey, uint16_t aIndex, uint8_t *aValu
         return OT_ERROR_NOT_FOUND;
     }
 
-    if (aIndex > setting->second.size())
+    if (aIndex >= setting->second.size())
     {
         return OT_ERROR_NOT_FOUND;
     }
@@ -280,7 +280,13 @@ otError FakePlatform::SettingsDelete(uint16_t aKey, int aIndex)
         return OT_ERROR_NOT_FOUND;
     }
 
-    if (static_cast<std::size_t>(aIndex) >= setting->second.size())
+    if (aIndex == -1)
+    {
+        mSettings.erase(setting);
+        return OT_ERROR_NONE;
+    }
+
+    if (aIndex < 0 || static_cast<std::size_t>(aIndex) >= setting->second.size())
     {
         return OT_ERROR_NOT_FOUND;
     }
