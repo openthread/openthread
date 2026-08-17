@@ -65,7 +65,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo add-apt-repository -y ppa:wireshark-dev/stable
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y ninja-build tshark
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
 
@@ -99,7 +99,7 @@ jobs:
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
 
     - name: Build Nexus
@@ -136,7 +136,7 @@ jobs:
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
 
     - name: Build Nexus
@@ -167,7 +167,7 @@ jobs:
 
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc
 
     - name: Build Nexus
@@ -198,7 +198,7 @@ jobs:
 
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
 
     - name: Set up Emscripten
