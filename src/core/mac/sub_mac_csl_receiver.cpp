@@ -261,13 +261,19 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
      * -timeAhead                           CslPhase                             +timeAfter             -timeAhead
      */
     uint32_t semiPeriod = mCslPeriod * Radio::kUsPerTenSymbols / 2;
-    uint32_t elapsed;
+    uint32_t elapsed    = 0;
     uint32_t semiWindow;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
-    elapsed = TimerMicro::GetNow() - mCslLastSync;
+    if (mCslSampleTime.GetAsLocalTimeMicro() > mCslLastSync)
+    {
+        elapsed = mCslSampleTime.GetAsLocalTimeMicro() - mCslLastSync;
+    }
 #else
-    elapsed = ClampToUint32(Get<Radio::Radio>().GetNow() - mCslLastSync);
+    if (mCslSampleTime.GetAsTime64() > mCslLastSync)
+    {
+        elapsed = ClampToUint32(mCslSampleTime.GetAsTime64() - mCslLastSync);
+    }
 #endif
 
     semiWindow = DetermineClockDrift(elapsed);
