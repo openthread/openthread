@@ -244,14 +244,6 @@ public:
     void SetAckRequest(bool aAckRequest) { UpdateFcfFlag(aAckRequest, kFcfAckRequest); }
 
     /**
-     * Indicates whether or not the PanId Compression bit is set.
-     *
-     * @retval TRUE   If the PanId Compression bit is set.
-     * @retval FALSE  If the PanId Compression bit is not set.
-     */
-    bool IsPanIdCompressed(void) const { return (GetFrameControlField() & kFcfPanidCompression) != 0; }
-
-    /**
      * Indicates whether or not IEs present.
      *
      * @retval TRUE   If IEs present.
@@ -288,13 +280,6 @@ public:
     bool IsSequencePresent(void) const { return IsSeqPresent(GetFrameControlField()); }
 
     /**
-     * Indicates whether or not the Destination PAN ID is present.
-     *
-     * @returns TRUE if the Destination PAN ID is present, FALSE otherwise.
-     */
-    bool IsDstPanIdPresent(void) const { return IsDstPanIdPresent(GetFrameControlField()); }
-
-    /**
      * Gets the Destination PAN Identifier.
      *
      * @param[out]  aPanId  The Destination PAN Identifier.
@@ -306,14 +291,6 @@ public:
     Error GetDstPanId(PanId &aPanId) const;
 
     /**
-     * Indicates whether or not the Destination Address is present for this object.
-     *
-     * @retval TRUE   If the Destination Address is present.
-     * @retval FALSE  If the Destination Address is not present.
-     */
-    bool IsDstAddrPresent() const { return IsDstAddrPresent(GetFrameControlField()); }
-
-    /**
      * Gets the Destination Address.
      *
      * @param[out]  aAddress  The Destination Address.
@@ -322,14 +299,6 @@ public:
      * @retval kErrorParse     Failed to parse the frame.
      */
     Error GetDstAddr(Address &aAddress) const;
-
-    /**
-     * Indicates whether or not the Source Address is present for this object.
-     *
-     * @retval TRUE   If the Source Address is present.
-     * @retval FALSE  If the Source Address is not present.
-     */
-    bool IsSrcPanIdPresent(void) const { return IsSrcPanIdPresent(GetFrameControlField()); }
 
     /**
      * Gets the Source PAN Identifier.
@@ -343,14 +312,6 @@ public:
     Error GetSrcPanId(PanId &aPanId) const;
 
     /**
-     * Indicates whether or not the Source Address is present for this object.
-     *
-     * @retval TRUE   If the Source Address is present.
-     * @retval FALSE  If the Source Address is not present.
-     */
-    bool IsSrcAddrPresent(void) const { return IsSrcAddrPresent(GetFrameControlField()); }
-
-    /**
      * Gets the Source Address.
      *
      * @param[out]  aAddress  The Source Address.
@@ -359,17 +320,6 @@ public:
      * @retval kErrorParse     Failed to parse the frame.
      */
     Error GetSrcAddr(Address &aAddress) const;
-
-    /**
-     * Gets the Security Control Field.
-     *
-     * @param[out]  aSecurityControlField  The Security Control Field.
-     *
-     * @retval kErrorNone      Successfully retrieved the Security Control Field.
-     * @retval kErrorNotFound  Frame does not have a security header (security is not enabled)
-     * @retval kErrorParse     Failed to parse the frame.
-     */
-    Error GetSecurityControlField(uint8_t &aSecurityControlField) const;
 
     /**
      * Gets the Security Level Identifier.
