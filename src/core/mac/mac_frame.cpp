@@ -1193,18 +1193,6 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource)
-{
-    // Placeholder implementation following removal of legacy Multipurpose frame format.
-    OT_UNUSED_VARIABLE(aPanId);
-    OT_UNUSED_VARIABLE(aWakeupRequest);
-    OT_UNUSED_VARIABLE(aSource);
-
-    return kErrorFailed;
-}
-#endif
-
 bool RxFrame::IsSecuredWith(KeyIdModeFlags aFlags) const
 {
     bool      isSecure = false;

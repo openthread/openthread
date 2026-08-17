@@ -826,8 +826,7 @@ private:
     void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
 #endif
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    Error HandleWakeupFrame(const RxFrame &aFrame);
-    void  UpdateWakeupListening(void);
+    void UpdateWakeupListening(void);
 #endif
 
     using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;

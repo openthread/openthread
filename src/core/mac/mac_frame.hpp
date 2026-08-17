@@ -71,11 +71,10 @@ public:
      */
     enum Type : uint16_t
     {
-        kTypeBeacon       = 0, ///< Beacon Frame Type.
-        kTypeData         = 1, ///< Data Frame Type.
-        kTypeAck          = 2, ///< Ack Frame Type.
-        kTypeMacCmd       = 3, ///< MAC Command Frame Type.
-        kTypeMultipurpose = 5, ///< Multipurpose Frame Type.
+        kTypeBeacon = 0, ///< Beacon Frame Type.
+        kTypeData   = 1, ///< Data Frame Type.
+        kTypeAck    = 2, ///< Ack Frame Type.
+        kTypeMacCmd = 3, ///< MAC Command Frame Type.
     };
 
     /**
@@ -191,18 +190,6 @@ public:
      * @retval FALSE  If this is not a MAC Command Frame.
      */
     bool IsMacCommand(void) const { return GetType() == kTypeMacCmd; }
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    /**
-     * This method returns whether the frame is an IEEE 802.15.4 Wake-up frame.
-     *
-     * This is a placeholder implementation following removal of legacy Multipurpose frame format.
-     *
-     * @retval TRUE   If this is a Wake-up frame.
-     * @retval FALSE  If this is not a Wake-up frame.
-     */
-    bool IsWakeupFrame(void) const { return false; }
-#endif
 
     /**
      * Returns the IEEE 802.15.4 Frame Version.
@@ -986,7 +973,7 @@ public:
      * @retval  kErrorNone        Successfully generated Wake-up frame.
      * @retval  kErrorInvalidArgs @p aDest or @p aSource have incorrect type.
      */
-    Error GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource);
+    Error GenerateWakeupFrame(PanId, const WakeupRequest &, const Address &) { return kErrorNotImplemented; }
 #endif
 
 private:

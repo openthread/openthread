@@ -360,16 +360,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    if (mTransmitFrame.GetType() == Frame::kTypeMultipurpose)
-    {
-        VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode2));
-    }
-    else
-#endif
-    {
-        VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode1));
-    }
+    VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode1));
 
     mTransmitFrame.SetAesKey(mKeyTrio.SelectKey(keyIndex));
 
