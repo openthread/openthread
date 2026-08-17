@@ -45,6 +45,11 @@ target_link_libraries(ot-fake-platform
 )
 
 add_library(ot-fake-ftd INTERFACE)
+target_compile_definitions(ot-fake-ftd INTERFACE
+    OPENTHREAD_FTD=1
+    OPENTHREAD_MTD=0
+    OPENTHREAD_RADIO=0
+)
 target_link_libraries(ot-fake-ftd INTERFACE
     openthread-ftd
     ot-fake-platform
