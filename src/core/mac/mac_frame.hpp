@@ -739,7 +739,6 @@ protected:
     static bool     IsDstPanIdPresent(uint16_t aFcf);
     static bool     IsSrcPanIdPresent(uint16_t aFcf);
     static AddrMode DetermineAddrMode(const Address &aAddress);
-    static uint8_t  CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t  CalculateKeySourceSize(uint8_t aSecurityControl);
     static uint8_t  CalculateMicSize(uint8_t aSecurityControl);
 
