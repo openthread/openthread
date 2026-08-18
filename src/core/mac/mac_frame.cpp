@@ -208,9 +208,12 @@ void TxFrame::BuildInfo::PrepareHeadersIn(TxFrame &aTxFrame) const
     if (mSecurityLevel != kSecurityNone)
     {
         uint8_t secCtl = ConstructSecurityControlField(mSecurityLevel, mKeyIdMode);
+        uint8_t size;
 
         IgnoreError(builder.AppendUint8(secCtl));
-        builder.AppendLength(CalculateSecurityHeaderSize(secCtl) - sizeof(secCtl));
+
+        size = kFrameCounterSize + CalculateKeySourceSize(secCtl) + ((mKeyIdMode == kKeyIdMode0) ? 0 : kKeyIndexSize);
+        builder.AppendLength(size);
 
         micSize = CalculateMicSize(secCtl);
     }
@@ -895,23 +898,6 @@ Frame::SecurityLevel Frame::ReadSecurityLevel(uint8_t aSecCtl)
 Frame::KeyIdMode Frame::ReadKeyIdMode(uint8_t aSecCtl)
 {
     return static_cast<KeyIdMode>(ReadBits<uint8_t, kScfKeyIdModeMask>(aSecCtl));
-}
-
-uint8_t Frame::CalculateSecurityHeaderSize(uint8_t aSecurityControl)
-{
-    uint8_t size;
-
-    VerifyOrExit(ReadSecurityLevel(aSecurityControl) != kSecurityNone, size = kInvalidSize);
-
-    size = kSecurityControlSize + kFrameCounterSize + CalculateKeySourceSize(aSecurityControl);
-
-    if (ReadKeyIdMode(aSecurityControl) != kKeyIdMode0)
-    {
-        size += kKeyIndexSize;
-    }
-
-exit:
-    return size;
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
