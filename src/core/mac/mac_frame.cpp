@@ -52,7 +52,7 @@ void TxFrame::BuildInfo::PrepareHeadersIn(TxFrame &aTxFrame) const
     FrameBuilder builder;
     uint8_t      micSize = 0;
 
-    fcf = static_cast<uint16_t>(mType) | static_cast<uint16_t>(mVersion);
+    fcf = ConstructFrameControlField(mType, mVersion);
 
     fcf |= static_cast<uint16_t>(DetermineAddrMode(mAddrs.mSource) << kFcfSrcAddrShift);
     fcf |= static_cast<uint16_t>(DetermineAddrMode(mAddrs.mDestination) << kFcfDstAddrShift);
@@ -291,8 +291,8 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
     // Also restrict frame version to 2003, 2006, 2015. Future frame
     // versions can alter the MAC header layout.
 
-    VerifyOrExit(GetType(mFcf) <= kTypeMacCmd);
-    VerifyOrExit(GetVersion(mFcf) <= kVersion2015);
+    VerifyOrExit(ReadType(mFcf) <= kTypeMacCmd);
+    VerifyOrExit(ReadVersion(mFcf) <= kVersion2015);
 
     if (IsSeqPresent(mFcf))
     {
@@ -404,7 +404,7 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
     // MAC Command
 
-    if (GetType(mFcf) == kTypeMacCmd)
+    if (ReadType(mFcf) == kTypeMacCmd)
     {
         VerifyOrExit(frameData.CanRead(sizeof(mCommandId)));
 
@@ -468,6 +468,11 @@ Error Frame::ValidatePsdu(void) const
     ParseInfo info;
 
     return info.ParseFrom(*this, kParseFully);
+}
+
+uint16_t Frame::ConstructFrameControlField(Type aType, uint8_t aVersion)
+{
+    return static_cast<uint16_t>(aType | (aVersion << kFcfVersionShift));
 }
 
 void Frame::UpdateFcfFlag(bool aSet, uint16_t aBitFlag)
@@ -784,7 +789,7 @@ Error Frame::GetCommandId(uint8_t &aCommandId) const
     ParseInfo info;
 
     SuccessOrExit(error = info.ParseFrom(*this, kParseFully));
-    VerifyOrExit(GetType(info.mFcf) == kTypeMacCmd, error = kErrorNotFound);
+    VerifyOrExit(ReadType(info.mFcf) == kTypeMacCmd, error = kErrorNotFound);
     aCommandId = info.mCommandId;
 
 exit:
@@ -1063,7 +1068,7 @@ exit:
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 {
-    uint16_t fcf = static_cast<uint16_t>(kTypeAck) | aFrame.GetVersion();
+    uint16_t fcf = ConstructFrameControlField(kTypeAck, aFrame.GetVersion());
 
     mChannel = aFrame.mChannel;
     ClearAllBytes(mInfo.mTxInfo);
@@ -1228,7 +1233,7 @@ Frame::InfoString Frame::ToInfoString(void) const
 {
     InfoString string;
     ParseInfo  info;
-    uint16_t   type;
+    uint8_t    type;
 
     string.Append("len:%u", mLength);
 
@@ -1245,7 +1250,7 @@ Frame::InfoString Frame::ToInfoString(void) const
 
     string.Append(", type:");
 
-    type = GetType(info.mFcf);
+    type = ReadType(info.mFcf);
 
     switch (type)
     {

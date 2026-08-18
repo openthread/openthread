@@ -67,9 +67,9 @@ public:
     /**
      * Represents the MAC frame type.
      *
-     * Values match the Frame Type field in Frame Control Field (FCF)  as an `uint16_t`.
+     * Values match the Frame Type field in Frame Control Field (FCF).
      */
-    enum Type : uint16_t
+    enum Type : uint8_t
     {
         kTypeBeacon = 0, ///< Beacon Frame Type.
         kTypeData   = 1, ///< Data Frame Type.
@@ -80,13 +80,14 @@ public:
     /**
      * Represents the MAC frame version.
      *
-     * Values match the Version field in Frame Control Field (FCF) as an `uint16_t`.
+     * Values match the raw (unshifted) Version sub-field (2-bit wide) in Frame Control Field (FCF). The enum does
+     * not cover all possible 2-bit values.
      */
-    enum Version : uint16_t
+    enum Version : uint8_t
     {
-        kVersion2003 = 0 << 12, ///< 2003 Frame Version.
-        kVersion2006 = 1 << 12, ///< 2006 Frame Version.
-        kVersion2015 = 2 << 12, ///< 2015 Frame Version.
+        kVersion2003 = 0, ///< 2003 Frame Version.
+        kVersion2006 = 1, ///< 2006 Frame Version.
+        kVersion2015 = 2, ///< 2015 Frame Version.
     };
 
     /**
@@ -173,7 +174,7 @@ public:
      *
      * @returns The IEEE 802.15.4 Frame Type.
      */
-    uint8_t GetType(void) const { return GetPsdu()[0] & kFcfFrameTypeMask; }
+    uint8_t GetType(void) const { return ReadType(GetFrameControlField()); }
 
     /**
      * Returns whether the frame is an Ack frame.
@@ -196,7 +197,7 @@ public:
      *
      * @returns The IEEE 802.15.4 Frame Version.
      */
-    uint16_t GetVersion(void) const { return GetVersion(GetFrameControlField()); }
+    uint8_t GetVersion(void) const { return ReadVersion(GetFrameControlField()); }
 
     /**
      * Returns if this IEEE 802.15.4 frame's version is 2015.
@@ -588,7 +589,8 @@ protected:
     static constexpr uint16_t kFcfDstAddrShort     = kAddrModeShort << kFcfDstAddrShift;
     static constexpr uint16_t kFcfDstAddrExt       = kAddrModeExt << kFcfDstAddrShift;
     static constexpr uint16_t kFcfDstAddrMask      = kFcfAddrMask << kFcfDstAddrShift;
-    static constexpr uint16_t kFcfFrameVersionMask = 3 << 12;
+    static constexpr uint16_t kFcfVersionShift     = 12;
+    static constexpr uint16_t kFcfVersionMask      = 3 << kFcfVersionShift;
     static constexpr uint16_t kFcfSrcAddrShift     = 14;
     static constexpr uint16_t kFcfSrcAddrNone      = kAddrModeNone << kFcfSrcAddrShift;
     static constexpr uint16_t kFcfSrcAddrShort     = kAddrModeShort << kFcfSrcAddrShift;
@@ -660,7 +662,7 @@ protected:
 
     void UpdateFcfFlag(bool aSet, uint16_t aBitFlag);
 
-    static uint16_t GetType(uint16_t aFcf) { return (aFcf & kFcfFrameTypeMask); }
+    static uint8_t  ReadType(uint16_t aFcf) { return As<uint8_t>(ReadBits<uint16_t, kFcfFrameTypeMask>(aFcf)); }
     static AddrMode ReadDstAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfDstAddrMask>(aFcf)); }
     static AddrMode ReadSrcAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfSrcAddrMask>(aFcf)); }
     static bool     IsSeqSuppressed(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfSeqSuppression) != 0); }
@@ -671,13 +673,14 @@ protected:
     static bool     IsFramePending(uint16_t aFcf) { return (aFcf & kFcfFramePending) != 0; }
     static bool     IsIePresent(uint16_t aFcf) { return IsVersion2015(aFcf) && ((aFcf & kFcfIePresent) != 0); }
     static bool     IsAckRequest(uint16_t aFcf) { return (aFcf & kFcfAckRequest) != 0; }
-    static uint16_t GetVersion(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask); }
-    static bool     IsVersion2015(uint16_t aFcf) { return GetVersion(aFcf) == kVersion2015; }
+    static uint8_t  ReadVersion(uint16_t aFcf) { return As<uint8_t>(ReadBits<uint16_t, kFcfVersionMask>(aFcf)); }
+    static bool     IsVersion2015(uint16_t aFcf) { return ReadVersion(aFcf) == kVersion2015; }
     static bool     IsDstPanIdPresent(uint16_t aFcf);
     static bool     IsSrcPanIdPresent(uint16_t aFcf);
     static AddrMode DetermineAddrMode(const Address &aAddress);
     static uint8_t  CalculateKeySourceSize(KeyIdMode aKeyIdMode);
     static uint8_t  CalculateMicSize(SecurityLevel aSecurityLevel);
+    static uint16_t ConstructFrameControlField(Type aType, uint8_t aVersion);
 
     // Security Control fields
     static SecurityLevel ReadSecurityLevel(uint8_t aSecCtl);
