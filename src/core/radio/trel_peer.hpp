@@ -128,13 +128,18 @@ public:
     /**
      * Indicates whether or not the IPv6 socket address associated with the TREL peer is valid.
      *
+     * A socket address is considered valid if it has a non-zero port number and a specified IPv6 address (not `::`).
+     *
      * During peer discovery (mDNS service and host resolution), the peer address may not yet be known and can be
      * invalid (i.e., set to the unspecified IPv6 address `::`).
      *
      * @retval TRUE   If the peer socket address is valid.
      * @retval FALSE  If the peer socket address is not valid.
      */
-    bool HasValidSockAddr(void) const { return !GetSockAddr().GetAddress().IsUnspecified(); }
+    bool HasValidSockAddr(void) const
+    {
+        return (GetSockAddr().GetPort() != 0) && !GetSockAddr().GetAddress().IsUnspecified();
+    }
 
     /**
      * Updates the IPv6 socket address of the discovered TREL peer based on a received message from peer.
