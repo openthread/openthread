@@ -872,17 +872,6 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     case Frame::kKeyIdMode2:
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-        if (aFrame.IsWakeupFrame())
-        {
-            uint8_t keySource[Frame::kKeySourceSizeMode2];
-
-            // Just set the key source here, further security processing will happen in SubMac
-            BigEndian::WriteUint32(keyManager.GetCurrentKeySequence(), keySource);
-            aFrame.SetKeySource(keySource);
-            ExitNow();
-        }
-#endif
         aFrame.SetAesKey(mMode2KeyMaterial);
 
         mKeyIdMode2FrameCounter++;
@@ -1710,29 +1699,8 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        if (aFrame.IsWakeupFrame())
-        {
-            uint32_t  sequence;
-            uint8_t   keyIndex;
-            FrameData keySource;
-
-            // TODO: Avoid generating a new key if a wake-up frame was recently received already
-
-            IgnoreError(aFrame.GetKeyIndex(keyIndex));
-            aFrame.GetKeySource(keySource);
-            sequence = BigEndian::ReadUint32(keySource.GetBytes());
-            VerifyOrExit(DetermineKeyIndexFor(sequence) == keyIndex, error = kErrorSecurity);
-
-            macKey     = &keyManager.GetTemporaryMacKey(sequence);
-            extAddress = &aSrcAddr.GetExtended();
-        }
-        else
-#endif
-        {
-            macKey     = &mMode2KeyMaterial;
-            extAddress = &AsCoreType(&kMode2ExtAddress);
-        }
+        macKey     = &mMode2KeyMaterial;
+        extAddress = &AsCoreType(&kMode2ExtAddress);
         break;
 
     default:
@@ -2125,12 +2093,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     case Frame::kTypeData:
         mCounters.mRxData++;
         break;
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    case Frame::kTypeMultipurpose:
-        SuccessOrExit(error = HandleWakeupFrame(*aFrame));
-        OT_FALL_THROUGH;
-#endif
 
     default:
         mCounters.mRxOther++;
@@ -2717,60 +2679,6 @@ void Mac::UpdateWakeupListening(void)
     mLinks.UpdateWakeupListening(mWakeupListenEnabled, mWakeupListenInterval, mWakeupListenDuration, channel);
 }
 
-Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
-{
-    Error               error = kErrorNone;
-    const ConnectionIe *connectionIe;
-    Address             srcAddress;
-    WakeupInfo          wakeupInfo;
-    Radio::Time32       rvTimeUs;
-    Radio::Time64       rvTimestampUs;
-    Radio::Time64       radioNowUs;
-
-    VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
-
-    SuccessOrExit(error = aFrame.GetSrcAddr(srcAddress));
-    VerifyOrExit(srcAddress.IsExtended(), error = kErrorDrop);
-
-    wakeupInfo.mExtAddress    = srcAddress.GetExtended();
-    connectionIe              = aFrame.Find<ConnectionIe>();
-    wakeupInfo.mRetryInterval = connectionIe->GetRetryInterval();
-    wakeupInfo.mRetryCount    = connectionIe->GetRetryCount();
-    VerifyOrExit(wakeupInfo.mRetryInterval > 0 && wakeupInfo.mRetryCount > 0, error = kErrorInvalidArgs);
-
-    radioNowUs = Get<Radio::Radio>().GetNow();
-    rvTimeUs   = aFrame.Find<RendezvousTimeIe>()->GetRendezvousTime() * Radio::kUsPerTenSymbols;
-    rvTimestampUs =
-        aFrame.GetTimestamp() + Radio::kHeaderPhrDuration + aFrame.GetLength() * Radio::kOctetDuration + rvTimeUs;
-
-    if (rvTimestampUs > radioNowUs + kCslRequestAhead)
-    {
-        wakeupInfo.mAttachDelayMs = Radio::ConvertTime64To32(rvTimestampUs - radioNowUs - kCslRequestAhead);
-        wakeupInfo.mAttachDelayMs = wakeupInfo.mAttachDelayMs / Time::kOneMsecInUsec;
-    }
-    else
-    {
-        wakeupInfo.mAttachDelayMs = 0;
-    }
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    {
-        uint32_t frameCounter;
-
-        IgnoreError(aFrame.GetFrameCounter(frameCounter));
-        LogInfo("Received wake-up frame, fc:%lu, rendezvous:%luus, retries:%u/%u", ToUlong(frameCounter),
-                ToUlong(rvTimeUs), wakeupInfo.mRetryCount, wakeupInfo.mRetryInterval);
-    }
-#endif
-
-    // Stop receiving more wake up frames
-    IgnoreError(SetWakeupListenEnabled(false));
-
-    Get<Mle::Mle>().HandleWakeupFrame(wakeupInfo);
-
-exit:
-    return error;
-}
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 } // namespace Mac
