@@ -75,6 +75,16 @@ public:
      */
     Error GenerateRandom(void);
 
+    /**
+     * Indicates whether or not the Extended PAN Identifier is valid.
+     *
+     * The all-zeros and all-ones values are reserved and disallowed by the Thread specification.
+     *
+     * @retval TRUE   If the Extended PAN Identifier is valid.
+     * @retval FALSE  If the Extended PAN Identifier is not valid.
+     */
+    bool IsValid(void) const;
+
 } OT_TOOL_PACKED_END;
 
 } // namespace MeshCoP
