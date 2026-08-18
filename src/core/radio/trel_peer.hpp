@@ -134,7 +134,10 @@ public:
      * @retval TRUE   If the peer socket address is valid.
      * @retval FALSE  If the peer socket address is not valid.
      */
-    bool HasValidSockAddr(void) const { return !GetSockAddr().GetAddress().IsUnspecified(); }
+    bool HasValidSockAddr(void) const
+    {
+        return !GetSockAddr().GetAddress().IsUnspecified() && (GetSockAddr().GetPort() != 0);
+    }
 
     /**
      * Updates the IPv6 socket address of the discovered TREL peer based on a received message from peer.

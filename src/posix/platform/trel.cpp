@@ -248,14 +248,18 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
 
         switch (errno)
         {
-        case ENETUNREACH:
-        case ENETDOWN:
-        case EHOSTUNREACH:
-            error = OT_ERROR_ABORT;
+        case EAGAIN:
+#if EWOULDBLOCK != EAGAIN
+        case EWOULDBLOCK:
+#endif
+        case ENOBUFS:
+        case EINTR:
+            error = OT_ERROR_INVALID_STATE;
             break;
 
         default:
-            error = OT_ERROR_INVALID_STATE;
+            error = OT_ERROR_ABORT;
+            break;
         }
     }
     else

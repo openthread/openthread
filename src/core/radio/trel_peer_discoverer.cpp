@@ -183,6 +183,11 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
     txtData.Init(aInfo.mTxtData, aInfo.mTxtLength);
     SuccessOrExit(txtData.Decode(txtInfo));
 
+    if (!aInfo.IsRemoved())
+    {
+        VerifyOrExit(!aInfo.GetSockAddr().GetAddress().IsUnspecified() && (aInfo.GetSockAddr().GetPort() != 0));
+    }
+
     VerifyOrExit(txtInfo.mExtAddress != Get<Mac::Mac>().GetExtAddress());
 
     if (aInfo.IsRemoved())
