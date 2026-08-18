@@ -1899,12 +1899,11 @@ exit:
 
 void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 {
+    Error     error = aError;
     Address   srcaddr;
     Address   dstaddr;
     PanId     panid;
     Neighbor *neighbor;
-    Error     error            = aError;
-    bool      isFrameValidated = false;
 
     mCounters.mRxTotal++;
 
@@ -1915,8 +1914,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     // Ensure we have a valid frame before attempting to read any contents of
     // the buffer received from the radio.
     SuccessOrExit(error = aFrame->ValidatePsdu());
-
-    isFrameValidated = true;
 
     IgnoreError(aFrame->GetSrcAddr(srcaddr));
     IgnoreError(aFrame->GetDstAddr(dstaddr));
@@ -2149,7 +2146,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        LogFrameRxFailure(isFrameValidated ? aFrame : nullptr, error);
+        LogFrameRxFailure(aFrame, error);
 
         switch (error)
         {
@@ -2412,14 +2409,8 @@ void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
         break;
     }
 
-    if (aFrame == nullptr)
-    {
-        LogAt(logLevel, "Frame rx failed, error:%s", ErrorToString(aError));
-    }
-    else
-    {
-        LogAt(logLevel, "Frame rx failed, error:%s, %s", ErrorToString(aError), aFrame->ToInfoString().AsCString());
-    }
+    LogAt(logLevel, "Frame rx failed, error:%s, %s", ErrorToString(aError),
+          (aFrame == nullptr) ? "no-frame" : aFrame->ToInfoString().AsCString());
 }
 
 void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const

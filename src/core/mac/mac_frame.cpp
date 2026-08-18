@@ -1262,7 +1262,11 @@ Frame::InfoString Frame::ToInfoString(void) const
 
     string.Append("len:%u", mLength);
 
-    SuccessOrExit(info.ParseFrom(*this, kParseFully));
+    if (info.ParseFrom(*this, kParseFully) != kErrorNone)
+    {
+        string.Append(", invalid-format");
+        ExitNow();
+    }
 
     if (IsSeqPresent(info.mFcf))
     {
