@@ -407,6 +407,146 @@ void TestArrayCopyAndFindMatching(void)
     printf("\n");
 }
 
+void TestArrayInsertAt(void)
+{
+    constexpr uint16_t kMaxSize = 6;
+
+    Array<uint16_t, kMaxSize> array;
+    uint16_t                 *entry;
+
+    // Verify invalid insert on empty array (out-of-bounds index)
+    VerifyOrQuit(array.InsertAt(1) == nullptr);
+    VerifyOrQuit(array.IsEmpty());
+
+    // Insert at index 0 in empty array (equivalent to `PushBack`)
+    entry = array.InsertAt(0);
+    VerifyOrQuit(entry != nullptr);
+    *entry = 20;
+    VerifyOrQuit(array.GetLength() == 1);
+    VerifyOrQuit(array[0] == 20);
+
+    // Insert at index 0 (at the beginning): array becomes [10, 20]
+    entry = array.InsertAt(0);
+    VerifyOrQuit(entry != nullptr);
+    *entry = 10;
+    VerifyOrQuit(array.GetLength() == 2);
+    VerifyOrQuit(array[0] == 10);
+    VerifyOrQuit(array[1] == 20);
+
+    // Verify invalid insert on partially filled array (index > length)
+    VerifyOrQuit(array.InsertAt(3) == nullptr);
+    VerifyOrQuit(array.InsertAt(kMaxSize) == nullptr);
+    VerifyOrQuit(array.GetLength() == 2);
+
+    // Insert at index 2 (at the end): array becomes [10, 20, 40]
+    entry = array.InsertAt(2);
+    VerifyOrQuit(entry != nullptr);
+    *entry = 40;
+    VerifyOrQuit(array.GetLength() == 3);
+    VerifyOrQuit(array[0] == 10);
+    VerifyOrQuit(array[1] == 20);
+    VerifyOrQuit(array[2] == 40);
+
+    // Insert at index 2 (in the middle): array becomes [10, 20, 30, 40]
+    entry = array.InsertAt(2);
+    VerifyOrQuit(entry != nullptr);
+    *entry = 30;
+    VerifyOrQuit(array.GetLength() == 4);
+    VerifyOrQuit(array[0] == 10);
+    VerifyOrQuit(array[1] == 20);
+    VerifyOrQuit(array[2] == 30);
+    VerifyOrQuit(array[3] == 40);
+
+    // Insert at index 1 (in the middle): array becomes [10, 15, 20, 30, 40]
+    entry = array.InsertAt(1);
+    VerifyOrQuit(entry != nullptr);
+    *entry = 15;
+    VerifyOrQuit(array.GetLength() == 5);
+    VerifyOrQuit(array[0] == 10);
+    VerifyOrQuit(array[1] == 15);
+    VerifyOrQuit(array[2] == 20);
+    VerifyOrQuit(array[3] == 30);
+    VerifyOrQuit(array[4] == 40);
+
+    // Insert at index 5 (at the end): array becomes [10, 15, 20, 30, 40, 50]
+    entry = array.InsertAt(5);
+    VerifyOrQuit(entry != nullptr);
+    *entry = 50;
+    VerifyOrQuit(array.GetLength() == 6);
+    VerifyOrQuit(array.IsFull());
+    VerifyOrQuit(array[0] == 10);
+    VerifyOrQuit(array[1] == 15);
+    VerifyOrQuit(array[2] == 20);
+    VerifyOrQuit(array[3] == 30);
+    VerifyOrQuit(array[4] == 40);
+    VerifyOrQuit(array[5] == 50);
+
+    // Verify insertion fails when array is full
+    VerifyOrQuit(array.InsertAt(0) == nullptr);
+    VerifyOrQuit(array.InsertAt(3) == nullptr);
+    VerifyOrQuit(array.InsertAt(6) == nullptr);
+    VerifyOrQuit(array.InsertAt(7) == nullptr);
+    VerifyOrQuit(array.GetLength() == 6);
+
+    // Test `Error InsertAt(IndexType, const Type &)` overload
+    array.Clear();
+    VerifyOrQuit(array.InsertAt(1, 100) == kErrorInvalidArgs);
+    SuccessOrQuit(array.InsertAt(0, 200));
+    SuccessOrQuit(array.InsertAt(0, 100));
+    SuccessOrQuit(array.InsertAt(2, 400));
+    SuccessOrQuit(array.InsertAt(2, 300));
+    VerifyOrQuit(array.GetLength() == 4);
+    VerifyOrQuit(array[0] == 100);
+    VerifyOrQuit(array[1] == 200);
+    VerifyOrQuit(array[2] == 300);
+    VerifyOrQuit(array[3] == 400);
+
+    VerifyOrQuit(array.InsertAt(5, 500) == kErrorInvalidArgs);
+    SuccessOrQuit(array.InsertAt(4, 500));
+    SuccessOrQuit(array.InsertAt(5, 600));
+    VerifyOrQuit(array.IsFull());
+    VerifyOrQuit(array.InsertAt(0, 50) == kErrorNoBufs);
+    VerifyOrQuit(array.InsertAt(3, 250) == kErrorNoBufs);
+    VerifyOrQuit(array.InsertAt(6, 700) == kErrorNoBufs);
+    VerifyOrQuit(array.InsertAt(7, 800) == kErrorNoBufs);
+
+    // Test inserting an element that is from the array itself,
+    // ensuring it is safely copied before existing elements are shifted.
+    array.Clear();
+    SuccessOrQuit(array.PushBack(100));
+    SuccessOrQuit(array.PushBack(200));
+    SuccessOrQuit(array.PushBack(300));
+
+    // Insert `array[1]` (200) at index 0: `array[1]` gets shifted right during insertion
+    SuccessOrQuit(array.InsertAt(0, array[1]));
+    VerifyOrQuit(array.GetLength() == 4);
+    VerifyOrQuit(array[0] == 200);
+    VerifyOrQuit(array[1] == 100);
+    VerifyOrQuit(array[2] == 200);
+    VerifyOrQuit(array[3] == 300);
+
+    // Insert `array[3]` (300) at index 1: `array[3]` gets shifted right during insertion
+    SuccessOrQuit(array.InsertAt(1, array[3]));
+    VerifyOrQuit(array.GetLength() == 5);
+    VerifyOrQuit(array[0] == 200);
+    VerifyOrQuit(array[1] == 300);
+    VerifyOrQuit(array[2] == 100);
+    VerifyOrQuit(array[3] == 200);
+    VerifyOrQuit(array[4] == 300);
+
+    // Insert `array[0]` (200) at index 0: self-insertion at the exact index
+    SuccessOrQuit(array.InsertAt(0, array[0]));
+    VerifyOrQuit(array.GetLength() == 6);
+    VerifyOrQuit(array[0] == 200);
+    VerifyOrQuit(array[1] == 200);
+    VerifyOrQuit(array[2] == 300);
+    VerifyOrQuit(array[3] == 100);
+    VerifyOrQuit(array[4] == 200);
+    VerifyOrQuit(array[5] == 300);
+
+    printf("TestArrayInsertAt PASSED\n\n");
+}
+
 void TestArrayIndexType(void)
 {
     typedef Array<uint16_t, 255>           Array1;
@@ -424,6 +564,7 @@ int main(void)
 {
     ot::TestArray();
     ot::TestArrayCopyAndFindMatching();
+    ot::TestArrayInsertAt();
     ot::TestArrayIndexType();
 
     printf("All tests passed\n");
