@@ -1095,71 +1095,66 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
 {
-    Error         error = kErrorNone;
-    BuildInfo     buildInfo;
-    Address       address;
-    PanId         panId;
-    SecurityLevel securityLevel = kSecurityNone;
-    KeyIdMode     keyIdMode     = kKeyIdMode0;
+    Error     error = kErrorParse;
+    ParseInfo rxInfo;
+    BuildInfo buildInfo;
+
+    buildInfo.mType    = kTypeAck;
+    buildInfo.mVersion = kVersion2015;
 
     // Validate the received frame.
 
-    VerifyOrExit(aRxFrame.IsVersion2015(), error = kErrorParse);
-    VerifyOrExit(aRxFrame.GetAckRequest(), error = kErrorParse);
+    SuccessOrExit(rxInfo.ParseFrom(aRxFrame, kParseFully));
+
+    VerifyOrExit(IsVersion2015(rxInfo.mFcf));
+    VerifyOrExit(IsAckRequest(rxInfo.mFcf));
+    VerifyOrExit(IsSeqPresent(rxInfo.mFcf));
 
     // Check `aRxFrame` has a valid destination address. The ack frame
     // will not use this as its source though and will always use no
     // source address.
 
-    SuccessOrExit(error = aRxFrame.GetDstAddr(address));
-    VerifyOrExit(!address.IsNone() && !address.IsBroadcast(), error = kErrorParse);
+    VerifyOrExit(!rxInfo.mAddrs.mDestination.IsNone() && !rxInfo.mAddrs.mDestination.IsBroadcast());
 
     // Check `aRxFrame` has a valid source, which is then used as
     // ack frames destination.
 
-    SuccessOrExit(error = aRxFrame.GetSrcAddr(buildInfo.mAddrs.mDestination));
-    VerifyOrExit(!buildInfo.mAddrs.mDestination.IsNone(), error = kErrorParse);
+    buildInfo.mAddrs.mDestination = rxInfo.mAddrs.mSource;
+    VerifyOrExit(!buildInfo.mAddrs.mDestination.IsNone());
 
-    if (aRxFrame.GetSecurityEnabled())
+    if (IsSecurityEnabled(rxInfo.mFcf))
     {
-        VerifyOrExit(aRxFrame.HasSecurityLevel(kSecurityEncMic32), error = kErrorParse);
-        securityLevel = kSecurityEncMic32;
+        VerifyOrExit(rxInfo.mSecurityLevel == kSecurityEncMic32);
+        VerifyOrExit(rxInfo.mKeyIdMode == kKeyIdMode1);
 
-        SuccessOrExit(error = aRxFrame.GetKeyIdMode(keyIdMode));
+        buildInfo.mSecurityLevel = kSecurityEncMic32;
+        buildInfo.mKeyIdMode     = kKeyIdMode1;
     }
 
-    if (aRxFrame.IsSrcPanIdPresent())
+    if (rxInfo.mPanIds.IsSourcePresent())
     {
-        SuccessOrExit(error = aRxFrame.GetSrcPanId(panId));
-        buildInfo.mPanIds.SetDestination(panId);
+        buildInfo.mPanIds.SetDestination(rxInfo.mPanIds.GetSource());
     }
-    else if (aRxFrame.IsDstPanIdPresent())
+    else if (rxInfo.mPanIds.IsDestinationPresent())
     {
-        SuccessOrExit(error = aRxFrame.GetDstPanId(panId));
-        buildInfo.mPanIds.SetDestination(panId);
+        buildInfo.mPanIds.SetDestination(rxInfo.mPanIds.GetDestination());
     }
+
+    error = kErrorNone;
 
     // Prepare the ack frame
 
     mChannel = aRxFrame.mChannel;
     ClearAllBytes(mInfo.mTxInfo);
 
-    buildInfo.mType          = kTypeAck;
-    buildInfo.mVersion       = kVersion2015;
-    buildInfo.mSecurityLevel = securityLevel;
-    buildInfo.mKeyIdMode     = keyIdMode;
-
     PrepareHeadersWithEmptyPayload(buildInfo);
 
     SetFramePending(aIsFramePending);
-    SetSequence(aRxFrame.GetSequence());
+    SetSequence(rxInfo.mSequenceNum);
 
-    if (aRxFrame.GetSecurityEnabled())
+    if (IsSecurityEnabled(rxInfo.mFcf))
     {
-        uint8_t keyIndex;
-
-        SuccessOrExit(error = aRxFrame.GetKeyIndex(keyIndex));
-        SetKeyIndex(keyIndex);
+        SetKeyIndex(rxInfo.mKeyIndex);
     }
 
     if (aIeLength > 0)
