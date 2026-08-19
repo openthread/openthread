@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 
+#include "common/binary_search.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
@@ -2109,45 +2110,7 @@ exit:
     if (error != kErrorNone)
     {
         LogFrameRxFailure(aFrame, error);
-
-        switch (error)
-        {
-        case kErrorSecurity:
-            mCounters.mRxErrSec++;
-            break;
-
-        case kErrorFcs:
-            mCounters.mRxErrFcs++;
-            break;
-
-        case kErrorNoFrameReceived:
-            mCounters.mRxErrNoFrame++;
-            break;
-
-        case kErrorUnknownNeighbor:
-            mCounters.mRxErrUnknownNeighbor++;
-            break;
-
-        case kErrorInvalidSourceAddress:
-            mCounters.mRxErrInvalidSrcAddr++;
-            break;
-
-        case kErrorAddressFiltered:
-            mCounters.mRxAddressFiltered++;
-            break;
-
-        case kErrorDestinationAddressFiltered:
-            mCounters.mRxDestAddrFiltered++;
-            break;
-
-        case kErrorDuplicated:
-            mCounters.mRxDuplicated++;
-            break;
-
-        default:
-            mCounters.mRxErrOther++;
-            break;
-        }
+        UpdateRxErrorCounters(error);
     }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -2200,6 +2163,46 @@ void Mac::UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame)
 
 exit:
     return;
+}
+
+void Mac::UpdateRxErrorCounters(Error aError)
+{
+    struct Entry
+    {
+        constexpr static bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
+        {
+            return (aFirst.mError < aSecond.mError);
+        }
+
+        int Compare(Error aError) const { return ThreeWayCompare(aError, mError); }
+
+        Error    mError;
+        uint32_t Counters::*mValuePtr;
+    };
+
+    static constexpr Entry kErrorToCounterMap[] = {
+        {kErrorSecurity, &Counters::mRxErrSec},
+        {kErrorFcs, &Counters::mRxErrFcs},
+        {kErrorNoFrameReceived, &Counters::mRxErrNoFrame},
+        {kErrorUnknownNeighbor, &Counters::mRxErrUnknownNeighbor},
+        {kErrorInvalidSourceAddress, &Counters::mRxErrInvalidSrcAddr},
+        {kErrorAddressFiltered, &Counters::mRxAddressFiltered},
+        {kErrorDestinationAddressFiltered, &Counters::mRxDestAddrFiltered},
+        {kErrorDuplicated, &Counters::mRxDuplicated},
+    };
+
+    static_assert(BinarySearch::IsSorted(kErrorToCounterMap), "kErrorToCounterMap is not sorted");
+
+    const Entry *entry = BinarySearch::Find(aError, kErrorToCounterMap);
+
+    if (entry != nullptr)
+    {
+        (mCounters.*entry->mValuePtr)++;
+    }
+    else if (aError != kErrorNone)
+    {
+        mCounters.mRxErrOther++;
+    }
 }
 
 bool Mac::HandleMacCommand(RxFrame &aFrame)

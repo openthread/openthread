@@ -790,6 +790,7 @@ private:
     void     BeginTransmit(void);
     Error    FilterDestShortAddress(ShortAddress aDestAddress) const;
     void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame);
+    void     UpdateRxErrorCounters(Error aError);
     bool     HandleMacCommand(RxFrame &aFrame);
     void     HandleTimer(void);
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
