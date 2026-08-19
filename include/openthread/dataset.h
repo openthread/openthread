@@ -636,6 +636,9 @@ otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalD
 /**
  * Indicates whether or not a given Operational Dataset (in TLVs format) affects connectivity.
  *
+ * The caller MUST ensure that the given @p aDatasetTlvs is valid (e.g., using `otDatasetIsValid()`). Otherwise, the
+ * behavior of this function is undefined.
+ *
  * A Dataset affects connectivity if it contains a different Channel, PAN ID, Mesh Local Prefix, Network Key, or
  * Security Policy than the current values in use.
  *
