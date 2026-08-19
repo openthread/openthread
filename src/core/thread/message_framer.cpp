@@ -356,8 +356,9 @@ start:
 
 #if OPENTHREAD_FTD
 
-uint16_t MessageFramer::PrepareMeshFrame(Mac::TxFrame &aFrame, Message &aMessage, const Mac::Addresses &aMacAddrs)
+Error MessageFramer::PrepareMeshFrame(Mac::TxFrame &aFrame, Message &aMessage, const Mac::Addresses &aMacAddrs)
 {
+    Error                        error = kErrorNone;
     Mac::TxFrame::BuildInfo      buildInfo;
     Mac::TxFrame::PayloadBuilder frameBuilder;
 
@@ -369,10 +370,11 @@ uint16_t MessageFramer::PrepareMeshFrame(Mac::TxFrame &aFrame, Message &aMessage
 
     PrepareMacHeaders(aFrame, buildInfo, frameBuilder, &aMessage);
 
-    SuccessOrAssert(frameBuilder.AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
+    SuccessOrExit(error = frameBuilder.AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
     aFrame.FinishPayload(frameBuilder);
 
-    return aMessage.GetLength();
+exit:
+    return error;
 }
 
 #endif // OPENTHREAD_FTD

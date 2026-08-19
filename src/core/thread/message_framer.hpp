@@ -115,9 +115,10 @@ public:
      * @param[in]  aMessage          The 6LoWPAN Mesh message.
      * @param[in]  aMacAddrs         The MAC source and destination addresses.
      *
-     * @returns The next offset into @p aMessage after the prepared frame.
+     * @retval kErrorNone    Successfully prepared the frame.
+     * @retval kErrorNoBufs  The message does not fit in the frame.
      */
-    uint16_t PrepareMeshFrame(Mac::TxFrame &aFrame, Message &aMessage, const Mac::Addresses &aMacAddrs);
+    Error PrepareMeshFrame(Mac::TxFrame &aFrame, Message &aMessage, const Mac::Addresses &aMacAddrs);
 
 #endif // OPENTHREAD_FTD
 
