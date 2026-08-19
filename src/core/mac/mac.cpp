@@ -1868,9 +1868,9 @@ exit:
 void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 {
     Error     error = aError;
-    Address   srcaddr;
-    Address   dstaddr;
-    PanId     panid;
+    Address   srcAddr;
+    Address   dstAddr;
+    PanId     panId;
     Neighbor *neighbor;
 
     mCounters.mRxTotal++;
@@ -1883,68 +1883,68 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     // the buffer received from the radio.
     SuccessOrExit(error = aFrame->ValidatePsdu());
 
-    IgnoreError(aFrame->GetSrcAddr(srcaddr));
-    IgnoreError(aFrame->GetDstAddr(dstaddr));
-    neighbor = !srcaddr.IsNone() ? Get<NeighborTable>().FindNeighbor(srcaddr) : nullptr;
+    IgnoreError(aFrame->GetSrcAddr(srcAddr));
+    IgnoreError(aFrame->GetDstAddr(dstAddr));
+    neighbor = !srcAddr.IsNone() ? Get<NeighborTable>().FindNeighbor(srcAddr) : nullptr;
 
     // Destination Address Filtering
-    switch (dstaddr.GetType())
+    switch (dstAddr.GetType())
     {
     case Address::kTypeNone:
         break;
 
     case Address::kTypeShort:
-        SuccessOrExit(error = FilterDestShortAddress(dstaddr.GetShort()));
+        SuccessOrExit(error = FilterDestShortAddress(dstAddr.GetShort()));
 
 #if OPENTHREAD_FTD
         // Allow multicasts from neighbor routers if FTD
-        if (neighbor == nullptr && dstaddr.IsBroadcast() && Get<Mle::Mle>().IsFullThreadDevice())
+        if (neighbor == nullptr && dstAddr.IsBroadcast() && Get<Mle::Mle>().IsFullThreadDevice())
         {
-            neighbor = Get<NeighborTable>().FindRxOnlyNeighborRouter(srcaddr);
+            neighbor = Get<NeighborTable>().FindRxOnlyNeighborRouter(srcAddr);
         }
 #endif
 
         break;
 
     case Address::kTypeExtended:
-        VerifyOrExit(dstaddr.GetExtended() == GetExtAddress(), error = kErrorDestinationAddressFiltered);
+        VerifyOrExit(dstAddr.GetExtended() == GetExtAddress(), error = kErrorDestinationAddressFiltered);
         break;
     }
 
     // Verify destination PAN ID if present
-    if (kErrorNone == aFrame->GetDstPanId(panid))
+    if (kErrorNone == aFrame->GetDstPanId(panId))
     {
-        VerifyOrExit(panid == kShortAddrBroadcast || panid == mPanId, error = kErrorDestinationAddressFiltered);
+        VerifyOrExit(panId == kShortAddrBroadcast || panId == mPanId, error = kErrorDestinationAddressFiltered);
     }
 
     // Source Address Filtering
-    switch (srcaddr.GetType())
+    switch (srcAddr.GetType())
     {
     case Address::kTypeNone:
         break;
 
     case Address::kTypeShort:
-        LogDebg("Received frame from short address 0x%04x", srcaddr.GetShort());
+        LogDebg("Received frame from short address 0x%04x", srcAddr.GetShort());
 
         VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
 
-        srcaddr.SetExtended(neighbor->GetExtAddress());
+        srcAddr.SetExtended(neighbor->GetExtAddress());
 
         OT_FALL_THROUGH;
 
     case Address::kTypeExtended:
 
         // Duplicate Address Protection
-        VerifyOrExit(srcaddr.GetExtended() != GetExtAddress(), error = kErrorInvalidSourceAddress);
+        VerifyOrExit(srcAddr.GetExtended() != GetExtAddress(), error = kErrorInvalidSourceAddress);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-        SuccessOrExit(error = mFilter.ApplyToRxFrame(*aFrame, srcaddr.GetExtended(), neighbor));
+        SuccessOrExit(error = mFilter.ApplyToRxFrame(*aFrame, srcAddr.GetExtended(), neighbor));
 #endif
 
         break;
     }
 
-    if (dstaddr.IsBroadcast())
+    if (dstAddr.IsBroadcast())
     {
         mCounters.mRxBroadcast++;
     }
@@ -1953,7 +1953,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         mCounters.mRxUnicast++;
     }
 
-    error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor);
+    error = ProcessReceiveSecurity(*aFrame, srcAddr, neighbor);
 
     switch (error)
     {
@@ -1984,7 +1984,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    ProcessCsl(*aFrame, srcaddr);
+    ProcessCsl(*aFrame, srcAddr);
 #endif
 
     Get<DataPollSender>().ProcessRxFrame(*aFrame);
@@ -2053,7 +2053,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
     case kOperationWaitingForData:
 
-        if (!dstaddr.IsNone())
+        if (!dstAddr.IsNone())
         {
             mTimer.Stop();
 
