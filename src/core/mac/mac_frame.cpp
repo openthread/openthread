@@ -208,14 +208,13 @@ void TxFrame::BuildInfo::PrepareHeadersIn(TxFrame &aTxFrame) const
     if (mSecurityLevel != kSecurityNone)
     {
         uint8_t secCtl = ConstructSecurityControlField(mSecurityLevel, mKeyIdMode);
-        uint8_t size;
+        uint8_t size =
+            kFrameCounterSize + CalculateKeySourceSize(mKeyIdMode) + ((mKeyIdMode != kKeyIdMode0) ? kKeyIndexSize : 0);
 
         IgnoreError(builder.AppendUint8(secCtl));
-
-        size = kFrameCounterSize + CalculateKeySourceSize(secCtl) + ((mKeyIdMode == kKeyIdMode0) ? 0 : kKeyIndexSize);
         builder.AppendLength(size);
 
-        micSize = CalculateMicSize(secCtl);
+        micSize = CalculateMicSize(mSecurityLevel);
     }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -341,7 +340,7 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
         mFrameCounterBytes = AsNonConst(frameData.GetBytes());
         SuccessOrExit(frameData.ReadUint<kLittleEndian>(mFrameCounter));
 
-        size = CalculateKeySourceSize(mSecCtl);
+        size = CalculateKeySourceSize(mKeyIdMode);
 
         VerifyOrExit(frameData.CanRead(size));
         mKeySource.Init(frameData.GetBytes(), size);
@@ -353,7 +352,7 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
             SuccessOrExit(frameData.ReadUint8(mKeyIndex));
         }
 
-        mMicSize = CalculateMicSize(mSecCtl);
+        mMicSize = CalculateMicSize(mSecurityLevel);
         SuccessOrExit(frameData.RemoveFooter(mMicSize));
     }
 
@@ -739,7 +738,7 @@ void Frame::GetKeySource(FrameData &aKeySource) const
     aKeySource = info.mKeySource;
 }
 
-uint8_t Frame::CalculateKeySourceSize(uint8_t aSecurityControl)
+uint8_t Frame::CalculateKeySourceSize(KeyIdMode aKeyIdMode)
 {
     static constexpr uint8_t kKeySourceSize[] = {
         /* [0] kKeyIdMode0 */ kKeySourceSizeMode0,
@@ -753,7 +752,7 @@ uint8_t Frame::CalculateKeySourceSize(uint8_t aSecurityControl)
     static_assert(kKeySourceSize[kKeyIdMode2] == kKeySourceSizeMode2, "kKeySourceSize[] array is incorrect");
     static_assert(kKeySourceSize[kKeyIdMode3] == kKeySourceSizeMode3, "kKeySourceSize[] array is incorrect");
 
-    return kKeySourceSize[ReadKeyIdMode(aSecurityControl)];
+    return kKeySourceSize[aKeyIdMode];
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -846,7 +845,7 @@ exit:
     return error;
 }
 
-uint8_t Frame::CalculateMicSize(uint8_t aSecurityControl)
+uint8_t Frame::CalculateMicSize(SecurityLevel aSecurityLevel)
 {
     static constexpr uint8_t kMicSize[] = {
         /* [0] kSecurityNone      */ kMic0Size,
@@ -868,7 +867,7 @@ uint8_t Frame::CalculateMicSize(uint8_t aSecurityControl)
     static_assert(kMicSize[kSecurityEncMic64] == kMic64Size, "kMicSize[] array is incorrect");
     static_assert(kMicSize[kSecurityEncMic128] == kMic128Size, "kMicSize[] array is incorrect");
 
-    return kMicSize[ReadSecurityLevel(aSecurityControl)];
+    return kMicSize[aSecurityLevel];
 }
 
 Frame::AddrMode Frame::DetermineAddrMode(const Address &aAddress)
