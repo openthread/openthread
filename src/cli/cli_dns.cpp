@@ -164,7 +164,7 @@ template <> otError Dns::Process<Cmd("config")>(Arg aArgs[])
      * -->                [@ca{recursion-desired-boolean}] [@ca{service-mode}] <!--
      * -->                [@ca{protocol}]
      * @par
-     * We can leave some of the fields as unspecified (or use value zero). The
+     * We can leave some of the fields as unspecified (or use value zero or "def"). The
      * unspecified fields are replaced by the corresponding OT config option
      * definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT` to form the default
      * query config.
@@ -203,7 +203,7 @@ exit:
  * @par
  * Send DNS Query to obtain IPv6 address for given hostname.
  * @par
- * The parameters after hostname are optional. Any unspecified (or zero) value
+ * The parameters after hostname are optional. Any unspecified (or zero or "def") value
  * for these optional parameters is replaced by the value from the current default
  * config (dns config).
  * @par
@@ -284,7 +284,7 @@ exit:
  * Send a browse (service instance enumeration) DNS query to get the list of services for
  * given service-name
  * @par
- * The parameters after `service-name` are optional. Any unspecified (or zero) value
+ * The parameters after `service-name` are optional. Any unspecified (or zero or "def") value
  * for these optional parameters is replaced by the value from the current default
  * config (`dns config`).
  * @par
@@ -324,7 +324,7 @@ exit:
  * Service instance label is provided first, followed by the service name
  * (note that service instance label can contain dot '.' character).
  * @par
- * The parameters after `service-name` are optional. Any unspecified (or zero)
+ * The parameters after `service-name` are optional. Any unspecified (or zero or "def")
  * value for these optional parameters is replaced by the value from the
  * current default config (`dns config`).
  * @par
@@ -353,7 +353,7 @@ template <> otError Dns::Process<Cmd("service")>(Arg aArgs[])
  * Service instance label is provided first, followed by the service name
  * (note that service instance label can contain dot '.' character).
  * @par
- * The parameters after `service-name` are optional. Any unspecified (or zero)
+ * The parameters after `service-name` are optional. Any unspecified (or zero or "def")
  * value for these optional parameters is replaced by the value from the
  * current default config (`dns config`).
  * @par
@@ -409,7 +409,7 @@ exit:
  * which are dot '.' separated. Note that the first label can itself
  * contain the dot '.' character.
  * @par
- * The parameters after `next-labels` are optional. Any unspecified (or zero)
+ * The parameters after `next-labels` are optional. Any unspecified (or zero or "def")
  * value for these optional parameters is replaced by the value from the
  * current default config (`dns config`).
  * @par
@@ -444,9 +444,10 @@ otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     // [max tx attempt] [recursion desired] [service mode]
     // [transport]`
 
-    otError error = OT_ERROR_NONE;
-    bool    recursionDesired;
-    bool    nat64Synth;
+    otError    error = OT_ERROR_NONE;
+    bool       recursionDesired;
+    bool       nat64Synth;
+    const char kDefaultValue[] = "def";
 
     ClearAllBytes(*aConfig);
 
@@ -461,23 +462,41 @@ otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     }
 
     VerifyOrExit(!aArgs[1].IsEmpty());
-    SuccessOrExit(error = aArgs[1].ParseAsUint16(aConfig->mServerSockAddr.mPort));
+    if (aArgs[1] != kDefaultValue)
+    {
+        SuccessOrExit(error = aArgs[1].ParseAsUint16(aConfig->mServerSockAddr.mPort));
+    }
 
     VerifyOrExit(!aArgs[2].IsEmpty());
-    SuccessOrExit(error = aArgs[2].ParseAsUint32(aConfig->mResponseTimeout));
+    if (aArgs[2] != kDefaultValue)
+    {
+        SuccessOrExit(error = aArgs[2].ParseAsUint32(aConfig->mResponseTimeout));
+    }
 
     VerifyOrExit(!aArgs[3].IsEmpty());
-    SuccessOrExit(error = aArgs[3].ParseAsUint8(aConfig->mMaxTxAttempts));
+    if (aArgs[3] != kDefaultValue)
+    {
+        SuccessOrExit(error = aArgs[3].ParseAsUint8(aConfig->mMaxTxAttempts));
+    }
 
     VerifyOrExit(!aArgs[4].IsEmpty());
-    SuccessOrExit(error = aArgs[4].ParseAsBool(recursionDesired));
-    aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
+    if (aArgs[4] != kDefaultValue)
+    {
+        SuccessOrExit(error = aArgs[4].ParseAsBool(recursionDesired));
+        aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
+    }
 
     VerifyOrExit(!aArgs[5].IsEmpty());
-    SuccessOrExit(error = ParseDnsServiceMode(aArgs[5], aConfig->mServiceMode));
+    if (aArgs[5] != kDefaultValue)
+    {
+        SuccessOrExit(error = ParseDnsServiceMode(aArgs[5], aConfig->mServiceMode));
+    }
+    else
+    {
+        aConfig->mServiceMode = OT_DNS_SERVICE_MODE_UNSPECIFIED;
+    }
 
     VerifyOrExit(!aArgs[6].IsEmpty());
-
     if (aArgs[6] == "tcp")
     {
         aConfig->mTransportProto = OT_DNS_TRANSPORT_TCP;
@@ -486,7 +505,7 @@ otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     {
         aConfig->mTransportProto = OT_DNS_TRANSPORT_UDP;
     }
-    else
+    else if (aArgs[6] != kDefaultValue)
     {
         error = OT_ERROR_INVALID_ARGS;
     }
@@ -519,12 +538,6 @@ const char *Dns::DnsConfigServiceModeToString(otDnsServiceMode aMode) const
 otError Dns::ParseDnsServiceMode(const Arg &aArg, otDnsServiceMode &aMode) const
 {
     otError error = OT_ERROR_NONE;
-
-    if (aArg == "def")
-    {
-        aMode = OT_DNS_SERVICE_MODE_UNSPECIFIED;
-        ExitNow();
-    }
 
     for (size_t index = 0; index < OT_ARRAY_LENGTH(kServiceModeStrings); index++)
     {
@@ -743,7 +756,7 @@ const char *Dns::RecordSectionToString(otDnsRecordSection aSection)
 
     static_assert(0 == OT_DNS_SECTION_ANSWER, "OT_DNS_SECTION_ANSWER value is incorrect");
     static_assert(1 == OT_DNS_SECTION_AUTHORITY, "OT_DNS_SECTION_AUTHORITY value is incorrect");
-    static_assert(2 == OT_DNS_SECTION_ADDITIONAL, "OT_DNS_SECTION_ADDITIONALATA value is incorrect");
+    static_assert(2 == OT_DNS_SECTION_ADDITIONAL, "OT_DNS_SECTION_ADDITIONAL value is incorrect");
 
     return Stringify(aSection, kSectionString);
 }
