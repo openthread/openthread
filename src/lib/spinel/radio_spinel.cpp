@@ -95,6 +95,7 @@ RadioSpinel::RadioSpinel(void)
     , mMacKeySet(false)
     , mCcaEnergyDetectThresholdSet(false)
     , mTransmitPowerSet(false)
+    , mMaxPowerTableSet(false)
     , mCoexEnabledSet(false)
     , mFemLnaGainSet(false)
     , mEnergyScanning(false)
@@ -2271,23 +2272,40 @@ void RadioSpinel::RestoreProperties(void)
         SuccessOrDie(Set(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, mFemLnaGain));
     }
 
-#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-    for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
+    // Guarded, because the table holds `kPowerDefault` for every channel unless
+    // the radio URL configured one. Without this, every restore would issue 16
+    // blocking transactions for users who never pass `max-power-table`.
+    if (mMaxPowerTableSet)
     {
-        int8_t power = mMaxPowerTable.GetTransmitPower(channel);
-
-        if (power != OT_RADIO_POWER_INVALID)
+        for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
         {
-            // Some old RCPs doesn't support max transmit power
-            otError error = SetChannelMaxTransmitPower(channel, power);
+            int8_t power = mMaxPowerTable.GetTransmitPower(channel);
 
-            if (error != OT_ERROR_NONE && error != OT_ERROR_NOT_FOUND)
+            if (power != OT_RADIO_POWER_INVALID)
             {
-                DieNow(OT_EXIT_FAILURE);
+                otError error =
+                    Set(SPINEL_PROP_PHY_CHAN_MAX_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, channel, power);
+
+                // An RCP without `SPINEL_PROP_PHY_CHAN_MAX_POWER` answers with
+                // `SPINEL_STATUS_PROP_NOT_FOUND`, which maps to
+                // `OT_ERROR_NOT_IMPLEMENTED`, not the `OT_ERROR_NOT_FOUND` this
+                // used to tolerate. Treating it as fatal would turn an ordinary
+                // RCP reset into an exit. Warn once and stop: the remaining
+                // channels would answer the same way.
+                if (error == OT_ERROR_NOT_IMPLEMENTED || error == OT_ERROR_NOT_FOUND)
+                {
+                    LogWarn("The RCP doesn't support setting the max transmit power");
+                    mMaxPowerTableSet = false;
+                    break;
+                }
+
+                if (error != OT_ERROR_NONE)
+                {
+                    DieNow(OT_EXIT_FAILURE);
+                }
             }
         }
     }
-#endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
 
     if ((sRadioCaps & OT_RADIO_CAPS_RX_ON_WHEN_IDLE) != 0)
     {
@@ -2339,7 +2357,12 @@ otError RadioSpinel::SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aMaxPow
     otError error = OT_ERROR_NONE;
     VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
     mMaxPowerTable.SetTransmitPower(aChannel, aMaxPower);
-    error = Set(SPINEL_PROP_PHY_CHAN_MAX_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, aChannel, aMaxPower);
+    SuccessOrExit(error = Set(SPINEL_PROP_PHY_CHAN_MAX_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, aChannel,
+                              aMaxPower));
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    mMaxPowerTableSet = true;
+#endif
 
 exit:
     return error;

@@ -414,6 +414,14 @@ void otPlatRadioEnableSrcMatch(otInstance *, bool aEnabled)
     FakePlatform::CurrentPlatform().SrcMatchEnable(aEnabled);
 }
 
+// Overrides the weak default in radio_platform.cpp, which reports
+// `kErrorNotImplemented`. Without this the fake RCP cannot accept a max power
+// table at all, so a test could not tell a correct restore from a missing one.
+otError otPlatRadioSetChannelMaxTransmitPower(otInstance *, uint8_t aChannel, int8_t aMaxPower)
+{
+    return FakePlatform::CurrentPlatform().ChannelMaxTxPowerSet(aChannel, aMaxPower);
+}
+
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *, uint16_t aShortAddr)
 {
     FakePlatform::CurrentPlatform().SrcMatchAddShortEntry(aShortAddr);

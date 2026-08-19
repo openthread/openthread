@@ -1329,6 +1329,7 @@ private:
     bool mMacKeySet : 1;                   ///< Whether MAC key has been set.
     bool mCcaEnergyDetectThresholdSet : 1; ///< Whether CCA energy detect threshold has been set.
     bool mTransmitPowerSet : 1;            ///< Whether transmit power has been set.
+    bool mMaxPowerTableSet : 1;            ///< Whether any channel's max transmit power has been set.
     bool mCoexEnabledSet : 1;              ///< Whether coex enabled has been set.
     bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has been set.
     bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.

@@ -127,6 +127,33 @@ public:
     virtual void   SrcMatchClearExtEntries(void) { mSrcMatchExtAddrs.clear(); }
     virtual size_t SrcMatchCountExtEntries(void) const { return mSrcMatchExtAddrs.size(); }
 
+    // Records what the RCP was told, so a test can assert which channel got
+    // which power rather than only that something was sent.
+    static constexpr int8_t kNoMaxTxPower = INT8_MIN;
+
+    virtual otError ChannelMaxTxPowerSet(uint8_t aChannel, int8_t aPower)
+    {
+        otError error = mChannelMaxTxPowerError;
+
+        if (error == OT_ERROR_NONE)
+        {
+            mChannelMaxTxPower[aChannel] = aPower;
+        }
+
+        return error;
+    }
+
+    // Makes the fake RCP refuse the property, the way a firmware without
+    // `SPINEL_PROP_PHY_CHAN_MAX_POWER` does.
+    virtual void   ChannelMaxTxPowerFailWith(otError aError) { mChannelMaxTxPowerError = aError; }
+    virtual int8_t ChannelMaxTxPowerGet(uint8_t aChannel) const
+    {
+        auto it = mChannelMaxTxPower.find(aChannel);
+        return (it == mChannelMaxTxPower.end()) ? kNoMaxTxPower : it->second;
+    }
+    virtual void   ChannelMaxTxPowerClear(void) { mChannelMaxTxPower.clear(); }
+    virtual size_t ChannelMaxTxPowerCount(void) const { return mChannelMaxTxPower.size(); }
+
 protected:
     void ProcessSchedules(uint64_t &aTimeout);
 
@@ -159,9 +186,11 @@ protected:
 
     std::map<uint32_t, std::vector<std::vector<uint8_t>>> mSettings;
 
-    bool                   mSrcMatchEnabled = false;
-    std::set<uint16_t>     mSrcMatchShortAddrs;
-    std::set<otExtAddress> mSrcMatchExtAddrs;
+    bool                      mSrcMatchEnabled = false;
+    std::set<uint16_t>        mSrcMatchShortAddrs;
+    std::set<otExtAddress>    mSrcMatchExtAddrs;
+    std::map<uint8_t, int8_t> mChannelMaxTxPower;
+    otError                   mChannelMaxTxPowerError = OT_ERROR_NONE;
 };
 
 template <> inline void FakePlatform::HandleSchedule<&FakePlatform::mMilliAlarmStart>()
