@@ -274,7 +274,7 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
         mPcapCallback.Invoke(aFrame, false);
     }
 
-    if (!ShouldHandleTransmitSecurity() && aFrame != nullptr && aFrame->IsAckedWithSecEnhAck())
+    if (!ShouldHandle(kCapTransmitSec) && aFrame != nullptr && aFrame->IsAckedWithSecEnhAck())
     {
         SignalFrameCounterUsed(aFrame->GetAckFrameCounter(), aFrame->GetAckKeyIndex());
     }
@@ -358,7 +358,7 @@ void SubMac::ProcessTransmitSecurity(void)
         SuccessOrExit(mTransmitFrame.GetKeyIndex(keyIndex));
     }
 
-    VerifyOrExit(ShouldHandleTransmitSecurity());
+    VerifyOrExit(ShouldHandle(kCapTransmitSec));
 
     VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode1));
 
@@ -495,7 +495,7 @@ void SubMac::HandleTransmitStarted(TxFrame &aFrame)
         mPcapCallback.Invoke(&aFrame, true);
     }
 
-    if (ShouldHandleAckTimeout() && aFrame.GetAckRequest())
+    if (ShouldHandle(kCapAckTimeout) && aFrame.GetAckRequest())
     {
         StartTimer(kAckTimeout);
     }
@@ -555,7 +555,8 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 
     // Determine whether to re-transmit the frame.
 
-    shouldRetx = ((aError != kErrorNone) && ShouldHandleRetries() && (mTransmitRetries < aFrame.GetMaxFrameRetries()));
+    shouldRetx = ((aError != kErrorNone) && ShouldHandle(kCapTransmitRetries) &&
+                  (mTransmitRetries < aFrame.GetMaxFrameRetries()));
 
     mCallbacks.RecordFrameTransmitStatus(aFrame, aError, mTransmitRetries, shouldRetx);
 
@@ -621,7 +622,7 @@ void SubMac::ReprocessSecurityForRetx(TxFrame &aFrame)
     // frame back to plaintext, we determine and set the key on `aFrame` using
     // its key index.
 
-    if (!ShouldHandleTransmitSecurity())
+    if (!ShouldHandle(kCapTransmitSec))
     {
         uint8_t keyIndex;
 
@@ -648,7 +649,7 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
 
     OT_UNUSED_VARIABLE(allowError);
 
-    VerifyOrExit(!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated());
+    VerifyOrExit(!ShouldHandle(kCapTransmitSec) && aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated());
 
     // In an FTD/MTD build, if/when link-raw is enabled, the `TxFrame`
     // is prepared and given by user and may not necessarily follow 15.4
@@ -734,7 +735,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
         IgnoreError(Get<Radio::Radio>().EnergyScan(aScanChannel, aScanDuration));
         SetState(kStateEnergyScan);
     }
-    else if (ShouldHandleEnergyScan())
+    else if (ShouldHandle(kCapEnergyScan))
     {
         SuccessOrAssert(Get<Radio::Radio>().Receive(aScanChannel));
 
@@ -887,7 +888,7 @@ void SubMac::SetMode1MacKeys(uint8_t aKeyIndex, const Key &aPrevKey, const Key &
 {
     mKeyTrio.Set(aKeyIndex, aPrevKey, aCurKey, aNextKey);
 
-    VerifyOrExit(!ShouldHandleTransmitSecurity());
+    VerifyOrExit(!ShouldHandle(kCapTransmitSec));
 
     Get<Radio::Radio>().SetMode1MacKeys(mKeyTrio);
 
@@ -923,7 +924,7 @@ void SubMac::SetFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger)
         mFrameCounter = aFrameCounter;
     }
 
-    VerifyOrExit(!ShouldHandleTransmitSecurity());
+    VerifyOrExit(!ShouldHandle(kCapTransmitSec));
 
     if (aSetIfLarger)
     {
