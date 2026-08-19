@@ -50,6 +50,9 @@ Leader::Leader(Instance &aInstance)
     , mWaitingForNetDataSync(false)
     , mContextIds(aInstance)
     , mTimer(aInstance)
+#if OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE
+    , mCoalesceTimer(aInstance)
+#endif
 #endif
 {
     Reset();
@@ -689,6 +692,13 @@ void Leader::SignalNetDataChanged(void)
     mMaxLength = Max(mMaxLength, GetLength());
     Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
 }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE
+void Leader::HandleCoalesceTimer(void)
+{
+    SignalNetDataChanged();
+}
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
