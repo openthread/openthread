@@ -612,6 +612,8 @@ Error Name::LabelIterator::GetNextLabel(void)
 
             // `mMessage.GetOffset()` must point to the start of the
             // DNS header.
+            VerifyOrExit(++mPointerHopCount <= kMaxPointerHops, error = kErrorParse);
+
             nextLabelOffset = mMessage.GetOffset() + (BigEndian::HostSwap16(pointerValue) & kPointerLabelOffsetMask);
             VerifyOrExit(nextLabelOffset < mMinLabelOffset, error = kErrorParse);
             mNextLabelOffset = nextLabelOffset;

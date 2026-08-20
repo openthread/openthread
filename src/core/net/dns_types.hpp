@@ -1078,11 +1078,20 @@ private:
     {
         static constexpr uint16_t kUnsetNameEndOffset = 0; // Special value indicating `mNameEndOffset` is not yet set.
 
+        // Maximum number of compression pointers that may be followed
+        // while reading a single name. A well-formed name needs very
+        // few (typically zero or one). This bounds the parsing work an
+        // attacker can trigger with a long descending pointer chain,
+        // independently of the strictly-decreasing-offset invariant
+        // (which alone only limits hops to the message size).
+        static constexpr uint16_t kMaxPointerHops = 128;
+
         LabelIterator(const Message &aMessage, uint16_t aLabelOffset)
             : mMessage(aMessage)
             , mNextLabelOffset(aLabelOffset)
             , mNameEndOffset(kUnsetNameEndOffset)
             , mMinLabelOffset(aLabelOffset)
+            , mPointerHopCount(0)
         {
         }
 
@@ -1101,6 +1110,7 @@ private:
         uint16_t       mNextLabelOffset;  // Offset in `mMessage` to the start of the next label.
         uint16_t       mNameEndOffset;    // Offset in `mMessage` to the byte after the end of domain name field.
         uint16_t       mMinLabelOffset;   // Offset in `mMessage` to the start of the earliest parsed label.
+        uint16_t       mPointerHopCount;  // Number of compression pointers followed while reading the name.
     };
 
     Name(const char *aString, const Message *aMessage, uint16_t aOffset)
