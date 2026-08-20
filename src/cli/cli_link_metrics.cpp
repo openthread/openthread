@@ -325,10 +325,14 @@ template <> otError LinkMetrics::Process<Cmd("config")>(Arg aArgs[])
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
 
-        SuccessOrExit(
-            error = otLinkMetricsConfigEnhAckProbing(GetInstancePtr(), &address, enhAckFlags, pLinkMetrics,
-                                                     &LinkMetrics::HandleLinkMetricsConfigEnhAckProbingMgmtResponse,
-                                                     this, &LinkMetrics::HandleLinkMetricsEnhAckProbingIe, this));
+        error = otLinkMetricsConfigEnhAckProbing(GetInstancePtr(), &address, enhAckFlags, pLinkMetrics,
+                                                 &LinkMetrics::HandleLinkMetricsConfigEnhAckProbingMgmtResponse, this,
+#if OPENTHREAD_CONFIG_CLI_LINK_METRICS_ENH_ACK_VERBOSE_ENABLE
+                                                 &LinkMetrics::HandleLinkMetricsEnhAckProbingIe, this);
+#else
+                                                 nullptr, nullptr);
+#endif
+        SuccessOrExit(error);
 
         if (sync)
         {
@@ -542,6 +546,7 @@ void LinkMetrics::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, ot
     OutputLine("Status: %s", LinkMetricsStatusToStr(aStatus));
 }
 
+#if OPENTHREAD_CONFIG_CLI_LINK_METRICS_ENH_ACK_VERBOSE_ENABLE
 void LinkMetrics::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
                                                    const otExtAddress        *aExtAddress,
                                                    const otLinkMetricsValues *aMetricsValues,
@@ -563,6 +568,7 @@ void LinkMetrics::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aS
         PrintLinkMetricsValue(aMetricsValues);
     }
 }
+#endif
 
 const char *LinkMetrics::LinkMetricsStatusToStr(otLinkMetricsStatus aStatus)
 {
