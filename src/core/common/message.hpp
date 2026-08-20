@@ -43,6 +43,7 @@
 #include <openthread/platform/messagepool.h>
 
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
@@ -2046,6 +2047,21 @@ public:
      */
     void ResetMaxUsedBufferCount(void) { mMaxAllocated = mNumAllocated; }
 
+#if OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE
+    /**
+     * Registers callbacks to be notified when the message buffer pool utilization crosses the low and high
+     * threshold levels configured by `OPENTHREAD_CONFIG_MESSAGE_BUFFER_LOW_THRESHOLD` and
+     * `OPENTHREAD_CONFIG_MESSAGE_BUFFER_HIGH_THRESHOLD`.
+     *
+     * @param[in] aLowCallback   A pointer to a function called when usage drops below the low threshold.
+     * @param[in] aHighCallback  A pointer to a function called when usage rises above the high threshold.
+     * @param[in] aContext       A pointer to arbitrary context information passed to the callbacks.
+     */
+    void SetBufferThresholdCallback(otMessageBufferThresholdCallback aLowCallback,
+                                    otMessageBufferThresholdCallback aHighCallback,
+                                    void                            *aContext);
+#endif
+
 private:
     static constexpr uint16_t kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
 
@@ -2058,6 +2074,20 @@ private:
 #endif
     uint16_t mNumAllocated;
     uint16_t mMaxAllocated;
+
+#if OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE
+    // The number of allocated buffers at (or below/above) which the low/high threshold callbacks are invoked.
+    // A hysteresis band (low < high) is used to avoid repeated callback invocations while usage fluctuates
+    // around a single threshold.
+    static constexpr uint16_t kBufferUsageLow  = kNumBuffers * OPENTHREAD_CONFIG_MESSAGE_BUFFER_LOW_THRESHOLD / 100;
+    static constexpr uint16_t kBufferUsageHigh = kNumBuffers * OPENTHREAD_CONFIG_MESSAGE_BUFFER_HIGH_THRESHOLD / 100;
+
+    void UpdateBufferThreshold(void);
+
+    bool                                       mBufferHighThresholdReached;
+    Callback<otMessageBufferThresholdCallback> mBufferLowThresholdCallback;
+    Callback<otMessageBufferThresholdCallback> mBufferHighThresholdCallback;
+#endif
 };
 
 // Declare specializations of `Message::Clone<CloneMode>()` (implemented in `message.cpp`).

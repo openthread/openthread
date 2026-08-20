@@ -163,4 +163,14 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 }
 
 void otMessageResetBufferInfo(otInstance *aInstance) { AsCoreType(aInstance).ResetBufferInfo(); }
+
+#if OPENTHREAD_CONFIG_MESSAGE_BUFFER_THRESHOLD_ENABLE
+void otMessageSetBufferThresholdCallback(otInstance                      *aInstance,
+                                         otMessageBufferThresholdCallback aLowCallback,
+                                         otMessageBufferThresholdCallback aHighCallback,
+                                         void                            *aContext)
+{
+    AsCoreType(aInstance).Get<MessagePool>().SetBufferThresholdCallback(aLowCallback, aHighCallback, aContext);
+}
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
