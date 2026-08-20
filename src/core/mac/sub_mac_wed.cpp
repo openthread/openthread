@@ -33,7 +33,7 @@
 
 #include "sub_mac.hpp"
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 
 #include "instance/instance.hpp"
 
@@ -121,4 +121,4 @@ void SubMac::HandleWedReceiveOrSleep(void)
 } // namespace Mac
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE

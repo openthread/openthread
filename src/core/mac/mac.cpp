@@ -66,7 +66,7 @@ Mac::Mac(Instance &aInstance)
     , mShouldDelaySleep(false)
     , mDelayingSleep(false)
 #endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     , mWakeupListenEnabled(false)
 #endif
     , mOperation(kOperationIdle)
@@ -91,7 +91,7 @@ Mac::Mac(Instance &aInstance)
     , mCslPeriod(0)
 #endif
     , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     , mWakeupListenInterval(kDefaultWedListenInterval)
     , mWakeupListenDuration(kDefaultWedListenDuration)
 #endif
@@ -229,7 +229,7 @@ bool Mac::IsInTransmitState(void) const
 #endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     case kOperationTransmitWakeup:
 #endif
         retval = true;
@@ -508,7 +508,7 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 void Mac::RequestWakeupFrameTransmission(void)
 {
     VerifyOrExit(IsEnabled());
@@ -613,7 +613,7 @@ void Mac::PerformNextOperation(void)
         // remains in receive mode after a data poll ACK indicating a
         // pending frame from the parent.
         kOperationWaitingForData,
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
         kOperationTransmitWakeup,
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -690,7 +690,7 @@ void Mac::PerformNextOperation(void)
     case kOperationTransmitDataCsl:
 #endif
     case kOperationTransmitPoll:
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     case kOperationTransmitWakeup:
 #endif
         BeginTransmit();
@@ -989,7 +989,7 @@ void Mac::BeginTransmit(void)
 
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     case kOperationTransmitWakeup:
         frame = Get<WakeupTxScheduler>().PrepareWakeupFrame(txFrames);
         VerifyOrExit(frame != nullptr);
@@ -1506,7 +1506,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         break;
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     case kOperationTransmitWakeup:
         FinishOperation();
         PerformNextOperation();
@@ -2317,7 +2317,7 @@ const char *Mac::OperationToString(Operation aOperation)
 #define CslTxOperationMapList(_)
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 #define WakeupOperationMapList(_) _(kOperationTransmitWakeup, "TransmitWakeup")
 #else
 #define WakeupOperationMapList(_)
@@ -2447,7 +2447,7 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
 
     VerifyOrExit(mCslPeriod != aPeriod);
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     if (IsWakeupListenEnabled() && aPeriod != 0)
     {
         IgnoreError(SetWakeupListenEnabled(false));
@@ -2599,7 +2599,7 @@ void Mac::SetRadioFilterEnabled(bool aFilterEnabled)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 Error Mac::SetWakeupChannel(uint8_t aChannel)
 {
     Error error = kErrorNone;
@@ -2613,7 +2613,7 @@ Error Mac::SetWakeupChannel(uint8_t aChannel)
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
     mWakeupChannel = aChannel;
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     UpdateWakeupListening();
 #endif
 
@@ -2622,7 +2622,7 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 void Mac::GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const
 {
     aInterval = mWakeupListenInterval;
@@ -2679,7 +2679,7 @@ void Mac::UpdateWakeupListening(void)
     mLinks.UpdateWakeupListening(mWakeupListenEnabled, mWakeupListenInterval, mWakeupListenDuration, channel);
 }
 
-#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 
 } // namespace Mac
 } // namespace ot

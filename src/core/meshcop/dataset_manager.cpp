@@ -189,7 +189,7 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
 
         case Tlv::kWakeupChannel:
         {
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
             uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
             error           = Get<Mac::Mac>().SetWakeupChannel(channel);
 
