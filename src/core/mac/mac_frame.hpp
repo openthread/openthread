@@ -624,14 +624,19 @@ protected:
     public:
         // - - - - - - - - - - - - - - - - - - - - - - - - -
         // Mac Header Address Info
-        uint16_t  mFcf;
+        Type      mType;
+        Version   mVersion;
+        bool      mIsSecurityEnabled : 1;
+        bool      mIsFramePending : 1;
+        bool      mIsAckRequest : 1;
+        bool      mIsSeqNumPresent : 1;
+        bool      mIsIePresent : 1;
+        uint8_t   mSequenceNum;
         PanIds    mPanIds;
         Addresses mAddrs;
-        uint8_t   mSequenceNum;
 
         // - - - - - - - - - - - - - - - - - - - - - - - - -
         // Aux Security Header
-        uint8_t       mSecCtl;
         SecurityLevel mSecurityLevel;
         KeyIdMode     mKeyIdMode;
         uint8_t       mKeyIndex;
