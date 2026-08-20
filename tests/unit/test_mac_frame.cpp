@@ -287,14 +287,14 @@ void TestMacHeader(void)
 
     for (const TestCase &testCase : kTestCases)
     {
-        uint8_t psdu[OT_RADIO_FRAME_MAX_SIZE];
-        uint8_t offset;
-
+        uint8_t                 psdu[OT_RADIO_FRAME_MAX_SIZE];
+        uint8_t                 offset;
         Mac::TxFrame            frame;
         Mac::TxFrame::BuildInfo buildInfo;
         Mac::Address            address;
         Mac::PanId              panId;
         Mac::Frame::Lengths     lengths;
+        Error                   error;
 
         frame.mPsdu      = psdu;
         frame.mLength    = 0;
@@ -376,26 +376,27 @@ void TestMacHeader(void)
         VerifyOrQuit(!frame.GetFramePending());
         VerifyOrQuit(!frame.IsIePresent());
         VerifyOrQuit(frame.GetAckRequest() == (testCase.mDstAddrType != kNoneAddr));
-
-        VerifyOrQuit(frame.IsSrcAddrPresent() == (testCase.mSrcAddrType != kNoneAddr));
         SuccessOrQuit(frame.GetSrcAddr(address));
         VerifyOrQuit(CompareAddresses(address, buildInfo.mAddrs.mSource));
-        VerifyOrQuit(frame.IsDstAddrPresent() == (testCase.mDstAddrType != kNoneAddr));
         SuccessOrQuit(frame.GetDstAddr(address));
         VerifyOrQuit(CompareAddresses(address, buildInfo.mAddrs.mDestination));
 
-        VerifyOrQuit(frame.IsDstPanIdPresent() == (testCase.mDstPanIdMode != kNoPanId));
-
-        if (frame.IsDstPanIdPresent())
+        if (testCase.mDstPanIdMode == kNoPanId)
+        {
+            VerifyOrQuit(frame.GetDstPanId(panId) == kErrorNotFound);
+        }
+        else
         {
             SuccessOrQuit(frame.GetDstPanId(panId));
             VerifyOrQuit(panId == buildInfo.mPanIds.GetDestination());
             VerifyOrQuit(buildInfo.mPanIds.IsDestinationPresent());
         }
 
-        if (frame.IsSrcPanIdPresent())
+        error = frame.GetSrcPanId(panId);
+
+        if (error != kErrorNotFound)
         {
-            SuccessOrQuit(frame.GetSrcPanId(panId));
+            SuccessOrQuit(error);
             VerifyOrQuit(panId == buildInfo.mPanIds.GetSource());
             VerifyOrQuit(buildInfo.mPanIds.IsSourcePresent());
         }
@@ -666,7 +667,9 @@ void TestMacFrameApi(void)
                                0xb2, 0x6e, 0x81, 0x25, 0xc9, 0xdb, 0xac, 0x2b, 0x0a, 0x0d, 0x00, 0x00,
                                0x00, 0x00, 0x01, 0x04, 0xaf, 0x14, 0xce, 0xaa, 0x5a, 0xe5};
 
-    Mac::Frame frame;
+    Mac::Frame   frame;
+    Mac::PanId   panId;
+    Mac::Address address;
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     uint8_t data_psdu1[] = {0x29, 0xee, 0x53, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a,
@@ -676,7 +679,6 @@ void TestMacFrameApi(void)
     uint8_t mac_cmd_psdu2[] = {0x6b, 0xaa, 0x8d, 0xce, 0xfa, 0x00, 0x68, 0x01, 0x68, 0x0d,
                                0x08, 0x00, 0x00, 0x00, 0x01, 0x04, 0x0d, 0xed, 0x0b, 0x35,
                                0x0c, 0x80, 0x3f, 0x04, 0x4b, 0x88, 0x89, 0xd6, 0x59, 0xe1};
-    uint8_t scf; // SecurityControlField
 #endif
 
     // Imm-Ack, Sequence Number: 94
@@ -700,10 +702,12 @@ void TestMacFrameApi(void)
     VerifyOrQuit(!frame.GetFramePending());
     VerifyOrQuit(!frame.GetAckRequest());
     VerifyOrQuit(!frame.IsIePresent());
-    VerifyOrQuit(!frame.IsDstPanIdPresent());
-    VerifyOrQuit(!frame.IsDstAddrPresent());
+    VerifyOrQuit(frame.GetDstPanId(panId) == kErrorNotFound);
+    SuccessOrQuit(frame.GetDstAddr(address));
+    VerifyOrQuit(address.IsNone());
     VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2006);
-    VerifyOrQuit(!frame.IsSrcAddrPresent());
+    SuccessOrQuit(frame.GetSrcAddr(address));
+    VerifyOrQuit(address.IsNone());
     VerifyOrQuit(frame.IsSequencePresent());
     VerifyOrQuit(frame.GetSequence() == 94);
 
@@ -718,11 +722,12 @@ void TestMacFrameApi(void)
     frame.mPsdu   = data_psdu1;
     frame.mLength = sizeof(data_psdu1);
     VerifyOrQuit(frame.IsVersion2015());
-    VerifyOrQuit(frame.IsDstPanIdPresent());
-    VerifyOrQuit(frame.IsDstAddrPresent());
-    VerifyOrQuit(frame.IsSrcAddrPresent());
-    SuccessOrQuit(frame.GetSecurityControlField(scf));
-    VerifyOrQuit(scf == 0x0d);
+    SuccessOrQuit(frame.GetDstPanId(panId));
+    VerifyOrQuit(panId == 0xface);
+    SuccessOrQuit(frame.GetDstAddr(address));
+    VerifyOrQuit(address.IsExtended());
+    SuccessOrQuit(frame.GetSrcAddr(address));
+    VerifyOrQuit(!address.IsNone());
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
     // IEEE 802.15.4-2006 Mac Command
@@ -796,6 +801,8 @@ void TestMacFrameAckGeneration(void)
     Mac::RxFrame receivedFrame;
     Mac::TxFrame ackFrame;
     uint8_t      ackFrameBuffer[100];
+    Mac::PanId   panId;
+    Mac::Address address;
 
     ackFrame.mPsdu   = ackFrameBuffer;
     ackFrame.mLength = sizeof(ackFrameBuffer);
@@ -835,9 +842,11 @@ void TestMacFrameAckGeneration(void)
 
     VerifyOrQuit(!ackFrame.GetAckRequest());
     VerifyOrQuit(!ackFrame.IsIePresent());
-    VerifyOrQuit(!ackFrame.IsDstPanIdPresent());
-    VerifyOrQuit(!ackFrame.IsDstAddrPresent());
-    VerifyOrQuit(!ackFrame.IsSrcAddrPresent());
+    VerifyOrQuit(ackFrame.GetDstPanId(panId) == kErrorNotFound);
+    SuccessOrQuit(ackFrame.GetDstAddr(address));
+    VerifyOrQuit(address.IsNone());
+    SuccessOrQuit(ackFrame.GetSrcAddr(address));
+    VerifyOrQuit(address.IsNone());
     VerifyOrQuit(ackFrame.GetVersion() == Mac::Frame::kVersion2006);
     VerifyOrQuit(ackFrame.IsSequencePresent());
     VerifyOrQuit(ackFrame.GetSequence() == 189);
@@ -894,9 +903,12 @@ void TestMacFrameAckGeneration(void)
     VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kTypeAck);
     VerifyOrQuit(ackFrame.GetSecurityEnabled());
     VerifyOrQuit(ackFrame.IsIePresent());
-    VerifyOrQuit(ackFrame.IsDstPanIdPresent());
-    VerifyOrQuit(ackFrame.IsDstAddrPresent());
-    VerifyOrQuit(!ackFrame.IsSrcAddrPresent());
+    SuccessOrQuit(ackFrame.GetDstPanId(panId));
+    VerifyOrQuit(panId == 0xface);
+    SuccessOrQuit(ackFrame.GetDstAddr(address));
+    VerifyOrQuit(!address.IsNone());
+    SuccessOrQuit(ackFrame.GetSrcAddr(address));
+    VerifyOrQuit(address.IsNone());
     VerifyOrQuit(ackFrame.GetVersion() == Mac::Frame::kVersion2015);
     VerifyOrQuit(ackFrame.IsSequencePresent());
     VerifyOrQuit(ackFrame.GetSequence() == 142);

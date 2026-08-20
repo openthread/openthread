@@ -648,18 +648,6 @@ exit:
     return error;
 }
 
-Error Frame::GetSecurityControlField(uint8_t &aSecurityControlField) const
-{
-    Error     error;
-    ParseInfo info;
-
-    SuccessOrExit(error = info.ParseFrom(*this, kParseSecurityHeader));
-    aSecurityControlField = info.mSecCtl;
-
-exit:
-    return error;
-}
-
 Error Frame::GetSecurityLevel(SecurityLevel &aSecurityLevel) const
 {
     Error     error;
