@@ -80,7 +80,7 @@ constexpr uint64_t kMinCslPeriod  = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD * 1000 
 constexpr uint64_t kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT;
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 /**
  * Minimum wake-up listen duration supported in microseconds.
  */
@@ -574,7 +574,7 @@ public:
      */
     Error Receive(uint8_t aChannel);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     /**
      * Schedules a radio reception window at a specific time and duration.
      *
@@ -990,7 +990,7 @@ inline Error Radio::Receive(uint8_t aChannel)
     return otPlatRadioReceive(GetInstancePtr(), aChannel);
 }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 inline Error Radio::ReceiveAt(uint8_t aChannel, Time32 aStart, uint32_t aDuration)
 {
     Error error = otPlatRadioReceiveAt(GetInstancePtr(), aChannel, aStart, aDuration);
@@ -1104,7 +1104,7 @@ inline Error Radio::Sleep(void) { return kErrorNone; }
 
 inline Error Radio::Receive(uint8_t) { return kErrorNone; }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 inline Error Radio::ReceiveAt(uint8_t, uint32_t, uint32_t) { return kErrorNone; }
 #endif
 

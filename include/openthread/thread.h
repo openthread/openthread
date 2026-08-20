@@ -1103,7 +1103,7 @@ uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance);
 /**
  * Attempts to wake a Wake-up End Device.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` to be enabled.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` to be enabled.
  *
  * The wake-up starts with transmitting a wake-up frame sequence to the Wake-up End Device.
  * During the wake-up sequence, and for a short time after the last wake-up frame is sent, the Wake-up Coordinator keeps

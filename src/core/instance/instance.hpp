@@ -974,7 +974,7 @@ template <> inline RouterTable &Instance::Get(void) { return mMle.mRouterTable; 
 template <> inline PeerTable &Instance::Get(void) { return mMle.mP2p.mPeerTable; }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 template <> inline WakeupTxScheduler &Instance::Get(void) { return mMle.mWakeupTxScheduler; }
 #endif
 

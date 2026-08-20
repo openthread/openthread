@@ -919,7 +919,7 @@ private:
     uint8_t mUncertainty;
 };
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 /**
  * Gets the length of the wake-up identifier.
  *
@@ -932,7 +932,7 @@ private:
 uint8_t GetWakeupIdLength(WakeupId aWakeupId);
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 /**
  * Represents a wake-up request.
  */
@@ -1029,9 +1029,9 @@ public:
      */
     bool IsWakeupByGroupId(void) const;
 };
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 /**
  * Represents the information of the received wake-up frame.
  */
@@ -1053,7 +1053,7 @@ struct WakeupInfo
 DefineCoreType(otExtAddress, Mac::ExtAddress);
 DefineCoreType(otMacKey, Mac::Key);
 DefineCoreType(otMacKeyMaterial, Mac::KeyMaterial);
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 DefineCoreType(otWakeupRequest, Mac::WakeupRequest);
 DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);
 #endif

@@ -483,7 +483,7 @@ uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 otError otThreadWakeup(otInstance         *aInstance,
                        const otExtAddress *aWedAddress,
                        uint16_t            aWakeupIntervalUs,

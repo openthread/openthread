@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2025, The OpenThread Authors.
+ *  Copyright (c) 2024-2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,37 +28,41 @@
 
 /**
  * @file
- *   This file implements the OpenThread Peer-to-Peer API.
+ *   This file includes compile-time configurations for Thread Direct (TD).
  */
 
-#include "openthread-core-config.h"
+#ifndef OT_CORE_CONFIG_THREAD_DIRECT_H_
+#define OT_CORE_CONFIG_THREAD_DIRECT_H_
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
+/**
+ * @addtogroup config-thread-direct
+ *
+ * @brief
+ *   This module includes configuration variables for Thread Direct (TD).
+ *
+ * @{
+ */
 
-#include "instance/instance.hpp"
-
-using namespace ot;
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-otError otP2pWakeupAndLink(otInstance           *aInstance,
-                           const otP2pRequest   *aP2pRequest,
-                           otP2pLinkDoneCallback aCallback,
-                           void                 *aContext)
-{
-    return AsCoreType(aInstance).Get<Mle::Mle>().P2pWakeupAndLink(AsCoreType(aP2pRequest), aCallback, aContext);
-}
+/**
+ * @def OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
+ *
+ * Define to 1 to enable Thread Direct Wake Initiator functionality.
+ */
+#ifndef OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
+#define OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE 0
 #endif
 
-void otP2pSetEventCallback(otInstance *aInstance, otP2pEventCallback aCallback, void *aContext)
-{
-    AsCoreType(aInstance).Get<Mle::Mle>().P2pSetEventCallback(aCallback, aContext);
-}
-
-otError otP2pUnlink(otInstance             *aInstance,
-                    const otExtAddress     *aExtAddress,
-                    otP2pUnlinkDoneCallback aCallback,
-                    void                   *aContext)
-{
-    return AsCoreType(aInstance).Get<Mle::Mle>().P2pUnlink(AsCoreType(aExtAddress), aCallback, aContext);
-}
+/**
+ * @def OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+ *
+ * Define to 1 to enable Thread Direct Wake Listener functionality.
+ */
+#ifndef OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+#define OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE 0
 #endif
+
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_THREAD_DIRECT_H_

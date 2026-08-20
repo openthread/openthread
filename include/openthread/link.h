@@ -1127,7 +1127,7 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
 /**
  * Gets the Wake-up channel.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -1138,7 +1138,7 @@ uint8_t otLinkGetWakeupChannel(otInstance *aInstance);
 /**
  * Sets the Wake-up channel.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aChannel   The Wake-up sample channel. Channel value should be `0` (Set Wake-up Channel unspecified,
@@ -1153,7 +1153,7 @@ otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel);
 /**
  * Enables or disables listening for wake-up frames.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aEnable       true to enable listening for wake-up frames, or false otherwise.
@@ -1167,7 +1167,7 @@ otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable);
 /**
  * Returns whether listening for wake-up frames is enabled.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  *
@@ -1179,7 +1179,7 @@ bool otLinkIsWakeupListenEnabled(otInstance *aInstance);
 /**
  * Get the wake-up listen parameters.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[out] aInterval   A pointer to return the wake-up listen interval in microseconds.
@@ -1193,7 +1193,7 @@ void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval,
  * The listen interval must be greater than the listen duration.
  * The listen duration must be greater or equal than the minimum supported.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aInterval   The wake-up listen interval in microseconds.

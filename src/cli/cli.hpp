@@ -366,7 +366,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_P2P_ENABLE
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     static void HandleP2pLinkDone(void *aContext);
     void        HandleP2pLinkDone(void);
 #endif
@@ -375,7 +375,7 @@ private:
     void        HandleP2pUnlinkDone(void);
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     static void HandleWakeupResult(otError aError, void *aContext);
     void        HandleWakeupResult(otError aError);
 #endif
