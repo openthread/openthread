@@ -586,10 +586,6 @@ private:
 
     bool RadioSupports(Capability aCapability) const { return (mRadioCaps & aCapability) != 0; }
     bool ShouldHandle(Capability aCapability) const;
-    bool ShouldHandleTransmitSecurity(void) const { return ShouldHandle(kCapTransmitSec); }
-    bool ShouldHandleAckTimeout(void) const { return ShouldHandle(kCapAckTimeout); }
-    bool ShouldHandleRetries(void) const { return ShouldHandle(kCapTransmitRetries); }
-    bool ShouldHandleEnergyScan(void) const { return ShouldHandle(kCapEnergyScan); }
     bool ShouldHandleCsmaBackOff(void) const;
 
     void ProcessTransmitSecurity(void);
