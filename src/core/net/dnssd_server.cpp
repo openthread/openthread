@@ -352,7 +352,7 @@ Server::ResponseCode Server::Request::ParseQuestions(uint8_t aTestMode, bool &aS
         VerifyOrExit(!(aTestMode & kTestModeRejectMultiQuestionQuery));
         VerifyOrExit(!(aTestMode & kTestModeIgnoreMultiQuestionQuery), aShouldRespond = false);
 
-        VerifyOrExit(questionCount == 2);
+        VerifyOrExit(questionCount == kMaxQuestionCount);
 
         // Allow SRV and TXT questions for the same service
         // instance name in the same query.
@@ -1113,6 +1113,16 @@ bool Server::ShouldForwardToUpstream(const Request &aRequest) const
     VerifyOrExit(mEnableUpstreamQuery);
 
     VerifyOrExit(aRequest.mHeader.IsRecursionDesiredFlagSet());
+
+    // This method runs before `Request::ParseQuestions()`, so the
+    // attacker-controlled `QDCOUNT` header field is not yet bounded.
+    // Reject any query carrying more questions than the server ever
+    // processes. This avoids iterating (and decompressing a name for)
+    // each of up to 65535 questions, which a crafted query could use
+    // to force disproportionate parsing work. Such over-large queries
+    // are malformed and are rejected later by `ParseQuestions()`.
+    VerifyOrExit(aRequest.mHeader.GetQuestionCount() <= kMaxQuestionCount);
+
     readOffset = sizeof(Header);
 
     for (uint16_t i = 0; i < aRequest.mHeader.GetQuestionCount(); i++)

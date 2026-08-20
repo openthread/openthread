@@ -312,6 +312,12 @@ private:
     static constexpr uint32_t kQueryTimeout                 = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT;
     static constexpr uint16_t kMaxConcurrentUpstreamQueries = 32;
 
+    // Maximum number of questions the server processes in a single
+    // query. A standard query carries one question; a matching
+    // SRV + TXT pair for the same service instance is also allowed
+    // (see `Request::ParseQuestions()`).
+    static constexpr uint16_t kMaxQuestionCount = 2;
+
     static constexpr uint16_t kRrTypeA     = ResourceRecord::kTypeA;
     static constexpr uint16_t kRrTypeNs    = ResourceRecord::kTypeNs;
     static constexpr uint16_t kRrTypeSoa   = ResourceRecord::kTypeSoa;

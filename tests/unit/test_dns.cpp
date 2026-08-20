@@ -1164,6 +1164,47 @@ void TestDnsCompressedName(void)
         printf("Read name =\"%s\"\n", name);
     }
 
+    {
+        // Long descending compression-pointer chain: offset 0 is the
+        // root terminator, and every even offset `k >= 2` holds a
+        // pointer to `k - 2`. Reading a name at offset `S` follows
+        // `S / 2` pointer hops down to the terminator. This exercises
+        // the per-name pointer-hop budget in `LabelIterator`: a chain
+        // within the budget reads as the (empty) root name, while a
+        // longer chain is rejected with `kErrorParse` instead of doing
+        // work proportional to the message size.
+
+        static constexpr uint16_t kChainSize        = 400;
+        static constexpr uint16_t kWithinBudget     = 60;  // 30 hops, well under the 128-hop budget.
+        static constexpr uint16_t kExceedsBudget    = 398; // 199 hops, over the budget.
+        uint8_t                   chain[kChainSize] = {0};
+
+        for (uint16_t k = 2; k + 1 < kChainSize; k += 2)
+        {
+            uint16_t target = k - 2;
+
+            chain[k]     = 0xc0 | ((target >> 8) & 0x3f);
+            chain[k + 1] = target & 0xff;
+        }
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(chain));
+        DumpBuffer("pointer-hop-chain", chain, kChainSize);
+
+        offset = kWithinBudget;
+        SuccessOrQuit(Dns::Name::ParseName(*message, offset));
+        offset = kWithinBudget;
+        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+        VerifyOrQuit(strcmp(name, ".") == 0, "Name::ReadName() did not return root name");
+
+        offset = kExceedsBudget;
+        VerifyOrQuit(Dns::Name::ParseName(*message, offset) == kErrorParse,
+                     "Name::ParseName() did not reject an over-long pointer chain");
+        offset = kExceedsBudget;
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name) == kErrorParse,
+                     "Name::ReadName() did not reject an over-long pointer chain");
+    }
+
     message->Free();
     message2->Free();
     testFreeInstance(instance);
