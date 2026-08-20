@@ -63,6 +63,7 @@ jobs:
         persist-credentials: false
 
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo add-apt-repository -y ppa:wireshark-dev/stable
         sudo apt-get update
@@ -96,6 +97,7 @@ jobs:
         persist-credentials: false
 
     - name: Bootstrap
+      timeout-minutes: 10
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
@@ -133,6 +135,7 @@ jobs:
         persist-credentials: false
 
     - name: Bootstrap
+      timeout-minutes: 10
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
@@ -166,6 +169,7 @@ jobs:
         persist-credentials: false
 
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc
@@ -197,6 +201,7 @@ jobs:
         persist-credentials: false
 
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build

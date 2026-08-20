@@ -58,6 +58,7 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y shellcheck iwyu
@@ -103,6 +104,7 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
     - name: Build
@@ -123,6 +125,7 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
     - name: Build and test with platform CCM one-shot enabled
@@ -144,11 +147,12 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
         sudo apt-get remove cmake
         sudo apt-get purge --auto-remove cmake
-        wget http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
+        wget --timeout=30 --tries=4 http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
         tar xf cmake-3.10.3.tar.gz
         cd cmake-3.10.3
         ./configure
@@ -185,6 +189,7 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
@@ -205,6 +210,7 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y clang-tools-14 ninja-build
@@ -225,6 +231,7 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
         cd third_party/mbedtls/repo && git fetch --tags && git checkout tags/v2.28.8
@@ -280,11 +287,12 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         cd /tmp
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-        wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm
+        wget --timeout=30 --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm
         tar xf gcc-arm
     - name: Build
       env:
@@ -314,6 +322,7 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         case ${{ matrix.gcc_ver }} in
@@ -348,8 +357,9 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - name: Bootstrap
+        timeout-minutes: 10
         run: |
-          wget https://apt.llvm.org/llvm.sh
+          wget --timeout=30 --tries=4 https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ matrix.clang_ver }}
           sudo apt-get update
@@ -372,6 +382,7 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build gn
@@ -404,9 +415,10 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         brew update
-        wget --tries 4 https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip
+        wget --timeout=30 --tries 4 https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip
         unzip ninja-mac.zip && mv ninja /usr/local/bin/.
     - name: Build
       run: |

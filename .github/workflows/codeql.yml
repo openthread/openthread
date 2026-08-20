@@ -64,6 +64,7 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
 
