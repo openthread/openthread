@@ -360,6 +360,18 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+otError otThreadSetFastAttachEnabled(otInstance *aInstance, bool aEnabled)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetFastAttachEnabled(aEnabled);
+}
+
+bool otThreadIsFastAttachEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().IsFastAttachEnabled();
+}
+#endif
+
 uint16_t otThreadGetVersion(void) { return kThreadVersion; }
 
 bool otThreadIsSingleton(otInstance *aInstance)

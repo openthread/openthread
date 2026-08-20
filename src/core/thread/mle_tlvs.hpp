@@ -476,8 +476,9 @@ typedef SimpleTlvInfo<Tlv::kLeaderData, LeaderDataTlvValue> LeaderDataTlv;
 class ScanMaskTlv : public UintTlvInfo<Tlv::kScanMask, uint8_t>
 {
 public:
-    static constexpr uint8_t kRouterFlag    = 1 << 7; ///< Scan Mask Router Flag.
-    static constexpr uint8_t kEndDeviceFlag = 1 << 6; ///< Scan Mask End Device Flag.
+    static constexpr uint8_t kRouterFlag     = 1 << 7; ///< Scan Mask Router Flag.
+    static constexpr uint8_t kEndDeviceFlag  = 1 << 6; ///< Scan Mask End Device Flag.
+    static constexpr uint8_t kFastAttachFlag = 1 << 5; ///< Scan Mask Fast Attach Flag.
 
     /**
      * Indicates whether or not the Router flag is set.
@@ -498,6 +499,16 @@ public:
      * @retval FALSE  If the End Device flag is not set.
      */
     static bool IsEndDeviceFlagSet(uint8_t aMask) { return (aMask & kEndDeviceFlag) != 0; }
+
+    /**
+     * Indicates whether or not the Fast Attach flag is set.
+     *
+     * @param[in] aMask   A scan mask value.
+     *
+     * @retval TRUE   If the Fast Attach flag is set.
+     * @retval FALSE  If the Fast Attach flag is not set.
+     */
+    static bool IsFastAttachFlagSet(uint8_t aMask) { return (aMask & kFastAttachFlag) != 0; }
 };
 
 /**

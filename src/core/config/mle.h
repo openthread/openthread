@@ -349,6 +349,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+ *
+ * Define as 1 to enable the Child-side MLE Fast Attach feature. When enabled, the application
+ * may opt in (per attach attempt) via `otThreadSetFastAttachEnabled()` to set the F flag in
+ * its Parent Request and early-select a Parent on the first acceptable LQ3 Parent Response.
+ *
+ * Note: Router-side handling of the F flag (reduced response jitter) is always-on standard
+ * behavior and is independent of this compile flag.
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+#define OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE 1
+#endif
+
+/**
  * @}
  */
 
