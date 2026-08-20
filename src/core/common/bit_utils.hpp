@@ -259,85 +259,42 @@ UintType ReadBits(UintType aBits)
 }
 
 /**
- * Writes a value to a specified bit-field within a little-endian integer and returns the modified integer in
- * little-endian format.
+ * Writes a value to a specified bit-field within an integer encoded with a given byte ordering and returns the
+ * modified integer in the same encoding.
  *
+ * @tparam kEncoding  The byte-order encoding (big-endian or little-endian).
  * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
  * @tparam kMask      The bitmask indicating the field to modify (must not be zero). The mask must be pre-shifted.
  * @tparam kOffset    The bit offset of the field. If not provided, this is computed from @p kMask.
  *
- * @param[in]  aBits   The original integer value in little-endian format.
+ * @param[in]  aBits   The original integer value in @p kEncoding format.
  * @param[in]  aValue  The value to write into the field (it should not be pre-shifted).
  *
- * @returns The updated integer in little-endian format.
+ * @returns The updated integer in @p kEncoding format.
  */
-template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
-UintType UpdateBitsLittleEndian(UintType aBits, UintType aValue)
+template <Encoding kEncoding, typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
+UintType UpdateBitsIn(UintType aBits, UintType aValue)
 {
-    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
-
-    return LittleEndian::HostSwap<UintType>((LittleEndian::HostSwap<UintType>(aBits) & ~kMask) |
-                                            ((aValue << kOffset) & kMask));
+    return HostSwap<kEncoding, UintType>(
+        UpdateBits<UintType, kMask, kOffset>(HostSwap<kEncoding, UintType>(aBits), aValue));
 }
 
 /**
- * Writes a value to a specified bit-field within a big-endian integer and returns the modified integer in big-endian
- * format.
+ * Reads the value of a specified bit-field from an integer encoded with a given byte ordering.
  *
- * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
- * @tparam kMask      The bitmask indicating the field to modify (must not be zero). The mask must be pre-shifted.
- * @tparam kOffset    The bit offset of the field. If not provided, this is computed from @p kMask.
- *
- * @param[in]  aBits   The original integer value in big-endian format.
- * @param[in]  aValue  The value to write into the field (it should not be pre-shifted).
- *
- * @returns The updated integer in big-endian format.
- */
-template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
-UintType UpdateBitsBigEndian(UintType aBits, UintType aValue)
-{
-    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
-
-    return BigEndian::HostSwap<UintType>((BigEndian::HostSwap<UintType>(aBits) & ~kMask) |
-                                         ((aValue << kOffset) & kMask));
-}
-
-/**
- * Reads the value of a specified bit-field from a little-endian integer.
- *
+ * @tparam kEncoding  The byte-order encoding (big-endian or little-endian).
  * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
  * @tparam kMask      The bitmask indicating the field to read (must not be zero). The mask must be pre-shifted.
  * @tparam kOffset    The bit offset of the field. If not provided, this is computed from @p kMask.
  *
- * @param[in] aBits   The integer value in little-endian format to read from.
+ * @param[in] aBits   The integer value in @p kEncoding format to read from.
  *
  * @returns The value from the bit-field (shifted to start at bit 0).
  */
-template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
-UintType ReadBitsLittleEndian(UintType aBits)
+template <Encoding kEncoding, typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
+UintType ReadBitsIn(UintType aBits)
 {
-    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
-
-    return (LittleEndian::HostSwap<UintType>(aBits) & kMask) >> kOffset;
-}
-
-/**
- * Reads the value of a specified bit-field from a big-endian integer.
- *
- * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
- * @tparam kMask      The bitmask indicating the field to read (must not be zero). The mask must be pre-shifted.
- * @tparam kOffset    The bit offset of the field. If not provided, this is computed from @p kMask.
- *
- * @param[in] aBits   The integer value in big-endian format to read from.
- *
- * @returns The value from the bit-field (shifted to start at bit 0).
- */
-template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
-UintType ReadBitsBigEndian(UintType aBits)
-{
-    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
-
-    return (BigEndian::HostSwap<UintType>(aBits) & kMask) >> kOffset;
+    return ReadBits<UintType, kMask, kOffset>(HostSwap<kEncoding, UintType>(aBits));
 }
 
 } // namespace ot

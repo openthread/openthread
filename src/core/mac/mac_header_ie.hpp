@@ -68,14 +68,17 @@ public:
      *
      * @returns the IE Element ID.
      */
-    uint8_t GetId(void) const { return static_cast<uint8_t>(ReadBitsLittleEndian<uint16_t, kIdMask>(mLenIdType)); }
+    uint8_t GetId(void) const { return static_cast<uint8_t>(ReadBitsIn<kLittleEndian, uint16_t, kIdMask>(mLenIdType)); }
 
     /**
      * Returns the IE content length.
      *
      * @returns the IE content length.
      */
-    uint8_t GetLength(void) const { return static_cast<uint8_t>(ReadBitsLittleEndian<uint16_t, kLenMask>(mLenIdType)); }
+    uint8_t GetLength(void) const
+    {
+        return static_cast<uint8_t>(ReadBitsIn<kLittleEndian, uint16_t, kLenMask>(mLenIdType));
+    }
 
     /**
      * Returns the total size of the Header IE (descriptor header plus content length) in bytes.
@@ -168,8 +171,8 @@ private:
     static constexpr uint16_t kLenMask = 0x007f << 0;
     static constexpr uint16_t kIdMask  = 0x00ff << 7;
 
-    void SetId(uint8_t aId) { mLenIdType = UpdateBitsLittleEndian<uint16_t, kIdMask>(mLenIdType, aId); }
-    void SetLength(uint8_t aLength) { mLenIdType = UpdateBitsLittleEndian<uint16_t, kLenMask>(mLenIdType, aLength); }
+    void SetId(uint8_t aId) { mLenIdType = UpdateBitsIn<kLittleEndian, uint16_t, kIdMask>(mLenIdType, aId); }
+    void SetLength(uint8_t aLen) { mLenIdType = UpdateBitsIn<kLittleEndian, uint16_t, kLenMask>(mLenIdType, aLen); }
 
     uint16_t mLenIdType;
 } OT_TOOL_PACKED_END;
