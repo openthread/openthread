@@ -350,6 +350,55 @@ public:
     Type *PopBack(void) OT_LIFETIME_BOUND { return IsEmpty() ? nullptr : &mElements[--mLength]; }
 
     /**
+     * Inserts a new entry at a given index in the array.
+     *
+     * The method uses assignment `=` operator on `Type` to copy @p aEntry into the inserted array element. Existing
+     * elements at and after @p aIndex are shifted right.
+     *
+     * The @p aEntry can be from the array itself. The method safely copies @p aEntry before shifting existing
+     * elements in the array.
+     *
+     * @param[in] aIndex          The index at which to insert the new element.
+     * @param[in] aEntry          The new entry to insert.
+     *
+     * @retval kErrorNone         Successfully inserted @p aEntry at @p aIndex in the array.
+     * @retval kErrorNoBufs       Could not insert the new element since array is full.
+     * @retval kErrorInvalidArgs  @p aIndex is invalid (`aIndex > GetLength()`).
+     */
+    Error InsertAt(IndexType aIndex, const Type &aEntry)
+    {
+        Error error;
+        Type  entry = aEntry;
+
+        SuccessOrExit(error = ShiftFrom(aIndex));
+        mElements[aIndex] = entry;
+
+    exit:
+        return error;
+    }
+
+    /**
+     * Inserts a new element at a given index in the array.
+     *
+     * On success, this method shifts existing elements to make room and returns a pointer to the inserted element
+     * in the array for the caller to initialize and use.
+     *
+     * @param[in] aIndex   The index at which to insert the new element.
+     *
+     * @returns A pointer to the newly inserted element, or `nullptr` if the array is full or @p aIndex is invalid.
+     */
+    Type *InsertAt(IndexType aIndex) OT_LIFETIME_BOUND
+    {
+        Type *entry = nullptr;
+
+        SuccessOrExit(ShiftFrom(aIndex));
+        entry = &mElements[aIndex];
+
+    exit:
+        return entry;
+    }
+
+    /**
      * Returns the index of an element in the array.
      *
      * The @p aElement MUST be from the array, otherwise the behavior of this method is undefined.
@@ -628,6 +677,24 @@ public:
     const Type *end(void) const OT_LIFETIME_BOUND { return &mElements[mLength]; }
 
 private:
+    Error ShiftFrom(IndexType aIndex)
+    {
+        Error error = kErrorNone;
+
+        VerifyOrExit(!IsFull(), error = kErrorNoBufs);
+        VerifyOrExit(aIndex <= mLength, error = kErrorInvalidArgs);
+
+        for (IndexType index = mLength; index > aIndex; index--)
+        {
+            mElements[index] = mElements[index - 1];
+        }
+
+        mLength++;
+
+    exit:
+        return error;
+    }
+
     Type      mElements[kMaxSize];
     IndexType mLength;
 };
