@@ -63,6 +63,7 @@ namespace ot {
 namespace BorderRouter {
 
 class NetDataBrTracker;
+class RoutingManager;
 
 /**
  * Implements processing and tracking of received Router Advertisement (RA) and Neighbor Advertisement (NA) messages.
@@ -74,6 +75,7 @@ class NetDataBrTracker;
 class RxRaTracker : public InstanceLocator
 {
     friend class NetDataBrTracker;
+    friend class RoutingManager;
     friend class ot::Notifier;
     friend class InfraIf;
 

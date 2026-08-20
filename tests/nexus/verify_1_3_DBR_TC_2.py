@@ -46,23 +46,30 @@ def check_no_new_omr(p, omr_init):
     try:
         types = verify_utils.as_list(p.thread_nwd.tlv.type)
         prefixes = verify_utils.as_list(p.thread_nwd.tlv.prefix)
+        o_flags = verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.o)
     except (AttributeError, IndexError):
         return True
 
     prefix_idx = 0
+    br_idx = 0
+    current_prefix = None
+
     for t in types:
         if t == consts.NWD_PREFIX_TLV:
-            current_prefix = prefixes[prefix_idx]
-            prefix_idx += 1
-            if current_prefix is nullField:
-                continue
-            if current_prefix != omr_init and current_prefix[0] == 0xfd:
-                # OMR prefixes start with 0xfd in this test.
-                # Only OMR_INIT should be there.
-                return False
+            if prefix_idx < len(prefixes):
+                current_prefix = prefixes[prefix_idx]
+                prefix_idx += 1
+            else:
+                current_prefix = None
+        elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
+            current_prefix = None
         elif t == consts.NWD_BORDER_ROUTER_TLV:
-            # Border Router sub-TLV belongs to the last seen Prefix TLV.
-            pass
+            if current_prefix is not None and current_prefix is not nullField:
+                if br_idx < len(o_flags):
+                    o_flag = o_flags[br_idx]
+                    if o_flag == 1 and current_prefix != omr_init and current_prefix[0] == 0xfd:
+                        return False
+            br_idx += 1
 
     return True
 
