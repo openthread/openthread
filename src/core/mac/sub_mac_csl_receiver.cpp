@@ -111,15 +111,10 @@ exit:
 
 void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
 {
-    bool diffPeriod  = aPeriod != mCslPeriod;
-    bool diffChannel = aChannel != mCslChannel;
-    bool diffPeer    = aShortAddr != mCslPeerShort;
-    bool retval      = diffPeriod || diffChannel || diffPeer;
-
-    VerifyOrExit(retval);
     mCslChannel = aChannel;
 
-    VerifyOrExit(diffPeriod || diffPeer);
+    VerifyOrExit((aPeriod != mCslPeriod) || (aShortAddr != mCslPeerShort));
+
     mCslPeerShort = aShortAddr;
     IgnoreError(Get<Radio::Radio>().EnableCsl(aPeriod, aShortAddr, aExtAddr));
 
