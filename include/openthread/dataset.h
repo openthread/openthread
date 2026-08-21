@@ -578,6 +578,12 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
  *
  * This method also checks whether there are duplicated TLVs or the TLVs are not well-formed in the @p aDatasetTlvs.
  *
+ * In addition to the TLV lengths, the values of the following TLVs are validated: Channel and Wake-up Channel (the
+ * channel page must be supported and the channel within range), Channel Mask (well-formed entries), PAN ID (must not
+ * be the broadcast PAN ID 0xffff), Extended PAN ID (must not be all-zeros or all-ones), Mesh-Local Prefix (must be a
+ * locally assigned ULA prefix, i.e., `fd00::/8`), Network Name (1 to 16 bytes, valid UTF-8, no control characters),
+ * and Security Policy.
+ *
  * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
  * @param[in]  aActive       TRUE for Active Dataset, FALSE for Pending Dataset.
  *
