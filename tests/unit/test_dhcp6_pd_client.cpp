@@ -721,7 +721,7 @@ struct Dhcp6TxMsg : public Dhcp6Msg
     void PrepareAdvertise(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr);
     void PrepareReply(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr);
     void AddIaPrefix(const PrefixInfo &aInfo);
-    void Send(void);
+    void Send(uint32_t aInfraIfIndex = kInfraIfIndex);
 };
 
 void Dhcp6TxMsg::PrepareAdvertise(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr)
@@ -779,7 +779,7 @@ void Dhcp6TxMsg::AddIaPrefix(const PrefixInfo &aInfo)
     iaPrefix->mValidLifetime     = aInfo.mValidLifetime;
 }
 
-void Dhcp6TxMsg::Send(void)
+void Dhcp6TxMsg::Send(uint32_t aInfraIfIndex)
 {
     Message *message;
 
@@ -789,7 +789,7 @@ void Dhcp6TxMsg::Send(void)
 
     LogMsg("Sending");
 
-    otPlatInfraIfDhcp6PdClientHandleReceived(sInstance, message, kInfraIfIndex);
+    otPlatInfraIfDhcp6PdClientHandleReceived(sInstance, message, aInfraIfIndex);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -2591,6 +2591,113 @@ void TestDhcp6PdServerReplyWithNoBindingToRelease(void)
     FinalizeTest();
 }
 
+void TestDhcp6PdReceiveWhenInfraIfDownOrWrongIndex(void)
+{
+    uint16_t               heapAllocations;
+    Dhcp6TxMsg             txMsg;
+    Dhcp6TxMsg::PrefixInfo prefixInfo;
+    Ip6::Prefix            prefix;
+    Mac::ExtAddress        serverMacAddr;
+    const DelegatedPrefix *delegatedPrefix;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDhcp6PdReceiveWhenInfraIfDownOrWrongIndex()");
+
+    InitTest();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    serverMacAddr.GenerateRandom();
+
+    prefix = PrefixFromString("2001:2222::", 64);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Start the client and get a delegated prefix");
+
+    VerifyOrQuit(!sDhcp6ListeningEnabled);
+    sInstance->Get<BorderRouter::Dhcp6PdClient>().Start();
+
+    AdvanceTime(2200);
+
+    VerifyOrQuit(sDhcp6ListeningEnabled);
+    VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 2);
+    sDhcp6RxMsgs[0].ValidateAsSolicit();
+    sDhcp6RxMsgs[1].ValidateAsSolicit();
+
+    txMsg.PrepareAdvertise(sDhcp6RxMsgs[0], serverMacAddr);
+    prefixInfo.mIaid              = 0;
+    prefixInfo.mT1                = 0;
+    prefixInfo.mT2                = 0;
+    prefixInfo.mPreferredLifetime = 1800;
+    prefixInfo.mValidLifetime     = 1800;
+    prefixInfo.mPrefix            = prefix;
+    txMsg.AddIaPrefix(prefixInfo);
+    txMsg.Send();
+
+    VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 3);
+    sDhcp6RxMsgs[2].ValidateAsRequest(prefix, serverMacAddr);
+
+    AdvanceTime(1);
+
+    txMsg.PrepareReply(sDhcp6RxMsgs[2], serverMacAddr);
+    txMsg.AddIaPrefix(prefixInfo);
+    txMsg.Send();
+
+    delegatedPrefix = sInstance->Get<BorderRouter::Dhcp6PdClient>().GetDelegatedPrefix();
+    VerifyOrQuit(delegatedPrefix != nullptr);
+    VerifyOrQuit(delegatedPrefix->mPrefix == prefix);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Signal infra interface is down while lease is held (listening stays enabled)");
+
+    SuccessOrQuit(otPlatInfraIfStateChanged(sInstance, kInfraIfIndex, /* aIsRunning */ false));
+    VerifyOrQuit(sDhcp6ListeningEnabled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Send DHCPv6 message while infra if is down - should be rejected and freed");
+
+    txMsg.Send();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Signal infra interface is up again");
+
+    SuccessOrQuit(otPlatInfraIfStateChanged(sInstance, kInfraIfIndex, /* aIsRunning */ true));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Send DHCPv6 message with wrong interface index - should be rejected and freed");
+
+    txMsg.Send(kInfraIfIndex + 1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Stop the client, and validate that Release message is received");
+
+    sDhcp6RxMsgs.Clear();
+    sInstance->Get<BorderRouter::Dhcp6PdClient>().Stop();
+
+    VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
+    sDhcp6RxMsgs[0].ValidateAsRelease(prefix, serverMacAddr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Send Reply to Release message and check that no more messages is received");
+
+    txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr);
+    txMsg.AddIaPrefix(prefixInfo);
+    sDhcp6RxMsgs.Clear();
+    txMsg.Send();
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sDhcp6RxMsgs.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestDhcp6PdReceiveWhenInfraIfDownOrWrongIndex()");
+
+    FinalizeTest();
+}
+
 #endif // OT_CONFIG_DHCP6_PD_CLIENT_ENABLE
 
 } // namespace ot
@@ -2611,6 +2718,7 @@ int main(void)
     ot::TestDhcp6PdServerNotExtendingLeaseDuringRenew();
     ot::TestDhcp6PdServerReplacingPrefix();
     ot::TestDhcp6PdServerReplyWithNoBindingToRelease();
+    ot::TestDhcp6PdReceiveWhenInfraIfDownOrWrongIndex();
 
     printf("All tests passed\n");
 #else
