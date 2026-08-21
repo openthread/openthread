@@ -43,6 +43,7 @@
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 
@@ -275,7 +276,7 @@ public:
      *
      * @returns The size (in bytes) of the prefix.
      */
-    static uint8_t SizeForLength(uint8_t aLength) { return BytesForBitSize(aLength); }
+    static uint8_t SizeForLength(uint8_t aLength) { return Min(BytesForBitSize(aLength), kMaxSize); }
 
     /**
      * Indicates whether or not a given prefix length is valid for use as a NAT64 prefix.

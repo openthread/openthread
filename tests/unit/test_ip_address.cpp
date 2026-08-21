@@ -929,6 +929,71 @@ void TestIp4Cidr(void)
     }
 }
 
+void TestIp6PrefixInvalidLengths(void)
+{
+    static const uint8_t kInvalidLengths[]               = {129, 130, 136, 137, 144, 200, 255};
+    static const uint8_t kRawPrefix[OT_IP6_ADDRESS_SIZE] = {
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x05, 0x00, 0x06,
+    };
+    static const char kExpectedPrefixString[] = "2001:db8:1:2:3:4:5:6";
+
+    OT_TOOL_PACKED_BEGIN
+    struct
+    {
+        Ip6::Prefix mPrefix;
+        uint8_t     mCanary[16];
+    } OT_TOOL_PACKED_END packedPrefix;
+
+    printf("\nTestIp6PrefixInvalidLengths()\n");
+
+    for (uint16_t len = 0; len <= 255; len++)
+    {
+        uint8_t length = static_cast<uint8_t>(len);
+
+        if (length <= Ip6::Prefix::kMaxLength)
+        {
+            VerifyOrQuit(Ip6::Prefix::SizeForLength(length) == (length + 7) / 8);
+        }
+        else
+        {
+            VerifyOrQuit(Ip6::Prefix::SizeForLength(length) == Ip6::Prefix::kMaxSize);
+        }
+    }
+
+    for (uint8_t invalidLen : kInvalidLengths)
+    {
+        char expectedString[Ip6::Prefix::kInfoStringSize];
+
+        memset(&packedPrefix, 0, sizeof(packedPrefix));
+        memset(packedPrefix.mCanary, 0xaa, sizeof(packedPrefix.mCanary));
+
+        packedPrefix.mPrefix.InitFrom(kRawPrefix, invalidLen);
+        VerifyOrQuit(packedPrefix.mPrefix.GetLength() == invalidLen);
+        VerifyOrQuit(!packedPrefix.mPrefix.IsValid());
+        VerifyOrQuit(packedPrefix.mPrefix.GetBytesSize() == Ip6::Prefix::kMaxSize);
+
+        for (uint8_t b : packedPrefix.mCanary)
+        {
+            VerifyOrQuit(b == 0xaa, "Prefix::InitFrom corrupted memory beyond prefix");
+        }
+
+        packedPrefix.mPrefix.Tidy();
+
+        VerifyOrQuit(packedPrefix.mPrefix.GetLength() == invalidLen, "Prefix::Tidy mutated invalid length");
+        VerifyOrQuit(memcmp(packedPrefix.mPrefix.GetBytes(), kRawPrefix, sizeof(kRawPrefix)) == 0,
+                     "Prefix::Tidy corrupted prefix bytes");
+
+        for (uint8_t b : packedPrefix.mCanary)
+        {
+            VerifyOrQuit(b == 0xaa, "Prefix::Tidy wrote out of bounds");
+        }
+
+        snprintf(expectedString, sizeof(expectedString), "%s/%u", kExpectedPrefixString, invalidLen);
+        VerifyOrQuit(strcmp(packedPrefix.mPrefix.ToString().AsCString(), expectedString) == 0,
+                     "Prefix::ToString() output mismatch for length > 128");
+    }
+}
+
 } // namespace ot
 
 int main(void)
@@ -939,6 +1004,7 @@ int main(void)
     ot::TestIp6PrefixFromString();
     ot::TestIp6Prefix();
     ot::TestIp6PrefixTidy();
+    ot::TestIp6PrefixInvalidLengths();
     ot::TestIp4MappedIp6Address();
     ot::TestIp4Ip6Translation();
     ot::TestIp4Cidr();
