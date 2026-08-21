@@ -274,8 +274,9 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
 
     Error     error = kErrorParse;
     FrameData frameData;
-    uint16_t  value;
-    uint8_t   size;
+    uint16_t  fcf;
+    PanId     panId;
+    uint8_t   value;
 
     VerifyOrExit(aFrame.GetPsdu() != nullptr);
 
@@ -284,36 +285,47 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Address Fields
 
-    SuccessOrExit(frameData.ReadUint<kLittleEndian>(mFcf));
+    SuccessOrExit(frameData.ReadUint<kLittleEndian>(fcf));
 
     // Only accept standard frame types (Beacon, Data, Ack, MAC Command).
     // Other types (e.g., Multipurpose) use a different FCF/header layout.
     // Also restrict frame version to 2003, 2006, 2015. Future frame
     // versions can alter the MAC header layout.
 
-    VerifyOrExit(ReadType(mFcf) <= kTypeMacCmd);
-    VerifyOrExit(ReadVersion(mFcf) <= kVersion2015);
+    value = ReadType(fcf);
+    VerifyOrExit(value <= kTypeMacCmd);
+    mType = static_cast<Type>(value);
 
-    if (IsSeqPresent(mFcf))
+    value = ReadVersion(fcf);
+    VerifyOrExit(value <= kVersion2015);
+    mVersion = static_cast<Version>(value);
+
+    mIsSecurityEnabled = IsSecurityEnabled(fcf);
+    mIsFramePending    = IsFramePending(fcf);
+    mIsAckRequest      = IsAckRequest(fcf);
+    mIsSeqNumPresent   = IsSeqPresent(fcf);
+    mIsIePresent       = IsIePresent(fcf);
+
+    if (mIsSeqNumPresent)
     {
         SuccessOrExit(frameData.ReadUint8(mSequenceNum));
     }
 
-    if (IsDstPanIdPresent(mFcf))
+    if (IsDstPanIdPresent(fcf))
     {
-        SuccessOrExit(frameData.ReadUint<kLittleEndian>(value));
-        mPanIds.SetDestination(value);
+        SuccessOrExit(frameData.ReadUint<kLittleEndian>(panId));
+        mPanIds.SetDestination(panId);
     }
 
-    SuccessOrExit(ParseAddress(frameData, ReadDstAddrMode(mFcf), mAddrs.mDestination));
+    SuccessOrExit(ParseAddress(frameData, ReadDstAddrMode(fcf), mAddrs.mDestination));
 
-    if (IsSrcPanIdPresent(mFcf))
+    if (IsSrcPanIdPresent(fcf))
     {
-        SuccessOrExit(frameData.ReadUint<kLittleEndian>(value));
-        mPanIds.SetSource(value);
+        SuccessOrExit(frameData.ReadUint<kLittleEndian>(panId));
+        mPanIds.SetSource(panId);
     }
 
-    SuccessOrExit(ParseAddress(frameData, ReadSrcAddrMode(mFcf), mAddrs.mSource));
+    SuccessOrExit(ParseAddress(frameData, ReadSrcAddrMode(fcf), mAddrs.mSource));
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
     // FCS
@@ -328,12 +340,15 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Aux Security Header
 
-    if (IsSecurityEnabled(mFcf))
+    if (mIsSecurityEnabled)
     {
-        SuccessOrExit(frameData.ReadUint8(mSecCtl));
+        uint8_t scf;
+        uint8_t size;
 
-        mSecurityLevel = ReadSecurityLevel(mSecCtl);
-        mKeyIdMode     = ReadKeyIdMode(mSecCtl);
+        SuccessOrExit(frameData.ReadUint8(scf));
+
+        mSecurityLevel = ReadSecurityLevel(scf);
+        mKeyIdMode     = ReadKeyIdMode(scf);
 
         VerifyOrExit(mSecurityLevel != kSecurityNone);
 
@@ -358,14 +373,14 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
 
     if (aMode == kParseSecurityHeader)
     {
-        VerifyOrExit(IsSecurityEnabled(mFcf), error = kErrorNotFound);
+        VerifyOrExit(mIsSecurityEnabled, error = kErrorNotFound);
         ExitNow(error = kErrorNone);
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Header IE
 
-    if (IsIePresent(mFcf))
+    if (mIsIePresent)
     {
 #if !OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
         ExitNow();
@@ -404,7 +419,7 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - - - - - - - -
     // MAC Command
 
-    if (ReadType(mFcf) == kTypeMacCmd)
+    if (mType == kTypeMacCmd)
     {
         VerifyOrExit(frameData.CanRead(sizeof(mCommandId)));
 
@@ -415,7 +430,7 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
         // encrypted payload, while in earlier versions, it is part of
         // the MAC header.
 
-        if (!IsVersion2015(mFcf))
+        if (mVersion != kVersion2015)
         {
             frameData.SkipOver(sizeof(mCommandId));
         }
@@ -789,7 +804,7 @@ Error Frame::GetCommandId(uint8_t &aCommandId) const
     ParseInfo info;
 
     SuccessOrExit(error = info.ParseFrom(*this, kParseFully));
-    VerifyOrExit(ReadType(info.mFcf) == kTypeMacCmd, error = kErrorNotFound);
+    VerifyOrExit(info.mType == kTypeMacCmd, error = kErrorNotFound);
     aCommandId = info.mCommandId;
 
 exit:
@@ -901,7 +916,7 @@ const HeaderIe *Frame::FindHeaderIe(HeaderIeMatcher aMatcher) const
 
     SuccessOrExit(info.ParseFrom(*this, kParseFully));
 
-    VerifyOrExit(IsIePresent(info.mFcf));
+    VerifyOrExit(info.mIsIePresent);
 
     // `ParseFrom()` already validates that Header IE(s) are
     // well-formed and contained within the frame. Here we
@@ -1098,9 +1113,9 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
 
     SuccessOrExit(rxInfo.ParseFrom(aRxFrame, kParseFully));
 
-    VerifyOrExit(IsVersion2015(rxInfo.mFcf));
-    VerifyOrExit(IsAckRequest(rxInfo.mFcf));
-    VerifyOrExit(IsSeqPresent(rxInfo.mFcf));
+    VerifyOrExit(rxInfo.mVersion == kVersion2015);
+    VerifyOrExit(rxInfo.mIsAckRequest);
+    VerifyOrExit(rxInfo.mIsSeqNumPresent);
 
     // Check `aRxFrame` has a valid destination address. The ack frame
     // will not use this as its source though and will always use no
@@ -1114,7 +1129,7 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
     buildInfo.mAddrs.mDestination = rxInfo.mAddrs.mSource;
     VerifyOrExit(!buildInfo.mAddrs.mDestination.IsNone());
 
-    if (IsSecurityEnabled(rxInfo.mFcf))
+    if (rxInfo.mIsSecurityEnabled)
     {
         VerifyOrExit(rxInfo.mSecurityLevel == kSecurityEncMic32);
         VerifyOrExit(rxInfo.mKeyIdMode == kKeyIdMode1);
@@ -1144,7 +1159,7 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
     SetFramePending(aIsFramePending);
     SetSequence(rxInfo.mSequenceNum);
 
-    if (IsSecurityEnabled(rxInfo.mFcf))
+    if (rxInfo.mIsSecurityEnabled)
     {
         SetKeyIndex(rxInfo.mKeyIndex);
     }
@@ -1233,7 +1248,6 @@ Frame::InfoString Frame::ToInfoString(void) const
 {
     InfoString string;
     ParseInfo  info;
-    uint8_t    type;
 
     string.Append("len:%u", mLength);
 
@@ -1243,16 +1257,14 @@ Frame::InfoString Frame::ToInfoString(void) const
         ExitNow();
     }
 
-    if (IsSeqPresent(info.mFcf))
+    if (info.mIsSeqNumPresent)
     {
         string.Append(", seqnum:%u", info.mSequenceNum);
     }
 
     string.Append(", type:");
 
-    type = ReadType(info.mFcf);
-
-    switch (type)
+    switch (info.mType)
     {
     case kTypeBeacon:
         string.Append("Beacon");
@@ -1285,15 +1297,15 @@ Frame::InfoString Frame::ToInfoString(void) const
         break;
 
     default:
-        string.Append("%u", type);
+        string.Append("%u", info.mType);
         break;
     }
 
     string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", info.mAddrs.mSource.ToString().AsCString(),
-                  info.mAddrs.mDestination.ToString().AsCString(), ToYesNo(IsSecurityEnabled(info.mFcf)),
-                  ToYesNo(IsAckRequest(info.mFcf)));
+                  info.mAddrs.mDestination.ToString().AsCString(), ToYesNo(info.mIsSecurityEnabled),
+                  ToYesNo(info.mIsAckRequest));
 
-    if (IsSecurityEnabled(info.mFcf))
+    if (info.mIsSecurityEnabled)
     {
         string.Append(", fc:%lu", ToUlong(info.mFrameCounter));
     }
