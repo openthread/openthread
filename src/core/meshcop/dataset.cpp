@@ -109,7 +109,7 @@ Error Dataset::ValidateTlvs(void) const
 
     for (const Tlv *tlv = GetTlvsStart(); tlv < end; tlv = tlv->GetNext())
     {
-        VerifyOrExit(!tlv->IsExtended() && ((tlv + 1) <= end) && (tlv->GetNext() <= end));
+        VerifyOrExit(((tlv + 1) <= end) && !tlv->IsExtended() && (tlv->GetNext() <= end));
         VerifyOrExit(IsTlvValid(*tlv));
 
         // Ensure there are no duplicate TLVs.
