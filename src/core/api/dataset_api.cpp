@@ -237,6 +237,7 @@ bool otDatasetAffectsConnectivity(otInstance *aInstance, const otOperationalData
     AssertPointerIsNotNull(aDatasetTlvs);
 
     SuccessOrExit(dataset.SetFrom(*aDatasetTlvs));
+    SuccessOrExit(dataset.ValidateTlvs());
     affects = dataset.AffectsConnectivity(AsCoreType(aInstance));
 
 exit:
