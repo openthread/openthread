@@ -873,12 +873,29 @@ otError otPlatRadioDisable(otInstance *aInstance);
 bool otPlatRadioIsEnabled(otInstance *aInstance);
 
 /**
- * Transition the radio from Receive to Sleep (turn off the radio).
+ * Transition the radio to the Sleep state (turn off the radio).
  *
- * @param[in] aInstance  The OpenThread instance structure.
+ * If the radio is already in the Sleep state, this function MUST return `OT_ERROR_NONE` with no effect.
  *
- * @retval OT_ERROR_NONE          Successfully transitioned to Sleep.
- * @retval OT_ERROR_BUSY          The radio was transmitting.
+ * If `otPlatRadioSleep()` is called while the radio is in the middle of receiving a frame or transmitting an ACK
+ * (e.g., during AIFS/turnaround wait or actively transmitting the ACK frame), the radio MUST complete the ongoing
+ * operation (finish frame reception and/or ACK transmission) and transition to Sleep immediately thereafter. In this
+ * scenario:
+ * - The radio MUST return `OT_ERROR_NONE` to indicate that the sleep request has been accepted and scheduled.
+ * - Upon finishing the frame reception (and any associated ACK transmission), the radio driver MUST invoke
+ *   `otPlatRadioReceiveDone()` to deliver the received frame (or report reception error) before transitioning
+ *   to Sleep.
+ *
+ * If any subsequent radio state transition function (e.g., `otPlatRadioReceive()` or `otPlatRadioTransmit()`) is
+ * called while a scheduled transition to Sleep is pending, the pending Sleep transition MUST be canceled/superseded,
+ * and the radio MUST transition to the newly requested state upon completing the ongoing reception and/or ACK
+ * transmission.
+ *
+ * @param[in] aInstance           The OpenThread instance structure.
+ *
+ * @retval OT_ERROR_NONE          Successfully transitioned to Sleep, radio is already in Sleep, or transition is
+ *                                accepted and scheduled.
+ * @retval OT_ERROR_BUSY          The radio was transmitting a frame (initiated by `otPlatRadioTransmit()`).
  * @retval OT_ERROR_INVALID_STATE The radio was disabled.
  */
 otError otPlatRadioSleep(otInstance *aInstance);
