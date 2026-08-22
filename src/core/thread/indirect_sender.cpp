@@ -381,10 +381,10 @@ exit:
     return error;
 }
 
-void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
-                                            const FrameContext &aContext,
-                                            Error               aError,
-                                            Child              &aChild)
+void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame::ParseInfo &aFrameInfo,
+                                            const FrameContext            &aContext,
+                                            Error                          aError,
+                                            Child                         &aChild)
 {
     Message *message    = aChild.GetIndirectMessage();
     uint16_t nextOffset = aContext.mMessageNextOffset;
@@ -484,9 +484,9 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         }
 #endif
 
-        if (!aFrame.IsEmpty())
+        if (!aFrameInfo.GetTxFrame()->IsEmpty())
         {
-            IgnoreError(aFrame.GetDstAddr(macDest));
+            macDest = aFrameInfo.mAddrs.mDestination;
             Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageTransmit, *message, txError, &macDest);
         }
 
@@ -501,7 +501,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         message->InvokeTxCallback(txError);
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        if (aFrame.IsEmpty())
+        if (aFrameInfo.GetTxFrame()->IsEmpty())
         {
             aChild.GetMacAddress(macDest);
         }
@@ -567,15 +567,15 @@ Error IndirectSender::PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame,
     return error;
 }
 
-void IndirectSender::HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
-                                                  const FrameContext &aContext,
-                                                  Error               aError,
-                                                  CslNeighbor        &aCslNeighbor)
+void IndirectSender::HandleSentFrameToCslNeighbor(const Mac::TxFrame::ParseInfo &aFrameInfo,
+                                                  const FrameContext            &aContext,
+                                                  Error                          aError,
+                                                  CslNeighbor                   &aCslNeighbor)
 {
 #if OPENTHREAD_FTD
-    HandleSentFrameToChild(aFrame, aContext, aError, static_cast<Child &>(aCslNeighbor));
+    HandleSentFrameToChild(aFrameInfo, aContext, aError, static_cast<Child &>(aCslNeighbor));
 #else
-    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aFrameInfo);
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aError);
     OT_UNUSED_VARIABLE(aCslNeighbor);

@@ -79,13 +79,15 @@ void WakeupTxScheduler::RequestWakeupFrameTransmission(void) { Get<Mac::Mac>().R
 
 Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
 {
-    Mac::TxFrame      *frame = nullptr;
-    Mac::Address       source;
-    uint32_t           radioTxDelay;
-    uint32_t           rendezvousTimeUs;
-    TimeMicro          nowUs    = TimerMicro::GetNow();
-    Radio::Time64      radioNow = Get<Radio::Radio>().GetNow();
-    Mac::ConnectionIe *connectionIe;
+    Mac::TxFrame           *frame = nullptr;
+    Mac::TxFrame::ParseInfo txFrameInfo;
+    Mac::Address            source;
+    uint32_t                radioTxDelay;
+    uint32_t                rendezvousTimeUs;
+    TimeMicro               nowUs    = TimerMicro::GetNow();
+    Radio::Time64           radioNow = Get<Radio::Radio>().GetNow();
+    Mac::RendezvousTimeIe  *rendezvousTimeIe;
+    Mac::ConnectionIe      *connectionIe;
 
     VerifyOrExit(mIsRunning);
 
@@ -102,6 +104,11 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     VerifyOrExit(frame->GenerateWakeupFrame(Get<Mac::Mac>().GetPanId(), mWakeupRequest, source) == kErrorNone,
                  frame = nullptr);
 
+    if (txFrameInfo.ParseFrom(*frame, Mac::Frame::kParseFully) != kErrorNone)
+    {
+        ExitNow(frame = nullptr);
+    }
+
     frame->SetTargetTxTime(radioNow + radioTxDelay, radioNow);
     frame->SetCsmaCaEnabled(kWakeupFrameTxCca);
     frame->SetMaxCsmaBackoffs(0);
@@ -113,10 +120,12 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     rendezvousTimeUs = mIntervalUs;
     rendezvousTimeUs += (mIntervalUs - (kWakeupFrameLength + kParentRequestLength) * Radio::kOctetDuration) / 2;
 
-    frame->Find<Mac::RendezvousTimeIe>()->SetRendezvousTime(
-        ClampToUint16(rendezvousTimeUs / Radio::kTenSymbolsDuration));
+    rendezvousTimeIe = txFrameInfo.Find<Mac::RendezvousTimeIe>();
+    VerifyOrExit(rendezvousTimeIe != nullptr, frame = nullptr);
+    rendezvousTimeIe->SetRendezvousTime(ClampToUint16(rendezvousTimeUs / Radio::kTenSymbolsDuration));
 
-    connectionIe = frame->Find<Mac::ConnectionIe>();
+    connectionIe = txFrameInfo.Find<Mac::ConnectionIe>();
+    VerifyOrExit(connectionIe != nullptr, frame = nullptr);
     connectionIe->SetRetryInterval(kConnectionRetryInterval);
     connectionIe->SetRetryCount(kConnectionRetryCount);
 

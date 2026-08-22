@@ -456,14 +456,14 @@ private:
     Error RemoveUnsecureReassemblyMessage(EvictReason aEvictReason);
     void  HandleDiscoverComplete(void);
 
-    void          HandleReceivedFrame(Mac::RxFrame &aFrame);
+    void          HandleReceivedFrame(Mac::RxFrame::ParseInfo &aFrameInfo);
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    Neighbor     *UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
-                                            Error               aError,
-                                            const Mac::Address &aMacDest,
-                                            bool                aIsDataPoll);
+    Neighbor     *UpdateNeighborOnSentFrame(Mac::TxFrame::ParseInfo &aFrameInfo,
+                                            Error                    aError,
+                                            const Mac::Address      &aMacDest,
+                                            bool                     aIsDataPoll);
     void UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError, bool aAllowNeighborRemove, uint8_t aFailLimit);
-    void HandleSentFrame(Mac::TxFrame &aFrame, Error aError);
+    void HandleSentFrame(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
     void UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
     void FinalizeMessageDirectTx(Message &aMessage, Error aError);
     void FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction);
@@ -497,7 +497,7 @@ private:
     void LogMessage(MessageAction aAction, const Message &aMessage);
     void LogMessage(MessageAction aAction, const Message &aMessage, Error aError);
     void LogMessage(MessageAction aAction, const Message &aMessage, Error aError, const Mac::Address *aAddress);
-    void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
+    void LogFrame(const char *aActionText, const Mac::Frame::ParseInfo &aFrameInfo, Error aError);
     void LogFragmentFrameDrop(Error aError, const RxInfo &aRxInfo, const Lowpan::FragmentHeader &aFragmentHeader);
     void LogLowpanHcFrameDrop(Error aError, const RxInfo &aRxInfo);
 

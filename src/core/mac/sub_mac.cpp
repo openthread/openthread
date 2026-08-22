@@ -314,7 +314,8 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
 
 Error SubMac::Send(void)
 {
-    Error error = kErrorNone;
+    Error              error = kErrorNone;
+    TxFrame::ParseInfo frameInfo;
 
     switch (mState)
     {
@@ -340,15 +341,23 @@ Error SubMac::Send(void)
 
     mTimer.Stop();
 
+    // We ignore the parsing error here because `Send()` must allow
+    // transmission of raw frames (when `LinkRaw` is enabled) which may
+    // not follow the standard IEEE 802.15.4 frame format.
+    // `ProcessTransmitSecurity()` validates `mParsedFully` before
+    // performing any security operations on the frame.
+
+    IgnoreError(frameInfo.ParseFrom(mTransmitFrame, Frame::kParseFully));
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     if (mRadioFilterEnabled)
     {
-        mCallbacks.TransmitDone(mTransmitFrame, nullptr, mTransmitFrame.GetAckRequest() ? kErrorNoAck : kErrorNone);
+        mCallbacks.TransmitDone(frameInfo, nullptr, frameInfo.mIsAckRequest ? kErrorNoAck : kErrorNone);
         ExitNow();
     }
 #endif
 
-    ProcessTransmitSecurity();
+    ProcessTransmitSecurity(frameInfo);
 
     mCsmaBackoffs    = 0;
     mTransmitRetries = 0;
@@ -363,46 +372,38 @@ exit:
     return error;
 }
 
-void SubMac::ProcessTransmitSecurity(void)
+void SubMac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
 {
-    const ExtAddress *extAddress = nullptr;
-    uint8_t           keyIndex;
+    VerifyOrExit(aFrameInfo.mParsedFully);
+    VerifyOrExit(aFrameInfo.mIsSecurityEnabled);
 
-    VerifyOrExit(mTransmitFrame.GetSecurityEnabled());
-    VerifyOrExit(!mTransmitFrame.IsSecurityProcessed());
+    VerifyOrExit(!aFrameInfo.GetTxFrame()->IsSecurityProcessed());
 
-    if (!mTransmitFrame.IsHeaderUpdated())
+    if (!aFrameInfo.GetTxFrame()->IsHeaderUpdated())
     {
-        keyIndex = mKeyTrio.GetKeyIndex();
-        mTransmitFrame.SetKeyIndex(keyIndex);
-    }
-    else
-    {
-        SuccessOrExit(mTransmitFrame.GetKeyIndex(keyIndex));
+        aFrameInfo.WriteKeyIndex(mKeyTrio.GetKeyIndex());
     }
 
     VerifyOrExit(ShouldHandle(kCapTransmitSec));
 
-    VerifyOrExit(mTransmitFrame.HasKeyIdMode(Frame::kKeyIdMode1));
+    VerifyOrExit(aFrameInfo.mKeyIdMode == Frame::kKeyIdMode1);
 
-    mTransmitFrame.SetAesKey(mKeyTrio.SelectKey(keyIndex));
+    aFrameInfo.GetTxFrame()->SetAesKey(mKeyTrio.SelectKey(aFrameInfo.mKeyIndex));
 
-    if (!mTransmitFrame.IsHeaderUpdated())
+    if (!aFrameInfo.GetTxFrame()->IsHeaderUpdated())
     {
         uint32_t frameCounter = GetFrameCounter();
 
-        mTransmitFrame.SetFrameCounter(frameCounter);
-        SignalFrameCounterUsed(frameCounter, keyIndex);
+        aFrameInfo.WriteFrameCounter(frameCounter);
+        SignalFrameCounterUsed(frameCounter, aFrameInfo.mKeyIndex);
     }
-
-    extAddress = &GetExtAddress();
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(!mTransmitFrame.Has<TimeIe>());
+    VerifyOrExit(!aFrameInfo.Has<TimeIe>());
 #endif
 
-    mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
+    aFrameInfo.ProcessTransmitAesCcm(GetExtAddress());
 
 exit:
     return;
@@ -513,21 +514,41 @@ exit:
 
 void SubMac::HandleTransmitStarted(TxFrame &aFrame)
 {
+    TxFrame::ParseInfo frameInfo;
+
     if (mPcapCallback.IsSet())
     {
         mPcapCallback.Invoke(&aFrame, true);
     }
 
-    if (ShouldHandle(kCapAckTimeout) && aFrame.GetAckRequest())
+    VerifyOrExit(ShouldHandle(kCapAckTimeout));
+
+    SuccessOrExit(frameInfo.ParseFrom(aFrame, Frame::kParseAddrFields));
+
+    if (frameInfo.mIsAckRequest)
     {
         StartTimer(kAckTimeout);
     }
+
+exit:
+    return;
 }
 
 void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 {
-    bool ccaSuccess = true;
-    bool shouldRetx;
+    bool               ccaSuccess = true;
+    bool               shouldRetx;
+    TxFrame::ParseInfo frameInfo;
+
+    // We ignore the parsing error here because `HandleTransmitDone()`
+    // must proceed with transmit-done handling (stopping timers,
+    // recording CCA status, handling retries) even if the frame is not
+    // a valid IEEE 802.15.4 frame (e.g., when `LinkRaw` is enabled with
+    // a vendor-specific format). Sub-handlers methods like
+    // `SignalFrameCounterUsedOnTxDone()` validate `mParsedFully`
+    // in `frameInfo` individually.
+
+    IgnoreError(frameInfo.ParseFrom(aFrame, Frame::kParseFully));
 
     // Stop ack timeout timer.
 
@@ -554,7 +575,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
             mCallbacks.RecordCcaStatus(ccaSuccess, aFrame.GetChannel());
         }
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        UpdateCslLastSyncTimestamp(aFrame, aAckFrame);
+        UpdateCslLastSyncTimestamp(frameInfo, aAckFrame);
 #endif
         break;
 
@@ -563,7 +584,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         OT_UNREACHABLE_CODE(ExitNow());
     }
 
-    SignalFrameCounterUsedOnTxDone(aFrame);
+    SignalFrameCounterUsedOnTxDone(frameInfo);
 
     // Determine whether a CSMA retry is required.
 
@@ -581,7 +602,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     shouldRetx = ((aError != kErrorNone) && ShouldHandle(kCapTransmitRetries) &&
                   (mTransmitRetries < aFrame.GetMaxFrameRetries()));
 
-    mCallbacks.RecordFrameTransmitStatus(aFrame, aError, mTransmitRetries, shouldRetx);
+    mCallbacks.RecordFrameTransmitStatus(frameInfo, aError, mTransmitRetries, shouldRetx);
 
     if (shouldRetx)
     {
@@ -589,7 +610,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         aFrame.SetIsARetransmission(true);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
-        ReprocessSecurityForRetx(aFrame);
+        ReprocessSecurityForRetx(frameInfo);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
@@ -622,7 +643,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     }
 #endif
 
-    mCallbacks.TransmitDone(aFrame, aAckFrame, aError);
+    mCallbacks.TransmitDone(frameInfo, aAckFrame, aError);
 
 exit:
     return;
@@ -630,32 +651,31 @@ exit:
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
-void SubMac::ReprocessSecurityForRetx(TxFrame &aFrame)
+void SubMac::ReprocessSecurityForRetx(TxFrame::ParseInfo &aFrameInfo)
 {
     // Re-processes transmit security on a frame being retransmitted if
     // it contains Header IEs. The frame is first restored back to
     // plaintext and then re-encrypted with a new frame counter value.
 
-    VerifyOrExit(aFrame.GetSecurityEnabled() && aFrame.IsIePresent());
+    VerifyOrExit(aFrameInfo.mParsedFully);
+    VerifyOrExit(aFrameInfo.mIsSecurityEnabled);
+    VerifyOrExit(aFrameInfo.mIsIePresent);
 
     // When transmit security is handled by `SubMac`, the AES key is already set
-    // on `aFrame`. However, when transmit security is delegated to the radio
-    // platform, the radio is not required to set or preserve the AES key on
-    // `aFrame`. To ensure `RestoreTransmitSecurity()` can properly decrypt the
-    // frame back to plaintext, we determine and set the key on `aFrame` using
-    // its key index.
+    // on `aFrameInfo.GetTxFrame()`. However, when transmit security is delegated
+    // to the radio platform, the radio is not required to set or preserve the AES
+    // key on the frame. To ensure `RestoreTransmitSecurity()` can properly decrypt
+    // the frame back to plaintext, we determine and set the key on the frame
+    // using its key index.
 
-    if (!ShouldHandle(kCapTransmitSec))
+    if (!ShouldHandle(kCapTransmitSec) && (aFrameInfo.mKeyIdMode == Frame::kKeyIdMode1))
     {
-        uint8_t keyIndex;
-
-        SuccessOrExit(aFrame.GetKeyIndex(keyIndex));
-        aFrame.SetAesKey(mKeyTrio.SelectKey(keyIndex));
+        aFrameInfo.GetTxFrame()->SetAesKey(mKeyTrio.SelectKey(aFrameInfo.mKeyIndex));
     }
 
-    aFrame.RestoreTransmitSecurity(GetExtAddress());
+    aFrameInfo.RestoreTransmitSecurity(GetExtAddress());
 
-    ProcessTransmitSecurity();
+    ProcessTransmitSecurity(aFrameInfo);
 
 exit:
     return;
@@ -663,16 +683,9 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
-void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
+void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame::ParseInfo &aFrameInfo)
 {
-    Frame::KeyIdMode keyIdMode;
-    uint8_t          keyIndex;
-    uint32_t         frameCounter;
-    bool             allowError = false;
-
-    OT_UNUSED_VARIABLE(allowError);
-
-    VerifyOrExit(!ShouldHandle(kCapTransmitSec) && aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated());
+    VerifyOrExit(!ShouldHandle(kCapTransmitSec));
 
     // In an FTD/MTD build, if/when link-raw is enabled, the `TxFrame`
     // is prepared and given by user and may not necessarily follow 15.4
@@ -683,17 +696,21 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
     // OpenThread core, we expect no error and therefore assert if
     // parsing fails.
 
+    if (!aFrameInfo.mParsedFully)
+    {
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    allowError = Get<LinkRaw>().IsEnabled();
+        VerifyOrExit(!Get<LinkRaw>().IsEnabled());
 #endif
+        OT_ASSERT(false);
+        OT_UNREACHABLE_CODE(ExitNow());
+    }
 
-    VerifyOrExit(aFrame.GetKeyIdMode(keyIdMode) == kErrorNone, OT_ASSERT(allowError));
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+    VerifyOrExit(aFrameInfo.mIsSecurityEnabled);
+    VerifyOrExit(aFrameInfo.GetTxFrame()->IsHeaderUpdated());
 
-    VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == kErrorNone, OT_ASSERT(allowError));
-    VerifyOrExit(aFrame.GetKeyIndex(keyIndex) == kErrorNone, OT_ASSERT(allowError));
+    VerifyOrExit(aFrameInfo.mKeyIdMode == Frame::kKeyIdMode1);
 
-    SignalFrameCounterUsed(frameCounter, keyIndex);
+    SignalFrameCounterUsed(aFrameInfo.mFrameCounter, aFrameInfo.mKeyIndex);
 
 exit:
     return;

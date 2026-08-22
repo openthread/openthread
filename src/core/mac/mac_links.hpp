@@ -205,21 +205,6 @@ public:
     }
 
     /**
-     * Sets the Sequence Number value on all supported radio tx frames.
-     *
-     * @param[in]  aSequence  The Sequence Number value.
-     */
-    void SetSequence(uint8_t aSequence)
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        mTxFrame802154.SetSequence(aSequence);
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-        mTxFrameTrel.SetSequence(aSequence);
-#endif
-    }
-
-    /**
      * Sets the maximum number of the CSMA-CA backoffs on all supported radio tx
      * frames.
      *
@@ -649,14 +634,11 @@ public:
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
-     * Sets the current MAC frame counter value from the value from a `TxFrame`.
+     * Sets the MAC frame counter in a TX frame for TREL link.
      *
-     * @param[in] TxFrame  The `TxFrame` from which to get the counter value.
-     *
-     * @retval kErrorNone            If successful.
-     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
+     * @param[in,out] aFrameInfo  The TX frame information to update.
      */
-    void SetMacFrameCounter(TxFrame &aFrame);
+    void SetMacFrameCounter(TxFrame::ParseInfo &aFrameInfo);
 #endif
 
 private:

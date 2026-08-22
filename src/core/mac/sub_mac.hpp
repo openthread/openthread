@@ -168,7 +168,7 @@ public:
          * @note Unlike `TransmitDone` which is invoked after all re-transmission attempts to indicate the final status
          * of a frame transmission, this method is invoked on all frame transmission attempts.
          *
-         * @param[in] aFrame      The transmitted frame.
+         * @param[in] aFrameInfo  The transmitted frame information.
          * @param[in] aError      kErrorNone when the frame was transmitted successfully,
          *                        kErrorNoAck when the frame was transmitted but no ACK was received,
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -177,20 +177,23 @@ public:
          * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
          *                        when there was an error in current transmission attempt.
          */
-        void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
+        void RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
+                                       Error                     aError,
+                                       uint8_t                   aRetryCount,
+                                       bool                      aWillRetx);
 
         /**
          * The method notifies user of `SubMac` that the transmit operation has completed, providing, if applicable,
          * the received ACK frame.
          *
-         * @param[in]  aFrame     The transmitted frame.
+         * @param[in]  aFrameInfo The transmitted frame information.
          * @param[in]  aAckFrame  A pointer to the ACK frame, `nullptr` if no ACK was received.
          * @param[in]  aError     kErrorNone when the frame was transmitted,
          *                        kErrorNoAck when the frame was transmitted but no ACK was received,
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
          *                        kErrorAbort when transmission was aborted for other reasons.
          */
-        void TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+        void TransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError);
 
         /**
          * Notifies user of `SubMac` that energy scan is complete.
@@ -637,8 +640,8 @@ private:
     bool ShouldHandle(Capability aCapability) const;
     bool ShouldHandleCsmaBackoff(void) const;
 
-    void ProcessTransmitSecurity(void);
-    void ReprocessSecurityForRetx(TxFrame &aFrame);
+    void ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo);
+    void ReprocessSecurityForRetx(TxFrame::ParseInfo &aFrameInfo);
     void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyIndex);
     void StartCsmaBackoff(void);
     void StartTimerForBackoff(uint8_t aBackoffExponent);
@@ -650,7 +653,7 @@ private:
     void HandleReceiveDone(RxFrame *aFrame, Error aError);
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
-    void SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame);
+    void SignalFrameCounterUsedOnTxDone(const TxFrame::ParseInfo &aFrameInfo);
     void HandleEnergyScanDone(int8_t aMaxRssi);
     void HandleTimer(void);
 
@@ -665,7 +668,7 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     void     CslInit(void);
     void     RestartCslTimerAfterSyncUpdate(void);
-    void     UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
+    void     UpdateCslLastSyncTimestamp(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame);
     void     UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
     void     SetCslLastSyncToNow(void);
     void     HandleCslTimer(void);

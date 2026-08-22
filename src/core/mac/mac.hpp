@@ -754,17 +754,21 @@ private:
     // Callbacks from `SubMac` or `Trel::Link`
     void HandleReceivedFrame(RxFrame *aFrame, Error aError);
     void RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel);
-    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
-    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+    void RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
+                                   Error                     aError,
+                                   uint8_t                   aRetryCount,
+                                   bool                      aWillRetx);
+    void HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError);
     void EnergyScanDone(int8_t aEnergyScanMaxRssi);
 
-    Error ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    Error ProcessReceiveSecurity(RxFrame::ParseInfo &aFrameInfo, const Address &aSrcAddr, Neighbor *aNeighbor);
     void  ProcessTransmitSecurity(TxFrame &aFrame);
+    void  ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    Error ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
+    Error ProcessEnhAckSecurity(TxFrame::ParseInfo &aTxFrameInfo, RxFrame::ParseInfo &aAckFrameInfo);
 #endif
-    const KeyMaterial *DetermineMode1Key(const Frame &aFrame) const;
-    const KeyMaterial *DetermineMode1KeyAndSequence(const Frame &aFrame, uint32_t &aKeySequence) const;
+    const KeyMaterial *DetermineMode1Key(const Frame::ParseInfo &aFrameInfo) const;
+    const KeyMaterial *DetermineMode1KeyAndSequence(const Frame::ParseInfo &aFrameInfo, uint32_t &aKeySequence) const;
 
     void     UpdateIdleMode(void);
     bool     IsPending(Operation aOperation) const { return mPendingOperations & (1U << aOperation); }
@@ -779,27 +783,31 @@ private:
     bool     ShouldSendBeacon(void) const;
     bool     IsJoinable(void) const;
     void     BeginTransmit(void);
+    void     HandleTxFramePrepFailed(TxFrames &aTxFrames);
     Error    FilterDestShortAddress(ShortAddress aDestAddress) const;
-    void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame);
-    void     HandleMacCommand(RxFrame &aFrame);
+    void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame::ParseInfo &aRxFrameInfo);
+    void     HandleMacCommand(RxFrame::ParseInfo &aFrameInfo);
     void     HandleTimer(void);
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    Error ProcessTxDone(TxFrame &aFrame, RxFrame *aAckFrame, Error &aError);
+    Error ProcessTxDone(TxFrame::ParseInfo &aFrameInfo, RxFrame::ParseInfo &aAckFrameInfo, Error &aError);
 #endif
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    Error ProcessMultiRadioTxDone(TxFrame &aFrame, Error &aError);
+    Error ProcessMultiRadioTxDone(TxFrame::ParseInfo &aFrameInfo, Error &aError);
 #endif
 
     Error CanScan(void) const;
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
     void  PerformActiveScan(void);
-    void  ReportActiveScanResult(const RxFrame *aBeaconFrame);
+    void  ReportActiveScanResult(const RxFrame::ParseInfo *aBeaconFrameInfo);
     void  PerformEnergyScan(void);
     void  ReportEnergyScanResult(int8_t aRssi);
 
-    void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
-    void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
+    void LogFrameRxFailure(const RxFrame::ParseInfo &aFrameInfo, Error aError) const;
+    void LogFrameTxFailure(const TxFrame::ParseInfo &aFrameInfo,
+                           Error                     aError,
+                           uint8_t                   aRetryCount,
+                           bool                      aWillRetx) const;
     void LogBeacon(const char *aActionText) const;
     void LogOperation(OperationAction aAction, Operation aOperation) const;
 
@@ -807,14 +815,14 @@ private:
     static const char *OperationActionToString(OperationAction aAction);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
+    void ProcessCsl(const RxFrame::ParseInfo &aFrameInfo, const Address &aSrcAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     void UpdateCslParameters(void);
     void UpdateCslState(void);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
+    void ProcessEnhAckProbing(const RxFrame::ParseInfo &aFrameInfo, const Neighbor &aNeighbor);
 #endif
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     void UpdateWakeupListening(void);

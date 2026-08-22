@@ -722,25 +722,20 @@ void Core::Process(Node &aNode)
 
 void Core::ProcessRadio(Node &aNode)
 {
-    Mac::Address dstAddr;
-    uint16_t     dstPanId;
-    bool         ackRequested;
-    AckMode      ackMode = kNoAck;
-    Node        *ackNode = nullptr;
+    Mac::TxFrame::ParseInfo txFrameInfo;
+    Mac::Address            dstAddr;
+    uint16_t                dstPanId;
+    bool                    ackRequested;
+    AckMode                 ackMode = kNoAck;
+    Node                   *ackNode = nullptr;
 
     VerifyOrExit(aNode.mRadio.mState == Radio::kStateTransmit);
 
-    if (aNode.mRadio.mTxFrame.GetDstAddr(dstAddr) != kErrorNone)
-    {
-        dstAddr.SetNone();
-    }
+    IgnoreError(txFrameInfo.ParseFrom(aNode.mRadio.mTxFrame, Mac::Frame::kParseFully));
 
-    if (aNode.mRadio.mTxFrame.GetDstPanId(dstPanId) != kErrorNone)
-    {
-        dstPanId = Mac::kPanIdBroadcast;
-    }
-
-    ackRequested = aNode.mRadio.mTxFrame.GetAckRequest();
+    dstAddr  = txFrameInfo.mAddrs.mDestination;
+    dstPanId = txFrameInfo.mPanIds.IsDestinationPresent() ? txFrameInfo.mPanIds.GetDestination() : Mac::kPanIdBroadcast;
+    ackRequested = txFrameInfo.mIsAckRequest;
 
     SuccessOrQuit(otMacFrameProcessTxSfd(&aNode.mRadio.mTxFrame, mNow, &aNode.mRadio.mRadioContext));
     static_cast<Radio::Frame &>(aNode.mRadio.mTxFrame).UpdateFcs();
@@ -816,13 +811,10 @@ void Core::ProcessRadio(Node &aNode)
 
             if (matchesDst && !dstAddr.IsNone() && !dstAddr.IsBroadcast() && ackRequested)
             {
-                Mac::Address srcAddr;
-
                 ackMode = kSendAckNoFramePending;
                 ackNode = &rxNode;
 
-                if ((aNode.mRadio.mTxFrame.GetSrcAddr(srcAddr) == kErrorNone) &&
-                    rxNode.mRadio.HasFramePendingFor(srcAddr))
+                if (rxNode.mRadio.HasFramePendingFor(txFrameInfo.mAddrs.mSource))
                 {
                     ackMode                                      = kSendAckFramePending;
                     rxFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
@@ -849,7 +841,7 @@ void Core::ProcessRadio(Node &aNode)
         const Mac::RxFrame &rxFrame =
             static_cast<const Mac::RxFrame &>(static_cast<const Mac::Frame &>(aNode.mRadio.mTxFrame));
 
-        if (rxFrame.IsVersion2015())
+        if (txFrameInfo.mVersion == Mac::Frame::kVersion2015)
         {
             uint8_t ackIeData[OT_ACK_IE_MAX_SIZE];
             uint8_t ackIeDataLength = 0;
@@ -864,14 +856,13 @@ void Core::ProcessRadio(Node &aNode)
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
             {
-                uint8_t      linkMetricsData[OT_ENH_PROBING_IE_DATA_MAX_SIZE];
-                uint8_t      linkMetricsDataLen;
-                Mac::Address srcAddr;
+                uint8_t linkMetricsData[OT_ENH_PROBING_IE_DATA_MAX_SIZE];
+                uint8_t linkMetricsDataLen;
 
-                if (aNode.mRadio.mTxFrame.GetSrcAddr(srcAddr) == kErrorNone)
+                if (!txFrameInfo.mAddrs.mSource.IsNone())
                 {
-                    linkMetricsDataLen = ackNode->mRadio.GenerateEnhAckProbingData(srcAddr, kDefaultRxLqi,
-                                                                                   kDefaultRxRssi, linkMetricsData);
+                    linkMetricsDataLen = ackNode->mRadio.GenerateEnhAckProbingData(
+                        txFrameInfo.mAddrs.mSource, kDefaultRxLqi, kDefaultRxRssi, linkMetricsData);
 
                     if (linkMetricsDataLen > 0)
                     {

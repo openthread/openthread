@@ -38,29 +38,23 @@
 
 namespace ot {
 
-Error ScanResult::PopulateFromBeacon(const Mac::RxFrame *aBeaconFrame)
+Error ScanResult::PopulateFromBeacon(const Mac::RxFrame::ParseInfo &aFrameInfo)
 {
-    Error        error = kErrorNone;
-    Mac::Address address;
+    Error error = kErrorNone;
 
     Clear();
 
-    VerifyOrExit(aBeaconFrame != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aFrameInfo.mType == Mac::Frame::kTypeBeacon, error = kErrorParse);
 
-    VerifyOrExit(aBeaconFrame->GetType() == Mac::Frame::kTypeBeacon, error = kErrorParse);
+    VerifyOrExit(aFrameInfo.mAddrs.mSource.IsExtended(), error = kErrorParse);
+    mExtAddress = aFrameInfo.mAddrs.mSource.GetExtended();
 
-    SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
-    VerifyOrExit(address.IsExtended(), error = kErrorParse);
-    mExtAddress = address.GetExtended();
+    mPanId =
+        aFrameInfo.mPanIds.IsSourcePresent() ? aFrameInfo.mPanIds.GetSource() : aFrameInfo.mPanIds.GetDestination();
 
-    if (aBeaconFrame->GetSrcPanId(mPanId) != kErrorNone)
-    {
-        IgnoreError(aBeaconFrame->GetDstPanId(mPanId));
-    }
-
-    mChannel = aBeaconFrame->GetChannel();
-    mRssi    = aBeaconFrame->GetRssi();
-    mLqi     = aBeaconFrame->GetLqi();
+    mChannel = aFrameInfo.GetRxFrame()->GetChannel();
+    mRssi    = aFrameInfo.GetRxFrame()->GetRssi();
+    mLqi     = aFrameInfo.GetRxFrame()->GetLqi();
 
 #if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
     {
@@ -68,7 +62,7 @@ Error ScanResult::PopulateFromBeacon(const Mac::RxFrame *aBeaconFrame)
         const Mac::BeaconHeader  *beaconHeader;
         const Mac::BeaconPayload *beaconPayload;
 
-        SuccessOrExit(aBeaconFrame->GetPayload(frameData));
+        frameData = aFrameInfo.mPayload;
 
         beaconHeader = frameData.Read<Mac::BeaconHeader>();
         VerifyOrExit((beaconHeader != nullptr) && beaconHeader->IsValid());

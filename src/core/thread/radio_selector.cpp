@@ -125,12 +125,11 @@ void RadioSelector::UpdateOnReceive(Neighbor &aNeighbor, Radio::Type aRadioType,
     }
 }
 
-void RadioSelector::UpdateOnSendDone(Mac::TxFrame &aFrame, Error aTxError)
+void RadioSelector::UpdateOnSendDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error aTxError)
 {
-    LogLevel     logLevel  = kLogLevelInfo;
-    Radio::Type  radioType = aFrame.GetRadioType();
-    Mac::Address macDest;
-    Neighbor    *neighbor;
+    LogLevel    logLevel  = kLogLevelInfo;
+    Radio::Type radioType = aFrameInfo.GetTxFrame()->GetRadioType();
+    Neighbor   *neighbor;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     if (radioType == Radio::kTypeTrel)
@@ -142,10 +141,9 @@ void RadioSelector::UpdateOnSendDone(Mac::TxFrame &aFrame, Error aTxError)
     }
 #endif
 
-    VerifyOrExit(aFrame.GetAckRequest());
+    VerifyOrExit(aFrameInfo.mIsAckRequest);
 
-    IgnoreError(aFrame.GetDstAddr(macDest));
-    neighbor = Get<NeighborTable>().FindNeighbor(macDest, Neighbor::kInStateAnyExceptInvalid);
+    neighbor = Get<NeighborTable>().FindNeighbor(aFrameInfo.mAddrs.mDestination, Neighbor::kInStateAnyExceptInvalid);
     VerifyOrExit(neighbor != nullptr);
 
     if (neighbor->GetSupportedRadioTypes().Contains(radioType))

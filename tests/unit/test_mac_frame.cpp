@@ -290,11 +290,9 @@ void TestMacHeader(void)
         uint8_t                 psdu[OT_RADIO_FRAME_MAX_SIZE];
         uint8_t                 offset;
         Mac::TxFrame            frame;
+        Mac::TxFrame::ParseInfo parseInfo;
         Mac::TxFrame::BuildInfo buildInfo;
-        Mac::Address            address;
-        Mac::PanId              panId;
         Mac::Frame::Lengths     lengths;
-        Error                   error;
 
         frame.mPsdu      = psdu;
         frame.mLength    = 0;
@@ -369,50 +367,38 @@ void TestMacHeader(void)
         VerifyOrQuit(lengths.mFooter == testCase.mFooterLength);
         VerifyOrQuit(frame.GetLength() == testCase.mHeaderLength + testCase.mFooterLength);
 
-        VerifyOrQuit(frame.GetType() == Mac::Frame::kTypeData);
-        VerifyOrQuit(!frame.IsAck());
-        VerifyOrQuit(frame.GetVersion() == testCase.mVersion);
-        VerifyOrQuit(frame.GetSecurityEnabled() == (testCase.mSecurity != kNoSec));
-        VerifyOrQuit(!frame.GetFramePending());
-        VerifyOrQuit(!frame.IsIePresent());
-        VerifyOrQuit(frame.GetAckRequest() == (testCase.mDstAddrType != kNoneAddr));
-        SuccessOrQuit(frame.GetSrcAddr(address));
-        VerifyOrQuit(CompareAddresses(address, buildInfo.mAddrs.mSource));
-        SuccessOrQuit(frame.GetDstAddr(address));
-        VerifyOrQuit(CompareAddresses(address, buildInfo.mAddrs.mDestination));
+        SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseFully));
+
+        VerifyOrQuit(parseInfo.mType == Mac::Frame::kTypeData);
+        VerifyOrQuit(parseInfo.mVersion == testCase.mVersion);
+        VerifyOrQuit(parseInfo.mIsSecurityEnabled == (testCase.mSecurity != kNoSec));
+        VerifyOrQuit(!parseInfo.mIsFramePending);
+        VerifyOrQuit(!parseInfo.mIsIePresent);
+        VerifyOrQuit(parseInfo.mIsAckRequest == (testCase.mDstAddrType != kNoneAddr));
+        VerifyOrQuit(CompareAddresses(parseInfo.mAddrs.mSource, buildInfo.mAddrs.mSource));
+        VerifyOrQuit(CompareAddresses(parseInfo.mAddrs.mDestination, buildInfo.mAddrs.mDestination));
 
         if (testCase.mDstPanIdMode == kNoPanId)
         {
-            VerifyOrQuit(frame.GetDstPanId(panId) == kErrorNotFound);
+            VerifyOrQuit(!parseInfo.mPanIds.IsDestinationPresent());
         }
         else
         {
-            SuccessOrQuit(frame.GetDstPanId(panId));
-            VerifyOrQuit(panId == buildInfo.mPanIds.GetDestination());
+            VerifyOrQuit(parseInfo.mPanIds.IsDestinationPresent());
+            VerifyOrQuit(parseInfo.mPanIds.GetDestination() == buildInfo.mPanIds.GetDestination());
             VerifyOrQuit(buildInfo.mPanIds.IsDestinationPresent());
         }
 
-        error = frame.GetSrcPanId(panId);
-
-        if (error != kErrorNotFound)
+        if (parseInfo.mPanIds.IsSourcePresent())
         {
-            SuccessOrQuit(error);
-            VerifyOrQuit(panId == buildInfo.mPanIds.GetSource());
+            VerifyOrQuit(parseInfo.mPanIds.GetSource() == buildInfo.mPanIds.GetSource());
             VerifyOrQuit(buildInfo.mPanIds.IsSourcePresent());
         }
 
-        if (frame.GetSecurityEnabled())
+        if (parseInfo.mIsSecurityEnabled)
         {
-            Mac::Frame::SecurityLevel security;
-            Mac::Frame::KeyIdMode     keyIdMode;
-
-            SuccessOrQuit(frame.GetSecurityLevel(security));
-            VerifyOrQuit(security == testCase.mSecurity);
-            VerifyOrQuit(frame.HasSecurityLevel(testCase.mSecurity));
-
-            SuccessOrQuit(frame.GetKeyIdMode(keyIdMode));
-            VerifyOrQuit(keyIdMode == testCase.mKeyIdMode);
-            VerifyOrQuit(frame.HasKeyIdMode(testCase.mKeyIdMode));
+            VerifyOrQuit(parseInfo.mSecurityLevel == testCase.mSecurity);
+            VerifyOrQuit(parseInfo.mKeyIdMode == testCase.mKeyIdMode);
         }
 
         offset = snprintf(string, sizeof(string), "\nver:%s, src[addr:%s, pan:%s], dst[addr:%s, pan:%s], sec:%s",
@@ -422,12 +408,12 @@ void TestMacHeader(void)
 
         if (!testCase.mSuppressSequence)
         {
-            VerifyOrQuit(frame.IsSequencePresent());
-            offset += snprintf(string + offset, sizeof(string) - offset, ", seq:%u", frame.GetSequence());
+            VerifyOrQuit(parseInfo.mIsSeqNumPresent);
+            offset += snprintf(string + offset, sizeof(string) - offset, ", seq:%u", parseInfo.mSequenceNum);
         }
         else
         {
-            VerifyOrQuit(!frame.IsSequencePresent());
+            VerifyOrQuit(!parseInfo.mIsSeqNumPresent);
         }
 
         DumpBuffer(string, frame.GetPsdu(), frame.GetLength());
@@ -437,7 +423,8 @@ void TestMacHeader(void)
         // versions (2003/2006).
 
         frame.SetIePresent(true);
-        VerifyOrQuit(frame.IsIePresent() == (testCase.mVersion == Mac::Frame::kVersion2015));
+        SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseAddrFields));
+        VerifyOrQuit(parseInfo.mIsIePresent == (testCase.mVersion == Mac::Frame::kVersion2015));
     }
 }
 
@@ -667,9 +654,8 @@ void TestMacFrameApi(void)
                                0xb2, 0x6e, 0x81, 0x25, 0xc9, 0xdb, 0xac, 0x2b, 0x0a, 0x0d, 0x00, 0x00,
                                0x00, 0x00, 0x01, 0x04, 0xaf, 0x14, 0xce, 0xaa, 0x5a, 0xe5};
 
-    Mac::Frame   frame;
-    Mac::PanId   panId;
-    Mac::Address address;
+    Mac::Frame            frame;
+    Mac::Frame::ParseInfo parseInfo;
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     uint8_t data_psdu1[] = {0x29, 0xee, 0x53, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a,
@@ -697,19 +683,18 @@ void TestMacFrameApi(void)
     //   FCS: 0x9bd2 (Correct)
     frame.mPsdu   = ack_psdu1;
     frame.mLength = sizeof(ack_psdu1);
-    VerifyOrQuit(frame.GetType() == Mac::Frame::kTypeAck);
-    VerifyOrQuit(!frame.GetSecurityEnabled());
-    VerifyOrQuit(!frame.GetFramePending());
-    VerifyOrQuit(!frame.GetAckRequest());
-    VerifyOrQuit(!frame.IsIePresent());
-    VerifyOrQuit(frame.GetDstPanId(panId) == kErrorNotFound);
-    SuccessOrQuit(frame.GetDstAddr(address));
-    VerifyOrQuit(address.IsNone());
-    VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2006);
-    SuccessOrQuit(frame.GetSrcAddr(address));
-    VerifyOrQuit(address.IsNone());
-    VerifyOrQuit(frame.IsSequencePresent());
-    VerifyOrQuit(frame.GetSequence() == 94);
+    SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseFully));
+    VerifyOrQuit(parseInfo.mType == Mac::Frame::kTypeAck);
+    VerifyOrQuit(!parseInfo.mIsSecurityEnabled);
+    VerifyOrQuit(!parseInfo.mIsFramePending);
+    VerifyOrQuit(!parseInfo.mIsAckRequest);
+    VerifyOrQuit(!parseInfo.mIsIePresent);
+    VerifyOrQuit(!parseInfo.mPanIds.IsDestinationPresent());
+    VerifyOrQuit(parseInfo.mAddrs.mDestination.IsNone());
+    VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2006);
+    VerifyOrQuit(parseInfo.mAddrs.mSource.IsNone());
+    VerifyOrQuit(parseInfo.mIsSeqNumPresent);
+    VerifyOrQuit(parseInfo.mSequenceNum == 94);
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     // IEEE 802.15.4-2015 Data
@@ -721,30 +706,29 @@ void TestMacFrameApi(void)
     //     Security Control Field: 0x0d
     frame.mPsdu   = data_psdu1;
     frame.mLength = sizeof(data_psdu1);
-    VerifyOrQuit(frame.IsVersion2015());
-    SuccessOrQuit(frame.GetDstPanId(panId));
-    VerifyOrQuit(panId == 0xface);
-    SuccessOrQuit(frame.GetDstAddr(address));
-    VerifyOrQuit(address.IsExtended());
-    SuccessOrQuit(frame.GetSrcAddr(address));
-    VerifyOrQuit(!address.IsNone());
+    SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseAddrFields));
+    VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2015);
+    VerifyOrQuit(parseInfo.mPanIds.IsDestinationPresent());
+    VerifyOrQuit(parseInfo.mPanIds.GetDestination() == 0xface);
+    VerifyOrQuit(parseInfo.mAddrs.mDestination.IsExtended());
+    VerifyOrQuit(!parseInfo.mAddrs.mSource.IsNone());
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
     // IEEE 802.15.4-2006 Mac Command
     //   Sequence Number: 133
     //   Command Identifier: Data Request (0x04)
-    uint8_t commandId;
     frame.mPsdu   = mac_cmd_psdu1;
     frame.mLength = sizeof(mac_cmd_psdu1);
-    VerifyOrQuit(frame.IsSequencePresent());
-    VerifyOrQuit(frame.GetSequence() == 133);
-    VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2006);
-    VerifyOrQuit(frame.GetType() == Mac::Frame::kTypeMacCmd);
-    SuccessOrQuit(frame.GetCommandId(commandId));
-    VerifyOrQuit(commandId == Mac::Frame::kMacCmdDataRequest);
-    VerifyOrQuit(!frame.IsIePresent());
+    SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseFully));
+    VerifyOrQuit(parseInfo.mIsSeqNumPresent);
+    VerifyOrQuit(parseInfo.mSequenceNum == 133);
+    VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2006);
+    VerifyOrQuit(parseInfo.mType == Mac::Frame::kTypeMacCmd);
+    VerifyOrQuit(parseInfo.mCommandId == Mac::Frame::kMacCmdDataRequest);
+    VerifyOrQuit(!parseInfo.mIsIePresent);
     frame.SetIePresent(true);
-    VerifyOrQuit(!frame.IsIePresent());
+    SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseAddrFields));
+    VerifyOrQuit(!parseInfo.mIsIePresent);
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     // IEEE 802.15.4-2015 Mac Command
@@ -755,54 +739,72 @@ void TestMacFrameApi(void)
     //   Command Identifier: Data Request (0x04)
     frame.mPsdu   = mac_cmd_psdu2;
     frame.mLength = sizeof(mac_cmd_psdu2);
-    VerifyOrQuit(frame.IsSequencePresent());
-    VerifyOrQuit(frame.GetSequence() == 141);
-    VerifyOrQuit(frame.IsVersion2015());
-    VerifyOrQuit(frame.GetType() == Mac::Frame::kTypeMacCmd);
-    SuccessOrQuit(frame.GetCommandId(commandId));
-    VerifyOrQuit(commandId == Mac::Frame::kMacCmdDataRequest);
-    printf("commandId:%d\n", commandId);
+    SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseFully));
+    VerifyOrQuit(parseInfo.mIsSeqNumPresent);
+    VerifyOrQuit(parseInfo.mSequenceNum == 141);
+    VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2015);
+    VerifyOrQuit(parseInfo.mType == Mac::Frame::kTypeMacCmd);
+    VerifyOrQuit(parseInfo.mCommandId == Mac::Frame::kMacCmdDataRequest);
+    printf("commandId:%d\n", parseInfo.mCommandId);
 
 #endif
 
     {
-        uint8_t psdu2003WithBit8[] = {0x00, 0x01, 0x11};
-        uint8_t psdu2006WithBit8[] = {0x00, 0x11, 0x22};
-        uint8_t psdu2015WithBit8[] = {0x00, 0x21, 0x33};
-        uint8_t psdu2015NoBit8[]   = {0x00, 0x20, 0x44};
+        uint8_t psdu2003WithBit8[] = {0x00, 0x01, 0x11, 0x00, 0x00};
+        uint8_t psdu2006WithBit8[] = {0x00, 0x11, 0x22, 0x00, 0x00};
+        uint8_t psdu2015WithBit8[] = {0x00, 0x21, 0x33, 0x00, 0x00};
+        uint8_t psdu2015NoBit8[]   = {0x00, 0x20, 0x44, 0x00, 0x00};
 
         frame.mPsdu   = psdu2003WithBit8;
         frame.mLength = sizeof(psdu2003WithBit8);
-        VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2003);
-        VerifyOrQuit(frame.IsSequencePresent());
-        VerifyOrQuit(frame.GetSequence() == 0x11);
+        SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseAddrFields));
+        VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2003);
+        VerifyOrQuit(parseInfo.mIsSeqNumPresent);
+        VerifyOrQuit(parseInfo.mSequenceNum == 0x11);
 
         frame.mPsdu   = psdu2006WithBit8;
         frame.mLength = sizeof(psdu2006WithBit8);
-        VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2006);
-        VerifyOrQuit(frame.IsSequencePresent());
-        VerifyOrQuit(frame.GetSequence() == 0x22);
+        SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseAddrFields));
+        VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2006);
+        VerifyOrQuit(parseInfo.mIsSeqNumPresent);
+        VerifyOrQuit(parseInfo.mSequenceNum == 0x22);
 
         frame.mPsdu   = psdu2015WithBit8;
         frame.mLength = sizeof(psdu2015WithBit8);
-        VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2015);
-        VerifyOrQuit(!frame.IsSequencePresent());
+        SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseAddrFields));
+        VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2015);
+        VerifyOrQuit(!parseInfo.mIsSeqNumPresent);
 
         frame.mPsdu   = psdu2015NoBit8;
         frame.mLength = sizeof(psdu2015NoBit8);
-        VerifyOrQuit(frame.GetVersion() == Mac::Frame::kVersion2015);
-        VerifyOrQuit(frame.IsSequencePresent());
-        VerifyOrQuit(frame.GetSequence() == 0x44);
+        SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseAddrFields));
+        VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2015);
+        VerifyOrQuit(parseInfo.mIsSeqNumPresent);
+        VerifyOrQuit(parseInfo.mSequenceNum == 0x44);
     }
 }
 
 void TestMacFrameAckGeneration(void)
 {
-    Mac::RxFrame receivedFrame;
-    Mac::TxFrame ackFrame;
-    uint8_t      ackFrameBuffer[100];
-    Mac::PanId   panId;
-    Mac::Address address;
+    Mac::RxFrame            receivedFrame;
+    Mac::TxFrame            ackFrame;
+    Mac::TxFrame::ParseInfo ackInfo;
+    uint8_t                 ackFrameBuffer[100];
+    uint8_t                 data_psdu1[] = {
+        0x61, 0xdc, 0xbd, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x02, 0x00, 0x00, 0x00,
+        0x00, 0x0a, 0x6e, 0x16, 0x7f, 0x33, 0xf0, 0x4d, 0x4c, 0x4d, 0x4c, 0x8b, 0xf0, 0x00, 0x15, 0x01, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xc2, 0x57, 0x9c, 0x31, 0xb3, 0x2a, 0xa1, 0x86, 0xba, 0x9a,
+        0xed, 0x5a, 0xb9, 0xa3, 0x59, 0x88, 0xeb, 0xbb, 0x0d, 0xc3, 0xed, 0xeb, 0x8a, 0x53, 0xa6, 0xed, 0xf7,
+        0xdd, 0x45, 0x6e, 0xf7, 0x9a, 0x17, 0xb4, 0xab, 0xc6, 0x75, 0x71, 0x46, 0x37, 0x93, 0x4a, 0x32, 0xb1,
+        0x21, 0x9f, 0x9d, 0xb3, 0x65, 0x27, 0xd5, 0xfc, 0x50, 0x16, 0x90, 0xd2, 0xd4,
+    };
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    uint8_t           data_psdu2[] = {0x69, 0xa8, 0x8e, 0xce, 0xfa, 0x02, 0x24, 0x00, 0x24, 0x0d, 0x02,
+                                      0x00, 0x00, 0x00, 0x01, 0x6b, 0x64, 0x60, 0x08, 0x55, 0xb8, 0x10,
+                                      0x18, 0xc7, 0x40, 0x2e, 0xfb, 0xf3, 0xda, 0xf9, 0x4e, 0x58, 0x70};
+    uint8_t           ie_data[]    = {0x04, 0x0d, 0x21, 0x0c, 0x35, 0x0c};
+    const Mac::CslIe *csl;
+#endif
 
     ackFrame.mPsdu   = ackFrameBuffer;
     ackFrame.mLength = sizeof(ackFrameBuffer);
@@ -824,32 +826,24 @@ void TestMacFrameAckGeneration(void)
     //  Destination PAN: 0xface
     //  Destination: 16:6e:0a:00:00:00:00:01 (16:6e:0a:00:00:00:00:01)
     //  Extended Source: 16:6e:0a:00:00:00:00:02 (16:6e:0a:00:00:00:00:02)
-    uint8_t data_psdu1[]  = {0x61, 0xdc, 0xbd, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x02,
-                             0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x7f, 0x33, 0xf0, 0x4d, 0x4c, 0x4d, 0x4c,
-                             0x8b, 0xf0, 0x00, 0x15, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xc2,
-                             0x57, 0x9c, 0x31, 0xb3, 0x2a, 0xa1, 0x86, 0xba, 0x9a, 0xed, 0x5a, 0xb9, 0xa3, 0x59,
-                             0x88, 0xeb, 0xbb, 0x0d, 0xc3, 0xed, 0xeb, 0x8a, 0x53, 0xa6, 0xed, 0xf7, 0xdd, 0x45,
-                             0x6e, 0xf7, 0x9a, 0x17, 0xb4, 0xab, 0xc6, 0x75, 0x71, 0x46, 0x37, 0x93, 0x4a, 0x32,
-                             0xb1, 0x21, 0x9f, 0x9d, 0xb3, 0x65, 0x27, 0xd5, 0xfc, 0x50, 0x16, 0x90, 0xd2, 0xd4};
     receivedFrame.mPsdu   = data_psdu1;
     receivedFrame.mLength = sizeof(data_psdu1);
 
     ackFrame.GenerateImmAck(receivedFrame, false);
     VerifyOrQuit(ackFrame.mLength == Mac::Frame::GetImmAckLength());
-    VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kTypeAck);
-    VerifyOrQuit(!ackFrame.GetSecurityEnabled());
-    VerifyOrQuit(!ackFrame.GetFramePending());
+    SuccessOrQuit(ackInfo.ParseFrom(ackFrame, Mac::Frame::kParseFully));
+    VerifyOrQuit(ackInfo.mType == Mac::Frame::kTypeAck);
+    VerifyOrQuit(!ackInfo.mIsSecurityEnabled);
+    VerifyOrQuit(!ackInfo.mIsFramePending);
 
-    VerifyOrQuit(!ackFrame.GetAckRequest());
-    VerifyOrQuit(!ackFrame.IsIePresent());
-    VerifyOrQuit(ackFrame.GetDstPanId(panId) == kErrorNotFound);
-    SuccessOrQuit(ackFrame.GetDstAddr(address));
-    VerifyOrQuit(address.IsNone());
-    SuccessOrQuit(ackFrame.GetSrcAddr(address));
-    VerifyOrQuit(address.IsNone());
-    VerifyOrQuit(ackFrame.GetVersion() == Mac::Frame::kVersion2006);
-    VerifyOrQuit(ackFrame.IsSequencePresent());
-    VerifyOrQuit(ackFrame.GetSequence() == 189);
+    VerifyOrQuit(!ackInfo.mIsAckRequest);
+    VerifyOrQuit(!ackInfo.mIsIePresent);
+    VerifyOrQuit(!ackInfo.mPanIds.IsDestinationPresent());
+    VerifyOrQuit(ackInfo.mAddrs.mDestination.IsNone());
+    VerifyOrQuit(ackInfo.mAddrs.mSource.IsNone());
+    VerifyOrQuit(ackInfo.mVersion == Mac::Frame::kVersion2006);
+    VerifyOrQuit(ackInfo.mIsSeqNumPresent);
+    VerifyOrQuit(ackInfo.mSequenceNum == 189);
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     // Received Frame 2
@@ -887,36 +881,32 @@ void TestMacFrameAckGeneration(void)
     //   MIC: f94e5870
     //   [Key Number: 0]
     //   FCS: 0x8c40 (Correct)
-    uint8_t data_psdu2[]  = {0x69, 0xa8, 0x8e, 0xce, 0xfa, 0x02, 0x24, 0x00, 0x24, 0x0d, 0x02,
-                             0x00, 0x00, 0x00, 0x01, 0x6b, 0x64, 0x60, 0x08, 0x55, 0xb8, 0x10,
-                             0x18, 0xc7, 0x40, 0x2e, 0xfb, 0xf3, 0xda, 0xf9, 0x4e, 0x58, 0x70};
     receivedFrame.mPsdu   = data_psdu2;
     receivedFrame.mLength = sizeof(data_psdu2);
 
-    uint8_t     ie_data[6] = {0x04, 0x0d, 0x21, 0x0c, 0x35, 0x0c};
-    Mac::CslIe *csl;
-
     SuccessOrQuit(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
 
-    csl = ackFrame.Find<Mac::CslIe>();
     VerifyOrQuit(ackFrame.mLength == 25);
-    VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kTypeAck);
-    VerifyOrQuit(ackFrame.GetSecurityEnabled());
-    VerifyOrQuit(ackFrame.IsIePresent());
-    SuccessOrQuit(ackFrame.GetDstPanId(panId));
-    VerifyOrQuit(panId == 0xface);
-    SuccessOrQuit(ackFrame.GetDstAddr(address));
-    VerifyOrQuit(!address.IsNone());
-    SuccessOrQuit(ackFrame.GetSrcAddr(address));
-    VerifyOrQuit(address.IsNone());
-    VerifyOrQuit(ackFrame.GetVersion() == Mac::Frame::kVersion2015);
-    VerifyOrQuit(ackFrame.IsSequencePresent());
-    VerifyOrQuit(ackFrame.GetSequence() == 142);
+    SuccessOrQuit(ackInfo.ParseFrom(ackFrame, Mac::Frame::kParseFully));
+    csl = ackInfo.Find<Mac::CslIe>();
+    VerifyOrQuit(csl != nullptr);
+    VerifyOrQuit(ackInfo.mType == Mac::Frame::kTypeAck);
+    VerifyOrQuit(ackInfo.mIsSecurityEnabled);
+    VerifyOrQuit(ackInfo.mIsIePresent);
+    VerifyOrQuit(ackInfo.mPanIds.IsDestinationPresent());
+    VerifyOrQuit(ackInfo.mPanIds.GetDestination() == 0xface);
+    VerifyOrQuit(!ackInfo.mAddrs.mDestination.IsNone());
+    VerifyOrQuit(ackInfo.mAddrs.mSource.IsNone());
+    VerifyOrQuit(ackInfo.mVersion == Mac::Frame::kVersion2015);
+    VerifyOrQuit(ackInfo.mIsSeqNumPresent);
+    VerifyOrQuit(ackInfo.mSequenceNum == 142);
     VerifyOrQuit(csl->GetPeriod() == 3125 && csl->GetPhase() == 3105);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     ackFrame.UpdateCslIe(123, 456);
-    csl = ackFrame.Find<Mac::CslIe>();
+    SuccessOrQuit(ackInfo.ParseFrom(ackFrame, Mac::Frame::kParseFully));
+    csl = ackInfo.Find<Mac::CslIe>();
+    VerifyOrQuit(csl != nullptr);
     VerifyOrQuit(csl->GetPeriod() == 123 && csl->GetPhase() == 456);
 #endif
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -925,33 +915,34 @@ void TestMacFrameAckGeneration(void)
 void TestMacFrameValidation(void)
 {
     // Simple IEEE 802.15.4-2003 Data Frame (FCF: 0x0001, DSN: 0x01, FCS: 2 bytes)
-    uint8_t    psdu[] = {0x01, 0x00, 0x01, 0x00, 0x00};
-    Mac::Frame frame;
+    uint8_t               psdu[] = {0x01, 0x00, 0x01, 0x00, 0x00};
+    Mac::Frame            frame;
+    Mac::Frame::ParseInfo frameInfo;
 
     frame.mPsdu   = psdu;
     frame.mLength = sizeof(psdu);
 
     // Verify valid 2003 Data frame passes validation
-    SuccessOrQuit(frame.ValidatePsdu());
+    SuccessOrQuit(frameInfo.ParseFrom(frame, Mac::Frame::kParseFully));
 
     // Verify unsupported frame types fail validation (Multipurpose = 5, Reserved = 4)
     psdu[0] = (psdu[0] & ~0x07) | 5;
-    VerifyOrQuit(frame.ValidatePsdu() == kErrorParse);
+    VerifyOrQuit(frameInfo.ParseFrom(frame, Mac::Frame::kParseFully) == kErrorParse);
 
     psdu[0] = (psdu[0] & ~0x07) | 4;
-    VerifyOrQuit(frame.ValidatePsdu() == kErrorParse);
+    VerifyOrQuit(frameInfo.ParseFrom(frame, Mac::Frame::kParseFully) == kErrorParse);
 
     // Restore valid frame type (Data = 1)
     psdu[0] = (psdu[0] & ~0x07) | 1;
-    SuccessOrQuit(frame.ValidatePsdu());
+    SuccessOrQuit(frameInfo.ParseFrom(frame, Mac::Frame::kParseFully));
 
     // Verify unsupported frame version fails validation (Version 3 = 3 << 4 in high byte of FCF)
     psdu[1] = (psdu[1] & ~0x30) | (3 << 4);
-    VerifyOrQuit(frame.ValidatePsdu() == kErrorParse);
+    VerifyOrQuit(frameInfo.ParseFrom(frame, Mac::Frame::kParseFully) == kErrorParse);
 
     // Restore valid frame version (2003 = 0)
     psdu[1] = (psdu[1] & ~0x30) | (0 << 4);
-    SuccessOrQuit(frame.ValidatePsdu());
+    SuccessOrQuit(frameInfo.ParseFrom(frame, Mac::Frame::kParseFully));
 }
 
 } // namespace ot

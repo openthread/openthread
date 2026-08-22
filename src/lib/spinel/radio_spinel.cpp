@@ -1596,22 +1596,29 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
         error = SpinelStatusToOtError(status);
     }
 
-    if ((sRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && (!mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated) &&
-        headerUpdated && static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
+    if ((sRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && (!mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated) && headerUpdated)
     {
-        uint8_t  keyIndex;
-        uint32_t frameCounter;
+        Mac::TxFrame::ParseInfo frameInfo;
 
-        // Replace transmit frame security key index and frame counter with the one filled by RCP
-        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S, &keyIndex,
-                                          &frameCounter);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        static_cast<Mac::TxFrame *>(mTransmitFrame)->SetKeyIndex(keyIndex);
-        static_cast<Mac::TxFrame *>(mTransmitFrame)->SetFrameCounter(frameCounter);
+        IgnoreError(frameInfo.ParseFrom(*static_cast<Mac::TxFrame *>(mTransmitFrame), Mac::Frame::kParseFully));
+
+        if (frameInfo.mIsSecurityEnabled)
+        {
+            uint8_t  keyIndex;
+            uint32_t frameCounter;
+
+            // Replace transmit frame security key index and frame counter with the one filled by RCP
+            unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S,
+                                              &keyIndex, &frameCounter);
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+            frameInfo.WriteKeyIndex(keyIndex);
+            frameInfo.WriteFrameCounter(frameCounter);
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-        mMacFrameCounterSet = true;
+            mMacFrameCounterSet = true;
 #endif
+        }
     }
 
     static_cast<Mac::TxFrame *>(mTransmitFrame)->SetIsHeaderUpdated(headerUpdated);

@@ -63,6 +63,9 @@ namespace Mac {
  */
 class Frame : public Radio::Frame
 {
+protected:
+    enum AddrMode : uint8_t;
+
 public:
     /**
      * Represents the MAC frame type.
@@ -138,6 +141,19 @@ public:
         kMacCmdGtsRequest                 = 9,
     };
 
+    /**
+     * Specifies the parsing mode for `ParseInfo::ParseFrom()`.
+     *
+     * In `kParseSecurityHeader` mode, the frame is explicitly required to have security enabled in FCF; otherwise
+     * `kErrorNotFound` is returned.
+     */
+    enum ParseMode : uint8_t
+    {
+        kParseAddrFields,     ///< Parse up through address fields (FCF, SecNum, PAN IDs, Addrs) and FCS.
+        kParseSecurityHeader, ///< Parse up through Auxiliary Security Header (requires security enabled).
+        kParseFully,          ///< Parse all headers fully.
+    };
+
     static constexpr uint8_t kKeySourceSizeMode0 = 0; ///< Key Source size in bytes for Key ID Mode 0.
     static constexpr uint8_t kKeySourceSizeMode1 = 0; ///< Key Source size in bytes for Key ID Mode 1.
     static constexpr uint8_t kKeySourceSizeMode2 = 4; ///< Key Source size in bytes for Key ID Mode 2.
@@ -162,65 +178,156 @@ public:
     };
 
     /**
-     * Validates the frame.
-     *
-     * @retval kErrorNone    Successfully parsed the MAC header.
-     * @retval kErrorParse   Failed to parse through the MAC header.
+     * Represents parsed information from a MAC frame header.
      */
-    Error ValidatePsdu(void) const;
+    class ParseInfo : public Clearable<ParseInfo>
+    {
+        friend class Frame; // TODO: At some point we should no longer need this, remove it.
 
-    /**
-     * Returns the IEEE 802.15.4 Frame Type.
-     *
-     * @returns The IEEE 802.15.4 Frame Type.
-     */
-    uint8_t GetType(void) const { return ReadType(GetFrameControlField()); }
+    public:
+        /**
+         * Initializes the `ParseInfo` object.
+         */
+        ParseInfo(void) { Clear(); }
 
-    /**
-     * Returns whether the frame is an Ack frame.
-     *
-     * @retval TRUE   If this is an Ack.
-     * @retval FALSE  If this is not an Ack.
-     */
-    bool IsAck(void) const { return GetType() == kTypeAck; }
+        /**
+         * Parses the MAC frame header according to the specified parsing mode.
+         *
+         * @param[in] aFrame  The frame to parse from.
+         * @param[in] aMode   The parsing mode.
+         *
+         * @retval kErrorNone      Successfully parsed the frame according to @p aMode.
+         * @retval kErrorNotFound  Security is not enabled when @p aMode is `kParseSecurityHeader`.
+         * @retval kErrorParse     Failed to parse the frame (frame is malformed).
+         */
+        Error ParseFrom(const Frame &aFrame, ParseMode aMode);
 
-    /**
-     * Returns whether the frame is a MAC Command frame.
-     *
-     * @retval TRUE   If this is a MAC Command frame.
-     * @retval FALSE  If this is not a MAC Command Frame.
-     */
-    bool IsMacCommand(void) const { return GetType() == kTypeMacCmd; }
+        /**
+         * Returns human-readable string corresponding to the frame information.
+         *
+         * @returns An `InfoString` containing info about the frame.
+         */
+        InfoString ToInfoString(void) const;
 
-    /**
-     * Returns the IEEE 802.15.4 Frame Version.
-     *
-     * @returns The IEEE 802.15.4 Frame Version.
-     */
-    uint8_t GetVersion(void) const { return ReadVersion(GetFrameControlField()); }
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-    /**
-     * Returns if this IEEE 802.15.4 frame's version is 2015.
-     *
-     * @returns TRUE if version is 2015, FALSE otherwise.
-     */
-    bool IsVersion2015(void) const { return IsVersion2015(GetFrameControlField()); }
+        /**
+         * Finds a specific Information Element (IE) in the frame.
+         *
+         * This method searches the frame for a Header IE matching the Element ID of @p IeType and also validates that
+         * the content of the IE is well-formed according to @p IeType.
+         *
+         * @tparam IeType  The IE subclass type to find.
+         *
+         * @returns A pointer to the IE, or `nullptr` if not found or if the IE content is malformed.
+         */
+        template <typename IeType> const IeType *Find(void) const
+        {
+            return static_cast<const IeType *>(FindHeaderIe(HeaderIe::ValidateAs<IeType>));
+        }
 
-    /**
-     * Indicates whether or not security is enabled.
-     *
-     * @retval TRUE   If security is enabled.
-     * @retval FALSE  If security is not enabled.
-     */
-    bool GetSecurityEnabled(void) const { return IsSecurityEnabled(GetFrameControlField()); }
+        /**
+         * Finds a specific Information Element (IE) in the frame.
+         *
+         * This method searches the frame for a Header IE matching the Element ID of @p IeType and also validates that
+         * the content of the IE is well-formed according to @p IeType.
+         *
+         * @tparam IeType  The IE subclass type to find.
+         *
+         * @returns A pointer to the IE, or `nullptr` if not found or if the IE content is malformed.
+         */
+        template <typename IeType> IeType *Find(void) { return AsNonConst(AsConst(this)->Find<IeType>()); }
 
-    /**
-     * Indicates whether or not the Frame Pending bit is set.
-     *
-     * @retval TRUE   If the Frame Pending bit is set.
-     * @retval FALSE  If the Frame Pending bit is not set.
-     */
-    bool GetFramePending(void) const { return IsFramePending(GetFrameControlField()); }
+        /**
+         * Indicates whether or not the frame contains a specific Information Element (IE).
+         *
+         * This method checks whether the frame contains a Header IE matching the Element ID of @p IeType with valid
+         * content according to @p IeType.
+         *
+         * @tparam IeType  The IE subclass type to check.
+         *
+         * @retval TRUE   The frame contains a valid instance of the IE.
+         * @retval FALSE  The frame does not contain the IE or its content is malformed.
+         */
+        template <typename IeType> bool Has(void) const { return Find<IeType>() != nullptr; }
+
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        const Frame *mFrame; ///< The parsed frame.
+
+        bool mParsedAddrFields : 1;     ///< TRUE if address fields are successfully parsed.
+        bool mParsedSecurityHeader : 1; ///< TRUE if Auxiliary Security Header is present and successfully parsed.
+        bool mParsedFully : 1;          ///< TRUE if the frame is fully parsed.
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Mac Header Address Info
+
+        bool      mIsSecurityEnabled : 1; ///< TRUE if security is enabled, FALSE otherwise.
+        bool      mIsFramePending : 1;    ///< TRUE if frame pending bit is set, FALSE otherwise.
+        bool      mIsAckRequest : 1;      ///< TRUE if ACK request bit is set, FALSE otherwise.
+        bool      mIsSeqNumPresent : 1;   ///< TRUE if sequence number is present, FALSE otherwise.
+        bool      mIsIePresent : 1;       ///< TRUE if IE present bit is set, FALSE otherwise.
+        Type      mType;                  ///< The frame type.
+        Version   mVersion;               ///< The frame version.
+        uint8_t   mSequenceNum;           ///< The sequence number (valid if `mIsSeqNumPresent`).
+        PanIds    mPanIds;                ///< Source and Destination PAN IDs.
+        Addresses mAddrs;                 ///< Source and Destination addresses.
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Aux Security Header (valid if `mIsSecurityEnabled`)
+
+        SecurityLevel mSecurityLevel; ///< The security level.
+        KeyIdMode     mKeyIdMode;     ///< The Key ID mode.
+        uint8_t       mKeyIndex;      ///< The Key Index.
+        uint8_t       mMicSize;       ///< The MIC size in bytes.
+        uint32_t      mFrameCounter;  ///< The security frame counter.
+        FrameData     mKeySource;     ///< The Key Source data.
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        FrameData mIeData; ///< The Header IE data.
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        uint8_t mCommandId; ///< The MAC Command ID (valid if `mType == kTypeMacCmd`).
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        FrameData mHeader; ///< The frame header (MHR) sub-range (see `mPayload` for treatment of Command ID).
+
+        /**
+         * The frame payload (MAC payload) sub-range.
+         *
+         * For MAC Command frames (`kTypeMacCmd`), the treatment of the Command ID field depends on the frame version:
+         *  - For 2015 version, the Command ID is part of the payload and included in `mPayload`.
+         *  - For earlier versions (2003/2006), the Command ID is part of the MAC header, so `mPayload` starts after
+         *    the Command ID. In this case the Command ID is part of `mHeader`.
+         */
+        FrameData mPayload;
+
+    protected:
+        enum AesCcmOperation : uint8_t
+        {
+            kEncrypt,
+            kDecrypt,
+        };
+
+        Error PerformAesCcm(AesCcmOperation aOperation, const ExtAddress &aExtAddress, const KeyMaterial &aMacKey);
+
+        uint8_t *mKeyIndexByte;
+        uint8_t *mFrameCounterBytes;
+
+    private:
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+        typedef bool (&HeaderIeMatcher)(const HeaderIe &aHeaderIe);
+
+        const HeaderIe *FindHeaderIe(HeaderIeMatcher aMatcher) const;
+#endif
+
+        static Error ParseAddress(FrameData &aFrameData, AddrMode aAddrMode, Address &aAddress);
+    };
 
     /**
      * Sets the Frame Pending bit.
@@ -230,14 +337,6 @@ public:
     void SetFramePending(bool aFramePending) { UpdateFcfFlag(aFramePending, kFcfFramePending); }
 
     /**
-     * Indicates whether or not the Ack Request bit is set.
-     *
-     * @retval TRUE   If the Ack Request bit is set.
-     * @retval FALSE  If the Ack Request bit is not set.
-     */
-    bool GetAckRequest(void) const { return IsAckRequest(GetFrameControlField()); }
-
-    /**
      * Sets the Ack Request bit.
      *
      * @param[in]  aAckRequest  The Ack Request bit.
@@ -245,207 +344,11 @@ public:
     void SetAckRequest(bool aAckRequest) { UpdateFcfFlag(aAckRequest, kFcfAckRequest); }
 
     /**
-     * Indicates whether or not IEs present.
-     *
-     * @retval TRUE   If IEs present.
-     * @retval FALSE  If no IE present.
-     */
-    bool IsIePresent(void) const { return IsIePresent(GetFrameControlField()); }
-
-    /**
      * Sets the IE Present bit.
      *
      * @param[in]  aIePresent   The IE Present bit.
      */
     void SetIePresent(bool aIePresent) { UpdateFcfFlag(aIePresent, kFcfIePresent); }
-
-    /**
-     * Returns the Sequence Number value.
-     *
-     * @returns The Sequence Number value.
-     */
-    uint8_t GetSequence(void) const;
-
-    /**
-     * Sets the Sequence Number value.
-     *
-     * @param[in]  aSequence  The Sequence Number value.
-     */
-    void SetSequence(uint8_t aSequence);
-
-    /**
-     * Indicates whether or not the Sequence Number is present.
-     *
-     * @returns TRUE if the Sequence Number is present, FALSE otherwise.
-     */
-    bool IsSequencePresent(void) const { return IsSeqPresent(GetFrameControlField()); }
-
-    /**
-     * Gets the Destination PAN Identifier.
-     *
-     * @param[out]  aPanId  The Destination PAN Identifier.
-     *
-     * @retval kErrorNone      Successfully retrieved the Destination PAN Identifier.
-     * @retval kErrorNotFound  Destination PAN Identifier is not present in the frame.
-     * @retval kErrorParse     Failed to parse the frame.
-     */
-    Error GetDstPanId(PanId &aPanId) const;
-
-    /**
-     * Gets the Destination Address.
-     *
-     * @param[out]  aAddress  The Destination Address.
-     *
-     * @retval kErrorNone      Successfully retrieved the Destination Address.
-     * @retval kErrorParse     Failed to parse the frame.
-     */
-    Error GetDstAddr(Address &aAddress) const;
-
-    /**
-     * Gets the Source PAN Identifier.
-     *
-     * @param[out]  aPanId  The Source PAN Identifier.
-     *
-     * @retval kErrorNone      Successfully retrieved the Source PAN Identifier.
-     * @retval kErrorNotFound  Source PAN Identifier is not present in the frame.
-     * @retval kErrorParse     Failed to parse the frame.
-     */
-    Error GetSrcPanId(PanId &aPanId) const;
-
-    /**
-     * Gets the Source Address.
-     *
-     * @param[out]  aAddress  The Source Address.
-     *
-     * @retval kErrorNone      Successfully retrieved the Source Address.
-     * @retval kErrorParse     Failed to parse the frame.
-     */
-    Error GetSrcAddr(Address &aAddress) const;
-
-    /**
-     * Gets the Security Level Identifier.
-     *
-     * @param[out]  aSecurityLevel  The Security Level Identifier.
-     *
-     * @retval kErrorNone      Successfully retrieved the Security Level Identifier.
-     * @retval kErrorNotFound  Frame does not have a security header (security is not enabled)
-     * @retval kErrorParse     Failed to parse MAC or security header.
-     */
-    Error GetSecurityLevel(SecurityLevel &aSecurityLevel) const;
-
-    /**
-     * Indicates whether or not the frame has a specific Security Level.
-     *
-     * @param[in]  aSecurityLevel  The Security Level to check.
-     *
-     * @retval TRUE   The frame contains a valid security header matching @p aSecurityLevel.
-     * @retval FALSE  The frame does not match @p aSecurityLevel or fails to parse MAC or security header.
-     */
-    bool HasSecurityLevel(SecurityLevel aSecurityLevel) const;
-
-    /**
-     * Gets the Key Identifier Mode.
-     *
-     * @param[out]  aKeyIdMode  The Key Identifier Mode.
-     *
-     * @retval kErrorNone   Successfully retrieved the Key Identifier Mode.
-     * @retval kErrorParse  Failed to parse MAC or security header.
-     */
-    Error GetKeyIdMode(KeyIdMode &aKeyIdMode) const;
-
-    /**
-     * Indicates whether or not the frame has a specific Key Identifier Mode.
-     *
-     * @param[in]  aKeyIdMode  The Key Identifier Mode to check.
-     *
-     * @retval TRUE   The frame contains a valid security header matching @p aKeyIdMode.
-     * @retval FALSE  The frame does not match @p aKeyIdMode or fails to parse MAC or security header.
-     */
-    bool HasKeyIdMode(KeyIdMode aKeyIdMode) const;
-
-    /**
-     * Gets the Frame Counter.
-     *
-     * @param[out]  aFrameCounter  The Frame Counter.
-     *
-     * @retval kErrorNone   Successfully retrieved the Frame Counter.
-     * @retval kErrorParse  Failed to parse MAC or security header.
-     */
-    Error GetFrameCounter(uint32_t &aFrameCounter) const;
-
-    /**
-     * Sets the Frame Counter.
-     *
-     * @param[in]  aFrameCounter  The Frame Counter.
-     */
-    void SetFrameCounter(uint32_t aFrameCounter);
-
-    /**
-     * Returns a pointer to the Key Source.
-     *
-     * @param[out]  aKeySource   A `FrameData` to point to key source data bytes.
-     */
-    void GetKeySource(FrameData &aKeySource) const;
-
-    /**
-     * Sets the Key Source.
-     *
-     * @param[in]  aKeySource  A pointer to the Key Source value.
-     */
-    void SetKeySource(const uint8_t *aKeySource);
-
-    /**
-     * Gets the Key Index (sub-field of Key ID).
-     *
-     * @param[out]  aKeyIndex  The Key Index
-     *
-     * @retval kErrorNone      Successfully retrieved the Key Index.
-     * @retval kErrorNotFound  Frame is using `kKeyIdMode0` which does not have any Key Index.
-     * @retval kErrorParse     Failed to parse MAC or security header.
-     */
-    Error GetKeyIndex(uint8_t &aKeyIndex) const;
-
-    /**
-     * Sets the Key Index (sub-field of Key ID).
-     *
-     * @param[in]  aKeyIndex  The Key Index.
-     */
-    void SetKeyIndex(uint8_t aKeyIndex);
-
-    /**
-     * Gets the Command ID.
-     *
-     * @param[out]  aCommandId  The Command ID.
-     *
-     * @retval kErrorNone      Successfully retrieved the Command ID.
-     * @retval kErrorNotFound  The frame is not a MAC command.
-     * @retval kErrorParse     Failed to parse frame.
-     */
-    Error GetCommandId(uint8_t &aCommandId) const;
-
-    /**
-     * Indicates whether the frame is a MAC Data Request command (data poll).
-     *
-     * For 802.15.4-2015 and above frame, the frame should be already decrypted.
-     *
-     * @returns TRUE if frame is a MAC Data Request command, FALSE otherwise.
-     */
-    bool IsDataRequestCommand(void) const;
-
-    /**
-     * Gets the frame payload as `FrameData`.
-     *
-     * For MAC Command frames (`kTypeMacCmd`), the treatment of the Command ID field depends on the frame version:
-     *   - For 2015 version , the Command ID is part of the payload, so @p aPayloadData includes it.
-     *   - For earlier versions (2003/2006), the Command ID is part of the MAC header, so @p aPayloadData starts after
-     *     the Command ID.
-     *
-     * @param[out] aPayloadData  A reference to a `FrameData` to return the frame payload.
-     *
-     * @retval kErrorNone   Successfully retrieved the frame payload.
-     * @retval kErrorParse  Failed to parse the frame.
-     */
-    Error GetPayload(FrameData &aPayloadData) const;
 
     /**
      * Determines the length breakdown of the frame.
@@ -458,45 +361,6 @@ public:
     Error DetermineLengths(Lengths &aLengths) const;
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    /**
-     * Finds a specific Information Element (IE) in the frame.
-     *
-     * This method searches the frame for a Header IE matching the Element ID of @p IeType and also validates that
-     * the content of the IE is well-formed according to @p IeType.
-     *
-     * @tparam IeType  The IE subclass type to find.
-     *
-     * @returns A pointer to the IE, or `nullptr` if not found or if the IE content is malformed.
-     */
-    template <typename IeType> const IeType *Find(void) const
-    {
-        return static_cast<const IeType *>(FindHeaderIe(HeaderIe::ValidateAs<IeType>));
-    }
-
-    /**
-     * Finds a specific Information Element (IE) in the frame.
-     *
-     * This method searches the frame for a Header IE matching the Element ID of @p IeType and also validates that
-     * the content of the IE is well-formed according to @p IeType.
-     *
-     * @tparam IeType  The IE subclass type to find.
-     *
-     * @returns A pointer to the IE, or `nullptr` if not found or if the IE content is malformed.
-     */
-    template <typename IeType> IeType *Find(void) { return AsNonConst(AsConst(this)->Find<IeType>()); }
-
-    /**
-     * Indicates whether or not the frame contains a specific Information Element (IE).
-     *
-     * This method checks whether the frame contains a Header IE matching the Element ID of @p IeType with valid
-     * content according to @p IeType.
-     *
-     * @tparam IeType  The IE subclass type to check.
-     *
-     * @retval TRUE   The frame contains a valid instance of the IE.
-     * @retval FALSE  The frame does not contain the IE or its content is malformed.
-     */
-    template <typename IeType> bool Has(void) const { return Find<IeType>() != nullptr; }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
@@ -519,20 +383,6 @@ public:
 #endif
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-
-    /**
-     * Returns information about the frame object as an `InfoString` object.
-     *
-     * @returns An `InfoString` containing info about the frame.
-     */
-    InfoString ToInfoString(void) const;
-
-    /**
-     * Returns the Frame Control field of the frame.
-     *
-     * @returns The Frame Control field.
-     */
-    uint16_t GetFrameControlField(void) const { return LittleEndian::ReadUint16(mPsdu); }
 
     /**
      * Returns the Immediate Acknowledgment (Imm-Ack) frame length in bytes.
@@ -558,6 +408,7 @@ public:
 protected:
     static constexpr uint8_t kFcfSize      = sizeof(uint16_t);
     static constexpr uint8_t kDsnSize      = sizeof(uint8_t);
+    static constexpr uint8_t kSeqNumIndex  = kFcfSize;
     static constexpr uint8_t kImmAckLength = kFcfSize + kDsnSize + k154FcsSize;
 
     static constexpr uint8_t kSecurityControlSize = sizeof(uint8_t);
@@ -612,60 +463,8 @@ protected:
     static constexpr uint8_t kInvalidSize  = kInvalidIndex;
     static constexpr uint8_t kMaxPsduSize  = kInvalidSize - 1;
 
-    enum ParseMode : uint8_t
-    {
-        kParseAddrFields,
-        kParseSecurityHeader,
-        kParseFully,
-    };
-
-    class ParseInfo
-    {
-    public:
-        // - - - - - - - - - - - - - - - - - - - - - - - - -
-        // Mac Header Address Info
-        Type      mType;
-        Version   mVersion;
-        bool      mIsSecurityEnabled : 1;
-        bool      mIsFramePending : 1;
-        bool      mIsAckRequest : 1;
-        bool      mIsSeqNumPresent : 1;
-        bool      mIsIePresent : 1;
-        uint8_t   mSequenceNum;
-        PanIds    mPanIds;
-        Addresses mAddrs;
-
-        // - - - - - - - - - - - - - - - - - - - - - - - - -
-        // Aux Security Header
-        SecurityLevel mSecurityLevel;
-        KeyIdMode     mKeyIdMode;
-        uint8_t       mKeyIndex;
-        uint8_t       mMicSize;
-        uint32_t      mFrameCounter;
-        FrameData     mKeySource;
-        uint8_t      *mFrameCounterBytes;
-        uint8_t      *mKeyIndexByte;
-
-        // - - - - - - - - - - - - - - - - - - - - - - - - -
-        // Header IEs
-        FrameData mIeData;
-
-        // - - - - - - - - - - - - - - - - - - - - - - - - -
-        // MAC Command ID
-        uint8_t mCommandId;
-
-        // - - - - - - - - - - - - - - - - - - - - - - - - -
-        // Header and Payload breakdown
-        FrameData mHeader;
-        FrameData mPayload;
-
-        Error ParseFrom(const Frame &aFrame, ParseMode aMode);
-
-    private:
-        static Error ParseAddress(FrameData &aFrameData, AddrMode aAddrMode, Address &aAddress);
-    };
-
-    void UpdateFcfFlag(bool aSet, uint16_t aBitFlag);
+    uint16_t GetFrameControlField(void) const { return LittleEndian::ReadUint16(mPsdu); }
+    void     UpdateFcfFlag(bool aSet, uint16_t aBitFlag);
 
     static uint8_t  ReadType(uint16_t aFcf) { return As<uint8_t>(ReadBits<uint16_t, kFcfFrameTypeMask>(aFcf)); }
     static AddrMode ReadDstAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfDstAddrMask>(aFcf)); }
@@ -693,13 +492,6 @@ protected:
 
 private:
     template <typename EnumType> static EnumType As(uint16_t aValue) { return static_cast<EnumType>(aValue); }
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    typedef bool (&HeaderIeMatcher)(const HeaderIe &aHeaderIe);
-
-    const HeaderIe *FindHeaderIe(HeaderIeMatcher aMatcher) const;
-    HeaderIe       *FindHeaderIe(HeaderIeMatcher aMatcher) { return AsNonConst(AsConst(this)->FindHeaderIe(aMatcher)); }
-#endif
 };
 
 /**
@@ -707,46 +499,43 @@ private:
  */
 class RxFrame : public Frame, public Radio::RxFrameProperties<RxFrame>
 {
-public:
     friend class TxFrame;
 
+public:
     /**
-     * Defines flags to indicate allowed Key ID Modes, used in `IsSecuredWith()`.
+     * Represents parsed information from a received MAC frame.
      */
-    enum KeyIdModeFlag : uint8_t
+    class ParseInfo : public Frame::ParseInfo
     {
-        kAllowKeyIdMode0 = (1 << 0), ///< Allow Key ID Mode 0.
-        kAllowKeyIdMode1 = (1 << 1), ///< Allow Key ID Mode 1.
-    };
+    public:
+        /**
+         * Returns a pointer to the associated `RxFrame`.
+         *
+         * @returns A pointer to the `RxFrame`.
+         */
+        const RxFrame *GetRxFrame(void) const { return static_cast<const RxFrame *>(mFrame); }
 
-    /**
-     * Represents a set of `KeyIdModeFlag`s.
-     */
-    typedef uint8_t KeyIdModeFlags;
-
-    /**
-     * Indicates whether the frame is secured with a given set of allowed Key ID Modes.
-     *
-     * @param[in] aFlags  A bitmask of `KeyIdModeFlags` specifying the allowed modes.
-     *
-     * @retval TRUE   The frame has security enabled and uses one of the allowed Key ID Modes.
-     * @retval FALSE  The frame does not have security enabled, or its Key ID Mode is not allowed.
-     */
-    bool IsSecuredWith(KeyIdModeFlags aFlags) const;
+        /**
+         * Returns a pointer to the associated `RxFrame`.
+         *
+         * @returns A pointer to the `RxFrame`.
+         */
+        RxFrame *GetRxFrame(void) { return AsNonConst(AsConst(this)->GetRxFrame()); }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-    /**
-     * Performs AES CCM on the frame which is received.
-     *
-     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
-     *                          for AES CCM computation.
-     * @param[in]  aMacKey      A reference to the MAC key to decrypt the received frame.
-     *
-     * @retval kErrorNone      Process of received frame AES CCM succeeded.
-     * @retval kErrorSecurity  Received frame MIC check failed.
-     */
-    Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey);
+        /**
+         * Performs AES CCM on the frame which is received.
+         *
+         * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
+         *                          for AES CCM computation.
+         * @param[in]  aMacKey      A reference to the MAC key to decrypt the received frame.
+         *
+         * @retval kErrorNone      Process of received frame AES CCM succeeded.
+         * @retval kErrorSecurity  Received frame MIC check failed.
+         */
+        Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey);
 #endif
+    };
 };
 
 /**
@@ -755,6 +544,91 @@ public:
 class TxFrame : public Frame, public Radio::TxFrameProperties<TxFrame>
 {
 public:
+    /**
+     * Represents parsed information from a transmitted MAC frame.
+     */
+    class ParseInfo : public Frame::ParseInfo
+    {
+    public:
+        /**
+         * Returns a pointer to the associated `TxFrame`.
+         *
+         * @returns A pointer to the `TxFrame`.
+         */
+        const TxFrame *GetTxFrame(void) const { return static_cast<const TxFrame *>(mFrame); }
+
+        /**
+         * Returns a pointer to the associated `TxFrame`.
+         *
+         * @returns A pointer to the `TxFrame`.
+         */
+        TxFrame *GetTxFrame(void) { return AsNonConst(AsConst(this)->GetTxFrame()); }
+
+        /**
+         * Writes the Sequence Number value in the frame.
+         *
+         * The Address fields MUST be parsed successfully before calling this method. If the Sequence Number is not
+         * present in the frame, this method performs no action.
+         *
+         * @param[in] aSequenceNum  The Sequence Number value.
+         */
+        void WriteSequenceNum(uint8_t aSequenceNum);
+
+        /**
+         * Writes the Key Index (sub-field of Key ID) in the frame.
+         *
+         * If the Auxiliary Security Header is not parsed or not present, or if the Key ID Mode is `kKeyIdMode0`, this
+         * method performs no action.
+         *
+         * @param[in] aKeyIndex  The Key Index.
+         */
+        void WriteKeyIndex(uint8_t aKeyIndex);
+
+        /**
+         * Writes the security Frame Counter in the frame.
+         *
+         * If the Auxiliary Security Header is not parsed or not present, this method performs no action. Otherwise,
+         * it writes the Frame Counter and marks the frame header as updated (`SetIsHeaderUpdated(true)`).
+         *
+         * @param[in] aFrameCounter  The Frame Counter.
+         */
+        void WriteFrameCounter(uint32_t aFrameCounter);
+
+        /**
+         * Writes the Key Source in the frame.
+         *
+         * If the Auxiliary Security Header is not parsed or not present, or if the Key ID Mode does not require a Key
+         * Source, this method performs no action.
+         *
+         * @param[in] aKeySource  A pointer to the Key Source value.
+         */
+        void WriteKeySource(const uint8_t *aKeySource);
+
+        /**
+         * Performs AES-CCM encryption on the frame to be transmitted.
+         *
+         * The frame MUST be fully parsed before calling this method. If security is enabled on the frame,
+         * this method encrypts the payload, appends the MIC tag, and marks security as processed
+         * (`SetIsSecurityProcessed(true)`). If security is not enabled, this method performs no action.
+         *
+         * @param[in] aExtAddress  A reference to the extended address used to generate the AES-CCM nonce.
+         */
+        void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+        /**
+         * Restores transmit security by decrypting the frame for retransmission.
+         *
+         * The frame MUST be fully parsed before calling this method. If security is enabled and was previously
+         * processed, this method decrypts the frame in-place using AES-CCM and resets both the security-processed
+         * and header-updated flags (`SetIsSecurityProcessed(false)` and `SetIsHeaderUpdated(false)`).
+         *
+         * @param[in] aExtAddress  A reference to the extended address used to generate the AES-CCM nonce.
+         */
+        void RestoreTransmitSecurity(const ExtAddress &aExtAddress);
+#endif
+    };
+
     /**
      * Represents the information to use to build the frame.
      */
@@ -881,22 +755,6 @@ public:
      * @param[in] aFromFrame  The frame to copy from.
      */
     void CopyFrom(const TxFrame &aFromFrame);
-
-    /**
-     * Performs AES CCM on the frame which is going to be sent.
-     *
-     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
-     *                          for AES CCM computation.
-     */
-    void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
-
-    /**
-     * Restore the frame for transmit processing.
-     *
-     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
-     *                          for AES CCM computation.
-     */
-    void RestoreTransmitSecurity(const ExtAddress &aExtAddress);
 
     /**
      * Generate Imm-Ack in this frame object.

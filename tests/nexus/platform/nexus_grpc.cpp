@@ -427,19 +427,22 @@ void GrpcServer::ClearQueue(void)
 
 GrpcServer::PacketInfo GrpcServer::GetPacketInfo(const Mac::Frame &aFrame)
 {
-    PacketInfo info;
+    PacketInfo            info;
+    Mac::Frame::ParseInfo frameInfo;
 
-    if (aFrame.IsAck())
+    IgnoreError(frameInfo.ParseFrom(aFrame, Mac::Frame::kParseFully));
+
+    if (frameInfo.mType == Mac::Frame::kTypeAck)
     {
         info.mProtocol = "IEEE 802.15.4 ACK";
         info.mSummary  = "ACK";
     }
-    else if (aFrame.GetType() == Mac::Frame::kTypeData)
+    else if (frameInfo.mType == Mac::Frame::kTypeData)
     {
         info.mProtocol = "IEEE 802.15.4 Data";
         info.mSummary  = "Data";
     }
-    else if (aFrame.IsMacCommand())
+    else if (frameInfo.mType == Mac::Frame::kTypeMacCmd)
     {
         info.mProtocol = "IEEE 802.15.4 Command";
         info.mSummary  = "Command";
@@ -450,11 +453,11 @@ GrpcServer::PacketInfo GrpcServer::GetPacketInfo(const Mac::Frame &aFrame)
         info.mSummary  = "Other";
     }
 
-    if (aFrame.IsSequencePresent())
+    if (frameInfo.mIsSeqNumPresent)
     {
         char buf[32];
 
-        snprintf(buf, sizeof(buf), " (seq=%u)", aFrame.GetSequence());
+        snprintf(buf, sizeof(buf), " (seq=%u)", frameInfo.mSequenceNum);
         info.mSummary += buf;
     }
 

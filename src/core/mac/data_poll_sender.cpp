@@ -190,18 +190,17 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
+void DataPollSender::HandlePollSent(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError)
 {
-    Mac::Address macDest;
-    bool         shouldRecalculatePollPeriod = false;
-    uint8_t      maxRetxAttempts;
+    bool    shouldRecalculatePollPeriod = false;
+    uint8_t maxRetxAttempts;
 
     VerifyOrExit(mEnabled);
 
-    if (!aFrame.IsEmpty())
+    if (!aFrameInfo.GetTxFrame()->IsEmpty())
     {
-        IgnoreError(aFrame.GetDstAddr(macDest));
-        Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest, /* aIsDataPoll */ true);
+        Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrameInfo, aError, aFrameInfo.mAddrs.mDestination,
+                                                       /* aIsDataPoll */ true);
     }
 
     if (GetParent().IsStateInvalid())
@@ -245,7 +244,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
         mPollTxFailureCounter++;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        maxRetxAttempts = aFrame.Has<Mac::CslIe>() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts;
+        maxRetxAttempts = aFrameInfo.Has<Mac::CslIe>() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts;
 #else
         maxRetxAttempts = kMaxPollRetxAttempts;
 #endif
@@ -304,13 +303,13 @@ exit:
     return;
 }
 
-void DataPollSender::ProcessRxFrame(const Mac::RxFrame &aFrame)
+void DataPollSender::ProcessRxFrame(const Mac::RxFrame::ParseInfo &aFrameInfo)
 {
     VerifyOrExit(mEnabled);
 
     mPollTimeoutCounter = 0;
 
-    if (aFrame.GetFramePending())
+    if (aFrameInfo.mIsFramePending)
     {
         IgnoreError(SendDataPoll());
     }
@@ -320,27 +319,29 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-void DataPollSender::ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFrame *aAckFrame, Error aError)
+void DataPollSender::ProcessTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo,
+                                   const Mac::RxFrame::ParseInfo &aAckFrameInfo,
+                                   Error                          aError)
 {
     bool sendDataPoll = false;
 
     VerifyOrExit(mEnabled);
     VerifyOrExit(Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported());
-    VerifyOrExit(aFrame.GetSecurityEnabled());
+    VerifyOrExit(aFrameInfo.mIsSecurityEnabled);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aFrame.IsARetransmission() && aFrame.Has<Mac::CslIe>())
+    if (aFrameInfo.GetTxFrame()->IsARetransmission() && aFrameInfo.Has<Mac::CslIe>())
     {
         // For retransmission frame, use a data poll to resync its parent with correct CSL phase
         sendDataPoll = true;
     }
 #endif
 
-    if (aError == kErrorNone && aAckFrame != nullptr)
+    if (aError == kErrorNone && aAckFrameInfo.GetRxFrame() != nullptr)
     {
         mPollTimeoutCounter = 0;
 
-        if (aAckFrame->GetFramePending())
+        if (aAckFrameInfo.mIsFramePending)
         {
             sendDataPoll = true;
         }
@@ -571,7 +572,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
     Get<MessageFramer>().PrepareMacHeaders(*frame, buildInfo);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (frame->Has<Mac::CslIe>())
+    if (buildInfo.mAppendCslIe)
     {
         // Disable frame retransmission when the data poll has CSL IE included
         aTxFrames.SetMaxFrameRetries(0);
