@@ -517,6 +517,10 @@ Error Mle::BecomeDetached(void)
 
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
 
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    Get<MeshMonitor::Server>().HandleDetach();
+#endif
+
     if (IsDetached() && mAttacher.WillStartAttachSoon())
     {
         // Already detached and waiting to start an attach attempt, so
@@ -5545,7 +5549,7 @@ void Mle::Attacher::HandleChildIdResponse(RxInfo &aRxInfo)
         IgnoreError(Get<Mle>().BecomeDetached());
         ExitNow();
     }
-
+    
     Get<Mle>().SetStateChild(shortAddress);
 
     if (!Get<Mle>().IsRxOnWhenIdle())
