@@ -37,6 +37,7 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/network_data_leader.hpp"
+#include "thread/router_table.hpp"
 
 namespace ot {
 
@@ -849,15 +850,67 @@ void TestLeaderWeightCalculation(void)
 
 #endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
+void TestRouterIdMask(void)
+{
+    Mle::RouterIdMask mask;
+
+    mask.Clear();
+    VerifyOrQuit(mask.IsValid());
+    VerifyOrQuit(mask.DetermineAllocatedCount() == 0);
+
+    for (uint16_t routerId = 0; routerId <= 255; routerId++)
+    {
+        VerifyOrQuit(!mask.IsAllocated(static_cast<uint8_t>(routerId)));
+    }
+
+    mask.Add(0);
+    mask.Add(10);
+    mask.Add(Mle::kMaxRouterId);
+
+    VerifyOrQuit(mask.IsAllocated(0));
+    VerifyOrQuit(mask.IsAllocated(10));
+    VerifyOrQuit(mask.IsAllocated(Mle::kMaxRouterId));
+    VerifyOrQuit(!mask.IsAllocated(1));
+    VerifyOrQuit(!mask.IsAllocated(61));
+
+    for (uint16_t routerId = Mle::kMaxRouterId + 1; routerId <= 255; routerId++)
+    {
+        VerifyOrQuit(!mask.IsAllocated(static_cast<uint8_t>(routerId)));
+    }
+
+    mask.Remove(10);
+    VerifyOrQuit(!mask.IsAllocated(10));
+
+    printf("TestRouterIdMask passed\n");
+}
+
+#if OPENTHREAD_FTD
+void TestRouterTableRouterIdBounds(void)
+{
+    Instance    *instance    = static_cast<Instance *>(testInitInstance());
+    RouterTable &routerTable = instance->Get<RouterTable>();
+
+    for (uint16_t routerId = 0; routerId <= 255; routerId++)
+    {
+        VerifyOrQuit(!routerTable.IsAllocated(static_cast<uint8_t>(routerId)));
+    }
+
+    testFreeInstance(instance);
+    printf("TestRouterTableRouterIdBounds passed\n");
+}
+#endif
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestDeviceMode();
+    ot::TestRouterIdMask();
     ot::UnitTester::TestChildIdResponseNetworkDataHandling();
 
 #if OPENTHREAD_FTD
     ot::UnitTester::TestTxChallengeTable();
+    ot::TestRouterTableRouterIdBounds();
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
