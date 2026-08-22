@@ -763,7 +763,7 @@ public:
     bool IsCslSupported(void) const;
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     /**
      * Attempts to wake a Wake-up End Device.
      *
@@ -782,7 +782,7 @@ public:
                  uint16_t               aDurationMs,
                  WakeupCallback         aCallback,
                  void                  *aCallbackContext);
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 
 #if OPENTHREAD_FTD
     /**
@@ -1229,7 +1229,7 @@ public:
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_P2P_ENABLE
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     /**
      * Attempts to wake up peers and establish P2P links with peers.
      *
@@ -1278,7 +1278,7 @@ public:
     void P2pSetEventCallback(P2pEventCallback aCallback, void *aContext) { mP2p.SetEventCallback(aCallback, aContext); }
 #endif // OPENTHREAD_CONFIG_P2P_ENABLE
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     /**
      * Notifies MLE that a wake-up frame was received successfully.
      *
@@ -1570,7 +1570,7 @@ private:
 #endif
     };
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     enum WedAttachState : uint8_t
     {
         kWedDetached,
@@ -2378,12 +2378,12 @@ private:
     public:
         P2p(Instance &aInstance);
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
         Error WakeupAndLink(const P2pRequest &aP2pRequest, P2pLinkDoneCallback aCallback, void *aContext);
         void  HandleP2pLinkRequest(RxInfo &aRxInfo);
         void  HandleP2pLinkAccept(RxInfo &aRxInfo);
 #endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
         void HandleP2pWakeup(const Mac::WakeupInfo &aWakeupInfo);
         void HandleP2pLinkAcceptAndRequest(RxInfo &aRxInfo);
 #endif
@@ -2394,8 +2394,8 @@ private:
         void  HandleLinkTimer(void);
 
     private:
-        static constexpr uint16_t kWakeupMaxDuration         = OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION;
-        static constexpr uint16_t kWakeupTxInterval          = OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL;
+        static constexpr uint16_t kWakeupMaxDuration         = 1090;
+        static constexpr uint16_t kWakeupTxInterval          = 7500;
         static constexpr uint32_t kEstablishP2pLinkTimeoutUs = 500000;
 
         enum State : uint8_t
@@ -2408,12 +2408,12 @@ private:
             kStateTearingDown,
         };
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
         void  SendP2pLinkRequest(Peer *aPeer);
         Error SendP2pLinkAccept(const LinkAcceptInfo &aInfo);
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
         Error SendP2pLinkAcceptAndRequest(const LinkAcceptInfo &aInfo);
 #endif
 
@@ -2527,7 +2527,7 @@ private:
     static void Log(MessageAction, MessageType, const Ip6::Address &, uint16_t) {}
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     void HandleWedAttachTimer(void);
 #endif
 
@@ -2618,7 +2618,7 @@ private:
     // Variables
 
     using MleSocket = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     using WedAttachTimer = TimerMicroIn<Mle, &Mle::HandleWedAttachTimer>;
 #endif
 
@@ -2661,7 +2661,7 @@ private:
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     WakeupTxScheduler        mWakeupTxScheduler;
     WedAttachState           mWedAttachState;
     WedAttachTimer           mWedAttachTimer;

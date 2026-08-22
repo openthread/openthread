@@ -84,9 +84,9 @@
  * @defgroup config-srp-client               SRP Client
  * @defgroup config-srp-server               SRP Server
  * @defgroup config-time-sync                Time Sync Service
+ * @defgroup config-thread-direct            Thread Direct
  * @defgroup config-tmf                      Thread Management Framework Service
  * @defgroup config-trel                     TREL
- * @defgroup config-wakeup                   Wake-up
  *
  * @}
  */

@@ -999,7 +999,7 @@ inline bool IsChildRloc16(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) 
  */
 const char *RoleToString(DeviceRole aRole);
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 /**
  * Represents a P2P request.
  */
@@ -1013,7 +1013,7 @@ public:
      */
     const Mac::WakeupRequest &GetWakeupRequest(void) const { return AsCoreType(&mWakeupRequest); }
 };
-#endif // OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 
 /**
  * @}
@@ -1027,7 +1027,7 @@ DefineMapEnum(otDeviceRole, Mle::DeviceRole);
 DefineCoreType(otDeviceProperties, Mle::DeviceProperties);
 DefineMapEnum(otPowerSupply, Mle::DeviceProperties::PowerSupply);
 #endif
-#if OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 DefineCoreType(otP2pRequest, Mle::P2pRequest);
 #endif
 

@@ -31,7 +31,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -102,10 +102,10 @@ public:
     const Mac::WakeupRequest &GetWakeupRequest(void) const { return mWakeupRequest; }
 
 private:
-    constexpr static uint8_t  kConnectionRetryInterval = OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_INTERVAL;
-    constexpr static uint8_t  kConnectionRetryCount    = OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_COUNT;
+    constexpr static uint8_t  kConnectionRetryInterval = 1;
+    constexpr static uint8_t  kConnectionRetryCount    = 12;
     constexpr static uint32_t kWakeupFrameLength       = 54; // Includes SHR
-    constexpr static bool     kWakeupFrameTxCca        = OPENTHREAD_CONFIG_WAKEUP_FRAME_TX_CCA_ENABLE;
+    constexpr static bool     kWakeupFrameTxCca        = true;
     constexpr static uint32_t kParentRequestLength     = 78; // Includes SHR
 
     // Called by the MAC layer when a wake-up frame transmission is about to be started.
@@ -132,6 +132,6 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 
 #endif // OT_CORE_MAC_WAKEUP_TX_SCHEDULER_HPP_

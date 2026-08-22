@@ -74,7 +74,7 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearch(aInstance)
 #endif
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     , mWakeupTxScheduler(aInstance)
     , mWedAttachState(kWedDetached)
     , mWedAttachTimer(aInstance)
@@ -1810,7 +1810,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #endif
 
 #if OPENTHREAD_CONFIG_P2P_ENABLE
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     case kCommandP2pLinkRequest:
         mP2p.HandleP2pLinkRequest(rxInfo);
         break;
@@ -1820,7 +1820,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     case kCommandP2pLinkAcceptAndRequest:
         mP2p.HandleP2pLinkAcceptAndRequest(rxInfo);
         break;
@@ -3056,7 +3056,7 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 void Mle::HandleWedAttachTimer(void)
 {
     switch (mWedAttachState)
@@ -3104,9 +3104,9 @@ Error Mle::Wakeup(const Mac::ExtAddress &aWedAddress,
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 void Mle::HandleWakeupFrame(const Mac::WakeupInfo &aWakeupInfo)
 {
     OT_UNUSED_VARIABLE(aWakeupInfo);
