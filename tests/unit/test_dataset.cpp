@@ -158,7 +158,13 @@ void TestDataset(void)
 
     // Invalid datasets
 
+    SuccessOrQuit(dataset.SetFrom(kTlvBytes, 1));
+    VerifyOrQuit(dataset.ValidateTlvs() == kErrorParse);
+
     SuccessOrQuit(dataset.SetFrom(kTlvBytes, sizeof(kTlvBytes) - 1));
+    VerifyOrQuit(dataset.ValidateTlvs() == kErrorParse);
+
+    SuccessOrQuit(dataset.SetFrom(kDuplicateChannels, sizeof(kDuplicateChannels) / 2 + 1));
     VerifyOrQuit(dataset.ValidateTlvs() == kErrorParse);
 
     SuccessOrQuit(dataset.SetFrom(kDuplicateChannels, sizeof(kDuplicateChannels)));
