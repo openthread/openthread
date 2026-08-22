@@ -504,6 +504,99 @@ public:
         testFreeInstance(instance);
         printf("TestTxChallengeTable passed\n");
     }
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    static void HandleChildUpdateRequest(Mle::Mle &aMle, Message &aMessage, const Mac::ExtAddress &aChildExtAddress)
+    {
+        Ip6::Address     peerAddress;
+        Ip6::MessageInfo messageInfo;
+        Mle::Mle::RxInfo rxInfo(aMessage, messageInfo);
+
+        peerAddress.InitAsLinkLocalAddress(aChildExtAddress);
+        messageInfo.SetPeerAddr(peerAddress);
+        messageInfo.SetSockAddr(aMle.GetLinkLocalAddress());
+
+        aMessage.SetOffset(0);
+
+        aMle.HandleChildUpdateRequestOnParent(rxInfo);
+    }
+
+    static void TestChildUpdateRequestCslChannel(void)
+    {
+        static constexpr uint16_t kCslPeriod = 3125;
+
+        struct TestCase
+        {
+            uint16_t mChannel;
+            bool     mShouldAccept;
+        };
+
+        static const TestCase kTestCases[] = {
+            {0, true}, // Zero indicates CSL channel is not specified.
+            {Radio::kChannelMin, true},
+            {Radio::kChannelMax, true},
+            {Radio::kChannelMax + 1, false},
+            {200, false},
+            {0x0100 + Radio::kChannelMin, false}, // Would be a valid channel if truncated to `uint8_t`.
+            {0xffff, false},
+        };
+
+        Instance                   *instance        = static_cast<Instance *>(testInitInstance());
+        Mac::ExtAddress             childExtAddress = ExtAddressFromSeed(0x30);
+        Mle::Mle                   *mle;
+        Mle::DeviceMode             mode;
+        Mle::DeviceMode::ModeConfig config;
+        Child                      *child;
+        uint8_t                     expectedChannel = 0;
+
+        printf("TestChildUpdateRequestCslChannel\n");
+
+        VerifyOrQuit(instance != nullptr);
+
+        mle = &instance->Get<Mle::Mle>();
+
+        config.mRxOnWhenIdle = false;
+        config.mDeviceType   = false;
+        config.mNetworkData  = false;
+        mode.Set(config);
+
+        child = mle->mChildTable.GetNewChild();
+        VerifyOrQuit(child != nullptr);
+
+        child->SetExtAddress(childExtAddress);
+        child->SetRloc16(kNewChildRloc16);
+        child->SetDeviceMode(mode);
+        child->SetState(Neighbor::kStateValid);
+        child->SetCslPeriod(kCslPeriod);
+        child->SetCslSynchronized(true);
+        VerifyOrQuit(child->IsCslSynchronized());
+        VerifyOrQuit(child->GetCslChannel() == expectedChannel);
+
+        for (const TestCase &testCase : kTestCases)
+        {
+            Message *message = instance->Get<MessagePool>().Allocate(Message::kTypeIp6);
+
+            VerifyOrQuit(message != nullptr);
+            message->SetSubType(Message::kSubTypeMle);
+
+            SuccessOrQuit(Tlv::Append<Mle::ModeTlv>(*message, mode.Get()));
+            SuccessOrQuit(Tlv::Append<Mle::CslChannelTlv>(*message, Mle::ChannelTlvValue(testCase.mChannel)));
+
+            HandleChildUpdateRequest(*mle, *message, childExtAddress);
+
+            if (testCase.mShouldAccept)
+            {
+                expectedChannel = static_cast<uint8_t>(testCase.mChannel);
+            }
+
+            VerifyOrQuit(child->GetCslChannel() == expectedChannel);
+
+            message->Free();
+        }
+
+        testFreeInstance(instance);
+        printf("TestChildUpdateRequestCslChannel passed\n");
+    }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 #endif // OPENTHREAD_FTD
 
 private:
@@ -911,6 +1004,9 @@ int main(void)
 #if OPENTHREAD_FTD
     ot::UnitTester::TestTxChallengeTable();
     ot::TestRouterTableRouterIdBounds();
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    ot::UnitTester::TestChildUpdateRequestCslChannel();
+#endif
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
