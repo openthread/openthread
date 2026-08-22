@@ -97,8 +97,13 @@ bool Prefix::IsCoveredBy(const NetworkPrefix &aNetworkPrefix) const
 
 void Prefix::Tidy(void)
 {
-    uint8_t byteLength      = GetBytesSize();
-    uint8_t lastByteBitMask = static_cast<uint8_t>(~(static_cast<uint8_t>(1 << (byteLength * 8 - mLength)) - 1));
+    uint8_t byteLength;
+    uint8_t lastByteBitMask;
+
+    VerifyOrExit(mLength < kMaxLength);
+
+    byteLength      = GetBytesSize();
+    lastByteBitMask = static_cast<uint8_t>(0xffU << (byteLength * 8 - mLength));
 
     if (byteLength != 0)
     {
@@ -109,6 +114,9 @@ void Prefix::Tidy(void)
     {
         mPrefix.mFields.m8[i] = 0;
     }
+
+exit:
+    return;
 }
 
 bool Prefix::operator==(const Prefix &aOther) const
