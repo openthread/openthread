@@ -223,6 +223,11 @@ void InfraIf::HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex)
     Get<Dhcp6PdClient>().HandleReceived(aMessage);
 
 exit:
+    if (error != kErrorNone)
+    {
+        aMessage.Free();
+    }
+
     LogDebgOnError(error, "process DHCPv6 msg");
 }
 
