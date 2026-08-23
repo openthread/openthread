@@ -103,7 +103,7 @@ jobs:
     - name: Bootstrap
       timeout-minutes: 10
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build lcov
         sudo bash script/install_socat
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
