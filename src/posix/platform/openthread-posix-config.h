@@ -431,7 +431,13 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF
  *
- * Define as 1 to let the upstream DNS bind the socket to infra network interface.
+ * Define as 1 to bind the sockets used to query recursive DNS servers discovered through RDNSS
+ * to the infra network interface. Those servers are discovered on the infra link, so queries to
+ * them are always sent out that interface, regardless of the host routing table.
+ *
+ * Nameservers from the host's resolv.conf (or set via `otSysUpstreamDnsSetServerList()`) are
+ * host-wide configuration and are always reached following the host's routing table, independent
+ * of this setting.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF
 #define OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF 1
