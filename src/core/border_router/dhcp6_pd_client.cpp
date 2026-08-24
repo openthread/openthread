@@ -374,7 +374,7 @@ Error Dhcp6PdClient::AppendIaPrefixOption(Message &aMessage, const Ip6::Prefix &
     return aMessage.Append(iaPrefixOption);
 }
 
-void Dhcp6PdClient::HandleReceived(Message &aMessage)
+void Dhcp6PdClient::HandleReceived(OwnedPtr<Message> aMessagePtr)
 {
     Header      header;
     OffsetRange serverDuidOffsetRange;
@@ -394,7 +394,7 @@ void Dhcp6PdClient::HandleReceived(Message &aMessage)
         ExitNow();
     }
 
-    SuccessOrExit(ParseHeaderAndValidateMessage(aMessage, header));
+    SuccessOrExit(ParseHeaderAndValidateMessage(*aMessagePtr, header));
 
     switch (header.GetMsgType())
     {
@@ -420,8 +420,8 @@ void Dhcp6PdClient::HandleReceived(Message &aMessage)
     // - The message does not include a Server ID option.
 
     VerifyOrExit(header.GetTransactionId() == mRetxTracker.GetTransactionId());
-    SuccessOrExit(ClientIdOption::MatchesEui64Duid(aMessage, Get<Mac::Mac>().GetExtAddress()));
-    SuccessOrExit(ServerIdOption::ReadDuid(aMessage, serverDuidOffsetRange));
+    SuccessOrExit(ClientIdOption::MatchesEui64Duid(*aMessagePtr, Get<Mac::Mac>().GetExtAddress()));
+    SuccessOrExit(ServerIdOption::ReadDuid(*aMessagePtr, serverDuidOffsetRange));
 
     // If we have selected a server, ensure the received server DUID
     // matches the one saved in `mServerDuid`. However, during the
@@ -433,28 +433,28 @@ void Dhcp6PdClient::HandleReceived(Message &aMessage)
     if (!mServerDuid.IsEmpty() && (mState != kStateSoliciting))
     {
         VerifyOrExit(serverDuidOffsetRange.GetLength() == mServerDuid.GetLength());
-        VerifyOrExit(aMessage.CompareBytes(serverDuidOffsetRange, mServerDuid.GetArrayBuffer()));
+        VerifyOrExit(aMessagePtr->CompareBytes(serverDuidOffsetRange, mServerDuid.GetArrayBuffer()));
     }
 
     // The client MUST process any SOL_MAX_RT option in an Advertise
     // or Reply message, even if the message contains a Status Code
     // option indicating a failure and will be discarded by the client
 
-    ProcessSolMaxRtOption(aMessage);
+    ProcessSolMaxRtOption(*aMessagePtr);
 
     switch (header.GetMsgType())
     {
     case kMsgTypeAdvertise:
-        HandleAdvertise(aMessage);
+        HandleAdvertise(*aMessagePtr);
         break;
 
     case kMsgTypeReply:
-        HandleReply(aMessage);
+        HandleReply(*aMessagePtr);
         break;
     }
 
 exit:
-    aMessage.Free();
+    return;
 }
 
 Error Dhcp6PdClient::ParseHeaderAndValidateMessage(Message &aMessage, Header &aHeader)
