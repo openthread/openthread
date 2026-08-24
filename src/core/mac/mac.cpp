@@ -1657,8 +1657,9 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        VerifyOrExit(keyManager.IsKekSet(), error = kErrorSecurity);
-        macKey     = &keyManager.GetKek();
+        VerifyOrExit(keyManager.IsKekSet());
+        macKey = &keyManager.GetKek();
+        VerifyOrExit(aSrcAddr.IsExtended());
         extAddress = &aSrcAddr.GetExtended();
         break;
 
@@ -1694,6 +1695,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
             }
         }
 
+        VerifyOrExit(aSrcAddr.IsExtended());
         extAddress = &aSrcAddr.GetExtended();
 
         break;
@@ -1867,11 +1869,11 @@ exit:
 
 void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 {
-    Error     error = aError;
+    Error     error    = aError;
+    Neighbor *neighbor = nullptr;
     Address   srcAddr;
     Address   dstAddr;
     PanId     panId;
-    Neighbor *neighbor;
 
     mCounters.mRxTotal++;
 
@@ -1885,7 +1887,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
     IgnoreError(aFrame->GetSrcAddr(srcAddr));
     IgnoreError(aFrame->GetDstAddr(dstAddr));
-    neighbor = !srcAddr.IsNone() ? Get<NeighborTable>().FindNeighbor(srcAddr) : nullptr;
 
     // Destination Address Filtering
     switch (dstAddr.GetType())
@@ -1895,15 +1896,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
     case Address::kTypeShort:
         SuccessOrExit(error = FilterDestShortAddress(dstAddr.GetShort()));
-
-#if OPENTHREAD_FTD
-        // Allow multicasts from neighbor routers if FTD
-        if (neighbor == nullptr && dstAddr.IsBroadcast() && Get<Mle::Mle>().IsFullThreadDevice())
-        {
-            neighbor = Get<NeighborTable>().FindRxOnlyNeighborRouter(srcAddr);
-        }
-#endif
-
         break;
 
     case Address::kTypeExtended:
@@ -1918,30 +1910,31 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     }
 
     // Source Address Filtering
-    switch (srcAddr.GetType())
+
+    if (!srcAddr.IsNone())
     {
-    case Address::kTypeNone:
-        break;
+        neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
 
-    case Address::kTypeShort:
-        LogDebg("Received frame from short address 0x%04x", srcAddr.GetShort());
+#if OPENTHREAD_FTD
+        // Allow multicasts from neighbor routers if FTD
+        if ((neighbor == nullptr) && dstAddr.IsBroadcast() && Get<Mle::Mle>().IsFullThreadDevice())
+        {
+            neighbor = Get<NeighborTable>().FindRxOnlyNeighborRouter(srcAddr);
+        }
+#endif
 
-        VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
+        if (srcAddr.IsShort())
+        {
+            LogDebg("Received frame from short address 0x%04x", srcAddr.GetShort());
+            VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
+            srcAddr.SetExtended(neighbor->GetExtAddress());
+        }
 
-        srcAddr.SetExtended(neighbor->GetExtAddress());
-
-        OT_FALL_THROUGH;
-
-    case Address::kTypeExtended:
-
-        // Duplicate Address Protection
         VerifyOrExit(srcAddr.GetExtended() != GetExtAddress(), error = kErrorInvalidSourceAddress);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
         SuccessOrExit(error = mFilter.ApplyToRxFrame(*aFrame, srcAddr.GetExtended(), neighbor));
 #endif
-
-        break;
     }
 
     if (dstAddr.IsBroadcast())
@@ -2538,6 +2531,8 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 {
     CslNeighbor *neighbor = nullptr;
     const CslIe *csl;
+
+    VerifyOrExit(!aSrcAddr.IsNone());
 
     VerifyOrExit(aFrame.IsVersion2015());
     VerifyOrExit(aFrame.IsSecuredWith(RxFrame::kAllowKeyIdMode1));
