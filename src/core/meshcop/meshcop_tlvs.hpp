@@ -898,7 +898,7 @@ private:
     static constexpr uint8_t  kBuildOffset = 4;
     static constexpr uint16_t kBuildMask   = 0xfff << kBuildOffset;
     static constexpr uint8_t  kRevOffset   = 0;
-    static constexpr uint16_t kRevMask     = 0xf << kBuildOffset;
+    static constexpr uint16_t kRevMask     = 0xf << kRevOffset;
 
     // For `mMinorMajor`
     static constexpr uint8_t kMinorOffset = 4;
