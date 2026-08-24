@@ -67,8 +67,8 @@ namespace Mac {
 #error "OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE MUST NOT be defined directly. It is derived from other configs"
 #endif
 
-#define OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE                                                         \
-    (OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || \
+#define OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE                                                        \
+    (OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || \
      ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE))
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -479,7 +479,7 @@ public:
     bool IsRadioFilterEnabled(void) const { return mRadioFilterEnabled; }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     /**
      * Configures wake-up listening parameters in all radios.
      *
@@ -552,13 +552,13 @@ private:
 #if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
         kStateTimedTransmit, // Timed TX (e.g., for CSL)
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
         kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
                            // sample state.
 #endif
     };
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     // Radio on times needed before and after MHR time for proper frame detection
     static constexpr uint32_t kMinReceiveOnAhead = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD;
     static constexpr uint32_t kMinReceiveOnAfter = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
@@ -568,10 +568,10 @@ private:
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     // Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval.
     // The value is in usec.
-    static constexpr uint32_t kWedReceiveTimeAfter = OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER;
+    static constexpr uint32_t kWedReceiveTimeAfter = 500;
 #endif
 
 #if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
@@ -608,7 +608,7 @@ private:
     void               SetState(State aState);
     static const char *StateToString(State aState);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     bool IsRadioSampleEnabled(void) const;
     void UpdateRadioSampleState(void);
     void RadioSample(void);
@@ -633,7 +633,7 @@ private:
     void LogCslWindow(uint32_t aWinStart, uint32_t aWinDuration);
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     void WedInit(void);
     void HandleWedTimer(void);
     void HandleWedReceiveAt(void);
@@ -687,7 +687,7 @@ private:
 #endif
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     using WedTimer = TimerMicroIn<SubMac, &SubMac::HandleWedTimer>;
 
     bool mIsWedSampling : 1;                 // Indicates that the current time is in WED's sample window

@@ -930,10 +930,10 @@ source_set("libopenthread_core_config") {
     "config/sntp_client.h",
     "config/srp_client.h",
     "config/srp_server.h",
+    "config/thread_direct.h",
     "config/time_sync.h",
     "config/tmf.h",
     "config/trel.h",
-    "config/wakeup.h",
     "openthread-core-config.h",
   ]
   public_configs = [

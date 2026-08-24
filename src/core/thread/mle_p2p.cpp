@@ -34,9 +34,9 @@
 #include "mle.hpp"
 
 #if OPENTHREAD_CONFIG_P2P_ENABLE
-#if !(OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE)
-#error "OPENTHREAD_CONFIG_P2P_ENABLE requires OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE or "\
-    "OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE"
+#if !(OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE)
+#error "OPENTHREAD_CONFIG_P2P_ENABLE requires OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE or "\
+    "OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE"
 #endif
 
 #include "common/code_utils.hpp"
@@ -60,7 +60,7 @@ Mle::P2p::P2p(Instance &aInstance)
 {
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 Error Mle::P2p::WakeupAndLink(const P2pRequest &aP2pRequest, P2pLinkDoneCallback aCallback, void *aContext)
 {
     Error error = kErrorNone;
@@ -135,7 +135,7 @@ Error Mle::P2p::SendP2pLinkAcceptAndRequest(const LinkAcceptInfo &aInfo)
 void Mle::P2p::HandleP2pLinkAccept(RxInfo &aRxInfo) { HandleP2pLinkAcceptVariant(aRxInfo, kTypeP2pLinkAccept); }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 void Mle::P2p::HandleP2pWakeup(const Mac::WakeupInfo &aWakeupInfo)
 {
     Peer *peer = nullptr;
@@ -212,7 +212,7 @@ Error Mle::P2p::SendP2pLinkAccept(const LinkAcceptInfo &aInfo)
 {
     return SendP2pLinkAcceptVariant(aInfo, false /* aIsLinkAcceptAndRequest*/);
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 
 Error Mle::P2p::SendP2pLinkAcceptVariant(const LinkAcceptInfo &aInfo, bool aIsLinkAcceptAndRequest)
 {
@@ -319,7 +319,7 @@ void Mle::P2p::HandleP2pLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageT
         info.mExtAddress = aRxInfo.mNeighbor->GetExtAddress();
         info.mLinkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
         SuccessOrExit(error = SendP2pLinkAccept(info));
 #endif
     }
@@ -451,7 +451,7 @@ void Mle::P2p::HandleLinkTimer(void)
 {
     switch (mState)
     {
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     case kStateWakingUp:
     case kStateWaitingLinkAccept:
     {
@@ -467,7 +467,7 @@ void Mle::P2p::HandleLinkTimer(void)
     break;
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     case kStateAttachDelay:
         SendP2pLinkRequest(mPeer);
         break;
@@ -488,7 +488,7 @@ void Mle::P2p::HandleLinkTimer(void)
 
 void Mle::P2p::SetWakeupListenerEnabled(void)
 {
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     // The wake-up listener is disabled after a wake-up frame is received, here enables the wake-up listener again.
     IgnoreError(Get<Mac::Mac>().SetWakeupListenEnabled(true));
 #endif

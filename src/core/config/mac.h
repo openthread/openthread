@@ -44,7 +44,6 @@
  */
 
 #include "config/time_sync.h"
-#include "config/wakeup.h"
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT

@@ -28,7 +28,7 @@
 
 #include "wakeup_tx_scheduler.hpp"
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 
 #include "common/code_utils.hpp"
 #include "common/log.hpp"
@@ -168,4 +168,4 @@ void WakeupTxScheduler::HandleRadioBusLatencyChanged(void)
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE

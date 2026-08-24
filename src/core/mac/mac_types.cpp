@@ -429,7 +429,7 @@ uint8_t DeterminePrevKeyIndex(uint8_t aKeyIndex)
     return prevIndex;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 uint8_t GetWakeupIdLength(WakeupId aWakeupId)
 {
     uint8_t zeroBytesCount = 0;
@@ -450,7 +450,7 @@ uint8_t GetWakeupIdLength(WakeupId aWakeupId)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
 void WakeupRequest::SetExtAddress(const ExtAddress &aExtAddress)
 {
     SetType(kTypeExtAddress);
