@@ -58,7 +58,24 @@ void NetworkNameTlv::SetNetworkName(const NameData &aNameData)
     SetLength(len);
 }
 
-bool NetworkNameTlv::IsValid(void) const { return IsValidUtf8String(mNetworkName, GetLength()); }
+bool NetworkNameTlv::IsValid(void) const
+{
+    bool isValid = false;
+
+#if OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
+    if (GetLength() == 0)
+    {
+        ExitNow(isValid = true);
+    }
+#endif
+
+    VerifyOrExit(IsValueInRange<uint8_t>(GetLength(), 1, NetworkName::kMaxSize));
+    VerifyOrExit(IsValidUtf8String(mNetworkName, GetLength()));
+    isValid = true;
+
+exit:
+    return isValid;
+}
 
 Error SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
 {

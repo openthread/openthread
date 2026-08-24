@@ -49,5 +49,23 @@ ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
 
 Error ExtendedPanId::GenerateRandom(void) { return Random::Crypto::Fill(*this); }
 
+bool ExtendedPanId::IsValid(void) const
+{
+    // The all-zeros and all-ones Extended PAN IDs are disallowed by
+    // the Thread specification. Determine both cases in a single pass
+    // by OR-ing and AND-ing all bytes together.
+
+    uint8_t oredBytes  = 0x00;
+    uint8_t andedBytes = 0xff;
+
+    for (uint8_t byte : m8)
+    {
+        oredBytes |= byte;
+        andedBytes &= byte;
+    }
+
+    return (oredBytes != 0x00) && (andedBytes != 0xff);
+}
+
 } // namespace MeshCoP
 } // namespace ot

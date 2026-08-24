@@ -128,6 +128,10 @@ bool Dataset::IsTlvValid(const Tlv &aTlv)
     bool    isValid   = true;
     uint8_t minLength = 0;
 
+    // Validate the TLV format, i.e., that the value is long enough for
+    // the TLV type. TLV types whose `IsValid()` does its own length
+    // checking are not included here.
+
     switch (aTlv.GetType())
     {
     case Tlv::kActiveTimestamp:
@@ -139,41 +143,25 @@ bool Dataset::IsTlvValid(const Tlv &aTlv)
     case Tlv::kDelayTimer:
         minLength = sizeof(DelayTimerTlv::UintValueType);
         break;
-    case Tlv::kPanId:
-        minLength = sizeof(PanIdTlv::UintValueType);
-        break;
-    case Tlv::kExtendedPanId:
-        minLength = sizeof(ExtendedPanIdTlv::ValueType);
-        break;
     case Tlv::kPskc:
         minLength = sizeof(PskcTlv::ValueType);
         break;
     case Tlv::kNetworkKey:
         minLength = sizeof(NetworkKeyTlv::ValueType);
         break;
+    case Tlv::kPanId:
+        minLength = sizeof(PanIdTlv::UintValueType);
+        break;
+    case Tlv::kExtendedPanId:
+        minLength = sizeof(ExtendedPanIdTlv::ValueType);
+        break;
     case Tlv::kMeshLocalPrefix:
         minLength = sizeof(MeshLocalPrefixTlv::ValueType);
         break;
     case Tlv::kChannel:
-        VerifyOrExit(aTlv.GetLength() >= sizeof(ChannelTlvValue), isValid = false);
-        isValid = aTlv.ReadValueAs<ChannelTlv>().IsValid();
-        break;
     case Tlv::kWakeupChannel:
-        VerifyOrExit(aTlv.GetLength() >= sizeof(ChannelTlvValue), isValid = false);
-        isValid = aTlv.ReadValueAs<WakeupChannelTlv>().IsValid();
+        minLength = sizeof(ChannelTlvValue);
         break;
-    case Tlv::kNetworkName:
-        isValid = As<NetworkNameTlv>(aTlv).IsValid();
-        break;
-
-    case Tlv::kSecurityPolicy:
-        isValid = As<SecurityPolicyTlv>(aTlv).IsValid();
-        break;
-
-    case Tlv::kChannelMask:
-        isValid = As<ChannelMaskTlv>(aTlv).IsValid();
-        break;
-
     default:
         break;
     }
@@ -181,6 +169,41 @@ bool Dataset::IsTlvValid(const Tlv &aTlv)
     if (minLength > 0)
     {
         isValid = (aTlv.GetLength() >= minLength);
+        VerifyOrExit(isValid);
+    }
+
+    // Validate the TLV value.
+
+    switch (aTlv.GetType())
+    {
+    case Tlv::kPanId:
+        // The broadcast PAN ID does not identify a network.
+        isValid = (aTlv.ReadValueAs<PanIdTlv>() != Mac::kPanIdBroadcast);
+        break;
+    case Tlv::kExtendedPanId:
+        isValid = aTlv.ReadValueAs<ExtendedPanIdTlv>().IsValid();
+        break;
+    case Tlv::kMeshLocalPrefix:
+        // The Mesh-Local Prefix is required to be a locally assigned ULA prefix.
+        isValid = aTlv.ReadValueAs<MeshLocalPrefixTlv>().IsLocallyAssignedUla();
+        break;
+    case Tlv::kChannel:
+        isValid = aTlv.ReadValueAs<ChannelTlv>().IsValid();
+        break;
+    case Tlv::kWakeupChannel:
+        isValid = aTlv.ReadValueAs<WakeupChannelTlv>().IsValid();
+        break;
+    case Tlv::kNetworkName:
+        isValid = As<NetworkNameTlv>(aTlv).IsValid();
+        break;
+    case Tlv::kSecurityPolicy:
+        isValid = As<SecurityPolicyTlv>(aTlv).IsValid();
+        break;
+    case Tlv::kChannelMask:
+        isValid = As<ChannelMaskTlv>(aTlv).IsValid();
+        break;
+    default:
+        break;
     }
 
 exit:
