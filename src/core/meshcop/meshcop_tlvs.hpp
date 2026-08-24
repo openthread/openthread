@@ -833,7 +833,7 @@ public:
      *
      * @returns The Build value.
      */
-    uint16_t GetBuild(void) const { return ReadBitsBigEndian<uint16_t, kBuildMask>(mBuildRevision); }
+    uint16_t GetBuild(void) const { return ReadBitsIn<kBigEndian, uint16_t, kBuildMask>(mBuildRevision); }
 
     /**
      * Sets the Build value.
@@ -842,7 +842,7 @@ public:
      */
     void SetBuild(uint16_t aBuild)
     {
-        mBuildRevision = UpdateBitsBigEndian<uint16_t, kBuildMask>(mBuildRevision, aBuild);
+        mBuildRevision = UpdateBitsIn<kBigEndian, uint16_t, kBuildMask>(mBuildRevision, aBuild);
     }
 
     /**
@@ -852,7 +852,7 @@ public:
      */
     uint8_t GetRevision(void) const
     {
-        return static_cast<uint8_t>(ReadBitsBigEndian<uint16_t, kRevMask>(mBuildRevision));
+        return static_cast<uint8_t>(ReadBitsIn<kBigEndian, uint16_t, kRevMask>(mBuildRevision));
     }
 
     /**
@@ -862,7 +862,7 @@ public:
      */
     void SetRevision(uint8_t aRevision)
     {
-        mBuildRevision = UpdateBitsBigEndian<uint16_t, kRevMask>(mBuildRevision, static_cast<uint16_t>(aRevision));
+        mBuildRevision = UpdateBitsIn<kBigEndian, uint16_t, kRevMask>(mBuildRevision, aRevision);
     }
 
     /**

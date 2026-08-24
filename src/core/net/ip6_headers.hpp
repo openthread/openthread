@@ -142,7 +142,7 @@ public:
      */
     uint8_t GetTrafficClass(void) const
     {
-        return static_cast<uint8_t>(ReadBitsBigEndian<uint16_t, kTrafficClassMask>(mVerTcFlow.m16[0]));
+        return static_cast<uint8_t>(ReadBitsIn<kBigEndian, uint16_t, kTrafficClassMask>(mVerTcFlow.m16[0]));
     }
 
     /**
@@ -152,8 +152,7 @@ public:
      */
     void SetTrafficClass(uint8_t aTc)
     {
-        mVerTcFlow.m16[0] =
-            UpdateBitsBigEndian<uint16_t, kTrafficClassMask>(mVerTcFlow.m16[0], static_cast<uint16_t>(aTc));
+        mVerTcFlow.m16[0] = UpdateBitsIn<kBigEndian, uint16_t, kTrafficClassMask>(mVerTcFlow.m16[0], aTc);
     }
 
     /**
@@ -163,7 +162,7 @@ public:
      */
     uint8_t GetDscp(void) const
     {
-        return static_cast<uint8_t>(ReadBitsBigEndian<uint16_t, kDscpMask>(mVerTcFlow.m16[0]));
+        return static_cast<uint8_t>(ReadBitsIn<kBigEndian, uint16_t, kDscpMask>(mVerTcFlow.m16[0]));
     }
 
     /**
@@ -173,7 +172,7 @@ public:
      */
     void SetDscp(uint8_t aDscp)
     {
-        mVerTcFlow.m16[0] = UpdateBitsBigEndian<uint16_t, kDscpMask>(mVerTcFlow.m16[0], static_cast<uint16_t>(aDscp));
+        mVerTcFlow.m16[0] = UpdateBitsIn<kBigEndian, uint16_t, kDscpMask>(mVerTcFlow.m16[0], aDscp);
     }
 
     /**
@@ -195,14 +194,17 @@ public:
      *
      * @returns  The Flow value.
      */
-    uint32_t GetFlow(void) const { return ReadBitsBigEndian<uint32_t, kFlowMask>(mVerTcFlow.m32); }
+    uint32_t GetFlow(void) const { return ReadBitsIn<kBigEndian, uint32_t, kFlowMask>(mVerTcFlow.m32); }
 
     /**
      * Sets the 20-bit Flow field in IPv6 header.
      *
      * @param[in] aFlow  The Flow value.
      */
-    void SetFlow(uint32_t aFlow) { mVerTcFlow.m32 = UpdateBitsBigEndian<uint32_t, kFlowMask>(mVerTcFlow.m32, aFlow); }
+    void SetFlow(uint32_t aFlow)
+    {
+        mVerTcFlow.m32 = UpdateBitsIn<kBigEndian, uint32_t, kFlowMask>(mVerTcFlow.m32, aFlow);
+    }
 
     /**
      * Returns the IPv6 Payload Length value.
@@ -671,7 +673,7 @@ public:
      *
      * @returns The Fragment Offset value.
      */
-    uint16_t GetOffset(void) const { return ReadBitsBigEndian<uint16_t, kOffsetMask>(mOffsetMore); }
+    uint16_t GetOffset(void) const { return ReadBitsIn<kBigEndian, uint16_t, kOffsetMask>(mOffsetMore); }
 
     /**
      * Sets the Fragment Offset value.
@@ -680,9 +682,7 @@ public:
      */
     void SetOffset(uint16_t aOffset)
     {
-        uint16_t tmp = BigEndian::HostSwap16(mOffsetMore);
-        WriteBits<uint16_t, kOffsetMask>(tmp, aOffset);
-        mOffsetMore = BigEndian::HostSwap16(tmp);
+        mOffsetMore = UpdateBitsIn<kBigEndian, uint16_t, kOffsetMask>(mOffsetMore, aOffset);
     }
 
     /**
@@ -690,17 +690,17 @@ public:
      *
      * @returns The M flag value.
      */
-    bool IsMoreFlagSet(void) const { return BigEndian::HostSwap16(mOffsetMore) & kMoreFlag; }
+    bool IsMoreFlagSet(void) const { return ReadBitsIn<kBigEndian, uint16_t, kMoreFlag>(mOffsetMore); }
 
     /**
      * Clears the M flag value.
      */
-    void ClearMoreFlag(void) { mOffsetMore = BigEndian::HostSwap16(BigEndian::HostSwap16(mOffsetMore) & ~kMoreFlag); }
+    void ClearMoreFlag(void) { mOffsetMore = UpdateBitsIn<kBigEndian, uint16_t, kMoreFlag>(mOffsetMore, 0); }
 
     /**
      * Sets the M flag value.
      */
-    void SetMoreFlag(void) { mOffsetMore = BigEndian::HostSwap16(BigEndian::HostSwap16(mOffsetMore) | kMoreFlag); }
+    void SetMoreFlag(void) { mOffsetMore = UpdateBitsIn<kBigEndian, uint16_t, kMoreFlag>(mOffsetMore, 1); }
 
     /**
      * Returns the frame identification.
