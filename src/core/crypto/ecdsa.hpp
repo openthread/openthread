@@ -198,7 +198,7 @@ public:
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     /**
-     * Represents a key pair (public and private keys) as a PSA KeyRef.
+     * Represents a key pair (public and private keys) as a `KeyRef`.
      */
     class KeyPairAsRef
     {
@@ -206,12 +206,12 @@ public:
         /**
          * Initializes a `KeyPairAsRef`.
          *
-         * @param[in] aKeyRef         PSA key reference to use while using the keypair.
+         * @param[in] aKeyRef         Key reference to use with the key pair.
          */
         explicit KeyPairAsRef(otCryptoKeyRef aKeyRef = 0) { mKeyRef = aKeyRef; }
 
         /**
-         * Generates a new keypair and imports it into PSA ITS.
+         * Generates a new key pair and saves it in secure storage.
          *
          * @retval kErrorNone         A new key pair was generated successfully.
          * @retval kErrorNoBufs       Failed to allocate buffer for key generation.
@@ -221,29 +221,28 @@ public:
         Error Generate(void) const { return otPlatCryptoEcdsaGenerateAndImportKey(mKeyRef); }
 
         /**
-         * Imports a new keypair into PSA ITS.
+         * Saves a new key pair into secure storage.
          *
-         * @param[in] aKeyPair        KeyPair to be imported in DER format.
+         * @param[in] aKeyPair        The key pair to be saved in DER format.
          *
-         * @retval kErrorNone         A key pair was imported successfully.
+         * @retval kErrorNone         A key pair was saved successfully.
          * @retval kErrorNotCapable   Feature not supported.
-         * @retval kErrorFailed       Failed to import the key.
+         * @retval kErrorFailed       Failed to save the key.
          */
-        Error ImportKeyPair(const KeyPair &aKeyPair)
+        Error SaveKeyPair(const KeyPair &aKeyPair)
         {
-            return Crypto::Storage::ImportKey(mKeyRef, Storage::kKeyTypeEcdsa, Storage::kKeyAlgorithmEcdsa,
-                                              (Storage::kUsageSignHash | Storage::kUsageVerifyHash),
-                                              Storage::kTypePersistent, aKeyPair.GetDerBytes(),
-                                              aKeyPair.GetDerLength());
+            return Crypto::Storage::SaveKey(mKeyRef, Storage::kKeyTypeEcdsa, Storage::kKeyAlgorithmEcdsa,
+                                            (Storage::kUsageSignHash | Storage::kUsageVerifyHash),
+                                            Storage::kTypePersistent, aKeyPair.GetDerBytes(), aKeyPair.GetDerLength());
         }
 
         /**
-         * Gets the associated public key from the keypair referenced by mKeyRef.
+         * Gets the associated public key from the key pair referenced by mKeyRef.
          *
          * @param[out] aPublicKey     A reference to a `PublicKey` to output the value.
          *
          * @retval kErrorNone      Public key was retrieved successfully, and @p aPublicKey is updated.
-         * @retval kErrorFailed    There was a error exporting the public key from PSA.
+         * @retval kErrorFailed    Failed to retrieve the public key from secure storage.
          */
         Error GetPublicKey(PublicKey &aPublicKey) const
         {
@@ -251,7 +250,7 @@ public:
         }
 
         /**
-         * Calculates the ECDSA signature for a hashed message using the private key from keypair
+         * Calculates the ECDSA signature for a hashed message using the private key from key pair
          * referenced by mKeyRef.
          *
          * Uses the deterministic digital signature generation procedure from RFC 6979.
@@ -270,16 +269,16 @@ public:
         }
 
         /**
-         * Gets the Key reference for the keypair stored in the PSA.
+         * Gets the key reference for the key pair stored in secure storage.
          *
-         * @returns The PSA key ref.
+         * @returns The key reference.
          */
         otCryptoKeyRef GetKeyRef(void) const { return mKeyRef; }
 
         /**
-         * Sets the Key reference.
+         * Sets the key reference.
          *
-         * @param[in] aKeyRef         PSA key reference to use while using the keypair.
+         * @param[in] aKeyRef         Key reference to use with the key pair.
          */
         void SetKeyRef(otCryptoKeyRef aKeyRef) { mKeyRef = aKeyRef; }
 

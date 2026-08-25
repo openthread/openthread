@@ -568,7 +568,7 @@ void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
     {
         size_t keyLen;
 
-        SuccessOrAssert(Crypto::Storage::ExportKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen));
+        SuccessOrAssert(Crypto::Storage::ReadKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen));
         OT_ASSERT(keyLen == NetworkKey::kSize);
     }
     else
@@ -587,7 +587,7 @@ void KeyManager::GetPskc(Pskc &aPskc) const
     {
         size_t keyLen;
 
-        SuccessOrAssert(Crypto::Storage::ExportKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen));
+        SuccessOrAssert(Crypto::Storage::ReadKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen));
         OT_ASSERT(keyLen == Pskc::kSize);
     }
     else
@@ -609,9 +609,10 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 
     if (!aOverWriteExisting)
     {
-        // Check if there is already a network key stored in ITS. If
-        // stored, and we are not overwriting the existing key,
-        // return without doing anything.
+        // Check if there is already a network key stored in secure
+        // storage. If stored, and we are not overwriting the existing
+        // key, return without doing anything.
+
         if (Crypto::Storage::HasKey(keyRef))
         {
             ExitNow();
@@ -620,10 +621,10 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 
     Crypto::Storage::DestroyKey(keyRef);
 
-    SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
-                                               Crypto::Storage::kKeyAlgorithmHmacSha256,
-                                               Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
-                                               Crypto::Storage::kTypePersistent, aNetworkKey.m8, NetworkKey::kSize));
+    SuccessOrAssert(Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeHmac,
+                                             Crypto::Storage::kKeyAlgorithmHmacSha256,
+                                             Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
+                                             Crypto::Storage::kTypePersistent, aNetworkKey.m8, NetworkKey::kSize));
 
 exit:
     if (mNetworkKeyRef != keyRef)
@@ -640,9 +641,9 @@ void KeyManager::StorePskc(const Pskc &aPskc)
 
     Crypto::Storage::DestroyKey(keyRef);
 
-    SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeRaw,
-                                               Crypto::Storage::kKeyAlgorithmVendor, Crypto::Storage::kUsageExport,
-                                               Crypto::Storage::kTypePersistent, aPskc.m8, Pskc::kSize));
+    SuccessOrAssert(Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeRaw, Crypto::Storage::kKeyAlgorithmVendor,
+                                             Crypto::Storage::kUsageExport, Crypto::Storage::kTypePersistent, aPskc.m8,
+                                             Pskc::kSize));
 
     if (mPskcRef != keyRef)
     {
