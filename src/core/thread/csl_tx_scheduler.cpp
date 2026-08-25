@@ -220,8 +220,8 @@ Radio::Time64 CslTxScheduler::NeighborInfo::DetermineNextCslWindow(Radio::Time64
     //         = nextTmh - phrDuration
     //         = lastRxTimestamp + 160us * (n * cslPeriod + cslPhase)
 
-    uint32_t      periodInUs    = GetCslPeriod() * Radio::kUsPerTenSymbols;
-    Radio::Time64 firstTxWindow = GetLastRxTimestamp() + GetCslPhase() * Radio::kUsPerTenSymbols;
+    uint32_t      periodInUs    = Mac::CslPeriodToUsec(GetCslPeriod());
+    Radio::Time64 firstTxWindow = GetLastRxTimestamp() + GetCslPhase() * Radio::kTenSymbolsDuration;
     Radio::Time64 nextTxWindow  = aRadioNow - (aRadioNow % periodInUs) + (firstTxWindow % periodInUs);
 
     while (nextTxWindow < aRadioNow + aLeadTime)

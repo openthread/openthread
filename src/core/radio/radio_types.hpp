@@ -57,6 +57,8 @@ namespace Radio {
 
 class Radio;
 
+constexpr uint32_t kTenSymbolsDuration = OT_US_PER_TEN_SYMBOLS; ///< 10 symbols duration in microseconds
+
 constexpr uint32_t kUncertaintyUnit = 10; ///< Clock uncertainty unit in microseconds.
 
 /**

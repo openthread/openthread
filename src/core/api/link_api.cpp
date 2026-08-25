@@ -439,7 +439,7 @@ exit:
 
 uint32_t otLinkGetCslPeriod(otInstance *aInstance)
 {
-    return Mac::Mac::CslPeriodToUsec(AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod());
+    return Mac::CslPeriodToUsec(AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod());
 }
 
 otError otLinkSetCslPeriod(otInstance *aInstance, uint32_t aPeriod)
@@ -453,8 +453,8 @@ otError otLinkSetCslPeriod(otInstance *aInstance, uint32_t aPeriod)
     }
     else
     {
-        VerifyOrExit((aPeriod % Radio::kUsPerTenSymbols) == 0, error = kErrorInvalidArgs);
-        periodInTenSymbolsUnit = ClampToUint16(aPeriod / Radio::kUsPerTenSymbols);
+        VerifyOrExit((aPeriod % Radio::kTenSymbolsDuration) == 0, error = kErrorInvalidArgs);
+        periodInTenSymbolsUnit = ClampToUint16(aPeriod / Radio::kTenSymbolsDuration);
         VerifyOrExit(periodInTenSymbolsUnit >= Radio::kMinCslPeriod, error = kErrorInvalidArgs);
     }
 
