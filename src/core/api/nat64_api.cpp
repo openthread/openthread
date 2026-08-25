@@ -100,6 +100,13 @@ otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr)
     return AsCoreType(aInstance).Get<Nat64::Translator>().GetIp4Cidr(AsCoreType(aCidr));
 }
 
+otError otNat64GetIp6Prefix(otInstance *aInstance, otIp6Prefix *aPrefix)
+{
+    AssertPointerIsNotNull(aPrefix);
+
+    return AsCoreType(aInstance).Get<Nat64::Translator>().GetNat64Prefix(AsCoreType(aPrefix));
+}
+
 otNat64State otNat64GetTranslatorState(otInstance *aInstance)
 {
     return MapEnum(AsCoreType(aInstance).Get<Nat64::Translator>().GetState());
