@@ -230,7 +230,7 @@ private:
     void      UpdateStateAfterRetxExhausted(void);
     Error     AppendIaPdOption(Message &aMessage);
     Error     AppendIaPrefixOption(Message &aMessage, const Ip6::Prefix &aPrefix);
-    void      HandleReceived(Message &aMessage);
+    void      HandleReceived(OwnedPtr<Message> aMessagePtr);
     Error     ParseHeaderAndValidateMessage(Message &aMessage, Dhcp6::Header &aHeader);
     void      HandleAdvertise(const Message &aMessage);
     void      HandleReply(const Message &aMessage);

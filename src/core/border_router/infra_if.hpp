@@ -45,6 +45,7 @@
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/string.hpp"
 #include "net/ip6.hpp"
 
@@ -277,7 +278,7 @@ private:
     void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
-    void HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex);
+    void HandleDhcp6Received(OwnedPtr<Message> aMessagePtr, uint32_t aInfraIfIndex);
 #endif
 
     bool     mInitialized : 1;
