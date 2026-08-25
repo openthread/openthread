@@ -288,6 +288,9 @@ Error Tcp::Endpoint::Abort(void)
 {
     struct tcpcb &tp = GetTcb();
 
+    // Signal any active `ProcessSignals()` call to stop using resources that
+    // are returned to the application by `Abort()`.
+    mPendingCallbacks &= ~kProcessSignalsActiveFlag;
     tcp_usr_abort(&tp);
     /* connection_lost will do any reinitialization work for this socket. */
     return kErrorNone;
@@ -705,13 +708,27 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
                          size_t                aPriorBacklog,
                          struct tcplp_signals &aSignals) const
 {
+    bool ownsProcessSignalsFlag = false;
+
     VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
+
+    // User callbacks can abort and immediately reuse this endpoint. `Abort()`
+    // clears this flag so that old signal processing does not resume against
+    // resources already returned to the application. Nested `ProcessSignals()`
+    // calls share the outer flag, so an abort stops every active invocation.
+    if ((aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) == 0)
+    {
+        aEndpoint.mPendingCallbacks |= kProcessSignalsActiveFlag;
+        ownsProcessSignalsFlag = true;
+    }
+
     if (aSignals.conn_established && aEndpoint.mEstablishedCallback != nullptr)
     {
         aEndpoint.mEstablishedCallback(&aEndpoint);
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
+    VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
+                 !aEndpoint.IsClosed());
     if (aEndpoint.mSendDoneCallback != nullptr)
     {
         otLinkedBuffer *curr = aPriorHead;
@@ -720,9 +737,10 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
 
         for (uint32_t i = 0; i != aSignals.links_popped; i++)
         {
-            otLinkedBuffer *next = curr->mNext;
+            VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
+                         !aEndpoint.IsClosed());
 
-            VerifyOrExit(i == 0 || (IsInitialized(aEndpoint) && !aEndpoint.IsClosed()));
+            otLinkedBuffer *next = curr->mNext;
 
             curr->mNext = nullptr;
             aEndpoint.mSendDoneCallback(&aEndpoint, curr);
@@ -730,7 +748,8 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
         }
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
+    VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
+                 !aEndpoint.IsClosed());
     if (aEndpoint.mForwardProgressCallback != nullptr)
     {
         size_t backlogBytes = aEndpoint.GetBacklogBytes();
@@ -742,7 +761,8 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
         }
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
+    VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
+                 !aEndpoint.IsClosed());
     if ((aSignals.recvbuf_added || aSignals.rcvd_fin) && aEndpoint.mReceiveAvailableCallback != nullptr)
     {
         aEndpoint.mReceiveAvailableCallback(&aEndpoint, cbuf_used_space(&aEndpoint.GetTcb().recvbuf),
@@ -750,13 +770,19 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
                                             cbuf_free_space(&aEndpoint.GetTcb().recvbuf));
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
+    VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
+                 !aEndpoint.IsClosed());
     if (aEndpoint.GetTcb().t_state == TCP6S_TIME_WAIT && aEndpoint.mDisconnectedCallback != nullptr)
     {
         aEndpoint.mDisconnectedCallback(&aEndpoint, OT_TCP_DISCONNECTED_REASON_TIME_WAIT);
     }
 
 exit:
+    if (ownsProcessSignalsFlag && IsInitialized(aEndpoint))
+    {
+        aEndpoint.mPendingCallbacks &= ~kProcessSignalsActiveFlag;
+    }
+
     return;
 }
 
