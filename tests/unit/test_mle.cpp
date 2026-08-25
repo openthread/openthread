@@ -579,7 +579,7 @@ public:
             message->SetSubType(Message::kSubTypeMle);
 
             SuccessOrQuit(Tlv::Append<Mle::ModeTlv>(*message, mode.Get()));
-            SuccessOrQuit(Tlv::Append<Mle::CslChannelTlv>(*message, Mle::ChannelTlvValue(testCase.mChannel)));
+            SuccessOrQuit(Tlv::Append<Mle::CslChannelTlv>(*message, Mle::CslChannelTlvValue(testCase.mChannel)));
 
             HandleChildUpdateRequest(*mle, *message, childExtAddress);
 
