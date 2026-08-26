@@ -62,7 +62,7 @@ void SubMac::RestartCslTimerAfterSyncUpdate(void)
     // Only applies for the case where radio supports receive timing.
     if (RadioSupports(kCapReceiveTiming) && mCslTimer.IsRunning())
     {
-        uint32_t periodUs = mCslPeriod * Radio::kUsPerTenSymbols;
+        uint32_t periodUs = CslPeriodToUsec(mCslPeriod);
 
         mCslTimer.Stop();
 
@@ -176,7 +176,7 @@ void SubMac::HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter)
      *       x-|------------|-------------------------------------x-|------------|---------------------------------------|
      *            sample                   sleep                        sample                    sleep
      */
-    uint32_t      periodUs = mCslPeriod * Radio::kUsPerTenSymbols;
+    uint32_t      periodUs = CslPeriodToUsec(mCslPeriod);
     Radio::Time32 winStart;
     uint32_t      winDuration;
 
@@ -225,7 +225,7 @@ void SubMac::HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter)
     }
     else
     {
-        uint32_t periodUs = mCslPeriod * Radio::kUsPerTenSymbols;
+        uint32_t periodUs = CslPeriodToUsec(mCslPeriod);
         uint32_t winStart;
         uint32_t winDuration;
 
@@ -255,7 +255,7 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
      * ---|-----------|------------|-----------|-----------|------------|------------|----------//------------|---
      * -timeAhead                           CslPhase                             +timeAfter             -timeAhead
      */
-    uint32_t semiPeriod = mCslPeriod * Radio::kUsPerTenSymbols / 2;
+    uint32_t semiPeriod = CslPeriodToUsec(mCslPeriod) / 2;
     uint32_t elapsed    = 0;
     uint32_t semiWindow;
 
@@ -286,10 +286,7 @@ uint32_t SubMac::DetermineClockDrift(uint32_t aIntervalUs) const
     return Radio::DetermineClockDrift(clockAccuracy, aIntervalUs);
 }
 
-uint32_t SubMac::GetNextCycleDrift(void) const
-{
-    return DetermineClockDrift(static_cast<uint32_t>(mCslPeriod) * Radio::kUsPerTenSymbols);
-}
+uint32_t SubMac::GetNextCycleDrift(void) const { return DetermineClockDrift(CslPeriodToUsec(mCslPeriod)); }
 
 void SubMac::SetCslLastSyncToNow(void)
 {
@@ -332,7 +329,7 @@ void SubMac::LogReceived(RxFrame *aFrame)
     GetCslWindowEdges(ahead, after);
     ahead -= kMinReceiveOnAhead + kCslReceiveTimeAhead;
 
-    sampleTime = mCslSampleTime.GetAsTime32() - mCslPeriod * Radio::kUsPerTenSymbols;
+    sampleTime = mCslSampleTime.GetAsTime32() - CslPeriodToUsec(mCslPeriod);
     deviation  = Radio::ConvertTime64To32(aFrame->GetTimestamp()) + Radio::kHeaderPhrDuration - sampleTime;
 
     // This logs three values (all in microseconds):

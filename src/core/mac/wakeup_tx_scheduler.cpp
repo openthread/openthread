@@ -113,7 +113,8 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     rendezvousTimeUs = mIntervalUs;
     rendezvousTimeUs += (mIntervalUs - (kWakeupFrameLength + kParentRequestLength) * Radio::kOctetDuration) / 2;
 
-    frame->Find<Mac::RendezvousTimeIe>()->SetRendezvousTime(ClampToUint16(rendezvousTimeUs / Radio::kUsPerTenSymbols));
+    frame->Find<Mac::RendezvousTimeIe>()->SetRendezvousTime(
+        ClampToUint16(rendezvousTimeUs / Radio::kTenSymbolsDuration));
 
     connectionIe = frame->Find<Mac::ConnectionIe>();
     connectionIe->SetRetryInterval(kConnectionRetryInterval);

@@ -869,6 +869,15 @@ private:
 };
 
 /**
+ * Converts a given CSL period in units of 10 symbols to microseconds.
+ *
+ * @param[in] aCslPeriod  The CSL period in units of 10 symbols.
+ *
+ * @returns The CSL period in microseconds.
+ */
+inline uint32_t CslPeriodToUsec(uint16_t aCslPeriod) { return Radio::kTenSymbolsDuration * aCslPeriod; }
+
+/**
  * Represents CSL accuracy.
  */
 class CslAccuracy

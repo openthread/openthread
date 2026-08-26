@@ -67,16 +67,15 @@ constexpr uint8_t kSfdSize       = 1;                                   ///< SFD
 constexpr uint8_t kPhrSize       = 1;                                   ///< PHY Header (PHR) size in bytes.
 constexpr uint8_t kPhyHeaderSize = kPreambleSize + kSfdSize + kPhrSize; ///< Total PHY header size in bytes.
 
-constexpr uint32_t kUsPerTenSymbols   = OT_US_PER_TEN_SYMBOLS; ///< Time for 10 symbols in units of microseconds
-constexpr uint32_t kHeaderShrDuration = 160;                   ///< Duration of SHR in us
-constexpr uint32_t kHeaderPhrDuration = 32;                    ///< Duration of PHR in us
-constexpr uint32_t kOctetDuration     = 32;                    ///< Duration of one octet in us
+constexpr uint32_t kHeaderShrDuration = 160; ///< Duration of SHR in us
+constexpr uint32_t kHeaderPhrDuration = 32;  ///< Duration of PHR in us
+constexpr uint32_t kOctetDuration     = 32;  ///< Duration of one octet in us
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 /**
  * Minimum CSL period supported in units of 10 symbols.
  */
-constexpr uint64_t kMinCslPeriod  = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD * 1000 / kUsPerTenSymbols;
+constexpr uint64_t kMinCslPeriod  = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD * 1000 / kTenSymbolsDuration;
 constexpr uint64_t kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT;
 #endif
 

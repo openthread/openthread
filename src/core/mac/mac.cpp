@@ -2507,11 +2507,6 @@ uint32_t Mac::GetCslPeriodInMsec(void) const
 {
     return DivideAndRoundToClosest<uint32_t>(CslPeriodToUsec(GetCslPeriod()), 1000u);
 }
-
-uint32_t Mac::CslPeriodToUsec(uint16_t aPeriodInTenSymbols)
-{
-    return static_cast<uint32_t>(aPeriodInTenSymbols) * Radio::kUsPerTenSymbols;
-}
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE

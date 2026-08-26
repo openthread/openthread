@@ -549,15 +549,6 @@ public:
     void SetCslPeriod(uint16_t aPeriod);
 
     /**
-     * This method converts a given CSL period in units of 10 symbols to microseconds.
-     *
-     * @param[in] aPeriodInTenSymbols   The CSL period in unit of 10 symbols.
-     *
-     * @returns The converted CSL period value in microseconds corresponding to @p aPeriodInTenSymbols.
-     */
-    static uint32_t CslPeriodToUsec(uint16_t aPeriodInTenSymbols);
-
-    /**
      * Indicates whether CSL is started at the moment.
      *
      * @retval TRUE   If CSL is enabled.
