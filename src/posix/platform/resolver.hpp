@@ -135,9 +135,12 @@ private:
         otPlatDnsUpstreamQuery *mThreadTxn;
         int                     mUdpFd4;
         int                     mUdpFd6;
+        // Socket bound to the infra netif, used for recursive DNS servers discovered
+        // on that link. -1 when unavailable (queries then use the unbound `mUdpFd6`).
+        int mInfraUdpFd6;
     };
 
-    static int CreateUdpSocket(sa_family_t aFamily);
+    static int CreateUdpSocket(sa_family_t aFamily, bool aBindToInfraNetif);
 
     Transaction *GetTransaction(otPlatDnsUpstreamQuery *aThreadTxn);
     Transaction *AllocateTransaction(otPlatDnsUpstreamQuery *aThreadTxn);
@@ -145,7 +148,8 @@ private:
     otError SendQueryToServer(Transaction        *aTxn,
                               const otIp6Address &aServerAddress,
                               const char         *aPacket,
-                              uint16_t            aLength);
+                              uint16_t            aLength,
+                              bool                aViaInfraNetif);
     void    ForwardResponse(otPlatDnsUpstreamQuery *aThreadTxn, int aFd);
     void    CloseTransaction(Transaction *aTxn);
     void    TryRefreshDnsServerList(void);
