@@ -921,7 +921,7 @@ public:
 
 #if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
     /**
-     * Generate IEE 802.15.4 Wake-up frame.
+     * Generate IEEE 802.15.4 Wake-up frame.
      *
      * @param[in]    aPanId          A destination PAN identifier
      * @param[in]    aWakeupRequest  A const reference to the wake-up request.
