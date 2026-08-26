@@ -48,10 +48,10 @@ class Resolver : public Logger<Resolver>
 public:
     static const char kLogModuleName[]; ///< Module name used for logging.
 
-    constexpr static ssize_t kMaxDnsMessageSize           = 512;
-    constexpr static ssize_t kMaxUpstreamTransactionCount = 16;
-    constexpr static ssize_t kMaxUpstreamServerCount      = 3;
-    constexpr static ssize_t kMaxRecursiveServerCount     = 3;
+    static constexpr ssize_t kMaxDnsMessageSize           = 512;
+    static constexpr ssize_t kMaxUpstreamTransactionCount = 16;
+    static constexpr ssize_t kMaxUpstreamServerCount      = 3;
+    static constexpr ssize_t kMaxRecursiveServerCount     = 3;
 
     /**
      * Initialize the upstream DNS resolver.

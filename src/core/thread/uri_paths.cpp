@@ -43,7 +43,7 @@ struct Entry
 {
     const char *mPath;
 
-    constexpr static bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
+    static constexpr bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
     {
         return AreStringsInOrder(aFirst.mPath, aSecond.mPath);
     }

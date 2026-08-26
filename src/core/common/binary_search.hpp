@@ -86,7 +86,7 @@ public:
      *
      * The `Entry` class MUST provide the following `static` and `constexpr` method to compare two entries.
      *
-     *    constexpr static bool Entry::AreInOrder(const Entry &aFirst, const Entry &aSecond);
+     *    static constexpr bool Entry::AreInOrder(const Entry &aFirst, const Entry &aSecond);
      *
      * The return value MUST be TRUE if the entries are in order, i.e. `aFirst < aSecond` and FALSE otherwise.
      *
