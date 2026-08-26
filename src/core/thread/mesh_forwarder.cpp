@@ -1021,38 +1021,25 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
 
     Get<SupervisionListener>().UpdateOnReceive(rxInfo.mMacAddrs.mSource, rxInfo.IsLinkSecurityEnabled());
 
-    switch (aFrame.GetType())
+    if (Lowpan::MeshHeader::IsMeshHeader(rxInfo.mFrameData))
     {
-    case Mac::Frame::kTypeData:
-        if (Lowpan::MeshHeader::IsMeshHeader(rxInfo.mFrameData))
-        {
 #if OPENTHREAD_FTD
-            HandleMesh(rxInfo);
+        HandleMesh(rxInfo);
 #endif
-        }
-        else if (Lowpan::FragmentHeader::IsFragmentHeader(rxInfo.mFrameData))
-        {
-            HandleFragment(rxInfo);
-        }
-        else if (Lowpan::Lowpan::IsLowpanHc(rxInfo.mFrameData))
-        {
-            HandleLowpanHc(rxInfo);
-        }
-        else
-        {
-            VerifyOrExit(rxInfo.mFrameData.GetLength() == 0, error = kErrorNotLowpanDataFrame);
+    }
+    else if (Lowpan::FragmentHeader::IsFragmentHeader(rxInfo.mFrameData))
+    {
+        HandleFragment(rxInfo);
+    }
+    else if (Lowpan::Lowpan::IsLowpanHc(rxInfo.mFrameData))
+    {
+        HandleLowpanHc(rxInfo);
+    }
+    else
+    {
+        VerifyOrExit(rxInfo.mFrameData.GetLength() == 0, error = kErrorNotLowpanDataFrame);
 
-            LogFrame("Received empty payload frame", aFrame, kErrorNone);
-        }
-
-        break;
-
-    case Mac::Frame::kTypeBeacon:
-        break;
-
-    default:
-        error = kErrorDrop;
-        break;
+        LogFrame("Received empty payload frame", aFrame, kErrorNone);
     }
 
 exit:

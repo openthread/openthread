@@ -2072,11 +2072,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     switch (aFrame->GetType())
     {
     case Frame::kTypeMacCmd:
-        if (HandleMacCommand(*aFrame)) // returns `true` when handled
-        {
-            ExitNow(error = kErrorNone);
-        }
-
+        HandleMacCommand(*aFrame);
         break;
 
     case Frame::kTypeBeacon:
@@ -2085,17 +2081,15 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
     case Frame::kTypeData:
         mCounters.mRxData++;
+        DumpDebg("RX", aFrame->GetPsdu(), aFrame->GetLength());
+        Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
+        UpdateIdleMode();
         break;
 
     default:
         mCounters.mRxOther++;
-        ExitNow();
+        break;
     }
-
-    DumpDebg("RX", aFrame->GetPsdu(), aFrame->GetLength());
-    Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
-
-    UpdateIdleMode();
 
 exit:
 
@@ -2195,9 +2189,8 @@ exit:
     return;
 }
 
-bool Mac::HandleMacCommand(RxFrame &aFrame)
+void Mac::HandleMacCommand(RxFrame &aFrame)
 {
-    bool    didHandle = false;
     uint8_t commandId;
 
     IgnoreError(aFrame.GetCommandId(commandId));
@@ -2216,14 +2209,12 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
             StartOperation(kOperationTransmitBeacon);
         }
 
-        didHandle = true;
         break;
 
     case Frame::kMacCmdDataRequest:
         mCounters.mRxDataPoll++;
 #if OPENTHREAD_FTD
         Get<DataPollHandler>().HandleDataPoll(aFrame);
-        didHandle = true;
 #endif
         break;
 
@@ -2231,8 +2222,6 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
         mCounters.mRxOther++;
         break;
     }
-
-    return didHandle;
 }
 
 void Mac::SetPromiscuous(bool aPromiscuous)
