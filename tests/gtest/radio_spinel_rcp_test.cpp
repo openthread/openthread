@@ -492,6 +492,94 @@ TEST(RadioSpinelSrcMatch, shouldBeAbleToClearAllRadioSrcMatchExtEntres)
 }
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+TEST(RadioSpinelMaxPowerTable, shouldRestoreEachChannelWithItsOwnPower)
+{
+    constexpr uint8_t kChannelA = 11;
+    constexpr uint8_t kChannelB = 15;
+    constexpr uint8_t kChannelC = 26;
+    constexpr int8_t  kPowerA   = 5;
+    constexpr int8_t  kPowerB   = 14;
+    constexpr int8_t  kPowerC   = 20;
+
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannelA, kPowerA), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannelB, kPowerB), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannelC, kPowerC), kErrorNone);
+
+    ASSERT_EQ(platform.ChannelMaxTxPowerGet(kChannelA), kPowerA);
+    ASSERT_EQ(platform.ChannelMaxTxPowerGet(kChannelB), kPowerB);
+    ASSERT_EQ(platform.ChannelMaxTxPowerGet(kChannelC), kPowerC);
+
+    // Forget what the RCP was told, so what follows can only come from the
+    // restore itself.
+    platform.ChannelMaxTxPowerClear();
+    ASSERT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+
+    platform.mRadioSpinel.RestoreProperties();
+
+    // Each configured channel comes back with its own power, not with a
+    // neighbour's and not with the table default.
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannelA), kPowerA);
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannelB), kPowerB);
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannelC), kPowerC);
+
+    // Channels never configured keep the table default, which is what the
+    // restore sends for them. Copied into a local first: `kPowerDefault` is a
+    // `static constexpr` with no out-of-line definition, and EXPECT_EQ binds
+    // its arguments by reference, which would odr-use it.
+    constexpr int8_t kDefaultPower = MaxPowerTable::kPowerDefault;
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(12), kDefaultPower);
+}
+
+TEST(RadioSpinelMaxPowerTable, shouldNotTouchTheRcpWhenNoChannelWasConfigured)
+{
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    platform.ChannelMaxTxPowerClear();
+    platform.mRadioSpinel.RestoreProperties();
+
+    // Nothing was configured, so the restore must not send the table's
+    // defaults to the RCP -- 16 blocking transactions on every recovery for a
+    // feature nobody asked for.
+    EXPECT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+}
+
+TEST(RadioSpinelMaxPowerTable, shouldSurviveAnRcpThatDoesNotImplementIt)
+{
+    constexpr uint8_t kChannel = 11;
+    constexpr int8_t  kPower   = 5;
+
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannel, kPower), kErrorNone);
+
+    // From here the RCP refuses the property. A firmware that lacks it answers
+    // `SPINEL_STATUS_PROP_NOT_FOUND` while this returns
+    // `SPINEL_STATUS_UNIMPLEMENTED`, but both reach the host as
+    // `OT_ERROR_NOT_IMPLEMENTED`, which is the path under test.
+    platform.ChannelMaxTxPowerFailWith(OT_ERROR_NOT_IMPLEMENTED);
+    platform.ChannelMaxTxPowerClear();
+
+    // Must not abort: this used to be a `DieNow()`, so a regression takes the
+    // whole test binary down rather than failing an assertion.
+    platform.mRadioSpinel.RestoreProperties();
+
+    EXPECT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+
+    // And it must give up rather than ask again on every later recovery, even
+    // once the RCP would accept it.
+    platform.ChannelMaxTxPowerFailWith(OT_ERROR_NONE);
+    platform.mRadioSpinel.RestoreProperties();
+
+    EXPECT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+}
+
 TEST(RadioSpinelSrcMatch, shouldNotDuplicateSrcMatchEntriesOnRestoreProperties)
 {
     constexpr uint16_t      kTestShortAddr = 0x1234;
