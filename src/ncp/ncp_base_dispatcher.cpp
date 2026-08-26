@@ -46,7 +46,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 {
 #define OT_NCP_GET_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertyGet<aPropertyName>}
 
-    constexpr static HandlerEntry sHandlerEntries[] = {
+    static constexpr HandlerEntry sHandlerEntries[] = {
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_LAST_STATUS),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_PROTOCOL_VERSION),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_NCP_VERSION),
@@ -412,7 +412,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 {
 #define OT_NCP_SET_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertySet<aPropertyName>}
 
-    constexpr static HandlerEntry sHandlerEntries[] = {
+    static constexpr HandlerEntry sHandlerEntries[] = {
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_POWER_STATE),
 #if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_MCU_POWER_STATE),
@@ -726,7 +726,7 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
 {
 #define OT_NCP_INSERT_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertyInsert<aPropertyName>}
 
-    constexpr static HandlerEntry sHandlerEntries[] = {
+    static constexpr HandlerEntry sHandlerEntries[] = {
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
         OT_NCP_INSERT_HANDLER_ENTRY(SPINEL_PROP_PHY_CALIBRATED_POWER),
 #endif
@@ -779,7 +779,7 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
 {
 #define OT_NCP_REMOVE_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertyRemove<aPropertyName>}
 
-    constexpr static HandlerEntry sHandlerEntries[] = {
+    static constexpr HandlerEntry sHandlerEntries[] = {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
         OT_NCP_REMOVE_HANDLER_ENTRY(SPINEL_PROP_THREAD_ON_MESH_NETS),

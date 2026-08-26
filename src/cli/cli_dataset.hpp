@@ -77,7 +77,7 @@ private:
     {
         int Compare(const char *aName) const { return strcmp(aName, mName); }
 
-        constexpr static bool AreInOrder(const ComponentMapper &aFirst, const ComponentMapper &aSecond)
+        static constexpr bool AreInOrder(const ComponentMapper &aFirst, const ComponentMapper &aSecond)
         {
             return AreStringsInOrder(aFirst.mName, aSecond.mName);
         }

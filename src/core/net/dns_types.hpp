@@ -1764,7 +1764,7 @@ private:
     {
         int Compare(uint16_t aRecordType) const { return (aRecordType - mRecordType); }
 
-        constexpr static bool AreInOrder(const DataRecipe &aFirst, const DataRecipe &aSecond)
+        static constexpr bool AreInOrder(const DataRecipe &aFirst, const DataRecipe &aSecond)
         {
             return (aFirst.mRecordType < aSecond.mRecordType);
         }

@@ -102,11 +102,11 @@ public:
     const Mac::WakeupRequest &GetWakeupRequest(void) const { return mWakeupRequest; }
 
 private:
-    constexpr static uint8_t  kConnectionRetryInterval = 1;
-    constexpr static uint8_t  kConnectionRetryCount    = 12;
-    constexpr static uint32_t kWakeupFrameLength       = 54; // Includes SHR
-    constexpr static bool     kWakeupFrameTxCca        = true;
-    constexpr static uint32_t kParentRequestLength     = 78; // Includes SHR
+    static constexpr uint8_t  kConnectionRetryInterval = 1;
+    static constexpr uint8_t  kConnectionRetryCount    = 12;
+    static constexpr uint32_t kWakeupFrameLength       = 54; // Includes SHR
+    static constexpr bool     kWakeupFrameTxCca        = true;
+    static constexpr uint32_t kParentRequestLength     = 78; // Includes SHR
 
     // Called by the MAC layer when a wake-up frame transmission is about to be started.
     Mac::TxFrame *PrepareWakeupFrame(Mac::TxFrames &aTxFrames);

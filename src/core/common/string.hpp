@@ -578,7 +578,7 @@ public:
     private:
         int Compare(uint16_t aKey) const { return ThreeWayCompare(aKey, mKey); }
 
-        constexpr static bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
+        static constexpr bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
         {
             return aFirst.mKey < aSecond.mKey;
         }
