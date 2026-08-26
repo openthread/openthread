@@ -719,7 +719,7 @@ TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
 
     buildInfo.mAddrs.mSource.SetNone();
     buildInfo.mAddrs.mDestination.SetShort(kShortAddrBroadcast);
-    buildInfo.mPanIds.SetDestination(kShortAddrBroadcast);
+    buildInfo.mPanIds.SetDestination(kPanIdBroadcast);
 
     buildInfo.mType      = Frame::kTypeMacCmd;
     buildInfo.mCommandId = Frame::kMacCmdBeaconRequest;
@@ -1906,7 +1906,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     // Verify destination PAN ID if present
     if (kErrorNone == aFrame->GetDstPanId(panId))
     {
-        VerifyOrExit(panId == kShortAddrBroadcast || panId == mPanId, error = kErrorDestinationAddressFiltered);
+        VerifyOrExit(panId == kPanIdBroadcast || panId == mPanId, error = kErrorDestinationAddressFiltered);
     }
 
     // Source Address Filtering
