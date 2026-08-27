@@ -606,7 +606,7 @@ private:
     {
         aInstance->Get<Mle::Mle>().Disable();
         aInstance->Get<ActiveDatasetManager>().SaveLocal(aDataset);
-        aInstance->Get<TcatAgent>().mHasWrittenActiveDataset = true;
+        aInstance->Get<TcatAgent>().mIsSourceOfDatasetChange = true;
         otTaskletsProcess(aInstance);
     }
 
@@ -623,6 +623,22 @@ private:
     {
         aInstance->Get<Mle::Mle>().Disable();
         aInstance->Get<ActiveDatasetManager>().Clear();
+        otTaskletsProcess(aInstance);
+    }
+
+    // Mock operation: TCAT Commissioner sends the Decommission command. `HandleDecommission()` itself can't be
+    // called here because it reads the peer certificate from a real (mbedtls) TLS session, which these unit
+    // tests don't set up. So its authorization check is mimicked and the rest of it - `Decommission()` - is
+    // invoked with a stand-in commissioner certificate.
+    static void MockDecommission(Instance *aInstance)
+    {
+        static uint8_t sCommissionerCert[] = {0x30, 0x82, 0x01, 0x00};
+
+        TcatAgent &agent = aInstance->Get<TcatAgent>();
+
+        VerifyOrQuit(agent.IsCommandClassAuthorized(TcatAgent::kDecommissioning));
+        agent.Decommission(sCommissionerCert, sizeof(sCommissionerCert));
+        agent.mJoinCallback.InvokeIfSet(aInstance, /* aIsJoin */ false, kErrorNone);
         otTaskletsProcess(aInstance);
     }
 
@@ -1250,6 +1266,59 @@ public:
         testFreeInstance(instance);
     }
 
+    // Verifies that a Decommission command restores the Commissioner's authorization to (over)write the Active
+    // Dataset within the same TCAT session, so that commissioning/decommissioning cycles can be repeated.
+    static void TestTcatDecommissionRestoresDatasetWrite(void)
+    {
+        Instance        *instance = TestInitInstanceTcat();
+        TcatAgent       *agent    = &instance->Get<TcatAgent>();
+        TcatJoinCounters counters = {};
+
+        // A device that was commissioned by some other entity (not this TCAT Agent) before the session started.
+        MockActiveDatasetChanged(instance, sFullDataset);
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+
+        // The Commissioner connects: it is not authorized to overwrite the existing Active Dataset, but it is
+        // authorized to decommission the device.
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ true);
+        agent->mJoinCallback.Set(HandleTcatJoin, &counters);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        for (int i = 0; i < 3; i++)
+        {
+            // Decommission erases the Active Dataset and reports a successful 'leave'.
+            MockDecommission(instance);
+            VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+            VerifyOrQuit(instance->Get<Mle::Mle>().IsDisabled());
+            VerifyOrQuit(counters.mLeaveCount == static_cast<uint32_t>(i + 1) && counters.mJoinCount == 0 &&
+                         counters.mLastError == kErrorNone);
+
+            // Regression test: decommissioning clears the Network Key, which signals a Notifier event that would
+            // otherwise be mistaken for an external dataset change and immediately revoke the authorization again.
+            VerifyOrQuit(agent->mCanOverwriteDataset, "Decommission must restore dataset-write authorization");
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+            // The Commissioner recommissions the device in the same session, and may still overwrite afterwards.
+            MockWriteActiveDataset(instance, sFullDataset);
+            VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        }
+
+        // A dataset change by another module still revokes the authorization after a Decommission.
+        MockDecommission(instance);
+        VerifyOrQuit(agent->mCanOverwriteDataset);
+        MockActiveDatasetChanged(instance, sFullDataset);
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        testFreeInstance(instance);
+    }
+
     // Verifies the OpenThread Notifier assumption that TcatAgent::HandleNotifierEvents() relies on:
     // multiple state changes that occur back-to-back are coalesced into a single notification carrying all of
     // the corresponding event flags.
@@ -1279,7 +1348,7 @@ public:
             changed.mNetworkKey.m8[0] ^= 0xff;
             changed.mExtendedPanId.m8[0] ^= 0xff;
             instance->Get<ActiveDatasetManager>().SaveLocal(changed);
-            agent->mHasWrittenActiveDataset = true; // model that this Agent is the source of the change
+            agent->mIsSourceOfDatasetChange = true; // model that this Agent is the source of the change
         }
 
         // repeat the tasklets processing to ensure subsequent notifer calls are not made.
@@ -1293,7 +1362,7 @@ public:
             VerifyOrQuit(observer.mExtPanIdCount == 1, "Extended PAN ID change must be reported exactly once");
             VerifyOrQuit(observer.mBothInOneCount == 1, "both changes must be coalesced into the same notification");
 
-            // Because the agent saw both events coalesced while mHasWrittenActiveDataset was set, it recognizes the
+            // Because the agent saw both events coalesced while mIsSourceOfDatasetChange was set, it recognizes the
             // change as its own and retains the Commissioner's authorization to overwrite the dataset.
             VerifyOrQuit(agent->mCanOverwriteDataset, "a self-made dataset change must not revoke authorization");
         }
@@ -1324,6 +1393,7 @@ int main(void)
     ot::MeshCoP::UnitTester::TestTcatDatasetOverwrite();
     ot::MeshCoP::UnitTester::TestTcatDatasetOverwriteAfterAttach();
     ot::MeshCoP::UnitTester::TestTcatRepeatedCommandActivation();
+    ot::MeshCoP::UnitTester::TestTcatDecommissionRestoresDatasetWrite();
     ot::MeshCoP::UnitTester::TestTcatNotifierCoalescesEvents();
     printf("All tests passed\n");
 #else
