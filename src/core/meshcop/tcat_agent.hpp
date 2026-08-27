@@ -459,6 +459,7 @@ private:
                                   const OffsetRange &aOffsetRange,
                                   bool              &aResponse);
     Error HandleDecommission(void);
+    void  Decommission(const uint8_t *aCommissionerCert, uint16_t aCertLength);
     Error HandlePing(const Message     &aIncomingMessage,
                      Message           &aOutgoingMessage,
                      const OffsetRange &aOffsetRange,
@@ -525,7 +526,7 @@ private:
     bool                             mInstallCodeVerified : 1;
     bool                             mCanOverwriteDataset : 1;
     bool                             mApplicationResponsePending : 1;
-    bool                             mHasWrittenActiveDataset : 1;
+    bool                             mIsSourceOfDatasetChange : 1;
     using ExpireTimer = TimerMilliIn<TcatAgent, &TcatAgent::HandleTimer>;
     ExpireTimer     mActiveOrStandbyTimer;
     uint32_t        mTcatActiveDurationMs;

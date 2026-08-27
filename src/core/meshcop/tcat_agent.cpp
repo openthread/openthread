@@ -82,7 +82,7 @@ void TcatAgent::ClearCommissionerState(void)
     mInstallCodeVerified           = false;
     mCanOverwriteDataset           = false;
     mApplicationResponsePending    = false;
-    mHasWrittenActiveDataset       = false;
+    mIsSourceOfDatasetChange       = false;
 }
 
 Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aJoinHandler, void *aContext)
@@ -602,7 +602,7 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessa
     // Flag lets HandleNotifierEvents() know that the Agent is the source of the change. In theory, this could be
     // coalesced with another module's dataset write at exactly the same time, but this is in practice impossible
     // to exploit as an attack vector by the TCAT Commissioner.
-    mHasWrittenActiveDataset = true;
+    mIsSourceOfDatasetChange = true;
 
 exit:
     return error;
@@ -697,6 +697,15 @@ Error TcatAgent::HandleDecommission(void)
     VerifyOrExit(IsCommandClassAuthorized(kDecommissioning), error = kErrorRejected);
     SuccessOrExit(error = Get<Ble::BleSecure>().GetPeerCertificateDer(buf, &bufLen, bufLen));
 
+    Decommission(buf, static_cast<uint16_t>(bufLen));
+
+exit:
+    mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
+    return error;
+}
+
+void TcatAgent::Decommission(const uint8_t *aCommissionerCert, uint16_t aCertLength)
+{
     Get<Mle::Mle>().Stop();
 
     if (!mVendorInfo->mDoNotActivateAfterLeaving)
@@ -708,7 +717,7 @@ Error TcatAgent::HandleDecommission(void)
     Get<PendingDatasetManager>().Clear();
 
     IgnoreReturnValue(Get<Instance>().ErasePersistentInfo());
-    Get<Settings>().SaveTcatCommissionerCertificate(buf, static_cast<uint16_t>(bufLen));
+    Get<Settings>().SaveTcatCommissionerCertificate(aCommissionerCert, aCertLength);
 
 #if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     {
@@ -718,11 +727,8 @@ Error TcatAgent::HandleDecommission(void)
     }
 #endif
 
-    mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
-    mCanOverwriteDataset = true; // enable repeated commissioning/decommissioning cycles in a session
-
-exit:
-    return error;
+    mCanOverwriteDataset     = true; // enable repeated commissioning/decommissioning cycles in a session
+    mIsSourceOfDatasetChange = true; // record that we made the dataset change (causing callback event later)
 }
 
 Error TcatAgent::HandlePing(const Message     &aIncomingMessage,
@@ -1119,11 +1125,11 @@ void TcatAgent::HandleNotifierEvents(Events aEvents)
 
     // Change of network key or ExtPanId by another process: it wrote a dataset for *another* Thread Network.
     // This event revokes the Commissioner's existing authorization (if any) to rewrite datasets.
-    if (!mHasWrittenActiveDataset && aEvents.ContainsAny(kEventNetworkKeyChanged | kEventThreadExtPanIdChanged))
+    if (!mIsSourceOfDatasetChange && aEvents.ContainsAny(kEventNetworkKeyChanged | kEventThreadExtPanIdChanged))
     {
         mCanOverwriteDataset = false;
     }
-    mHasWrittenActiveDataset = false;
+    mIsSourceOfDatasetChange = false;
 
     if (aEvents.Contains(kEventPskcChanged))
     {
