@@ -586,7 +586,7 @@ private:
 
     bool RadioSupports(Capability aCapability) const { return (mRadioCaps & aCapability) != 0; }
     bool ShouldHandle(Capability aCapability) const;
-    bool ShouldHandleCsmaBackOff(void) const;
+    bool ShouldHandleCsmaBackoff(void) const;
 
     void ProcessTransmitSecurity(void);
     void ReprocessSecurityForRetx(TxFrame &aFrame);
@@ -665,7 +665,7 @@ private:
     KeyTrio                mKeyTrio;
     uint32_t               mFrameCounter;
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-    uint8_t mRetxDelayBackOffExponent;
+    uint8_t mRetxDelayBackoffExponent;
 #endif
     SubMacTimer mTimer;
 

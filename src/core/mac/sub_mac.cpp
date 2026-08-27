@@ -82,7 +82,7 @@ void SubMac::Init(void)
     mEnergyScanMaxRssi = Radio::kInvalidRssi;
     mEnergyScanEndTime = Time{0};
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-    mRetxDelayBackOffExponent = kRetxDelayMinBackoffExponent;
+    mRetxDelayBackoffExponent = kRetxDelayMinBackoffExponent;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -331,7 +331,7 @@ Error SubMac::Send(void)
     mTransmitRetries = 0;
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-    mRetxDelayBackOffExponent = kRetxDelayMinBackoffExponent;
+    mRetxDelayBackoffExponent = kRetxDelayMinBackoffExponent;
 #endif
 
     StartCsmaBackoff();
@@ -413,7 +413,7 @@ void SubMac::StartCsmaBackoff(void)
 
     SetState(kStateCsmaBackoff);
 
-    if (mTransmitFrame.GetMaxCsmaBackoffs() > 0 && ShouldHandleCsmaBackOff())
+    if (mTransmitFrame.GetMaxCsmaBackoffs() > 0 && ShouldHandleCsmaBackoff())
     {
         uint8_t backoffExponent = kCsmaMinBe + mCsmaBackoffs;
 
@@ -544,7 +544,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 
     // Determine whether a CSMA retry is required.
 
-    if (!ccaSuccess && ShouldHandleCsmaBackOff() && mCsmaBackoffs < aFrame.GetMaxCsmaBackoffs())
+    if (!ccaSuccess && ShouldHandleCsmaBackoff() && mCsmaBackoffs < aFrame.GetMaxCsmaBackoffs())
     {
         mCsmaBackoffs++;
         StartCsmaBackoff();
@@ -573,9 +573,9 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         if (aError == kErrorNoAck)
         {
             SetState(kStateDelayBeforeRetx);
-            StartTimerForBackoff(mRetxDelayBackOffExponent);
-            mRetxDelayBackOffExponent =
-                Min(static_cast<uint8_t>(mRetxDelayBackOffExponent + 1), kRetxDelayMaxBackoffExponent);
+            StartTimerForBackoff(mRetxDelayBackoffExponent);
+            mRetxDelayBackoffExponent =
+                Min(static_cast<uint8_t>(mRetxDelayBackoffExponent + 1), kRetxDelayMaxBackoffExponent);
             ExitNow();
         }
 #endif
@@ -858,7 +858,7 @@ exit:
     return shouldHandle;
 }
 
-bool SubMac::ShouldHandleCsmaBackOff(void) const
+bool SubMac::ShouldHandleCsmaBackoff(void) const
 {
     bool shouldHandle = false;
 
