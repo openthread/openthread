@@ -416,7 +416,7 @@ otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr);
  * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[out] aPrefix           A pointer to an `otIp6Prefix`. Where the prefix will be filled.
+ * @param[out] aPrefix           A pointer to an `otIp6Prefix` to output the prefix.
  *
  * @retval OT_ERROR_NONE       The prefix was successfully filled.
  * @retval OT_ERROR_NOT_FOUND  The translator is not configured with an IPv6 prefix.
