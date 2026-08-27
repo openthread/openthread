@@ -505,21 +505,6 @@ public:
         printf("TestTxChallengeTable passed\n");
     }
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static void HandleChildUpdateRequest(Mle::Mle &aMle, Message &aMessage, const Mac::ExtAddress &aChildExtAddress)
-    {
-        Ip6::Address     peerAddress;
-        Ip6::MessageInfo messageInfo;
-        Mle::Mle::RxInfo rxInfo(aMessage, messageInfo);
-
-        peerAddress.InitAsLinkLocalAddress(aChildExtAddress);
-        messageInfo.SetPeerAddr(peerAddress);
-        messageInfo.SetSockAddr(aMle.GetLinkLocalAddress());
-
-        aMessage.SetOffset(0);
-
-        aMle.HandleChildUpdateRequestOnParent(rxInfo);
-    }
-
     static void TestChildUpdateRequestCslChannel(void)
     {
         static constexpr uint16_t kCslPeriod = 3125;
@@ -532,6 +517,7 @@ public:
 
         static const TestCase kTestCases[] = {
             {0, true}, // Zero indicates CSL channel is not specified.
+            {Radio::kChannelMin - 1, false},
             {Radio::kChannelMin, true},
             {Radio::kChannelMax, true},
             {Radio::kChannelMax + 1, false},
@@ -805,6 +791,23 @@ private:
         message->Free();
         testFreeInstance(instance);
     }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    static void HandleChildUpdateRequest(Mle::Mle &aMle, Message &aMessage, const Mac::ExtAddress &aChildExtAddress)
+    {
+        Ip6::Address     peerAddress;
+        Ip6::MessageInfo messageInfo;
+        Mle::Mle::RxInfo rxInfo(aMessage, messageInfo);
+
+        peerAddress.InitAsLinkLocalAddress(aChildExtAddress);
+        messageInfo.SetPeerAddr(peerAddress);
+        messageInfo.SetSockAddr(aMle.GetLinkLocalAddress());
+
+        aMessage.SetOffset(0);
+
+        aMle.HandleChildUpdateRequestOnParent(rxInfo);
+    }
+#endif
 };
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
