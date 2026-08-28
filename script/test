@@ -351,6 +351,7 @@ do_build_otbr_docker()
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
         "-DOTBR_DHCP6_PD=ON"
+        "-DOT_POSIX_INSTALL_EXTERNAL_ROUTES=ON"
     )
     local args=(
         "BORDER_ROUTING=${BORDER_ROUTING}"
