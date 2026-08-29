@@ -214,7 +214,7 @@
  * Define as 1 to add external routes to POSIX kernel when external routes are changed in netdata.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE 1
+#define OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE 0
 #endif
 
 /**

@@ -53,7 +53,7 @@ endif()
 
 ot_option(OT_POSIX_INFRA_NETIF_LOST_EXIT OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE "exit on infrastructure network interface lost")
 
-option(OT_POSIX_INSTALL_EXTERNAL_ROUTES "Install External Routes as IPv6 routes" ON)
+option(OT_POSIX_INSTALL_EXTERNAL_ROUTES "Install External Routes as IPv6 routes" OFF)
 if(OT_POSIX_INSTALL_EXTERNAL_ROUTES)
     target_compile_definitions(ot-posix-config
         INTERFACE "OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE=1"
