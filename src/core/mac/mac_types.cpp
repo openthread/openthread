@@ -300,11 +300,11 @@ void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
 
         DestroyKey();
 
-        SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeAes,
-                                                   Crypto::Storage::kKeyAlgorithmAesEcb,
-                                                   (aIsExportable ? Crypto::Storage::kUsageExport : 0) |
-                                                       Crypto::Storage::kUsageEncrypt | Crypto::Storage::kUsageDecrypt,
-                                                   Crypto::Storage::kTypeVolatile, aKey.GetBytes(), Key::kSize));
+        SuccessOrAssert(Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeAes,
+                                                 Crypto::Storage::kKeyAlgorithmAesEcb,
+                                                 (aIsExportable ? Crypto::Storage::kUsageExport : 0) |
+                                                     Crypto::Storage::kUsageEncrypt | Crypto::Storage::kUsageDecrypt,
+                                                 Crypto::Storage::kTypeVolatile, aKey.GetBytes(), Key::kSize));
 
         SetKeyRef(keyRef);
     }
@@ -323,7 +323,7 @@ void KeyMaterial::ExtractKey(Key &aKey) const
     {
         size_t keySize;
 
-        SuccessOrAssert(Crypto::Storage::ExportKey(GetKeyRef(), aKey.m8, Key::kSize, keySize));
+        SuccessOrAssert(Crypto::Storage::ReadKey(GetKeyRef(), aKey.m8, Key::kSize, keySize));
     }
 #else
     aKey = GetKey();

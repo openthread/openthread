@@ -919,10 +919,10 @@ Error TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBu
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Crypto::Storage::KeyRef keyRef;
-    SuccessOrExit(error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
-                                                     Crypto::Storage::kKeyAlgorithmHmacSha256,
-                                                     Crypto::Storage::kUsageSignHash, Crypto::Storage::kTypeVolatile,
-                                                     reinterpret_cast<const uint8_t *>(aBuf), aBufLen));
+    SuccessOrExit(error = Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeHmac,
+                                                   Crypto::Storage::kKeyAlgorithmHmacSha256,
+                                                   Crypto::Storage::kUsageSignHash, Crypto::Storage::kTypeVolatile,
+                                                   reinterpret_cast<const uint8_t *>(aBuf), aBufLen));
     cryptoKey.SetAsKeyRef(keyRef);
 #else
     cryptoKey.Set(reinterpret_cast<const uint8_t *>(aBuf), static_cast<uint16_t>(aBufLen));
