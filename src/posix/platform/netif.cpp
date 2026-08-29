@@ -903,7 +903,8 @@ exit:
 }
 #endif // __linux__
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE || \
+    OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
 {
     return AddRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength, aPriority);
@@ -913,7 +914,7 @@ static otError DeleteRoute(const otIp6Prefix &aPrefix)
 {
     return DeleteRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength);
 }
-#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#endif
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
 static bool HasAddedOmrRoute(const otIp6Prefix &aOmrPrefix)
@@ -1091,7 +1092,7 @@ exit:
 }
 #endif // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static otError AddIp4Route(const otIp4Cidr &aIp4Cidr, uint32_t aPriority)
 {
     return AddRoute(aIp4Cidr.mAddress.mFields.m8, aIp4Cidr.mLength, aPriority);
@@ -1118,7 +1119,10 @@ static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsA
 
 #if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
-static otIp4Cidr sActiveNat64Cidr;
+static otIp4Cidr   sActiveNat64Cidr;
+static otIp6Prefix sActiveNat64Ip6Prefix;
+static bool        sIsNat64Ip4RouteAdded = false;
+static bool        sIsNat64Ip6RouteAdded = false;
 
 static constexpr uint32_t kNat64RoutePriority = 100; // Priority for route to NAT64 CIDR, 100 means a high priority.
 
@@ -1127,6 +1131,7 @@ static bool isSameIp4Cidr(const otIp4Cidr &aCidr1, const otIp4Cidr &aCidr2)
     bool res = true;
 
     VerifyOrExit(aCidr1.mLength == aCidr2.mLength, res = false);
+    VerifyOrExit(aCidr1.mLength > 0);
 
     // The higher (32 - length) bits must be the same, host bits are ignored.
     VerifyOrExit(((ntohl(aCidr1.mAddress.mFields.m32) ^ ntohl(aCidr2.mAddress.mFields.m32)) >> (32 - aCidr1.mLength)) ==
@@ -1137,50 +1142,127 @@ exit:
     return res;
 }
 
+static void addNat64Routes(void)
+{
+    otError error;
+
+    if (!sIsNat64Ip4RouteAdded && sActiveNat64Cidr.mLength > 0)
+    {
+        if ((error = AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority)) != OT_ERROR_NONE)
+        {
+            LogWarn("failed to add route for NAT64 CIDR: %s", otThreadErrorToString(error));
+        }
+        else
+        {
+            sIsNat64Ip4RouteAdded = true;
+            LogInfo("Added route for NAT64 CIDR");
+        }
+    }
+
+    // Route the NAT64 prefix into the Thread network interface, so that traffic
+    // originated by the host to NAT64-synthesized addresses reaches the translator.
+    if (!sIsNat64Ip6RouteAdded && sActiveNat64Ip6Prefix.mLength > 0)
+    {
+        if ((error = AddRoute(sActiveNat64Ip6Prefix, kNat64RoutePriority)) != OT_ERROR_NONE)
+        {
+            LogWarn("failed to add route for NAT64 prefix: %s", otThreadErrorToString(error));
+        }
+        else
+        {
+            sIsNat64Ip6RouteAdded = true;
+            LogInfo("Added route for NAT64 prefix");
+        }
+    }
+}
+
+static void deleteNat64Ip4Route(void)
+{
+    otError error;
+
+    VerifyOrExit(sIsNat64Ip4RouteAdded);
+
+    if ((error = DeleteIp4Route(sActiveNat64Cidr)) != OT_ERROR_NONE)
+    {
+        LogWarn("failed to delete route for NAT64 CIDR: %s", otThreadErrorToString(error));
+    }
+    else
+    {
+        LogInfo("Deleted route for NAT64 CIDR");
+    }
+
+    sIsNat64Ip4RouteAdded = false;
+
+exit:
+    return;
+}
+
+static void deleteNat64Ip6Route(void)
+{
+    otError error;
+
+    VerifyOrExit(sIsNat64Ip6RouteAdded);
+
+    if ((error = DeleteRoute(sActiveNat64Ip6Prefix)) != OT_ERROR_NONE)
+    {
+        LogWarn("failed to delete route for NAT64 prefix: %s", otThreadErrorToString(error));
+    }
+    else
+    {
+        LogInfo("Deleted route for NAT64 prefix");
+    }
+
+    sIsNat64Ip6RouteAdded = false;
+
+exit:
+    return;
+}
+
 static void processNat64StateChange(void)
 {
-    otIp4Cidr translatorCidr;
-    otError   error = OT_ERROR_NONE;
+    otIp4Cidr   translatorCidr;
+    otIp6Prefix translatorIp6Prefix;
 
-    // Skip if NAT64 translator has not been configured with a CIDR.
-    SuccessOrExit(otNat64GetCidr(gInstance, &translatorCidr));
+    if (otNat64GetCidr(gInstance, &translatorCidr) != OT_ERROR_NONE)
+    {
+        memset(&translatorCidr, 0, sizeof(translatorCidr));
+    }
 
     if (!isSameIp4Cidr(translatorCidr, sActiveNat64Cidr)) // Someone sets a new CIDR for NAT64.
     {
         char cidrString[OT_IP4_CIDR_STRING_SIZE];
 
-        if (sActiveNat64Cidr.mLength != 0)
-        {
-            if ((error = DeleteIp4Route(sActiveNat64Cidr)) != OT_ERROR_NONE)
-            {
-                LogWarn("failed to delete route for NAT64: %s", otThreadErrorToString(error));
-            }
-        }
+        deleteNat64Ip4Route(); // Delete the route of the previous CIDR, if any.
         sActiveNat64Cidr = translatorCidr;
 
-        otIp4CidrToString(&translatorCidr, cidrString, sizeof(cidrString));
+        otIp4CidrToString(&sActiveNat64Cidr, cidrString, sizeof(cidrString));
         LogInfo("NAT64 CIDR updated to %s.", cidrString);
+    }
+
+    if (otNat64GetIp6Prefix(gInstance, &translatorIp6Prefix) != OT_ERROR_NONE)
+    {
+        memset(&translatorIp6Prefix, 0, sizeof(translatorIp6Prefix));
+    }
+
+    if (!otIp6ArePrefixesEqual(&translatorIp6Prefix, &sActiveNat64Ip6Prefix)) // The NAT64 prefix changed.
+    {
+        char prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+        deleteNat64Ip6Route(); // Delete the route of the previous prefix, if any.
+        sActiveNat64Ip6Prefix = translatorIp6Prefix;
+
+        otIp6PrefixToString(&sActiveNat64Ip6Prefix, prefixString, sizeof(prefixString));
+        LogInfo("NAT64 prefix updated to %s.", prefixString);
     }
 
     if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
     {
-        if ((error = AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority)) != OT_ERROR_NONE)
-        {
-            LogWarn("failed to add route for NAT64: %s", otThreadErrorToString(error));
-        }
-        LogInfo("Adding route for NAT64");
+        addNat64Routes();
     }
-    else if (sActiveNat64Cidr.mLength > 0) // Translator is not active.
+    else // Translator is not active.
     {
-        if ((error = DeleteIp4Route(sActiveNat64Cidr)) != OT_ERROR_NONE)
-        {
-            LogWarn("failed to delete route for NAT64: %s", otThreadErrorToString(error));
-        }
-        LogInfo("Deleting route for NAT64");
+        deleteNat64Ip4Route();
+        deleteNat64Ip6Route();
     }
-
-exit:
-    return;
 }
 #endif // defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
@@ -1373,7 +1455,7 @@ static void processTransmit(otInstance *aInstance)
     char       packet[kMaxIp6Size];
     otError    error  = OT_ERROR_NONE;
     size_t     offset = 0;
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     bool isIp4 = false;
 #endif
 
@@ -1606,14 +1688,22 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         LogInfo("Succeeded to sync netif state with host");
     }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (isUp && otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    if (isUp)
     {
-        // Recover NAT64 route.
-        if ((error = AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority)) != OT_ERROR_NONE)
+        if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
         {
-            LogWarn("failed to add route for NAT64: %s", otThreadErrorToString(error));
+            // Recover the NAT64 routes. This is a no-op for routes that are
+            // already installed.
+            addNat64Routes();
         }
+    }
+    else
+    {
+        // The kernel removes the routes of an interface that goes down, so
+        // track them as no longer installed without issuing netlink requests.
+        sIsNat64Ip4RouteAdded = false;
+        sIsNat64Ip6RouteAdded = false;
     }
 #endif
 
