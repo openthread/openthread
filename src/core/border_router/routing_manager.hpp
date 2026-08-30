@@ -109,7 +109,11 @@ public:
      * - One entry for NAT64 published prefix.
      * - One extra entry for transitions.
      */
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+    static constexpr uint16_t kMaxPublishedPrefixes = 3 + kMaxAilPrefixes;
+#else
     static constexpr uint16_t kMaxPublishedPrefixes = 3;
+#endif
 
     /**
      * Represents the states of `RoutingManager`.
@@ -714,6 +718,7 @@ private:
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
         bool               AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const;
+        bool               IsPublishingOrAdvertising(void) const;
         bool               IsInitialEvaluationDone(void) const;
         void               HandleRxRaTrackerChanged(void);
         bool               ShouldPublishUlaRoute(void) const;
@@ -748,7 +753,6 @@ private:
         void  SetState(State aState);
         void  SetAilPrefix(const Ip6::Prefix &aPrefix);
         void  SetFavoredPrefix(const Ip6::Prefix &aPrefix);
-        bool  IsPublishingOrAdvertising(void) const;
         void  GenerateLocalPrefix(void);
         void  PublishAndAdvertise(void);
         void  Deprecate(void);
@@ -939,6 +943,29 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+
+    class AilPrefixLowpanPublisher : public InstanceLocator
+    {
+    public:
+        explicit AilPrefixLowpanPublisher(Instance &aInstance);
+
+        void Start(void) { Evaluate(); }
+        void Stop(void);
+        void Evaluate(void);
+        void HandleRxRaTrackerChanged(void) { Evaluate(); }
+
+    private:
+        void Publish(const Ip6::Prefix &aPrefix);
+        void Unpublish(const Ip6::Prefix &aPrefix);
+
+        AilPrefixArray mPublishedPrefixes;
+    };
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     struct TxRaInfo
     {
         // Tracks info about emitted RA messages:
@@ -1119,6 +1146,10 @@ private:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     PdPrefixManager mPdPrefixManager;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+    AilPrefixLowpanPublisher mAilPrefixLowpanPublisher;
 #endif
 
     TxRaInfo   mTxRaInfo;

@@ -265,6 +265,27 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+ *
+ * Define to 1 to enable Border Router publishing of AIL on-link prefixes for 6LoWPAN context compression.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_PUBLISHED_AIL_PREFIXES
+ *
+ * Specifies the maximum number of AIL on-link prefixes published in Thread Network Data
+ * by Routing Manager for 6LoWPAN context compression.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_PUBLISHED_AIL_PREFIXES
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_PUBLISHED_AIL_PREFIXES 2
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
  *
  * Define to 1 to add mock (empty) implementation of infra-if platform APIs.
