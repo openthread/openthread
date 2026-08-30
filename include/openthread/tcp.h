@@ -382,6 +382,7 @@ otError otTcpBind(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName);
 enum
 {
     OT_TCP_CONNECT_NO_FAST_OPEN = 1 << 0,
+    OT_TCP_NODELAY              = 1 << 1,
 };
 
 /**
@@ -406,6 +407,18 @@ enum
  * @retval OT_ERROR_FAILED  Failed to complete the operation.
  */
 otError otTcpConnect(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName, uint32_t aFlags);
+
+/**
+ * Sets the TCP endpoint's options.
+ *
+ * @param[in]  aEndpoint  A pointer to the TCP endpoint structure to connect.
+ * @param[in]  aFlags     Flags specifying options for this operation (see enumeration above).
+ *
+ * @retval OT_ERROR_NONE    Successfully completed the operation.
+ * @retval OT_ERROR_FAILED  Failed to complete the operation.
+ *
+ */
+otError otTcpSetSockOpt(otTcpEndpoint *aEndpoint, uint32_t aFlags);
 
 /**
  * Defines flags passed to @p otTcpSendByReference.
