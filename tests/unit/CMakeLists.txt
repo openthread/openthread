@@ -232,6 +232,7 @@ ot_unit_test(ip_address)
 ot_unit_test(link_metrics_manager)
 ot_unit_test(link_quality)
 ot_unit_test(linked_list)
+ot_unit_test(log_platform_macro)
 ot_unit_test(lowpan)
 ot_unit_test(ltv)
 ot_unit_test(mac_frame)
@@ -279,6 +280,41 @@ ot_unit_ncp_test(dnssd)
 ot_unit_ncp_test(infra_if)
 ot_unit_ncp_test(srp_server)
 ot_unit_ncp_test(ephemeral_key)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# `ot-test-log_platform_macro` is compiled with `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE=1` and a
+# test-only platform header (`test_log_platform_macro_stub.h`) to verify that the `Log{Crit,Warn,Note,Info,Debg}()`,
+# `LogAt()`, `LogWarnOnError()`, and `Dump*()` macros correctly expand to platform-provided `OT_LOG_PLATFORM_*`
+# macros (instead of `ot::Logger`) when a platform opts into that mode. `OPENTHREAD_CONFIG_LOG_LEVEL` is raised
+# to `DEBG` so every log level macro is actually compiled in and exercised. `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`
+# is enabled so `LogCert()`/`DumpCert()` (which must always go through `ot::Logger`, never the platform macros) are
+# also compiled in and can be tested.
+target_compile_definitions(ot-test-log_platform_macro
+    PRIVATE
+        "OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE=1"
+        "OPENTHREAD_CONFIG_LOG_OFFLOADING_HEADER_FILE=\"test_log_platform_macro_stub.h\""
+        "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG"
+        "OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1"
+)
+
+# `ot-config`'s Debug-build default of `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1` is incompatible with
+# `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE=1` (see `openthread-core-config-check.h`) and is irrelevant to what this
+# test verifies, so it is undefined and redefined to 0 here. This must be done via `target_compile_options()`
+# (mapped to ninja's `$FLAGS`, which come after `$DEFINES` on the compile command line), since `ot-config`'s
+# `INTERFACE` compile definition is otherwise appended after (and so would win over) a same-named
+# `target_compile_definitions()` override on this target.
+target_compile_options(ot-test-log_platform_macro
+    PRIVATE
+        "-UOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE"
+        "-DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=0"
+)
+
+# `common/log.hpp` (in src/core) does `#include OPENTHREAD_CONFIG_LOG_OFFLOADING_HEADER_FILE`, so
+# `tests/unit/` (where the stub header lives) must be on the include path.
+target_include_directories(ot-test-log_platform_macro
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

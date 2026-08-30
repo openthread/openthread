@@ -31,6 +31,10 @@
 
 #include <openthread/logging.h>
 
+// When `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, `otLogCritPlat()` is defined as a macro in
+// `<openthread/logging.h>` instead, expanding directly to a platform-provided `OT_LOG_PLATFORM_CRIT()` macro. In
+// that case, this tool's own definition below is neither needed nor (being a macro) definable here.
+#if !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
 void otLogCritPlat(const char *aFormat, ...)
 {
     va_list args;
@@ -39,3 +43,4 @@ void otLogCritPlat(const char *aFormat, ...)
     vprintf(aFormat, args);
     va_end(args);
 }
+#endif // !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
