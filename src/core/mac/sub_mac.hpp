@@ -41,6 +41,7 @@
 #include <openthread/platform/crypto.h>
 
 #include "common/callback.hpp"
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -71,6 +72,14 @@ namespace Mac {
     (OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || \
      ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE))
 
+#ifdef OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+#error "OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE MUST NOT be defined directly. It is derived from other configs"
+#endif
+
+#define OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE                                                    \
+    (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE || \
+     ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE))
+
 //----------------------------------------------------------------------------------------------------------------------
 // Config validity checks
 
@@ -78,17 +87,13 @@ namespace Mac {
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE."
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE."
 #endif
 
-#if !OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE && !OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 #error "Microsecond timer OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE is required for "\
-    "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE"
-#endif
-
+       "TARGET TIME RX feature (CSL, Thread direct wakeup listener, etc)."
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -338,6 +343,28 @@ public:
      */
     Error Receive(uint8_t aChannel);
 
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    /**
+     * Schedules a radio reception window at a specific time and duration.
+     *
+     * `SubMac` supports one active and one pending reception window. If an unstarted receive window is already
+     * pending when this method is called, the new window will replace the existing pending window.
+     *
+     * @param[in] aStartTime  The start time in microseconds.
+     * @param[in] aDuration   The duration of the receive window in microseconds.
+     * @param[in] aChannel    The channel to use for receiving.
+     */
+    void ReceiveAt(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel);
+
+    /**
+     * Cancels any pending scheduled receive window (`ReceiveAt()`).
+     *
+     * If a scheduled reception window is currently pending (waiting to start), it is cancelled. If a timed reception
+     * window is already active (radio is currently receiving), this method does not interrupt the ongoing reception.
+     */
+    void CancelPendingReceiveAt(void);
+#endif
+
     /**
      * Gets the radio transmit frame.
      *
@@ -552,9 +579,8 @@ private:
 #if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
         kStateTimedTransmit, // Timed TX (e.g., for CSL)
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-        kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
-                           // sample state.
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+        kStateTimedReceive, // Timed RX (CSL sampling or wake listening)
 #endif
     };
 
@@ -582,6 +608,29 @@ private:
         OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD + kCcaSampleInterval + Radio::kHeaderShrDuration;
 #endif
 
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    class TimedRx : public Clearable<TimedRx>
+    {
+    public:
+        TimedRx(void) { Clear(); }
+
+        void          Init(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel);
+        bool          IsSpecified(void) const { return mIsSpecified; }
+        Radio::Time64 GetStartTime(void) const { return mStartTime; }
+        Radio::Time64 GetEndTime(void) const { return mStartTime + mDuration; }
+        uint8_t       GetChannel(void) const { return mChannel; }
+        bool          HasStarted(const Radio::SyncedTime &aNow) const { return mStartTime <= aNow.GetAsTime64(); }
+        bool          HasEnded(const Radio::SyncedTime &aNow) const { return GetEndTime() <= aNow.GetAsTime64(); }
+        void          ScheduleOnRadio(Radio::Radio &aRadio) const;
+
+    private:
+        Radio::Time64 mStartTime;
+        uint32_t      mDuration;
+        uint8_t       mChannel;
+        bool          mIsSpecified;
+    };
+#endif
+
     void Init(void);
 
     bool RadioSupports(Capability aCapability) const { return (mRadioCaps & aCapability) != 0; }
@@ -605,14 +654,13 @@ private:
     void HandleEnergyScanDone(int8_t aMaxRssi);
     void HandleTimer(void);
 
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    void StartPendingTimedRx(void);
+    void ProcessTimedRx(void);
+#endif
+
     void               SetState(State aState);
     static const char *StateToString(State aState);
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    bool IsRadioSampleEnabled(void) const;
-    void UpdateRadioSampleState(void);
-    void RadioSample(void);
-#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     void     CslInit(void);
@@ -625,19 +673,15 @@ private:
     uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
     uint32_t GetNextCycleDrift(void) const;
     bool     IsCslEnabled(void) const { return mCslPeriod > 0; }
+    void     LogCslWindow(Radio::Time64 aStart, uint32_t aDuration);
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
 #endif
-    void HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter);
-    void HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter);
-    void LogCslWindow(uint32_t aWinStart, uint32_t aWinDuration);
 #endif
 
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     void WedInit(void);
     void HandleWedTimer(void);
-    void HandleWedReceiveAt(void);
-    void HandleWedReceiveOrSleep(void);
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
@@ -667,15 +711,18 @@ private:
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     uint8_t mRetxDelayBackoffExponent;
 #endif
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    TimedRx mActiveTimedRx;
+    TimedRx mPendingTimedRx;
+#endif
+
     SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     using CslTimer = TimerMicroIn<SubMac, &SubMac::HandleCslTimer>;
 
-    uint16_t mCslPeriod;                  // The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t  mCslChannel : 7;             // The CSL sample channel.
-    bool     mIsCslSampling : 1;          // Indicates that the current time is in CSL sample window
-                                          // for platforms not supporting `Radio::ReceiveAt()`.
+    uint16_t          mCslPeriod;         // The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t           mCslChannel;        // The CSL sample channel.
     uint16_t          mCslPeerShort;      // The CSL peer short address.
     Radio::SyncedTime mCslSampleTime;     // The CSL sample time for current period.
     CslAccuracy       mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
@@ -690,9 +737,7 @@ private:
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     using WedTimer = TimerMicroIn<SubMac, &SubMac::HandleWedTimer>;
 
-    bool mIsWedSampling : 1;                 // Indicates that the current time is in WED's sample window
-                                             // for platforms not supporting `Radio::ReceiveAt()`.
-    bool              mIsWedEnabled : 1;     // Indicates if the WED is enabled.
+    bool              mIsWedEnabled;         // Indicates if the WED is enabled.
     uint32_t          mWakeupListenInterval; // The wake-up listen interval, in microseconds.
     uint32_t          mWakeupListenDuration; // The wake-up listen duration, in microseconds.
     uint8_t           mWakeupChannel;        // The wake-up sample channel.
