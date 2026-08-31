@@ -46,6 +46,18 @@ void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout)
     AsCoreType(aInstance).Get<Mle::Mle>().SetTimeout(aTimeout);
 }
 
+otError otThreadSaveNetworkInfo(otInstance *aInstance)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
+
+    VerifyOrExit(instance.Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
+    instance.Get<Mle::Mle>().Store();
+
+exit:
+    return error;
+}
+
 const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().GetExtPanId();

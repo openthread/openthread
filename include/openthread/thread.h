@@ -354,6 +354,20 @@ uint32_t otThreadGetChildTimeout(otInstance *aInstance);
 void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout);
 
 /**
+ * Saves the current network attachment state to non-volatile settings.
+ *
+ * This stores the current `NetworkInfo` and `ParentInfo` (if attached as a child) to the
+ * platform settings. It is intended to be called before a reset or any sleep mode that does
+ * not retain RAM.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE           Successfully stored network info.
+ * @retval OT_ERROR_INVALID_STATE  The device is not attached to a Thread network.
+ */
+otError otThreadSaveNetworkInfo(otInstance *aInstance);
+
+/**
  * Gets the IEEE 802.15.4 Extended PAN ID.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

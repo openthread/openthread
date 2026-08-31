@@ -6529,6 +6529,20 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
     {
         OutputLine("%u", otThreadGetVersion());
     }
+    /**
+     * @cli thread save
+     * @code
+     * thread save
+     * Done
+     * @endcode
+     * @par
+     * Saves the current network attachment state to non-volatile settings.
+     * @sa otThreadSaveNetworkInfo
+     */
+    else if (aArgs[0] == "save")
+    {
+        error = otThreadSaveNetworkInfo(GetInstancePtr());
+    }
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
