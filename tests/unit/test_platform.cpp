@@ -940,6 +940,29 @@ otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisement
     return otPlatBleGapAdvSetData(aInstance, aAdvertisementData, aAdvertisementLen);
 }
 
+/* Weak stubs for callbacks defined in the FTD/MTD core library, not available for RCP targets. */
+
+OT_TOOL_WEAK void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+}
+
+OT_TOOL_WEAK void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+}
+
+OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance             *aInstance,
+                                                    uint16_t                aHandle,
+                                                    const otBleRadioPacket *aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHandle);
+    OT_UNUSED_VARIABLE(aPacket);
+}
+
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
 #if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
