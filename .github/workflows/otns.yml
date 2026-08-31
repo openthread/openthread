@@ -76,7 +76,7 @@ jobs:
     - name: Bootstrap
       timeout-minutes: 10
       run: |
-        sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
         sudo apt-get --no-install-recommends install -y lcov ninja-build
     - name: Run
       run: |
@@ -120,7 +120,7 @@ jobs:
       - name: Bootstrap
         timeout-minutes: 10
         run: |
-          sudo apt-get update
+          sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
           sudo apt-get --no-install-recommends install -y lcov ninja-build
       - name: Run
         run: |
@@ -186,7 +186,7 @@ jobs:
       - name: Bootstrap
         timeout-minutes: 10
         run: |
-          sudo apt-get update
+          sudo rm -f /etc/apt/sources.list.d/*.list && sudo apt-get update
           sudo apt-get --no-install-recommends install -y lcov ninja-build
       - name: Run
         run: |
