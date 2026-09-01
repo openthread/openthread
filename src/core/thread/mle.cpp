@@ -3047,7 +3047,7 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 
     static constexpr uint64_t usInSecond = 1000000;
 
-    uint64_t cslPeriodUs  = Mac::CslPeriodToUsec(Radio::kMinCslPeriod);
+    uint64_t cslPeriodUs  = Mac::CslPeriodToUsec(Mac::kMinCslPeriod);
     uint64_t cslTimeoutUs = GetCslTimeout() * usInSecond;
     uint64_t k            = cslTimeoutUs / cslPeriodUs;
 

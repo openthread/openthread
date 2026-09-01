@@ -2568,7 +2568,7 @@ void Mac::ProcessCsl(const RxFrame::ParseInfo &aFrameInfo, const Address &aSrcAd
 
     VerifyOrExit(neighbor != nullptr);
 
-    VerifyOrExit(csl->GetPeriod() >= kMinCslIePeriod);
+    VerifyOrExit(csl->GetPeriod() >= kMinCslPeriod);
 
     neighbor->SetCslPeriod(csl->GetPeriod());
     neighbor->SetCslPhase(csl->GetPhase());
