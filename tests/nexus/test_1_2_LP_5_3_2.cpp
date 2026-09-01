@@ -197,7 +197,7 @@ void Test1_2_LP_5_3_2(void)
 
     // Pre-set CSL parameters on SSED_1 before it joins.
     ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriodInTenSymbols);
-    ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout);
+    SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
 
     /**
      * Step 1: All
@@ -228,7 +228,7 @@ void Test1_2_LP_5_3_2(void)
 
     // Override again after Join just in case Join() resets them to defaults.
     ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriodInTenSymbols);
-    ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout);
+    SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
 
     nexus.AdvanceTime(kAttachAsSsedTime);
     VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
@@ -241,7 +241,7 @@ void Test1_2_LP_5_3_2(void)
     Log("Step 2a: SSED_1");
 
     // Deactivate autosynchronization by setting a very long CSL timeout on SSED_1.
-    ssed1.Get<Mle::Mle>().SetCslTimeout(kDeactivatedCslTimeout);
+    SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kDeactivatedCslTimeout));
 
     /**
      * Step 3: Harness

@@ -742,8 +742,11 @@ public:
      * Sets the CSL timeout.
      *
      * @param[in]  aTimeout  The CSL timeout in seconds.
+     *
+     * @retval kErrorNone         Successfully set the CSL timeout.
+     * @retval kErrorInvalidArgs  @p aTimeout is larger than the maximum allowed CSL timeout.
      */
-    void SetCslTimeout(uint32_t aTimeout);
+    Error SetCslTimeout(uint32_t aTimeout);
 
     /**
      * Calculates CSL metric of parent.
@@ -1353,6 +1356,9 @@ private:
     static constexpr uint32_t kDefaultStoreFrameCounterAhead = OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
     static constexpr uint32_t kDefaultChildTimeout           = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT;
     static constexpr uint32_t kDefaultCslTimeout             = OPENTHREAD_CONFIG_CSL_TIMEOUT;
+    static constexpr uint32_t kMaxCslTimeout                 = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT;
+
+    static_assert(kDefaultCslTimeout <= kMaxCslTimeout, "default CSL timeout exceeds max CSL timeout");
 
 #if OPENTHREAD_FTD
     // Advertisement trickle timer constants - all times are in milliseconds.

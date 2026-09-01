@@ -162,7 +162,7 @@ void Test1_2_LP_5_3_6(void)
     VerifyOrQuit(ssed1.Get<Mle::Mle>().GetParent().GetExtAddress() == router1.Get<Mac::Mac>().GetExtAddress());
 
     ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriodMs * 1000 / OT_US_PER_TEN_SYMBOLS);
-    ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeoutSec);
+    SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeoutSec));
     nexus.AdvanceTime(kStabilizationTime);
 
     /**

@@ -196,7 +196,7 @@ void Test1_2_LP_5_3_5(void)
         {
             // For SSED_2-6, apply target parameters before joining so they are used in Child ID Request
             sseds[i]->Get<Mac::Mac>().SetCslPeriod(kCslPeriod500ms);
-            sseds[i]->Get<Mle::Mle>().SetCslTimeout(kCslTimeouts[i]);
+            SuccessOrQuit(sseds[i]->Get<Mle::Mle>().SetCslTimeout(kCslTimeouts[i]));
             sseds[i]->Get<Mac::Mac>().SetCslChannel(kCslChannels[i]);
         }
 
@@ -229,7 +229,7 @@ void Test1_2_LP_5_3_5(void)
 
     // Now update SSED_1 to trigger MLE Child Update Request/Response (Criterion 2.2)
     sseds[0]->Get<Mac::Mac>().SetCslPeriod(kCslPeriod500ms);
-    sseds[0]->Get<Mle::Mle>().SetCslTimeout(kCslTimeouts[0]);
+    SuccessOrQuit(sseds[0]->Get<Mle::Mle>().SetCslTimeout(kCslTimeouts[0]));
     sseds[0]->Get<Mac::Mac>().SetCslChannel(kCslChannels[0]);
 
     nexus.AdvanceTime(kStabilizationTime);

@@ -455,7 +455,7 @@ otError otLinkSetCslPeriod(otInstance *aInstance, uint32_t aPeriod)
     {
         VerifyOrExit((aPeriod % Radio::kTenSymbolsDuration) == 0, error = kErrorInvalidArgs);
         periodInTenSymbolsUnit = ClampToUint16(aPeriod / Radio::kTenSymbolsDuration);
-        VerifyOrExit(periodInTenSymbolsUnit >= Radio::kMinCslPeriod, error = kErrorInvalidArgs);
+        VerifyOrExit(periodInTenSymbolsUnit >= Mac::kMinCslPeriod, error = kErrorInvalidArgs);
     }
 
     AsCoreType(aInstance).Get<Mac::Mac>().SetCslPeriod(periodInTenSymbolsUnit);
@@ -468,13 +468,7 @@ uint32_t otLinkGetCslTimeout(otInstance *aInstance) { return AsCoreType(aInstanc
 
 otError otLinkSetCslTimeout(otInstance *aInstance, uint32_t aTimeout)
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(Radio::kMaxCslTimeout >= aTimeout, error = kErrorInvalidArgs);
-    AsCoreType(aInstance).Get<Mle::Mle>().SetCslTimeout(aTimeout);
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetCslTimeout(aTimeout);
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

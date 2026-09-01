@@ -247,7 +247,7 @@ public:
      *
      * @returns The number of milliseconds.
      */
-    static uint32_t constexpr SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
+    static uint32_t constexpr SecToMsec(uint32_t aSeconds) { return aSeconds * kOneSecondInMsec; }
 
     /**
      * Converts a given number of milliseconds to seconds.
@@ -256,7 +256,16 @@ public:
      *
      * @returns The number of seconds.
      */
-    static uint32_t constexpr MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
+    static uint32_t constexpr MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / kOneSecondInMsec; }
+
+    /**
+     * Converts a given number of milliseconds to microseconds.
+     *
+     * @param[in] aMilliseconds  The milliseconds value to convert to microseconds.
+     *
+     * @returns The number of microseconds.
+     */
+    static uint32_t constexpr MsecToUsec(uint32_t aMilliseconds) { return aMilliseconds * kOneMsecInUsec; }
 
     /**
      * Converts a given number of microseconds to milliseconds.
@@ -265,7 +274,7 @@ public:
      *
      * @returns The number of milliseconds.
      */
-    static uint32_t constexpr UsecToMsec(uint32_t aMicroseconds) { return aMicroseconds / 1000u; }
+    static uint32_t constexpr UsecToMsec(uint32_t aMicroseconds) { return aMicroseconds / kOneMsecInUsec; }
 
 private:
     static constexpr uint32_t kDistantInterval = (1UL << 31) - 1;

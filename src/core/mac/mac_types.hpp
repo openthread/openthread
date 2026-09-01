@@ -48,7 +48,9 @@
 #include "common/data.hpp"
 #include "common/equatable.hpp"
 #include "common/non_copyable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/string.hpp"
+#include "common/time.hpp"
 #include "crypto/storage.hpp"
 #include "radio/radio_types.hpp"
 
@@ -867,6 +869,17 @@ private:
     uint32_t mTrelCounter;
 #endif
 };
+
+/**
+ * Minimum CSL period supported in units of 10 symbols.
+ */
+constexpr uint16_t kMinCslPeriod =
+    static_cast<uint16_t>(Time::MsecToUsec(OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD) / Radio::kTenSymbolsDuration);
+
+static_assert(kMinCslPeriod > 0, "kMinCslPeriod must be greater than zero");
+static_assert((Time::MsecToUsec(OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD) / Radio::kTenSymbolsDuration) <=
+                  NumericLimits<uint16_t>::kMax,
+              "kMinCslPeriod is too large to fit in uint16_t");
 
 /**
  * Converts a given CSL period in units of 10 symbols to microseconds.

@@ -956,10 +956,14 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-void Mle::SetCslTimeout(uint32_t aTimeout)
-{
-    VerifyOrExit(mCslTimeout != aTimeout);
 
+Error Mle::SetCslTimeout(uint32_t aTimeout)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aTimeout <= kMaxCslTimeout, error = kErrorInvalidArgs);
+
+    VerifyOrExit(mCslTimeout != aTimeout);
     mCslTimeout = aTimeout;
 
     Get<DataPollSender>().RecalculatePollPeriod();
@@ -970,11 +974,12 @@ void Mle::SetCslTimeout(uint32_t aTimeout)
     }
 
 exit:
-    return;
+    return error;
 }
 
 bool Mle::IsCslSupported(void) const { return IsChild() && GetParent().IsThreadVersion1p2OrHigher(); }
-#endif
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 void Mle::InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo)
 {
@@ -3047,7 +3052,7 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 
     static constexpr uint64_t usInSecond = 1000000;
 
-    uint64_t cslPeriodUs  = Mac::CslPeriodToUsec(Radio::kMinCslPeriod);
+    uint64_t cslPeriodUs  = Mac::CslPeriodToUsec(Mac::kMinCslPeriod);
     uint64_t cslTimeoutUs = GetCslTimeout() * usInSecond;
     uint64_t k            = cslTimeoutUs / cslPeriodUs;
 

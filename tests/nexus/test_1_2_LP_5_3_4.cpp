@@ -131,7 +131,7 @@ void Test1_2_LP_5_3_4(void)
 
     ssed1.Join(leader, Node::kAsSed);
     ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod500ms);
-    ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout20s);
+    SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout20s));
     nexus.AdvanceTime(kStabilizationTime);
     VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
 
