@@ -162,6 +162,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CRYPTO_INVALID_KEY_REF
+ *
+ * The sentinel `KeyRef` value that marks "no key set". Depends on the crypto backend in use; a backend whose
+ * platform reserves a different value as invalid can override this definition. Defaults to `PSA_KEY_ID_NULL`,
+ * as used by the default PSA backend.
+ */
+#ifndef OPENTHREAD_CONFIG_CRYPTO_INVALID_KEY_REF
+#define OPENTHREAD_CONFIG_CRYPTO_INVALID_KEY_REF 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE
  *
  * Define to 1 if you want to make MAC keys exportable.
