@@ -36,6 +36,7 @@
 #include <openthread/platform/flash.h>
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#include <assert.h>
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 #endif
@@ -952,12 +953,14 @@ OT_TOOL_WEAK void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConne
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aConnectionId);
+    assert(false);
 }
 
 OT_TOOL_WEAK void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aConnectionId);
+    assert(false);
 }
 
 OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance             *aInstance,
@@ -967,6 +970,7 @@ OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance             *aIns
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aPacket);
+    assert(false);
 }
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
