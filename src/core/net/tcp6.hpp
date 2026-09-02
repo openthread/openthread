@@ -561,6 +561,7 @@ private:
     static constexpr uint8_t kForwardProgressCallbackFlag  = (1 << 2);
     static constexpr uint8_t kReceiveAvailableCallbackFlag = (1 << 3);
     static constexpr uint8_t kDisconnectedCallbackFlag     = (1 << 4);
+    static constexpr uint8_t kProcessSignalsActiveFlag     = (1 << 5);
 
     typedef TcpHeader Header;
 
