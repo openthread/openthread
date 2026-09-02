@@ -152,6 +152,12 @@ void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
         SuccessOrDie(mRadioSpinel.SetCcaEnergyDetectThreshold(value));
     }
 
+    if (aRadioUrl.HasParam("tx-power"))
+    {
+        SuccessOrDie(aRadioUrl.ParseInt8("tx-power", value));
+        SuccessOrDie(mRadioSpinel.SetTransmitPower(value));
+    }
+
 #if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
     // config files should be parsed before the region parameter
     if (aRadioUrl.HasParam("product-config-file"))
