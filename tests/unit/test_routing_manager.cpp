@@ -831,6 +831,30 @@ void VerifyNat64PrefixInNetData(const Ip6::Prefix &aNat64Prefix)
     VerifyOrQuit(didFind);
 }
 
+void VerifyBrOnLinkPrefixInSettings(const Ip6::Prefix &aPrefix, bool aExpectedPresent)
+{
+    Settings::BrOnLinkPrefix savedPrefix;
+    bool                     found = false;
+
+    for (int index = 0; sInstance->Get<Settings>().ReadBrOnLinkPrefix(index, savedPrefix) == kErrorNone; index++)
+    {
+        if (savedPrefix.GetPrefix() == aPrefix)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    VerifyOrQuit(found == aExpectedPresent);
+}
+
+void VerifyNoBrOnLinkPrefixInSettings(void)
+{
+    Settings::BrOnLinkPrefix savedPrefix;
+
+    VerifyOrQuit(sInstance->Get<Settings>().ReadBrOnLinkPrefix(0, savedPrefix) != kErrorNone);
+}
+
 struct Pio
 {
     using Flags = Ip6::Nd::PrefixInfoOption::Flags;
@@ -2751,6 +2775,155 @@ void TestLocalOnLinkPrefixDeprecation(void)
 
     Log("End of TestLocalOnLinkPrefixDeprecation");
 
+    FinalizeTest();
+}
+
+void TestUnadvertisedLocalOnLinkPrefix(void)
+{
+    static const otExtendedPanId kExtPanId1 = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x08}};
+
+    Ip6::Prefix          localOnLink;
+    Ip6::Prefix          oldLocalOnLink;
+    Ip6::Prefix          localOmr;
+    Ip6::Prefix          onLinkPrefix   = PrefixFromString("2000:abba:baba::", 64);
+    Ip6::Address         routerAddressA = AddressFromString("fd00::aaaa");
+    otOperationalDataset dataset;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestUnadvertisedLocalOnLinkPrefix");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Scenario 1: A favored on-link prefix is discovered on AIL while local on-link
+    // prefix is in `kToAdvertise` state (before any RA is emitted).
+    // Ensure the unadvertised local on-link prefix transitions to `kIdle` and is NOT deprecated.
+
+    InitTest(/* aEnableBorderRouting */ false);
+
+    // Enable RxRaTracker before enabling RoutingManager.
+    // This allows initial RS router discovery to complete without
+    // timing dependencies or interference from RsSender start jitter.
+    sInstance->Get<BorderRouter::RxRaTracker>().SetEnabled(true, BorderRouter::RxRaTracker::kRequesterMultiAilDetector);
+    AdvanceTime(15000);
+    VerifyOrQuit(sInstance->Get<BorderRouter::RxRaTracker>().IsInitialRouterDiscoveryFinished());
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+
+    // Advance time slightly to allow the Leader to add the ULA route to Network Data
+    // and for OnLinkPrefixManager to transition to `kToAdvertise`.
+    // The first RA advertising the prefix is scheduled with `kAfterRandomDelay` (~2-4 seconds),
+    // so at 500 ms no RA advertising the prefix has been emitted.
+    AdvanceTime(500);
+
+    VerifyNoBrOnLinkPrefixInSettings();
+
+    // Send an RA from router A advertising an on-link prefix.
+    // This causes `OnLinkPrefixManager` to deprecate the local on-link prefix. Since it was
+    // in `kToAdvertise` (never advertised in an RA), it must transition directly to `kIdle`
+    // rather than `kDeprecating`.
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, kValidLitime, kPreferredLifetime)});
+
+    sRaValidated = false;
+    sExpectedPio = kNoPio;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(20000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sDeprecatingPrefixes.IsEmpty());
+
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioCleared);
+
+    VerifyNoBrOnLinkPrefixInSettings();
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    sInstance->Get<BorderRouter::RxRaTracker>().SetEnabled(false,
+                                                           BorderRouter::RxRaTracker::kRequesterMultiAilDetector);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Scenario 2: Extended PAN ID changes while local on-link prefix is in `kToAdvertise` state.
+    // Ensure the old prefix is NOT deprecated and not saved to Settings, while the new
+    // prefix is saved to Settings only after it is actually advertised in an RA.
+
+    sInstance->Get<BorderRouter::RxRaTracker>().SetEnabled(true, BorderRouter::RxRaTracker::kRequesterMultiAilDetector);
+    AdvanceTime(15000);
+    VerifyOrQuit(sInstance->Get<BorderRouter::RxRaTracker>().IsInitialRouterDiscoveryFinished());
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    oldLocalOnLink = localOnLink;
+
+    AdvanceTime(500);
+
+    VerifyNoBrOnLinkPrefixInSettings();
+
+    SuccessOrQuit(otDatasetGetActive(sInstance, &dataset));
+    VerifyOrQuit(dataset.mComponents.mIsExtendedPanIdPresent);
+    dataset.mExtendedPanId = kExtPanId1;
+    dataset.mActiveTimestamp.mSeconds++;
+    SuccessOrQuit(otDatasetSetActive(sInstance, &dataset));
+
+    AdvanceTime(500);
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    VerifyOrQuit(localOnLink != oldLocalOnLink);
+    Log("Local on-link prefix changed to %s from %s", localOnLink.ToString().AsCString(),
+        oldLocalOnLink.ToString().AsCString());
+
+    VerifyNoBrOnLinkPrefixInSettings();
+
+    // Advance time for the RA to be emitted advertising the new local prefix.
+    // The old local on-link prefix should NOT be present in the RA as deprecating.
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sDeprecatingPrefixes.IsEmpty());
+
+    VerifyBrOnLinkPrefixInSettings(oldLocalOnLink, false);
+    VerifyBrOnLinkPrefixInSettings(localOnLink, true);
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    sInstance->Get<BorderRouter::RxRaTracker>().SetEnabled(false,
+                                                           BorderRouter::RxRaTracker::kRequesterMultiAilDetector);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Scenario 3: Routing Manager is stopped while local on-link prefix is in `kToAdvertise` state.
+    // Ensure no deprecating RA is emitted and prefix is never saved to Settings.
+
+    sInstance->Get<Settings>().DeleteAllBrOnLinkPrefixes();
+
+    sInstance->Get<BorderRouter::RxRaTracker>().SetEnabled(true, BorderRouter::RxRaTracker::kRequesterMultiAilDetector);
+    AdvanceTime(15000);
+    VerifyOrQuit(sInstance->Get<BorderRouter::RxRaTracker>().IsInitialRouterDiscoveryFinished());
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+    AdvanceTime(500);
+
+    VerifyNoBrOnLinkPrefixInSettings();
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    sInstance->Get<BorderRouter::RxRaTracker>().SetEnabled(false,
+                                                           BorderRouter::RxRaTracker::kRequesterMultiAilDetector);
+
+    sRaValidated = false;
+    AdvanceTime(5000);
+    VerifyOrQuit(!sRaValidated);
+
+    VerifyNoBrOnLinkPrefixInSettings();
+    VerifyExternalRouteInNetData(kNoRoute);
+
+    Log("End of TestUnadvertisedLocalOnLinkPrefix");
     FinalizeTest();
 }
 
@@ -5436,6 +5609,7 @@ int main(void)
     ot::TestAdvNonUlaRoute();
     ot::TestFavoredOnLinkPrefix();
     ot::TestLocalOnLinkPrefixDeprecation();
+    ot::TestUnadvertisedLocalOnLinkPrefix();
     ot::TestExtPanIdChange();
     ot::TestConflictingPrefix();
     ot::TestPrefixStaleTime();

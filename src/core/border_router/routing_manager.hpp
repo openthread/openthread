@@ -732,6 +732,7 @@ private:
         {
             kIdle,
             kPublishing,
+            kToAdvertise,
             kAdvertising,
             kDeprecating,
         };
