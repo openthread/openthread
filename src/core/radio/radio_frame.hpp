@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/as_core_type.hpp"
+#include "common/const_cast.hpp"
 #include "mac/mac_types.hpp"
 #include "radio/radio_types.hpp"
 
@@ -51,11 +52,25 @@ namespace Radio {
  * @{
  */
 
+class Frame;
+
 /**
- * Represents a radio frame.
+ * Defines a CRTP base class providing property accessors for a radio frame.
+ *
+ * Users of this class should follow CRTP-style inheritance, where the `FrameType` class inherits from
+ * `FrameProperties<FrameType>`.
+ *
+ * The `FrameType` class MUST provide a `GetFrame()` method returning a reference to the associated `Frame` with the
+ * following signature:
+ *
+ *       const Frame &GetFrame(void) const;
+ *
+ * @tparam FrameType  The frame or frame-info type.
  */
-class Frame : public otRadioFrame
+template <typename FrameType> class FrameProperties
 {
+    friend FrameType;
+
 public:
     /**
      * Indicates whether the frame is empty (no payload).
@@ -63,42 +78,42 @@ public:
      * @retval TRUE   The frame is empty (no PSDU payload).
      * @retval FALSE  The frame is not empty.
      */
-    bool IsEmpty(void) const { return (mLength == 0); }
+    bool IsEmpty(void) const { return (AsFrame().mLength == 0); }
 
     /**
      * Returns the frame length (PSDU length).
      *
      * @returns The frame length.
      */
-    uint16_t GetLength(void) const { return mLength; }
+    uint16_t GetLength(void) const { return AsFrame().mLength; }
 
     /**
      * Sets the frame length.
      *
      * @param[in]  aLength  The frame length.
      */
-    void SetLength(uint16_t aLength) { mLength = aLength; }
+    void SetLength(uint16_t aLength) { AsFrame().mLength = aLength; }
 
     /**
      * Returns the channel used for transmission or reception.
      *
      * @returns The channel used for transmission or reception.
      */
-    uint8_t GetChannel(void) const { return mChannel; }
+    uint8_t GetChannel(void) const { return AsFrame().mChannel; }
 
     /**
      * Returns a pointer to the PSDU.
      *
      * @returns A pointer to the PSDU.
      */
-    uint8_t *GetPsdu(void) { return mPsdu; }
+    uint8_t *GetPsdu(void) { return AsFrame().mPsdu; }
 
     /**
      * Returns a pointer to the PSDU.
      *
      * @returns A pointer to the PSDU.
      */
-    const uint8_t *GetPsdu(void) const { return mPsdu; }
+    const uint8_t *GetPsdu(void) const { return AsFrame().mPsdu; }
 
     /**
      * Returns a pointer to the PSDU starting at a given index.
@@ -107,7 +122,7 @@ public:
      *
      * @returns A pointer to the PSDU starting at @p aIndex.
      */
-    uint8_t *GetPsduStartingAt(uint16_t aIndex) { return mPsdu + aIndex; }
+    uint8_t *GetPsduStartingAt(uint16_t aIndex) { return GetPsdu() + aIndex; }
 
     /**
      * Returns a pointer to the PSDU starting at a given index.
@@ -116,7 +131,7 @@ public:
      *
      * @returns A pointer to the PSDU starting at @p aIndex.
      */
-    const uint8_t *GetPsduStartingAt(uint16_t aIndex) const { return mPsdu + aIndex; }
+    const uint8_t *GetPsduStartingAt(uint16_t aIndex) const { return GetPsdu() + aIndex; }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     /**
@@ -124,16 +139,31 @@ public:
      *
      * @returns Frame's radio link type.
      */
-    Type GetRadioType(void) const { return static_cast<Type>(mRadioType); }
+    Type GetRadioType(void) const { return static_cast<Type>(AsFrame().mRadioType); }
 
     /**
      * Sets the radio link type of the frame.
      *
      * @param[in] aRadioType  A radio link type.
      */
-    void SetRadioType(Type aRadioType) { mRadioType = static_cast<uint8_t>(aRadioType); }
+    void SetRadioType(Type aRadioType) { AsFrame().mRadioType = static_cast<uint8_t>(aRadioType); }
 #endif
 
+private:
+    FrameProperties(void) = default;
+
+    const Frame &AsFrame(void) const { return static_cast<const FrameType *>(this)->GetFrame(); }
+    Frame       &AsFrame(void) { return AsNonConst(AsConst(this)->AsFrame()); }
+};
+
+/**
+ * Represents a radio frame.
+ */
+class Frame : public otRadioFrame, public FrameProperties<Frame>
+{
+    friend class FrameProperties<Frame>;
+
+public:
     /**
      * Returns the maximum transmission unit size (MTU).
      *
@@ -165,15 +195,28 @@ public:
 protected:
     static constexpr uint16_t k154MtuSize = OT_RADIO_FRAME_MAX_SIZE;
     static constexpr uint8_t  k154FcsSize = sizeof(uint16_t);
+
+private:
+    const Frame &GetFrame(void) const { return *this; }
 };
 
 /**
  * Defines a CRTP base class providing property accessors for a received radio frame.
  *
- * @tparam RxFrameType  The `RxFrame` subclass type.
+ * Users of this class should follow CRTP-style inheritance, where the `RxType` class inherits from
+ * `RxFrameProperties<RxType>`.
+ *
+ * The `RxType` class MUST provide a `GetFrame()` method returning a reference to the associated `Frame` with the
+ * following signature:
+ *
+ *       const Frame &GetFrame(void) const;
+ *
+ * @tparam RxType  The frame or frame-info type.
  */
-template <typename RxFrameType> class RxFrameProperties
+template <typename RxType> class RxFrameProperties
 {
+    friend RxType;
+
 public:
     /**
      * Returns the RSSI in dBm used for reception.
@@ -255,17 +298,29 @@ public:
     const Time64 &GetTimestamp(void) const { return AsFrame().mInfo.mRxInfo.mTimestamp; }
 
 private:
-    Frame       &AsFrame(void) { return *static_cast<RxFrameType *>(this); }
-    const Frame &AsFrame(void) const { return *static_cast<const RxFrameType *>(this); }
+    RxFrameProperties(void) = default;
+
+    const Frame &AsFrame(void) const { return static_cast<const RxType *>(this)->GetFrame(); }
+    Frame       &AsFrame(void) { return AsNonConst(AsConst(this)->AsFrame()); }
 };
 
 /**
  * Defines a CRTP base class providing property accessors for a transmitted radio frame.
  *
- * @tparam TxFrameType  The `TxFrame` subclass type.
+ * Users of this class should follow CRTP-style inheritance, where the `TxType` class inherits from
+ * `TxFrameProperties<TxType>`.
+ *
+ * The `TxType` class MUST provide a `GetFrame()` method returning a reference to the associated `Frame` with the
+ * following signature:
+ *
+ *       const Frame &GetFrame(void) const;
+ *
+ * @tparam TxType  The frame or frame-info type.
  */
-template <typename TxFrameType> class TxFrameProperties
+template <typename TxType> class TxFrameProperties
 {
+    friend TxType;
+
 public:
     /**
      * Sets the channel on which to send the frame.
@@ -503,13 +558,15 @@ public:
     }
 
 private:
+    TxFrameProperties(void) = default;
+
     uint32_t GetTxDelay(void) const { return AsFrame().mInfo.mTxInfo.mTxDelay; }
     void     SetTxDelay(uint32_t aTxDelay) { AsFrame().mInfo.mTxInfo.mTxDelay = aTxDelay; }
     Time32   GetTxDelayBaseTime(void) const { return AsFrame().mInfo.mTxInfo.mTxDelayBaseTime; }
     void SetTxDelayBaseTime(Time32 aTxDelayBaseTime) { AsFrame().mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
 
-    Frame       &AsFrame(void) { return *static_cast<TxFrameType *>(this); }
-    const Frame &AsFrame(void) const { return *static_cast<const TxFrameType *>(this); }
+    const Frame &AsFrame(void) const { return static_cast<const TxType *>(this)->GetFrame(); }
+    Frame       &AsFrame(void) { return AsNonConst(AsConst(this)->AsFrame()); }
 };
 
 /**

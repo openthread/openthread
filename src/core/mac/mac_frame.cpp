@@ -615,8 +615,8 @@ void TxFrame::ParseInfo::WriteSequenceNum(uint8_t aSequenceNum)
     VerifyOrExit(mParsedAddrFields);
     VerifyOrExit(mIsSeqNumPresent);
 
-    mSequenceNum                          = aSequenceNum;
-    GetTxFrame()->GetPsdu()[kSeqNumIndex] = aSequenceNum;
+    mSequenceNum            = aSequenceNum;
+    GetPsdu()[kSeqNumIndex] = aSequenceNum;
 
 exit:
     return;
@@ -673,7 +673,7 @@ void TxFrame::ParseInfo::WriteFrameCounter(uint32_t aFrameCounter)
     mFrameCounter = aFrameCounter;
     LittleEndian::WriteUint32(aFrameCounter, mFrameCounterBytes);
 
-    GetTxFrame()->SetIsHeaderUpdated(true);
+    SetIsHeaderUpdated(true);
 
 exit:
     return;
@@ -921,8 +921,8 @@ void TxFrame::ParseInfo::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
     VerifyOrExit(mParsedFully);
     VerifyOrExit(mIsSecurityEnabled);
-    SuccessOrExit(PerformAesCcm(kEncrypt, aExtAddress, GetTxFrame()->GetAesKey()));
-    GetTxFrame()->SetIsSecurityProcessed(true);
+    SuccessOrExit(PerformAesCcm(kEncrypt, aExtAddress, GetAesKey()));
+    SetIsSecurityProcessed(true);
 
 exit:
     return;
@@ -933,12 +933,12 @@ void TxFrame::ParseInfo::RestoreTransmitSecurity(const ExtAddress &aExtAddress)
 {
     VerifyOrExit(mParsedFully);
     VerifyOrExit(mIsSecurityEnabled);
-    VerifyOrExit(GetTxFrame()->IsSecurityProcessed());
-    IgnoreError(PerformAesCcm(kDecrypt, aExtAddress, GetTxFrame()->GetAesKey()));
-    GetTxFrame()->SetIsSecurityProcessed(false);
+    VerifyOrExit(IsSecurityProcessed());
+    IgnoreError(PerformAesCcm(kDecrypt, aExtAddress, GetAesKey()));
+    SetIsSecurityProcessed(false);
 
 exit:
-    GetTxFrame()->SetIsHeaderUpdated(false);
+    SetIsHeaderUpdated(false);
 }
 #endif
 
@@ -1069,7 +1069,7 @@ Frame::InfoString Frame::ParseInfo::ToInfoString(void) const
         ExitNow();
     }
 
-    string.Append("len:%u", mFrame->mLength);
+    string.Append("len:%u", GetLength());
 
     if (!mParsedFully)
     {
@@ -1133,7 +1133,7 @@ exit:
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (mFrame != nullptr)
     {
-        string.Append(", radio:%s", Radio::TypeToString(mFrame->GetRadioType()));
+        string.Append(", radio:%s", Radio::TypeToString(GetRadioType()));
     }
 #endif
 

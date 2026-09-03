@@ -78,9 +78,9 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame::ParseInfo &aFrameInfo)
         }
     }
 
-    mChannel = aFrameInfo.GetRxFrame()->GetChannel();
-    mRss     = aFrameInfo.GetRxFrame()->GetRssi();
-    mLqi     = aFrameInfo.GetRxFrame()->GetLqi();
+    mChannel = aFrameInfo.GetChannel();
+    mRss     = aFrameInfo.GetRssi();
+    mLqi     = aFrameInfo.GetLqi();
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     {
@@ -88,14 +88,14 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame::ParseInfo &aFrameInfo)
 
         if (timeIe != nullptr)
         {
-            mNetworkTimeOffset = static_cast<int64_t>(timeIe->GetTime() - aFrameInfo.GetRxFrame()->GetTimestamp());
+            mNetworkTimeOffset = static_cast<int64_t>(timeIe->GetTime() - aFrameInfo.GetTimestamp());
             mTimeSyncSeq       = timeIe->GetSequence();
         }
     }
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    mRadioType = static_cast<uint8_t>(aFrameInfo.GetRxFrame()->GetRadioType());
+    mRadioType = static_cast<uint8_t>(aFrameInfo.GetRadioType());
 #endif
 }
 

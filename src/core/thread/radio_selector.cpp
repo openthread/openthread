@@ -128,7 +128,7 @@ void RadioSelector::UpdateOnReceive(Neighbor &aNeighbor, Radio::Type aRadioType,
 void RadioSelector::UpdateOnSendDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error aTxError)
 {
     LogLevel    logLevel  = kLogLevelInfo;
-    Radio::Type radioType = aFrameInfo.GetTxFrame()->GetRadioType();
+    Radio::Type radioType = aFrameInfo.GetRadioType();
     Neighbor   *neighbor;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

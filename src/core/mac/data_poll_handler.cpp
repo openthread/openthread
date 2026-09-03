@@ -99,15 +99,15 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame::ParseInfo &aFrameInfo)
     child->SetLastHeard(TimerMilli::GetNow());
     child->ResetLinkFailures();
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    child->SetLastPollRadioType(aFrameInfo.GetRxFrame()->GetRadioType());
+    child->SetLastPollRadioType(aFrameInfo.GetRadioType());
 #endif
 
     indirectMsgCount = child->GetIndirectMessageCount();
 
     LogInfo("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d, ack-fp:%d", child->GetRloc16(), indirectMsgCount,
-            aFrameInfo.GetRxFrame()->GetRssi(), aFrameInfo.GetRxFrame()->IsAckedWithFramePending());
+            aFrameInfo.GetRssi(), aFrameInfo.IsAckedWithFramePending());
 
-    if (!aFrameInfo.GetRxFrame()->IsAckedWithFramePending())
+    if (!aFrameInfo.IsAckedWithFramePending())
     {
         if ((indirectMsgCount > 0) && aFrameInfo.mAddrs.mSource.IsShort())
         {
@@ -211,7 +211,7 @@ void DataPollHandler::HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInf
         break;
 
     case kErrorNoAck:
-        OT_ASSERT(!aFrameInfo.mIsSecurityEnabled || aFrameInfo.GetTxFrame()->IsHeaderUpdated());
+        OT_ASSERT(!aFrameInfo.mIsSecurityEnabled || aFrameInfo.IsHeaderUpdated());
 
         aChild.IncrementIndirectTxAttempts();
         LogInfo("Indirect tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetIndirectTxAttempts(),
@@ -230,7 +230,7 @@ void DataPollHandler::HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInf
             ExitNow();
         }
 
-        if ((aChild.GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts) && !aFrameInfo.GetTxFrame()->IsEmpty())
+        if ((aChild.GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts) && !aFrameInfo.IsEmpty())
         {
             // We save the frame counter, key id, and data sequence number of
             // current frame so we use the same values for the retransmission
@@ -238,7 +238,7 @@ void DataPollHandler::HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInf
 
             aChild.SetIndirectDataSequenceNumber(aFrameInfo.mSequenceNum);
 
-            if (aFrameInfo.mIsSecurityEnabled && aFrameInfo.GetTxFrame()->IsHeaderUpdated())
+            if (aFrameInfo.mIsSecurityEnabled && aFrameInfo.IsHeaderUpdated())
             {
                 aChild.SetIndirectFrameCounter(aFrameInfo.mFrameCounter);
                 aChild.SetIndirectKeyIndex(aFrameInfo.mKeyIndex);
