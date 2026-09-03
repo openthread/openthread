@@ -239,7 +239,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
     if ((curMessage != nullptr) && !curMessage->GetIndirectTxChildMask().Has(Get<ChildTable>().GetChildIndex(aChild)))
     {
         // Set the indirect message for this child to `nullptr` to ensure
-        // it is not processed on `HandleSentFrameToChild()` callback.
+        // it is not processed on `HandleFrameTxToChildDone()` callback.
 
         aChild.SetIndirectMessage(nullptr);
 
@@ -381,10 +381,10 @@ exit:
     return error;
 }
 
-void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame::ParseInfo &aFrameInfo,
-                                            const FrameContext            &aContext,
-                                            Error                          aError,
-                                            Child                         &aChild)
+void IndirectSender::HandleFrameTxToChildDone(const Mac::TxFrame::ParseInfo &aFrameInfo,
+                                              const FrameContext            &aContext,
+                                              Error                          aError,
+                                              Child                         &aChild)
 {
     Message *message    = aChild.GetIndirectMessage();
     uint16_t nextOffset = aContext.mMessageNextOffset;
@@ -403,7 +403,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame::ParseInfo &aFram
     // support the "source address match" feature and always includes
     // "frame pending" flag in acks to data poll frames. In such a case,
     // `IndirectSender` prepares and sends an empty frame to the child
-    // after it sends a data poll. Here in `HandleSentFrameToChild()` we
+    // after it sends a data poll. Here in `HandleFrameTxToChildDone()` we
     // exit quickly if we detect the "send done" is for the empty frame
     // to ensure we do not update any newly added indirect message after
     // preparing the empty frame.
@@ -567,13 +567,13 @@ Error IndirectSender::PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame,
     return error;
 }
 
-void IndirectSender::HandleSentFrameToCslNeighbor(const Mac::TxFrame::ParseInfo &aFrameInfo,
-                                                  const FrameContext            &aContext,
-                                                  Error                          aError,
-                                                  CslNeighbor                   &aCslNeighbor)
+void IndirectSender::HandleFrameTxToCslNeighborDone(const Mac::TxFrame::ParseInfo &aFrameInfo,
+                                                    const FrameContext            &aContext,
+                                                    Error                          aError,
+                                                    CslNeighbor                   &aCslNeighbor)
 {
 #if OPENTHREAD_FTD
-    HandleSentFrameToChild(aFrameInfo, aContext, aError, static_cast<Child &>(aCslNeighbor));
+    HandleFrameTxToChildDone(aFrameInfo, aContext, aError, static_cast<Child &>(aCslNeighbor));
 #else
     OT_UNUSED_VARIABLE(aFrameInfo);
     OT_UNUSED_VARIABLE(aContext);

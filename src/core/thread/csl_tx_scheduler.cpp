@@ -234,7 +234,7 @@ Radio::Time64 CslTxScheduler::NeighborInfo::DetermineNextCslWindow(Radio::Time64
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
-Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
+Mac::TxFrame *CslTxScheduler::PrepareFrame(Mac::TxFrames &aTxFrames)
 {
     Mac::TxFrame *frame = nullptr;
 
@@ -303,11 +303,11 @@ exit:
 
 #else // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
-Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &) { return nullptr; }
+Mac::TxFrame *CslTxScheduler::PrepareFrame(Mac::TxFrames &) { return nullptr; }
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
-void CslTxScheduler::HandleSentFrame(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError)
+void CslTxScheduler::HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError)
 {
     VerifyOrExit(mCslTxNeighbor != nullptr);
 
@@ -359,7 +359,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame::ParseInfo &aFrameInfo, 
         OT_UNREACHABLE_CODE(break);
     }
 
-    Get<IndirectSender>().HandleSentFrameToCslNeighbor(aFrameInfo, mFrameContext, aError, *mCslTxNeighbor);
+    Get<IndirectSender>().HandleFrameTxToCslNeighborDone(aFrameInfo, mFrameContext, aError, *mCslTxNeighbor);
 
 exit:
     mCslTxMessage  = nullptr;

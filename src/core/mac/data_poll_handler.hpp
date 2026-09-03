@@ -167,7 +167,7 @@ public:
      *    callback `HandleFrameChangeDone()` is invoked.
      *
      * 2) In case of "replace" request, the ongoing indirect transmission is allowed to finish (current tx attempt).
-     *    2.a) If the tx attempt is successful, the `IndirectSender::HandleSentFrameToChild()` in invoked which
+     *    2.a) If the tx attempt is successful, the `IndirectSender::HandleFrameTxToChildDone()` is invoked which
      *         indicates the "replace" could not happen (in this case `HandleFrameChangeDone()` is no longer called).
      *    2.b) If the ongoing tx attempt is unsuccessful, then callback `HandleFrameChangeDone()` is invoked to allow
      *         the next layer to update the frame/message for the child.
@@ -186,10 +186,10 @@ private:
 
     // Callbacks from MAC
     void          HandleDataPoll(Mac::RxFrame::ParseInfo &aFrameInfo);
-    Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    void          HandleSentFrame(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
+    Mac::TxFrame *PrepareFrame(Mac::TxFrames &aTxFrames);
+    void          HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
 
-    void HandleSentFrame(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError, Child &aChild);
+    void HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError, Child &aChild);
     void ProcessPendingPolls(void);
     void ResetTxAttempts(Child &aChild);
 

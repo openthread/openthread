@@ -131,7 +131,7 @@ exit:
     return;
 }
 
-Mac::TxFrame *DataPollHandler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
+Mac::TxFrame *DataPollHandler::PrepareFrame(Mac::TxFrames &aTxFrames)
 {
     Mac::TxFrame *frame = nullptr;
 
@@ -179,20 +179,20 @@ exit:
     return frame;
 }
 
-void DataPollHandler::HandleSentFrame(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError)
+void DataPollHandler::HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError)
 {
     Child *child = mIndirectTxChild;
 
     VerifyOrExit(child != nullptr);
 
     mIndirectTxChild = nullptr;
-    HandleSentFrame(aFrameInfo, aError, *child);
+    HandleFrameTxDone(aFrameInfo, aError, *child);
 
 exit:
     ProcessPendingPolls();
 }
 
-void DataPollHandler::HandleSentFrame(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError, Child &aChild)
+void DataPollHandler::HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError, Child &aChild)
 {
     if (aChild.IsFramePurgePending())
     {
@@ -254,7 +254,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame::ParseInfo &aFrameInfo,
         OT_ASSERT(false);
     }
 
-    Get<IndirectSender>().HandleSentFrameToChild(aFrameInfo, mFrameContext, aError, aChild);
+    Get<IndirectSender>().HandleFrameTxToChildDone(aFrameInfo, mFrameContext, aError, aChild);
 
 exit:
     return;

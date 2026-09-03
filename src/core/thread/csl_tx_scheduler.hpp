@@ -242,8 +242,8 @@ private:
     void HandleTimer(void);
 
     // Callbacks from `Mac`
-    Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    void          HandleSentFrame(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
+    Mac::TxFrame *PrepareFrame(Mac::TxFrames &aTxFrames);
+    void          HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
     void          HandleMacEnableStatusChanged(void);
 
     // Callback from `Radio`

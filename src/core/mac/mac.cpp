@@ -959,7 +959,7 @@ void Mac::BeginTransmit(void)
         txFrames.SetChannel(mRadioChannel);
         txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
         txFrames.SetMaxFrameRetries(mMaxFrameRetriesDirect);
-        frame = Get<MeshForwarder>().HandleFrameRequest(txFrames);
+        frame = Get<MeshForwarder>().PrepareFrame(txFrames);
         VerifyOrExit(frame != nullptr);
         seqNum = mDataSequence++;
         break;
@@ -969,7 +969,7 @@ void Mac::BeginTransmit(void)
         txFrames.SetChannel(mRadioChannel);
         txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsIndirect);
         txFrames.SetMaxFrameRetries(mMaxFrameRetriesIndirect);
-        frame = Get<DataPollHandler>().HandleFrameRequest(txFrames);
+        frame = Get<DataPollHandler>().PrepareFrame(txFrames);
         VerifyOrExit(frame != nullptr);
         // If the frame is marked as retransmission, then data sequence number is already set.
         shouldWriteSeqNum = !frame->IsARetransmission();
@@ -981,7 +981,7 @@ void Mac::BeginTransmit(void)
     case kOperationTransmitDataCsl:
         txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsCsl);
         txFrames.SetMaxFrameRetries(kMaxFrameRetriesCsl);
-        frame = Get<CslTxScheduler>().HandleFrameRequest(txFrames);
+        frame = Get<CslTxScheduler>().PrepareFrame(txFrames);
         VerifyOrExit(frame != nullptr);
         // If the frame is marked as retransmission, then data sequence number is already set.
         shouldWriteSeqNum = !frame->IsARetransmission();
@@ -1476,7 +1476,7 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
 
         mCounters.mTxDataPoll++;
         FinishOperation();
-        Get<DataPollSender>().HandlePollSent(aFrameInfo, aError);
+        Get<DataPollSender>().HandlePollTxDone(aFrameInfo, aError);
         PerformNextOperation();
         break;
 
@@ -1496,7 +1496,7 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
 
         DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
         FinishOperation();
-        Get<MeshForwarder>().HandleSentFrame(aFrameInfo, aError);
+        Get<MeshForwarder>().HandleFrameTxDone(aFrameInfo, aError);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         Get<DataPollSender>().ProcessTxDone(aFrameInfo, ackFrameInfo, aError);
 #endif
@@ -1509,7 +1509,7 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
 
         DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
         FinishOperation();
-        Get<CslTxScheduler>().HandleSentFrame(aFrameInfo, aError);
+        Get<CslTxScheduler>().HandleFrameTxDone(aFrameInfo, aError);
         PerformNextOperation();
 
         break;
@@ -1532,7 +1532,7 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
 
         DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
         FinishOperation();
-        Get<DataPollHandler>().HandleSentFrame(aFrameInfo, aError);
+        Get<DataPollHandler>().HandleFrameTxDone(aFrameInfo, aError);
         PerformNextOperation();
         break;
 #endif // OPENTHREAD_FTD
