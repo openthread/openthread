@@ -790,15 +790,6 @@ public:
      */
     Error GenerateWakeupFrame(PanId, const WakeupRequest &, const Address &) { return kErrorNotImplemented; }
 #endif
-
-private:
-    enum AesCcmOperation : uint8_t
-    {
-        kEncrypt,
-        kDecrypt,
-    };
-
-    Error PerformAesCcm(AesCcmOperation aOperation, const ExtAddress &aExtAddress);
 };
 
 /**
