@@ -182,8 +182,6 @@ public:
      */
     class ParseInfo : public Clearable<ParseInfo>
     {
-        friend class Frame; // TODO: At some point we should no longer need this, remove it.
-
     public:
         /**
          * Initializes the `ParseInfo` object.
