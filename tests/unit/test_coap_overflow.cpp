@@ -67,6 +67,47 @@ void TestCoapOverflow(void)
     testFreeInstance(instance);
 }
 
+void TestCoapOptionNumberOverflow(void)
+{
+    Instance      *instance;
+    Coap::Message *message;
+
+    // Two options with deltas 65535 then 12. Each delta is individually
+    // valid, but their cumulative sum (65547) exceeds the 16-bit option
+    // number and would wrap to 11 (Uri-Path), producing a non-monotonic
+    // option sequence that RFC 7252 forbids.
+    //
+    // Byte 0xe0 : option 1, delta 14 (2-byte extension), length 0.
+    // Bytes 0xfe 0xf2 : extended delta 0xfef2 + 269 = 65535.
+    // Byte 0xc0 : option 2, delta 12, length 0.
+
+    uint8_t options[] = {0xe0, 0xfe, 0xf2, 0xc0};
+
+    printf("TestCoapOptionNumberOverflow()\n");
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+
+    message = AsCoapMessagePtr(instance->Get<MessagePool>().Allocate(Message::kTypeOther));
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(message->Init(Coap::kTypeNonConfirmable, Coap::kCodePut));
+    SuccessOrQuit(message->AppendBytes(options, sizeof(options)));
+
+    Coap::Option::Iterator iterator;
+
+    SuccessOrQuit(iterator.Init(*message));
+    VerifyOrQuit(!iterator.IsDone());
+    VerifyOrQuit(iterator.GetOption()->GetNumber() == 65535);
+
+    // The second option would wrap the running option number and must be rejected.
+    VerifyOrQuit(iterator.Advance() == kErrorParse,
+                 "Fix failed: cumulative option number overflow was not rejected!");
+
+    message->Free();
+    testFreeInstance(instance);
+}
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 void TestReadBlockOptionValuesInvalidLength(void)
 {
@@ -126,6 +167,7 @@ void TestReadBlockOptionValuesInvalidLength(void)
 int main(void)
 {
     ot::TestCoapOverflow();
+    ot::TestCoapOptionNumberOverflow();
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     ot::TestReadBlockOptionValuesInvalidLength();
 #endif
