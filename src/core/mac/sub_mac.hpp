@@ -430,21 +430,24 @@ public:
      * @param[in]  aShortAddr The short source address of CSL receiver's peer.
      * @param[in]  aExtAddr   The extended source address of CSL receiver's peer.
      */
-    void SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
+    void SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
+    {
+        mCslReceiver.SetParams(aPeriod, aChannel, aShortAddr, aExtAddr);
+    }
 
     /**
      * Returns parent CSL accuracy (clock accuracy and uncertainty).
      *
      * @returns The parent CSL accuracy.
      */
-    const CslAccuracy &GetCslParentAccuracy(void) const { return mCslParentAccuracy; }
+    const CslAccuracy &GetCslParentAccuracy(void) const { return mCslReceiver.GetParentAccuracy(); }
 
     /**
      * Sets parent CSL accuracy.
      *
      * @param[in] aCslAccuracy  The parent CSL accuracy.
      */
-    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy) { mCslParentAccuracy = aCslAccuracy; }
+    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy) { mCslReceiver.SetParentAccuracy(aCslAccuracy); }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -587,17 +590,11 @@ private:
 #endif
     };
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    // Radio on times needed before and after MHR time for proper frame detection
-    static constexpr uint32_t kMinReceiveOnAhead = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD;
-    static constexpr uint32_t kMinReceiveOnAfter = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
-
-    // CSL/wake-up listening receivers would wake up `kCslReceiveTimeAhead` earlier
-    // than expected sample window. The value is in usec.
-    static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
-#endif
-
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+    // Wake-up listening receivers would wake up `kWedReceiveTimeAhead` earlier
+    // than expected sample window. The value is in usec.
+    static constexpr uint32_t kWedReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+
     // Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval.
     // The value is in usec.
     static constexpr uint32_t kWedReceiveTimeAfter = 500;
@@ -634,6 +631,55 @@ private:
     };
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    void HandleCslReceiverTimer(void) { mCslReceiver.HandleTimer(); }
+
+    class CslReceiver : public InstanceLocator
+    {
+    public:
+        explicit CslReceiver(Instance &aInstance);
+
+        void Init(void);
+        void Stop(void) { mTimer.Stop(); }
+        void SetParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
+        void UpdateLastSyncTimestamp(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame);
+        void UpdateLastSyncTimestamp(RxFrame *aFrame, Error aError);
+        void HandleTimer(void);
+
+        const CslAccuracy &GetParentAccuracy(void) const { return mParentAccuracy; }
+        void               SetParentAccuracy(const CslAccuracy &aCslAccuracy) { mParentAccuracy = aCslAccuracy; }
+
+    private:
+        static constexpr uint32_t kMinReceiveOnAhead = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD;
+        static constexpr uint32_t kMinReceiveOnAfter = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
+        static constexpr uint32_t kReceiveTimeAhead  = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+
+        void     RestartTimerAfterSyncUpdate(void);
+        void     SetLastSyncToNow(void);
+        void     GetWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
+        uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
+        uint32_t GetNextCycleDrift(void) const;
+        bool     IsEnabled(void) const { return mPeriod > 0; }
+        void     LogWindow(Radio::Time64 aStart, uint32_t aDuration);
+        void     LogReceived(RxFrame *aFrame);
+
+        using CslTimer = TimerMicroIn<SubMac, &SubMac::HandleCslReceiverTimer>;
+
+        uint16_t          mPeriod;
+        uint8_t           mChannel;
+        uint16_t          mPeerShort;
+        Radio::SyncedTime mSampleTime;
+        CslAccuracy       mParentAccuracy;
+        CslTimer          mTimer;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+        TimeMicro mLastSync;
+#else
+        Radio::Time64 mLastSync;
+#endif
+    };
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
     void Init(void);
 
     bool RadioSupports(Capability aCapability) const { return (mRadioCaps & aCapability) != 0; }
@@ -664,23 +710,6 @@ private:
 
     void               SetState(State aState);
     static const char *StateToString(State aState);
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void     CslInit(void);
-    void     RestartCslTimerAfterSyncUpdate(void);
-    void     UpdateCslLastSyncTimestamp(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame);
-    void     UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
-    void     SetCslLastSyncToNow(void);
-    void     HandleCslTimer(void);
-    void     GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
-    uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
-    uint32_t GetNextCycleDrift(void) const;
-    bool     IsCslEnabled(void) const { return mCslPeriod > 0; }
-    void     LogCslWindow(Radio::Time64 aStart, uint32_t aDuration);
-#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-    void LogReceived(RxFrame *aFrame);
-#endif
-#endif
 
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     void WedInit(void);
@@ -722,19 +751,7 @@ private:
     SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    using CslTimer = TimerMicroIn<SubMac, &SubMac::HandleCslTimer>;
-
-    uint16_t          mCslPeriod;         // The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t           mCslChannel;        // The CSL sample channel.
-    uint16_t          mCslPeerShort;      // The CSL peer short address.
-    Radio::SyncedTime mCslSampleTime;     // The CSL sample time for current period.
-    CslAccuracy       mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
-    CslTimer          mCslTimer;
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
-    TimeMicro mCslLastSync; // The timestamp of the last successful CSL synchronization.
-#else
-    Radio::Time64 mCslLastSync;
-#endif
+    CslReceiver mCslReceiver;
 #endif
 
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE

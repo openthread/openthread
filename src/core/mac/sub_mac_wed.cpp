@@ -61,7 +61,7 @@ void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aD
     if (aEnable)
     {
         mWedSampleTime.SetToNow(Get<Radio::Radio>());
-        mWedSampleTime += kCslReceiveTimeAhead;
+        mWedSampleTime += kWedReceiveTimeAhead;
         mWedSampleTime -= mWakeupListenInterval;
 
         HandleWedTimer();
