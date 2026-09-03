@@ -173,9 +173,25 @@ void NcpBase::LinkRawTransmitDone(uint8_t aIid, otRadioFrame *aFrame, otRadioFra
 
     if (mCurTransmitTID[aIid])
     {
-        uint8_t header        = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(aIid) | mCurTransmitTID[aIid];
-        bool    framePending  = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
-        bool    headerUpdated = static_cast<Mac::TxFrame *>(aFrame)->IsHeaderUpdated();
+        uint8_t                 header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(aIid) | mCurTransmitTID[aIid];
+        Mac::TxFrame::ParseInfo txFrameInfo;
+        bool                    framePending;
+        bool                    headerUpdated;
+
+        IgnoreError(txFrameInfo.ParseFrom(*static_cast<Mac::TxFrame *>(aFrame), Mac::Frame::kParseFully));
+        headerUpdated = txFrameInfo.GetTxFrame()->IsHeaderUpdated();
+
+        if (aAckFrame != nullptr)
+        {
+            Mac::RxFrame::ParseInfo ackFrameInfo;
+
+            IgnoreError(ackFrameInfo.ParseFrom(*static_cast<Mac::RxFrame *>(aAckFrame), Mac::Frame::kParseFully));
+            framePending = ackFrameInfo.mIsFramePending;
+        }
+        else
+        {
+            framePending = false;
+        }
 
         // Clear cached transmit TID
         mCurTransmitTID[aIid] = 0;
@@ -190,24 +206,14 @@ void NcpBase::LinkRawTransmitDone(uint8_t aIid, otRadioFrame *aFrame, otRadioFra
             SuccessOrExit(PackRadioFrame(aAckFrame, aError));
         }
 
-        if (static_cast<Mac::TxFrame *>(aFrame)->GetSecurityEnabled() && headerUpdated)
+        if (txFrameInfo.mIsSecurityEnabled && headerUpdated)
         {
-            uint8_t  keyIndex;
-            uint32_t frameCounter;
+            // If the frame uses Key ID Mode 0, there is no Key Index
+            // field in the Security Header. We default and still
+            // write `txFrameInfo.mKeyIndex` (as zero) in this case.
 
-            SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetFrameCounter(frameCounter));
-
-            // If the frame uses Key ID Mode 0, there is no Key Index field in
-            // the Security Header, so `GetKeyIndex()` may return an error.
-            // We default `keyIndex` to 0 in this case.
-
-            if (static_cast<Mac::TxFrame *>(aFrame)->GetKeyIndex(keyIndex) != OT_ERROR_NONE)
-            {
-                keyIndex = 0;
-            }
-
-            SuccessOrExit(mEncoder.WriteUint8(keyIndex));
-            SuccessOrExit(mEncoder.WriteUint32(frameCounter));
+            SuccessOrExit(mEncoder.WriteUint8(txFrameInfo.mKeyIndex));
+            SuccessOrExit(mEncoder.WriteUint32(txFrameInfo.mFrameCounter));
         }
 
         SuccessOrExit(mEncoder.EndFrame());

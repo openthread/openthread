@@ -169,27 +169,17 @@ void Links::Send(TxFrame &aFrame, Radio::Types aRadioTypes)
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-void Links::SetMacFrameCounter(TxFrame &aFrame)
+void Links::SetMacFrameCounter(TxFrame::ParseInfo &aFrameInfo)
 {
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    Radio::Type radioType = aFrame.GetRadioType();
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (radioType == Radio::kTypeTrel)
+    if (aFrameInfo.GetTxFrame()->GetRadioType() == Radio::kTypeTrel)
 #endif
     {
-        aFrame.SetFrameCounter(Get<KeyManager>().GetTrelMacFrameCounter());
+        aFrameInfo.WriteFrameCounter(Get<KeyManager>().GetTrelMacFrameCounter());
         Get<KeyManager>().IncrementTrelMacFrameCounter();
-        ExitNow();
     }
-#endif
-
-exit:
-    return;
 }
-#endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#endif
 
 } // namespace Mac
 } // namespace ot

@@ -243,7 +243,7 @@ private:
 
     // Callbacks from `Mac`
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    void          HandleSentFrame(const Mac::TxFrame &aFrame, Error aError);
+    void          HandleSentFrame(const Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
     void          HandleMacEnableStatusChanged(void);
 
     // Callback from `Radio`

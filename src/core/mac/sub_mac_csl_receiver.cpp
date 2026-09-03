@@ -73,15 +73,20 @@ void SubMac::RestartCslTimerAfterSyncUpdate(void)
     }
 }
 
-void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
+void SubMac::UpdateCslLastSyncTimestamp(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame)
 {
     // Actual synchronization timestamp should be from the sent frame instead of the current time.
     // Assuming the error here since it is bounded and has very small effect on the final window duration.
-    if (aAckFrame != nullptr && aFrame.Has<CslIe>())
-    {
-        SetCslLastSyncToNow();
-        RestartCslTimerAfterSyncUpdate();
-    }
+
+    VerifyOrExit(aAckFrame != nullptr);
+    VerifyOrExit(aFrameInfo.mParsedFully);
+    VerifyOrExit(aFrameInfo.Has<CslIe>());
+
+    SetCslLastSyncToNow();
+    RestartCslTimerAfterSyncUpdate();
+
+exit:
+    return;
 }
 
 void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
@@ -241,15 +246,16 @@ void SubMac::LogReceived(RxFrame *aFrame)
 {
     static constexpr uint8_t kLogStringSize = 72;
 
-    String<kLogStringSize> logString;
-    Address                dst;
-    int32_t                deviation;
-    uint32_t               sampleTime, ahead, after;
+    String<kLogStringSize>  logString;
+    Mac::RxFrame::ParseInfo frameInfo;
+    int32_t                 deviation;
+    uint32_t                sampleTime, ahead, after;
 
-    IgnoreError(aFrame->GetDstAddr(dst));
+    IgnoreError(frameInfo.ParseFrom(*aFrame, Mac::Frame::kParseAddrFields));
 
-    VerifyOrExit((dst.GetType() == Address::kTypeShort && dst.GetShort() == GetShortAddress()) ||
-                 (dst.GetType() == Address::kTypeExtended && dst.GetExtended() == GetExtAddress()));
+    VerifyOrExit(
+        (frameInfo.mAddrs.mDestination.IsShort() && frameInfo.mAddrs.mDestination.GetShort() == GetShortAddress()) ||
+        (frameInfo.mAddrs.mDestination.IsExtended() && frameInfo.mAddrs.mDestination.GetExtended() == GetExtAddress()));
 
     LogDebg("Received frame in state %s, timestamp %lu", StateToString(mState),
             ToUlong(Radio::ConvertTime64To32(aFrame->GetTimestamp())));

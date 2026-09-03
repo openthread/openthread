@@ -967,12 +967,11 @@ exit:
 
 bool Diags::ShouldHandleReceivedFrame(const otRadioFrame &aFrame) const
 {
-    bool                ret   = false;
-    const Mac::RxFrame &frame = static_cast<const Mac::RxFrame &>(aFrame);
-    Mac::Address        dstAddress;
+    bool                    ret = false;
+    Mac::RxFrame::ParseInfo frameInfo;
 
-    VerifyOrExit(frame.GetDstAddr(dstAddress) == kErrorNone);
-    VerifyOrExit(dstAddress == mReceiveConfig.mFilterAddress);
+    SuccessOrExit(frameInfo.ParseFrom(static_cast<const Mac::RxFrame &>(aFrame), Mac::Frame::kParseAddrFields));
+    VerifyOrExit(frameInfo.mAddrs.mDestination == mReceiveConfig.mFilterAddress);
     ret = true;
 
 exit:

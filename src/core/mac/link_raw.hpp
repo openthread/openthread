@@ -241,12 +241,15 @@ public:
 private:
     // Callbacks from `SubMac`
     void InvokeReceiveDone(RxFrame *aFrame, Error aError);
-    void InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+    void InvokeTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError);
     void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
+    void RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
+                                   Error                     aError,
+                                   uint8_t                   aRetryCount,
+                                   bool                      aWillRetx);
 #else
-    void RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
+    void RecordFrameTransmitStatus(const TxFrame::ParseInfo &, Error, uint8_t, bool) {}
 #endif
 
     uint8_t                 mReceiveChannel;
