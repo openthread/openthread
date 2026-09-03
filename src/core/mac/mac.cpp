@@ -796,10 +796,10 @@ void Mac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
     {
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     case Frame::kKeyIdMode0:
-        aFrameInfo.GetTxFrame()->SetAesKey(keyManager.GetKek());
+        aFrameInfo.SetAesKey(keyManager.GetKek());
         extAddress = &GetExtAddress();
 
-        if (!aFrameInfo.GetTxFrame()->IsHeaderUpdated())
+        if (!aFrameInfo.IsHeaderUpdated())
         {
             aFrameInfo.WriteFrameCounter(keyManager.GetKekFrameCounter());
             keyManager.IncrementKekFrameCounter();
@@ -812,7 +812,7 @@ void Mac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        if (aFrameInfo.GetTxFrame()->GetRadioType() == Radio::kTypeIeee802154)
+        if (aFrameInfo.GetRadioType() == Radio::kTypeIeee802154)
 #endif
         {
             // For 15.4 radio link, the AES CCM* and frame security
@@ -824,7 +824,7 @@ void Mac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        if (aFrameInfo.GetTxFrame()->GetRadioType() == Radio::kTypeTrel)
+        if (aFrameInfo.GetRadioType() == Radio::kTypeTrel)
 #endif
         {
             const KeyMaterial *macKey;
@@ -835,7 +835,7 @@ void Mac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
             // not updated), we get a new frame counter and key id from the key
             // manager.
 
-            if (!aFrameInfo.GetTxFrame()->IsHeaderUpdated())
+            if (!aFrameInfo.IsHeaderUpdated())
             {
                 mLinks.SetMacFrameCounter(aFrameInfo);
                 aFrameInfo.WriteKeyIndex(DetermineKeyIndexFor(keyManager.GetCurrentKeySequence()));
@@ -843,7 +843,7 @@ void Mac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
 
             macKey = DetermineMode1Key(aFrameInfo);
             VerifyOrExit(macKey != nullptr);
-            aFrameInfo.GetTxFrame()->SetAesKey(*macKey);
+            aFrameInfo.SetAesKey(*macKey);
             extAddress = &GetExtAddress();
         }
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -851,7 +851,7 @@ void Mac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     case Frame::kKeyIdMode2:
-        aFrameInfo.GetTxFrame()->SetAesKey(mMode2KeyMaterial);
+        aFrameInfo.SetAesKey(mMode2KeyMaterial);
 
         mKeyIdMode2FrameCounter++;
         aFrameInfo.WriteFrameCounter(mKeyIdMode2FrameCounter);
@@ -871,7 +871,7 @@ void Mac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(!aFrameInfo.GetTxFrame()->IsCslIePresent());
+    VerifyOrExit(!aFrameInfo.IsCslIePresent());
 #endif
 
     aFrameInfo.ProcessTransmitAesCcm(*extAddress);
@@ -994,7 +994,7 @@ void Mac::BeginTransmit(void)
     }
 #endif
 
-    if (!frameInfo.GetTxFrame()->IsSecurityProcessed())
+    if (!frameInfo.IsSecurityProcessed())
     {
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // Go through all selected radio link types for this tx and
@@ -1140,7 +1140,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
     if (aError != kErrorNone)
     {
         LogFrameTxFailure(aFrameInfo, aError, aRetryCount, aWillRetx);
-        DumpDebg("TX ERR", aFrameInfo.GetTxFrame()->GetPsdu(), 16);
+        DumpDebg("TX ERR", aFrameInfo.GetPsdu(), 16);
 
         if (aWillRetx)
         {
@@ -1213,17 +1213,17 @@ Error Mac::ProcessTxDone(TxFrame::ParseInfo &aFrameInfo, RxFrame::ParseInfo &aAc
     Neighbor *neighbor = nullptr;
 
     VerifyOrExit(aFrameInfo.GetTxFrame() != nullptr);
-    VerifyOrExit(!aFrameInfo.GetTxFrame()->IsEmpty());
+    VerifyOrExit(!aFrameInfo.IsEmpty());
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    VerifyOrExit(aFrameInfo.GetTxFrame()->GetRadioType() == Radio::kTypeIeee802154);
+    VerifyOrExit(aFrameInfo.GetRadioType() == Radio::kTypeIeee802154);
 
     // Set the radio type on `AckFrame`, so we can determine the
     // proper (15.4 based) key in `ProcessEnhAckSecurity()`.
 
     if (aAckFrameInfo.GetRxFrame() != nullptr)
     {
-        aAckFrameInfo.GetRxFrame()->SetRadioType(Radio::kTypeIeee802154);
+        aAckFrameInfo.SetRadioType(Radio::kTypeIeee802154);
     }
 #endif
 
@@ -1323,9 +1323,9 @@ Error Mac::ProcessMultiRadioTxDone(TxFrame::ParseInfo &aFrameInfo, Error &aError
     Radio::Types requiredRadios;
 
     VerifyOrExit(aFrameInfo.GetTxFrame() != nullptr);
-    VerifyOrExit(!aFrameInfo.GetTxFrame()->IsEmpty());
+    VerifyOrExit(!aFrameInfo.IsEmpty());
 
-    radio          = aFrameInfo.GetTxFrame()->GetRadioType();
+    radio          = aFrameInfo.GetRadioType();
     requiredRadios = mLinks.GetTxFramesRequiredRadioTypes();
 
     Get<RadioSelector>().UpdateOnSendDone(aFrameInfo, aError);
@@ -1425,7 +1425,7 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
         break;
 
     case kOperationTransmitPoll:
-        OT_ASSERT(aFrameInfo.GetTxFrame()->IsEmpty() || aFrameInfo.mIsAckRequest);
+        OT_ASSERT(aFrameInfo.IsEmpty() || aFrameInfo.mIsAckRequest);
 
         if ((aError == kErrorNone) && (aAckFrame != nullptr))
         {
@@ -1457,7 +1457,7 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
         }
 #endif
 
-        DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
+        DumpDebg("TX", aFrameInfo.GetPsdu(), aFrameInfo.GetLength());
         FinishOperation();
         Get<MeshForwarder>().HandleFrameTxDone(aFrameInfo, aError);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -1470,7 +1470,7 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
     case kOperationTransmitDataCsl:
         mCounters.mTxData++;
 
-        DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
+        DumpDebg("TX", aFrameInfo.GetPsdu(), aFrameInfo.GetLength());
         FinishOperation();
         Get<CslTxScheduler>().HandleFrameTxDone(aFrameInfo, aError);
         PerformNextOperation();
@@ -1493,7 +1493,7 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
         }
 #endif
 
-        DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
+        DumpDebg("TX", aFrameInfo.GetPsdu(), aFrameInfo.GetLength());
         FinishOperation();
         Get<DataPollHandler>().HandleFrameTxDone(aFrameInfo, aError);
         PerformNextOperation();
@@ -1663,7 +1663,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame::ParseInfo &aFrameInfo, const Address 
                 uint32_t neighborFrameCounter;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-                neighborFrameCounter = aNeighbor->GetLinkFrameCounters().Get(aFrameInfo.GetRxFrame()->GetRadioType());
+                neighborFrameCounter = aNeighbor->GetLinkFrameCounters().Get(aFrameInfo.GetRadioType());
 #else
                 neighborFrameCounter = aNeighbor->GetLinkFrameCounters().Get();
 #endif
@@ -2164,11 +2164,11 @@ void Mac::UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame::ParseInfo &
 
     VerifyOrExit(aRxFrameInfo.mParsedFully);
 
-    aNeighbor.GetLinkInfo().AddRss(aRxFrameInfo.GetRxFrame()->GetRssi());
+    aNeighbor.GetLinkInfo().AddRss(aRxFrameInfo.GetRssi());
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    aNeighbor.AggregateLinkMetrics(/* aSeriesId */ 0, aRxFrameInfo.mType, aRxFrameInfo.GetRxFrame()->GetLqi(),
-                                   aRxFrameInfo.GetRxFrame()->GetRssi());
+    aNeighbor.AggregateLinkMetrics(/* aSeriesId */ 0, aRxFrameInfo.mType, aRxFrameInfo.GetLqi(),
+                                   aRxFrameInfo.GetRssi());
 #endif
 
     // Signal when `aNeighbor` is the current parent and its link
@@ -2193,7 +2193,7 @@ void Mac::HandleMacCommand(RxFrame::ParseInfo &aFrameInfo)
         if (ShouldSendBeacon())
         {
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-            mTxBeaconRadioLinks.Add(aFrameInfo.GetRxFrame()->GetRadioType());
+            mTxBeaconRadioLinks.Add(aFrameInfo.GetRadioType());
 #endif
             StartOperation(kOperationTransmitBeacon);
         }
@@ -2346,10 +2346,10 @@ void Mac::LogFrameTxFailure(const TxFrame::ParseInfo &aFrameInfo,
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aFrameInfo.GetTxFrame()->GetRadioType() == Radio::kTypeIeee802154)
+    if (aFrameInfo.GetRadioType() == Radio::kTypeIeee802154)
 #endif
     {
-        uint8_t maxAttempts = aFrameInfo.GetTxFrame()->GetMaxFrameRetries() + 1;
+        uint8_t maxAttempts = aFrameInfo.GetMaxFrameRetries() + 1;
         uint8_t curAttempt  = aWillRetx ? (aRetryCount + 1) : maxAttempts;
 
         LogInfo("Frame tx attempt %u/%u failed, error:%s, %s", curAttempt, maxAttempts, ErrorToString(aError),
@@ -2362,7 +2362,7 @@ void Mac::LogFrameTxFailure(const TxFrame::ParseInfo &aFrameInfo,
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aFrameInfo.GetTxFrame()->GetRadioType() == Radio::kTypeTrel)
+    if (aFrameInfo.GetRadioType() == Radio::kTypeTrel)
 #endif
     {
         if (Get<Trel::Interface>().IsEnabled())
@@ -2516,10 +2516,10 @@ void Mac::ProcessCsl(const RxFrame::ParseInfo &aFrameInfo, const Address &aSrcAd
     neighbor->SetCslPhase(csl->GetPhase());
     neighbor->SetCslSynchronized(true);
     neighbor->SetCslLastHeard(TimerMilli::GetNow());
-    neighbor->SetLastRxTimestamp(aFrameInfo.GetRxFrame()->GetTimestamp());
+    neighbor->SetLastRxTimestamp(aFrameInfo.GetTimestamp());
     LogDebg("Timestamp=%lu Sequence=%u CslPeriod=%u CslPhase=%u TransmitPhase=%u",
-            ToUlong(Radio::ConvertTime64To32(aFrameInfo.GetRxFrame()->GetTimestamp())), aFrameInfo.mSequenceNum,
-            csl->GetPeriod(), csl->GetPhase(), neighbor->GetCslPhase());
+            ToUlong(Radio::ConvertTime64To32(aFrameInfo.GetTimestamp())), aFrameInfo.mSequenceNum, csl->GetPeriod(),
+            csl->GetPhase(), neighbor->GetCslPhase());
 
 #if OPENTHREAD_FTD
     Get<CslTxScheduler>().Update();

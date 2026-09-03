@@ -209,7 +209,7 @@ exit:
 
 void LinkRaw::InvokeTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError)
 {
-    LogDebg("TransmitDone(%u bytes), error:%s", aFrameInfo.GetTxFrame()->GetLength(), ErrorToString(aError));
+    LogDebg("TransmitDone(%u bytes), error:%s", aFrameInfo.GetLength(), ErrorToString(aError));
 
     if (mTransmitDoneCallback)
     {
@@ -277,7 +277,7 @@ void LinkRaw::RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
     if (aError != kErrorNone)
     {
         LogInfo("Frame tx failed, error:%s, retries:%d/%d, %s", ErrorToString(aError), aRetryCount,
-                aFrameInfo.GetTxFrame()->GetMaxFrameRetries(), aFrameInfo.ToInfoString().AsCString());
+                aFrameInfo.GetMaxFrameRetries(), aFrameInfo.ToInfoString().AsCString());
     }
 }
 

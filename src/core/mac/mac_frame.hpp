@@ -180,8 +180,10 @@ public:
     /**
      * Represents parsed information from a MAC frame header.
      */
-    class ParseInfo : public Clearable<ParseInfo>
+    class ParseInfo : public Clearable<ParseInfo>, public Radio::FrameProperties<ParseInfo>
     {
+        friend class Radio::FrameProperties<ParseInfo>;
+
     public:
         /**
          * Initializes the `ParseInfo` object.
@@ -325,6 +327,8 @@ public:
 #endif
 
         static Error ParseAddress(FrameData &aFrameData, AddrMode aAddrMode, Address &aAddress);
+
+        const Frame &GetFrame(void) const { return *mFrame; }
     };
 
     /**
@@ -498,13 +502,16 @@ private:
 class RxFrame : public Frame, public Radio::RxFrameProperties<RxFrame>
 {
     friend class TxFrame;
+    friend class Radio::RxFrameProperties<RxFrame>;
 
 public:
     /**
      * Represents parsed information from a received MAC frame.
      */
-    class ParseInfo : public Frame::ParseInfo
+    class ParseInfo : public Frame::ParseInfo, public Radio::RxFrameProperties<ParseInfo>
     {
+        friend class Radio::RxFrameProperties<ParseInfo>;
+
     public:
         /**
          * Returns a pointer to the associated `RxFrame`.
@@ -533,7 +540,13 @@ public:
          */
         Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey);
 #endif
+
+    private:
+        const Frame &GetFrame(void) const { return *GetRxFrame(); }
     };
+
+private:
+    const Frame &GetFrame(void) const { return *this; }
 };
 
 /**
@@ -541,12 +554,16 @@ public:
  */
 class TxFrame : public Frame, public Radio::TxFrameProperties<TxFrame>
 {
+    friend class Radio::TxFrameProperties<TxFrame>;
+
 public:
     /**
      * Represents parsed information from a transmitted MAC frame.
      */
-    class ParseInfo : public Frame::ParseInfo
+    class ParseInfo : public Frame::ParseInfo, public Radio::TxFrameProperties<ParseInfo>
     {
+        friend class Radio::TxFrameProperties<ParseInfo>;
+
     public:
         /**
          * Returns a pointer to the associated `TxFrame`.
@@ -625,6 +642,9 @@ public:
          */
         void RestoreTransmitSecurity(const ExtAddress &aExtAddress);
 #endif
+
+    private:
+        const Frame &GetFrame(void) const { return *GetTxFrame(); }
     };
 
     /**
@@ -774,6 +794,9 @@ public:
      * @retval  kErrorParse          @p aRxFrame has incorrect format.
      */
     Error GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
+
+private:
+    const Frame &GetFrame(void) const { return *this; }
 };
 
 /**

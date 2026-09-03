@@ -396,9 +396,9 @@ void SubMac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
     VerifyOrExit(aFrameInfo.mParsedFully);
     VerifyOrExit(aFrameInfo.mIsSecurityEnabled);
 
-    VerifyOrExit(!aFrameInfo.GetTxFrame()->IsSecurityProcessed());
+    VerifyOrExit(!aFrameInfo.IsSecurityProcessed());
 
-    if (!aFrameInfo.GetTxFrame()->IsHeaderUpdated())
+    if (!aFrameInfo.IsHeaderUpdated())
     {
         aFrameInfo.WriteKeyIndex(mKeyTrio.GetKeyIndex());
     }
@@ -407,9 +407,9 @@ void SubMac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
 
     VerifyOrExit(aFrameInfo.mKeyIdMode == Frame::kKeyIdMode1);
 
-    aFrameInfo.GetTxFrame()->SetAesKey(mKeyTrio.SelectKey(aFrameInfo.mKeyIndex));
+    aFrameInfo.SetAesKey(mKeyTrio.SelectKey(aFrameInfo.mKeyIndex));
 
-    if (!aFrameInfo.GetTxFrame()->IsHeaderUpdated())
+    if (!aFrameInfo.IsHeaderUpdated())
     {
         uint32_t frameCounter = GetFrameCounter();
 
@@ -689,7 +689,7 @@ void SubMac::ReprocessSecurityForRetx(TxFrame::ParseInfo &aFrameInfo)
 
     if (!ShouldHandle(kCapTransmitSec) && (aFrameInfo.mKeyIdMode == Frame::kKeyIdMode1))
     {
-        aFrameInfo.GetTxFrame()->SetAesKey(mKeyTrio.SelectKey(aFrameInfo.mKeyIndex));
+        aFrameInfo.SetAesKey(mKeyTrio.SelectKey(aFrameInfo.mKeyIndex));
     }
 
     aFrameInfo.RestoreTransmitSecurity(GetExtAddress());
@@ -725,7 +725,7 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame::ParseInfo &aFrameInfo
     }
 
     VerifyOrExit(aFrameInfo.mIsSecurityEnabled);
-    VerifyOrExit(aFrameInfo.GetTxFrame()->IsHeaderUpdated());
+    VerifyOrExit(aFrameInfo.IsHeaderUpdated());
 
     VerifyOrExit(aFrameInfo.mKeyIdMode == Frame::kKeyIdMode1);
 
