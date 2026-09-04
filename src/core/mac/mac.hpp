@@ -699,8 +699,6 @@ private:
     static constexpr uint8_t kMaxFrameRetriesCsl             = 0;
     static constexpr uint8_t kTxNumBcast                     = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST;
 
-    static constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
-
     static constexpr uint32_t kDefaultWedListenInterval = 1000000;
     static constexpr uint32_t kDefaultWedListenDuration = 8000;
 
