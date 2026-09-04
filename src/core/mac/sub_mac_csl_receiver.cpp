@@ -246,12 +246,12 @@ void SubMac::LogReceived(RxFrame *aFrame)
 {
     static constexpr uint8_t kLogStringSize = 72;
 
-    String<kLogStringSize>  logString;
-    Mac::RxFrame::ParseInfo frameInfo;
-    int32_t                 deviation;
-    uint32_t                sampleTime, ahead, after;
+    String<kLogStringSize> logString;
+    RxFrame::ParseInfo     frameInfo;
+    int32_t                deviation;
+    uint32_t               sampleTime, ahead, after;
 
-    IgnoreError(frameInfo.ParseFrom(*aFrame, Mac::Frame::kParseAddrFields));
+    IgnoreError(frameInfo.ParseFrom(*aFrame, Frame::kParseAddrFields));
 
     VerifyOrExit(
         (frameInfo.mAddrs.mDestination.IsShort() && frameInfo.mAddrs.mDestination.GetShort() == GetShortAddress()) ||

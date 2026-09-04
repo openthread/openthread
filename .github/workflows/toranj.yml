@@ -189,6 +189,9 @@ jobs:
         #- - - - - - - - - - - - - - - - - - - - - - - - - - -
         git clean -dfx
         ./tests/toranj/build.sh --enable-plat-key-ref all
+        #- - - - - - - - - - - - - - - - - - - - - - - - - - -
+        git clean -dfx
+        ./tests/toranj/build.sh --enable-csl-debug --log-level DEBG all
 
   toranj-macos:
     name: toranj-macos
