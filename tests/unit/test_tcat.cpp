@@ -604,7 +604,7 @@ private:
     // It models the behavior of `HandleSetActiveOperationalDataset()`, without checking authorization.
     static void MockWriteActiveDataset(Instance *aInstance, const Dataset::Info &aDataset)
     {
-        aInstance->Get<Mle::Mle>().Disable();
+        SuccessOrQuit(aInstance->Get<Mle::Mle>().Disable());
         aInstance->Get<ActiveDatasetManager>().SaveLocal(aDataset);
         aInstance->Get<TcatAgent>().mIsSourceOfDatasetChange = true;
         otTaskletsProcess(aInstance);
@@ -621,7 +621,7 @@ private:
     // Mock operation: an entity other than a TCAT Commissioner clears the active dataset.
     static void MockActiveDatasetCleared(Instance *aInstance)
     {
-        aInstance->Get<Mle::Mle>().Disable();
+        SuccessOrQuit(aInstance->Get<Mle::Mle>().Disable());
         aInstance->Get<ActiveDatasetManager>().Clear();
         otTaskletsProcess(aInstance);
     }
@@ -1170,21 +1170,21 @@ public:
         {
             // Once the device is attached to a Thread network, the TCAT Commissioner can no longer overwrite the
             // Active Dataset (this prevents a dataset from propagating to other already-networked devices).
-            agent->HandleStartThreadInterface();
+            SuccessOrQuit(agent->HandleStartThreadInterface());
             MockDeviceAttachedToNetwork(instance);
             VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
             VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
 
             // When the device has detached from Thread, the TCAT Commissioner can overwrite the Active Dataset
             // even without a Decommission command, because it's still in the same TCAT session.
-            agent->HandleStopThreadInterface();
+            SuccessOrQuit(agent->HandleStopThreadInterface());
             MockDeviceDetachedFromNetwork(instance);
             VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
             VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
         }
 
         // Attach to Thread Network again to prepare for the next test.
-        agent->HandleStartThreadInterface();
+        SuccessOrQuit(agent->HandleStartThreadInterface());
         MockDeviceAttachedToNetwork(instance);
 
         // Another module/process changes the Active Dataset content significantly (here: a different Network Key).
@@ -1198,13 +1198,13 @@ public:
         }
 
         // Thread is stopped
-        agent->HandleStopThreadInterface();
+        SuccessOrQuit(agent->HandleStopThreadInterface());
         MockDeviceDetachedFromNetwork(instance);
         VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
         VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
 
         // Attach to Thread Network again
-        agent->HandleStartThreadInterface();
+        SuccessOrQuit(agent->HandleStartThreadInterface());
         MockDeviceAttachedToNetwork(instance);
         VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
         VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
