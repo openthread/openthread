@@ -53,16 +53,12 @@ SubMac::SubMac(Instance &aInstance)
     , mCallbacks(aInstance)
     , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslTimer(aInstance)
+    , mCslReceiver(aInstance)
 #endif
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     , mWedTimer(aInstance)
 #endif
 {
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mCslParentAccuracy.Init();
-#endif
-
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && !OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
     // Assuming the platform must deal with the retransmission security correctly.
     OT_ASSERT(RadioSupports(kCapTransmitRetries));
@@ -99,7 +95,7 @@ void SubMac::Init(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    CslInit();
+    mCslReceiver.Init();
 #endif
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     WedInit();
@@ -208,7 +204,7 @@ Error SubMac::Disable(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mCslTimer.Stop();
+    mCslReceiver.Stop();
 #endif
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     mWedTimer.Stop();
@@ -301,7 +297,7 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    UpdateCslLastSyncTimestamp(aFrame, aError);
+    mCslReceiver.UpdateLastSyncTimestamp(aFrame, aError);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -575,7 +571,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
             mCallbacks.RecordCcaStatus(ccaSuccess, aFrame.GetChannel());
         }
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        UpdateCslLastSyncTimestamp(frameInfo, aAckFrame);
+        mCslReceiver.UpdateLastSyncTimestamp(frameInfo, aAckFrame);
 #endif
         break;
 
