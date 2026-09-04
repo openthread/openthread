@@ -534,7 +534,9 @@ public:
     /**
      * Enables the radio.
      *
-     * @retval kErrorNone     Successfully enabled.
+     * @sa otPlatRadioEnable()
+     *
+     * @retval kErrorNone     Successfully enabled, or the radio was already enabled.
      * @retval kErrorFailed   The radio could not be enabled.
      */
     Error Enable(void);
@@ -542,8 +544,12 @@ public:
     /**
      * Disables the radio.
      *
-     * @retval kErrorNone           Successfully transitioned to Disabled.
-     * @retval kErrorInvalidState   The radio was not in sleep state.
+     * Requires the radio to be in Sleep state, or to have a pending transition to Sleep.
+     *
+     * @sa otPlatRadioDisable()
+     *
+     * @retval kErrorNone           Successfully transitioned to Disabled, or the radio was already disabled.
+     * @retval kErrorInvalidState   The radio is neither in Sleep state nor transitioning to Sleep state.
      */
     Error Disable(void);
 
@@ -557,24 +563,36 @@ public:
     /**
      * Transitions the radio from Receive to Sleep (turn off the radio).
      *
-     * @retval kErrorNone          Successfully transitioned to Sleep.
-     * @retval kErrorBusy          The radio was transmitting.
+     * If the radio is receiving a frame or transmitting an ACK, the transition to Sleep is accepted and scheduled to
+     * happen right after that operation completes.
+     *
+     * @sa otPlatRadioSleep()
+     *
+     * @retval kErrorNone          Successfully transitioned to Sleep, already in Sleep, or transition is scheduled.
+     * @retval kErrorBusy          The radio was transmitting a frame.
      * @retval kErrorInvalidState  The radio was disabled.
      */
     Error Sleep(void);
 
     /**
-     * Transitions the radio from Sleep to Receive (turn on the radio).
+     * Transitions the radio from Sleep to Receive (turn on the radio), or changes the radio's receive channel.
+     *
+     * If @p aChannel differs from the current receive channel, the radio transitions to it as soon as possible and
+     * any ongoing operation on the old channel may be aborted.
+     *
+     * @sa otPlatRadioReceive()
      *
      * @param[in]  aChannel   The channel to use for receiving.
      *
-     * @retval kErrorNone          Successfully transitioned to Receive.
+     * @retval kErrorNone          Successfully transitioned to Receive, or was already in Receive state.
      * @retval kErrorInvalidState  The radio was disabled or transmitting.
      */
     Error Receive(uint8_t aChannel);
 
     /**
      * Schedules a radio reception window at a specific time and duration.
+     *
+     * @sa otPlatRadioReceiveAt()
      *
      * @param[in]  aChannel   The radio channel on which to receive.
      * @param[in]  aStart     The receive window start time, in microseconds.
