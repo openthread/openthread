@@ -288,6 +288,16 @@ public:
     void SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
+     * Indicates whether a given MAC address matches this device's short, alternate short, or extended address.
+     *
+     * @param[in] aAddress  The MAC address to check.
+     *
+     * @retval TRUE   If @p aAddress matches any of this device's addresses.
+     * @retval FALSE  If @p aAddress does not match any of this device's addresses.
+     */
+    bool HasAddress(const Address &aAddress) const;
+
+    /**
      * Registers a callback to provide received packet capture for IEEE 802.15.4 frames.
      *
      * @param[in]  aCallback   The packet capture callback, or `nullptr` to disable packet capture.
@@ -642,8 +652,8 @@ private:
         void Init(void);
         void Stop(void) { mTimer.Stop(); }
         void SetParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
-        void UpdateLastSyncTimestamp(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame);
-        void UpdateLastSyncTimestamp(RxFrame *aFrame, Error aError);
+        void ProcessTxDone(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame);
+        void ProcessRxFrame(const RxFrame &aFrame);
         void HandleTimer(void);
 
         const CslAccuracy &GetParentAccuracy(void) const { return mParentAccuracy; }
@@ -654,14 +664,18 @@ private:
         static constexpr uint32_t kMinReceiveOnAfter = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
         static constexpr uint32_t kReceiveTimeAhead  = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
 
+        struct Window
+        {
+            Radio::SyncedTime mStartTime;
+            uint32_t          mDuration;
+        };
+
         void     RestartTimerAfterSyncUpdate(void);
         void     SetLastSyncToNow(void);
-        void     GetWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
+        void     DetermineWindow(const Radio::SyncedTime &aSampleTime, Window &aWindow) const;
         uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
-        uint32_t GetNextCycleDrift(void) const;
         bool     IsEnabled(void) const { return mPeriod > 0; }
-        void     LogWindow(Radio::Time64 aStart, uint32_t aDuration);
-        void     LogReceived(RxFrame *aFrame);
+        void     LogReceived(const RxFrame &aFrame);
 
         using CslTimer = TimerMicroIn<SubMac, &SubMac::HandleCslReceiverTimer>;
 

@@ -160,6 +160,35 @@ void SubMac::SetExtAddress(const ExtAddress &aExtAddress)
     LogDebg("RadioExtAddress: %s", mExtAddress.ToString().AsCString());
 }
 
+bool SubMac::HasAddress(const Address &aAddress) const
+{
+    bool matches = false;
+
+    switch (aAddress.GetType())
+    {
+    case Address::kTypeNone:
+        break;
+
+    case Address::kTypeShort:
+        if (aAddress.GetShort() == mShortAddress)
+        {
+            matches = true;
+        }
+        else if (mAlternateShortAddress != kShortAddrInvalid)
+        {
+            matches = (aAddress.GetShort() == mAlternateShortAddress);
+        }
+
+        break;
+
+    case Address::kTypeExtended:
+        matches = (aAddress.GetExtended() == mExtAddress);
+        break;
+    }
+
+    return matches;
+}
+
 void SubMac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     mRxOnWhenIdle = aRxOnWhenIdle;
@@ -297,7 +326,10 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mCslReceiver.UpdateLastSyncTimestamp(aFrame, aError);
+    if ((aFrame != nullptr) && (aError == kErrorNone))
+    {
+        mCslReceiver.ProcessRxFrame(*aFrame);
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -571,7 +603,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
             mCallbacks.RecordCcaStatus(ccaSuccess, aFrame.GetChannel());
         }
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        mCslReceiver.UpdateLastSyncTimestamp(frameInfo, aAckFrame);
+        mCslReceiver.ProcessTxDone(frameInfo, aAckFrame);
 #endif
         break;
 
