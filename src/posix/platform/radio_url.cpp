@@ -117,6 +117,8 @@ const char *otSysGetRadioUrlHelpString(void)
            "    region[=region-code]          Set the radio's region code. The region code must be an\n"
            "                                  ISO 3166 alpha-2 code.\n"
            "    cca-threshold[=dbm]           Set the radio's CCA ED threshold in dBm measured at antenna connector.\n"
+           "    tx-power[=dbm]                Set the radio's transmit power in dBm. max-power-table only caps\n"
+           "                                  the power; the radio transmits at min(tx-power, max-power-table).\n"
            "    enable-coex[=1|0]             If not specified, RCP coex operates with its default configuration.\n"
            "                                  Disable coex with 0, and enable it with other values.\n"
            "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"
