@@ -513,6 +513,15 @@ const MeshCoP::Tlv *Leader::FindCommissioningDataSubTlv(uint8_t aType) const
     VerifyOrExit(dataTlv != nullptr);
     subTlv = As<MeshCoP::Tlv>(Tlv::FindTlv(dataTlv->GetValue(), dataTlv->GetLength(), aType));
 
+    // Commissioning Data sub-TLVs are always in base TLV format. Reject an
+    // extended TLV here: its `0xff` length byte would otherwise be taken as
+    // the value length by the sub-TLV accessors (e.g. `SteeringDataTlv`,
+    // which reads `mSteeringData` at a fixed offset), reading past the TLV.
+    if ((subTlv != nullptr) && subTlv->IsExtended())
+    {
+        subTlv = nullptr;
+    }
+
 exit:
     return subTlv;
 }
@@ -552,6 +561,14 @@ void Leader::GetCommissioningDataset(MeshCoP::CommissioningDataset &aDataset) co
 
     for (; subTlv < endTlv; subTlv = subTlv->GetNext())
     {
+        // A malformed sub-TLV whose header runs past `endTlv`, or an extended
+        // TLV (never used by the known sub-TLVs below), is treated as an extra
+        // TLV. This also stops `GetNext()` from reading the length past the end.
+
+        VerifyOrExit((subTlv + 1) <= endTlv, aDataset.mHasExtraTlv = true);
+        VerifyOrExit(!subTlv->IsExtended(), aDataset.mHasExtraTlv = true);
+        VerifyOrExit(subTlv->GetNext() <= endTlv, aDataset.mHasExtraTlv = true);
+
         switch (subTlv->GetType())
         {
         case MeshCoP::Tlv::kBorderAgentLocator:

@@ -1117,6 +1117,81 @@ void TestNetworkDataContextLength(void)
     testFreeInstance(instance);
 }
 
+void TestNetworkDataCommissioningData(void)
+{
+    class TestLeader : public Leader
+    {
+    public:
+        void Populate(const uint8_t *aTlvs, uint8_t aTlvsLength)
+        {
+            memcpy(GetBytes(), aTlvs, aTlvsLength);
+            SetLength(aTlvsLength);
+        }
+    };
+
+    Instance *instance;
+
+    printf("\n\n-------------------------------------------------");
+    printf("\nTestNetworkDataCommissioningData()\n");
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
+
+    {
+        // Commissioning Data TLV (Network Data type 4) whose value is a single
+        // MeshCoP sub-TLV encoded as an *extended* TLV: base length byte 0xff
+        // followed by a 16-bit extended length of zero. Commissioning Data
+        // sub-TLVs are always base TLVs, so the extended form is malformed. Read
+        // with the base-TLV accessors, the 0xff length byte is taken as the
+        // value length: `SteeringDataTlv::CopyTo()` would copy 16 bytes out of a
+        // 4-byte TLV, and the direct sub-TLV walk in `GetCommissioningDataset()`
+        // would run `GetNext()` past the end of the value.
+
+        struct TestCase
+        {
+            uint8_t mSubTlvType;
+        };
+
+        static const TestCase kTestCases[] = {
+            {8},  // Steering Data
+            {9},  // Border Agent Locator
+            {11}, // Commissioner Session ID
+            {18}, // Joiner UDP Port
+        };
+
+        Leader &leader = instance->Get<Leader>();
+
+        for (const TestCase &testCase : kTestCases)
+        {
+            const uint8_t kNetworkData[] = {
+                0x08, 0x04, testCase.mSubTlvType, 0xff, 0x00, 0x00,
+            };
+
+            MeshCoP::SteeringData         steeringData;
+            MeshCoP::CommissioningDataset dataset;
+            uint16_t                      value;
+
+            reinterpret_cast<TestLeader &>(leader).Populate(kNetworkData, sizeof(kNetworkData));
+
+            // Extended sub-TLVs must be rejected instead of parsed with the
+            // base-TLV layout.
+            VerifyOrQuit(leader.FindSteeringData(steeringData) == kErrorNotFound);
+            VerifyOrQuit(leader.FindBorderAgentRloc(value) == kErrorNotFound);
+            VerifyOrQuit(leader.FindCommissioningSessionId(value) == kErrorNotFound);
+            VerifyOrQuit(leader.FindJoinerUdpPort(value) == kErrorNotFound);
+
+            // The direct walk must not read past the value and should flag the
+            // malformed TLV as an extra sub-TLV.
+            leader.GetCommissioningDataset(dataset);
+            VerifyOrQuit(!dataset.mIsSteeringDataSet);
+            VerifyOrQuit(!dataset.mIsLocatorSet);
+            VerifyOrQuit(dataset.mHasExtraTlv);
+        }
+    }
+
+    testFreeInstance(instance);
+}
+
 } // namespace NetworkData
 } // namespace ot
 
@@ -1129,6 +1204,7 @@ int main(void)
     ot::NetworkData::TestNetworkDataDsnSrpServices();
     ot::NetworkData::TestNetworkDataDsnSrpAnycastSeqNumSelection();
     ot::NetworkData::TestNetworkDataContextLength();
+    ot::NetworkData::TestNetworkDataCommissioningData();
 
     printf("\nAll tests passed\n");
     return 0;
