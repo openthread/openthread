@@ -647,7 +647,7 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     }
 }
 
-Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
+Mac::TxFrame *MeshForwarder::PrepareFrame(Mac::TxFrames &aTxFrames)
 {
     Mac::TxFrame *frame         = nullptr;
     bool          addFragHeader = false;
@@ -736,10 +736,10 @@ exit:
     return frame;
 }
 
-Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame::ParseInfo &aFrameInfo,
-                                                   Error                    aError,
-                                                   const Mac::Address      &aMacDest,
-                                                   bool                     aIsDataPoll)
+Neighbor *MeshForwarder::UpdateNeighborOnFrameTxDone(Mac::TxFrame::ParseInfo &aFrameInfo,
+                                                     Error                    aError,
+                                                     const Mac::Address      &aMacDest,
+                                                     bool                     aIsDataPoll)
 {
     OT_UNUSED_VARIABLE(aIsDataPoll);
 
@@ -831,7 +831,7 @@ exit:
 }
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-void MeshForwarder::HandleSentFrame(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError)
+void MeshForwarder::HandleFrameTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError)
 {
     Neighbor *neighbor = nullptr;
 
@@ -857,7 +857,7 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame::ParseInfo &aFrameInfo, Error a
     if (!aFrameInfo.GetTxFrame()->IsEmpty())
     {
         neighbor =
-            UpdateNeighborOnSentFrame(aFrameInfo, aError, aFrameInfo.mAddrs.mDestination, /* aIsDataPoll */ false);
+            UpdateNeighborOnFrameTxDone(aFrameInfo, aError, aFrameInfo.mAddrs.mDestination, /* aIsDataPoll */ false);
     }
 
     UpdateSendMessage(aError, aFrameInfo.mAddrs.mDestination, neighbor);

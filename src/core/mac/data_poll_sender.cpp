@@ -190,7 +190,7 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollSender::HandlePollSent(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError)
+void DataPollSender::HandlePollTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError)
 {
     bool    shouldRecalculatePollPeriod = false;
     uint8_t maxRetxAttempts;
@@ -199,8 +199,8 @@ void DataPollSender::HandlePollSent(Mac::TxFrame::ParseInfo &aFrameInfo, Error a
 
     if (!aFrameInfo.GetTxFrame()->IsEmpty())
     {
-        Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrameInfo, aError, aFrameInfo.mAddrs.mDestination,
-                                                       /* aIsDataPoll */ true);
+        Get<MeshForwarder>().UpdateNeighborOnFrameTxDone(aFrameInfo, aError, aFrameInfo.mAddrs.mDestination,
+                                                         /* aIsDataPoll */ true);
     }
 
     if (GetParent().IsStateInvalid())
@@ -410,7 +410,7 @@ void DataPollSender::StopFastPolls(void)
     VerifyOrExit(mFastPollsUsers != 0);
 
     // If `mFastPollsUsers` hits the max, let it be cleared
-    // from `HandlePollSent()` (after all fast polls are sent).
+    // from `HandlePollTxDone()` (after all fast polls are sent).
     VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers);
 
     mFastPollsUsers--;

@@ -122,16 +122,15 @@ public:
     uint32_t GetExternalPollPeriod(void) const { return mExternalPollPeriod; }
 
     /**
-     * Informs the data poll sender of success/error status of a previously requested poll frame
-     * transmission.
+     * Informs the data poll sender that a data poll frame transmission has completed.
      *
      * In case of transmit failure, the data poll sender may choose to send the next data poll more quickly (up to
      * some fixed number of attempts).
      *
      * @param[in] aFrameInfo  The data poll frame information.
-     * @param[in] aError      Error status of a data poll message transmission.
+     * @param[in] aError      Error status of a data poll frame transmission.
      */
-    void HandlePollSent(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
+    void HandlePollTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
 
     /**
      * Informs the data poll sender that a data poll timeout happened, i.e., when the ack in response to

@@ -256,8 +256,8 @@ public:
     /**
      * Handles a deferred ack.
      *
-     * Some radio links can use deferred ack logic, where a tx request always report `HandleSentFrame()` quickly. The
-     * link layer would wait for the ack and report it at a later time using this method.
+     * Some radio links can use deferred ack logic, where a tx request always reports `HandleFrameTxDone()` quickly.
+     * The link layer would wait for the ack and report it at a later time using this method.
      *
      * The link layer is expected to call `HandleDeferredAck()` (with success or failure status) for every tx request
      * on the radio link.
@@ -457,13 +457,13 @@ private:
     void  HandleDiscoverComplete(void);
 
     void          HandleReceivedFrame(Mac::RxFrame::ParseInfo &aFrameInfo);
-    Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    Neighbor     *UpdateNeighborOnSentFrame(Mac::TxFrame::ParseInfo &aFrameInfo,
-                                            Error                    aError,
-                                            const Mac::Address      &aMacDest,
-                                            bool                     aIsDataPoll);
+    Mac::TxFrame *PrepareFrame(Mac::TxFrames &aTxFrames);
+    Neighbor     *UpdateNeighborOnFrameTxDone(Mac::TxFrame::ParseInfo &aFrameInfo,
+                                              Error                    aError,
+                                              const Mac::Address      &aMacDest,
+                                              bool                     aIsDataPoll);
     void UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError, bool aAllowNeighborRemove, uint8_t aFailLimit);
-    void HandleSentFrame(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
+    void HandleFrameTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
     void UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
     void FinalizeMessageDirectTx(Message &aMessage, Error aError);
     void FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction);
