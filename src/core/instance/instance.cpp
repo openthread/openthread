@@ -173,6 +173,9 @@ Instance::Instance(void)
 #endif
     , mNetworkDataServiceManager(*this)
     , mVendorInfo(*this)
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    , mMeshMonitorServer(*this)
+#endif
     , mNetDiagServer(*this)
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     , mNetDiagClient(*this)

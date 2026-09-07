@@ -134,6 +134,7 @@
 #include "thread/link_metrics.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mesh_forwarder.hpp"
+#include "thread/mesh_monitor.hpp"
 #include "thread/message_framer.hpp"
 #include "thread/mle.hpp"
 #include "thread/mlr_manager.hpp"
@@ -715,6 +716,10 @@ private:
 
     VendorInfo mVendorInfo;
 
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    MeshMonitor::Server mMeshMonitorServer;
+#endif
+
     NetDiag::Server mNetDiagServer;
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     NetDiag::Client mNetDiagClient;
@@ -1128,6 +1133,10 @@ template <> inline Dns::Dso &Instance::Get(void) { return mDnsDso; }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 template <> inline Dns::Multicast::Core &Instance::Get(void) { return mMdnsCore; }
+#endif
+
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+template <> inline MeshMonitor::Server &Instance::Get(void) { return mMeshMonitorServer; }
 #endif
 
 template <> inline VendorInfo &Instance::Get(void) { return mVendorInfo; }

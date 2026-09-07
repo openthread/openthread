@@ -110,6 +110,9 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
     Get<Dhcp6::Server>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    Get<MeshMonitor::Server>().HandleNotifierEvents(events);
+#endif
 #if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
     Get<NeighborDiscovery::Agent>().HandleNotifierEvents(events);
 #endif

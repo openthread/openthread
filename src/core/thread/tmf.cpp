@@ -151,6 +151,14 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
         Case(kUriTcatEnable, MeshCoP::TcatAgent);
 #endif
 
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+        Case(kUriMeshMonEndDeviceRequest, MeshMonitor::Server);
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+        Case(kUriMeshMonEndDeviceUpdate, MeshMonitor::Server);
+        Case(kUriMeshMonServerRequest, MeshMonitor::Server);
+#endif
+
     default:
         didHandle = false;
         break;

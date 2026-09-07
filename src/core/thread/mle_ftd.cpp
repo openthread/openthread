@@ -1096,13 +1096,13 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
 
     if (neighborState != Neighbor::kStateValid)
     {
-        InitNeighbor(*router, aRxInfo);
-        router->SetRloc16(sourceAddress);
-        router->GetLinkFrameCounters().SetAll(linkFrameCounter);
-        router->SetLinkAckFrameCounter(linkFrameCounter);
-        router->SetMleFrameCounter(mleFrameCounter);
-        router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
-                                         DeviceMode::kModeFullNetworkData));
+    InitNeighbor(*router, aRxInfo);
+    router->SetRloc16(sourceAddress);
+    router->GetLinkFrameCounters().SetAll(linkFrameCounter);
+    router->SetLinkAckFrameCounter(linkFrameCounter);
+    router->SetMleFrameCounter(mleFrameCounter);
+    router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
+                                     DeviceMode::kModeFullNetworkData));
         router->SetKeySequence(aRxInfo.mKeySequence);
         router->SetState(Neighbor::kStateValid);
     }
@@ -1120,6 +1120,10 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
     {
         mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
     }
+
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    Get<MeshMonitor::Server>().HandleRouterAdded(*router);
+#endif
 
     mDelayedSender.RemoveScheduledLinkRequest(*router);
 
@@ -2203,6 +2207,11 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     TlvList                 requestedTlvList;
     ChildUpdateResponseInfo info;
     bool                    childDidChange = false;
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    MeshMonitor::TlvSet diagTlvs;
+
+    diagTlvs.Set(MeshMonitor::Tlv::kLastHeard);
+#endif
 
     Log(kMessageReceive, kTypeChildUpdateRequestOfChild, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -2274,6 +2283,10 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     {
     case kErrorNone:
         info.mTlvList.Add(Tlv::kAddressRegistration);
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+        diagTlvs.Set(MeshMonitor::Tlv::kIp6AddressList);
+        diagTlvs.Set(MeshMonitor::Tlv::kAlocList);
+#endif
         break;
     case kErrorNotFound:
         break;
@@ -2299,6 +2312,10 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         {
             child->SetTimeout(timeout);
             childDidChange = true;
+
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+            diagTlvs.Set(MeshMonitor::Tlv::kTimeout);
+#endif
         }
 
         info.mTlvList.Add(Tlv::kTimeout);
@@ -2351,6 +2368,9 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
             child->SetCslTimeout(cslTimeout);
             // MUST include CSL accuracy TLV when request includes CSL timeout
             info.mTlvList.Add(Tlv::kCslClockAccuracy);
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+            diagTlvs.Set(MeshMonitor::Tlv::kCsl);
+#endif
             break;
         case kErrorNotFound:
             break;
@@ -2363,6 +2383,9 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
             // Special value of zero is used to indicate that
             // CSL channel is not specified.
             child->SetCslChannel(static_cast<uint8_t>(cslChannelTlvValue.GetChannel()));
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+            diagTlvs.Set(MeshMonitor::Tlv::kCsl);
+#endif
         }
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -2390,6 +2413,10 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         // are added to the child.
 
         Get<IndirectSender>().HandleChildModeChange(*child, oldMode);
+
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+        diagTlvs.Set(MeshMonitor::Tlv::kMode);
+#endif
     }
 
     if (childDidChange)
@@ -2409,6 +2436,10 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 #endif
 
     SendChildUpdateResponseToChild(child, info);
+
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    Get<MeshMonitor::Server>().MarkChildDiagDirty(*child, diagTlvs);
+#endif
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
 
@@ -3202,6 +3233,9 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
         if (aNeighbor.IsStateValidOrRestoring())
         {
             mNeighborTable.Signal(NeighborTable::kChildRemoved, aNeighbor);
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+            Get<MeshMonitor::Server>().HandleChildRemoved(static_cast<Child &>(aNeighbor));
+#endif
         }
 
         Get<IndirectSender>().ClearAllMessagesForSleepyChild(child);
@@ -3351,6 +3385,10 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     SuccessOrExit(Tlv::Find<ThreadRouterMaskTlv>(aMsg->mMessage, routerIdMask));
     VerifyOrExit(routerIdMask.IsValid());
     VerifyOrExit(routerIdMask.IsAllocated(GetLeaderId()));
+
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    Get<MeshMonitor::Server>().HandleDetach();
+#endif
 
     SetAlternateRloc16(GetRloc16());
 
@@ -3857,6 +3895,10 @@ void Mle::SetChildStateToValid(Child &aChild)
     mDelayedSender.RemoveScheduledChildUpdateRequestToChild(aChild);
 
     mNeighborTable.Signal(NeighborTable::kChildAdded, aChild);
+
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    Get<MeshMonitor::Server>().HandleChildAdded(aChild);
+#endif
 
 exit:
     return;
