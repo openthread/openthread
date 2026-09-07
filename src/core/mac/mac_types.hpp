@@ -866,6 +866,15 @@ private:
 };
 
 /**
+ * Converts a given CSL period in units of 10 symbols to microseconds.
+ *
+ * @param[in] aCslPeriod  The CSL period in units of 10 symbols.
+ *
+ * @returns The CSL period in microseconds.
+ */
+inline constexpr uint32_t CslPeriodToUsec(uint16_t aCslPeriod) { return Radio::kTenSymbolsDuration * aCslPeriod; }
+
+/**
  * Minimum CSL period supported in units of 10 symbols.
  */
 constexpr uint16_t kMinCslPeriod =
@@ -877,13 +886,9 @@ static_assert((Time::MsecToUsec(OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD) / Radio::k
               "kMinCslPeriod is too large to fit in uint16_t");
 
 /**
- * Converts a given CSL period in units of 10 symbols to microseconds.
- *
- * @param[in] aCslPeriod  The CSL period in units of 10 symbols.
- *
- * @returns The CSL period in microseconds.
+ * Minimum CSL period supported in microseconds.
  */
-inline uint32_t CslPeriodToUsec(uint16_t aCslPeriod) { return Radio::kTenSymbolsDuration * aCslPeriod; }
+constexpr uint32_t kMinCslPeriodInUsec = CslPeriodToUsec(kMinCslPeriod);
 
 /**
  * Represents CSL accuracy.

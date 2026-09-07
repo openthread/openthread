@@ -3007,17 +3007,35 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 {
-    // This function calculates the overall time that device will operate
-    // on battery by summing sequence of "ON quants" over a period of time.
+    // This method calculates a metric estimating the average CSL sample window
+    // expansion per CSL sample period over a CSL timeout interval with no
+    // synchronizations. Candidate-invariant terms (the receiver's own crystal
+    // accuracy and uncertainty, and fixed receive-on margins) are omitted.
+    //
+    // At sample period `i` (from 1 to `k`), the elapsed time since last sync is
+    // `i * P`, where `P` is the CSL period. The sample window expands on each
+    // side (ahead and after) by the clock drift `(i * P * accuracy / 10^6)`,
+    // totaling `2 * (i * P * accuracy / 10^6)` per sample period.
+    // Summing over all `k` periods yields:
+    //   Total Drift = 2 * (P * accuracy / 10^6) * sum(i from 1 to k)
+    //               = 2 * (P * accuracy / 10^6) * (k * (k + 1) / 2)
+    //               = k * (k + 1) * P * accuracy / 10^6
+    //
+    // Similarly, parent uncertainty (in microseconds) expands both sides at
+    // each of the `k` periods:
+    //   Total Uncertainty = 2 * uncertainty * k
+    //
+    // To simplify and avoid large numbers, the total metric is divided by `k`
+    // (which is constant across all parent candidates), representing the average
+    // window expansion per period (scaled by 10^6 to avoid integer division):
+    //   Metric = (k + 1) * P * accuracy + 2 * uncertainty * 10^6
 
-    static constexpr uint64_t usInSecond = 1000000;
+    static constexpr uint64_t kPpmScale = 1000000u;
 
-    uint64_t cslPeriodUs  = Mac::CslPeriodToUsec(Mac::kMinCslPeriod);
-    uint64_t cslTimeoutUs = GetCslTimeout() * usInSecond;
-    uint64_t k            = cslTimeoutUs / cslPeriodUs;
+    uint64_t k = static_cast<uint64_t>(GetCslTimeout()) * Time::kOneSecondInUsec / Mac::kMinCslPeriodInUsec;
 
-    return k * (k + 1) * cslPeriodUs / usInSecond * aCslAccuracy.GetClockAccuracy() +
-           Radio::ConvertUncertaintyToUsec(aCslAccuracy.GetUncertainty()) * k;
+    return (k + 1) * Mac::kMinCslPeriodInUsec * aCslAccuracy.GetClockAccuracy() +
+           2 * static_cast<uint64_t>(Radio::ConvertUncertaintyToUsec(aCslAccuracy.GetUncertainty())) * kPpmScale;
 }
 #endif
 
