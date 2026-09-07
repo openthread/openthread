@@ -976,7 +976,7 @@ static void UpdateOmrRoutes(otInstance *aInstance)
     // Add kernel routes for OMR prefixes in Network Data
     while (otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        if (HasAddedOmrRoute(config.mPrefix))
+        if (!otNetDataContainsOmrPrefix(aInstance, &config.mPrefix) || HasAddedOmrRoute(config.mPrefix))
         {
             continue;
         }

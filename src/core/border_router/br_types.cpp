@@ -313,6 +313,38 @@ bool FavoredOmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmr
     return isFavored;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+//---------------------------------------------------------------------------------------------------------------------
+// AilPrefixArray
+
+void AilPrefixArray::Add(const Ip6::Prefix &aPrefix)
+{
+    IndexType index;
+
+    VerifyOrExit(aPrefix.IsValid() && (aPrefix.GetLength() == Ip6::NetworkPrefix::kLength));
+    VerifyOrExit(!Contains(aPrefix));
+
+    for (index = 0; index < GetLength(); index++)
+    {
+        if (aPrefix < (*this)[index])
+        {
+            break;
+        }
+    }
+
+    if (IsFull())
+    {
+        VerifyOrExit(index < GetLength());
+        PopBack();
+    }
+
+    IgnoreError(InsertAt(index, aPrefix));
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+
 //---------------------------------------------------------------------------------------------------------------------
 
 bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)

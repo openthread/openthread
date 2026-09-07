@@ -1244,6 +1244,29 @@ exit:
     return isReachable;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+void RxRaTracker::GetAilPrefixes(AilPrefixArray &aPrefixes) const
+{
+    for (const Router &router : mRouters)
+    {
+        if (!router.IsReachable())
+        {
+            continue;
+        }
+
+        for (const OnLinkPrefix &onLinkPrefix : router.mOnLinkPrefixes)
+        {
+            if (onLinkPrefix.ShouldDisregard() || onLinkPrefix.IsDeprecated())
+            {
+                continue;
+            }
+
+            aPrefixes.Add(onLinkPrefix.GetPrefix());
+        }
+    }
+}
+#endif
+
 void RxRaTracker::InitIterator(PrefixTableIterator &aIterator) const
 {
     static_cast<Iterator &>(aIterator).Init(mRouters.GetHead(), Get<UptimeTracker>().GetUptimeInSeconds());
