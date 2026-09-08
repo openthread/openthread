@@ -293,6 +293,17 @@ exit:
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// CslChannelTlvValue
+
+bool CslChannelTlvValue::IsValid(void) const
+{
+    // Special value of zero is used to indicate that
+    // CSL channel is not specified.
+
+    return (GetChannel() == 0) || ChannelTlvValue::IsValid();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // LeaderDataTlvValue
 
 LeaderDataTlvValue::LeaderDataTlvValue(const LeaderData &aLeaderData)
