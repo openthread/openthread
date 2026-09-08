@@ -1130,6 +1130,7 @@ void TestNetworkDataCommissioningData(void)
     };
 
     Instance *instance;
+    Leader   *leader;
 
     printf("\n\n-------------------------------------------------");
     printf("\nTestNetworkDataCommissioningData()\n");
@@ -1137,57 +1138,119 @@ void TestNetworkDataCommissioningData(void)
     instance = testInitInstance();
     VerifyOrQuit(instance != nullptr);
 
+    leader = &instance->Get<Leader>();
+
     {
-        // Commissioning Data TLV (Network Data type 4) whose value is a single
-        // MeshCoP sub-TLV encoded as an *extended* TLV: base length byte 0xff
-        // followed by a 16-bit extended length of zero. Commissioning Data
-        // sub-TLVs are always base TLVs, so the extended form is malformed. Read
-        // with the base-TLV accessors, the 0xff length byte is taken as the
-        // value length: `SteeringDataTlv::CopyTo()` would copy 16 bytes out of a
-        // 4-byte TLV, and the direct sub-TLV walk in `GetCommissioningDataset()`
-        // would run `GetNext()` past the end of the value.
+        // Commissioning Data TLV whose value is a single MeshCoP sub-TLV in
+        // the extended format (base length byte 0xff followed by a 16-bit
+        // extended length of zero). None of the known sub-TLVs use the
+        // extended format, so the readers must not parse it with the base
+        // TLV layout, and the walk in `GetCommissioningDataset()` must skip
+        // over it without reading past the end of the value.
 
-        struct TestCase
-        {
-            uint8_t mSubTlvType;
+        static const uint8_t kSubTlvTypes[] = {
+            MeshCoP::Tlv::kSteeringData,
+            MeshCoP::Tlv::kBorderAgentLocator,
+            MeshCoP::Tlv::kCommissionerSessionId,
+            MeshCoP::Tlv::kJoinerUdpPort,
         };
 
-        static const TestCase kTestCases[] = {
-            {8},  // Steering Data
-            {9},  // Border Agent Locator
-            {11}, // Commissioner Session ID
-            {18}, // Joiner UDP Port
-        };
-
-        Leader &leader = instance->Get<Leader>();
-
-        for (const TestCase &testCase : kTestCases)
+        for (uint8_t subTlvType : kSubTlvTypes)
         {
-            const uint8_t kNetworkData[] = {
-                0x08, 0x04, testCase.mSubTlvType, 0xff, 0x00, 0x00,
-            };
+            const uint8_t kNetworkData[] = {0x08, 0x04, subTlvType, 0xff, 0x00, 0x00};
 
             MeshCoP::SteeringData         steeringData;
             MeshCoP::CommissioningDataset dataset;
             uint16_t                      value;
 
-            reinterpret_cast<TestLeader &>(leader).Populate(kNetworkData, sizeof(kNetworkData));
+            printf("\nExtended sub-TLV type %u", subTlvType);
 
-            // Extended sub-TLVs must be rejected instead of parsed with the
-            // base-TLV layout.
-            VerifyOrQuit(leader.FindSteeringData(steeringData) == kErrorNotFound);
-            VerifyOrQuit(leader.FindBorderAgentRloc(value) == kErrorNotFound);
-            VerifyOrQuit(leader.FindCommissioningSessionId(value) == kErrorNotFound);
-            VerifyOrQuit(leader.FindJoinerUdpPort(value) == kErrorNotFound);
+            reinterpret_cast<TestLeader *>(leader)->Populate(kNetworkData, sizeof(kNetworkData));
 
-            // The direct walk must not read past the value and should flag the
-            // malformed TLV as an extra sub-TLV.
-            leader.GetCommissioningDataset(dataset);
+            VerifyOrQuit(leader->FindSteeringData(steeringData) == kErrorNotFound);
+            VerifyOrQuit(leader->FindBorderAgentRloc(value) == kErrorNotFound);
+            VerifyOrQuit(leader->FindCommissioningSessionId(value) == kErrorNotFound);
+            VerifyOrQuit(leader->FindJoinerUdpPort(value) == kErrorNotFound);
+
+            leader->GetCommissioningDataset(dataset);
             VerifyOrQuit(!dataset.mIsSteeringDataSet);
             VerifyOrQuit(!dataset.mIsLocatorSet);
-            VerifyOrQuit(dataset.mHasExtraTlv);
+            VerifyOrQuit(!dataset.mIsSessionIdSet);
+            VerifyOrQuit(!dataset.mIsJoinerUdpPortSet);
+            VerifyOrQuit(!dataset.mHasExtraTlv);
         }
     }
+
+    {
+        // An extended sub-TLV (with a one-byte value) followed by a base
+        // Joiner UDP Port sub-TLV. The walk must skip over the extended
+        // sub-TLV and still parse the base sub-TLV after it.
+
+        static const uint8_t kNetworkData[] = {
+            0x08, 0x09, MeshCoP::Tlv::kSteeringData, 0xff, 0x00, 0x01, 0xaa, MeshCoP::Tlv::kJoinerUdpPort, 0x02,
+            0x12, 0x34,
+        };
+
+        MeshCoP::SteeringData         steeringData;
+        MeshCoP::CommissioningDataset dataset;
+        uint16_t                      value;
+
+        printf("\nExtended sub-TLV followed by a base sub-TLV");
+
+        reinterpret_cast<TestLeader *>(leader)->Populate(kNetworkData, sizeof(kNetworkData));
+
+        VerifyOrQuit(leader->FindSteeringData(steeringData) == kErrorNotFound);
+        SuccessOrQuit(leader->FindJoinerUdpPort(value));
+        VerifyOrQuit(value == 0x1234);
+
+        leader->GetCommissioningDataset(dataset);
+        VerifyOrQuit(!dataset.mIsSteeringDataSet);
+        VerifyOrQuit(dataset.mIsJoinerUdpPortSet);
+        VerifyOrQuit(dataset.mJoinerUdpPort == 0x1234);
+        VerifyOrQuit(!dataset.mHasExtraTlv);
+    }
+
+    {
+        // Truncated sub-TLVs: the header, the extended header, or the value
+        // runs past the end of the Commissioning Data value. The walk must
+        // stop without reading past the end. The content is malformed rather
+        // than carrying an unknown sub-TLV, so `mHasExtraTlv` stays clear.
+
+        static const uint8_t kTruncatedHeader[]         = {0x08, 0x01, MeshCoP::Tlv::kBorderAgentLocator};
+        static const uint8_t kTruncatedExtendedHeader[] = {0x08, 0x03, MeshCoP::Tlv::kBorderAgentLocator, 0xff, 0x00};
+        static const uint8_t kTruncatedValue[]          = {0x08, 0x03, MeshCoP::Tlv::kBorderAgentLocator, 0x05, 0x00};
+
+        struct TestCase
+        {
+            const uint8_t *mNetworkData;
+            uint8_t        mNetworkDataLength;
+            const char    *mName;
+        };
+
+        static const TestCase kTestCases[] = {
+            {kTruncatedHeader, sizeof(kTruncatedHeader), "truncated header"},
+            {kTruncatedExtendedHeader, sizeof(kTruncatedExtendedHeader), "truncated extended header"},
+            {kTruncatedValue, sizeof(kTruncatedValue), "truncated value"},
+        };
+
+        for (const TestCase &testCase : kTestCases)
+        {
+            MeshCoP::CommissioningDataset dataset;
+            uint16_t                      value;
+
+            printf("\nSub-TLV with %s", testCase.mName);
+
+            reinterpret_cast<TestLeader *>(leader)->Populate(testCase.mNetworkData, testCase.mNetworkDataLength);
+
+            VerifyOrQuit(leader->FindBorderAgentRloc(value) == kErrorNotFound);
+
+            leader->GetCommissioningDataset(dataset);
+            VerifyOrQuit(!dataset.mIsLocatorSet);
+            VerifyOrQuit(!dataset.mHasExtraTlv);
+        }
+    }
+
+    printf("\n");
 
     testFreeInstance(instance);
 }
