@@ -535,10 +535,10 @@ Error Manager::EvictActiveCommissioner(void)
 {
     Error                   error = kErrorNone;
     uint16_t                sessionId;
-    uint16_t                baRloc16;
     OwnedPtr<Coap::Message> message;
 
-    SuccessOrExit(error = Get<NetworkData::Leader>().FindBorderAgentRloc(baRloc16));
+    VerifyOrExit(Get<NetworkData::Leader>().HasBorderAgentRloc(), error = kErrorNotFound);
+
     SuccessOrExit(error = Get<NetworkData::Leader>().FindCommissioningSessionId(sessionId));
 
     message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriLeaderKeepAlive));

@@ -571,7 +571,7 @@ void Admitter::CommissionerPetitioner::SendPetitionIfNoOtherCommissioner(void)
 
     OT_ASSERT(mState == kToPetition || mState == kRejected);
 
-    if (Get<NetworkData::Leader>().FindInCommissioningData<BorderAgentLocatorTlv>() != nullptr)
+    if (Get<NetworkData::Leader>().HasBorderAgentRloc())
     {
         SetState(kRejected);
         ExitNow();
