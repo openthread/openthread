@@ -2342,8 +2342,8 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (child->IsCslSynchronized())
     {
-        ChannelTlvValue cslChannelTlvValue;
-        uint32_t        cslTimeout;
+        CslChannelTlvValue cslChannelTlvValue;
+        uint32_t           cslTimeout;
 
         switch (Tlv::Find<CslTimeoutTlv>(aRxInfo.mMessage, cslTimeout))
         {
@@ -2358,11 +2358,16 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
             ExitNow(error = kErrorNone);
         }
 
-        if (Tlv::Find<CslChannelTlv>(aRxInfo.mMessage, cslChannelTlvValue) == kErrorNone)
+        switch (Tlv::Find<CslChannelTlv>(aRxInfo.mMessage, cslChannelTlvValue))
         {
-            // Special value of zero is used to indicate that
-            // CSL channel is not specified.
+        case kErrorNone:
+            VerifyOrExit(cslChannelTlvValue.IsValid(), error = kErrorParse);
             child->SetCslChannel(static_cast<uint8_t>(cslChannelTlvValue.GetChannel()));
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
         }
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
