@@ -73,8 +73,6 @@ jobs:
         cache: pip
     - name: Bootstrap
       timeout-minutes: 10
-      env:
-        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
@@ -110,8 +108,6 @@ jobs:
         cache: pip
     - name: Bootstrap
       timeout-minutes: 10
-      env:
-        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
@@ -143,14 +139,8 @@ jobs:
       with:
         submodules: recursive
         persist-credentials: false
-    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-      with:
-        python-version: '3.12'
-        cache: pip
     - name: Bootstrap
       timeout-minutes: 10
-      env:
-        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
@@ -158,40 +148,112 @@ jobs:
       run: |
         ./tests/toranj/build.sh all
         ninja test
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Validate posix builds with different radio configs
-        git clean -dfx
-        ./tests/toranj/build.sh ncp-15.4
-        git clean -dfx
-        ./tests/toranj/build.sh ncp-trel
-        git clean -dfx
-        ./tests/toranj/build.sh ncp-15.4+trel
-        git clean -dfx
-        ./tests/toranj/build.sh posix-15.4
-        git clean -dfx
-        ./tests/toranj/build.sh posix-15.4+trel
-        git clean -dfx
-        ./tests/toranj/build.sh posix-trel
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Log levels
-        git clean -dfx
-        ./tests/toranj/build.sh --log-level DEBG all
-        git clean -dfx
-        ./tests/toranj/build.sh --log-level INFO all
-        git clean -dfx
-        ./tests/toranj/build.sh --log-level NOTE all
-        git clean -dfx
-        ./tests/toranj/build.sh --log-level WARN all
-        git clean -dfx
-        ./tests/toranj/build.sh --log-level CRIT all
-        git clean -dfx
-        ./tests/toranj/build.sh --log-level NONE all
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - -
-        git clean -dfx
-        ./tests/toranj/build.sh --enable-plat-key-ref all
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - -
-        git clean -dfx
-        ./tests/toranj/build.sh --enable-csl-debug --log-level DEBG all
+
+  toranj-build-log-level:
+    name: toranj-build-log-level-${{ matrix.LOG_LEVEL }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        LOG_LEVEL: ['DEBG', 'INFO', 'NOTE', 'WARN', 'CRIT', 'NONE']
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+        persist-credentials: false
+    - name: Bootstrap
+      timeout-minutes: 10
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build
+    - name: Build
+      run: |
+        ./tests/toranj/build.sh --log-level ${{ matrix.LOG_LEVEL }} all
+
+  toranj-build-ncp:
+    name: toranj-build-ncp-${{ matrix.RADIO_LINK }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        RADIO_LINK: ['15.4', 'trel', '15.4+trel']
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+        persist-credentials: false
+    - name: Bootstrap
+      timeout-minutes: 10
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build
+    - name: Build
+      run: |
+        ./tests/toranj/build.sh ncp-${{ matrix.RADIO_LINK }}
+
+  toranj-build-posix:
+    name: toranj-build-posix-${{ matrix.RADIO_LINK }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        RADIO_LINK: ['15.4', 'trel', '15.4+trel']
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+        persist-credentials: false
+    - name: Bootstrap
+      timeout-minutes: 10
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build
+    - name: Build
+      run: |
+        ./tests/toranj/build.sh posix-${{ matrix.RADIO_LINK }}
+
+  toranj-build-feature:
+    name: toranj-build-feature-(${{ matrix.OPTIONS }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        OPTIONS:
+          - '--enable-plat-key-ref all'
+          - '--enable-csl-debug --log-level DEBG all'
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+        persist-credentials: false
+    - name: Bootstrap
+      timeout-minutes: 10
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build
+    - name: Build
+      run: |
+        ./tests/toranj/build.sh ${{ matrix.OPTIONS }}
 
   toranj-macos:
     name: toranj-macos
@@ -208,12 +270,10 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
-      env:
-        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         brew update
         brew install ninja
-    - name: Build & Run
+    - name: Build
       run: |
         ./tests/toranj/build.sh posix-15.4
 
