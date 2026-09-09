@@ -55,7 +55,6 @@
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
-#include <openthread/provisional/p2p.h>
 
 #include "cli/cli_ba.hpp"
 #include "cli/cli_bbr.hpp"
@@ -364,16 +363,6 @@ private:
 
 #if OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
     static void HandleIp6Receive(otMessage *aMessage, void *aContext);
-#endif
-
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    static void HandleP2pLinkDone(void *aContext);
-    void        HandleP2pLinkDone(void);
-#endif
-
-    static void HandleP2pUnlinkDone(void *aContext);
-    void        HandleP2pUnlinkDone(void);
 #endif
 
 #if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE

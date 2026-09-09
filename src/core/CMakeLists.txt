@@ -76,7 +76,6 @@ set(COMMON_SOURCES
     api/netdata_publisher_api.cpp
     api/netdiag_api.cpp
     api/network_time_api.cpp
-    api/p2p_api.cpp
     api/ping_sender_api.cpp
     api/radio_stats_api.cpp
     api/random_crypto_api.cpp
