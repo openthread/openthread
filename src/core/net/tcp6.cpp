@@ -737,8 +737,9 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
 
         for (uint32_t i = 0; i != aSignals.links_popped; i++)
         {
-            VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
-                         !aEndpoint.IsClosed());
+            VerifyOrExit(i == 0 || (IsInitialized(aEndpoint) &&
+                        (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
+                        !aEndpoint.IsClosed()));
 
             otLinkedBuffer *next = curr->mNext;
 
