@@ -85,22 +85,8 @@ uint8_t otLinkGetWakeupChannel(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupChannel();
 }
 
-otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel)
-{
-    Error     error    = kErrorNone;
-    Instance &instance = AsCoreType(aInstance);
-
-    VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
-
-    SuccessOrExit(error = instance.Get<Mac::Mac>().SetWakeupChannel(aChannel));
-
-    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
-    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+otError otLinkSetWakeupChannel(otInstance *, uint8_t) { return kErrorNotImplemented; }
+#endif
 
 uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance)
 {
@@ -502,23 +488,11 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 }
 
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenEnabled(aEnable);
-}
+otError otLinkSetWakeUpListenEnabled(otInstance *, bool) { return kErrorNotImplemented; }
 
-bool otLinkIsWakeupListenEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().IsWakeupListenEnabled();
-}
+bool otLinkIsWakeupListenEnabled(otInstance *) { return false; }
 
-void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval, uint32_t *aDuration)
-{
-    AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupListenParameters(*aInterval, *aDuration);
-}
+void otLinkGetWakeupListenParameters(otInstance *, uint32_t *, uint32_t *) {}
 
-otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterval, uint32_t aDuration)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenParameters(aInterval, aDuration);
-}
-#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+otError otLinkSetWakeupListenParameters(otInstance *, uint32_t, uint32_t) { return kErrorNotImplemented; }
+#endif

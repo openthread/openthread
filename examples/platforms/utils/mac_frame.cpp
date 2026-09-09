@@ -366,11 +366,7 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
     uint32_t          frameCounter;
     bool              processKeyId;
 
-    processKeyId =
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-        otMacFrameIsKeyIdMode2(aFrame) ||
-#endif
-        otMacFrameIsKeyIdMode1(aFrame);
+    processKeyId = otMacFrameIsKeyIdMode1(aFrame);
 
     VerifyOrExit(otMacFrameIsSecurityEnabled(aFrame) && processKeyId && !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
 

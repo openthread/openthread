@@ -202,13 +202,6 @@ public:
     void RequestCslFrameTransmission(void);
 #endif
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    /**
-     * Requests `Mac` to start a wake-up frame transmission.
-     */
-    void RequestWakeupFrameTransmission(void);
-#endif
-
     /**
      * Requests transmission of a data poll (MAC Data Request) frame.
      *
@@ -630,61 +623,6 @@ public:
      */
     uint8_t GetWakeupChannel(void) const { return mWakeupChannel; }
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    /**
-     * Sets the wake-up channel.
-     *
-     * @param[in]  aChannel  The wake-up channel.
-     *
-     * @retval kErrorNone          Successfully set the wake-up channel.
-     * @retval kErrorInvalidArgs   The @p aChannel is not in the supported channel mask.
-     */
-    Error SetWakeupChannel(uint8_t aChannel);
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    /**
-     * Gets the wake-up listen parameters.
-     *
-     * @param[out]  aInterval  A reference to return the wake-up listen interval in microseconds.
-     * @param[out]  aDuration  A reference to return the wake-up listen duration in microseconds.
-     */
-    void GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const;
-
-    /**
-     * Sets the wake-up listen parameters.
-     *
-     * The listen interval must be greater than the listen duration.
-     * The listen duration must be greater or equal than `Radio::kMinWakeupListenDuration`.
-     *
-     * @param[in]  aInterval  The wake-up listen interval in microseconds.
-     * @param[in]  aDuration  The wake-up listen duration in microseconds.
-     *
-     * @retval kErrorNone          Successfully set the wake-up listen parameters.
-     * @retval kErrorInvalidArgs   Configured listen interval is not greater than listen duration.
-     */
-    Error SetWakeupListenParameters(uint32_t aInterval, uint32_t aDuration);
-
-    /**
-     * Enables/disables listening for wake-up frames.
-     *
-     * @param[in]  aEnable  TRUE to enable listening for wake-up frames, FALSE otherwise
-     *
-     * @retval kErrorNone          Successfully enabled/disabled listening for wake-up frames.
-     * @retval kErrorInvalidArgs   Configured listen interval is not greater than listen duration.
-     * @retval kErrorInvalidState  Could not enable/disable listening for wake-up frames.
-     */
-    Error SetWakeupListenEnabled(bool aEnable);
-
-    /**
-     * Returns whether listening for wake-up frames is enabled.
-     *
-     * @retval TRUE   If listening for wake-up frames is enabled.
-     * @retval FALSE  If listening for wake-up frames is not enabled.
-     */
-    bool IsWakeupListenEnabled(void) const { return mWakeupListenEnabled; }
-#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 
@@ -716,9 +654,6 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
-#endif
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-        kOperationTransmitWakeup,
 #endif
     };
 
@@ -822,9 +757,6 @@ private:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     void ProcessEnhAckProbing(const RxFrame::ParseInfo &aFrameInfo, const Neighbor &aNeighbor);
 #endif
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    void UpdateWakeupListening(void);
-#endif
 
     using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
     using MacTimer      = TimerMilliIn<Mac, &Mac::HandleTimer>;
@@ -842,9 +774,6 @@ private:
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     bool mShouldDelaySleep : 1;
     bool mDelayingSleep : 1;
-#endif
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    bool mWakeupListenEnabled : 1;
 #endif
     Operation   mOperation;
     uint16_t    mPendingOperations;
@@ -870,10 +799,6 @@ private:
     uint16_t mCslPeriod;
 #endif
     uint8_t mWakeupChannel;
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    uint32_t mWakeupListenInterval;
-    uint32_t mWakeupListenDuration;
-#endif
     union
     {
         ScanResult::ScanCallback    mActiveScanCallback;

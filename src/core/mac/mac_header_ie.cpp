@@ -79,42 +79,5 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-
-Error ConnectionIe::SetWakeupId(WakeupId aWakeupId)
-{
-    Error   error          = kErrorNone;
-    uint8_t wakeupIdLength = GetWakeupIdLength(aWakeupId);
-
-    VerifyOrExit(GetSize() >= sizeof(ConnectionIe), error = kErrorParse);
-    VerifyOrExit(GetSize() - sizeof(ConnectionIe) == wakeupIdLength, error = kErrorParse);
-
-    aWakeupId = LittleEndian::HostSwap64(aWakeupId);
-    memcpy(GetBytes() + sizeof(ConnectionIe), reinterpret_cast<uint8_t *>(&aWakeupId), wakeupIdLength);
-
-exit:
-    return error;
-}
-
-Error ConnectionIe::GetWakeupId(WakeupId &aWakeupId) const
-{
-    Error   error = kErrorNone;
-    uint8_t wakeupIdLength;
-
-    VerifyOrExit(GetSize() > sizeof(ConnectionIe), error = kErrorParse);
-
-    wakeupIdLength = GetSize() - sizeof(ConnectionIe);
-    VerifyOrExit(wakeupIdLength <= sizeof(WakeupId), error = kErrorParse);
-
-    aWakeupId = 0;
-    memcpy(reinterpret_cast<uint8_t *>(&aWakeupId), GetBytes() + sizeof(ConnectionIe), wakeupIdLength);
-    aWakeupId = LittleEndian::HostSwap64(aWakeupId);
-
-exit:
-    return error;
-}
-
-#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-
 } // namespace Mac
 } // namespace ot

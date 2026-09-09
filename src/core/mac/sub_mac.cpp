@@ -55,9 +55,6 @@ SubMac::SubMac(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslReceiver(aInstance)
 #endif
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    , mWedTimer(aInstance)
-#endif
 {
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && !OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
     // Assuming the platform must deal with the retransmission security correctly.
@@ -96,9 +93,6 @@ void SubMac::Init(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslReceiver.Init();
-#endif
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    WedInit();
 #endif
 }
 
@@ -205,9 +199,6 @@ Error SubMac::Disable(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslReceiver.Stop();
-#endif
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    mWedTimer.Stop();
 #endif
 
     mTimer.Stop();

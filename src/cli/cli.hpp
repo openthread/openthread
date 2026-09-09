@@ -55,6 +55,7 @@
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
+#include <openthread/provisional/p2p.h>
 
 #include "cli/cli_ba.hpp"
 #include "cli/cli_bbr.hpp"

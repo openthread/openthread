@@ -89,7 +89,6 @@
 #include "crypto/mbedtls.hpp"
 #include "crypto/storage.hpp"
 #include "mac/mac.hpp"
-#include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
 #include "meshcop/border_agent_admitter.hpp"
 #include "meshcop/border_agent_ephemeral_key.hpp"
@@ -968,14 +967,6 @@ template <> inline NeighborTable &Instance::Get(void) { return mMle.mNeighborTab
 template <> inline ChildTable &Instance::Get(void) { return mMle.mChildTable; }
 
 template <> inline RouterTable &Instance::Get(void) { return mMle.mRouterTable; }
-#endif
-
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-template <> inline PeerTable &Instance::Get(void) { return mMle.mP2p.mPeerTable; }
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-template <> inline WakeupTxScheduler &Instance::Get(void) { return mMle.mWakeupTxScheduler; }
 #endif
 
 template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }

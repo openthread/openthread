@@ -187,17 +187,6 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
             break;
         }
 
-        case Tlv::kWakeupChannel:
-        {
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-            uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
-            error           = Get<Mac::Mac>().SetWakeupChannel(channel);
-
-            LogCritOnError(error, "set wake-up channel to %u when applying dataset", channel);
-#endif
-            break;
-        }
-
         case Tlv::kPanId:
             Get<Mac::Mac>().SetPanId(cur->ReadValueAs<PanIdTlv>());
             break;
