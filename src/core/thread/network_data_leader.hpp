@@ -461,6 +461,9 @@ private:
 
 #if OPENTHREAD_FTD
     static constexpr uint32_t kMaxNetDataSyncWait = 60 * 1000; // Maximum time to wait for netdata sync in msec.
+#if OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE
+    static constexpr uint32_t kCoalesceDelay = OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_DELAY;
+#endif
     static constexpr uint8_t  kMinServiceId       = 0x00;
     static constexpr uint8_t  kMaxServiceId       = 0x0f;
 
@@ -621,12 +624,19 @@ private:
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 
+#if OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE
+    void HandleCoalesceTimer(void);
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     void CheckForNetDataGettingFull(const NetworkData &aNetworkData, uint16_t aOldRloc16);
     void MarkAsClone(void);
 #endif
 
-    using UpdateTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
+    using UpdateTimer    = TimerMilliIn<Leader, &Leader::HandleTimer>;
+#if OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE
+    using CoalesceTimer  = TimerMilliIn<Leader, &Leader::HandleCoalesceTimer>;
+#endif
 #endif // OPENTHREAD_FTD
 
     uint8_t mStableVersion;
@@ -641,6 +651,9 @@ private:
     bool        mWaitingForNetDataSync;
     ContextIds  mContextIds;
     UpdateTimer mTimer;
+#if OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE
+    CoalesceTimer mCoalesceTimer;
+#endif
 #endif
 };
 
