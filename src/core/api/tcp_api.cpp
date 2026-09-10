@@ -70,6 +70,8 @@ otError otTcpConnect(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName, uint
     return AsCoreType(aEndpoint).Connect(AsCoreType(aSockName), aFlags);
 }
 
+otError otTcpSetSockOpt(otTcpEndpoint *aEndpoint, uint32_t aFlags) { return AsCoreType(aEndpoint).SetSockOpt(aFlags); }
+
 otError otTcpSendByReference(otTcpEndpoint *aEndpoint, otLinkedBuffer *aBuffer, uint32_t aFlags)
 {
     return AsCoreType(aEndpoint).SendByReference(*aBuffer, aFlags);
