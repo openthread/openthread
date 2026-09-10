@@ -103,6 +103,43 @@ void TestCoapOptionNumberOverflow(void)
     // The second option would wrap the running option number and must be rejected.
     VerifyOrQuit(iterator.Advance() == kErrorParse,
                  "Fix failed: cumulative option number overflow was not rejected!");
+    VerifyOrQuit(iterator.IsDone());
+    VerifyOrQuit(iterator.GetOption() == nullptr);
+
+    message->Free();
+    testFreeInstance(instance);
+}
+
+void TestCoapOptionNumberMaxRepeated(void)
+{
+    Instance      *instance;
+    Coap::Message *message;
+
+    uint8_t options[] = {0xe0, 0xfe, 0xf2, 0x00};
+
+    printf("TestCoapOptionNumberMaxRepeated()\n");
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+
+    message = AsCoapMessagePtr(instance->Get<MessagePool>().Allocate(Message::kTypeOther));
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(message->Init(Coap::kTypeNonConfirmable, Coap::kCodePut));
+    SuccessOrQuit(message->AppendBytes(options, sizeof(options)));
+
+    Coap::Option::Iterator iterator;
+
+    SuccessOrQuit(iterator.Init(*message));
+    VerifyOrQuit(!iterator.IsDone());
+    VerifyOrQuit(iterator.GetOption()->GetNumber() == 65535);
+
+    SuccessOrQuit(iterator.Advance());
+    VerifyOrQuit(!iterator.IsDone());
+    VerifyOrQuit(iterator.GetOption()->GetNumber() == 65535);
+
+    SuccessOrQuit(iterator.Advance());
+    VerifyOrQuit(iterator.IsDone());
 
     message->Free();
     testFreeInstance(instance);
@@ -168,6 +205,7 @@ int main(void)
 {
     ot::TestCoapOverflow();
     ot::TestCoapOptionNumberOverflow();
+    ot::TestCoapOptionNumberMaxRepeated();
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     ot::TestReadBlockOptionValuesInvalidLength();
 #endif

@@ -822,6 +822,7 @@ Error Option::Iterator::Advance(void)
 
     optionDelta = (headerByte & Message::kOptionDeltaMask) >> Message::kOptionDeltaOffset;
     SuccessOrExit(error = ReadExtendedOptionField(optionDelta));
+    VerifyOrExit(CanAddSafely<uint16_t>(mOption.mNumber, optionDelta), error = kErrorParse);
 
     optionLength = (headerByte & Message::kOptionLengthMask) >> Message::kOptionLengthOffset;
     SuccessOrExit(error = ReadExtendedOptionField(optionLength));
@@ -829,7 +830,6 @@ Error Option::Iterator::Advance(void)
     VerifyOrExit(optionLength <= GetMessage().GetLength() - mNextOptionOffset, error = kErrorParse);
     mNextOptionOffset += optionLength;
 
-    VerifyOrExit(CanAddSafely<uint16_t>(mOption.mNumber, optionDelta), error = kErrorParse);
     mOption.mNumber += optionDelta;
     mOption.mLength = optionLength;
 
