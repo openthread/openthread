@@ -64,6 +64,16 @@
 
 set -euo pipefail
 
+repo_dir=$(cd "$(dirname "$0")/.." && pwd)
+readonly repo_dir
+
+if ! python3 -c "import yapf" &> /dev/null; then
+    if [[ -z ${VIRTUAL_ENV:-} ]] && [[ -f "${repo_dir}/.venv/bin/activate" ]]; then
+        # shellcheck source=/dev/null
+        source "${repo_dir}/.venv/bin/activate"
+    fi
+fi
+
 OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
 readonly OT_BUILD_JOBS
 
