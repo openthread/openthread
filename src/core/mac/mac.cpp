@@ -66,9 +66,6 @@ Mac::Mac(Instance &aInstance)
     , mShouldDelaySleep(false)
     , mDelayingSleep(false)
 #endif
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    , mWakeupListenEnabled(false)
-#endif
     , mOperation(kOperationIdle)
     , mPendingOperations(0)
     , mBeaconSequence(Random::NonCrypto::Generate<uint8_t>())
@@ -91,10 +88,6 @@ Mac::Mac(Instance &aInstance)
     , mCslPeriod(0)
 #endif
     , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    , mWakeupListenInterval(kDefaultWedListenInterval)
-    , mWakeupListenDuration(kDefaultWedListenDuration)
-#endif
     , mActiveScanCallback()
     , mLinks(aInstance)
     , mOperationTask(aInstance)
@@ -229,9 +222,6 @@ bool Mac::IsInTransmitState(void) const
 #endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    case kOperationTransmitWakeup:
-#endif
         retval = true;
         break;
 
@@ -508,17 +498,6 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-void Mac::RequestWakeupFrameTransmission(void)
-{
-    VerifyOrExit(IsEnabled());
-    StartOperation(kOperationTransmitWakeup);
-
-exit:
-    return;
-}
-#endif
-
 Error Mac::RequestDataPollTransmission(void)
 {
     Error error = kErrorNone;
@@ -613,9 +592,6 @@ void Mac::PerformNextOperation(void)
         // remains in receive mode after a data poll ACK indicating a
         // pending frame from the parent.
         kOperationWaitingForData,
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-        kOperationTransmitWakeup,
-#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
 #endif
@@ -690,9 +666,6 @@ void Mac::PerformNextOperation(void)
     case kOperationTransmitDataCsl:
 #endif
     case kOperationTransmitPoll:
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    case kOperationTransmitWakeup:
-#endif
         BeginTransmit();
         break;
 
@@ -988,16 +961,6 @@ void Mac::BeginTransmit(void)
         seqNum            = shouldWriteSeqNum ? mDataSequence++ : 0;
         break;
 
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    case kOperationTransmitWakeup:
-        frame = Get<WakeupTxScheduler>().PrepareWakeupFrame(txFrames);
-        VerifyOrExit(frame != nullptr);
-        frame->SetChannel(mWakeupChannel);
-        frame->SetRxChannelAfterTxDone(mRadioChannel);
-        shouldWriteSeqNum = false;
-        break;
 #endif
 
     default:
@@ -1536,13 +1499,6 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
         PerformNextOperation();
         break;
 #endif // OPENTHREAD_FTD
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    case kOperationTransmitWakeup:
-        FinishOperation();
-        PerformNextOperation();
-        break;
-#endif
 
     default:
         OT_ASSERT(false);
@@ -2318,7 +2274,7 @@ const char *Mac::OperationToString(Operation aOperation)
     _(kOperationTransmitDataDirect, "TransmitDataDirect") \
     _(kOperationTransmitPoll, "TransmitPoll")             \
     _(kOperationWaitingForData, "WaitingForData")         \
-    FtdOperationMapList(_) CslTxOperationMapList(_) WakeupOperationMapList(_)
+    FtdOperationMapList(_) CslTxOperationMapList(_)
 
 #if OPENTHREAD_FTD
 #define FtdOperationMapList(_) _(kOperationTransmitDataIndirect, "TransmitDataIndirect")
@@ -2330,12 +2286,6 @@ const char *Mac::OperationToString(Operation aOperation)
 #define CslTxOperationMapList(_) _(kOperationTransmitDataCsl, "TransmitDataCsl")
 #else
 #define CslTxOperationMapList(_)
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-#define WakeupOperationMapList(_) _(kOperationTransmitWakeup, "TransmitWakeup")
-#else
-#define WakeupOperationMapList(_)
 #endif
 
     DefineEnumStringArray(OperationMapList);
@@ -2463,14 +2413,6 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
     bool shouldUpdateCslState;
 
     VerifyOrExit(mCslPeriod != aPeriod);
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    if (IsWakeupListenEnabled() && aPeriod != 0)
-    {
-        IgnoreError(SetWakeupListenEnabled(false));
-        LogWarn("Disabling wake-up frame listening due to CSL period change");
-    }
-#endif
 
     // A CSL period value of 0 means that the CSL is disabled.
     shouldUpdateCslState = ((mCslPeriod == 0) != (aPeriod == 0));
@@ -2617,88 +2559,6 @@ void Mac::SetRadioFilterEnabled(bool aFilterEnabled)
     UpdateIdleMode();
 }
 #endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-Error Mac::SetWakeupChannel(uint8_t aChannel)
-{
-    Error error = kErrorNone;
-
-    if (aChannel == 0)
-    {
-        mWakeupChannel = GetPanChannel();
-        ExitNow();
-    }
-
-    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
-    mWakeupChannel = aChannel;
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    UpdateWakeupListening();
-#endif
-
-exit:
-    return error;
-}
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-void Mac::GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const
-{
-    aInterval = mWakeupListenInterval;
-    aDuration = mWakeupListenDuration;
-}
-
-Error Mac::SetWakeupListenParameters(uint32_t aInterval, uint32_t aDuration)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aDuration >= Radio::kMinWakeupListenDuration, error = kErrorInvalidArgs);
-    VerifyOrExit(aInterval > aDuration, error = kErrorInvalidArgs);
-
-    mWakeupListenInterval = aInterval;
-    mWakeupListenDuration = aDuration;
-    UpdateWakeupListening();
-
-exit:
-    return error;
-}
-
-Error Mac::SetWakeupListenEnabled(bool aEnable)
-{
-    Error error = kErrorNone;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aEnable && GetCslPeriod() > 0)
-    {
-        LogWarn("Cannot enable wake-up frame listening while CSL is enabled");
-        ExitNow(error = kErrorInvalidState);
-    }
-#endif
-
-    if (aEnable == mWakeupListenEnabled)
-    {
-        LogInfo("Listening for wake up frames was already %s", aEnable ? "started" : "stopped");
-        ExitNow();
-    }
-
-    mWakeupListenEnabled = aEnable;
-    UpdateWakeupListening();
-
-    LogInfo("Listening for wake up frames %s: chan:%u, addr:%s", aEnable ? "started" : "stopped", mWakeupChannel,
-            GetExtAddress().ToString().AsCString());
-
-exit:
-    return error;
-}
-
-void Mac::UpdateWakeupListening(void)
-{
-    uint8_t channel = mWakeupChannel ? mWakeupChannel : mPanChannel;
-
-    mLinks.UpdateWakeupListening(mWakeupListenEnabled, mWakeupListenInterval, mWakeupListenDuration, channel);
-}
-
-#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 
 } // namespace Mac
 } // namespace ot

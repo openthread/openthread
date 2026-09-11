@@ -429,45 +429,5 @@ uint8_t DeterminePrevKeyIndex(uint8_t aKeyIndex)
     return prevIndex;
 }
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-uint8_t GetWakeupIdLength(WakeupId aWakeupId)
-{
-    uint8_t zeroBytesCount = 0;
-
-    for (int i = static_cast<int>(sizeof(WakeupId)) - 1; i >= 1; --i)
-    {
-        if (((aWakeupId >> (i * kBitsPerByte)) & 0xFF) == 0)
-        {
-            zeroBytesCount++;
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    return sizeof(WakeupId) - zeroBytesCount;
-}
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-void WakeupRequest::SetExtAddress(const ExtAddress &aExtAddress)
-{
-    SetType(kTypeExtAddress);
-    aExtAddress.CopyTo(mShared.mExtAddress.m8);
-}
-
-const ExtAddress &WakeupRequest::GetExtAddress(void) const { return AsCoreType(&mShared.mExtAddress); }
-
-ExtAddress &WakeupRequest::GetExtAddress(void) { return AsCoreType(&mShared.mExtAddress); }
-
-void WakeupRequest::SetType(Type aType) { mType = MapEnum(aType); }
-
-bool WakeupRequest::IsWakeupByExtAddress(void) const { return MapEnum(mType) == kTypeExtAddress; }
-
-bool WakeupRequest::IsWakeupById(void) const { return MapEnum(mType) == kTypeWakeupId; }
-
-bool WakeupRequest::IsWakeupByGroupId(void) const { return MapEnum(mType) == kTypeGroupWakeupId; }
-#endif
 } // namespace Mac
 } // namespace ot

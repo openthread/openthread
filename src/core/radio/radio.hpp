@@ -71,13 +71,6 @@ constexpr uint32_t kHeaderShrDuration = 160; ///< Duration of SHR in us
 constexpr uint32_t kHeaderPhrDuration = 32;  ///< Duration of PHR in us
 constexpr uint32_t kOctetDuration     = 32;  ///< Duration of one octet in us
 
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-/**
- * Minimum wake-up listen duration supported in microseconds.
- */
-constexpr uint32_t kMinWakeupListenDuration = 100;
-#endif
-
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD) && \
     !OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 #error "OPENTHREAD_CONFIG_RADIO_STATS_ENABLE requires OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE".

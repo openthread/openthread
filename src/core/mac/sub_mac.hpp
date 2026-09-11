@@ -522,18 +522,6 @@ public:
     bool IsRadioFilterEnabled(void) const { return mRadioFilterEnabled; }
 #endif
 
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    /**
-     * Configures wake-up listening parameters in all radios.
-     *
-     * @param[in]  aEnable    Whether to enable or disable wake-up listening.
-     * @param[in]  aInterval  The wake-up listen interval in microseconds.
-     * @param[in]  aDuration  The wake-up listen duration in microseconds.
-     * @param[in]  aChannel   The wake-up channel.
-     */
-    void UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel);
-#endif
-
 private:
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
     static constexpr uint8_t  kCsmaMaxBe         = 5;                  // macMaxBE (IEEE 802.15.4-2006).
@@ -599,16 +587,6 @@ private:
         kStateTimedReceive, // Timed RX (CSL sampling or wake listening)
 #endif
     };
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    // Wake-up listening receivers would wake up `kWedReceiveTimeAhead` earlier
-    // than expected sample window. The value is in usec.
-    static constexpr uint32_t kWedReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
-
-    // Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval.
-    // The value is in usec.
-    static constexpr uint32_t kWedReceiveTimeAfter = 500;
-#endif
 
 #if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
     // Lead time (in microseconds) to schedule a delayed tx earlier
@@ -725,11 +703,6 @@ private:
     void               SetState(State aState);
     static const char *StateToString(State aState);
 
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    void WedInit(void);
-    void HandleWedTimer(void);
-#endif
-
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     using SubMacTimer = TimerMicroIn<SubMac, &SubMac::HandleTimer>;
 #else
@@ -766,17 +739,6 @@ private:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     CslReceiver mCslReceiver;
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    using WedTimer = TimerMicroIn<SubMac, &SubMac::HandleWedTimer>;
-
-    bool              mIsWedEnabled;         // Indicates if the WED is enabled.
-    uint32_t          mWakeupListenInterval; // The wake-up listen interval, in microseconds.
-    uint32_t          mWakeupListenDuration; // The wake-up listen duration, in microseconds.
-    uint8_t           mWakeupChannel;        // The wake-up sample channel.
-    Radio::SyncedTime mWedSampleTime;        // The WED sample time of the current interval.
-    WedTimer          mWedTimer;
 #endif
 };
 

@@ -774,20 +774,6 @@ public:
      * @retval  kErrorParse          @p aRxFrame has incorrect format.
      */
     Error GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    /**
-     * Generate IEEE 802.15.4 Wake-up frame.
-     *
-     * @param[in]    aPanId          A destination PAN identifier
-     * @param[in]    aWakeupRequest  A const reference to the wake-up request.
-     * @param[in]    aSource         A source address (short or extended)
-     *
-     * @retval  kErrorNone        Successfully generated Wake-up frame.
-     * @retval  kErrorInvalidArgs @p aDest or @p aSource have incorrect type.
-     */
-    Error GenerateWakeupFrame(PanId, const WakeupRequest &, const Address &) { return kErrorNotImplemented; }
-#endif
 };
 
 /**

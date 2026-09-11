@@ -35,30 +35,24 @@
 
 #if OPENTHREAD_CONFIG_P2P_ENABLE
 
+#include <openthread/provisional/p2p.h>
+
 #include "instance/instance.hpp"
 
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-otError otP2pWakeupAndLink(otInstance           *aInstance,
-                           const otP2pRequest   *aP2pRequest,
-                           otP2pLinkDoneCallback aCallback,
-                           void                 *aContext)
+otError otP2pWakeupAndLink(otInstance *, const otP2pRequest *, otP2pLinkDoneCallback, void *)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().P2pWakeupAndLink(AsCoreType(aP2pRequest), aCallback, aContext);
+    return kErrorNotImplemented;
 }
 #endif
 
-void otP2pSetEventCallback(otInstance *aInstance, otP2pEventCallback aCallback, void *aContext)
+void otP2pSetEventCallback(otInstance *, otP2pEventCallback, void *) {}
+
+otError otP2pUnlink(otInstance *, const otExtAddress *, otP2pUnlinkDoneCallback, void *)
 {
-    AsCoreType(aInstance).Get<Mle::Mle>().P2pSetEventCallback(aCallback, aContext);
+    return kErrorNotImplemented;
 }
 
-otError otP2pUnlink(otInstance             *aInstance,
-                    const otExtAddress     *aExtAddress,
-                    otP2pUnlinkDoneCallback aCallback,
-                    void                   *aContext)
-{
-    return AsCoreType(aInstance).Get<Mle::Mle>().P2pUnlink(AsCoreType(aExtAddress), aCallback, aContext);
-}
-#endif
+#endif // OPENTHREAD_CONFIG_P2P_ENABLE

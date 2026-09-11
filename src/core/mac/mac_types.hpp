@@ -91,11 +91,6 @@ constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///<
 typedef otLinkPcapCallback PcapCallback;
 
 /**
- * Represents the wake-up identifier.
- */
-typedef otWakeupId WakeupId;
-
-/**
  * Represents the MAC layer counters.
  */
 typedef otMacCounters Counters;
@@ -941,131 +936,6 @@ private:
     uint8_t mUncertainty;
 };
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-/**
- * Gets the length of the wake-up identifier.
- *
- * The length is the number of bytes remaining after removing the most significant zero bytes.
- *
- * @param[in]  aWakeupId  The wake-up identifier.
- *
- * @returns The length of the @p aWakeupId.
- */
-uint8_t GetWakeupIdLength(WakeupId aWakeupId);
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-/**
- * Represents a wake-up request.
- */
-class WakeupRequest : public otWakeupRequest
-{
-public:
-    /**
-     * Represents a wake-up request type.
-     */
-    enum Type : uint8_t
-    {
-        kTypeExtAddress    = OT_WAKEUP_TYPE_EXT_ADDRESS,
-        kTypeWakeupId      = OT_WAKEUP_TYPE_IDENTIFIER,
-        kTypeGroupWakeupId = OT_WAKEUP_TYPE_GROUP_IDENTIFIER,
-    };
-
-    /**
-     * Sets the wake-up request with an Extended Address.
-     *
-     * The type is also updated to indicate that the wake-up request type is `kTypeExtAddress`.
-     *
-     * @param[in]  aExtAddress  An Extended Address.
-     */
-    void SetExtAddress(const ExtAddress &aExtAddress);
-
-    /**
-     * Gets the Extended Address of the wake-up request.
-     *
-     * MUST be used only if the wake-up request type is `kTypeExtAddress`.
-     *
-     * @returns A constant reference to the Extended Address.
-     */
-    const ExtAddress &GetExtAddress(void) const;
-
-    /**
-     * Gets the Extended Address of the wake-up request.
-     *
-     * MUST be used only if the wake-up request type is `kTypeExtAddress`.
-     *
-     * @returns A reference to the Extended Address.
-     */
-    ExtAddress &GetExtAddress(void);
-
-    /**
-     * Gets the Wake-up Identifier of the wake-up request.
-     *
-     * MUST be used only if the wake-up request type is `kTypeWakeupId` or `kTypeGroupWakeupId`.
-     *
-     * @returns The Wake-up Identifier.
-     */
-    WakeupId GetWakeupId(void) const { return mShared.mWakeupId; }
-
-    /**
-     * Sets the wake-up request with the Wake-up Identifier.
-     *
-     * The type is also updated to indicate that the wake-up request type is `kTypeWakeupId`.
-     *
-     * @param[in]  aWakeupId  A Wake-up Identifier.
-     */
-    void SetWakeupId(WakeupId aWakeupId)
-    {
-        SetType(kTypeWakeupId);
-        mShared.mWakeupId = aWakeupId;
-    }
-
-    /**
-     * Sets the wake-up request type.
-     *
-     * @param[in]  aType  The wake-up request type.
-     */
-    void SetType(Type aType);
-
-    /**
-     * Indicates whether the peer is set to be woken up by the extended address.
-     *
-     * @retval TRUE   If the peer is set to be woken up by the extended address.
-     * @retval FALSE  If the peer is not not set to be woken up by the extended address.
-     */
-    bool IsWakeupByExtAddress(void) const;
-
-    /**
-     * Indicates whether the peer is set to be woken up by the wake-up identifier.
-     *
-     * @retval TRUE   If the peer is set to be woken up by the wake-up identifier.
-     * @retval FALSE  If the peer is not set to be woken up by the wake-up identifier.
-     */
-    bool IsWakeupById(void) const;
-
-    /**
-     * Indicates whether the peer is set to be woken up by the group wake-up identifier.
-     *
-     * @retval TRUE   If the peer is set to be woken up by the group wake-up identifier.
-     * @retval FALSE  If the peer is not set to be woken up by the group wake-up identifier.
-     */
-    bool IsWakeupByGroupId(void) const;
-};
-#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-/**
- * Represents the information of the received wake-up frame.
- */
-struct WakeupInfo
-{
-    ExtAddress mExtAddress;        ///< The extended address of the Wake-up Coordinator.
-    uint32_t   mAttachDelayMs;     ///< The delay before linking to the peer.
-    uint8_t    mRetryInterval : 2; ///< The interval of the periodic connection windows.
-    uint8_t    mRetryCount : 4;    ///< The maximum number of retries the action by the Wake-up Listener.
-};
-#endif
-
 /**
  * @}
  */
@@ -1075,10 +945,6 @@ struct WakeupInfo
 DefineCoreType(otExtAddress, Mac::ExtAddress);
 DefineCoreType(otMacKey, Mac::Key);
 DefineCoreType(otMacKeyMaterial, Mac::KeyMaterial);
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-DefineCoreType(otWakeupRequest, Mac::WakeupRequest);
-DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);
-#endif
 
 } // namespace ot
 
