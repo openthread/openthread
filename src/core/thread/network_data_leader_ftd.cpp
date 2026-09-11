@@ -99,6 +99,22 @@ exit:
     return;
 }
 
+void Leader::UpdateBorderAgentRloc(uint16_t aRloc16)
+{
+    CommissioningDataSubTlvInfo subTlvInfo;
+
+    SuccessOrExit(FindCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator, subTlvInfo));
+
+    VerifyOrExit(subTlvInfo.mLength >= sizeof(uint16_t));
+    VerifyOrExit(BigEndian::ReadUint16(subTlvInfo.mValue) != aRloc16);
+    BigEndian::WriteUint16(aRloc16, AsNonConst(subTlvInfo.mValue));
+
+    IncrementVersion();
+
+exit:
+    return;
+}
+
 Error Leader::AnycastLookup(uint16_t aAloc16, uint16_t &aRloc16) const
 {
     Error error = kErrorNone;
@@ -1285,7 +1301,6 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
     const PrefixTlv *prefix;
     TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
     ChangedFlags     flags;
-    uint16_t         rloc16;
     uint16_t         sessionId;
     Rlocs            rlocs;
 
@@ -1339,7 +1354,7 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
         Get<MeshCoP::Leader>().SetSessionId(sessionId);
     }
 
-    if (FindBorderAgentRloc(rloc16) == kErrorNone)
+    if (HasBorderAgentRloc())
     {
         Get<MeshCoP::Leader>().SetEmptyCommissionerData();
     }

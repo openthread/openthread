@@ -721,7 +721,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     VerifyOrQuit(admitter.Get<Admitter>().IsPrimeAdmitter());
     VerifyOrQuit(!admitter.Get<Admitter>().IsActiveCommissioner());
 
-    VerifyOrQuit(admitter.Get<NetworkData::Leader>().FindBorderAgentRloc(rloc16) == kErrorNotFound);
+    VerifyOrQuit(!admitter.Get<NetworkData::Leader>().HasBorderAgentRloc());
 
     nexus.AdvanceTime(10 * Time::kOneSecondInMsec);
 
@@ -933,7 +933,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     VerifyOrQuit(admitter.Get<Admitter>().IsPrimeAdmitter());
     VerifyOrQuit(!admitter.Get<Admitter>().IsActiveCommissioner());
 
-    VerifyOrQuit(admitter.Get<NetworkData::Leader>().FindBorderAgentRloc(rloc16) == kErrorNotFound);
+    VerifyOrQuit(!admitter.Get<NetworkData::Leader>().HasBorderAgentRloc());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Re-establish DTLS session");
