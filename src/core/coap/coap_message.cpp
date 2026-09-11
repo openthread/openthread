@@ -822,6 +822,7 @@ Error Option::Iterator::Advance(void)
 
     optionDelta = (headerByte & Message::kOptionDeltaMask) >> Message::kOptionDeltaOffset;
     SuccessOrExit(error = ReadExtendedOptionField(optionDelta));
+    VerifyOrExit(CanAddSafely<uint16_t>(mOption.mNumber, optionDelta), error = kErrorParse);
 
     optionLength = (headerByte & Message::kOptionLengthMask) >> Message::kOptionLengthOffset;
     SuccessOrExit(error = ReadExtendedOptionField(optionLength));
