@@ -167,6 +167,7 @@ OT_TOOL_WEAK otError otPlatCryptoAesCcmProcessOneShot(bool                      
     mbedtls_ccm_init(&ctx);
 
     VerifyOrExit(aConfig != nullptr && aConfig->mNonce != nullptr && aData != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aHeader != nullptr || aConfig->mHeaderLength == 0, error = kErrorInvalidArgs);
 
     {
         const LiteralKey key(*static_cast<const Key *>(&aConfig->mKey));
