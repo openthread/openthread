@@ -740,11 +740,11 @@ public:
     Error SetCslTimeout(uint32_t aTimeout);
 
     /**
-     * Calculates CSL metric of parent.
+     * Calculates the CSL metric of a parent candidate based on its CSL accuracy.
      *
-     * @param[in] aCslAccuracy The CSL accuracy.
+     * @param[in] aCslAccuracy  The CSL accuracy of the parent candidate.
      *
-     * @returns CSL metric.
+     * @returns The calculated CSL metric (smaller is better).
      */
     uint64_t CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const;
 
