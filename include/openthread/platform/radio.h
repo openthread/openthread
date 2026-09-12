@@ -846,9 +846,11 @@ otRadioState otPlatRadioGetState(otInstance *aInstance);
 /**
  * Enable the radio.
  *
+ * If the radio is already enabled, this function MUST return `OT_ERROR_NONE` with no effect.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval OT_ERROR_NONE     Successfully enabled.
+ * @retval OT_ERROR_NONE     Successfully enabled or is already enabled.
  * @retval OT_ERROR_FAILED   The radio could not be enabled.
  */
 otError otPlatRadioEnable(otInstance *aInstance);
@@ -856,15 +858,24 @@ otError otPlatRadioEnable(otInstance *aInstance);
 /**
  * Disable the radio.
  *
+ * If the radio is already disabled, this function MUST return `OT_ERROR_NONE` with no effect.
+ * Otherwise, the radio MUST be in the Sleep state, or have a pending transition to Sleep (see
+ * `otPlatRadioSleep()`), for it to be disabled successfully.
+ *
+ * Disabling the radio MUST be enacted as soon as possible, aborting any ongoing or scheduled operations.
+ * (Such operations may exist during a pending transition to Sleep state.) These aborted ongoing
+ * operations MUST NOT lead to any callback functions (like `otPlatRadio...Done()`) being called.
+ * When this function returns successfully, the radio MUST be in state `OT_RADIO_STATE_DISABLED`.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval OT_ERROR_NONE            Successfully transitioned to Disabled.
- * @retval OT_ERROR_INVALID_STATE   The radio was not in sleep state.
+ * @retval OT_ERROR_NONE            Successfully transitioned to Disabled, or was already Disabled.
+ * @retval OT_ERROR_INVALID_STATE   The radio is neither in Sleep state nor transitioning to Sleep state.
  */
 otError otPlatRadioDisable(otInstance *aInstance);
 
 /**
- * Check whether radio is enabled or not.
+ * Check whether the radio is enabled or not.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
@@ -886,10 +897,11 @@ bool otPlatRadioIsEnabled(otInstance *aInstance);
  *   `otPlatRadioReceiveDone()` to deliver the received frame (or report reception error) before transitioning
  *   to Sleep.
  *
- * If any subsequent radio state transition function (e.g., `otPlatRadioReceive()` or `otPlatRadioTransmit()`) is
- * called while a scheduled transition to Sleep is pending, the pending Sleep transition MUST be canceled/superseded,
- * and the radio MUST transition to the newly requested state upon completing the ongoing reception and/or ACK
- * transmission.
+ * If any subsequent radio state transition function (e.g., `otPlatRadioTransmit()`, or `otPlatRadioReceive()`
+ * on the same channel) is called while a scheduled transition to Sleep is pending, the pending Sleep transition
+ * MUST be canceled/superseded, and the radio MUST transition to the newly requested state upon completing the
+ * ongoing reception and/or ACK transmission. (Exceptions where the ongoing operation is aborted are documented
+ * in `otPlatRadioReceive()` when changing channel, and in `otPlatRadioDisable()`.)
  *
  * @param[in] aInstance           The OpenThread instance structure.
  *
@@ -901,12 +913,21 @@ bool otPlatRadioIsEnabled(otInstance *aInstance);
 otError otPlatRadioSleep(otInstance *aInstance);
 
 /**
- * Transition the radio from Sleep to Receive (turn on the radio).
+ * Transition the radio from Sleep to Receive (turn on the radio), or change the radio's receive channel.
+ *
+ * If the radio is already in Receive state on `aChannel`, this function MUST return `OT_ERROR_NONE` with no effect
+ * other than canceling any pending transition to Sleep (see `otPlatRadioSleep()`).
+ *
+ * If `aChannel` differs from the current receive channel, the radio MUST transition to the newly requested channel
+ * as soon as possible. The radio SHOULD abort any ongoing operation on the old channel in this case. An ongoing
+ * frame receive operation that is aborted SHOULD be reported via `otPlatRadioReceiveDone()` with `aError` set to
+ * `OT_ERROR_ABORT`.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aChannel   The channel to use for receiving.
  *
- * @retval OT_ERROR_NONE          Successfully transitioned to Receive.
+ * @retval OT_ERROR_NONE          Successfully transitioned to Receive on channel `aChannel`, or was already
+ *                                receiving on `aChannel`.
  * @retval OT_ERROR_INVALID_STATE The radio was disabled or transmitting.
  */
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
@@ -1021,8 +1042,13 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, otRadioTim
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
  * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
- *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
- *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
+ *                       OT_ERROR_ABORT when reception was aborted and a frame was not (fully) received,
+ *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space,
+ *                       OT_ERROR_FCS when a frame was received with an invalid FCS,
+ *                       OT_ERROR_NO_FRAME_RECEIVED when the frame content was missing or malformed,
+ *                       OT_ERROR_DESTINATION_ADDRESS_FILTERED when the frame was filtered out by dest address,
+ *                       OT_ERROR_PARSE when the received frame could not be parsed,
+ *                       OT_ERROR_FAILED when reception failed for any other reason.
  */
 extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
@@ -1036,9 +1062,7 @@ extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, 
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
- * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
- *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
- *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
+ * @param[in]  aError    (as documented in `otPlatRadioReceiveDone()`)
  */
 extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
