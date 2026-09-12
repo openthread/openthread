@@ -93,6 +93,7 @@
 #include <math.h>
 #include <net/if.h>
 #include <net/if_arp.h>
+#include <poll.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -440,6 +441,61 @@ void AddRtAttrUint32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, 
     AddRtAttr(aHeader, aMaxLen, aType, &aData, sizeof(aData));
 }
 
+static otError SendNetlinkMessage(const void *aBuffer, size_t aLength)
+{
+    static constexpr int kPollTimeoutMs = 10;
+    static constexpr int kMaxRetries    = 3;
+
+    otError error   = OT_ERROR_NONE;
+    int     retries = 0;
+
+    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
+
+    while (true)
+    {
+        ssize_t rval = send(sNetlinkFd, aBuffer, aLength, 0);
+
+        if (rval >= 0)
+        {
+            ExitNow();
+        }
+
+        if (errno == EINTR)
+        {
+            continue;
+        }
+
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            struct pollfd pfd;
+            int           pollRet;
+
+            VerifyOrExit(retries++ < kMaxRetries, error = OT_ERROR_BUSY);
+
+            pfd.fd      = sNetlinkFd;
+            pfd.events  = POLLOUT;
+            pfd.revents = 0;
+
+            do
+            {
+                pollRet = poll(&pfd, 1, kPollTimeoutMs);
+            } while (pollRet < 0 && errno == EINTR);
+
+            if ((pollRet > 0 && (pfd.revents & POLLOUT)) || pollRet == 0)
+            {
+                continue;
+            }
+
+            ExitNow(error = OT_ERROR_FAILED);
+        }
+
+        ExitNow(error = OT_ERROR_FAILED);
+    }
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
 static bool IsOmrAddress(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo)
 {
@@ -520,7 +576,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 #endif
     }
 
-    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
+    if (SendNetlinkMessage(&req, req.nh.nlmsg_len) == OT_ERROR_NONE)
     {
         LogInfo("Sent request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
                 Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
@@ -711,11 +767,12 @@ template <size_t N> otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPref
 
     inet_ntop(req.msg.rtm_family, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+    if (error != OT_ERROR_NONE)
     {
-        LogInfo("Failed to send request#%u to add route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
-        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
-        DieNow(OT_EXIT_ERROR_ERRNO);
+        LogInfo("Failed to send request#%u to add route %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
+                otThreadErrorToString(error));
+        ExitNow();
     }
     else
     {
@@ -765,11 +822,12 @@ template <size_t N> otError DeleteRoute(const uint8_t (&aAddress)[N], uint8_t aP
 
     inet_ntop(req.msg.rtm_family, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+    if (error != OT_ERROR_NONE)
     {
-        LogInfo("Failed to send request#%u to delete route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
-        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
-        DieNow(OT_EXIT_ERROR_ERRNO);
+        LogInfo("Failed to send request#%u to delete route %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
+                otThreadErrorToString(error));
+        ExitNow();
     }
     else
     {
@@ -792,6 +850,7 @@ static void AddAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen, uint32_
     } req{};
     unsigned int netifIdx = otSysGetThreadNetifIndex();
     char         addrStrBuf[INET6_ADDRSTRLEN];
+    otError      error;
 
     VerifyOrExit(netifIdx > 0);
     VerifyOrExit(sNetlinkFd >= 0);
@@ -814,10 +873,12 @@ static void AddAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen, uint32_
 
     inet_ntop(AF_INET6, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, req.header.nlmsg_len, 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+
+    if (error != OT_ERROR_NONE)
     {
         LogWarn("Failed to send request#%u to add address label %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
-                strerror(errno));
+                otThreadErrorToString(error));
     }
     else
     {
@@ -839,6 +900,7 @@ static void DeleteAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen)
     } req{};
     unsigned int netifIdx = otSysGetThreadNetifIndex();
     char         addrStrBuf[INET6_ADDRSTRLEN];
+    otError      error;
 
     VerifyOrExit(netifIdx > 0);
     VerifyOrExit(sNetlinkFd >= 0);
@@ -860,10 +922,12 @@ static void DeleteAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen)
 
     inet_ntop(AF_INET6, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, req.header.nlmsg_len, 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+
+    if (error != OT_ERROR_NONE)
     {
         LogWarn("Failed to send request#%u to delete address label %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
-                strerror(errno));
+                otThreadErrorToString(error));
     }
     else
     {
@@ -2261,7 +2325,7 @@ static void SetAddrGenModeToNone(void)
         afSpec->rta_len += afInet6->rta_len;
     }
 
-    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
+    if (SendNetlinkMessage(&req, req.nh.nlmsg_len) == OT_ERROR_NONE)
     {
         LogInfo("Sent request#%u to set addr_gen_mode to %d", sNetlinkSequence, mode);
     }
