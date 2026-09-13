@@ -390,6 +390,30 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         break;
     }
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    case Tlv::kSrpClientCounters:
+    {
+        // Omitted when not an SRP client. Server-only devices are identified via Network Data.
+        SrpClientCountersTlvValue tlvValue;
+        Srp::Client              &srpClient = Get<Srp::Client>();
+        uint8_t                   flags     = 0;
+
+        if (srpClient.IsRunning())
+        {
+            flags |= SrpClientCountersTlvValue::kFlagsRunning;
+        }
+
+        if (srpClient.IsRegistered())
+        {
+            flags |= SrpClientCountersTlvValue::kFlagsRegistered;
+        }
+
+        tlvValue.InitFrom(srpClient.GetCounters(), flags);
+        error = Tlv::Append<SrpClientCountersTlv>(aMessage, tlvValue);
+        break;
+    }
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+
     case Tlv::kVendorName:
         error = Tlv::Append<VendorNameTlv>(aMessage, Get<VendorInfo>().GetName());
         break;
@@ -734,6 +758,12 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Msg &aMsg)
         case Tlv::kMleCounters:
             Get<Mle::Mle>().ResetCounters();
             break;
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        case Tlv::kSrpClientCounters:
+            Get<Srp::Client>().ResetCounters();
+            break;
+#endif
 
         case Tlv::kNonPreferredChannels:
             mNonPreferredChannelsResetCallback.InvokeIfSet();
@@ -1144,6 +1174,15 @@ Error Client::ParseDiagTlv(const Message &aMessage, const Tlv::Info &aTlvInfo, D
 
         SuccessOrExit(error = aTlvInfo.Read<MleCountersTlv>(aMessage, tlvValue));
         tlvValue.Read(aDiagTlv.mData.mMleCounters);
+        break;
+    }
+
+    case Tlv::kSrpClientCounters:
+    {
+        SrpClientCountersTlvValue tlvValue;
+
+        SuccessOrExit(error = aTlvInfo.Read<SrpClientCountersTlv>(aMessage, tlvValue));
+        tlvValue.Read(aDiagTlv.mData.mSrpClientCounters);
         break;
     }
 

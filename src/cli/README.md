@@ -3160,9 +3160,39 @@ Rloc16: 0x1800
 Done
 ```
 
+```bash
+> networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:0c00 45
+> DIAG_GET.rsp/ans: 2d5d03000000000000ee480000000000000000000000000000ee4800000000000124f800000003000000020000000200000000000000000000000000000001000000010000000100000001000000000000000000000000000000000000019c
+SRP Client Counters:
+    Running: yes
+    Registered: yes
+    TxUpdates: 3
+    UpdateAttempts: 2
+    Success: 2
+    RejectedDuplicate: 0
+    RejectedSecurity: 0
+    RejectedOther: 0
+    Timeouts: 1
+    HostAddressChanges: 1
+    ServerChanges: 1
+    ServiceAdds: 1
+    ServiceRemoves: 0
+    ServiceClears: 0
+    HostAndServicesRemoves: 0
+    HostAndServicesClears: 0
+    TxTotalBytes: 412
+    RegisteredTime: 61000
+    AnycastAvailableTime: 0
+    UnicastAvailableTime: 61000
+    TrackedTime: 75000
+Done
+```
+
+A device that is not an SRP client omits TLV 45 from the response.
+
 ### networkdiagnostic reset \<addr\> \<type\> ..
 
-Send network diagnostic request to reset \<addr\>'s tlv of \<type\>s. Currently `MAC Counters`(9) is supported.
+Send network diagnostic request to reset \<addr\>'s tlv of \<type\>s. Currently `MAC Counters`(9), `MLE Counters`(34), `Non-Preferred Channels`(36), and `SRP Client Counters`(45) are supported.
 
 ```bash
 > diagnostic reset fd00:db8::ff:fe00:0 9
