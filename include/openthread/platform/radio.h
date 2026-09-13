@@ -1098,6 +1098,11 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * to indicate that there is activity on the channel. This requirement holds even when the requested
  * transmit channel differs from the channel on which the radio is currently receiving a frame.
  *
+ * An exception to the above requirement is when transmission is scheduled at a specific future time.
+ * In that case, the frame transmission has priority over ongoing reception and the ongoing frame
+ * reception MUST be aborted if the radio determines it cannot finish the frame reception operation
+ * before the scheduled frame transmission is due.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aFrame     A pointer to the frame to be transmitted.
  *
