@@ -214,55 +214,7 @@ template <> otError SrpClient::Process<Cmd("counters")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        struct CounterEntry
-        {
-            const uint32_t otSrpClientCounters::*mValuePtr;
-            const char                          *mName;
-        };
-
-        struct TimeCounterEntry
-        {
-            const uint64_t otSrpClientCounters::*mValuePtr;
-            const char                          *mName;
-        };
-
-        static const CounterEntry kCounters[] = {
-            {&otSrpClientCounters::mTxUpdates, "Tx Updates"},
-            {&otSrpClientCounters::mUpdateAttempts, "Update Attempts"},
-            {&otSrpClientCounters::mSuccess, "Success"},
-            {&otSrpClientCounters::mRejectedDuplicate, "Rejected Duplicate"},
-            {&otSrpClientCounters::mRejectedSecurity, "Rejected Security"},
-            {&otSrpClientCounters::mRejectedOther, "Rejected Other"},
-            {&otSrpClientCounters::mTimeouts, "Timeouts"},
-            {&otSrpClientCounters::mHostAddressChanges, "Host Address Changes"},
-            {&otSrpClientCounters::mServerChanges, "Server Changes"},
-            {&otSrpClientCounters::mServiceAdds, "Service Adds"},
-            {&otSrpClientCounters::mServiceRemoves, "Service Removes"},
-            {&otSrpClientCounters::mServiceClears, "Service Clears"},
-            {&otSrpClientCounters::mHostAndServicesRemoves, "Host And Services Removes"},
-            {&otSrpClientCounters::mHostAndServicesClears, "Host And Services Clears"},
-            {&otSrpClientCounters::mTxTotalBytes, "Tx Total Bytes"},
-        };
-
-        static const TimeCounterEntry kTimeCounters[] = {
-            {&otSrpClientCounters::mRegisteredTime, "Registered Time Milli"},
-            {&otSrpClientCounters::mAnycastAvailableTime, "Anycast Available Time Milli"},
-            {&otSrpClientCounters::mUnicastAvailableTime, "Unicast Available Time Milli"},
-            {&otSrpClientCounters::mTrackedTime, "Tracked Time Milli"},
-        };
-
-        const otSrpClientCounters *counters = otSrpClientGetCounters(GetInstancePtr());
-
-        for (const CounterEntry &entry : kCounters)
-        {
-            OutputLine("%s: %lu", entry.mName, ToUlong(counters->*entry.mValuePtr));
-        }
-
-        for (const TimeCounterEntry &entry : kTimeCounters)
-        {
-            OutputFormat("%s: ", entry.mName);
-            OutputUint64Line(counters->*entry.mValuePtr);
-        }
+        OutputSrpCounters(/* aIndentSize */ 0, *otSrpClientGetCounters(GetInstancePtr()));
     }
     /**
      * @cli srp client counters reset

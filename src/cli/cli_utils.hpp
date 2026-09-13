@@ -43,6 +43,7 @@
 #include <openthread/cli.h>
 #include <openthread/joiner.h>
 #include <openthread/netdiag.h>
+#include <openthread/srp_client.h>
 #include <openthread/thread.h>
 
 #include "cli_config.h"
@@ -357,6 +358,17 @@ public:
      * @param[in] aUint64   The `uint64_t` value to output.
      */
     void OutputUint64Line(uint64_t aUint64);
+
+    /**
+     * Outputs the SRP client counters.
+     *
+     * Used for both the locally read counters (`otSrpClientGetCounters()`) and the counters reported by a remote
+     * device in a Network Diagnostic SRP Client Counters TLV, so that both render identically.
+     *
+     * @param[in] aIndentSize   Number of spaces to indent each outputted line by.
+     * @param[in] aCounters     The SRP client counters to output.
+     */
+    void OutputSrpCounters(uint8_t aIndentSize, const otSrpClientCounters &aCounters);
 
     /**
      * Outputs "Enabled" or "Disabled" status to the CLI console (it also appends newline "\r\n").

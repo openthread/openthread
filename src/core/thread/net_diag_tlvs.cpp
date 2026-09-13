@@ -286,5 +286,57 @@ void MleCountersTlvValue::Read(MleCounters &aDiagMleCounters) const
     aDiagMleCounters.mLeaderTime                    = BigEndian::HostSwap64(mLeaderTime);
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// SrpClientCountersTlvValue
+
+static_assert(sizeof(SrpClientCountersTlvValue) == 92,
+              "SrpClientCountersTlvValue is not 92 bytes - check OT_TOOL_PACKED and field order");
+
+void SrpClientCountersTlvValue::InitFrom(const SrpClientCounters &aCounters)
+{
+    mRegisteredTime         = BigEndian::HostSwap64(aCounters.mRegisteredTime);
+    mAnycastAvailableTime   = BigEndian::HostSwap64(aCounters.mAnycastAvailableTime);
+    mUnicastAvailableTime   = BigEndian::HostSwap64(aCounters.mUnicastAvailableTime);
+    mTrackedTime            = BigEndian::HostSwap64(aCounters.mTrackedTime);
+    mTxUpdates              = BigEndian::HostSwap32(aCounters.mTxUpdates);
+    mUpdateAttempts         = BigEndian::HostSwap32(aCounters.mUpdateAttempts);
+    mSuccess                = BigEndian::HostSwap32(aCounters.mSuccess);
+    mRejectedDuplicate      = BigEndian::HostSwap32(aCounters.mRejectedDuplicate);
+    mRejectedSecurity       = BigEndian::HostSwap32(aCounters.mRejectedSecurity);
+    mRejectedOther          = BigEndian::HostSwap32(aCounters.mRejectedOther);
+    mTimeouts               = BigEndian::HostSwap32(aCounters.mTimeouts);
+    mHostAddressChanges     = BigEndian::HostSwap32(aCounters.mHostAddressChanges);
+    mServerChanges          = BigEndian::HostSwap32(aCounters.mServerChanges);
+    mServiceAdds            = BigEndian::HostSwap32(aCounters.mServiceAdds);
+    mServiceRemoves         = BigEndian::HostSwap32(aCounters.mServiceRemoves);
+    mServiceClears          = BigEndian::HostSwap32(aCounters.mServiceClears);
+    mHostAndServicesRemoves = BigEndian::HostSwap32(aCounters.mHostAndServicesRemoves);
+    mHostAndServicesClears  = BigEndian::HostSwap32(aCounters.mHostAndServicesClears);
+    mTxTotalBytes           = BigEndian::HostSwap32(aCounters.mTxTotalBytes);
+}
+
+void SrpClientCountersTlvValue::Read(SrpClientCounters &aDiagCounters) const
+{
+    aDiagCounters.mRegisteredTime         = BigEndian::HostSwap64(mRegisteredTime);
+    aDiagCounters.mAnycastAvailableTime   = BigEndian::HostSwap64(mAnycastAvailableTime);
+    aDiagCounters.mUnicastAvailableTime   = BigEndian::HostSwap64(mUnicastAvailableTime);
+    aDiagCounters.mTrackedTime            = BigEndian::HostSwap64(mTrackedTime);
+    aDiagCounters.mTxUpdates              = BigEndian::HostSwap32(mTxUpdates);
+    aDiagCounters.mUpdateAttempts         = BigEndian::HostSwap32(mUpdateAttempts);
+    aDiagCounters.mSuccess                = BigEndian::HostSwap32(mSuccess);
+    aDiagCounters.mRejectedDuplicate      = BigEndian::HostSwap32(mRejectedDuplicate);
+    aDiagCounters.mRejectedSecurity       = BigEndian::HostSwap32(mRejectedSecurity);
+    aDiagCounters.mRejectedOther          = BigEndian::HostSwap32(mRejectedOther);
+    aDiagCounters.mTimeouts               = BigEndian::HostSwap32(mTimeouts);
+    aDiagCounters.mHostAddressChanges     = BigEndian::HostSwap32(mHostAddressChanges);
+    aDiagCounters.mServerChanges          = BigEndian::HostSwap32(mServerChanges);
+    aDiagCounters.mServiceAdds            = BigEndian::HostSwap32(mServiceAdds);
+    aDiagCounters.mServiceRemoves         = BigEndian::HostSwap32(mServiceRemoves);
+    aDiagCounters.mServiceClears          = BigEndian::HostSwap32(mServiceClears);
+    aDiagCounters.mHostAndServicesRemoves = BigEndian::HostSwap32(mHostAndServicesRemoves);
+    aDiagCounters.mHostAndServicesClears  = BigEndian::HostSwap32(mHostAndServicesClears);
+    aDiagCounters.mTxTotalBytes           = BigEndian::HostSwap32(mTxTotalBytes);
+}
+
 } // namespace NetDiag
 } // namespace ot

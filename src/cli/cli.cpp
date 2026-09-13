@@ -7758,6 +7758,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * - `42`: Border Router Local On-link Prefix TLV
      * - `43`: Border Router Favored On-link Prefix TLV
      * - `44`: Vendor OUI TLV
+     * - `45`: SRP Client Counters TLV
      *
      * @par
      * Sends a network diagnostic request to retrieve specified Type Length Values (TLVs)
@@ -7782,8 +7783,8 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * @par
      * Sends a network diagnostic request to reset the specified Type Length Values (TLVs)
      * on the specified address(es). This command only supports the
-     * following TLV values: `9` (MAC Counters TLV) or `34` (MLE
-     * Counters TLV)
+     * following TLV values: `9` (MAC Counters TLV), `34` (MLE
+     * Counters TLV), `36` (Non-Preferred Channels TLV), or `45` (SRP Client Counters TLV)
      * @sa otThreadSendDiagnosticReset
      */
     else if (aArgs[0] == "reset")
@@ -7889,6 +7890,10 @@ void Interpreter::HandleDiagnosticGetResponse(otError              aError,
         case OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS:
             OutputLine("MLE Counters:");
             OutputNetworkDiagMleCounters(kIndentSize, diagTlv.mData.mMleCounters);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_SRP_CLIENT_COUNTERS:
+            OutputLine("SRP Client Counters:");
+            OutputSrpCounters(kIndentSize, diagTlv.mData.mSrpClientCounters);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL:
             OutputLine("Battery Level: %u%%", diagTlv.mData.mBatteryLevel);

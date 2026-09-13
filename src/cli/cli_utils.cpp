@@ -162,6 +162,57 @@ void Utils::OutputUint64Line(uint64_t aUint64)
     OutputNewLine();
 }
 
+void Utils::OutputSrpCounters(uint8_t aIndentSize, const otSrpClientCounters &aCounters)
+{
+    struct CounterEntry
+    {
+        const uint32_t otSrpClientCounters::*mValuePtr;
+        const char                          *mName;
+    };
+
+    struct TimeCounterEntry
+    {
+        const uint64_t otSrpClientCounters::*mValuePtr;
+        const char                          *mName;
+    };
+
+    static const CounterEntry kCounters[] = {
+        {&otSrpClientCounters::mTxUpdates, "Tx Updates"},
+        {&otSrpClientCounters::mUpdateAttempts, "Update Attempts"},
+        {&otSrpClientCounters::mSuccess, "Success"},
+        {&otSrpClientCounters::mRejectedDuplicate, "Rejected Duplicate"},
+        {&otSrpClientCounters::mRejectedSecurity, "Rejected Security"},
+        {&otSrpClientCounters::mRejectedOther, "Rejected Other"},
+        {&otSrpClientCounters::mTimeouts, "Timeouts"},
+        {&otSrpClientCounters::mHostAddressChanges, "Host Address Changes"},
+        {&otSrpClientCounters::mServerChanges, "Server Changes"},
+        {&otSrpClientCounters::mServiceAdds, "Service Adds"},
+        {&otSrpClientCounters::mServiceRemoves, "Service Removes"},
+        {&otSrpClientCounters::mServiceClears, "Service Clears"},
+        {&otSrpClientCounters::mHostAndServicesRemoves, "Host And Services Removes"},
+        {&otSrpClientCounters::mHostAndServicesClears, "Host And Services Clears"},
+        {&otSrpClientCounters::mTxTotalBytes, "Tx Total Bytes"},
+    };
+
+    static const TimeCounterEntry kTimeCounters[] = {
+        {&otSrpClientCounters::mRegisteredTime, "Registered Time Milli"},
+        {&otSrpClientCounters::mAnycastAvailableTime, "Anycast Available Time Milli"},
+        {&otSrpClientCounters::mUnicastAvailableTime, "Unicast Available Time Milli"},
+        {&otSrpClientCounters::mTrackedTime, "Tracked Time Milli"},
+    };
+
+    for (const CounterEntry &entry : kCounters)
+    {
+        OutputLine(aIndentSize, "%s: %lu", entry.mName, ToUlong(aCounters.*entry.mValuePtr));
+    }
+
+    for (const TimeCounterEntry &entry : kTimeCounters)
+    {
+        OutputFormat(aIndentSize, "%s: ", entry.mName);
+        OutputUint64Line(aCounters.*entry.mValuePtr);
+    }
+}
+
 void Utils::OutputEnabledDisabledStatus(bool aEnabled) { OutputLine(aEnabled ? "Enabled" : "Disabled"); }
 
 void Utils::OutputMsecDurationInSec(uint32_t aMsecDuration)

@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/netdiag.h>
+#include <openthread/srp_client.h>
 #include <openthread/thread.h>
 
 #include "common/as_core_type.hpp"
@@ -106,6 +107,7 @@ public:
         kBrLocalOnlinkPrefix   = OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX,
         kBrFavoredOnLinkPrefix = OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX,
         kVendorOui             = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_OUI,
+        kSrpClientCounters     = OT_NETWORK_DIAGNOSTIC_TLV_SRP_CLIENT_COUNTERS,
     };
 
     /**
@@ -915,6 +917,59 @@ private:
  * Defines MLE Counters TLV constants and types.
  */
 typedef SimpleTlvInfo<Tlv::kMleCounters, MleCountersTlvValue> MleCountersTlv;
+
+/**
+ * Represents the SRP Client Counters.
+ */
+typedef otSrpClientCounters SrpClientCounters;
+
+/**
+ * Implements SRP Client Counters TLV value generation and parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class SrpClientCountersTlvValue
+{
+public:
+    /**
+     * Initializes the TLV value.
+     *
+     * @param[in] aCounters   The SRP client counters to initialize the TLV with.
+     */
+    void InitFrom(const SrpClientCounters &aCounters);
+
+    /**
+     * Reads the counters from the TLV value.
+     *
+     * @param[out] aDiagCounters   A reference to `NetDiag::SrpClientCounters` to populate.
+     */
+    void Read(SrpClientCounters &aDiagCounters) const;
+
+private:
+    uint64_t mRegisteredTime;         // Milliseconds spent in the registered state.
+    uint64_t mAnycastAvailableTime;   // Subset of registered time with an anycast server.
+    uint64_t mUnicastAvailableTime;   // Subset of registered time with a unicast server.
+    uint64_t mTrackedTime;            // Milliseconds tracked, across all client states.
+    uint32_t mTxUpdates;              // SRP update transmissions (wire-level).
+    uint32_t mUpdateAttempts;         // Fresh SRP update transactions started.
+    uint32_t mSuccess;                // Transactions with a successful server response.
+    uint32_t mRejectedDuplicate;      // Transactions rejected with a name/record conflict.
+    uint32_t mRejectedSecurity;       // Transactions rejected for security/policy/algorithm.
+    uint32_t mRejectedOther;          // Transactions rejected with any other server error.
+    uint32_t mTimeouts;               // Retransmission timers expired before a response.
+    uint32_t mHostAddressChanges;     // Host-address changes triggering re-registration.
+    uint32_t mServerChanges;          // Auto-start server (re-)selections.
+    uint32_t mServiceAdds;            // Services successfully added.
+    uint32_t mServiceRemoves;         // Services removed (unregister sent to server).
+    uint32_t mServiceClears;          // Services cleared (local-only).
+    uint32_t mHostAndServicesRemoves; // Host and all services removed.
+    uint32_t mHostAndServicesClears;  // Host and all services cleared (local-only).
+    uint32_t mTxTotalBytes;           // UDP payload bytes of transmitted SRP messages.
+} OT_TOOL_PACKED_END;
+
+/**
+ * Defines SRP Client Counters TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kSrpClientCounters, SrpClientCountersTlvValue> SrpClientCountersTlv;
 
 } // namespace NetDiag
 

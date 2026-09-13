@@ -44,6 +44,7 @@
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
+#include <openthread/srp_client.h>
 #include <openthread/thread.h>
 #include <openthread/platform/radio.h>
 
@@ -95,6 +96,7 @@ extern "C" {
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX 42     ///< Border Router Local On-link Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX 43   ///< Border Router Favored On-link Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_OUI 44             ///< Vendor OUI TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_SRP_CLIENT_COUNTERS 45    ///< SRP Client Counters TLV
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH 32         ///< Max length of Vendor Model TLV.
@@ -340,6 +342,7 @@ typedef struct otNetworkDiagTlv
         otNetworkDiagIp6AddrList  mIp6AddrList;
         otNetworkDiagMacCounters  mMacCounters;
         otNetworkDiagMleCounters  mMleCounters;
+        otSrpClientCounters       mSrpClientCounters;
         uint8_t                   mBatteryLevel;
         uint16_t                  mSupplyVoltage;
         uint32_t                  mMaxChildTimeout;
