@@ -570,7 +570,8 @@ public:
      *
      * @param[in]  aChannel   The channel to use for receiving.
      *
-     * @retval kErrorNone          Successfully transitioned to Receive, or was already in Receive state.
+     * @retval kErrorNone          Successfully transitioned to Receive on channel @p aChannel, or was already
+     *                             receiving on channel @p aChannel.
      * @retval kErrorInvalidState  The radio was disabled or transmitting.
      */
     Error Receive(uint8_t aChannel);
