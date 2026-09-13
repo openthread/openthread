@@ -449,7 +449,7 @@ typedef enum otRadioState
  *  |          |<-----------|       |<-----------|         |<--------------|          |
  *  +----------+  Disable() +-------+   Sleep()  +---------+   Receive()   +----------+
  *                                    (Radio OFF)                 or
- *                                                        signal TransmitDone
+ *                                                          signal TxDone()
  *
  * During the IEEE 802.15.4 data request command the transition Sleep->Receive->Transmit
  * can be shortened to direct transition from Sleep to Transmit if the platform supports
@@ -919,15 +919,18 @@ otError otPlatRadioSleep(otInstance *aInstance);
  * other than canceling any pending transition to Sleep (see `otPlatRadioSleep()`).
  *
  * If `aChannel` differs from the current receive channel, the radio MUST transition to the newly requested channel
- * as soon as possible. The radio SHOULD abort any ongoing operation on the old channel in this case. An ongoing
- * frame receive operation that is aborted SHOULD be reported via `otPlatRadioReceiveDone()` with `aError` set to
- * `OT_ERROR_ABORT`.
+ * as soon as possible if the radio is idle (not receiving a frame) on its current receive channel.
+ * If the radio is receiving a frame, the ongoing receive operation SHOULD be completed first before switching to
+ * `aChannel`. In this case, the channel change is scheduled to occur right after frame reception is done.
+ * In the exceptional case that a frame receive operation is aborted, this event SHOULD be reported via
+ * `otPlatRadioReceiveDone()` with `aError` set to `OT_ERROR_ABORT`.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aChannel   The channel to use for receiving.
  *
  * @retval OT_ERROR_NONE          Successfully transitioned to Receive on channel `aChannel`, or was already
- *                                receiving on `aChannel`.
+ *                                receiving on `aChannel`, or successfully scheduled the transition to Receive on
+ *                                channel `aChannel` after the ongoing operation on the current channel completes.
  * @retval OT_ERROR_INVALID_STATE The radio was disabled or transmitting.
  */
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
@@ -1040,7 +1043,8 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, otRadioTim
  * The radio driver calls this function to notify OpenThread of a received frame.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
+ * @param[in]  aFrame    A pointer to the received frame when @p aError is `OT_ERROR_NONE`, or NULL if the
+ *                       receive operation failed, was aborted, or resulted in an invalid frame.
  * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
  *                       OT_ERROR_ABORT when reception was aborted and a frame was not (fully) received,
  *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space,
@@ -1061,7 +1065,7 @@ extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, 
  * Is used when diagnostics is enabled.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
+ * @param[in]  aFrame    (as documented in `otPlatRadioReceiveDone()`)
  * @param[in]  aError    (as documented in `otPlatRadioReceiveDone()`)
  */
 extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
@@ -1088,6 +1092,11 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  *    - Receive if RX is on when the device is idle or OT_RADIO_CAPS_SLEEP_TO_TX is not supported
  *    - Sleep if RX is off when the device is idle and OT_RADIO_CAPS_SLEEP_TO_TX is supported.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
+ *
+ * If the radio is actively receiving a frame when this call is made, `OT_ERROR_NONE` is returned and
+ * subsequently `otPlatRadioTxDone()` SHOULD be called with `aError` value `OT_ERROR_CHANNEL_ACCESS_FAILURE`
+ * to indicate that there is activity on the channel. This requirement holds even when the requested
+ * transmit channel differs from the channel on which the radio is currently receiving a frame.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aFrame     A pointer to the frame to be transmitted.
