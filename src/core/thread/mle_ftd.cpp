@@ -2355,7 +2355,7 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         case kErrorNotFound:
             break;
         default:
-            ExitNow(error = kErrorNone);
+            ExitNow(error = kErrorParse);
         }
 
         switch (Tlv::Find<CslChannelTlv>(aRxInfo.mMessage, cslChannelTlvValue))
