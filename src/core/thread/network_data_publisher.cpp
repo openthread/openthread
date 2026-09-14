@@ -54,6 +54,11 @@ Publisher::Publisher(Instance &aInstance)
 #endif
 #endif
     , mTimer(aInstance)
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_SHARE_ADD_DELAY
+    , mAddTime(0)
+    , mHasAddTime(false)
+    , mSharingAddTime(false)
+#endif
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     // Since the `PrefixEntry` type is used in an array,
@@ -219,8 +224,42 @@ void Publisher::NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
+TimeMilli Publisher::DetermineAddTime(TimeMilli aNow)
+{
+    // Determines when an entry that just became eligible should be added.
+    //
+    // The randomized delay decorrelates devices that independently race to publish a
+    // matching entry, which only requires the delay to differ between devices. Drawing it
+    // per entry additionally scatters one device's own entries in time, and since each
+    // landing is a distinct Network Data change, each one costs a separate
+    // `SRV_DATA.ntf` registration to the Leader plus a Network Data propagation to the
+    // whole mesh.
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_SHARE_ADD_DELAY
+    if (mSharingAddTime)
+    {
+        if (!mHasAddTime)
+        {
+            mAddTime    = aNow + Random::NonCrypto::GenerateInClosedRange<uint32_t>(1, kMaxDelayToAdd);
+            mHasAddTime = true;
+        }
+
+        return mAddTime;
+    }
+#endif
+
+    return aNow + Random::NonCrypto::GenerateInClosedRange<uint32_t>(1, kMaxDelayToAdd);
+}
+
 void Publisher::HandleNotifierEvents(Events aEvents)
 {
+    // Entries becoming eligible during this pass share one add time. The shared time is
+    // valid only for the duration of the pass (see `DetermineAddTime()`).
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_SHARE_ADD_DELAY
+    mSharingAddTime = true;
+    mHasAddTime     = false;
+#endif
+
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     mDnsSrpServiceEntry.HandleNotifierEvents(aEvents);
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
@@ -233,6 +272,10 @@ void Publisher::HandleNotifierEvents(Events aEvents)
     {
         entry.HandleNotifierEvents(aEvents);
     }
+#endif
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_SHARE_ADD_DELAY
+    mSharingAddTime = false;
 #endif
 }
 
@@ -305,7 +348,7 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
 
         if (aNumEntries < aDesiredNumEntries)
         {
-            mUpdateTime = now + Random::NonCrypto::GenerateInClosedRange<uint32_t>(1, kMaxDelayToAdd);
+            mUpdateTime = Get<Publisher>().DetermineAddTime(now);
             SetState(kAdding);
             Get<Publisher>().GetTimer().FireAtIfEarlier(mUpdateTime);
             LogUpdateTime(now);

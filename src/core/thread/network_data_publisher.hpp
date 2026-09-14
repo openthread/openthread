@@ -350,7 +350,6 @@ private:
         };
 
         // All intervals are in milliseconds.
-        static constexpr uint32_t kMaxDelayToAdd    = OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_ADD;
         static constexpr uint32_t kMaxDelayToRemove = OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_REMOVE;
         static constexpr uint32_t kExtraDelayToRemovePreferred =
             OPENTHREAD_CONFIG_NETDATA_PUBLISHER_EXTRA_DELAY_TIME_TO_REMOVE_PREFERRED;
@@ -560,6 +559,10 @@ private:
     void        HandleNotifierEvents(Events aEvents);
     void        HandleTimer(void);
 
+    static constexpr uint32_t kMaxDelayToAdd = OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_ADD;
+
+    TimeMilli DetermineAddTime(TimeMilli aNow);
+
     using PublisherTimer = TimerMilliIn<Publisher, &Publisher::HandleTimer>;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -575,6 +578,11 @@ private:
 #endif
 
     PublisherTimer mTimer;
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_SHARE_ADD_DELAY
+    TimeMilli mAddTime;
+    bool      mHasAddTime;
+    bool      mSharingAddTime;
+#endif
 };
 
 } // namespace NetworkData
