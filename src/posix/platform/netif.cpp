@@ -568,6 +568,70 @@ static bool IsOmrAddress(otInstance *aInstance, const otIp6AddressInfo &aAddress
 }
 #endif
 
+struct PendingRemoveAddress
+{
+    bool Matches(const otIp6AddressInfo &aAddressInfo) const
+    {
+        return (mPrefixLength == aAddressInfo.mPrefixLength) &&
+               (memcmp(&mAddress, aAddressInfo.mAddress, sizeof(otIp6Address)) == 0);
+    }
+
+    otIp6Address mAddress;
+    uint8_t      mPrefixLength;
+    uint8_t      mScope;
+};
+
+static constexpr size_t     kMaxPendingRemoveAddrs = 4;
+static PendingRemoveAddress sPendingRemoveAddrs[kMaxPendingRemoveAddrs];
+static size_t               sPendingRemoveAddrsCount = 0;
+
+static void SendDeleteAddress(const PendingRemoveAddress &aAddress)
+{
+    struct
+    {
+        struct nlmsghdr  nh;
+        struct ifaddrmsg ifa;
+        char             buf[512];
+    } req;
+
+    memset(&req, 0, sizeof(req));
+
+    req.nh.nlmsg_len   = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
+    req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
+    req.nh.nlmsg_type  = RTM_DELADDR;
+    req.nh.nlmsg_pid   = 0;
+    req.nh.nlmsg_seq   = ++sNetlinkSequence;
+
+    req.ifa.ifa_family    = AF_INET6;
+    req.ifa.ifa_prefixlen = aAddress.mPrefixLength;
+    req.ifa.ifa_flags     = IFA_F_NODAD;
+    req.ifa.ifa_scope     = aAddress.mScope;
+    req.ifa.ifa_index     = gNetifIndex;
+
+    AddRtAttr(&req.nh, sizeof(req), IFA_LOCAL, &aAddress.mAddress, sizeof(aAddress.mAddress));
+
+    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
+    {
+        LogInfo("Sent request#%u to remove %s/%u", sNetlinkSequence, Ip6AddressString(&aAddress.mAddress).AsCString(),
+                aAddress.mPrefixLength);
+    }
+    else
+    {
+        LogWarn("Failed to send request#%u to remove %s/%u", sNetlinkSequence,
+                Ip6AddressString(&aAddress.mAddress).AsCString(), aAddress.mPrefixLength);
+    }
+}
+
+static void FlushPendingRemoveAddresses(void)
+{
+    for (size_t i = 0; i < sPendingRemoveAddrsCount; i++)
+    {
+        SendDeleteAddress(sPendingRemoveAddrs[i]);
+    }
+
+    sPendingRemoveAddrsCount = 0;
+}
+
 static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -580,11 +644,55 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
         char             buf[512];
     } req;
 
+    if (!aIsAdded)
+    {
+        // Defer deletion to give an immediate address property update (e.g., preferred status
+        // change) a chance to update the address in-place using NLM_F_REPLACE without route churn.
+        for (size_t i = 0; i < sPendingRemoveAddrsCount; i++)
+        {
+            if (sPendingRemoveAddrs[i].Matches(aAddressInfo))
+            {
+                ExitNow();
+            }
+        }
+
+        if (sPendingRemoveAddrsCount == kMaxPendingRemoveAddrs)
+        {
+            SendDeleteAddress(sPendingRemoveAddrs[0]);
+            for (size_t i = 1; i < sPendingRemoveAddrsCount; i++)
+            {
+                sPendingRemoveAddrs[i - 1] = sPendingRemoveAddrs[i];
+            }
+            sPendingRemoveAddrsCount--;
+        }
+
+        sPendingRemoveAddrs[sPendingRemoveAddrsCount].mAddress      = *aAddressInfo.mAddress;
+        sPendingRemoveAddrs[sPendingRemoveAddrsCount].mPrefixLength = aAddressInfo.mPrefixLength;
+        sPendingRemoveAddrs[sPendingRemoveAddrsCount].mScope        = aAddressInfo.mScope;
+        sPendingRemoveAddrsCount++;
+
+        ExitNow();
+    }
+
+    // Check if this address was queued for pending removal and cancel it to update in-place.
+    for (size_t i = 0; i < sPendingRemoveAddrsCount; i++)
+    {
+        if (sPendingRemoveAddrs[i].Matches(aAddressInfo))
+        {
+            for (size_t j = i + 1; j < sPendingRemoveAddrsCount; j++)
+            {
+                sPendingRemoveAddrs[j - 1] = sPendingRemoveAddrs[j];
+            }
+            sPendingRemoveAddrsCount--;
+            break;
+        }
+    }
+
     memset(&req, 0, sizeof(req));
 
     req.nh.nlmsg_len   = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
-    req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | (aIsAdded ? (NLM_F_CREATE | NLM_F_EXCL) : 0);
-    req.nh.nlmsg_type  = aIsAdded ? RTM_NEWADDR : RTM_DELADDR;
+    req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_REPLACE;
+    req.nh.nlmsg_type  = RTM_NEWADDR;
     req.nh.nlmsg_pid   = 0;
     req.nh.nlmsg_seq   = ++sNetlinkSequence;
 
@@ -596,12 +704,12 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 
     AddRtAttr(&req.nh, sizeof(req), IFA_LOCAL, aAddressInfo.mAddress, sizeof(*aAddressInfo.mAddress));
 
-    if (!aAddressInfo.mPreferred || aAddressInfo.mScope == kLinkLocalScope)
     {
         struct ifa_cacheinfo cacheinfo;
 
         memset(&cacheinfo, 0, sizeof(cacheinfo));
-        cacheinfo.ifa_valid = UINT32_MAX;
+        cacheinfo.ifa_valid    = UINT32_MAX;
+        cacheinfo.ifa_prefered = (aAddressInfo.mPreferred && aAddressInfo.mScope != kLinkLocalScope) ? UINT32_MAX : 0;
 
         AddRtAttr(&req.nh, sizeof(req), IFA_CACHEINFO, &cacheinfo, sizeof(cacheinfo));
     }
@@ -611,10 +719,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
     {
         // Remove prefix route for OMR address if `OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE` is enabled to
         // avoid having two routes.
-        if (aIsAdded)
-        {
-            AddRtAttrUint32(&req.nh, sizeof(req), IFA_FLAGS, IFA_F_NOPREFIXROUTE);
-        }
+        AddRtAttrUint32(&req.nh, sizeof(req), IFA_FLAGS, IFA_F_NOPREFIXROUTE);
     }
     else
 #endif
@@ -641,14 +746,17 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 
     if (SendNetlinkMessage(&req, req.nh.nlmsg_len) == OT_ERROR_NONE)
     {
-        LogInfo("Sent request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
+        LogInfo("Sent request#%u to add/replace %s/%u", sNetlinkSequence,
                 Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
     }
     else
     {
-        LogWarn("Failed to send request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
+        LogWarn("Failed to send request#%u to add/replace %s/%u", sNetlinkSequence,
                 Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
     }
+
+exit:
+    return;
 }
 
 #pragma GCC diagnostic pop
@@ -2678,6 +2786,10 @@ void platformNetifTearDown(void) {}
 
 void platformNetifDeinit(void)
 {
+#ifdef __linux__
+    FlushPendingRemoveAddresses();
+#endif
+
     if (sTunFd != -1)
     {
         close(sTunFd);
@@ -2719,6 +2831,10 @@ void platformNetifUpdateFdSet(ot::Posix::Mainloop::Context *aContext)
 {
     VerifyOrExit(gNetifIndex > 0);
 
+#ifdef __linux__
+    FlushPendingRemoveAddresses();
+#endif
+
     assert(aContext != nullptr);
     assert(sTunFd >= 0);
     assert(sNetlinkFd >= 0);
@@ -2747,6 +2863,10 @@ void platformNetifProcess(const ot::Posix::Mainloop::Context *aContext)
 {
     assert(aContext != nullptr);
     VerifyOrExit(gNetifIndex > 0);
+
+#ifdef __linux__
+    FlushPendingRemoveAddresses();
+#endif
 
     if (ot::Posix::Mainloop::HasFdErrored(sTunFd, *aContext))
     {
