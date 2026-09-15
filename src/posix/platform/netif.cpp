@@ -440,6 +440,125 @@ void AddRtAttrUint32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, 
     AddRtAttr(aHeader, aMaxLen, aType, &aData, sizeof(aData));
 }
 
+struct PendingNetlinkTxQueue
+{
+    static constexpr size_t kMaxBufferSize = 512;
+    static constexpr size_t kMaxEntries    = 16;
+
+    struct Entry
+    {
+        uint16_t mLength;
+        alignas(struct nlmsghdr) uint8_t mBuffer[kMaxBufferSize];
+    };
+
+    bool IsEmpty(void) const { return mCount == 0; }
+    bool IsFull(void) const { return mCount == kMaxEntries; }
+
+    void Clear(void)
+    {
+        mHead  = 0;
+        mCount = 0;
+    }
+
+    const Entry &Front(void) const { return mEntries[mHead]; }
+
+    void PopFront(void)
+    {
+        mHead = (mHead + 1) % kMaxEntries;
+        mCount--;
+    }
+
+    void PushBack(const void *aBuffer, size_t aLength)
+    {
+        Entry &entry = mEntries[(mHead + mCount) % kMaxEntries];
+
+        memcpy(entry.mBuffer, aBuffer, aLength);
+        entry.mLength = static_cast<uint16_t>(aLength);
+        mCount++;
+    }
+
+    Entry  mEntries[kMaxEntries];
+    size_t mHead  = 0;
+    size_t mCount = 0;
+};
+
+static PendingNetlinkTxQueue sPendingNetlinkTxQueue;
+
+static void ProcessPendingNetlinkTx(void)
+{
+    VerifyOrExit(sNetlinkFd >= 0);
+
+    while (!sPendingNetlinkTxQueue.IsEmpty())
+    {
+        const PendingNetlinkTxQueue::Entry &entry = sPendingNetlinkTxQueue.Front();
+        ssize_t                             rval;
+
+        do
+        {
+            rval = send(sNetlinkFd, entry.mBuffer, entry.mLength, 0);
+        } while (rval < 0 && errno == EINTR);
+
+        if (rval < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                ExitNow();
+            }
+
+            uint32_t seq = 0;
+
+            if (entry.mLength >= sizeof(struct nlmsghdr))
+            {
+                seq = reinterpret_cast<const struct nlmsghdr *>(entry.mBuffer)->nlmsg_seq;
+            }
+
+            LogWarn("Failed to send queued netlink message#%u: %s", seq, strerror(errno));
+        }
+
+        sPendingNetlinkTxQueue.PopFront();
+    }
+
+exit:
+    return;
+}
+
+static otError SendNetlinkMessage(const void *aBuffer, size_t aLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(aLength <= PendingNetlinkTxQueue::kMaxBufferSize, error = OT_ERROR_INVALID_ARGS);
+
+    ProcessPendingNetlinkTx();
+
+    if (sPendingNetlinkTxQueue.IsEmpty())
+    {
+        ssize_t rval;
+
+        do
+        {
+            rval = send(sNetlinkFd, aBuffer, aLength, 0);
+        } while (rval < 0 && errno == EINTR);
+
+        if (rval >= 0)
+        {
+            ExitNow();
+        }
+
+        if (errno != EAGAIN && errno != EWOULDBLOCK)
+        {
+            ExitNow(error = OT_ERROR_FAILED);
+        }
+    }
+
+    VerifyOrExit(!sPendingNetlinkTxQueue.IsFull(), error = OT_ERROR_BUSY);
+
+    sPendingNetlinkTxQueue.PushBack(aBuffer, aLength);
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
 static bool IsOmrAddress(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo)
 {
@@ -520,7 +639,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 #endif
     }
 
-    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
+    if (SendNetlinkMessage(&req, req.nh.nlmsg_len) == OT_ERROR_NONE)
     {
         LogInfo("Sent request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
                 Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
@@ -711,11 +830,12 @@ template <size_t N> otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPref
 
     inet_ntop(req.msg.rtm_family, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+    if (error != OT_ERROR_NONE)
     {
-        LogInfo("Failed to send request#%u to add route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
-        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
-        DieNow(OT_EXIT_ERROR_ERRNO);
+        LogInfo("Failed to send request#%u to add route %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
+                otThreadErrorToString(error));
+        ExitNow();
     }
     else
     {
@@ -765,11 +885,12 @@ template <size_t N> otError DeleteRoute(const uint8_t (&aAddress)[N], uint8_t aP
 
     inet_ntop(req.msg.rtm_family, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+    if (error != OT_ERROR_NONE)
     {
-        LogInfo("Failed to send request#%u to delete route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
-        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
-        DieNow(OT_EXIT_ERROR_ERRNO);
+        LogInfo("Failed to send request#%u to delete route %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
+                otThreadErrorToString(error));
+        ExitNow();
     }
     else
     {
@@ -792,6 +913,7 @@ static void AddAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen, uint32_
     } req{};
     unsigned int netifIdx = otSysGetThreadNetifIndex();
     char         addrStrBuf[INET6_ADDRSTRLEN];
+    otError      error;
 
     VerifyOrExit(netifIdx > 0);
     VerifyOrExit(sNetlinkFd >= 0);
@@ -814,10 +936,12 @@ static void AddAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen, uint32_
 
     inet_ntop(AF_INET6, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, req.header.nlmsg_len, 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+
+    if (error != OT_ERROR_NONE)
     {
         LogWarn("Failed to send request#%u to add address label %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
-                strerror(errno));
+                otThreadErrorToString(error));
     }
     else
     {
@@ -839,6 +963,7 @@ static void DeleteAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen)
     } req{};
     unsigned int netifIdx = otSysGetThreadNetifIndex();
     char         addrStrBuf[INET6_ADDRSTRLEN];
+    otError      error;
 
     VerifyOrExit(netifIdx > 0);
     VerifyOrExit(sNetlinkFd >= 0);
@@ -860,10 +985,12 @@ static void DeleteAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen)
 
     inet_ntop(AF_INET6, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, req.header.nlmsg_len, 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+
+    if (error != OT_ERROR_NONE)
     {
         LogWarn("Failed to send request#%u to delete address label %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
-                strerror(errno));
+                otThreadErrorToString(error));
     }
     else
     {
@@ -2261,7 +2388,7 @@ static void SetAddrGenModeToNone(void)
         afSpec->rta_len += afInet6->rta_len;
     }
 
-    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
+    if (SendNetlinkMessage(&req, req.nh.nlmsg_len) == OT_ERROR_NONE)
     {
         LogInfo("Sent request#%u to set addr_gen_mode to %d", sNetlinkSequence, mode);
     }
@@ -2573,6 +2700,10 @@ void platformNetifDeinit(void)
         sNetlinkFd = -1;
     }
 
+#ifdef __linux__
+    sPendingNetlinkTxQueue.Clear();
+#endif
+
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     if (sMLDMonitorFd != -1)
     {
@@ -2597,6 +2728,12 @@ void platformNetifUpdateFdSet(ot::Posix::Mainloop::Context *aContext)
     ot::Posix::Mainloop::AddToErrorFdSet(sTunFd, *aContext);
     ot::Posix::Mainloop::AddToReadFdSet(sNetlinkFd, *aContext);
     ot::Posix::Mainloop::AddToErrorFdSet(sNetlinkFd, *aContext);
+#ifdef __linux__
+    if (!sPendingNetlinkTxQueue.IsEmpty())
+    {
+        ot::Posix::Mainloop::AddToWriteFdSet(sNetlinkFd, *aContext);
+    }
+#endif
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     ot::Posix::Mainloop::AddToReadFdSet(sMLDMonitorFd, *aContext);
     ot::Posix::Mainloop::AddToErrorFdSet(sMLDMonitorFd, *aContext);
@@ -2640,6 +2777,13 @@ void platformNetifProcess(const ot::Posix::Mainloop::Context *aContext)
     {
         processNetlinkEvent(gInstance);
     }
+
+#ifdef __linux__
+    if (ot::Posix::Mainloop::IsFdWritable(sNetlinkFd, *aContext))
+    {
+        ProcessPendingNetlinkTx();
+    }
+#endif
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     if (ot::Posix::Mainloop::IsFdReadable(sMLDMonitorFd, *aContext))
