@@ -1183,6 +1183,27 @@ exit:
     return isOnLink;
 }
 
+bool RxRaTracker::HasSeenPreferredOnLinkPrefixAfter(const Ip6::Prefix &aPrefix, TimeMilli aTime) const
+{
+    bool hasSeen = false;
+
+    for (const Router &router : mRouters)
+    {
+        for (const OnLinkPrefix &onLinkPrefix : router.mOnLinkPrefixes)
+        {
+            if (!onLinkPrefix.IsDeprecated() && onLinkPrefix.Matches(aPrefix) &&
+                (onLinkPrefix.GetLastUpdateTime() >= aTime))
+            {
+                hasSeen = true;
+                ExitNow();
+            }
+        }
+    }
+
+exit:
+    return hasSeen;
+}
+
 bool RxRaTracker::IsPrefixOnLink(const Ip6::Prefix &aPrefix) const
 {
     bool isOnLink = false;

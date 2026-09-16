@@ -308,6 +308,18 @@ public:
     bool IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const;
 
     /**
+     * Indicates whether a given prefix is seen as a preferred (non-deprecated) on-link prefix in any tracked RA
+     * received after a given time.
+     *
+     * @param[in] aPrefix  The IPv6 prefix to check.
+     * @param[in] aTime    The time threshold.
+     *
+     * @retval TRUE   The prefix is seen as a preferred on-link prefix after @p aTime.
+     * @retval FALSE  The prefix is not seen as a preferred on-link prefix after @p aTime.
+     */
+    bool HasSeenPreferredOnLinkPrefixAfter(const Ip6::Prefix &aPrefix, TimeMilli aTime) const;
+
+    /**
      * Indicates whether a given prefix is seen as an on-link prefix in any tracked RA.
      *
      * @param[in] aPrefix  The IPv6 prefix to check.
