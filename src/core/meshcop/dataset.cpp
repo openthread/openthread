@@ -65,7 +65,6 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     mActiveTimestamp.mAuthoritative = false;
     mChannel                        = preferredChannels.ChooseRandomChannel();
     mChannelMask                    = supportedChannels.GetMask();
-    mWakeupChannel                  = supportedChannels.ChooseRandomChannel();
     mPanId                          = Mac::GenerateRandomPanId();
     AsCoreType(&mSecurityPolicy).SetToDefault();
 
@@ -83,7 +82,6 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     mComponents.mIsMeshLocalPrefixPresent = true;
     mComponents.mIsPanIdPresent           = true;
     mComponents.mIsChannelPresent         = true;
-    mComponents.mIsWakeupChannelPresent   = true;
     mComponents.mIsPskcPresent            = true;
     mComponents.mIsSecurityPolicyPresent  = true;
     mComponents.mIsChannelMaskPresent     = true;
@@ -159,7 +157,6 @@ bool Dataset::IsTlvValid(const Tlv &aTlv)
         minLength = sizeof(MeshLocalPrefixTlv::ValueType);
         break;
     case Tlv::kChannel:
-    case Tlv::kWakeupChannel:
         minLength = sizeof(ChannelTlvValue);
         break;
     default:
@@ -189,9 +186,6 @@ bool Dataset::IsTlvValid(const Tlv &aTlv)
         break;
     case Tlv::kChannel:
         isValid = aTlv.ReadValueAs<ChannelTlv>().IsValid();
-        break;
-    case Tlv::kWakeupChannel:
-        isValid = aTlv.ReadValueAs<WakeupChannelTlv>().IsValid();
         break;
     case Tlv::kNetworkName:
         isValid = As<NetworkNameTlv>(aTlv).IsValid();
@@ -270,10 +264,6 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
 
         case Tlv::kChannel:
             aDatasetInfo.Set<kChannel>(cur->ReadValueAs<ChannelTlv>().GetChannel());
-            break;
-
-        case Tlv::kWakeupChannel:
-            aDatasetInfo.Set<kWakeupChannel>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
             break;
 
         case Tlv::kChannelMask:
@@ -472,14 +462,6 @@ Error Dataset::WriteTlvsFrom(const Dataset::Info &aDatasetInfo)
 
         channelValue.SetChannelAndPage(aDatasetInfo.Get<kChannel>());
         SuccessOrExit(error = Write<ChannelTlv>(channelValue));
-    }
-
-    if (aDatasetInfo.IsPresent<kWakeupChannel>())
-    {
-        ChannelTlvValue channelValue;
-
-        channelValue.SetChannelAndPage(aDatasetInfo.Get<kWakeupChannel>());
-        SuccessOrExit(error = Write<WakeupChannelTlv>(channelValue));
     }
 
     if (aDatasetInfo.IsPresent<kChannelMask>())

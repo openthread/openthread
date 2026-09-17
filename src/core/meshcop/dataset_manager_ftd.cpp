@@ -239,14 +239,6 @@ Error ActiveDatasetManager::GenerateLocal(void)
         IgnoreError(dataset.Write<ChannelTlv>(channelValue));
     }
 
-    if (!dataset.Contains<WakeupChannelTlv>())
-    {
-        ChannelTlvValue channelValue;
-
-        channelValue.SetChannelAndPage(Get<Mac::Mac>().GetWakeupChannel());
-        IgnoreError(dataset.Write<WakeupChannelTlv>(channelValue));
-    }
-
     if (!dataset.Contains<ChannelMaskTlv>())
     {
         ChannelMaskTlv::Value value;

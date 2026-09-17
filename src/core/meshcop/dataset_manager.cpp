@@ -657,11 +657,6 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         tlvList.Add(Tlv::kChannel);
     }
 
-    if (aDatasetComponents.IsPresent<Dataset::kWakeupChannel>())
-    {
-        tlvList.Add(Tlv::kWakeupChannel);
-    }
-
     if (aDatasetComponents.IsPresent<Dataset::kPskc>())
     {
         tlvList.Add(Tlv::kPskc);
