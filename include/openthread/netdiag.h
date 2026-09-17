@@ -95,6 +95,7 @@ extern "C" {
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX 42     ///< Border Router Local On-link Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX 43   ///< Border Router Favored On-link Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_OUI 44             ///< Vendor OUI TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_SRP_CLIENT_COUNTERS 45    ///< SRP Client Counters TLV
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH 32         ///< Max length of Vendor Model TLV.
@@ -250,6 +251,39 @@ typedef struct otNetworkDiagMleCounters
 } otNetworkDiagMleCounters;
 
 /**
+ * Represents a Network Diagnostics SRP Client Counters value.
+ *
+ * The counter fields mirror `otSrpClientCounters`. `mIsRunning` and `mIsRegistered` are decoded from the
+ * TLV's Flags field and report the queried device's SRP client state at the time the response was generated.
+ */
+typedef struct otNetworkDiagSrpClientCounters
+{
+    uint64_t mRegisteredTime;         ///< Cumulative number of milliseconds spent in the registered state.
+    uint64_t mAnycastAvailableTime;   ///< Subset of `mRegisteredTime` while registered with an anycast server.
+    uint64_t mUnicastAvailableTime;   ///< Subset of `mRegisteredTime` while registered with a unicast server.
+    uint64_t mTrackedTime;            ///< Cumulative milliseconds since last counter reset, across all client states
+                                      ///< (including stopped/paused).
+    uint32_t mTxUpdates;              ///< Number of SRP update transmissions (wire-level; includes retransmissions).
+    uint32_t mUpdateAttempts;         ///< Number of fresh SRP update transactions started.
+    uint32_t mSuccess;                ///< Number of transactions completed with a successful server response.
+    uint32_t mRejectedDuplicate;      ///< Number of transactions completed with a name/record conflict response.
+    uint32_t mRejectedSecurity;       ///< Number of transactions completed with a security/policy/algorithm response.
+    uint32_t mRejectedOther;          ///< Number of transactions completed with any other server error response.
+    uint32_t mTimeouts;               ///< Number of retransmission timers that expired before a response arrived.
+    uint32_t mHostAddressChanges;     ///< Number of host-address change events that triggered an SRP re-registration.
+    uint32_t mServerChanges;          ///< Number of auto-start server (re-)selections that triggered an SRP update.
+    uint32_t mServiceAdds;            ///< Number of times a service was successfully added.
+    uint32_t mServiceRemoves;         ///< Number of times a service was removed (sends an unregister to server).
+    uint32_t mServiceClears;          ///< Number of times a service was cleared (local-only, no server message).
+    uint32_t mHostAndServicesRemoves; ///< Number of times the host and all services were removed (notifies server).
+    uint32_t mHostAndServicesClears;  ///< Number of times the host and all services were cleared (local-only).
+    uint32_t mTxTotalBytes;           ///< Cumulative UDP payload bytes of transmitted SRP messages.
+    bool     mIsRunning;              ///< Whether the SRP client is started (not stopped).
+    bool     mIsRegistered;           ///< Whether the host info is registered with a server and no SRP update is
+                                      ///< pending.
+} otNetworkDiagSrpClientCounters;
+
+/**
  * Represents a Network Diagnostic Child Table Entry.
  */
 typedef struct otNetworkDiagChildEntry
@@ -327,35 +361,36 @@ typedef struct otNetworkDiagTlv
 
     union
     {
-        otExtAddress              mExtAddress;
-        otExtAddress              mEui64;
-        uint16_t                  mAddr16;
-        otLinkModeConfig          mMode;
-        uint32_t                  mTimeout;
-        otNetworkDiagConnectivity mConnectivity;
-        otNetworkDiagRoute        mRoute;
-        otNetworkDiagEnhRoute     mEnhRoute;
-        otLeaderData              mLeaderData;
-        otNetworkDiagData         mNetworkData;
-        otNetworkDiagIp6AddrList  mIp6AddrList;
-        otNetworkDiagMacCounters  mMacCounters;
-        otNetworkDiagMleCounters  mMleCounters;
-        uint8_t                   mBatteryLevel;
-        uint16_t                  mSupplyVoltage;
-        uint32_t                  mMaxChildTimeout;
-        uint16_t                  mVersion;
-        char                      mVendorName[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH + 1];
-        char                      mVendorModel[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH + 1];
-        char                      mVendorSwVersion[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_SW_VERSION_TLV_LENGTH + 1];
-        char                      mThreadStackVersion[OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH + 1];
-        char                      mVendorAppUrl[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH + 1];
-        otThreadVendorOui         mVendorOui;
-        otChannelMask             mNonPreferredChannels;
-        otNetworkDiagData         mChannelPages;
-        otNetworkDiagChildTable   mChildTable;
-        otNetworkDiagBrState      mBrState;
-        otNetworkDiagIp6AddrList  mBrIfAddrList;
-        otIp6NetworkPrefix        mBrPrefix; // This field is shared for various BR prefix TLV (OMR, on-link).
+        otExtAddress                   mExtAddress;
+        otExtAddress                   mEui64;
+        uint16_t                       mAddr16;
+        otLinkModeConfig               mMode;
+        uint32_t                       mTimeout;
+        otNetworkDiagConnectivity      mConnectivity;
+        otNetworkDiagRoute             mRoute;
+        otNetworkDiagEnhRoute          mEnhRoute;
+        otLeaderData                   mLeaderData;
+        otNetworkDiagData              mNetworkData;
+        otNetworkDiagIp6AddrList       mIp6AddrList;
+        otNetworkDiagMacCounters       mMacCounters;
+        otNetworkDiagMleCounters       mMleCounters;
+        otNetworkDiagSrpClientCounters mSrpClientCounters;
+        uint8_t                        mBatteryLevel;
+        uint16_t                       mSupplyVoltage;
+        uint32_t                       mMaxChildTimeout;
+        uint16_t                       mVersion;
+        char                           mVendorName[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH + 1];
+        char                           mVendorModel[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH + 1];
+        char                           mVendorSwVersion[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_SW_VERSION_TLV_LENGTH + 1];
+        char                     mThreadStackVersion[OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH + 1];
+        char                     mVendorAppUrl[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH + 1];
+        otThreadVendorOui        mVendorOui;
+        otChannelMask            mNonPreferredChannels;
+        otNetworkDiagData        mChannelPages;
+        otNetworkDiagChildTable  mChildTable;
+        otNetworkDiagBrState     mBrState;
+        otNetworkDiagIp6AddrList mBrIfAddrList;
+        otIp6NetworkPrefix       mBrPrefix; // This field is shared for various BR prefix TLV (OMR, on-link).
     } mData;
 } otNetworkDiagTlv;
 

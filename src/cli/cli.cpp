@@ -7758,6 +7758,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * - `42`: Border Router Local On-link Prefix TLV
      * - `43`: Border Router Favored On-link Prefix TLV
      * - `44`: Vendor OUI TLV
+     * - `45`: SRP Client Counters TLV
      *
      * @par
      * Sends a network diagnostic request to retrieve specified Type Length Values (TLVs)
@@ -7782,8 +7783,8 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * @par
      * Sends a network diagnostic request to reset the specified Type Length Values (TLVs)
      * on the specified address(es). This command only supports the
-     * following TLV values: `9` (MAC Counters TLV) or `34` (MLE
-     * Counters TLV)
+     * following TLV values: `9` (MAC Counters TLV), `34` (MLE
+     * Counters TLV), `36` (Non-Preferred Channels TLV), or `45` (SRP Client Counters TLV)
      * @sa otThreadSendDiagnosticReset
      */
     else if (aArgs[0] == "reset")
@@ -7889,6 +7890,10 @@ void Interpreter::HandleDiagnosticGetResponse(otError              aError,
         case OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS:
             OutputLine("MLE Counters:");
             OutputNetworkDiagMleCounters(kIndentSize, diagTlv.mData.mMleCounters);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_SRP_CLIENT_COUNTERS:
+            OutputLine("SRP Client Counters:");
+            OutputNetworkDiagSrpClientCounters(kIndentSize, diagTlv.mData.mSrpClientCounters);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL:
             OutputLine("Battery Level: %u%%", diagTlv.mData.mBatteryLevel);
@@ -8130,6 +8135,61 @@ void Interpreter::OutputNetworkDiagMleCounters(uint8_t aIndentSize, const otNetw
     {
         OutputFormat("%s: ", counter.mName);
         OutputUint64Line(aMleCounters.*counter.mValuePtr);
+    }
+}
+
+void Interpreter::OutputNetworkDiagSrpClientCounters(uint8_t                               aIndentSize,
+                                                     const otNetworkDiagSrpClientCounters &aCounters)
+{
+    struct CounterName
+    {
+        const uint32_t otNetworkDiagSrpClientCounters::*mValuePtr;
+        const char                                     *mName;
+    };
+
+    struct TimeCounterName
+    {
+        const uint64_t otNetworkDiagSrpClientCounters::*mValuePtr;
+        const char                                     *mName;
+    };
+
+    static const CounterName kCounterNames[] = {
+        {&otNetworkDiagSrpClientCounters::mTxUpdates, "TxUpdates"},
+        {&otNetworkDiagSrpClientCounters::mUpdateAttempts, "UpdateAttempts"},
+        {&otNetworkDiagSrpClientCounters::mSuccess, "Success"},
+        {&otNetworkDiagSrpClientCounters::mRejectedDuplicate, "RejectedDuplicate"},
+        {&otNetworkDiagSrpClientCounters::mRejectedSecurity, "RejectedSecurity"},
+        {&otNetworkDiagSrpClientCounters::mRejectedOther, "RejectedOther"},
+        {&otNetworkDiagSrpClientCounters::mTimeouts, "Timeouts"},
+        {&otNetworkDiagSrpClientCounters::mHostAddressChanges, "HostAddressChanges"},
+        {&otNetworkDiagSrpClientCounters::mServerChanges, "ServerChanges"},
+        {&otNetworkDiagSrpClientCounters::mServiceAdds, "ServiceAdds"},
+        {&otNetworkDiagSrpClientCounters::mServiceRemoves, "ServiceRemoves"},
+        {&otNetworkDiagSrpClientCounters::mServiceClears, "ServiceClears"},
+        {&otNetworkDiagSrpClientCounters::mHostAndServicesRemoves, "HostAndServicesRemoves"},
+        {&otNetworkDiagSrpClientCounters::mHostAndServicesClears, "HostAndServicesClears"},
+        {&otNetworkDiagSrpClientCounters::mTxTotalBytes, "TxTotalBytes"},
+    };
+
+    static const TimeCounterName kTimeCounterNames[] = {
+        {&otNetworkDiagSrpClientCounters::mRegisteredTime, "RegisteredTime"},
+        {&otNetworkDiagSrpClientCounters::mAnycastAvailableTime, "AnycastAvailableTime"},
+        {&otNetworkDiagSrpClientCounters::mUnicastAvailableTime, "UnicastAvailableTime"},
+        {&otNetworkDiagSrpClientCounters::mTrackedTime, "TrackedTime"},
+    };
+
+    OutputLine(aIndentSize, "Running: %s", aCounters.mIsRunning ? "yes" : "no");
+    OutputLine(aIndentSize, "Registered: %s", aCounters.mIsRegistered ? "yes" : "no");
+
+    for (const CounterName &counter : kCounterNames)
+    {
+        OutputLine(aIndentSize, "%s: %lu", counter.mName, ToUlong(aCounters.*counter.mValuePtr));
+    }
+
+    for (const TimeCounterName &counter : kTimeCounterNames)
+    {
+        OutputFormat(aIndentSize, "%s: ", counter.mName);
+        OutputUint64Line(aCounters.*counter.mValuePtr);
     }
 }
 

@@ -421,6 +421,14 @@ public:
     bool IsRunning(void) const { return (mState != kStateStopped); }
 
     /**
+     * Indicates whether the host info is registered with a server and no SRP update is pending.
+     *
+     * @retval TRUE   The host info is registered with a server and no SRP update is pending.
+     * @retval FALSE  The host info is not registered with a server, or an SRP update is pending.
+     */
+    bool IsRegistered(void) const { return (mState == kStateUpdated) && (mHostInfo.GetState() == kRegistered); }
+
+    /**
      * Gets the socket address (IPv6 address and port number) of the SRP server which is being used by SRP
      * client.
      *
