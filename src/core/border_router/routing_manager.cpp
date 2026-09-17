@@ -1272,8 +1272,9 @@ void RoutingManager::OnLinkPrefixManager::Init(void)
 
         lifetime = Min(savedPrefix.GetLifetime(), Time::MsecToSec(TimerMilli::kMaxDelay));
 
-        entry->mPrefix     = savedPrefix.GetPrefix();
-        entry->mExpireTime = now + Time::SecToMsec(lifetime);
+        entry->mPrefix        = savedPrefix.GetPrefix();
+        entry->mDeprecateTime = now;
+        entry->mExpireTime    = now + Time::SecToMsec(lifetime);
 
         LogInfo("Restored old prefix %s, lifetime:%lu", entry->mPrefix.ToString().AsCString(), ToUlong(lifetime));
 
@@ -1658,6 +1659,16 @@ Error RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(RouterAdvert::TxMes
             continue;
         }
 
+        // If another router on the infrastructure link is actively
+        // advertising this prefix as a preferred on-link prefix after we
+        // started deprecating it, we skip including it as a deprecating
+        // PIO to avoid sending conflicting advertisements.
+
+        if (Get<RxRaTracker>().HasSeenPreferredOnLinkPrefixAfter(oldPrefix.mPrefix, oldPrefix.mDeprecateTime))
+        {
+            continue;
+        }
+
         validLifetime = TimeMilli::MsecToSec(oldPrefix.mExpireTime - now);
 
         flags = PrefixInfoOption::kOnLinkFlag | PrefixInfoOption::kAutoConfigFlag;
@@ -1755,8 +1766,9 @@ void RoutingManager::OnLinkPrefixManager::DeprecateOldPrefix(const Ip6::Prefix &
         Get<Settings>().RemoveBrOnLinkPrefix(removedPrefix);
     }
 
-    entry->mPrefix     = aPrefix;
-    entry->mExpireTime = aExpireTime;
+    entry->mPrefix        = aPrefix;
+    entry->mDeprecateTime = TimerMilli::GetNow();
+    entry->mExpireTime    = aExpireTime;
     mTimer.FireAtIfEarlier(aExpireTime);
 
     SavePrefix(aPrefix, aExpireTime);
