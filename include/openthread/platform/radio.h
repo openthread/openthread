@@ -863,7 +863,7 @@ otError otPlatRadioEnable(otInstance *aInstance);
  * `otPlatRadioSleep()`), for it to be disabled successfully.
  *
  * Disabling the radio MUST be enacted as soon as possible, aborting any ongoing or scheduled operations.
- * (Such operations may exist during a pending transition to Sleep state.) These aborted ongoing
+ * (Ongoing operations may exist during a pending transition to Sleep state.) These aborted ongoing
  * operations MUST NOT lead to any callback functions (like `otPlatRadio...Done()`) being called.
  * When this function returns successfully, the radio MUST be in state `OT_RADIO_STATE_DISABLED`.
  *
@@ -900,8 +900,9 @@ bool otPlatRadioIsEnabled(otInstance *aInstance);
  * If any subsequent radio state transition function (e.g., `otPlatRadioTransmit()`, or `otPlatRadioReceive()`
  * on the same channel) is called while a scheduled transition to Sleep is pending, the pending Sleep transition
  * MUST be canceled/superseded, and the radio MUST transition to the newly requested state upon completing the
- * ongoing reception and/or ACK transmission. (Exceptions where the ongoing operation is aborted are documented
- * in `otPlatRadioReceive()` when changing channel, and in `otPlatRadioDisable()`.)
+ * ongoing reception and/or ACK transmission. (Exceptions where the ongoing operation is possibly not completed
+ * are documented in `otPlatRadioReceive()` when changing channel, in `otPlatRadioTransmit()` when doing a timed
+ * transmit, and in `otPlatRadioDisable()`.)
  *
  * @param[in] aInstance           The OpenThread instance structure.
  *
@@ -919,9 +920,10 @@ otError otPlatRadioSleep(otInstance *aInstance);
  * other than canceling any pending transition to Sleep (see `otPlatRadioSleep()`).
  *
  * If `aChannel` differs from the current receive channel, the radio MUST transition to the newly requested channel
- * as soon as possible if the radio is idle (not receiving a frame) on its current receive channel.
- * If the radio is receiving a frame, the ongoing receive operation SHOULD be completed first before switching to
- * `aChannel`. In this case, the channel change is scheduled to occur right after frame reception is done.
+ * as soon as possible if the radio is idle (not in a receive operation) on its current receive channel.
+ * If the radio is receiving a frame or transmitting an ACK, the ongoing receive operation SHOULD be completed
+ * first before switching to `aChannel`. In this case, the channel change is scheduled to occur right after the
+ * receive operation is done.
  * In the exceptional case that a frame receive operation is aborted, this event SHOULD be reported via
  * `otPlatRadioReceiveDone()` with `aError` set to `OT_ERROR_ABORT`.
  *
@@ -1093,13 +1095,14 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  *    - Sleep if RX is off when the device is idle and OT_RADIO_CAPS_SLEEP_TO_TX is supported.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
  *
- * If the radio is actively receiving a frame when this call is made, `OT_ERROR_NONE` is returned and
- * subsequently `otPlatRadioTxDone()` SHOULD be called with `aError` value `OT_ERROR_CHANNEL_ACCESS_FAILURE`
- * to indicate that there is activity on the channel. This requirement holds even when the requested
- * transmit channel differs from the channel on which the radio is currently receiving a frame.
+ * If the radio is actively receiving a frame or transmitting an ACK when this call is made, `OT_ERROR_NONE` is
+ * returned and subsequently `otPlatRadioTxDone()` SHOULD be called as soon as possible with `aError` value
+ * `OT_ERROR_CHANNEL_ACCESS_FAILURE` to indicate that there is activity on the channel. This requirement
+ * holds even when the requested transmit channel differs from the channel on which the radio is currently
+ * doing its receive operation.
  *
- * An exception to the above requirement is when transmission is scheduled at a specific future time.
- * In that case, the frame transmission has priority over ongoing reception and the ongoing frame
+ * An exception to the above requirement is time-scheduled transmissions (see `mTxDelayBaseTime`).
+ * In that case, the timed frame transmission has priority over ongoing reception and the ongoing frame
  * reception MUST be aborted if the radio determines it cannot finish the frame reception operation
  * before the scheduled frame transmission is due.
  *
@@ -1107,7 +1110,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * @param[in] aFrame     A pointer to the frame to be transmitted.
  *
  * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
- * @retval OT_ERROR_INVALID_STATE The radio was not in the Receive state.
+ * @retval OT_ERROR_INVALID_STATE The radio was not in one of the states required to transition.
  */
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame);
 
