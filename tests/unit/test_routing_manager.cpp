@@ -2627,6 +2627,56 @@ void TestFavoredOnLinkPrefix(void)
     VerifyFavoredOnLinkPrefix(onLinkPrefixB);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Verify that `mExpirationTimer` is scheduled for `GetDeprecationTime()`
+    // so that `RxRaTracker::Evaluate()` runs immediately when a favored
+    // on-link prefix's preferred lifetime expires (even when `validLifetime`
+    // is much longer and `mStaleTimer` / `mRouterTimer` do not fire at
+    // `GetDeprecationTime()`).
+    //
+    // Remove `onLinkPrefixB` and advertise `onLinkPrefixA` from router A
+    // with `preferredLifetime = 1800, validLifetime = 7200`, and from
+    // router B with `preferredLifetime = 1000 (< 1800), validLifetime = 7200`.
+
+    SendRouterAdvert(routerAddressB, {Pio(onLinkPrefixB, 0, 0)});
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefixA, 7200, kPreferredLifetime)});
+    SendRouterAdvert(routerAddressB, {Pio(onLinkPrefixA, 7200, 1000)});
+
+    AdvanceTime(10 * 1000);
+    VerifyFavoredOnLinkPrefix(onLinkPrefixA);
+
+    // Refresh router B's RA every 500s so `mStaleTimer` for `onLinkPrefixA`
+    // is kept in the future, while router A's entry is not refreshed and will
+    // reach `GetDeprecationTime()` at `t = 1800s`.
+
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        AdvanceTime(500 * 1000);
+        SendRouterAdvert(routerAddressB, {Pio(onLinkPrefixA, 7200, 1000)});
+    }
+
+    // At `t = 1790s` (10s before `GetDeprecationTime()`), refresh router A and B
+    // reachability so `mRouterTimer` will not fire near `t = 1800s`.
+
+    AdvanceTime(280 * 1000);
+    SendRouterAdvert(routerAddressA, DefaultRoute(0, NetworkData::kRoutePreferenceMedium));
+    SendRouterAdvert(routerAddressB, {Pio(onLinkPrefixA, 7200, 1000)});
+
+    AdvanceTime(5 * 1000);
+    VerifyFavoredOnLinkPrefix(onLinkPrefixA);
+
+    // Advance 15s (past `GetDeprecationTime()` at `t = 1800s`, while `validLifetime`
+    // is still ~5400s). Verify that `RxRaTracker::Evaluate()` fires at `t = 1800s`
+    // and `RoutingManager` immediately transitions to advertising `localOnLink`.
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+
+    AdvanceTime(15 * 1000);
+
+    VerifyFavoredOnLinkPrefix(localOnLink);
+    VerifyOrQuit(sRaValidated);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
     AdvanceTime(3000);

@@ -891,6 +891,11 @@ void RxRaTracker::Evaluate(void)
         {
             entryExpireTime.UpdateIfEarlier(entry.GetExpireTime());
 
+            if (!entry.IsDeprecated())
+            {
+                entryExpireTime.UpdateIfEarlier(entry.GetDeprecationTime());
+            }
+
             if (!entry.IsStaleTimeCalculated())
             {
                 DetermineStaleTimeFor(entry, staleTime);
@@ -933,8 +938,8 @@ void RxRaTracker::Evaluate(void)
     }
 
     mRouterTimer.FireAt(routerTimeoutTime);
-    mExpirationTimer.FireAt(entryExpireTime);
     mStaleTimer.FireAt(staleTime);
+    mExpirationTimer.FireAt(entryExpireTime);
     mRdnssAddrTimer.FireAt(rdnsssAddrExpireTime);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
