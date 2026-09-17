@@ -34,7 +34,7 @@ Displays currently set TCAT advertised IDs.
 
 ```bash
 tcat advid
-type oui24, value: f378aa
+type oui, value: f378aa
 Done
 ```
 
@@ -47,21 +47,12 @@ tcat advid ianapen f378aabb
 Done
 ```
 
-### advid oui24 \<id\>
+### advid oui \<id\>
 
-Sets TCAT advertised IEEE OUI-24 ID. See the [IEEE OUI registry](https://standards.ieee.org/products-programs/regauth/oui/).
-
-```bash
-tcat advid oui24 f378aa
-Done
-```
-
-### advid oui36 \<id\>
-
-Sets TCAT advertised IEEE OUI-36 ID. See the [IEEE OUI registry](https://standards.ieee.org/products-programs/regauth/oui/).
+Sets TCAT advertised IEEE OUI-24, OUI-28 or OUI-36 ID. See the [IEEE OUI registry](https://standards.ieee.org/products-programs/regauth/oui/).
 
 ```bash
-tcat advid oui36 f378aabbcc
+tcat advid oui f378aa
 Done
 ```
 
@@ -71,6 +62,15 @@ Sets TCAT advertised device discriminator ID.
 
 ```bash
 tcat advid discriminator f378aabbdd
+Done
+```
+
+### advid applicationprotocol \<id\>
+
+Sets TCAT advertised application protocol ID to a 2-byte network byte order protocol identifier and optionally up to 3-bytes application data.
+
+```bash
+tcat advid applicationprotocol c000aabbcc
 Done
 ```
 

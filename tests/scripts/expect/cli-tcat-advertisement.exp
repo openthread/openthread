@@ -45,18 +45,18 @@ send "tcat advid\n"
 expect_line "type ianapen, value: f378aabb"
 expect_line "Done"
 
-send "tcat advid oui24 f378aa\n"
+send "tcat advid oui f378aa\n"
 expect_line "Done"
 
 send "tcat advid\n"
-expect_line "type oui24, value: f378aa"
+expect_line "type oui, value: f378aa"
 expect_line "Done"
 
-send "tcat advid oui36 f378aabbcc\n"
+send "tcat advid app c000aabb\n"
 expect_line "Done"
 
 send "tcat advid\n"
-expect_line "type oui36, value: f378aabbcc"
+expect_line "type app, value: c000aabb"
 expect_line "Done"
 
 send "tcat advid discriminator f378aabbdd\n"
@@ -111,6 +111,67 @@ send "tcat standby\n"
 expect_line "Done"
 
 send "tcat active 1200000\n"
+expect_line "Done"
+
+# Repeat advid and devid test in active state
+#
+
+send "tcat advid ianapen f378\n"
+expect_line "Done"
+
+send "tcat advid\n"
+expect_line "type ianapen, value: f378"
+expect_line "Done"
+
+send "tcat advid ianapen f378aabb\n"
+expect_line "Done"
+
+send "tcat advid\n"
+expect_line "type ianapen, value: f378aabb"
+expect_line "Done"
+
+send "tcat advid oui f378aa\n"
+expect_line "Done"
+
+send "tcat advid\n"
+expect_line "type oui, value: f378aa"
+expect_line "Done"
+
+send "tcat advid app c000aabb\n"
+expect_line "Done"
+
+send "tcat advid\n"
+expect_line "type app, value: c000aabb"
+expect_line "Done"
+
+send "tcat advid discriminator f378aabbdd\n"
+expect_line "Done"
+
+send "tcat advid\n"
+expect_line "type discriminator, value: f378aabbdd"
+expect_line "Done"
+
+send "tcat advid clear\n"
+expect_line "Done"
+
+send "tcat advid\n"
+expect_line "Done"
+
+send "tcat devid\n"
+expect_line "Done"
+
+send "tcat devid aaaa\n"
+expect_line "aaaa"
+expect_line "Done"
+
+send "tcat devid\n"
+expect_line "aaaa"
+expect_line "Done"
+
+send "tcat devid clear\n"
+expect_line "Done"
+
+send "tcat devid\n"
 expect_line "Done"
 
 send "tcat stop\n"
