@@ -72,12 +72,12 @@ void SubMac::CslReceiver::RestartTimerAfterSyncUpdate(void)
 
         mTimer.Stop();
 
-        // Rewind sample times by one period. HandleTimer() will add this
-        // period back, effectively re-evaluating the current CSL period's
+        // Rewind sample times by one period. `ScheduleSampleWindow()` will add
+        // this period back, effectively re-evaluating the current CSL period's
         // schedule using the updated mLastSync.
         mSampleTime -= periodUs;
 
-        HandleTimer();
+        ScheduleSampleWindow();
     }
 }
 
@@ -146,7 +146,7 @@ void SubMac::CslReceiver::SetParams(uint16_t          aPeriod,
 #else
         mLastSync = mSampleTime.GetAsTime64();
 #endif
-        HandleTimer();
+        ScheduleSampleWindow();
     }
     else
     {
@@ -157,7 +157,7 @@ exit:
     return;
 }
 
-void SubMac::CslReceiver::HandleTimer(void)
+void SubMac::CslReceiver::ScheduleSampleWindow(void)
 {
     Window window;
 

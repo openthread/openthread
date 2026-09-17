@@ -632,7 +632,7 @@ private:
         void SetParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
         void ProcessTxDone(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame);
         void ProcessRxFrame(const RxFrame &aFrame);
-        void HandleTimer(void);
+        void HandleTimer(void) { ScheduleSampleWindow(); }
 
         const CslAccuracy &GetParentAccuracy(void) const { return mParentAccuracy; }
         void               SetParentAccuracy(const CslAccuracy &aCslAccuracy) { mParentAccuracy = aCslAccuracy; }
@@ -650,6 +650,7 @@ private:
 
         void     RestartTimerAfterSyncUpdate(void);
         void     SetLastSyncToNow(void);
+        void     ScheduleSampleWindow(void);
         void     DetermineWindow(const Radio::SyncedTime &aSampleTime, Window &aWindow) const;
         uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
         bool     IsEnabled(void) const { return mPeriod > 0; }
