@@ -563,8 +563,8 @@ public:
     /**
      * Transitions the radio from Sleep to Receive (turn on the radio), or changes the radio's receive channel.
      *
-     * If @p aChannel differs from the current receive channel, the radio transitions to it as soon as possible and
-     * any ongoing operation on the old channel should typically be aborted.
+     * If @p aChannel differs from the current receive channel, the radio transitions to it as soon as possible
+     * while typically completing any ongoing receive operation on the old channel.
      *
      * @sa otPlatRadioReceive()
      *
