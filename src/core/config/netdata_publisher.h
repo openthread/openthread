@@ -82,6 +82,22 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NETDATA_PUBLISHER_SHARE_ADD_DELAY
+ *
+ * Define as 1 to have all entries that become eligible to be added during the same
+ * evaluation pass share a single randomized add delay, so that a device publishes them
+ * as one Network Data change.
+ *
+ * With this enabled a device adds its entries together: fewer registrations and
+ * propagations, no entry delayed beyond `MAX_DELAY_TO_ADD`, and the device's full set of
+ * entries appears sooner because it no longer waits for the maximum of several
+ * independent draws. Delays remain independent between devices.
+ */
+#ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_SHARE_ADD_DELAY
+#define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_SHARE_ADD_DELAY 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NETDATA_PUBLISHER_EXTRA_DELAY_TIME_TO_REMOVE_PREFERRED
  *
  * Specifies the extra wait time (in milliseconds) used when removing a preferred entry.
