@@ -157,6 +157,21 @@ template <> otError Dns::Process<Cmd("config")>(Arg aArgs[])
      * TransportProtocol: udp
      * Done
      * @endcode
+     * @code
+     * dns config def def def def def srv_txt_sep udp
+     * Done
+     * @endcode
+     * @code
+     * dns config
+     * Server: [2001:4860:4860:0:0:0:0:8888]:53
+     * ResponseTimeout: 7000 ms
+     * MaxTxAttempts: 3
+     * RecursionDesired: yes
+     * ServiceMode: srv_txt_sep
+     * Nat64Mode: allow
+     * TransportProtocol: udp
+     * Done
+     * @endcode
      * @par api_copy
      * #otDnsClientSetDefaultConfig
      * @cparam dns config [@ca{dns-server-IP}] [@ca{dns-server-port}] <!--
@@ -164,10 +179,13 @@ template <> otError Dns::Process<Cmd("config")>(Arg aArgs[])
      * -->                [@ca{recursion-desired-boolean}] [@ca{service-mode}] <!--
      * -->                [@ca{protocol}]
      * @par
-     * We can leave some of the fields as unspecified (or use value zero). The
-     * unspecified fields are replaced by the corresponding OT config option
-     * definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT` to form the default
-     * query config.
+     * You can leave some of the fields as unspecified (or use value zero or "def"). This
+     * includes the DNS server IP address itself. Since an address has no "zero" form,
+     * use "def" (or, equivalently, the unspecified address "::") to select the default
+     * server address. The unspecified fields are replaced by the corresponding OT config
+     * option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_<OPTION>` to form the
+     * default query config. Note that specifying zero for a boolean argument means
+     * disabled. Use "def" to select the default value.
      * `OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE` is required.
      */
     else
@@ -195,6 +213,11 @@ exit:
  * DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
  * Done
  * @endcode
+ * @code
+ * dns resolve example.com def 53
+ * DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
+ * Done
+ * @endcode
  * @cparam dns resolve @ca{hostname} [@ca{dns-server-IP}] <!--
  * -->                 [@ca{dns-server-port}] [@ca{response-timeout-ms}] <!--
  * -->                 [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
@@ -203,9 +226,11 @@ exit:
  * @par
  * Send DNS Query to obtain IPv6 address for given hostname.
  * @par
- * The parameters after hostname are optional. Any unspecified (or zero) value
+ * The parameters after hostname are optional. Any unspecified (or zero or "def") value
  * for these optional parameters is replaced by the value from the current default
- * config (dns config).
+ * config (dns config). This includes the DNS server IP address itself. Use "def" (or,
+ * equivalently, the unspecified address "::") to select the server address from the
+ * current default config while still overriding later parameters explicitly.
  * @par
  * The DNS server IP can be an IPv4 address, which will be synthesized to an
  * IPv6 address using the preferred NAT64 prefix from the network data.
@@ -284,7 +309,7 @@ exit:
  * Send a browse (service instance enumeration) DNS query to get the list of services for
  * given service-name
  * @par
- * The parameters after `service-name` are optional. Any unspecified (or zero) value
+ * The parameters after `service-name` are optional. Any unspecified (or zero or "def") value
  * for these optional parameters is replaced by the value from the current default
  * config (`dns config`).
  * @par
@@ -324,7 +349,7 @@ exit:
  * Service instance label is provided first, followed by the service name
  * (note that service instance label can contain dot '.' character).
  * @par
- * The parameters after `service-name` are optional. Any unspecified (or zero)
+ * The parameters after `service-name` are optional. Any unspecified (or zero or "def")
  * value for these optional parameters is replaced by the value from the
  * current default config (`dns config`).
  * @par
@@ -353,7 +378,7 @@ template <> otError Dns::Process<Cmd("service")>(Arg aArgs[])
  * Service instance label is provided first, followed by the service name
  * (note that service instance label can contain dot '.' character).
  * @par
- * The parameters after `service-name` are optional. Any unspecified (or zero)
+ * The parameters after `service-name` are optional. Any unspecified (or zero or "def")
  * value for these optional parameters is replaced by the value from the
  * current default config (`dns config`).
  * @par
@@ -409,7 +434,7 @@ exit:
  * which are dot '.' separated. Note that the first label can itself
  * contain the dot '.' character.
  * @par
- * The parameters after `next-labels` are optional. Any unspecified (or zero)
+ * The parameters after `next-labels` are optional. Any unspecified (or zero or "def")
  * value for these optional parameters is replaced by the value from the
  * current default config (`dns config`).
  * @par
@@ -444,40 +469,53 @@ otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     // [max tx attempt] [recursion desired] [service mode]
     // [transport]`
 
-    otError error = OT_ERROR_NONE;
-    bool    recursionDesired;
-    bool    nat64Synth;
+    otError               error = OT_ERROR_NONE;
+    bool                  recursionDesired;
+    bool                  nat64Synth;
+    static constexpr char kDefaultValue[] = "def";
 
     ClearAllBytes(*aConfig);
 
     VerifyOrExit(!aArgs[0].IsEmpty(), aConfig = nullptr);
-
-    SuccessOrExit(error = ParseOrSynthesizeIp6Address(aArgs[0], aConfig->mServerSockAddr.mAddress, nat64Synth));
-
-    if (nat64Synth)
+    if (aArgs[0] != kDefaultValue)
     {
-        OutputFormat("Synthesized IPv6 DNS server address: ");
-        OutputIp6AddressLine(aConfig->mServerSockAddr.mAddress);
+        SuccessOrExit(error = ParseOrSynthesizeIp6Address(aArgs[0], aConfig->mServerSockAddr.mAddress, nat64Synth));
+        if (nat64Synth)
+        {
+            OutputFormat("Synthesized IPv6 DNS server address: ");
+            OutputIp6AddressLine(aConfig->mServerSockAddr.mAddress);
+        }
     }
 
     VerifyOrExit(!aArgs[1].IsEmpty());
-    SuccessOrExit(error = aArgs[1].ParseAsUint16(aConfig->mServerSockAddr.mPort));
+    if (aArgs[1] != kDefaultValue)
+    {
+        SuccessOrExit(error = aArgs[1].ParseAsUint16(aConfig->mServerSockAddr.mPort));
+    }
 
     VerifyOrExit(!aArgs[2].IsEmpty());
-    SuccessOrExit(error = aArgs[2].ParseAsUint32(aConfig->mResponseTimeout));
+    if (aArgs[2] != kDefaultValue)
+    {
+        SuccessOrExit(error = aArgs[2].ParseAsUint32(aConfig->mResponseTimeout));
+    }
 
     VerifyOrExit(!aArgs[3].IsEmpty());
-    SuccessOrExit(error = aArgs[3].ParseAsUint8(aConfig->mMaxTxAttempts));
+    if (aArgs[3] != kDefaultValue)
+    {
+        SuccessOrExit(error = aArgs[3].ParseAsUint8(aConfig->mMaxTxAttempts));
+    }
 
     VerifyOrExit(!aArgs[4].IsEmpty());
-    SuccessOrExit(error = aArgs[4].ParseAsBool(recursionDesired));
-    aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
+    if (aArgs[4] != kDefaultValue)
+    {
+        SuccessOrExit(error = aArgs[4].ParseAsBool(recursionDesired));
+        aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
+    }
 
     VerifyOrExit(!aArgs[5].IsEmpty());
     SuccessOrExit(error = ParseDnsServiceMode(aArgs[5], aConfig->mServiceMode));
 
     VerifyOrExit(!aArgs[6].IsEmpty());
-
     if (aArgs[6] == "tcp")
     {
         aConfig->mTransportProto = OT_DNS_TRANSPORT_TCP;
@@ -486,7 +524,7 @@ otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     {
         aConfig->mTransportProto = OT_DNS_TRANSPORT_UDP;
     }
-    else
+    else if (aArgs[6] != kDefaultValue)
     {
         error = OT_ERROR_INVALID_ARGS;
     }
@@ -743,7 +781,7 @@ const char *Dns::RecordSectionToString(otDnsRecordSection aSection)
 
     static_assert(0 == OT_DNS_SECTION_ANSWER, "OT_DNS_SECTION_ANSWER value is incorrect");
     static_assert(1 == OT_DNS_SECTION_AUTHORITY, "OT_DNS_SECTION_AUTHORITY value is incorrect");
-    static_assert(2 == OT_DNS_SECTION_ADDITIONAL, "OT_DNS_SECTION_ADDITIONALATA value is incorrect");
+    static_assert(2 == OT_DNS_SECTION_ADDITIONAL, "OT_DNS_SECTION_ADDITIONAL value is incorrect");
 
     return Stringify(aSection, kSectionString);
 }
