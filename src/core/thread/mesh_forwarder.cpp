@@ -1147,6 +1147,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         SuccessOrExit(error = message->SetLength(datagramSize));
 
         message->SetDatagramTag(fragmentHeader.GetDatagramTag());
+        message->SetDatagramSource(aRxInfo.GetSrcAddr());
         message->SetTimestampToNow();
         message->UpdateLinkInfoFrom(aRxInfo.mLinkInfo);
 
@@ -1176,6 +1177,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
             // Security Check: only consider reassembly buffers that had the same Security Enabled setting.
             if (msg.GetLength() == fragmentHeader.GetDatagramSize() &&
                 msg.GetDatagramTag() == fragmentHeader.GetDatagramTag() &&
+                msg.MatchesDatagramSource(aRxInfo.GetSrcAddr()) &&
                 msg.GetOffset() == fragmentHeader.GetDatagramOffset() &&
                 msg.GetOffset() + aRxInfo.mFrameData.GetLength() <= fragmentHeader.GetDatagramSize() &&
                 msg.IsLinkSecurityEnabled() == aRxInfo.IsLinkSecurityEnabled())
