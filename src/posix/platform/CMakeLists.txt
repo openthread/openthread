@@ -126,6 +126,7 @@ endif()
 add_library(openthread-posix
     alarm.cpp
     backtrace.cpp
+    bpf_tap.cpp
     ble.cpp
     configuration.cpp
     config_file.cpp
@@ -140,7 +141,9 @@ add_library(openthread-posix
     mdns_socket.cpp
     memory.cpp
     misc.cpp
+    multicast_forwarding.cpp
     multicast_routing.cpp
+    multicast_routing_bpf.cpp
     netif.cpp
     power.cpp
     radio.cpp

@@ -1808,9 +1808,13 @@ static void processTransmit(otInstance *aInstance)
 {
     otMessage *message = nullptr;
     ssize_t    rval;
-    char       packet[kMaxIp6Size];
-    otError    error  = OT_ERROR_NONE;
-    size_t     offset = 0;
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    char packet[kMaxIp6Size + 4]; // the tunnel header (below) is not part of the datagram
+#else
+    char packet[kMaxIp6Size];
+#endif
+    otError error  = OT_ERROR_NONE;
+    size_t  offset = 0;
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     bool isIp4 = false;
 #endif
