@@ -337,8 +337,14 @@ class BleStreamSecure:
 
     @property
     def is_connected(self):
+        # Also consult the underlying link (self.stream.is_connected): the TLS flags
+        # below are only updated reactively when an inbound close-notify is processed,
+        # so they can still report "connected" after the peer has already dropped the
+        # BLE link. Checking the link makes the pre-command connection check reflect
+        # reality instead of failing later at the actual write.
         return not self._close_notify_sent and not self._close_notify_received and \
-            self._peer_public_key is not None and self.ssl_object is not None
+            self._peer_public_key is not None and self.ssl_object is not None and \
+            self.stream.is_connected
 
     @property
     def peer_public_key(self):
