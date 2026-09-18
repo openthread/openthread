@@ -119,9 +119,11 @@ static Message *BuildIpMessage(Node                       &aOwner,
 
     VerifyOrQuit(message != nullptr);
 
+    uint16_t payloadLength = static_cast<uint16_t>(aPayload.size());
+
     Ip6::Header ip6Header;
     ip6Header.InitVersionTrafficClassFlow();
-    ip6Header.SetPayloadLength(sizeof(Ip6::UdpHeader) + aPayload.size());
+    ip6Header.SetPayloadLength(static_cast<uint16_t>(sizeof(Ip6::UdpHeader) + payloadLength));
     ip6Header.SetNextHeader(Ip6::kProtoUdp);
     ip6Header.SetHopLimit(Ip6::kDefaultHopLimit);
     ip6Header.SetSource(aSource);
@@ -131,13 +133,13 @@ static Message *BuildIpMessage(Node                       &aOwner,
     udpHeader.Clear();
     udpHeader.SetSourcePort(Tmf::kUdpPort);
     udpHeader.SetDestinationPort(Tmf::kUdpPort);
-    udpHeader.SetLength(sizeof(Ip6::UdpHeader) + aPayload.size());
+    udpHeader.SetLength(static_cast<uint16_t>(sizeof(Ip6::UdpHeader) + payloadLength));
     udpHeader.SetChecksum(0);
-    udpHeader.SetChecksum(ComputeUdpChecksum(aSource, aDestination, udpHeader, aPayload.data(), aPayload.size()));
+    udpHeader.SetChecksum(ComputeUdpChecksum(aSource, aDestination, udpHeader, aPayload.data(), payloadLength));
 
     SuccessOrQuit(message->Append(ip6Header));
     SuccessOrQuit(message->Append(udpHeader));
-    SuccessOrQuit(message->AppendBytes(aPayload.data(), aPayload.size()));
+    SuccessOrQuit(message->AppendBytes(aPayload.data(), payloadLength));
     message->SetLinkSecurityEnabled(true);
     message->SetOffset(0);
 
