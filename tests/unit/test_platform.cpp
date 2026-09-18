@@ -35,7 +35,7 @@
 #include <sys/time.h>
 #include <openthread/platform/flash.h>
 
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 #endif
@@ -848,7 +848,7 @@ OT_TOOL_WEAK otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance) {
 
 OT_TOOL_WEAK otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState) { return OT_ERROR_NONE; }
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 
 uint8_t  sPlatBleLastAdvSetData[OT_TCAT_ADVERTISEMENT_MAX_LEN];
 uint16_t sPlatBleLastAdvSetDataLen = 0;
@@ -948,7 +948,7 @@ otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisement
     return otPlatBleGapAdvSetData(aInstance, aAdvertisementData, aAdvertisementLen);
 }
 
-#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 
 #if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
