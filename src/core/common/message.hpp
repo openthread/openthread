@@ -208,15 +208,16 @@ protected:
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
         Instance *mInstance;
 #endif
-        bool mDirectTx : 1;            // Whether a direct transmission is required.
-        bool mLinkSecurity : 1;        // Whether link security is enabled.
-        bool mInPriorityQ : 1;         // Whether the message is queued in normal or priority queue.
-        bool mTxSuccess : 1;           // Whether the direct tx of the message was successful.
-        bool mDoNotEvict : 1;          // Whether this message may be evicted.
-        bool mMulticastLoop : 1;       // Whether this multicast message may be looped back.
-        bool mResolvingAddress : 1;    // Whether the message is pending an address query resolution.
-        bool mAllowLookbackToHost : 1; // Whether the message is allowed to be looped back to host.
-        bool mIsDstPanIdBroadcast : 1; // Whether the dest PAN ID is broadcast.
+        bool mDirectTx : 1;                 // Whether a direct transmission is required.
+        bool mLinkSecurity : 1;             // Whether link security is enabled.
+        bool mInPriorityQ : 1;              // Whether the message is queued in normal or priority queue.
+        bool mTxSuccess : 1;                // Whether the direct tx of the message was successful.
+        bool mDoNotEvict : 1;               // Whether this message may be evicted.
+        bool mMulticastLoop : 1;            // Whether this multicast message may be looped back.
+        bool mResolvingAddress : 1;         // Whether the message is pending an address query resolution.
+        bool mAllowLookbackToHost : 1;      // Whether the message is allowed to be looped back to host.
+        bool mIsDstPanIdBroadcast : 1;      // Whether the dest PAN ID is broadcast.
+        bool mDatagramSourceIsExtended : 1; // Whether stored 6LoWPAN reassembly source is extended.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         bool mIsRadioTypeSet : 1; // Whether the radio type is set.
 #endif
@@ -236,12 +237,13 @@ protected:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         uint8_t mTimeSyncSeq; // The time sync sequence.
 #endif
-        uint16_t mLength;      // Current message length (number of bytes).
-        uint16_t mOffset;      // A byte offset within the message.
-        uint16_t mReserved;    // Number of reserved bytes (for header).
-        uint16_t mMeshDest;    // Used for unicast non-link-local messages.
-        uint16_t mPanId;       // PAN ID (used for MLE Discover Request and Response).
-        uint32_t mDatagramTag; // The datagram tag used for 6LoWPAN frags or IPv6fragmentation.
+        uint16_t        mLength;         // Current message length (number of bytes).
+        uint16_t        mOffset;         // A byte offset within the message.
+        uint16_t        mReserved;       // Number of reserved bytes (for header).
+        uint16_t        mMeshDest;       // Used for unicast non-link-local messages.
+        uint16_t        mPanId;          // PAN ID (used for MLE Discover Request and Response).
+        uint32_t        mDatagramTag;    // The datagram tag used for 6LoWPAN frags or IPv6 fragmentation.
+        Mac::ExtAddress mDatagramSource; // Stored source bytes for a received fragmented datagram.
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         int64_t mNetworkTimeOffset; // The time offset to the Thread network time, in microseconds.
 #endif
@@ -1196,6 +1198,56 @@ public:
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      */
     void SetDatagramTag(uint32_t aTag) { GetMetadata().mDatagramTag = aTag; }
+
+    /**
+     * Sets the source address associated with a received 6LoWPAN fragmented datagram.
+     *
+     * @param[in] aSource  The source address.
+     */
+    void SetDatagramSource(const Mac::Address &aSource)
+    {
+        GetMetadata().mDatagramSourceIsExtended = aSource.IsExtended();
+
+        if (aSource.IsExtended())
+        {
+            GetMetadata().mDatagramSource = aSource.GetExtended();
+        }
+        else
+        {
+            Mac::ShortAddress shortAddress = aSource.GetShort();
+            GetMetadata().mDatagramSource.Clear();
+            memcpy(&GetMetadata().mDatagramSource, &shortAddress, sizeof(shortAddress));
+        }
+    }
+
+    /**
+     * Indicates whether a source address matches the one associated with a received 6LoWPAN fragmented datagram.
+     *
+     * @param[in] aSource  The source address to compare.
+     *
+     * @retval TRUE   The source addresses match.
+     * @retval FALSE  The source addresses do not match.
+     */
+    bool MatchesDatagramSource(const Mac::Address &aSource) const
+    {
+        bool matches = (GetMetadata().mDatagramSourceIsExtended == aSource.IsExtended());
+
+        if (matches)
+        {
+            if (aSource.IsExtended())
+            {
+                matches = (GetMetadata().mDatagramSource == aSource.GetExtended());
+            }
+            else
+            {
+                Mac::ShortAddress shortAddress;
+                memcpy(&shortAddress, &GetMetadata().mDatagramSource, sizeof(shortAddress));
+                matches = (shortAddress == aSource.GetShort());
+            }
+        }
+
+        return matches;
+    }
 
 #if OPENTHREAD_FTD
     /**
