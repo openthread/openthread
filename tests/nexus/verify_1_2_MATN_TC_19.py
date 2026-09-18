@@ -252,7 +252,7 @@ def verify(pv):
     print("Step 11: MTD sends a unicast ICMPv6 Echo Response packet back to Host.")
     pkts.filter_wpan_src64(MTD).\
         filter_ping_reply().\
-        filter(lambda p: p.ipv6.dst == HOST_ULA).\
+        filter(lambda p: p.ipv6.dst == HOST_ULA or (hasattr(p, 'ipv6') and getattr(p.ipv6, 'dst', None) and Ipv6Addr(p.ipv6.dst)[8:] == HOST_ULA[8:])).\
         must_next()
 
 

@@ -264,6 +264,17 @@ public:
     const Ip6::Prefix &GetFavoredNat64Prefix(void) const { return mDecisionFactors.mFavoredNat64Prefix; }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+    /**
+     * Retrieves the discovered AIL (Adjacent Infrastructure Link) prefixes.
+     *
+     * Iterates through reachable routers and adds their valid, non-deprecated on-link prefixes into @p aPrefixes.
+     *
+     * @param[out] aPrefixes  An `AilPrefixArray` to populate with discovered AIL prefixes.
+     */
+    void GetAilPrefixes(AilPrefixArray &aPrefixes) const;
+#endif
+
     /**
      * Sets the Managed Address Configuration (M) and Other Configuration (O) flags on a Router Advertisement header.
      *
