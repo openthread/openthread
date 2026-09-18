@@ -580,8 +580,13 @@ private:
     };
 #endif
 
-    bool IsRunning(void) const { return mSocket.IsBound(); }
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    bool              IsRunning(void) const { return mSocket.IsBound(); }
+    Ip6::Udp::Socket &GetSocket(const Ip6::MessageInfo &aMessageInfo);
+    void              HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error             HandleQuery(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Error HandleSrpServerUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#endif
     void ProcessQuery(Request &aRequest);
     void ResolveByProxy(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
     void RemoveQueryAndPrepareResponse(ProxyQuery &aQuery, ProxyQueryInfo &aInfo, Response &aResponse);

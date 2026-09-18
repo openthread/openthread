@@ -139,8 +139,6 @@ void Server::Stop(void)
 
 void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Request request;
-
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     // We first let the `Srp::Server` process the received message.
     // It returns `kErrorNone` to indicate that it successfully
@@ -148,6 +146,19 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     VerifyOrExit(Get<Srp::Server>().HandleDnssdServerUdpReceive(aMessage, aMessageInfo) != kErrorNone);
 #endif
+
+    IgnoreError(HandleQuery(aMessage, aMessageInfo));
+
+exit:
+    return;
+}
+
+Error Server::HandleQuery(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Error   error = kErrorDrop;
+    Request request;
+
+    VerifyOrExit(IsRunning());
 
     request.mMessage     = &aMessage;
     request.mMessageInfo = &aMessageInfo;
@@ -158,9 +169,39 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     LogInfo("Received query from %s", aMessageInfo.GetPeerAddr().ToString().AsCString());
 
     ProcessQuery(request);
+    error = kErrorNone;
 
 exit:
-    return;
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+Error Server::HandleSrpServerUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    // This is called from `Srp::Server` when a UDP message is
+    // received on its socket. If `Dnssd::Server` is running, we
+    // process the received message as a DNS query. We return
+    // `kErrorNone` to indicate that message was processed by
+    // `Dnssd::Server`, otherwise `kErrorDrop` is returned.
+
+    return HandleQuery(aMessage, aMessageInfo);
+}
+#endif
+
+Ip6::Udp::Socket &Server::GetSocket(const Ip6::MessageInfo &aMessageInfo)
+{
+    Ip6::Udp::Socket *socket = &mSocket;
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Ip6::Udp::Socket &srpSocket = Get<Srp::Server>().GetSocket();
+
+    if (srpSocket.IsOpen() && (aMessageInfo.GetSockPort() == srpSocket.GetSockName().GetPort()))
+    {
+        socket = &srpSocket;
+    }
+#endif
+
+    return *socket;
 }
 
 void Server::ProcessQuery(Request &aRequest)
@@ -294,7 +335,7 @@ void Server::Response::Send(const Ip6::MessageInfo &aMessageInfo)
 
     mMessage->Write(0, mHeader);
 
-    SuccessOrExit(Get<Server>().mSocket.SendTo(*mMessage, aMessageInfo));
+    SuccessOrExit(Get<Server>().GetSocket(aMessageInfo).SendTo(*mMessage, aMessageInfo));
 
     // When `SendTo()` returns success it takes over ownership of
     // the given message, so we release ownership of `mMessage`.
@@ -1146,7 +1187,8 @@ void Server::OnUpstreamQueryDone(UpstreamQueryTransaction &aQueryTransaction, Me
 
     if (aResponseMessage != nullptr)
     {
-        error = mSocket.SendTo(*aResponseMessage, aQueryTransaction.GetMessageInfo());
+        error =
+            GetSocket(aQueryTransaction.GetMessageInfo()).SendTo(*aResponseMessage, aQueryTransaction.GetMessageInfo());
     }
     else
     {

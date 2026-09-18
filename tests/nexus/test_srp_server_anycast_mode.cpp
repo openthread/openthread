@@ -77,36 +77,61 @@ static constexpr uint16_t kSrpServerAnycastPort   = 53;
  */
 struct BrowseContext
 {
-    Node *mClientNode;
-    bool  mDone;
+    Node   *mClientNode;
+    otError mError;
+    bool    mDone;
 };
 
 static void HandleBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext)
 {
-    BrowseContext                     *context  = static_cast<BrowseContext *>(aContext);
-    const Dns::Client::BrowseResponse &response = *static_cast<const Dns::Client::BrowseResponse *>(aResponse);
-    char                               label[Dns::Name::kMaxLabelSize];
-    Dns::Client::ServiceInfo           serviceInfo;
-    char                               hostName[Dns::Name::kMaxNameSize];
+    BrowseContext *context = static_cast<BrowseContext *>(aContext);
 
-    SuccessOrQuit(aError);
+    context->mError = aError;
+    context->mDone  = true;
 
-    // Since there is only one match the server should include the service info in additional section.
-    SuccessOrQuit(response.GetServiceInstance(0, label, sizeof(label)));
-    VerifyOrQuit(StringMatch(label, kSrpInstanceName, kStringCaseInsensitiveMatch));
+    SuccessOrExit(aError);
+    {
+        const Dns::Client::BrowseResponse &response = *static_cast<const Dns::Client::BrowseResponse *>(aResponse);
+        char                               label[Dns::Name::kMaxLabelSize];
+        Dns::Client::ServiceInfo           serviceInfo;
+        char                               hostName[Dns::Name::kMaxNameSize];
 
-    serviceInfo.mHostNameBuffer     = hostName;
-    serviceInfo.mHostNameBufferSize = sizeof(hostName);
-    serviceInfo.mTxtData            = nullptr;
-    serviceInfo.mTxtDataSize        = 0;
+        // Since there is only one match the server should include the service info in additional section.
+        SuccessOrQuit(response.GetServiceInstance(0, label, sizeof(label)));
+        VerifyOrQuit(StringMatch(label, kSrpInstanceName, kStringCaseInsensitiveMatch));
 
-    SuccessOrQuit(response.GetServiceInfo(label, serviceInfo));
+        serviceInfo.mHostNameBuffer     = hostName;
+        serviceInfo.mHostNameBufferSize = sizeof(hostName);
+        serviceInfo.mTxtData            = nullptr;
+        serviceInfo.mTxtDataSize        = 0;
 
-    VerifyOrQuit(serviceInfo.mPort == kSrpServicePort);
-    VerifyOrQuit(StringStartsWith(serviceInfo.mHostNameBuffer, kSrpHostName, kStringCaseInsensitiveMatch));
-    VerifyOrQuit(AsCoreType(&serviceInfo.mHostAddress) == context->mClientNode->Get<Mle::Mle>().GetMeshLocalEid());
+        SuccessOrQuit(response.GetServiceInfo(label, serviceInfo));
 
-    context->mDone = true;
+        VerifyOrQuit(serviceInfo.mPort == kSrpServicePort);
+        VerifyOrQuit(StringStartsWith(serviceInfo.mHostNameBuffer, kSrpHostName, kStringCaseInsensitiveMatch));
+        VerifyOrQuit(AsCoreType(&serviceInfo.mHostAddress) == context->mClientNode->Get<Mle::Mle>().GetMeshLocalEid());
+    }
+
+exit:
+    return;
+}
+
+/**
+ * Test context for DNS record query.
+ */
+struct RecordContext
+{
+    otError mError;
+    bool    mDone;
+};
+
+static void HandleRecordResponse(otError aError, const otDnsRecordResponse *aResponse, void *aContext)
+{
+    RecordContext *context = static_cast<RecordContext *>(aContext);
+
+    context->mError = aError;
+    context->mDone  = true;
+    OT_UNUSED_VARIABLE(aResponse);
 }
 
 void TestSrpServerAnycastMode(const char *aJsonFileName)
@@ -226,11 +251,67 @@ void TestSrpServerAnycastMode(const char *aJsonFileName)
         // 5. Browse for the service from the browser node and verify result.
         BrowseContext context;
         context.mClientNode = &client;
+        context.mError      = OT_ERROR_NONE;
         context.mDone       = false;
 
         SuccessOrQuit(browser.Get<Dns::Client>().Browse(kSrpFullServiceType, HandleBrowseResponse, &context));
         nexus.AdvanceTime(kDnsQueryTime);
         VerifyOrQuit(context.mDone);
+        SuccessOrQuit(context.mError);
+
+        // 5b. Query targeting the SRP server's port explicitly.
+        // In unicast mode, this is the dynamic unicast SRP port, verifying that standard DNS
+        // queries sent to the SRP server socket are handled by DNS-SD server.
+        // In anycast mode, this is port 53.
+        {
+            Dns::Client::QueryConfig queryConfig;
+            queryConfig.Clear();
+            AsCoreType(&queryConfig.mServerSockAddr).SetAddress(server.Get<Mle::Mle>().GetMeshLocalEid());
+            queryConfig.mServerSockAddr.mPort = server.Get<Srp::Server>().GetPort();
+
+            context.mDone  = false;
+            context.mError = OT_ERROR_FAILED;
+            SuccessOrQuit(
+                browser.Get<Dns::Client>().Browse(kSrpFullServiceType, HandleBrowseResponse, &context, &queryConfig));
+            nexus.AdvanceTime(kDnsQueryTime);
+            VerifyOrQuit(context.mDone);
+            SuccessOrQuit(context.mError);
+
+            // Also query SOA record for default.service.arpa. targeting the SRP server's port.
+            RecordContext recordContext;
+            recordContext.mDone  = false;
+            recordContext.mError = OT_ERROR_FAILED;
+            SuccessOrQuit(browser.Get<Dns::Client>().QueryRecord(Dns::ResourceRecord::kTypeSoa, nullptr,
+                                                                 "default.service.arpa.", HandleRecordResponse,
+                                                                 &recordContext, &queryConfig));
+            nexus.AdvanceTime(kDnsQueryTime);
+            VerifyOrQuit(recordContext.mDone);
+            SuccessOrQuit(recordContext.mError);
+
+            // When DNS-SD server is stopped, querying the SRP server's port should receive NotImplemented response.
+            server.Get<Dns::ServiceDiscovery::Server>().Stop();
+
+            recordContext.mDone  = false;
+            recordContext.mError = OT_ERROR_NONE;
+            SuccessOrQuit(browser.Get<Dns::Client>().QueryRecord(Dns::ResourceRecord::kTypeSoa, nullptr,
+                                                                 "default.service.arpa.", HandleRecordResponse,
+                                                                 &recordContext, &queryConfig));
+            nexus.AdvanceTime(kDnsQueryTime);
+            VerifyOrQuit(recordContext.mDone);
+            VerifyOrQuit(recordContext.mError == OT_ERROR_NOT_IMPLEMENTED);
+
+            // Re-start DNS-SD server and verify queries work again.
+            SuccessOrQuit(server.Get<Dns::ServiceDiscovery::Server>().Start());
+
+            recordContext.mDone  = false;
+            recordContext.mError = OT_ERROR_FAILED;
+            SuccessOrQuit(browser.Get<Dns::Client>().QueryRecord(Dns::ResourceRecord::kTypeSoa, nullptr,
+                                                                 "default.service.arpa.", HandleRecordResponse,
+                                                                 &recordContext, &queryConfig));
+            nexus.AdvanceTime(kDnsQueryTime);
+            VerifyOrQuit(recordContext.mDone);
+            SuccessOrQuit(recordContext.mError);
+        }
 
         // 6. Clear host on client and stop both client and server.
         client.Get<Srp::Client>().ClearHostAndServices();

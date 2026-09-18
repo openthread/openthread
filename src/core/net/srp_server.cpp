@@ -1713,6 +1713,25 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 {
     Error error = ProcessMessage(aMessage, aMessageInfo);
 
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    if (error != kErrorNone)
+    {
+        error = Get<Dns::ServiceDiscovery::Server>().HandleSrpServerUdpReceive(aMessage, aMessageInfo);
+    }
+#endif
+
+    if (error != kErrorNone)
+    {
+        Dns::UpdateHeader header;
+
+        if ((aMessage.Read(aMessage.GetOffset(), header) == kErrorNone) &&
+            (header.GetType() == Dns::UpdateHeader::kTypeQuery))
+        {
+            SendResponse(header, Dns::UpdateHeader::kResponseNotImplemented, aMessageInfo);
+            error = kErrorNone;
+        }
+    }
+
     LogWarnOnError(error, "handle DNS message");
     OT_UNUSED_VARIABLE(error);
 }
