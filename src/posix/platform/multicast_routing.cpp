@@ -41,8 +41,6 @@
 #include <unistd.h>
 #ifdef __linux__
 #include <linux/mroute6.h>
-#else
-#error "Multicast Routing feature is not ported to non-Linux platforms yet."
 #endif
 
 #include <openthread/backbone_router_ftd.h>
@@ -149,34 +147,6 @@ exit:
     return;
 }
 
-void MulticastRoutingManager::Add(const Ip6::Address &aAddress)
-{
-    VerifyOrExit(IsEnabled());
-
-    UnblockInboundMulticastForwardingCache(aAddress);
-    UpdateMldReport(aAddress, true);
-
-    LogResult(OT_ERROR_NONE, "%s: %s", __FUNCTION__, aAddress.ToString().AsCString());
-
-exit:
-    return;
-}
-
-void MulticastRoutingManager::Remove(const Ip6::Address &aAddress)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(IsEnabled());
-
-    RemoveInboundMulticastForwardingCache(aAddress);
-    UpdateMldReport(aAddress, false);
-
-    LogResult(error, "%s: %s", __FUNCTION__, aAddress.ToString().AsCString());
-
-exit:
-    return;
-}
-
 void MulticastRoutingManager::UpdateMldReport(const Ip6::Address &aAddress, bool isAdd)
 {
     struct ipv6_mreq ipv6mr;
@@ -205,6 +175,64 @@ bool MulticastRoutingManager::HasMulticastListener(const Ip6::Address &aAddress)
 
 exit:
     return found;
+}
+
+void MulticastRoutingManager::HandleStateChange(otInstance *aInstance, otChangedFlags aFlags)
+{
+    if (aFlags & OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE)
+    {
+        otBackboneRouterState state = otBackboneRouterGetState(aInstance);
+
+        switch (state)
+        {
+        case OT_BACKBONE_ROUTER_STATE_DISABLED:
+        case OT_BACKBONE_ROUTER_STATE_SECONDARY:
+            Disable();
+            break;
+        case OT_BACKBONE_ROUTER_STATE_PRIMARY:
+            Enable();
+            break;
+        }
+    }
+}
+
+#ifdef __linux__
+
+MulticastRoutingManager::MulticastRoutingManager()
+    : mLastExpireTime(0)
+    , mMulticastRouterSock(-1)
+    , mState(kStateDisabled)
+    , mRetryIntervalMs(kMinRetryIntervalMs)
+    , mNextRetryTime(0)
+{
+}
+
+void MulticastRoutingManager::Add(const Ip6::Address &aAddress)
+{
+    VerifyOrExit(IsEnabled());
+
+    UnblockInboundMulticastForwardingCache(aAddress);
+    UpdateMldReport(aAddress, true);
+
+    LogResult(OT_ERROR_NONE, "%s: %s", __FUNCTION__, aAddress.ToString().AsCString());
+
+exit:
+    return;
+}
+
+void MulticastRoutingManager::Remove(const Ip6::Address &aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsEnabled());
+
+    RemoveInboundMulticastForwardingCache(aAddress);
+    UpdateMldReport(aAddress, false);
+
+    LogResult(error, "%s: %s", __FUNCTION__, aAddress.ToString().AsCString());
+
+exit:
+    return;
 }
 
 void MulticastRoutingManager::Update(Mainloop::Context &aContext)
@@ -579,25 +607,6 @@ void MulticastRoutingManager::DumpMulticastForwardingCache(void) const
 #endif
 }
 
-void MulticastRoutingManager::HandleStateChange(otInstance *aInstance, otChangedFlags aFlags)
-{
-    if (aFlags & OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE)
-    {
-        otBackboneRouterState state = otBackboneRouterGetState(aInstance);
-
-        switch (state)
-        {
-        case OT_BACKBONE_ROUTER_STATE_DISABLED:
-        case OT_BACKBONE_ROUTER_STATE_SECONDARY:
-            Disable();
-            break;
-        case OT_BACKBONE_ROUTER_STATE_PRIMARY:
-            Enable();
-            break;
-        }
-    }
-}
-
 void MulticastRoutingManager::MulticastForwardingCache::Set(MulticastRoutingManager::MifIndex aIif,
                                                             MulticastRoutingManager::MifIndex aOif)
 {
@@ -691,6 +700,8 @@ void MulticastRoutingManager::RemoveMulticastForwardingCache(
 
     aMfc.Erase();
 }
+
+#endif // __linux__
 
 } // namespace Posix
 } // namespace ot
