@@ -522,6 +522,11 @@ Error Leader::FindCommissioningDataSubTlv(uint8_t aType, CommissioningDataSubTlv
 
     error = kErrorNone;
 
+    if ((subTlv != nullptr) && subTlv->IsExtended())
+    {
+        subTlv = nullptr;
+    }
+
 exit:
     return error;
 }
@@ -562,6 +567,18 @@ void Leader::GetCommissioningDataset(MeshCoP::CommissioningDataset &aDataset) co
 
     for (; subTlv < endTlv; subTlv = subTlv->GetNext())
     {
+        VerifyOrExit((subTlv + 1) <= endTlv);
+
+        if (subTlv->IsExtended())
+        {
+            // None of the known sub-TLVs use the extended format, so skip over it.
+            VerifyOrExit((As<ExtendedTlv>(subTlv) + 1) <= As<ExtendedTlv>(endTlv));
+            VerifyOrExit(subTlv->GetNext() <= endTlv);
+            continue;
+        }
+
+        VerifyOrExit(subTlv->GetNext() <= endTlv);
+
         switch (subTlv->GetType())
         {
         case MeshCoP::Tlv::kBorderAgentLocator:
