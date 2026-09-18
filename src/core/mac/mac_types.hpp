@@ -41,7 +41,6 @@
 
 #include <openthread/link.h>
 #include <openthread/thread.h>
-#include <openthread/provisional/link.h>
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"

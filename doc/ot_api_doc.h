@@ -175,18 +175,6 @@
  *
  * @}
  *
- * @defgroup api-provisional             Provisional
- * @brief
- *   This module includes the OpenThread provisional APIs. These APIs are not stable and users should use them with
- *   caution.
- *
- * @{
- *
- * @defgroup api-provisional-link        Link
- * @defgroup api-provisional-p2p         Peer-to-Peer
- *
- * @}
- *
  * @}
  */
 
