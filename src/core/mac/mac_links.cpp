@@ -172,7 +172,7 @@ void Links::Send(TxFrame &aFrame, Radio::Types aRadioTypes)
 void Links::SetMacFrameCounter(TxFrame::ParseInfo &aFrameInfo)
 {
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aFrameInfo.GetTxFrame()->GetRadioType() == Radio::kTypeTrel)
+    if (aFrameInfo.GetRadioType() == Radio::kTypeTrel)
 #endif
     {
         aFrameInfo.WriteFrameCounter(Get<KeyManager>().GetTrelMacFrameCounter());

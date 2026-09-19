@@ -179,7 +179,7 @@ void NcpBase::LinkRawTransmitDone(uint8_t aIid, otRadioFrame *aFrame, otRadioFra
         bool                    headerUpdated;
 
         IgnoreError(txFrameInfo.ParseFrom(*static_cast<Mac::TxFrame *>(aFrame), Mac::Frame::kParseFully));
-        headerUpdated = txFrameInfo.GetTxFrame()->IsHeaderUpdated();
+        headerUpdated = txFrameInfo.IsHeaderUpdated();
 
         if (aAckFrame != nullptr)
         {
