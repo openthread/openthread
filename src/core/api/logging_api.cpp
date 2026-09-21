@@ -37,14 +37,26 @@
 
 using namespace ot;
 
-otLogLevel otGetLogLevel(otInstance *aInstance) { return MapEnum(AsCoreType(aInstance).GetLogLevel()); }
+otLogLevel otGetLogLevel(otInstance *aInstance)
+{
+    LogLevel level;
+
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    OT_UNUSED_VARIABLE(aInstance);
+    level = Instance::GetLogLevel();
+#else
+    level = AsCoreType(aInstance).GetLogLevel();
+#endif
+
+    return MapEnum(level);
+}
 
 otLogLevel otLoggingGetLevel(void)
 {
     LogLevel level;
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    level = Instance::Get().GetLogLevel();
+    level = Instance::GetLogLevel();
 #else
     level = Instance::GetGlobalLogLevel();
 #endif
