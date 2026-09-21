@@ -721,6 +721,7 @@ private:
     void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame::ParseInfo &aRxFrameInfo);
     void     HandleMacCommand(RxFrame::ParseInfo &aFrameInfo);
     void     HandleTimer(void);
+    void     UpdateCountersAndRetryHistogramOnTxDone(Error aError);
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     Error ProcessTxDone(TxFrame::ParseInfo &aFrameInfo, RxFrame::ParseInfo &aAckFrameInfo, Error &aError);
 #endif

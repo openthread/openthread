@@ -1395,6 +1395,7 @@ void Mac::HandleTxFramePrepFailed(TxFrames &aTxFrames)
 void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError)
 {
     RxFrame::ParseInfo ackFrameInfo;
+    Operation          operation;
 
     if (aAckFrame != nullptr)
     {
@@ -1409,21 +1410,14 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
     SuccessOrExit(ProcessMultiRadioTxDone(aFrameInfo, aError));
 #endif
 
+    UpdateCountersAndRetryHistogramOnTxDone(aError);
+
+    DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
+
     // Determine next action based on current operation.
 
     switch (mOperation)
     {
-    case kOperationActiveScan:
-        mCounters.mTxBeaconRequest++;
-        mTimer.Start(mScanDuration);
-        break;
-
-    case kOperationTransmitBeacon:
-        mCounters.mTxBeacon++;
-        FinishOperation();
-        PerformNextOperation();
-        break;
-
     case kOperationTransmitPoll:
         OT_ASSERT(aFrameInfo.GetTxFrame()->IsEmpty() || aFrameInfo.mIsAckRequest);
 
@@ -1437,74 +1431,142 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
             LogInfo("Sent data poll, fp:%s", ToYesNo(ackFrameInfo.mIsFramePending));
         }
 
-        mCounters.mTxDataPoll++;
-        FinishOperation();
-        Get<DataPollSender>().HandlePollTxDone(aFrameInfo, aError);
-        PerformNextOperation();
-        break;
+        OT_FALL_THROUGH;
 
+    case kOperationTransmitBeacon:
     case kOperationTransmitDataDirect:
-        mCounters.mTxData++;
-
-        if (aError != kErrorNone)
-        {
-            mCounters.mTxDirectMaxRetryExpiry++;
-        }
-#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-        else
-        {
-            mRetryHistogram.RecordDirectTx(mLinks.GetTransmitRetries());
-        }
-#endif
-
-        DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
-        FinishOperation();
-        Get<MeshForwarder>().HandleFrameTxDone(aFrameInfo, aError);
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        Get<DataPollSender>().ProcessTxDone(aFrameInfo, ackFrameInfo, aError);
-#endif
-        PerformNextOperation();
-        break;
-
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
-        mCounters.mTxData++;
-
-        DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
-        FinishOperation();
-        Get<CslTxScheduler>().HandleFrameTxDone(aFrameInfo, aError);
-        PerformNextOperation();
-
-        break;
 #endif
-
 #if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
-        mCounters.mTxData++;
-
-        if (aError != kErrorNone)
-        {
-            mCounters.mTxIndirectMaxRetryExpiry++;
-        }
-#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-        else
-        {
-            mRetryHistogram.RecordIndirectTx(mLinks.GetTransmitRetries());
-        }
 #endif
-
-        DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
-        FinishOperation();
-        Get<DataPollHandler>().HandleFrameTxDone(aFrameInfo, aError);
-        PerformNextOperation();
+        // All transmission operations finish the current operation, report
+        // the TX status to the initiating module, and schedule the next
+        // operation below.
         break;
-#endif // OPENTHREAD_FTD
+
+    case kOperationActiveScan:
+        mTimer.Start(mScanDuration);
+        ExitNow();
 
     default:
         OT_ASSERT(false);
     }
 
-    ExitNow(); // Added to suppress "unused label exit" warning (in TREL radio only).
+    operation = mOperation;
+
+    FinishOperation();
+
+    // Report the transmission result to the module that initiated the operation.
+
+    switch (operation)
+    {
+    case kOperationTransmitPoll:
+        Get<DataPollSender>().HandlePollTxDone(aFrameInfo, aError);
+        break;
+
+    case kOperationTransmitBeacon:
+        break;
+
+    case kOperationTransmitDataDirect:
+        Get<MeshForwarder>().HandleFrameTxDone(aFrameInfo, aError);
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        Get<DataPollSender>().ProcessTxDone(aFrameInfo, ackFrameInfo, aError);
+#endif
+        break;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    case kOperationTransmitDataCsl:
+        Get<CslTxScheduler>().HandleFrameTxDone(aFrameInfo, aError);
+        break;
+#endif
+
+#if OPENTHREAD_FTD
+    case kOperationTransmitDataIndirect:
+        Get<DataPollHandler>().HandleFrameTxDone(aFrameInfo, aError);
+        break;
+#endif
+
+    default:
+        break;
+    }
+
+    PerformNextOperation();
+
+exit:
+    return;
+}
+
+void Mac::UpdateCountersAndRetryHistogramOnTxDone(Error aError)
+{
+    switch (mOperation)
+    {
+    case kOperationActiveScan:
+        mCounters.mTxBeaconRequest++;
+        break;
+
+    case kOperationTransmitBeacon:
+        mCounters.mTxBeacon++;
+        break;
+
+    case kOperationTransmitPoll:
+        mCounters.mTxDataPoll++;
+        break;
+
+    case kOperationTransmitDataDirect:
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    case kOperationTransmitDataCsl:
+#endif
+#if OPENTHREAD_FTD
+    case kOperationTransmitDataIndirect:
+#endif
+        mCounters.mTxData++;
+        break;
+
+    default:
+        break;
+    }
+
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
+    if (aError == kErrorNone)
+    {
+        switch (mOperation)
+        {
+        case kOperationTransmitDataDirect:
+            mRetryHistogram.RecordDirectTx(mLinks.GetTransmitRetries());
+            break;
+
+#if OPENTHREAD_FTD
+        case kOperationTransmitDataIndirect:
+            mRetryHistogram.RecordIndirectTx(mLinks.GetTransmitRetries());
+            break;
+#endif
+        default:
+            break;
+        }
+    }
+
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
+    VerifyOrExit(aError != kErrorNone);
+
+    switch (mOperation)
+    {
+    case kOperationTransmitDataDirect:
+        mCounters.mTxDirectMaxRetryExpiry++;
+        break;
+
+#if OPENTHREAD_FTD
+    case kOperationTransmitDataIndirect:
+        mCounters.mTxIndirectMaxRetryExpiry++;
+        break;
+#endif
+
+    default:
+        break;
+    }
 
 exit:
     return;
