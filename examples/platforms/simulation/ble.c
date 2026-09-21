@@ -257,13 +257,12 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
     }
     else if (FD_ISSET(sFd, aReadFdSet))
     {
-        socklen_t len = sizeof(sSockaddr);
-        ssize_t   rval;
-        if (!sIsConnected)
-        {
-            memset(&sSockaddr, 0, sizeof(sSockaddr));
-        }
-        rval = recvfrom(sFd, sBleBuffer, sizeof(sBleBuffer), 0, (struct sockaddr *)&sSockaddr, &len);
+        struct sockaddr_in sockaddr;
+        socklen_t          len = sizeof(sockaddr);
+        ssize_t            rval;
+
+        memset(&sockaddr, 0, sizeof(sockaddr));
+        rval = recvfrom(sFd, sBleBuffer, sizeof(sBleBuffer), 0, (struct sockaddr *)&sockaddr, &len);
         if (rval > 0)
         {
             otBleRadioPacket myPacket;
@@ -274,6 +273,7 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
                 // closing TCAT session until the device is ready again for a new session.
                 otEXPECT(sIsAdvertising);
 
+                sSockaddr        = sockaddr;
                 sIsConnected     = true;
                 sIsDisconnecting = false;
                 sIsAdvertising   = false; // per API contract, advertising stops once a client connects

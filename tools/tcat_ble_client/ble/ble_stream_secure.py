@@ -347,6 +347,11 @@ class BleStreamSecure:
             self.stream.is_connected
 
     @property
+    def close_notify_received(self):
+        """True if the TLS connection was closed by a close-notify alert received from the peer."""
+        return self._close_notify_received
+
+    @property
     def peer_public_key(self):
         return self._peer_public_key
 
