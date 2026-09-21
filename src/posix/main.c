@@ -327,6 +327,9 @@ static otInstance *InitInstance(PosixConfig *aConfig)
 
     instance = otSysInit(&aConfig->mPlatformConfig);
     VerifyOrDie(instance != NULL, OT_EXIT_FAILURE);
+
+    IgnoreError(otSetLogLevel(instance, aConfig->mLogLevel));
+
     syslog(LOG_INFO, "Thread interface: %s", otSysGetThreadNetifName());
 
     if (aConfig->mPlatformConfig.mCoprocessorType != OT_COPROCESSOR_RCP)
