@@ -698,8 +698,9 @@ static constexpr size_t     kMaxPendingRemoveAddrs = 4;
 static PendingRemoveAddress sPendingRemoveAddrs[kMaxPendingRemoveAddrs];
 static size_t               sPendingRemoveAddrsCount = 0;
 
-static void SendDeleteAddress(const PendingRemoveAddress &aAddress)
+static otError SendDeleteAddress(const PendingRemoveAddress &aAddress)
 {
+    otError error;
     struct
     {
         struct nlmsghdr  nh;
@@ -723,7 +724,12 @@ static void SendDeleteAddress(const PendingRemoveAddress &aAddress)
 
     AddRtAttr(&req.nh, sizeof(req), IFA_LOCAL, &aAddress.mAddress, sizeof(aAddress.mAddress));
 
-    if (SendNetlinkMessage(&req, req.nh.nlmsg_len) == OT_ERROR_NONE)
+    // Route through `SendNetlinkMessage()` (rather than a raw `send()`) so that this delete is
+    // ordered against any add/replace for the same address still sitting in the pending netlink
+    // TX queue (e.g., due to a prior `EAGAIN`), instead of racing ahead of it.
+    error = SendNetlinkMessage(&req, req.nh.nlmsg_len);
+
+    if (error == OT_ERROR_NONE)
     {
         LogInfo("Sent request#%u to remove %s/%u", sNetlinkSequence, Ip6AddressString(&aAddress.mAddress).AsCString(),
                 aAddress.mPrefixLength);
@@ -732,19 +738,35 @@ static void SendDeleteAddress(const PendingRemoveAddress &aAddress)
     }
     else
     {
-        LogWarn("Failed to send request#%u to remove %s/%u", sNetlinkSequence,
-                Ip6AddressString(&aAddress.mAddress).AsCString(), aAddress.mPrefixLength);
+        LogWarn("Failed to send request#%u to remove %s/%u: %s", sNetlinkSequence,
+                Ip6AddressString(&aAddress.mAddress).AsCString(), aAddress.mPrefixLength, otThreadErrorToString(error));
     }
+
+    return error;
 }
 
 static void FlushPendingRemoveAddresses(void)
 {
+    size_t remaining = 0;
+
     for (size_t i = 0; i < sPendingRemoveAddrsCount; i++)
     {
-        SendDeleteAddress(sPendingRemoveAddrs[i]);
+        // `OT_ERROR_BUSY` (the pending netlink TX queue is full) is the only retryable outcome.
+        // Once hit, stop attempting later entries and instead keep this one and all subsequent
+        // entries pending for the next flush, so that a later removal can't end up queued ahead
+        // of this one once space frees up. Any other outcome (sent, or a non-retryable failure
+        // such as the netlink socket being unavailable) consumes the entry.
+        if (SendDeleteAddress(sPendingRemoveAddrs[i]) == OT_ERROR_BUSY)
+        {
+            for (; i < sPendingRemoveAddrsCount; i++)
+            {
+                sPendingRemoveAddrs[remaining++] = sPendingRemoveAddrs[i];
+            }
+            break;
+        }
     }
 
-    sPendingRemoveAddrsCount = 0;
+    sPendingRemoveAddrsCount = remaining;
 }
 
 static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
@@ -773,7 +795,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 
         if (sPendingRemoveAddrsCount == kMaxPendingRemoveAddrs)
         {
-            SendDeleteAddress(sPendingRemoveAddrs[0]);
+            IgnoreError(SendDeleteAddress(sPendingRemoveAddrs[0]));
             for (size_t i = 1; i < sPendingRemoveAddrsCount; i++)
             {
                 sPendingRemoveAddrs[i - 1] = sPendingRemoveAddrs[i];
@@ -3025,6 +3047,7 @@ void platformNetifDeinit(void)
 #ifdef __linux__
     sPendingNetlinkTxQueue.Clear();
     ClearPendingNetlinkRequests();
+    sPendingRemoveAddrsCount = 0;
 #endif
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
@@ -3075,10 +3098,6 @@ void platformNetifProcess(const ot::Posix::Mainloop::Context *aContext)
     assert(aContext != nullptr);
     VerifyOrExit(gNetifIndex > 0);
 
-#ifdef __linux__
-    FlushPendingRemoveAddresses();
-#endif
-
     if (ot::Posix::Mainloop::HasFdErrored(sTunFd, *aContext))
     {
         close(sTunFd);
@@ -3112,7 +3131,13 @@ void platformNetifProcess(const ot::Posix::Mainloop::Context *aContext)
 #ifdef __linux__
     if (ot::Posix::Mainloop::IsFdWritable(sNetlinkFd, *aContext))
     {
+        // Flush after `ProcessPendingNetlinkTx()` so any queue space it just freed up is used
+        // immediately, rather than flushing first and failing on a queue that's still full from
+        // before `select()` was called. Both calls are gated on the fd actually being writable so
+        // a wakeup for an unrelated fd doesn't uselessly retry (and fail) against a socket that
+        // select() already told us isn't ready.
         ProcessPendingNetlinkTx();
+        FlushPendingRemoveAddresses();
     }
 #endif
 
