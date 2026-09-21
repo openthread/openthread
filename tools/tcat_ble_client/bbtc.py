@@ -37,7 +37,7 @@ from ble.ble_stream_secure import BleStreamSecure
 from ble.udp_stream import UdpStream
 from ble import ble_scanner
 from cli.cli import CLI
-from cli.base_commands import connection_closed_helper
+from cli.base_commands import connection_closed_helper, disconnect_helper
 from dataset.dataset import ThreadDataset
 from cli.command import CommandResult
 from tlv.tcat_tlv import TcatTLVType
@@ -122,9 +122,13 @@ async def receive_loop(cli_context: dict):
                 await connection_closed_helper(cli_context)
                 continue
 
-            # The link can also drop without raising BleConnectionClosed.
-            if not bless.stream.is_connected:
-                await connection_closed_helper(cli_context)
+            # The connection can also end without BleConnectionClosed being raised: either the peer
+            # closed TLS gracefully (close-notify), or the BLE link itself dropped.
+            if not bless.is_connected:
+                if bless.close_notify_received:
+                    await disconnect_helper(cli_context)
+                else:
+                    await connection_closed_helper(cli_context)
                 continue
 
             if data:

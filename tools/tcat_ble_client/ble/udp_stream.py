@@ -66,7 +66,7 @@ class UdpStream:
             if len(data) == 0:
                 logger.debug('rx: BLE link disconnection was simulated (0-byte UDP packet)')
                 self.__connected = False
-                return b''
+                raise BleConnectionClosed('BLE connection (simulation) was closed')
             logger.debug(f'rx {len(data)} bytes')
             return data
         else:
@@ -80,9 +80,8 @@ class UdpStream:
 
     async def disconnect(self):
         self.__connected = False
-        if self.socket is not None:
-            self.socket.close()
+        self.socket.close()
 
     @property
     def is_connected(self):
-        return self.__connected and self.socket is not None
+        return self.__connected

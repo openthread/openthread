@@ -110,4 +110,4 @@ class BleStream:
 
     @property
     def is_connected(self):
-        return self.client.is_connected
+        return self.client.is_connected or len(self.__receive_buffer) > 0
