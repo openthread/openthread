@@ -65,9 +65,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     data += sizeof(seed);
     size -= sizeof(seed);
 
-    Core nexus;
+    Core             nexus;
+    Node            &server = nexus.CreateNode();
+    Ip6::Udp::Socket socket(server.GetInstance(), &FuzzUdpNoop, nullptr);
+    Ip6::MessageInfo info;
+    uint16_t         port;
+    Ip6::Address     dest;
 
-    Node &server = nexus.CreateNode();
     SuccessOrQuit(server.GetInstance().SetLogLevel(kLogLevelNone));
     server.GetInstance().Get<Srp::Server>().SetAutoEnableMode(true);
     server.GetInstance().Get<BorderRouter::InfraIf>().Init(/* aInfraIfIndex */ 1, /* aIsRunning */ true);
@@ -78,37 +82,34 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     VerifyOrQuit(server.Get<Mle::Mle>().IsLeader());
     VerifyOrQuit(server.Get<Srp::Server>().GetState() == Srp::Server::kStateRunning);
 
+    port = server.Get<Srp::Server>().GetPort();
+    dest = server.Get<Mle::Mle>().GetMeshLocalEid();
+
+    SuccessOrExit(socket.Open(Ip6::kNetifThreadInternal));
+
+    message = socket.NewMessage();
+    VerifyOrExit(message != nullptr);
+
+    SuccessOrExit(message->AppendBytes(data, static_cast<uint16_t>(size)));
+
+    info.SetPeerAddr(dest);
+    info.SetPeerPort(port);
+
+    if (socket.SendTo(*message, info) == kErrorNone)
     {
-        uint16_t         port = server.Get<Srp::Server>().GetPort();
-        Ip6::Address     dest = server.Get<Mle::Mle>().GetMeshLocalEid();
-        Ip6::Udp::Socket socket(server.GetInstance(), &FuzzUdpNoop, nullptr);
-        Ip6::MessageInfo info;
-
-        SuccessOrExit(socket.Open(Ip6::kNetifThreadInternal));
-
-        message = socket.NewMessage();
-        VerifyOrExit(message != nullptr);
-
-        SuccessOrExit(message->AppendBytes(data, static_cast<uint16_t>(size)));
-
-        info.SetPeerAddr(dest);
-        info.SetPeerPort(port);
-
-        if (socket.SendTo(*message, info) == kErrorNone)
-        {
-            message = nullptr;
-        }
-
-        nexus.AdvanceTime(5 * 1000);
-
-    exit:
-        IgnoreError(socket.Close());
+        message = nullptr;
     }
+
+    nexus.AdvanceTime(5 * 1000);
+
+exit:
+    IgnoreError(socket.Close());
 
     if (message != nullptr)
     {
         message->Free();
     }
+
     return 0;
 }
 
