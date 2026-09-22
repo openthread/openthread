@@ -29,11 +29,16 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    if: github.repository == "openthread/openthread"
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "github-actions"
     rebase-strategy: "disabled"
     open-pull-requests-limit: 1
+    groups:
+      codeql:
+        patterns:
+          - "github/codeql-action*"
