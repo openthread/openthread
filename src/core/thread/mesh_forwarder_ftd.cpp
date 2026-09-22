@@ -557,7 +557,8 @@ void MeshForwarder::HandleMesh(RxInfo &aRxInfo)
 
     SuccessOrExit(error = meshHeader.ParseFrom(aRxInfo.mFrameData));
 
-    neighborMacSource = aRxInfo.GetSrcAddr();
+    aRxInfo.mHasMeshHeader = true;
+    neighborMacSource      = aRxInfo.GetSrcAddr();
 
     // Switch the `aRxInfo.mMacAddrs` to the mesh header source/destination
 

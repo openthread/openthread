@@ -217,7 +217,8 @@ protected:
         bool mResolvingAddress : 1;         // Whether the message is pending an address query resolution.
         bool mAllowLookbackToHost : 1;      // Whether the message is allowed to be looped back to host.
         bool mIsDstPanIdBroadcast : 1;      // Whether the dest PAN ID is broadcast.
-        bool mDatagramSourceIsExtended : 1; // Whether stored 6LoWPAN reassembly source is extended.
+        bool mDatagramSourceIsExtended : 1;    // Whether stored 6LoWPAN reassembly source is extended.
+        bool mDatagramSourceHasMeshHeader : 1; // Whether stored reassembly source came from a Mesh Header.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         bool mIsRadioTypeSet : 1; // Whether the radio type is set.
 #endif
@@ -243,15 +244,25 @@ protected:
         uint16_t        mMeshDest;       // Used for unicast non-link-local messages.
         uint16_t        mPanId;          // PAN ID (used for MLE Discover Request and Response).
         uint32_t        mDatagramTag;    // The datagram tag used for 6LoWPAN frags or IPv6 fragmentation.
-        Mac::ExtAddress mDatagramSource; // Stored source bytes for a received fragmented datagram.
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         int64_t mNetworkTimeOffset; // The time offset to the Thread network time, in microseconds.
 #endif
         TimeMilli   mTimestamp;   // The message timestamp.
         Message    *mNext;        // Next message in a doubly linked list.
         Message    *mPrev;        // Previous message in a doubly linked list.
-        TxCallback  mTxCallback;  // The callback to inform message TX success or failure.
-        void       *mTxContext;   // The arbitrary context associated with `mTxCallback`.
+        union
+        {
+            struct
+            {
+                TxCallback mTxCallback; // The callback to inform message TX success or failure.
+                void      *mTxContext;  // The arbitrary context associated with `mTxCallback`.
+            } mTxInfo;
+            union
+            {
+                Mac::ShortAddress mShort;
+                Mac::ExtAddress   mExtended;
+            } mDatagramSource;
+        };
         RssAverager mRssAverager; // The averager maintaining the received signal strength (RSS) average.
         LqiAverager mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
 #if OPENTHREAD_FTD
@@ -1200,52 +1211,49 @@ public:
     void SetDatagramTag(uint32_t aTag) { GetMetadata().mDatagramTag = aTag; }
 
     /**
-     * Sets the source address associated with a received 6LoWPAN fragmented datagram.
+     * Sets the source identity associated with a received 6LoWPAN fragmented datagram.
      *
-     * @param[in] aSource  The source address.
+     * @param[in] aSource         The effective source address.
+     * @param[in] aHasMeshHeader Whether the fragment was received with a Mesh Header.
      */
-    void SetDatagramSource(const Mac::Address &aSource)
+    void SetDatagramSource(const Mac::Address &aSource, bool aHasMeshHeader)
     {
-        GetMetadata().mDatagramSourceIsExtended = aSource.IsExtended();
+        OT_ASSERT(aSource.IsShort() || aSource.IsExtended());
+
+        GetMetadata().mDatagramSourceIsExtended     = aSource.IsExtended();
+        GetMetadata().mDatagramSourceHasMeshHeader = aHasMeshHeader;
 
         if (aSource.IsExtended())
         {
-            GetMetadata().mDatagramSource = aSource.GetExtended();
+            GetMetadata().mDatagramSource.mExtended = aSource.GetExtended();
         }
         else
         {
-            Mac::ShortAddress shortAddress = aSource.GetShort();
-            GetMetadata().mDatagramSource.Clear();
-            memcpy(&GetMetadata().mDatagramSource, &shortAddress, sizeof(shortAddress));
+            GetMetadata().mDatagramSource.mShort = aSource.GetShort();
         }
     }
 
     /**
-     * Indicates whether a source address matches the one associated with a received 6LoWPAN fragmented datagram.
+     * Indicates whether a source identity matches the one associated with a received 6LoWPAN fragmented datagram.
      *
-     * @param[in] aSource  The source address to compare.
+     * @param[in] aSource         The effective source address to compare.
+     * @param[in] aHasMeshHeader Whether the fragment was received with a Mesh Header.
      *
-     * @retval TRUE   The source addresses match.
-     * @retval FALSE  The source addresses do not match.
+     * @retval TRUE   The source identities match.
+     * @retval FALSE  The source identities do not match.
      */
-    bool MatchesDatagramSource(const Mac::Address &aSource) const
+    bool MatchesDatagramSource(const Mac::Address &aSource, bool aHasMeshHeader) const
     {
-        bool matches = (GetMetadata().mDatagramSourceIsExtended == aSource.IsExtended());
+        bool matches = false;
 
-        if (matches)
-        {
-            if (aSource.IsExtended())
-            {
-                matches = (GetMetadata().mDatagramSource == aSource.GetExtended());
-            }
-            else
-            {
-                Mac::ShortAddress shortAddress;
-                memcpy(&shortAddress, &GetMetadata().mDatagramSource, sizeof(shortAddress));
-                matches = (shortAddress == aSource.GetShort());
-            }
-        }
+        VerifyOrExit(aSource.IsShort() || aSource.IsExtended());
+        VerifyOrExit(GetMetadata().mDatagramSourceHasMeshHeader == aHasMeshHeader);
+        VerifyOrExit(GetMetadata().mDatagramSourceIsExtended == aSource.IsExtended());
 
+        matches = aSource.IsExtended() ? (GetMetadata().mDatagramSource.mExtended == aSource.GetExtended())
+                                       : (GetMetadata().mDatagramSource.mShort == aSource.GetShort());
+
+    exit:
         return matches;
     }
 
