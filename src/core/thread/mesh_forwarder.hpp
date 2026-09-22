@@ -474,6 +474,7 @@ private:
     Error GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
 
 #if OPENTHREAD_FTD
+    void          DetermineDirectOrIndirectTx(Message &aMessage);
     void          FinalizeMessageIndirectTxs(Message &aMessage);
     FwdFrameInfo *FindFwdFrameInfoEntry(uint16_t aSrcRloc16, uint16_t aDatagramTag);
     bool          UpdateFwdFrameInfoArrayOnTimeTick(void);

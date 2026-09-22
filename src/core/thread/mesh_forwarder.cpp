@@ -131,6 +131,43 @@ exit:
     return;
 }
 
+void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
+{
+    Message &message = *aMessagePtr.Release();
+
+    message.SetOffset(0);
+    message.SetDatagramTag(0);
+    message.SetTimestampToNow();
+
+    mSendQueue.Enqueue(message);
+
+#if OPENTHREAD_FTD
+    if (Get<Mle::Mle>().IsFullThreadDevice())
+    {
+        DetermineDirectOrIndirectTx(message);
+    }
+    else
+#endif
+    {
+        message.SetDirectTransmission();
+    }
+
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+    ApplyDirectTxQueueLimit(message);
+#endif
+
+    if (message.IsDirectTransmission())
+    {
+        mScheduleTransmissionTask.Post();
+        ExitNow();
+    }
+
+    RemoveMessageIfNoPendingTx(message);
+
+exit:
+    return;
+}
+
 void MeshForwarder::ResumeMessageTransmissions(void)
 {
     if (mTxPaused)
@@ -422,7 +459,6 @@ void MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
 
     LogMessage(kMessageFullQueueDrop, aMessage);
     FinalizeMessageDirectTx(aMessage, kErrorDrop);
-    RemoveMessageIfNoPendingTx(aMessage);
 
 exit:
     return;
