@@ -1100,6 +1100,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
     Lowpan::FragmentHeader fragmentHeader;
     Message               *message = nullptr;
 
+    VerifyOrExit(!aRxInfo.GetSrcAddr().IsNone(), error = kErrorDrop);
     SuccessOrExit(error = fragmentHeader.ParseFrom(aRxInfo.mFrameData));
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -1147,7 +1148,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         SuccessOrExit(error = message->SetLength(datagramSize));
 
         message->SetDatagramTag(fragmentHeader.GetDatagramTag());
-        message->SetDatagramSource(aRxInfo.GetSrcAddr());
+        message->SetDatagramSource(aRxInfo.GetSrcAddr(), aRxInfo.mHasMeshHeader);
         message->SetTimestampToNow();
         message->UpdateLinkInfoFrom(aRxInfo.mLinkInfo);
 
@@ -1177,7 +1178,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
             // Security Check: only consider reassembly buffers that had the same Security Enabled setting.
             if (msg.GetLength() == fragmentHeader.GetDatagramSize() &&
                 msg.GetDatagramTag() == fragmentHeader.GetDatagramTag() &&
-                msg.MatchesDatagramSource(aRxInfo.GetSrcAddr()) &&
+                msg.MatchesDatagramSource(aRxInfo.GetSrcAddr(), aRxInfo.mHasMeshHeader) &&
                 msg.GetOffset() == fragmentHeader.GetDatagramOffset() &&
                 msg.GetOffset() + aRxInfo.mFrameData.GetLength() <= fragmentHeader.GetDatagramSize() &&
                 msg.IsLinkSecurityEnabled() == aRxInfo.IsLinkSecurityEnabled())

@@ -32,6 +32,7 @@
 #include <openthread/platform/radio.h>
 
 #include "coap/coap.hpp"
+#include "net/checksum.hpp"
 #include "net/ip6_headers.hpp"
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
@@ -44,54 +45,6 @@ namespace Nexus {
 
 static constexpr uint8_t kLargeTypeCount  = 180;
 static constexpr uint8_t kUnknownDiagType = 0xfe;
-
-static uint32_t AddChecksumBytes(uint32_t aSum, const uint8_t *aData, size_t aLength)
-{
-    for (size_t index = 0; index + 1 < aLength; index += 2)
-    {
-        aSum += (static_cast<uint16_t>(aData[index]) << 8) | aData[index + 1];
-    }
-
-    if (aLength & 1)
-    {
-        aSum += static_cast<uint16_t>(aData[aLength - 1]) << 8;
-    }
-
-    return aSum;
-}
-
-static uint16_t ComputeUdpChecksum(const Ip6::Address   &aSource,
-                                   const Ip6::Address   &aDestination,
-                                   const Ip6::UdpHeader &aHeader,
-                                   const uint8_t        *aPayload,
-                                   uint16_t              aPayloadLength)
-{
-    uint32_t sum       = 0;
-    uint32_t udpLength = sizeof(Ip6::UdpHeader) + aPayloadLength;
-    uint8_t  tail[8]   = {static_cast<uint8_t>(udpLength >> 24),
-                          static_cast<uint8_t>(udpLength >> 16),
-                          static_cast<uint8_t>(udpLength >> 8),
-                          static_cast<uint8_t>(udpLength),
-                          0,
-                          0,
-                          0,
-                          Ip6::kProtoUdp};
-
-    sum = AddChecksumBytes(sum, aSource.GetBytes(), sizeof(otIp6Address));
-    sum = AddChecksumBytes(sum, aDestination.GetBytes(), sizeof(otIp6Address));
-    sum = AddChecksumBytes(sum, tail, sizeof(tail));
-    sum = AddChecksumBytes(sum, reinterpret_cast<const uint8_t *>(&aHeader), sizeof(aHeader));
-    sum = AddChecksumBytes(sum, aPayload, aPayloadLength);
-
-    while (sum >> 16)
-    {
-        sum = (sum & 0xffffu) + (sum >> 16);
-    }
-
-    uint16_t checksum = static_cast<uint16_t>(~sum);
-
-    return checksum ? checksum : 0xffff;
-}
 
 static std::vector<uint8_t> BuildDiagnosticGetPayload(Node &aNode)
 {
@@ -135,13 +88,15 @@ static Message *BuildIpMessage(Node                       &aOwner,
     udpHeader.SetDestinationPort(Tmf::kUdpPort);
     udpHeader.SetLength(static_cast<uint16_t>(sizeof(Ip6::UdpHeader) + payloadLength));
     udpHeader.SetChecksum(0);
-    udpHeader.SetChecksum(ComputeUdpChecksum(aSource, aDestination, udpHeader, aPayload.data(), payloadLength));
 
     SuccessOrQuit(message->Append(ip6Header));
     SuccessOrQuit(message->Append(udpHeader));
     SuccessOrQuit(message->AppendBytes(aPayload.data(), payloadLength));
-    message->SetLinkSecurityEnabled(true);
+
+    message->SetOffset(sizeof(Ip6::Header));
+    Checksum::UpdateMessageChecksum(*message, aSource, aDestination, Ip6::kProtoUdp);
     message->SetOffset(0);
+    message->SetLinkSecurityEnabled(true);
 
     return message;
 }
@@ -159,6 +114,27 @@ static uint16_t PrepareAndDeliverMesh(Node                 &aRelay,
 
     VerifyOrQuit(nextOffset > aMessage.GetOffset());
     SuccessOrQuit(otMacFrameProcessTxSfd(&frame, Core::Get().GetNowMicro64(), &aRelay.mRadio.mRadioContext));
+    frame.UpdateFcs();
+
+    Radio::Frame rxFrame(frame);
+    rxFrame.mInfo.mRxInfo.mTimestamp = Core::Get().GetNowMicro64();
+    rxFrame.mInfo.mRxInfo.mRssi      = -20;
+    rxFrame.mInfo.mRxInfo.mLqi       = 255;
+    otPlatRadioReceiveDone(&aReceiver.GetInstance(), &rxFrame, kErrorNone);
+
+    return nextOffset;
+}
+
+static uint16_t PrepareAndDeliverDirect(Node                 &aSender,
+                                        Node                 &aReceiver,
+                                        Message              &aMessage,
+                                        const Mac::Addresses &aMacAddresses)
+{
+    Radio::Frame frame;
+    uint16_t     nextOffset = aSender.Get<MessageFramer>().PrepareFrame(frame, aMessage, aMacAddresses);
+
+    VerifyOrQuit(nextOffset > aMessage.GetOffset());
+    SuccessOrQuit(otMacFrameProcessTxSfd(&frame, Core::Get().GetNowMicro64(), &aSender.mRadio.mRadioContext));
     frame.UpdateFcs();
 
     Radio::Frame rxFrame(frame);
@@ -242,18 +218,19 @@ static void TestSameOriginatorAccepted(void)
     uint16_t             meshSource      = originA->Get<Mac::Mac>().GetShortAddress();
     uint16_t             meshDestination = receiver->Get<Mac::Mac>().GetShortAddress();
     uint32_t             txBefore        = receiver->Get<Mac::Mac>().GetCounters().mTxTotal;
+    uint32_t             rxBefore        = receiver->Get<MeshForwarder>().GetCounters().mRxSuccess;
     uint32_t             fragmentCount =
         SendAllFragments(nexus, *relay, *receiver, *message, addresses, meshSource, meshDestination);
     uint32_t txAfter = receiver->Get<Mac::Mac>().GetCounters().mTxTotal;
+    uint32_t rxAfter = receiver->Get<MeshForwarder>().GetCounters().mRxSuccess;
 
     VerifyOrQuit(fragmentCount > 1);
     VerifyOrQuit(txAfter > txBefore);
+    VerifyOrQuit(rxAfter > rxBefore);
 }
 
 static void TestDifferentOriginatorRejected(void)
 {
-    // A forwarded fragment is authenticated by the immediate relay. The Mesh Header originator still identifies
-    // the fragmented datagram source, so changing it between FRAG1 and FRAGN must not complete reassembly.
     Core  nexus;
     Node *receiver;
     Node *relay;
@@ -272,11 +249,13 @@ static void TestDifferentOriginatorRejected(void)
     uint16_t             originBShort    = originB->Get<Mac::Mac>().GetShortAddress();
     uint16_t             meshDestination = receiver->Get<Mac::Mac>().GetShortAddress();
     uint32_t             txBefore        = receiver->Get<Mac::Mac>().GetCounters().mTxTotal;
+    uint32_t             rxBefore        = receiver->Get<MeshForwarder>().GetCounters().mRxSuccess;
 
     uint16_t nextOffset =
         PrepareAndDeliverMesh(*relay, *receiver, *firstMessage, addresses, originAShort, meshDestination);
 
     VerifyOrQuit(nextOffset < firstMessage->GetLength());
+    firstMessage->SetOffset(nextOffset);
 
     nextMessage->SetDatagramTag(firstMessage->GetDatagramTag());
     nextMessage->SetOffset(nextOffset);
@@ -292,11 +271,79 @@ static void TestDifferentOriginatorRejected(void)
 
     nexus.AdvanceTime(50);
 
-    uint32_t txAfter = receiver->Get<Mac::Mac>().GetCounters().mTxTotal;
-
     VerifyOrQuit(originAShort != originBShort);
     VerifyOrQuit(fragmentCount > 1);
-    VerifyOrQuit(txAfter == txBefore);
+    VerifyOrQuit(receiver->Get<Mac::Mac>().GetCounters().mTxTotal == txBefore);
+    VerifyOrQuit(receiver->Get<MeshForwarder>().GetCounters().mRxSuccess == rxBefore);
+
+    while (firstMessage->GetOffset() < firstMessage->GetLength())
+    {
+        nextOffset = PrepareAndDeliverMesh(*relay, *receiver, *firstMessage, addresses, originAShort, meshDestination);
+        firstMessage->SetOffset(nextOffset);
+    }
+
+    nexus.AdvanceTime(50);
+
+    VerifyOrQuit(receiver->Get<Mac::Mac>().GetCounters().mTxTotal > txBefore);
+    VerifyOrQuit(receiver->Get<MeshForwarder>().GetCounters().mRxSuccess > rxBefore);
+}
+
+static void TestMeshHeaderPresenceMismatchRejected(void)
+{
+    Core  nexus;
+    Node *receiver;
+    Node *relay;
+    Node *originA;
+    Node *originB;
+
+    InitializeNodes(nexus, receiver, relay, originA, originB);
+    OT_UNUSED_VARIABLE(originB);
+
+    std::vector<uint8_t> payload = BuildDiagnosticGetPayload(*originA);
+    const Ip6::Address  &source  = originA->Get<Mle::Mle>().GetMeshLocalRloc();
+    const Ip6::Address  &dest    = receiver->Get<Mle::Mle>().GetMeshLocalRloc();
+    OwnedPtr<Message>    directMessage(BuildIpMessage(*originA, source, dest, payload));
+    OwnedPtr<Message>    meshMessage(BuildIpMessage(*relay, source, dest, payload));
+    Mac::Addresses       directAddresses;
+    Mac::Addresses       meshAddresses   = MakeRelayAddresses(*relay, *receiver);
+    uint16_t             originAShort    = originA->Get<Mac::Mac>().GetShortAddress();
+    uint16_t             meshDestination = receiver->Get<Mac::Mac>().GetShortAddress();
+    uint32_t             txBefore        = receiver->Get<Mac::Mac>().GetCounters().mTxTotal;
+    uint32_t             rxBefore        = receiver->Get<MeshForwarder>().GetCounters().mRxSuccess;
+
+    directAddresses.mSource.SetShort(originAShort);
+    directAddresses.mDestination.SetShort(meshDestination);
+
+    uint16_t nextOffset = PrepareAndDeliverDirect(*originA, *receiver, *directMessage, directAddresses);
+
+    VerifyOrQuit(nextOffset < directMessage->GetLength());
+    directMessage->SetOffset(nextOffset);
+
+    meshMessage->SetDatagramTag(directMessage->GetDatagramTag());
+    meshMessage->SetOffset(nextOffset);
+
+    while (meshMessage->GetOffset() < meshMessage->GetLength())
+    {
+        nextOffset =
+            PrepareAndDeliverMesh(*relay, *receiver, *meshMessage, meshAddresses, originAShort, meshDestination);
+        meshMessage->SetOffset(nextOffset);
+    }
+
+    nexus.AdvanceTime(50);
+
+    VerifyOrQuit(receiver->Get<Mac::Mac>().GetCounters().mTxTotal == txBefore);
+    VerifyOrQuit(receiver->Get<MeshForwarder>().GetCounters().mRxSuccess == rxBefore);
+
+    while (directMessage->GetOffset() < directMessage->GetLength())
+    {
+        nextOffset = PrepareAndDeliverDirect(*originA, *receiver, *directMessage, directAddresses);
+        directMessage->SetOffset(nextOffset);
+    }
+
+    nexus.AdvanceTime(50);
+
+    VerifyOrQuit(receiver->Get<Mac::Mac>().GetCounters().mTxTotal > txBefore);
+    VerifyOrQuit(receiver->Get<MeshForwarder>().GetCounters().mRxSuccess > rxBefore);
 }
 
 } // namespace Nexus
@@ -306,6 +353,7 @@ int main(void)
 {
     ot::Nexus::TestSameOriginatorAccepted();
     ot::Nexus::TestDifferentOriginatorRejected();
+    ot::Nexus::TestMeshHeaderPresenceMismatchRejected();
     printf("All tests passed\n");
     return 0;
 }

@@ -327,6 +327,7 @@ private:
         explicit RxInfo(Instance &aInstance)
             : InstanceLocator(aInstance)
             , mParsedIp6Headers(false)
+            , mHasMeshHeader(false)
         {
         }
 
@@ -341,6 +342,7 @@ private:
         Mac::Addresses mMacAddrs;
         Ip6::Headers   mIp6Headers;
         bool           mParsedIp6Headers;
+        bool           mHasMeshHeader;
     };
 
 #if OPENTHREAD_FTD
