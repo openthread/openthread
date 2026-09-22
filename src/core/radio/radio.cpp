@@ -72,12 +72,6 @@ uint32_t ChannelMaskForPage(uint8_t aChannelPage)
     return mask;
 }
 
-bool IsCslChannelValid(uint8_t aCslChannel)
-{
-    return ((aCslChannel == 0) ||
-            ((kChannelMin == aCslChannel) || ((kChannelMin < aCslChannel) && (aCslChannel <= kChannelMax))));
-}
-
 //---------------------------------------------------------------------------------------------------------------------
 
 #if OPENTHREAD_RADIO

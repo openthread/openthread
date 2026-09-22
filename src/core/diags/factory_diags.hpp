@@ -243,7 +243,6 @@ private:
     void OutputStats(void);
     void UpdateTxStats(Error aError);
 
-    static bool IsChannelValid(uint8_t aChannel);
     static bool IsFrameLengthValid(uint16_t aLength);
 
     static const struct Command sCommands[];

@@ -143,10 +143,6 @@ private:
     };
 
     bool IsPowerUpdated(void) const { return mCalibratedPowerIndex == kInvalidIndex; }
-    bool IsChannelValid(uint8_t aChannel) const
-    {
-        return ((aChannel >= Radio::kChannelMin) && (aChannel <= Radio::kChannelMax));
-    }
 
     static constexpr uint8_t  kInvalidIndex = NumericLimits<uint8_t>::kMax;
     static constexpr uint16_t kInvalidPower = NumericLimits<int16_t>::kMax;
