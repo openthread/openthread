@@ -180,8 +180,10 @@ public:
     /**
      * Represents parsed information from a MAC frame header.
      */
-    class ParseInfo : public Clearable<ParseInfo>
+    class ParseInfo : public Clearable<ParseInfo>, public Radio::FrameProperties<ParseInfo>
     {
+        friend class Radio::FrameProperties<ParseInfo>;
+
     public:
         /**
          * Initializes the `ParseInfo` object.
@@ -313,6 +315,7 @@ public:
         };
 
         Error PerformAesCcm(AesCcmOperation aOperation, const ExtAddress &aExtAddress, const KeyMaterial &aMacKey);
+        const Frame &GetFrame(void) const { return *mFrame; }
 
         uint8_t *mKeyIndexByte;
         uint8_t *mFrameCounterBytes;
@@ -461,8 +464,9 @@ protected:
     static constexpr uint8_t kInvalidSize  = kInvalidIndex;
     static constexpr uint8_t kMaxPsduSize  = kInvalidSize - 1;
 
-    uint16_t GetFrameControlField(void) const { return LittleEndian::ReadUint16(mPsdu); }
-    void     UpdateFcfFlag(bool aSet, uint16_t aBitFlag);
+    uint16_t     GetFrameControlField(void) const { return LittleEndian::ReadUint16(mPsdu); }
+    void         UpdateFcfFlag(bool aSet, uint16_t aBitFlag);
+    const Frame &GetFrame(void) const { return *this; }
 
     static uint8_t  ReadType(uint16_t aFcf) { return As<uint8_t>(ReadBits<uint16_t, kFcfFrameTypeMask>(aFcf)); }
     static AddrMode ReadDstAddrMode(uint16_t aFcf) { return As<AddrMode>(ReadBits<uint16_t, kFcfDstAddrMask>(aFcf)); }
@@ -498,13 +502,16 @@ private:
 class RxFrame : public Frame, public Radio::RxFrameProperties<RxFrame>
 {
     friend class TxFrame;
+    friend class Radio::RxFrameProperties<RxFrame>;
 
 public:
     /**
      * Represents parsed information from a received MAC frame.
      */
-    class ParseInfo : public Frame::ParseInfo
+    class ParseInfo : public Frame::ParseInfo, public Radio::RxFrameProperties<ParseInfo>
     {
+        friend class Radio::RxFrameProperties<ParseInfo>;
+
     public:
         /**
          * Returns a pointer to the associated `RxFrame`.
@@ -541,12 +548,16 @@ public:
  */
 class TxFrame : public Frame, public Radio::TxFrameProperties<TxFrame>
 {
+    friend class Radio::TxFrameProperties<TxFrame>;
+
 public:
     /**
      * Represents parsed information from a transmitted MAC frame.
      */
-    class ParseInfo : public Frame::ParseInfo
+    class ParseInfo : public Frame::ParseInfo, public Radio::TxFrameProperties<ParseInfo>
     {
+        friend class Radio::TxFrameProperties<ParseInfo>;
+
     public:
         /**
          * Returns a pointer to the associated `TxFrame`.

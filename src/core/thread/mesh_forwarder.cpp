@@ -758,7 +758,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnFrameTxDone(Mac::TxFrame::ParseInfo &aF
     // `SendDone` event from `Mac` layer with success status and
     // wait for deferred ack callback instead.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aFrameInfo.GetTxFrame()->GetRadioType() == Radio::kTypeTrel)
+    if (aFrameInfo.GetRadioType() == Radio::kTypeTrel)
 #endif
     {
         VerifyOrExit(aError != kErrorNone);
@@ -854,7 +854,7 @@ void MeshForwarder::HandleFrameTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error
     }
 #endif
 
-    if (!aFrameInfo.GetTxFrame()->IsEmpty())
+    if (!aFrameInfo.IsEmpty())
     {
         neighbor =
             UpdateNeighborOnFrameTxDone(aFrameInfo, aError, aFrameInfo.mAddrs.mDestination, /* aIsDataPoll */ false);
