@@ -364,21 +364,21 @@ const char *Message::PriorityToString(Priority aPriority)
 
 void Message::RegisterTxCallback(TxCallback aCallback, void *aContext)
 {
-    GetMetadata().mTxInfo.mTxCallback = aCallback;
-    GetMetadata().mTxInfo.mTxContext  = aContext;
+    GetMetadata().mTxCallback = aCallback;
+    GetMetadata().mTxContext  = aContext;
 }
 
 void Message::InvokeTxCallback(Error aError)
 {
-    TxCallback callback = GetMetadata().mTxInfo.mTxCallback;
+    TxCallback callback = GetMetadata().mTxCallback;
 
     if (callback != nullptr)
     {
         bool originalEvictFlag = GetDoNotEvict();
 
-        GetMetadata().mTxInfo.mTxCallback = nullptr;
+        GetMetadata().mTxCallback = nullptr;
         SetDoNotEvict(true);
-        callback(this, aError, GetMetadata().mTxInfo.mTxContext);
+        callback(this, aError, GetMetadata().mTxContext);
         SetDoNotEvict(originalEvictFlag);
     }
 }

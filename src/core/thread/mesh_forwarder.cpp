@@ -1094,11 +1094,31 @@ exit:
     }
 }
 
+bool MeshForwarder::MatchesReassemblySource(const Mac::Address &aFirstSource, const Mac::Address &aSource)
+{
+    bool      matches       = (aFirstSource == aSource);
+    Neighbor *firstNeighbor = nullptr;
+    Neighbor *neighbor      = nullptr;
+
+    VerifyOrExit(!matches);
+    VerifyOrExit((aFirstSource.IsShort() || aFirstSource.IsExtended()) &&
+                 (aSource.IsShort() || aSource.IsExtended()));
+
+    firstNeighbor = Get<NeighborTable>().FindNeighbor(aFirstSource, Neighbor::kInStateAnyExceptInvalid);
+    neighbor      = Get<NeighborTable>().FindNeighbor(aSource, Neighbor::kInStateAnyExceptInvalid);
+
+    matches = (firstNeighbor != nullptr) && (firstNeighbor == neighbor);
+
+exit:
+    return matches;
+}
+
 void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
 {
     Error                  error = kErrorNone;
     Lowpan::FragmentHeader fragmentHeader;
     Message               *message = nullptr;
+    ReassemblyMetadata     metadata;
 
     VerifyOrExit(!aRxInfo.GetSrcAddr().IsNone(), error = kErrorDrop);
     SuccessOrExit(error = fragmentHeader.ParseFrom(aRxInfo.mFrameData));
@@ -1147,8 +1167,6 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         VerifyOrExit(datagramSize >= message->GetLength(), error = kErrorParse);
         SuccessOrExit(error = message->SetLength(datagramSize));
 
-        message->SetDatagramTag(fragmentHeader.GetDatagramTag());
-        message->SetDatagramSource(aRxInfo.GetSrcAddr(), aRxInfo.mHasMeshHeader);
         message->SetTimestampToNow();
         message->UpdateLinkInfoFrom(aRxInfo.mLinkInfo);
 
@@ -1167,6 +1185,12 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
             ClearReassemblyList();
         }
 
+        metadata.mDatagramSize = datagramSize;
+        metadata.mDatagramTag  = fragmentHeader.GetDatagramTag();
+        metadata.mSource       = aRxInfo.GetSrcAddr();
+
+        SuccessOrExit(error = metadata.AppendTo(*message));
+
         mReassemblyList.Enqueue(*message);
 
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kMeshForwarder);
@@ -1175,12 +1199,14 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
     {
         for (Message &msg : mReassemblyList)
         {
+            metadata.ReadFrom(msg);
+
             // Security Check: only consider reassembly buffers that had the same Security Enabled setting.
-            if (msg.GetLength() == fragmentHeader.GetDatagramSize() &&
-                msg.GetDatagramTag() == fragmentHeader.GetDatagramTag() &&
-                msg.MatchesDatagramSource(aRxInfo.GetSrcAddr(), aRxInfo.mHasMeshHeader) &&
+            if (metadata.mDatagramSize == fragmentHeader.GetDatagramSize() &&
+                metadata.mDatagramTag == fragmentHeader.GetDatagramTag() &&
+                MatchesReassemblySource(metadata.mSource, aRxInfo.GetSrcAddr()) &&
                 msg.GetOffset() == fragmentHeader.GetDatagramOffset() &&
-                msg.GetOffset() + aRxInfo.mFrameData.GetLength() <= fragmentHeader.GetDatagramSize() &&
+                msg.GetOffset() + aRxInfo.mFrameData.GetLength() <= metadata.mDatagramSize &&
                 msg.IsLinkSecurityEnabled() == aRxInfo.IsLinkSecurityEnabled())
             {
                 message = &msg;
@@ -1212,8 +1238,11 @@ exit:
 
     if (error == kErrorNone)
     {
-        if (message->DetermineLengthAfterOffset() == 0)
+        metadata.ReadFrom(*message);
+
+        if (message->GetOffset() == metadata.mDatagramSize)
         {
+            metadata.RemoveFrom(*message);
             mReassemblyList.Dequeue(*message);
             IgnoreError(HandleDatagram(*message, aRxInfo.GetSrcAddr()));
         }

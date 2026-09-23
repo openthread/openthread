@@ -46,33 +46,34 @@ namespace Nexus {
 static constexpr uint8_t kLargeTypeCount  = 180;
 static constexpr uint8_t kUnknownDiagType = 0xfe;
 
-static std::vector<uint8_t> BuildDiagnosticGetPayload(Node &aNode)
+static Coap::Message *BuildDiagnosticGetPayload(Node &aNode)
 {
-    Coap::Message *coap = aNode.Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetRequest);
+    Coap::Message *message = aNode.Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetRequest);
+    uint8_t        types[kLargeTypeCount];
 
-    VerifyOrQuit(coap != nullptr);
+    VerifyOrQuit(message != nullptr);
 
-    std::vector<uint8_t> types(kLargeTypeCount, kUnknownDiagType);
+    for (uint8_t &type : types)
+    {
+        type = kUnknownDiagType;
+    }
+
     types[0] = NetDiag::Tlv::kVersion;
-    SuccessOrQuit(Tlv::Append<NetDiag::TypeListTlv>(*coap, types.data(), kLargeTypeCount));
+    SuccessOrQuit(Tlv::Append<NetDiag::TypeListTlv>(*message, types, sizeof(types)));
 
-    std::vector<uint8_t> bytes(coap->GetLength());
-    VerifyOrQuit(coap->ReadBytes(0, bytes.data(), coap->GetLength()) == coap->GetLength());
-    coap->Free();
-
-    return bytes;
+    return message;
 }
 
-static Message *BuildIpMessage(Node                       &aOwner,
-                               const Ip6::Address         &aSource,
-                               const Ip6::Address         &aDestination,
-                               const std::vector<uint8_t> &aPayload)
+static Message *BuildIpMessage(Node               &aOwner,
+                               const Ip6::Address &aSource,
+                               const Ip6::Address &aDestination,
+                               const Message      &aPayload)
 {
     Message *message = aOwner.Get<MessagePool>().Allocate(Message::kTypeIp6);
 
     VerifyOrQuit(message != nullptr);
 
-    uint16_t payloadLength = static_cast<uint16_t>(aPayload.size());
+    uint16_t payloadLength = aPayload.GetLength();
 
     Ip6::Header ip6Header;
     ip6Header.InitVersionTrafficClassFlow();
@@ -91,7 +92,7 @@ static Message *BuildIpMessage(Node                       &aOwner,
 
     SuccessOrQuit(message->Append(ip6Header));
     SuccessOrQuit(message->Append(udpHeader));
-    SuccessOrQuit(message->AppendBytes(aPayload.data(), payloadLength));
+    SuccessOrQuit(message->AppendBytesFromMessage(aPayload, 0, payloadLength));
 
     message->SetOffset(sizeof(Ip6::Header));
     Checksum::UpdateMessageChecksum(*message, aSource, aDestination, Ip6::kProtoUdp);
@@ -210,10 +211,10 @@ static void TestSameOriginatorAccepted(void)
     InitializeNodes(nexus, receiver, relay, originA, originB);
     OT_UNUSED_VARIABLE(originB);
 
-    std::vector<uint8_t> payload = BuildDiagnosticGetPayload(*relay);
+    OwnedPtr<Coap::Message> payload(BuildDiagnosticGetPayload(*relay));
     const Ip6::Address  &source  = originA->Get<Mle::Mle>().GetMeshLocalRloc();
     const Ip6::Address  &dest    = receiver->Get<Mle::Mle>().GetMeshLocalRloc();
-    OwnedPtr<Message>    message(BuildIpMessage(*relay, source, dest, payload));
+    OwnedPtr<Message>    message(BuildIpMessage(*relay, source, dest, *payload));
     Mac::Addresses       addresses       = MakeRelayAddresses(*relay, *receiver);
     uint16_t             meshSource      = originA->Get<Mac::Mac>().GetShortAddress();
     uint16_t             meshDestination = receiver->Get<Mac::Mac>().GetShortAddress();
@@ -239,11 +240,11 @@ static void TestDifferentOriginatorRejected(void)
 
     InitializeNodes(nexus, receiver, relay, originA, originB);
 
-    std::vector<uint8_t> payload = BuildDiagnosticGetPayload(*relay);
+    OwnedPtr<Coap::Message> payload(BuildDiagnosticGetPayload(*relay));
     const Ip6::Address  &source  = originA->Get<Mle::Mle>().GetMeshLocalRloc();
     const Ip6::Address  &dest    = receiver->Get<Mle::Mle>().GetMeshLocalRloc();
-    OwnedPtr<Message>    firstMessage(BuildIpMessage(*relay, source, dest, payload));
-    OwnedPtr<Message>    nextMessage(BuildIpMessage(*relay, source, dest, payload));
+    OwnedPtr<Message>    firstMessage(BuildIpMessage(*relay, source, dest, *payload));
+    OwnedPtr<Message>    nextMessage(BuildIpMessage(*relay, source, dest, *payload));
     Mac::Addresses       addresses       = MakeRelayAddresses(*relay, *receiver);
     uint16_t             originAShort    = originA->Get<Mac::Mac>().GetShortAddress();
     uint16_t             originBShort    = originB->Get<Mac::Mac>().GetShortAddress();
@@ -288,7 +289,7 @@ static void TestDifferentOriginatorRejected(void)
     VerifyOrQuit(receiver->Get<MeshForwarder>().GetCounters().mRxSuccess > rxBefore);
 }
 
-static void TestMeshHeaderPresenceMismatchRejected(void)
+static void TestAddressTransitionAccepted(void)
 {
     Core  nexus;
     Node *receiver;
@@ -297,52 +298,41 @@ static void TestMeshHeaderPresenceMismatchRejected(void)
     Node *originB;
 
     InitializeNodes(nexus, receiver, relay, originA, originB);
+    OT_UNUSED_VARIABLE(relay);
     OT_UNUSED_VARIABLE(originB);
 
-    std::vector<uint8_t> payload = BuildDiagnosticGetPayload(*originA);
-    const Ip6::Address  &source  = originA->Get<Mle::Mle>().GetMeshLocalRloc();
-    const Ip6::Address  &dest    = receiver->Get<Mle::Mle>().GetMeshLocalRloc();
-    OwnedPtr<Message>    directMessage(BuildIpMessage(*originA, source, dest, payload));
-    OwnedPtr<Message>    meshMessage(BuildIpMessage(*relay, source, dest, payload));
-    Mac::Addresses       directAddresses;
-    Mac::Addresses       meshAddresses   = MakeRelayAddresses(*relay, *receiver);
-    uint16_t             originAShort    = originA->Get<Mac::Mac>().GetShortAddress();
-    uint16_t             meshDestination = receiver->Get<Mac::Mac>().GetShortAddress();
-    uint32_t             txBefore        = receiver->Get<Mac::Mac>().GetCounters().mTxTotal;
-    uint32_t             rxBefore        = receiver->Get<MeshForwarder>().GetCounters().mRxSuccess;
+    OwnedPtr<Coap::Message> payload(BuildDiagnosticGetPayload(*originA));
+    const Ip6::Address     &source = originA->Get<Mle::Mle>().GetMeshLocalRloc();
+    const Ip6::Address     &dest   = receiver->Get<Mle::Mle>().GetMeshLocalRloc();
+    OwnedPtr<Message>       firstMessage(BuildIpMessage(*originA, source, dest, *payload));
+    OwnedPtr<Message>       nextMessage(BuildIpMessage(*originA, source, dest, *payload));
+    Mac::Addresses          extendedAddresses;
+    Mac::Addresses          shortAddresses;
+    uint16_t                originAShort = originA->Get<Mac::Mac>().GetShortAddress();
+    uint16_t                receiverShort = receiver->Get<Mac::Mac>().GetShortAddress();
+    uint32_t                rxBefore = receiver->Get<MeshForwarder>().GetCounters().mRxSuccess;
 
-    directAddresses.mSource.SetShort(originAShort);
-    directAddresses.mDestination.SetShort(meshDestination);
+    extendedAddresses.mSource.SetExtended(originA->Get<Mac::Mac>().GetExtAddress());
+    extendedAddresses.mDestination.SetShort(receiverShort);
+    shortAddresses.mSource.SetShort(originAShort);
+    shortAddresses.mDestination.SetShort(receiverShort);
 
-    uint16_t nextOffset = PrepareAndDeliverDirect(*originA, *receiver, *directMessage, directAddresses);
+    uint16_t nextOffset = PrepareAndDeliverDirect(*originA, *receiver, *firstMessage, extendedAddresses);
 
-    VerifyOrQuit(nextOffset < directMessage->GetLength());
-    directMessage->SetOffset(nextOffset);
+    VerifyOrQuit(nextOffset < firstMessage->GetLength());
+    firstMessage->SetOffset(nextOffset);
 
-    meshMessage->SetDatagramTag(directMessage->GetDatagramTag());
-    meshMessage->SetOffset(nextOffset);
+    nextMessage->SetDatagramTag(firstMessage->GetDatagramTag());
+    nextMessage->SetOffset(nextOffset);
 
-    while (meshMessage->GetOffset() < meshMessage->GetLength())
+    while (nextMessage->GetOffset() < nextMessage->GetLength())
     {
-        nextOffset =
-            PrepareAndDeliverMesh(*relay, *receiver, *meshMessage, meshAddresses, originAShort, meshDestination);
-        meshMessage->SetOffset(nextOffset);
+        nextOffset = PrepareAndDeliverDirect(*originA, *receiver, *nextMessage, shortAddresses);
+        nextMessage->SetOffset(nextOffset);
     }
 
     nexus.AdvanceTime(50);
 
-    VerifyOrQuit(receiver->Get<Mac::Mac>().GetCounters().mTxTotal == txBefore);
-    VerifyOrQuit(receiver->Get<MeshForwarder>().GetCounters().mRxSuccess == rxBefore);
-
-    while (directMessage->GetOffset() < directMessage->GetLength())
-    {
-        nextOffset = PrepareAndDeliverDirect(*originA, *receiver, *directMessage, directAddresses);
-        directMessage->SetOffset(nextOffset);
-    }
-
-    nexus.AdvanceTime(50);
-
-    VerifyOrQuit(receiver->Get<Mac::Mac>().GetCounters().mTxTotal > txBefore);
     VerifyOrQuit(receiver->Get<MeshForwarder>().GetCounters().mRxSuccess > rxBefore);
 }
 
@@ -353,7 +343,7 @@ int main(void)
 {
     ot::Nexus::TestSameOriginatorAccepted();
     ot::Nexus::TestDifferentOriginatorRejected();
-    ot::Nexus::TestMeshHeaderPresenceMismatchRejected();
+    ot::Nexus::TestAddressTransitionAccepted();
     printf("All tests passed\n");
     return 0;
 }
