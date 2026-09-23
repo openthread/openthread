@@ -2429,8 +2429,6 @@ private:
 
     DeclareTmfResponseHandlerIn(Mle, HandleAddressSolicitResponse);
 
-    static bool IsMessageMleSubType(const Message &aMessage);
-    static bool IsMessageChildUpdateRequest(const Message &aMessage);
     static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

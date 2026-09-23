@@ -104,7 +104,9 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
 
     if ((aMessage.GetType() != Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
     {
-        Message *supervisionMessage = FindQueuedMessageForSleepyChild(aChild, AcceptSupervisionMessage);
+        Message *supervisionMessage;
+
+        supervisionMessage = FindQueuedMessageForSleepyChild(aChild, Message::AcceptType<Message::kTypeSupervision>);
 
         if (supervisionMessage != nullptr)
         {
@@ -158,7 +160,7 @@ exit:
     return;
 }
 
-const Message *IndirectSender::FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const
+const Message *IndirectSender::FindQueuedMessageForSleepyChild(const Child &aChild, Message::Checker aChecker) const
 {
     const Message *match      = nullptr;
     uint16_t       childIndex = Get<ChildTable>().GetChildIndex(aChild);
@@ -260,7 +262,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
 
     VerifyOrExit(!aChild.IsWaitingForMessageUpdate());
 
-    newMessage = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
+    newMessage = FindQueuedMessageForSleepyChild(aChild, Message::AcceptAny);
 
     VerifyOrExit(curMessage != newMessage);
 
@@ -303,7 +305,7 @@ exit:
 
 void IndirectSender::UpdateIndirectMessage(Child &aChild)
 {
-    Message *message = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
+    Message *message = FindQueuedMessageForSleepyChild(aChild, Message::AcceptAny);
 
     aChild.SetWaitingForMessageUpdate(false);
     aChild.SetIndirectMessage(message);
@@ -531,18 +533,6 @@ void IndirectSender::ClearMessagesForRemovedChildren(void)
 
         ClearAllMessagesForSleepyChild(child);
     }
-}
-
-bool IndirectSender::AcceptAnyMessage(const Message &aMessage)
-{
-    OT_UNUSED_VARIABLE(aMessage);
-
-    return true;
-}
-
-bool IndirectSender::AcceptSupervisionMessage(const Message &aMessage)
-{
-    return aMessage.GetType() == Message::kTypeSupervision;
 }
 
 #endif // OPENTHREAD_FTD

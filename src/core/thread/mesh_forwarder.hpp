@@ -162,17 +162,15 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
 #if OPENTHREAD_FTD
-    typedef IndirectSender::MessageChecker MessageChecker; ///< General predicate function checking a message.
-
     /**
      * Removes and frees messages queued for a child, based on a given predicate.
      *
      * The `aChild` can be either sleepy or non-sleepy.
      *
-     * @param[in] aChild            The child whose messages are to be evaluated.
-     * @param[in] aMessageChecker   The predicate function to filter messages.
+     * @param[in] aChild    The child whose messages are to be evaluated.
+     * @param[in] aChecker  The predicate function to filter messages.
      */
-    void RemoveMessagesForChild(Child &aChild, MessageChecker aMessageChecker);
+    void RemoveMessagesForChild(Child &aChild, Message::Checker aChecker);
 #endif
 
     /**

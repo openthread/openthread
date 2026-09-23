@@ -352,6 +352,16 @@ public:
     };
 
     /**
+     * Defines a predicate function reference which is used to check or filter a message.
+     *
+     * @param[in] aMessage   The message to check.
+     *
+     * @retval TRUE   If the message matches the criteria.
+     * @retval FALSE  If the message does not match the criteria.
+     */
+    typedef bool (&Checker)(const Message &aMessage);
+
+    /**
      * Represents settings used for creating a new message.
      */
     class Settings : public otMessageSettings
@@ -1594,6 +1604,59 @@ public:
     void ClearRadioType(void) { GetMetadata().mIsRadioTypeSet = false; }
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Helper common predicate `Checker` functions
+
+    /**
+     * Predicate checker function that matches and accepts any message.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   Always matches and accepts the message.
+     */
+    static bool AcceptAny(const Message &aMessage)
+    {
+        OT_UNUSED_VARIABLE(aMessage);
+        return true;
+    }
+
+    /**
+     * Predicate checker function that checks whether a message matches a specific type.
+     *
+     * @tparam kType        The message type to match.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message type matches @p kType.
+     * @retval FALSE  The message type does not match @p kType.
+     */
+    template <Type kType> static bool AcceptType(const Message &aMessage) { return aMessage.GetType() == kType; }
+
+    /**
+     * Predicate checker function that checks whether a message is of MLE subtype.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message is of MLE subtype.
+     * @retval FALSE  The message is not of MLE subtype.
+     */
+    static bool AcceptAnyMle(const Message &aMessage) { return aMessage.IsSubTypeMle(); }
+
+    /**
+     * Predicate checker function that checks whether a message is a specific MLE command.
+     *
+     * @tparam kMleCommand  The MLE command to match.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message is an MLE command of @p kMleCommand type.
+     * @retval FALSE  The message is not an MLE command of @p kMleCommand type.
+     */
+    template <Mle::Command kMleCommand> static bool AcceptMle(const Message &aMessage)
+    {
+        return aMessage.IsMleCommand(kMleCommand);
+    }
 
 protected:
     class OT_GSL_POINTER ConstIterator : public ItemPtrIterator<const Message, ConstIterator>

@@ -2022,13 +2022,6 @@ exit:
     return error;
 }
 
-bool Mle::IsMessageMleSubType(const Message &aMessage) { return aMessage.IsSubTypeMle(); }
-
-bool Mle::IsMessageChildUpdateRequest(const Message &aMessage)
-{
-    return aMessage.IsMleCommand(kCommandChildUpdateRequest);
-}
-
 void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
 {
     Error              error = kErrorNone;
@@ -2059,7 +2052,7 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadAndMatchResponseTlvWith(child->GetChallenge()));
 
-    Get<MeshForwarder>().RemoveMessagesForChild(*child, IsMessageMleSubType);
+    Get<MeshForwarder>().RemoveMessagesForChild(*child, Message::AcceptAnyMle);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadFrameCounterTlvs(linkFrameCounter, mleFrameCounter));
 
@@ -2939,10 +2932,11 @@ Error Mle::SendChildUpdateRequestToChild(Child &aChild)
         // to the sleepy child if there is one already
         // queued.
 
-        VerifyOrExit(!Get<IndirectSender>().HasQueuedMessageForSleepyChild(aChild, IsMessageChildUpdateRequest));
+        VerifyOrExit(!Get<IndirectSender>().HasQueuedMessageForSleepyChild(
+            aChild, Message::AcceptMle<kCommandChildUpdateRequest>));
     }
 
-    Get<MeshForwarder>().RemoveMessagesForChild(aChild, IsMessageChildUpdateRequest);
+    Get<MeshForwarder>().RemoveMessagesForChild(aChild, Message::AcceptMle<kCommandChildUpdateRequest>);
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendSourceAddressAndLeaderDataTlvs());
