@@ -321,7 +321,6 @@ private:
         explicit RxInfo(Instance &aInstance)
             : InstanceLocator(aInstance)
             , mParsedIp6Headers(false)
-            , mHasMeshHeader(false)
         {
         }
 
@@ -336,8 +335,16 @@ private:
         Mac::Addresses mMacAddrs;
         Ip6::Headers   mIp6Headers;
         bool           mParsedIp6Headers;
-        bool           mHasMeshHeader;
     };
+
+    struct ReassemblyMetadata : public Message::FooterData<ReassemblyMetadata>
+    {
+        uint16_t     mDatagramSize;
+        uint16_t     mDatagramTag;
+        Mac::Address mSource;
+    };
+
+    bool MatchesReassemblySource(const Mac::Address &aFirstSource, const Mac::Address &aSource);
 
 #if OPENTHREAD_FTD
 

@@ -208,17 +208,15 @@ protected:
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
         Instance *mInstance;
 #endif
-        bool mDirectTx : 1;                 // Whether a direct transmission is required.
-        bool mLinkSecurity : 1;             // Whether link security is enabled.
-        bool mInPriorityQ : 1;              // Whether the message is queued in normal or priority queue.
-        bool mTxSuccess : 1;                // Whether the direct tx of the message was successful.
-        bool mDoNotEvict : 1;               // Whether this message may be evicted.
-        bool mMulticastLoop : 1;            // Whether this multicast message may be looped back.
-        bool mResolvingAddress : 1;         // Whether the message is pending an address query resolution.
-        bool mAllowLookbackToHost : 1;      // Whether the message is allowed to be looped back to host.
-        bool mIsDstPanIdBroadcast : 1;      // Whether the dest PAN ID is broadcast.
-        bool mDatagramSourceIsExtended : 1;    // Whether stored 6LoWPAN reassembly source is extended.
-        bool mDatagramSourceHasMeshHeader : 1; // Whether stored reassembly source came from a Mesh Header.
+        bool mDirectTx : 1;            // Whether a direct transmission is required.
+        bool mLinkSecurity : 1;        // Whether link security is enabled.
+        bool mInPriorityQ : 1;         // Whether the message is queued in normal or priority queue.
+        bool mTxSuccess : 1;           // Whether the direct tx of the message was successful.
+        bool mDoNotEvict : 1;          // Whether this message may be evicted.
+        bool mMulticastLoop : 1;       // Whether this multicast message may be looped back.
+        bool mResolvingAddress : 1;    // Whether the message is pending an address query resolution.
+        bool mAllowLookbackToHost : 1; // Whether the message is allowed to be looped back to host.
+        bool mIsDstPanIdBroadcast : 1; // Whether the dest PAN ID is broadcast.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         bool mIsRadioTypeSet : 1; // Whether the radio type is set.
 #endif
@@ -238,31 +236,20 @@ protected:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         uint8_t mTimeSyncSeq; // The time sync sequence.
 #endif
-        uint16_t        mLength;         // Current message length (number of bytes).
-        uint16_t        mOffset;         // A byte offset within the message.
-        uint16_t        mReserved;       // Number of reserved bytes (for header).
-        uint16_t        mMeshDest;       // Used for unicast non-link-local messages.
-        uint16_t        mPanId;          // PAN ID (used for MLE Discover Request and Response).
-        uint32_t        mDatagramTag;    // The datagram tag used for 6LoWPAN frags or IPv6 fragmentation.
+        uint16_t mLength;      // Current message length (number of bytes).
+        uint16_t mOffset;      // A byte offset within the message.
+        uint16_t mReserved;    // Number of reserved bytes (for header).
+        uint16_t mMeshDest;    // Used for unicast non-link-local messages.
+        uint16_t mPanId;       // PAN ID (used for MLE Discover Request and Response).
+        uint32_t mDatagramTag; // The datagram tag used for 6LoWPAN frags or IPv6fragmentation.
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         int64_t mNetworkTimeOffset; // The time offset to the Thread network time, in microseconds.
 #endif
         TimeMilli   mTimestamp;   // The message timestamp.
         Message    *mNext;        // Next message in a doubly linked list.
         Message    *mPrev;        // Previous message in a doubly linked list.
-        union
-        {
-            struct
-            {
-                TxCallback mTxCallback; // The callback to inform message TX success or failure.
-                void      *mTxContext;  // The arbitrary context associated with `mTxCallback`.
-            } mTxInfo;
-            union
-            {
-                Mac::ShortAddress mShort;
-                Mac::ExtAddress   mExtended;
-            } mDatagramSource;
-        };
+        TxCallback  mTxCallback;  // The callback to inform message TX success or failure.
+        void       *mTxContext;   // The arbitrary context associated with `mTxCallback`.
         RssAverager mRssAverager; // The averager maintaining the received signal strength (RSS) average.
         LqiAverager mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
 #if OPENTHREAD_FTD
@@ -1209,53 +1196,6 @@ public:
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      */
     void SetDatagramTag(uint32_t aTag) { GetMetadata().mDatagramTag = aTag; }
-
-    /**
-     * Sets the source identity associated with a received 6LoWPAN fragmented datagram.
-     *
-     * @param[in] aSource         The effective source address.
-     * @param[in] aHasMeshHeader Whether the fragment was received with a Mesh Header.
-     */
-    void SetDatagramSource(const Mac::Address &aSource, bool aHasMeshHeader)
-    {
-        OT_ASSERT(aSource.IsShort() || aSource.IsExtended());
-
-        GetMetadata().mDatagramSourceIsExtended     = aSource.IsExtended();
-        GetMetadata().mDatagramSourceHasMeshHeader = aHasMeshHeader;
-
-        if (aSource.IsExtended())
-        {
-            GetMetadata().mDatagramSource.mExtended = aSource.GetExtended();
-        }
-        else
-        {
-            GetMetadata().mDatagramSource.mShort = aSource.GetShort();
-        }
-    }
-
-    /**
-     * Indicates whether a source identity matches the one associated with a received 6LoWPAN fragmented datagram.
-     *
-     * @param[in] aSource         The effective source address to compare.
-     * @param[in] aHasMeshHeader Whether the fragment was received with a Mesh Header.
-     *
-     * @retval TRUE   The source identities match.
-     * @retval FALSE  The source identities do not match.
-     */
-    bool MatchesDatagramSource(const Mac::Address &aSource, bool aHasMeshHeader) const
-    {
-        bool matches = false;
-
-        VerifyOrExit(aSource.IsShort() || aSource.IsExtended());
-        VerifyOrExit(GetMetadata().mDatagramSourceHasMeshHeader == aHasMeshHeader);
-        VerifyOrExit(GetMetadata().mDatagramSourceIsExtended == aSource.IsExtended());
-
-        matches = aSource.IsExtended() ? (GetMetadata().mDatagramSource.mExtended == aSource.GetExtended())
-                                       : (GetMetadata().mDatagramSource.mShort == aSource.GetShort());
-
-    exit:
-        return matches;
-    }
 
 #if OPENTHREAD_FTD
     /**

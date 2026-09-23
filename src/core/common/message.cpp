@@ -364,18 +364,18 @@ const char *Message::PriorityToString(Priority aPriority)
 
 void Message::RegisterTxCallback(TxCallback aCallback, void *aContext)
 {
-    GetMetadata().mTxInfo.mTxCallback = aCallback;
-    GetMetadata().mTxInfo.mTxContext  = aContext;
+    GetMetadata().mTxCallback = aCallback;
+    GetMetadata().mTxContext  = aContext;
 }
 
 void Message::InvokeTxCallback(Error aError)
 {
-    TxCallback callback = GetMetadata().mTxInfo.mTxCallback;
+    TxCallback callback = GetMetadata().mTxCallback;
 
     if (callback != nullptr)
     {
-        GetMetadata().mTxInfo.mTxCallback = nullptr;
-        callback(this, aError, GetMetadata().mTxInfo.mTxContext);
+        GetMetadata().mTxCallback = nullptr;
+        callback(this, aError, GetMetadata().mTxContext);
     }
 }
 
