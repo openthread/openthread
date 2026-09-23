@@ -1057,6 +1057,8 @@ bool MeshForwarder::MatchesReassemblySource(const Mac::Address &aFirstSource, co
     VerifyOrExit((aFirstSource.IsShort() || aFirstSource.IsExtended()) &&
                  (aSource.IsShort() || aSource.IsExtended()));
 
+    // A direct neighbor can legitimately switch between extended and short source addressing during attach.
+    // Treat the two forms as the same identity only when both resolve to the same Neighbor entry.
     firstNeighbor = Get<NeighborTable>().FindNeighbor(aFirstSource, Neighbor::kInStateAnyExceptInvalid);
     neighbor      = Get<NeighborTable>().FindNeighbor(aSource, Neighbor::kInStateAnyExceptInvalid);
 
