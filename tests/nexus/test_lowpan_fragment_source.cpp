@@ -27,7 +27,6 @@
  */
 
 #include <stdio.h>
-#include <vector>
 
 #include <openthread/platform/radio.h>
 
@@ -59,7 +58,7 @@ static Coap::Message *BuildDiagnosticGetPayload(Node &aNode)
     }
 
     types[0] = NetDiag::Tlv::kVersion;
-    SuccessOrQuit(Tlv::Append<NetDiag::TypeListTlv>(*message, types, sizeof(types)));
+    SuccessOrQuit(Tlv::Append<NetDiag::TypeListTlv>(*message, types, kLargeTypeCount));
 
     return message;
 }
