@@ -1395,6 +1395,7 @@ void Mac::HandleTxFramePrepFailed(TxFrames &aTxFrames)
 void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError)
 {
     RxFrame::ParseInfo ackFrameInfo;
+    Operation          operation;
 
     if (aAckFrame != nullptr)
     {
@@ -1409,6 +1410,8 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
     SuccessOrExit(ProcessMultiRadioTxDone(aFrameInfo, aError));
 #endif
 
+    DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
+
     // Determine next action based on current operation.
 
     switch (mOperation)
@@ -1416,13 +1419,7 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
     case kOperationActiveScan:
         mCounters.mTxBeaconRequest++;
         mTimer.Start(mScanDuration);
-        break;
-
-    case kOperationTransmitBeacon:
-        mCounters.mTxBeacon++;
-        FinishOperation();
-        PerformNextOperation();
-        break;
+        ExitNow();
 
     case kOperationTransmitPoll:
         OT_ASSERT(aFrameInfo.GetTxFrame()->IsEmpty() || aFrameInfo.mIsAckRequest);
@@ -1436,11 +1433,41 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
 
             LogInfo("Sent data poll, fp:%s", ToYesNo(ackFrameInfo.mIsFramePending));
         }
+        break;
 
+    case kOperationTransmitBeacon:
+    case kOperationTransmitDataDirect:
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    case kOperationTransmitDataCsl:
+#endif
+#if OPENTHREAD_FTD
+    case kOperationTransmitDataIndirect:
+#endif
+        break;
+
+    default:
+        OT_ASSERT(false);
+        ExitNow();
+    }
+
+    // The current operation is verified to be a valid transmit
+    // operation. Finish the operation, update counter, report the
+    // transmission result to the module that initiated the
+    // operation.
+
+    operation = mOperation;
+
+    FinishOperation();
+
+    switch (operation)
+    {
+    case kOperationTransmitBeacon:
+        mCounters.mTxBeacon++;
+        break;
+
+    case kOperationTransmitPoll:
         mCounters.mTxDataPoll++;
-        FinishOperation();
         Get<DataPollSender>().HandlePollTxDone(aFrameInfo, aError);
-        PerformNextOperation();
         break;
 
     case kOperationTransmitDataDirect:
@@ -1457,24 +1484,16 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
         }
 #endif
 
-        DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
-        FinishOperation();
         Get<MeshForwarder>().HandleFrameTxDone(aFrameInfo, aError);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         Get<DataPollSender>().ProcessTxDone(aFrameInfo, ackFrameInfo, aError);
 #endif
-        PerformNextOperation();
         break;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
         mCounters.mTxData++;
-
-        DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
-        FinishOperation();
         Get<CslTxScheduler>().HandleFrameTxDone(aFrameInfo, aError);
-        PerformNextOperation();
-
         break;
 #endif
 
@@ -1492,19 +1511,15 @@ void Mac::HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame,
             mRetryHistogram.RecordIndirectTx(mLinks.GetTransmitRetries());
         }
 #endif
-
-        DumpDebg("TX", aFrameInfo.GetTxFrame()->GetPsdu(), aFrameInfo.GetTxFrame()->GetLength());
-        FinishOperation();
         Get<DataPollHandler>().HandleFrameTxDone(aFrameInfo, aError);
-        PerformNextOperation();
         break;
-#endif // OPENTHREAD_FTD
+#endif
 
     default:
-        OT_ASSERT(false);
+        break;
     }
 
-    ExitNow(); // Added to suppress "unused label exit" warning (in TREL radio only).
+    PerformNextOperation();
 
 exit:
     return;
