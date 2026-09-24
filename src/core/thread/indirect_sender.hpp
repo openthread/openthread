@@ -138,16 +138,6 @@ public:
     };
 
     /**
-     * Represents a predicate function for checking if a given `Message` meets specific criteria.
-     *
-     * @param[in] aMessage The message to evaluate.
-     *
-     * @retval TRUE   If the @p aMessage satisfies the predicate condition.
-     * @retval FALSE  If the @p aMessage does not satisfy the predicate condition.
-     */
-    typedef bool (&MessageChecker)(const Message &aMessage);
-
-    /**
      * Initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
@@ -195,7 +185,7 @@ public:
 
     /**
      * Finds the first queued message for a given sleepy child that also satisfies the conditions of a given
-     * `MessageChecker`.
+     * `Message::Checker`.
      *
      * The caller MUST ensure that @p aChild is sleepy.
      *
@@ -204,14 +194,14 @@ public:
      *
      * @returns A pointer to the matching queued message, or `nullptr` if none is found.
      */
-    Message *FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker)
+    Message *FindQueuedMessageForSleepyChild(const Child &aChild, Message::Checker aChecker)
     {
         return AsNonConst(AsConst(this)->FindQueuedMessageForSleepyChild(aChild, aChecker));
     }
 
     /**
      * Finds the first queued message for a given sleepy child that also satisfies the conditions of a given
-     * `MessageChecker`.
+     * `Message::Checker`.
      *
      * The caller MUST ensure that @p aChild is sleepy.
      *
@@ -220,11 +210,11 @@ public:
      *
      * @returns A pointer to the matching queued message, or `nullptr` if none is found.
      */
-    const Message *FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const;
+    const Message *FindQueuedMessageForSleepyChild(const Child &aChild, Message::Checker aChecker) const;
 
     /**
      * Indicates whether there is any queued message for a given sleepy child that also satisfies the conditions of a
-     * given `MessageChecker`.
+     * given `Message::Checker`.
      *
      * The caller MUST ensure that @p aChild is sleepy.
      *
@@ -234,7 +224,7 @@ public:
      * @retval TRUE   There is a queued message satisfying @p aChecker for sleepy child @p aChild.
      * @retval FALSE  There is no queued message satisfying @p aChecker for sleepy child @p aChild.
      */
-    bool HasQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const
+    bool HasQueuedMessageForSleepyChild(const Child &aChild, Message::Checker aChecker) const
     {
         return (FindQueuedMessageForSleepyChild(aChild, aChecker) != nullptr);
     }
@@ -279,9 +269,6 @@ private:
     void UpdateIndirectMessage(Child &aChild);
     void RequestMessageUpdate(Child &aChild);
     void ClearMessagesForRemovedChildren(void);
-
-    static bool AcceptAnyMessage(const Message &aMessage);
-    static bool AcceptSupervisionMessage(const Message &aMessage);
 #endif // OPENTHREAD_FTD
 
     bool mEnabled;

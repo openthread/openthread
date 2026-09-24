@@ -259,11 +259,11 @@ exit:
     return error;
 }
 
-void MeshForwarder::RemoveMessagesForChild(Child &aChild, MessageChecker &aMessageChecker)
+void MeshForwarder::RemoveMessagesForChild(Child &aChild, Message::Checker aChecker)
 {
     for (Message &message : mSendQueue)
     {
-        if (!aMessageChecker(message))
+        if (!aChecker(message))
         {
             continue;
         }
