@@ -337,7 +337,7 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
     // Some radio hardware strips the FCS after verification
     // before delivering ACK frames to the host. Skip FCS
     // removal if the FCS is already stripped.
-    if ((mType != kTypeAck) || frameData.CanRead(aFrame.GetFcsSize()))
+    if ((mType != kTypeAck) || (aFrame.GetLength() >= GetImmAckLength()))
     {
         SuccessOrExit(frameData.RemoveFooter(aFrame.GetFcsSize()));
     }
