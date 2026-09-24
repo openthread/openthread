@@ -1254,7 +1254,6 @@ Error FragmentHeader::ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, ui
         VerifyOrExit(aFrameLength >= sizeof(NextFrag));
         mOffset       = aFrame[kOffsetIndex] * 8;
         VerifyOrExit(mOffset > 0);
-        VerifyOrExit(mOffset < mSize);
         aHeaderLength = sizeof(NextFrag);
     }
     else
@@ -1262,6 +1261,8 @@ Error FragmentHeader::ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, ui
         mOffset       = 0;
         aHeaderLength = sizeof(FirstFrag);
     }
+
+    VerifyOrExit(mSize > mOffset);
 
     error = kErrorNone;
 
