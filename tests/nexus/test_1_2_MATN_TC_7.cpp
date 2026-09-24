@@ -44,10 +44,7 @@ static constexpr uint32_t kFormNetworkTime = 10 * 1000;
  */
 static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 
-/**
- * Time to advance for the network to stabilize, in milliseconds.
- */
-static constexpr uint32_t kStabilizationTime = 10 * 1000;
+static constexpr uint32_t kStabilizationTime = 100 * 1000;
 
 /**
  * ICMPv6 Echo Request identifier.
@@ -67,7 +64,7 @@ static constexpr uint32_t kInfraIfIndex = 1;
 /**
  * Multicast address MA5 (realm-local).
  */
-static const char kMA5[] = "ff03::1234:777a:1";
+static const char kMA5[] = "ff03::1234:777a:5";
 
 /**
  * Multicast address (admin-local).
@@ -158,12 +155,13 @@ void TestMatnTc7(void)
     SuccessOrQuit(br1.Get<BorderRouter::RoutingManager>().SetEnabled(true));
     br1.Get<BackboneRouter::Local>().SetEnabled(true);
 
-    br2.Join(br1, Node::kAsFtd);
     router.Join(br1, Node::kAsFtd);
     nexus.AdvanceTime(kAttachToRouterTime);
-
-    VerifyOrQuit(br2.Get<Mle::Mle>().IsRouter());
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+
+    br2.Join(br1, Node::kAsFtd);
+    nexus.AdvanceTime(kAttachToRouterTime);
+    VerifyOrQuit(br2.Get<Mle::Mle>().IsRouter());
 
     br2.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
     br2.Get<BorderRouter::RoutingManager>().Init();
