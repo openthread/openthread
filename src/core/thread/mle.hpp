@@ -1240,6 +1240,8 @@ private:
     static constexpr uint32_t kAttachBackoffMinInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL;
     static constexpr uint32_t kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL;
     static constexpr uint32_t kAttachBackoffJitter      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL;
+    static constexpr uint32_t kAttachBackoffInitialMaxInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_MAX_INTERVAL;
+    static constexpr uint32_t kAttachBackoffInitialPeriod      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_PERIOD;
     static constexpr uint32_t kAttachBackoffDelayToResetCounter =
         OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL;
 
@@ -1956,6 +1958,7 @@ private:
         uint8_t                 mChildIdRequestsRemaining;
         uint16_t                mAttachCounter;
         uint16_t                mAnnounceDelay;
+        TimeMilli               mDetachTime;
         TxChallenge             mParentRequestChallenge;
         ParentCandidate         mParentCandidate;
         AttachTimer             mTimer;
