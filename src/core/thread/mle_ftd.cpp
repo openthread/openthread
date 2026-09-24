@@ -1939,7 +1939,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
             uint8_t         contextId = AddressRegistrationTlv::GetContextId(controlByte);
             Lowpan::Context context;
 
-            IgnoreError(aRxInfo.mMessage.ReadAndAdvance(offsetRange, address.GetIid()));
+            SuccessOrExit(error = aRxInfo.mMessage.ReadAndAdvance(offsetRange, address.GetIid()));
 
             Get<NetworkData::Leader>().FindContextForId(contextId, context);
 
@@ -1956,7 +1956,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         {
             // Uncompressed entry contains the full IPv6 address.
 
-            IgnoreError(aRxInfo.mMessage.ReadAndAdvance(offsetRange, address));
+            SuccessOrExit(error = aRxInfo.mMessage.ReadAndAdvance(offsetRange, address));
         }
 
         error = aChild.AddIp6Address(address);
