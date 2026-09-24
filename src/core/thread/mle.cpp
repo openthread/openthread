@@ -580,6 +580,9 @@ void Mle::SetStateDetached(void)
 #endif
 
     SetRole(kRoleDetached);
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
+    Get<Mlr::Manager>().UpdateState();
+#endif
     mAttacher.CancelAttachOnRoleChange();
     mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
     mRetxTracker.Stop();
