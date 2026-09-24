@@ -1121,8 +1121,10 @@ Frame::InfoString Frame::ParseInfo::ToInfoString(void) const
         break;
     }
 
-    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", mAddrs.mSource.ToString().AsCString(),
-                  mAddrs.mDestination.ToString().AsCString(), ToYesNo(mIsSecurityEnabled), ToYesNo(mIsAckRequest));
+    string.AppendField("src", mAddrs.mSource);
+    string.AppendField("dst", mAddrs.mDestination);
+    string.AppendField("sec", mIsSecurityEnabled);
+    string.AppendField("ackreq", mIsAckRequest);
 
     if (mIsSecurityEnabled)
     {

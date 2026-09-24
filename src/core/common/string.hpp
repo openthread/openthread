@@ -514,6 +514,8 @@ public:
      */
     StringWriter &AppendCharMultipleTimes(char aChar, uint16_t aCount);
 
+    template <typename ObjectType> StringWriter &AppendField(const char *aLabel, const ObjectType &aObject);
+
     /**
      * Converts all uppercase letter characters in the string to lowercase.
      */
@@ -529,6 +531,20 @@ private:
     uint16_t       mLength;
     const uint16_t mSize;
 };
+
+template <typename ObjectType> StringWriter &StringWriter::AppendField(const char *aLabel, const ObjectType &aObject)
+{
+    Append(", %s:", aLabel);
+    aObject.ToString(*this);
+
+    return *this;
+}
+
+template <> inline StringWriter &StringWriter::AppendField(const char *aLabel, const bool &aBool)
+{
+    Append(", %s:%s", aLabel, ToYesNo(aBool));
+    return *this;
+}
 
 /**
  * Defines a fixed-size string.

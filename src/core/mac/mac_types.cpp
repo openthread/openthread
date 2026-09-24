@@ -80,10 +80,11 @@ ExtAddress::InfoString ExtAddress::ToString(void) const
 {
     InfoString string;
 
-    string.AppendHexBytes(m8, sizeof(ExtAddress));
-
+    ToString(string);
     return string;
 }
+
+void ExtAddress::ToString(StringWriter &aWriter) const { aWriter.AppendHexBytes(m8, sizeof(ExtAddress)); }
 
 Error ExtAddress::FromString(const char *aString)
 {
@@ -167,20 +168,24 @@ Address::InfoString Address::ToString(void) const
 {
     InfoString string;
 
+    ToString(string);
+    return string;
+}
+
+void Address::ToString(StringWriter &aWriter) const
+{
     if (mType == kTypeExtended)
     {
-        string.AppendHexBytes(GetExtended().m8, sizeof(ExtAddress));
+        aWriter.AppendHexBytes(GetExtended().m8, sizeof(ExtAddress));
     }
     else if (mType == kTypeNone)
     {
-        string.Append("None");
+        aWriter.Append("None");
     }
     else
     {
-        string.Append("0x%04x", GetShort());
+        aWriter.Append("0x%04x", GetShort());
     }
-
-    return string;
 }
 
 void PanIds::SetSource(PanId aPanId)

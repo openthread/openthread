@@ -1448,7 +1448,7 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
 
     SuccessOrExit(headers.ParseFrom(aMessage));
 
-    string.Append("%s IPv6 %s msg, len:%u, chksum:%04x, ecn:%s, ", MessageActionToString(aAction, aError),
+    string.Append("%s IPv6 %s msg, len:%u, chksum:%04x, ecn:%s", MessageActionToString(aAction, aError),
                   Ip6::Ip6::IpProtoToString(headers.GetIpProto()), aMessage.GetLength(), headers.GetChecksum(),
                   Ip6::Ip6::EcnToString(headers.GetEcn()));
 
@@ -1472,16 +1472,7 @@ void MeshForwarder::AppendMacAddrToLogString(StringWriter       &aString,
 {
     VerifyOrExit(aMacAddress != nullptr);
 
-    if (aAction == kMessageReceive)
-    {
-        aString.Append("from:");
-    }
-    else
-    {
-        aString.Append("to:");
-    }
-
-    aString.Append("%s, ", aMacAddress->ToString().AsCString());
+    aString.AppendField((aAction == kMessageReceive) ? "from" : "to", *aMacAddress).Append(", ");
 
 exit:
     return;

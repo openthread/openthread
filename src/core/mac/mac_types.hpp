@@ -235,6 +235,9 @@ public:
      */
     InfoString ToString(void) const;
 
+    // TODO:
+    void ToString(StringWriter &aWriter) const;
+
     /**
      * Parses an Extended Address from a string.
      *
@@ -427,6 +430,9 @@ public:
      * @returns A `String` representing the address.
      */
     InfoString ToString(void) const;
+
+    // TODO:
+    void ToString(StringWriter &aWriter) const;
 
 private:
     union
