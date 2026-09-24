@@ -2362,7 +2362,8 @@ exit:
 otError RadioSpinel::SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aMaxPower)
 {
     otError error = OT_ERROR_NONE;
-    VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+
+    VerifyOrExit(Radio::IsChannelValid(aChannel), error = OT_ERROR_INVALID_ARGS);
     mMaxPowerTable.SetTransmitPower(aChannel, aMaxPower);
     SuccessOrExit(error = Set(SPINEL_PROP_PHY_CHAN_MAX_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, aChannel,
                               aMaxPower));
@@ -2486,7 +2487,7 @@ otError RadioSpinel::ClearCalibratedPowers(void) { return Set(SPINEL_PROP_PHY_CA
 otError RadioSpinel::SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower)
 {
     otError error = OT_ERROR_NONE;
-    VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(Radio::IsChannelValid(aChannel), error = OT_ERROR_INVALID_ARGS);
     error =
         Set(SPINEL_PROP_PHY_CHAN_TARGET_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT16_S, aChannel, aTargetPower);
 

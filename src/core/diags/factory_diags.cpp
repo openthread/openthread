@@ -88,7 +88,7 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(aArgsLength == 1, error = kErrorInvalidArgs);
 
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], channel));
-    VerifyOrExit(IsChannelValid(channel), error = kErrorInvalidArgs);
+    VerifyOrExit(Radio::IsChannelValid(channel), error = kErrorInvalidArgs);
 
     otPlatDiagChannelSet(channel);
 
@@ -262,7 +262,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
 
             VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
             SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], rxChannelAfterTxDone));
-            VerifyOrExit(IsChannelValid(rxChannelAfterTxDone), error = kErrorInvalidArgs);
+            VerifyOrExit(Radio::IsChannelValid(rxChannelAfterTxDone), error = kErrorInvalidArgs);
         }
         else if (StringMatch(aArgs[0], "-d"))
         {
@@ -342,7 +342,7 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
         uint8_t channel;
 
         SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], channel));
-        VerifyOrExit(IsChannelValid(channel), error = kErrorInvalidArgs);
+        VerifyOrExit(Radio::IsChannelValid(channel), error = kErrorInvalidArgs);
 
         mChannel = channel;
         otPlatDiagChannelSet(mChannel);
@@ -928,7 +928,7 @@ void Diags::TransmitDone(Error aError)
 
     if (mCurTxCmd == kTxCmdSweep)
     {
-        if (IsChannelValid(mChannel + 1))
+        if (Radio::IsChannelValid(mChannel + 1))
         {
             mChannel += 1;
             otPlatDiagChannelSet(mChannel);
@@ -1091,7 +1091,7 @@ Error Diags::ProcessPowerSettings(uint8_t aArgsLength, char *aArgs[])
     else if (aArgsLength == 1)
     {
         SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], channel));
-        VerifyOrExit(IsChannelValid(channel), error = kErrorInvalidArgs);
+        VerifyOrExit(Radio::IsChannelValid(channel), error = kErrorInvalidArgs);
 
         SuccessOrExit(error = GetPowerSettings(channel, powerSettings));
         Output("TargetPower(0.01dBm): %d\r\nActualPower(0.01dBm): %d\r\nRawPowerSetting: %s\r\n",
@@ -1185,11 +1185,6 @@ Error Diags::ProcessGpio(uint8_t aArgsLength, char *aArgs[])
 
 exit:
     return error;
-}
-
-bool Diags::IsChannelValid(uint8_t aChannel)
-{
-    return (aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax);
 }
 
 bool Diags::IsFrameLengthValid(uint16_t aLength)

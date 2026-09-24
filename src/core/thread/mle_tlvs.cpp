@@ -278,18 +278,7 @@ void ChannelTlvValue::SetChannelAndPage(uint16_t aChannel)
 
 bool ChannelTlvValue::IsValid(void) const
 {
-    bool     isValid = false;
-    uint16_t channel;
-
-    VerifyOrExit(Radio::SupportsChannelPage(mChannelPage));
-
-    channel = GetChannel();
-    VerifyOrExit((Radio::kChannelMin <= channel) && (channel <= Radio::kChannelMax));
-
-    isValid = true;
-
-exit:
-    return isValid;
+    return Radio::SupportsChannelPage(mChannelPage) && Radio::IsChannelValid(GetChannel());
 }
 
 //---------------------------------------------------------------------------------------------------------------------

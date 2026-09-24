@@ -415,7 +415,10 @@ otError otLinkSetCslChannel(otInstance *aInstance, uint8_t aChannel)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(Radio::IsCslChannelValid(aChannel), error = kErrorInvalidArgs);
+    if (aChannel != 0)
+    {
+        VerifyOrExit(Radio::IsChannelValid(aChannel), error = kErrorInvalidArgs);
+    }
 
     AsCoreType(aInstance).Get<Mac::Mac>().SetCslChannel(aChannel);
 
