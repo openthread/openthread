@@ -40,6 +40,7 @@
 
 #include <openthread/border_routing.h>
 
+#include "common/array.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/error.hpp"
@@ -626,6 +627,32 @@ public:
      */
     bool IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const;
 };
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+static constexpr uint8_t kMaxAilPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_PUBLISHED_AIL_PREFIXES;
+
+/**
+ * Represents an array of AIL (Adjacent Infrastructure Link) prefixes.
+ *
+ * Keeps the prefixes in sorted order up to `kMaxAilPrefixes` entries.
+ */
+class AilPrefixArray : public Array<Ip6::Prefix, kMaxAilPrefixes>
+{
+public:
+    /**
+     * Adds a candidate prefix to the array.
+     *
+     * The prefix is added only if it is a valid 64-bit prefix and is not already present in the array.
+     * The array elements are kept sorted in ascending numerical order. If the array is full, the prefix is added
+     * only if it is smaller than the largest entry in the array, displacing the largest entry.
+     *
+     * @param[in] aPrefix  The prefix to add.
+     */
+    void Add(const Ip6::Prefix &aPrefix);
+};
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_AIL_PREFIX_COMPRESSION_ENABLE
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Helper functions
