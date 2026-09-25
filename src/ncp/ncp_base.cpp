@@ -1710,12 +1710,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RX_AT>(void)
 
     {
         otRadioTime64 now = otPlatRadioGetNow(mInstance);
-        uint32_t      start;
 
-        VerifyOrExit(when > now && (when - now) < UINT32_MAX, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(when > now && (when - now) <= INT32_MAX, error = OT_ERROR_INVALID_ARGS);
 
-        start = when - now;
-        error = otPlatRadioReceiveAt(mInstance, channel, start, duration);
+        // `otPlatRadioReceiveAt()`'s `aStart` is an absolute radio time (truncated to 32 bits), not a duration
+        // relative to `now` - see its documentation in `openthread/platform/radio.h`.
+        error = otPlatRadioReceiveAt(mInstance, channel, static_cast<otRadioTime32>(when), duration);
     }
 
 exit:
