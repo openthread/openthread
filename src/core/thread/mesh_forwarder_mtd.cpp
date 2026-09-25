@@ -37,23 +37,6 @@
 
 namespace ot {
 
-void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
-{
-    Message &message = *aMessagePtr.Release();
-
-    message.SetDirectTransmission();
-    message.SetOffset(0);
-    message.SetDatagramTag(0);
-    message.SetTimestampToNow();
-
-    mSendQueue.Enqueue(message);
-    mScheduleTransmissionTask.Post();
-
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    ApplyDirectTxQueueLimit(message);
-#endif
-}
-
 Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvictReason)
 {
     Error    error = kErrorNotFound;
