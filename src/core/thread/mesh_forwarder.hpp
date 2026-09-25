@@ -335,6 +335,15 @@ private:
         bool           mParsedIp6Headers;
     };
 
+    struct ReassemblyMetadata : public Message::FooterData<ReassemblyMetadata>
+    {
+        uint16_t     mDatagramSize;
+        uint16_t     mDatagramTag;
+        Mac::Address mSource;
+    };
+
+    bool MatchesReassemblySource(const Mac::Address &aFirstSource, const Mac::Address &aSource);
+
 #if OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
