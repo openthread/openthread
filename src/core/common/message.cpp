@@ -374,8 +374,12 @@ void Message::InvokeTxCallback(Error aError)
 
     if (callback != nullptr)
     {
+        bool originalEvictFlag = GetDoNotEvict();
+
         GetMetadata().mTxCallback = nullptr;
+        SetDoNotEvict(true);
         callback(this, aError, GetMetadata().mTxContext);
+        SetDoNotEvict(originalEvictFlag);
     }
 }
 
