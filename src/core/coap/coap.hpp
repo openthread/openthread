@@ -43,6 +43,7 @@
 #include "common/message_allocator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/owned_ptr.hpp"
+#include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
@@ -824,6 +825,26 @@ private:
 #endif
     };
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    struct Block2ResponseMetadata : public Clearable<Block2ResponseMetadata>
+    {
+        Block2ResponseMetadata(void) { Clear(); }
+
+        void InitFromRequest(const Msg &aRxMsg, const char *aUriPath);
+        bool MatchesRequest(const Msg &aRxMsg, const char *aUriPath) const;
+        bool MatchesResponse(const Msg &aTxMsg) const;
+        bool IsSet(void) const { return mIsSet; }
+
+        Ip6::Address mSockAddr;
+        uint16_t     mSockPort;
+        Ip6::Address mPeerAddr;
+        uint16_t     mPeerPort;
+        Token        mToken;
+        char         mUriPath[Message::kMaxReceivedUriPath + 1];
+        bool         mIsSet;
+    };
+#endif
+
     class PendingRequests;
 
     class Request
@@ -1001,6 +1022,9 @@ private:
     Error ProcessBlockwiseSend(Msg &aMsg, const SendCallbacks &aCallbacks);
     Error ProcessBlockwiseResponse(Msg &aRxMsg, Request &aRequest);
     Error ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
+    void  ClearPendingBlock2Response(void);
+    void  ClearPendingBlock2ResponseFor(const Msg &aTxMsg);
+    void  CommitPendingBlock2Response(const Msg &aTxMsg);
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
     Error PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
@@ -1028,6 +1052,8 @@ private:
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     LinkedList<ResourceBlockWise> mBlockWiseResources;
     Message                      *mLastResponse;
+    Block2ResponseMetadata        mLastResponseMetadata;
+    Block2ResponseMetadata        mPendingBlock2ResponseMetadata;
 #endif
 };
 

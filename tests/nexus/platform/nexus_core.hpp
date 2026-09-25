@@ -40,6 +40,7 @@
 #include "nexus_utils.hpp"
 #include "common/array.hpp"
 #include "common/owning_list.hpp"
+#include "common/time.hpp"
 #include "instance/instance.hpp"
 #include "thread/key_manager.hpp"
 
