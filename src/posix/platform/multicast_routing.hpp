@@ -41,6 +41,10 @@
 
 #include "logger.hpp"
 #include "mainloop.hpp"
+#ifndef __linux__
+#include "bpf_tap.hpp"
+#include "multicast_forwarding.hpp"
+#endif
 #include "platform-posix.h"
 #include "core/common/non_copyable.hpp"
 #include "core/net/ip6_address.hpp"
@@ -54,15 +58,7 @@ class MulticastRoutingManager : public Mainloop::Source, public Logger<Multicast
 public:
     static const char kLogModuleName[];
 
-    explicit MulticastRoutingManager()
-
-        : mLastExpireTime(0)
-        , mMulticastRouterSock(-1)
-        , mState(kStateDisabled)
-        , mRetryIntervalMs(kMinRetryIntervalMs)
-        , mNextRetryTime(0)
-    {
-    }
+    explicit MulticastRoutingManager();
 
     bool IsEnabled(void) const { return mState == kStateEnabled; }
     void SetUp(void);
@@ -72,12 +68,8 @@ public:
     void HandleStateChange(otInstance *aInstance, otChangedFlags aFlags);
 
 private:
-    static constexpr uint32_t kMinRetryIntervalMs                       = 100;
-    static constexpr uint32_t kMaxRetryIntervalMs                       = 5000;
-    static constexpr uint16_t kMulticastForwardingCacheExpireTimeout    = 300;
-    static constexpr uint16_t kMulticastForwardingCacheExpiringInterval = 60;
-    static constexpr uint16_t kMulticastForwardingCacheTableSize =
-        OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE;
+    static constexpr uint32_t kMinRetryIntervalMs = 100;
+    static constexpr uint32_t kMaxRetryIntervalMs = 5000;
 
     enum State : uint8_t
     {
@@ -85,6 +77,27 @@ private:
         kStateEnabling,
         kStateEnabled,
     };
+
+    void Enable(void);
+    void Disable(void);
+    void Add(const Ip6::Address &aAddress);
+    void Remove(const Ip6::Address &aAddress);
+    void UpdateMldReport(const Ip6::Address &aAddress, bool isAdd);
+    bool HasMulticastListener(const Ip6::Address &aAddress) const;
+
+    static void HandleBackboneMulticastListenerEvent(void                                  *aContext,
+                                                     otBackboneRouterMulticastListenerEvent aEvent,
+                                                     const otIp6Address                    *aAddress);
+    void        HandleBackboneMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
+                                                     const Ip6::Address                    &aAddress);
+
+#ifdef __linux__
+    // The kernel forwards (MRT6); this class maintains its forwarding cache.
+
+    static constexpr uint16_t kMulticastForwardingCacheExpireTimeout    = 300;
+    static constexpr uint16_t kMulticastForwardingCacheExpiringInterval = 60;
+    static constexpr uint16_t kMulticastForwardingCacheTableSize =
+        OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE;
 
     enum MifIndex : uint8_t
     {
@@ -117,12 +130,6 @@ private:
         MifIndex      mOif;
     };
 
-    void    Enable(void);
-    void    Disable(void);
-    void    Add(const Ip6::Address &aAddress);
-    void    Remove(const Ip6::Address &aAddress);
-    void    UpdateMldReport(const Ip6::Address &aAddress, bool isAdd);
-    bool    HasMulticastListener(const Ip6::Address &aAddress) const;
     otError InitMulticastRouterSock(void);
     void    FinalizeMulticastRouterSock(void);
     void    ProcessMulticastRouterMessages(void);
@@ -138,18 +145,59 @@ private:
     void    RemoveMulticastForwardingCache(MulticastForwardingCache &aMfc) const;
     static const char *MifIndexToString(MifIndex aMif);
     void               DumpMulticastForwardingCache(void) const;
-    static void        HandleBackboneMulticastListenerEvent(void                                  *aContext,
-                                                            otBackboneRouterMulticastListenerEvent aEvent,
-                                                            const otIp6Address                    *aAddress);
-    void               HandleBackboneMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
-                                                            const Ip6::Address                    &aAddress);
 
     MulticastForwardingCache mMulticastForwardingCacheTable[kMulticastForwardingCacheTableSize];
     uint64_t                 mLastExpireTime;
-    int                      mMulticastRouterSock;
-    State                    mState;
-    uint32_t                 mRetryIntervalMs;
-    uint64_t                 mNextRetryTime;
+#else
+    // No kernel multicast routing: this class forwards, between a packet tap on the Thread interface and one on the
+    // infrastructure interface.
+
+    static constexpr uint16_t kMaxFrameSize      = 1518;
+    static constexpr uint32_t kReportIntervalSec = 300;
+
+    struct Counters
+    {
+        uint32_t mReceived;
+        uint32_t mForwarded;
+        uint32_t mRejected;
+        uint32_t mNoListener;
+        uint32_t mDuplicates;
+        uint32_t mRateLimited;
+        uint32_t mErrors;
+    };
+
+    otError InitMulticastRouterSock(void);
+    void    FinalizeMulticastRouterSock(void);
+    otError OpenThreadTap(void);
+    otError OpenBackboneTap(void);
+    otError ReadBackboneMac(void);
+    void    HandleThreadPacket(const uint8_t *aPacket, uint16_t aLength);
+    void    HandleBackbonePacket(const uint8_t *aPacket, uint16_t aLength);
+    void    ReportCounters(void);
+
+    static void HandleThreadFrame(void *aContext, const uint8_t *aFrame, uint16_t aLength);
+    static void HandleBackboneFrame(void *aContext, const uint8_t *aFrame, uint16_t aLength);
+    static void ReportCounters(const char *aDirection, const Counters &aCounters);
+
+    static const MulticastForwarding::RateLimiter::Config kThreadToBackboneLimits;
+    static const MulticastForwarding::RateLimiter::Config kBackboneToThreadLimits;
+
+    BpfTap                           mThreadTap;
+    BpfTap                           mBackboneTap;
+    uint8_t                          mBackboneMac[MulticastForwarding::kMacSize];
+    MulticastForwarding::DedupCache  mDedupCache;
+    MulticastForwarding::RateLimiter mThreadToBackboneLimiter;
+    MulticastForwarding::RateLimiter mBackboneToThreadLimiter;
+    Counters                         mThreadToBackbone;
+    Counters                         mBackboneToThread;
+    uint64_t                         mNextReportTime;
+    bool                             mCountersChanged;
+#endif // __linux__
+
+    int      mMulticastRouterSock;
+    State    mState;
+    uint32_t mRetryIntervalMs;
+    uint64_t mNextRetryTime;
 };
 
 } // namespace Posix

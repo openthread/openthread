@@ -67,6 +67,47 @@ target_link_libraries(ot-ftd-gtest
 )
 gtest_discover_tests(ot-ftd-gtest)
 
+add_executable(ot-posix-gtest
+    multicast_forwarding_test.cpp
+    ${openthread_SOURCE_DIR}/src/posix/platform/multicast_forwarding.cpp
+)
+
+target_include_directories(ot-posix-gtest PRIVATE
+    ${openthread_SOURCE_DIR}/src
+    ${openthread_SOURCE_DIR}/src/core
+    ${openthread_SOURCE_DIR}/src/posix/platform
+)
+
+target_link_libraries(ot-posix-gtest
+    ot-fake-ftd
+    GTest::gtest
+    GTest::gtest_main
+)
+
+gtest_discover_tests(ot-posix-gtest)
+
+# The BPF tap exists only where BPF does, in a Backbone Router build: the parser test is built there.
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND OT_BACKBONE_ROUTER)
+    add_executable(ot-posix-bpf-gtest
+        bpf_tap_test.cpp
+        ${openthread_SOURCE_DIR}/src/posix/platform/bpf_tap.cpp
+    )
+
+    target_include_directories(ot-posix-bpf-gtest PRIVATE
+        ${openthread_SOURCE_DIR}/src
+        ${openthread_SOURCE_DIR}/src/core
+        ${openthread_SOURCE_DIR}/src/posix/platform
+    )
+
+    target_link_libraries(ot-posix-bpf-gtest
+        ot-fake-ftd
+        GTest::gtest
+        GTest::gtest_main
+    )
+
+    gtest_discover_tests(ot-posix-bpf-gtest)
+endif()
+
 add_library(ot-fake-rcp
     fake_coprocessor_platform.cpp
 )
