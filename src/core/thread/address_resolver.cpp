@@ -748,6 +748,10 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
 
+    // Address Errors resolve duplicate EIDs, not topology-dependent locators.
+    VerifyOrExit(!Get<Mle::Mle>().IsRoutingLocator(target) && !Get<Mle::Mle>().IsAnycastLocator(target),
+                 error = kErrorDrop);
+
     for (Ip6::Netif::UnicastAddress &address : Get<ThreadNetif>().GetUnicastAddresses())
     {
         if (address.GetAddress() == target && Get<Mle::Mle>().GetMeshLocalEid().GetIid() != meshLocalIid)
