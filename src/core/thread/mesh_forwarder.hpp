@@ -294,6 +294,14 @@ private:
         kEvictReasonDirectTxQueueAtLimit,
     };
 
+#if OPENTHREAD_FTD
+    enum PriorityGuard : uint8_t // Used in FindMessageToEvict()
+    {
+        kLowerPriorityThan,
+        kEqualOrHigherPriorityThan,
+    };
+#endif
+
     enum MessageAction : uint8_t
     {
         kMessageReceive,         // Indicates that the message was received.
@@ -474,6 +482,7 @@ private:
     Error GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
 
 #if OPENTHREAD_FTD
+    Message      *FindMessageToEvict(PriorityGuard aGuard, Message::Priority aPriority, Message::Checker aChecker);
     void          DetermineDirectOrIndirectTx(Message &aMessage);
     void          FinalizeMessageIndirectTxs(Message &aMessage);
     FwdFrameInfo *FindFwdFrameInfoEntry(uint16_t aSrcRloc16, uint16_t aDatagramTag);

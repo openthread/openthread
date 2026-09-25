@@ -1658,6 +1658,28 @@ public:
         return aMessage.IsMleCommand(kMleCommand);
     }
 
+    /**
+     * Predicate checker function that checks whether a message is scheduled for direct transmission.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message is scheduled for direct transmission.
+     * @retval FALSE  The message is not scheduled for direct transmission.
+     */
+    static bool AcceptDirectTx(const Message &aMessage) { return aMessage.IsDirectTransmission(); }
+
+#if OPENTHREAD_FTD
+    /**
+     * Predicate checker function that checks whether a message is scheduled for indirect transmission to any child.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message is scheduled for indirect transmission.
+     * @retval FALSE  The message is not scheduled for indirect transmission.
+     */
+    static bool AcceptIndirectTx(const Message &aMessage) { return !aMessage.GetIndirectTxChildMask().IsEmpty(); }
+#endif
+
 protected:
     class OT_GSL_POINTER ConstIterator : public ItemPtrIterator<const Message, ConstIterator>
     {
