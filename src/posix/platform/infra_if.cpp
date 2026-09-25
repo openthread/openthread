@@ -53,6 +53,8 @@
 #include <unistd.h>
 #ifdef __linux__
 #include <linux/rtnetlink.h>
+#else
+#include <net/route.h>
 #endif
 
 #include <openthread/border_router.h>
@@ -225,7 +227,34 @@ int CreateNetLinkSocket(void)
 
     return sock;
 }
-#endif // #ifdef __linux__
+#else // __linux__
+// Create a routing socket that delivers interface and address events.
+int CreateRouteSocket(void)
+{
+    int sock;
+
+    sock = SocketWithCloseExec(PF_ROUTE, SOCK_RAW, AF_UNSPEC, kSocketNonBlock);
+    VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
+
+    // Where the platform can filter, avoid waking up for every routing table event on the host. Elsewhere (macOS)
+    // the other message types are received and ignored.
+#if defined(ROUTE_FILTER)
+    {
+        unsigned int filter = ROUTE_FILTER(RTM_IFINFO) | ROUTE_FILTER(RTM_NEWADDR) | ROUTE_FILTER(RTM_DELADDR);
+
+        VerifyOrDie(setsockopt(sock, AF_ROUTE, ROUTE_MSGFILTER, &filter, sizeof(filter)) == 0, OT_EXIT_ERROR_ERRNO);
+    }
+#elif defined(RO_MSGFILTER)
+    {
+        uint8_t filter[] = {RTM_IFINFO, RTM_NEWADDR, RTM_DELADDR};
+
+        VerifyOrDie(setsockopt(sock, AF_ROUTE, RO_MSGFILTER, filter, sizeof(filter)) == 0, OT_EXIT_ERROR_ERRNO);
+    }
+#endif
+
+    return sock;
+}
+#endif // __linux__
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
@@ -293,6 +322,8 @@ otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
         {
         case EADDRNOTAVAIL:
         case ENODEV:
+        case ENETDOWN:
+        case ENXIO:
             LogWarn("failed to send ICMPv6 message: %s, suggests infra link might be down, checking status.",
                     strerror(errno));
             SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
@@ -441,6 +472,8 @@ void InfraNetif::Init(void)
 {
 #ifdef __linux__
     mNetLinkSocket = CreateNetLinkSocket();
+#else
+    mRouteSocket = CreateRouteSocket();
 #endif
 
 #if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
@@ -457,6 +490,8 @@ void InfraNetif::SetInfraNetif(const char *aIfName, int aIcmp6Socket)
     OT_ASSERT(gInstance != nullptr);
 #ifdef __linux__
     VerifyOrDie(mNetLinkSocket != -1, OT_EXIT_INVALID_STATE);
+#else
+    VerifyOrDie(mRouteSocket != -1, OT_EXIT_INVALID_STATE);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -494,6 +529,8 @@ void InfraNetif::SetUp(void)
     OT_ASSERT(gInstance != nullptr);
 #ifdef __linux__
     VerifyOrExit(mNetLinkSocket != -1);
+#else
+    VerifyOrExit(mRouteSocket != -1);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -554,6 +591,12 @@ void InfraNetif::Deinit(void)
         close(mNetLinkSocket);
         mNetLinkSocket = -1;
     }
+#else
+    if (mRouteSocket != -1)
+    {
+        close(mRouteSocket);
+        mRouteSocket = -1;
+    }
 #endif
 
     mInfraIfName[0] = '\0';
@@ -568,6 +611,8 @@ void InfraNetif::Update(Mainloop::Context &aContext)
 
 #ifdef __linux__
     VerifyOrExit(mNetLinkSocket != -1);
+#else
+    VerifyOrExit(mRouteSocket != -1);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -578,6 +623,8 @@ void InfraNetif::Update(Mainloop::Context &aContext)
 
 #ifdef __linux__
     Mainloop::AddToReadFdSet(mNetLinkSocket, aContext);
+#else
+    Mainloop::AddToReadFdSet(mRouteSocket, aContext);
 #endif
 
 exit:
@@ -690,7 +737,123 @@ exit:
     return;
 }
 
-#endif // #ifdef __linux__
+#else // __linux__
+
+void InfraNetif::ReceiveRouteMessage(void)
+{
+    const size_t kMaxRouteBufSize = 2048;
+    ssize_t      len;
+    uint32_t     ifIndex = 0;
+    union
+    {
+        struct rt_msghdr  mRtHeader;
+        struct ifa_msghdr mIfaHeader;
+        struct if_msghdr  mIfHeader;
+        uint8_t           mBuffer[kMaxRouteBufSize];
+    } msgBuffer;
+
+    // The routing socket delivers one message per read.
+    len = recv(mRouteSocket, msgBuffer.mBuffer, sizeof(msgBuffer.mBuffer), 0);
+
+    if (len < 0)
+    {
+        int error = errno;
+
+        VerifyOrExit(error != EAGAIN && error != EWOULDBLOCK && error != EINTR);
+
+        // `ENOBUFS`: the receive buffer overflowed and messages were dropped, possibly the one reporting the link or
+        // the address coming back. Check the state rather than wait for an event that may not come again.
+        LogWarn("Failed to receive route message: %s", strerror(error));
+        VerifyOrExit(error == ENOBUFS);
+        UpdateInfraIfState();
+        ExitNow();
+    }
+
+    VerifyOrExit(len >=
+                 static_cast<ssize_t>(sizeof(msgBuffer.mRtHeader.rtm_msglen) + sizeof(msgBuffer.mRtHeader.rtm_version) +
+                                      sizeof(msgBuffer.mRtHeader.rtm_type)));
+    VerifyOrExit(msgBuffer.mRtHeader.rtm_version == RTM_VERSION);
+
+    switch (msgBuffer.mRtHeader.rtm_type)
+    {
+    case RTM_NEWADDR:
+    case RTM_DELADDR:
+        VerifyOrExit(len >= static_cast<ssize_t>(sizeof(struct ifa_msghdr)));
+        ifIndex = msgBuffer.mIfaHeader.ifam_index;
+        break;
+    case RTM_IFINFO:
+        VerifyOrExit(len >= static_cast<ssize_t>(sizeof(struct if_msghdr)));
+        ifIndex = msgBuffer.mIfHeader.ifm_index;
+        break;
+    default:
+        ExitNow();
+    }
+
+    // Only the infrastructure interface: under its index, or under its name if it was re-created with another.
+    if (ifIndex != mInfraIfIndex)
+    {
+        char ifname[IF_NAMESIZE] = {};
+
+        VerifyOrExit(mInfraIfName[0] != '\0' && if_indextoname(ifIndex, ifname) != nullptr &&
+                     strcmp(ifname, mInfraIfName) == 0);
+    }
+
+    UpdateInfraIfState();
+
+exit:
+    return;
+}
+
+// Brings `mInfraIfIndex` and the running state in line with the interface as it is now: deleted, re-created under
+// the same name (with the same or another index), or with its link or addresses changed. Called for a routing
+// message about the interface and when messages may have been lost, so every case is decided here.
+void InfraNetif::UpdateInfraIfState(void)
+{
+    unsigned int ifIndex;
+
+    VerifyOrExit(mInfraIfName[0] != '\0');
+
+    ifIndex = if_nametoindex(mInfraIfName);
+
+    if (ifIndex == 0)
+    {
+        // The interface is deleted. We must update its running state to false.
+        VerifyOrExit(mInfraIfIndex != 0);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, /* aIsRunning */ false));
+#endif
+        mInfraIfIndex = 0;
+        ExitNow();
+    }
+
+    if (ifIndex != mInfraIfIndex)
+    {
+        // Re-created (from 0) or re-created with another index: Border Routing starts over on the new index.
+        LogInfo("The infra interface index changed from %u to %u", mInfraIfIndex, ifIndex);
+        mInfraIfIndex = ifIndex;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        // The ICMPv6 socket is bound to the interface by index, not by name.
+        if (mInfraIfIcmp6Socket != -1)
+        {
+            VerifyOrDie(setsockopt(mInfraIfIcmp6Socket, IPPROTO_IPV6, IPV6_BOUND_IF, &ifIndex, sizeof(ifIndex)) == 0,
+                        OT_EXIT_ERROR_ERRNO);
+        }
+        SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, IsRunning()));
+#endif
+        ExitNow();
+    }
+
+    // The link went up or down, or an address (possibly the link-local one) was added or removed: check and update
+    // the running state. Without this the state only ever changes to "not running", on a failed send.
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
+#endif
+
+exit:
+    return;
+}
+
+#endif // __linux__
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 void InfraNetif::ReceiveIcmp6Message(void)
@@ -794,6 +957,8 @@ void InfraNetif::Process(const Mainloop::Context &aContext)
 
 #ifdef __linux__
     VerifyOrExit(mNetLinkSocket != -1);
+#else
+    VerifyOrExit(mRouteSocket != -1);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -807,6 +972,11 @@ void InfraNetif::Process(const Mainloop::Context &aContext)
     if (Mainloop::IsFdReadable(mNetLinkSocket, aContext))
     {
         ReceiveNetLinkMessage();
+    }
+#else
+    if (Mainloop::IsFdReadable(mRouteSocket, aContext))
+    {
+        ReceiveRouteMessage();
     }
 #endif
 
