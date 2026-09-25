@@ -1396,6 +1396,11 @@ void RoutingManager::OnLinkPrefixManager::Stop(void)
     }
 }
 
+bool RoutingManager::OnLinkPrefixManager::ContainsOldLocalPrefix(const Ip6::Prefix &aPrefix) const
+{
+    return mOldLocalPrefixes.ContainsMatching(aPrefix);
+}
+
 bool RoutingManager::OnLinkPrefixManager::AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const
 {
     bool matches = false;

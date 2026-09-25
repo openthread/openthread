@@ -31,6 +31,7 @@
 #include "test_platform.h"
 #include "test_util.hpp"
 
+#include <openthread/border_routing.h>
 #include <openthread/dataset_ftd.h>
 #include <openthread/thread.h>
 #include <openthread/platform/border_routing.h>
@@ -3040,15 +3041,18 @@ void TestExtPanIdChange(void)
     static const otExtendedPanId kExtPanId4 = {{0x44, 0x00, 0x44, 0x00, 0x44, 0x00, 0x44, 0x00}};
     static const otExtendedPanId kExtPanId5 = {{0x77, 0x88, 0x00, 0x00, 0x55, 0x55, 0x55, 0x55}};
 
-    Ip6::Prefix          localOnLink;
-    Ip6::Prefix          oldLocalOnLink;
-    Ip6::Prefix          localOmr;
-    Ip6::Prefix          onLinkPrefix   = PrefixFromString("2000:abba:baba::", 64);
-    Ip6::Address         routerAddressA = AddressFromString("fd00::aaaa");
-    uint32_t             oldPrefixLifetime;
-    Ip6::Prefix          oldPrefixes[4];
-    otOperationalDataset dataset;
-    uint16_t             heapAllocations;
+    Ip6::Prefix                        localOnLink;
+    Ip6::Prefix                        oldLocalOnLink;
+    Ip6::Prefix                        localOmr;
+    Ip6::Prefix                        onLinkPrefix   = PrefixFromString("2000:abba:baba::", 64);
+    Ip6::Address                       routerAddressA = AddressFromString("fd00::aaaa");
+    Ip6::Address                       routerAddressB = AddressFromString("fd00::bbbb");
+    uint32_t                           oldPrefixLifetime;
+    Ip6::Prefix                        oldPrefixes[4];
+    otOperationalDataset               dataset;
+    otBorderRoutingPrefixTableIterator iterator;
+    otBorderRoutingRouterEntry         routerEntry;
+    uint16_t                           heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestExtPanIdChange");
@@ -3080,6 +3084,22 @@ void TestExtPanIdChange(void)
     VerifyOrQuit(sExpectedRios.SawAll());
     Log("Local on-link prefix is being advertised, lifetime: %d", sOnLinkLifetime);
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Simulate a peer BR (router B) advertising the same local on-link
+    // and OMR prefixes and verify `mIsPeerBr` is true.
+
+    SendRouterAdvert(routerAddressB, {Pio(localOnLink, kValidLitime, kPreferredLifetime)},
+                     {Rio(localOmr, kValidLitime, NetworkData::kRoutePreferenceMedium)});
+    AdvanceTime(1);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+    otBorderRoutingPrefixTableInitIterator(sInstance, &iterator);
+    SuccessOrQuit(otBorderRoutingGetNextRouterEntry(sInstance, &iterator, &routerEntry));
+    VerifyOrQuit(AsCoreType(&routerEntry.mAddress) == routerAddressB);
+    VerifyOrQuit(routerEntry.mIsPeerBr);
+    VerifyOrQuit(otBorderRoutingGetNextRouterEntry(sInstance, &iterator, &routerEntry) == OT_ERROR_NOT_FOUND);
+#endif
+
     //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     // Check behavior when ext PAN ID changes while the local on-link is
     // being advertised.
@@ -3106,6 +3126,24 @@ void TestExtPanIdChange(void)
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
     Log("Local on-link prefix changed to %s from %s", localOnLink.ToString().AsCString(),
         oldLocalOnLink.ToString().AsCString());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Have peer BR (router B) send an RA advertising the new local
+    // on-link prefix and deprecating the old local on-link prefix,
+    // and verify `mIsPeerBr` remains true.
+
+    SendRouterAdvert(routerAddressB,
+                     {Pio(localOnLink, kValidLitime, kPreferredLifetime), Pio(oldLocalOnLink, kValidLitime, 0)},
+                     {Rio(localOmr, kValidLitime, NetworkData::kRoutePreferenceMedium)});
+    AdvanceTime(1);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+    otBorderRoutingPrefixTableInitIterator(sInstance, &iterator);
+    SuccessOrQuit(otBorderRoutingGetNextRouterEntry(sInstance, &iterator, &routerEntry));
+    VerifyOrQuit(AsCoreType(&routerEntry.mAddress) == routerAddressB);
+    VerifyOrQuit(routerEntry.mIsPeerBr);
+    VerifyOrQuit(otBorderRoutingGetNextRouterEntry(sInstance, &iterator, &routerEntry) == OT_ERROR_NOT_FOUND);
+#endif
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate the received RA message and that it contains the
