@@ -31,14 +31,48 @@ set -euxo pipefail
 
 TEMP_PATH=$(mktemp -d)
 SOCAT="socat-1.7.4.4"
-SOCAT_TAR="$SOCAT.tar.gz"
+SOCAT_TAR="$SOCAT.tar.bz2"
+# Use the Yocto source mirror for HTTPS transport; verify the upstream archive hash below.
+SOCAT_URL="https://downloads.yoctoproject.org/mirror/sources/$SOCAT_TAR"
+SOCAT_SHA256="fbd42bd2f0e54a3af6d01bdf15385384ab82dbc0e4f1a5e153b3e0be1b6380ac"
+
+trap 'rm -rf "$TEMP_PATH" || sudo rm -rf "$TEMP_PATH"' EXIT
+
+verify_sha256()
+{
+    local actual_sha256
+    local archive=$1
+
+    if command -v sha256sum >/dev/null 2>&1; then
+        actual_sha256=$(sha256sum "$archive" | awk '{print $1}')
+    elif command -v shasum >/dev/null 2>&1; then
+        actual_sha256=$(shasum -a 256 "$archive" | awk '{print $1}')
+    else
+        echo "sha256sum or shasum is required to verify $archive" >&2
+        exit 1
+    fi
+
+    if [[ "$actual_sha256" != "$SOCAT_SHA256" ]]; then
+        echo "SHA-256 mismatch for $archive" >&2
+        echo "Expected: $SOCAT_SHA256" >&2
+        echo "Actual:   $actual_sha256" >&2
+        exit 1
+    fi
+}
 
 INSTALL_PREFIX="--prefix=/usr"
-if command -v brew; then
+if command -v brew >/dev/null 2>&1; then
     INSTALL_PREFIX="" # On MacOS, it's not allowed to install to /usr/bin due to System Integrity Protection
 fi
 
 cd "$TEMP_PATH"
-[[ -f $SOCAT_TAR ]] || wget http://www.dest-unreach.org/socat/download/"$SOCAT_TAR"
-tar -xvzf "$SOCAT_TAR"
+[[ -f "$SOCAT_TAR" ]] || wget \
+    --tries 4 \
+    --https-only \
+    --secure-protocol=TLSv1_2 \
+    --max-redirect=0 \
+    --output-document="$SOCAT_TAR" \
+    "$SOCAT_URL"
+verify_sha256 "$SOCAT_TAR"
+tar -xjf "$SOCAT_TAR"
 cd "$SOCAT" && ./configure "$INSTALL_PREFIX" && make && sudo make install
