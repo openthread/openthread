@@ -1117,6 +1117,115 @@ void TestNetworkDataContextLength(void)
     testFreeInstance(instance);
 }
 
+void TestNetworkDataCommissioningData(void)
+{
+    class TestLeader : public Leader
+    {
+    public:
+        void Populate(const uint8_t *aTlvs, uint8_t aTlvsLength)
+        {
+            memcpy(GetBytes(), aTlvs, aTlvsLength);
+            SetLength(aTlvsLength);
+        }
+    };
+
+    Instance                     *instance;
+    TestLeader                   *leader;
+    MeshCoP::CommissioningDataset dataset;
+
+    printf("\n\n-------------------------------------------------");
+    printf("\nTestNetworkDataCommissioningData()\n");
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
+
+    leader = reinterpret_cast<TestLeader *>(&instance->Get<Leader>());
+
+    {
+        // Commissioning Data TLV with a Joiner UDP Port sub-TLV in the
+        // extended format (length byte 0xff followed by a 16-bit length)
+        // and a base Border Agent Locator sub-TLV after it. The walk in
+        // `GetCommissioningDataset()` must step over the extended sub-TLV
+        // using its 16-bit length and treat both as known sub-TLVs.
+
+        static const uint8_t kNetworkData[] = {
+            0x08, 0x0a, MeshCoP::Tlv::kJoinerUdpPort,      0xff, 0x00, 0x02,
+            0x12, 0x34, MeshCoP::Tlv::kBorderAgentLocator, 0x02, 0xab, 0xcd,
+        };
+
+        printf("\nExtended sub-TLV followed by a base sub-TLV");
+
+        leader->Populate(kNetworkData, sizeof(kNetworkData));
+
+        leader->GetCommissioningDataset(dataset);
+        VerifyOrQuit(dataset.mIsJoinerUdpPortSet);
+        VerifyOrQuit(dataset.mJoinerUdpPort == 0x1234);
+        VerifyOrQuit(dataset.mIsLocatorSet);
+        VerifyOrQuit(dataset.mLocator == 0xabcd);
+        VerifyOrQuit(!dataset.mHasExtraTlv);
+    }
+
+    {
+        // Same extended Joiner UDP Port sub-TLV followed by an unknown
+        // sub-TLV, which must still be reported as an extra TLV.
+
+        static const uint8_t kNetworkData[] = {
+            0x08, 0x08, MeshCoP::Tlv::kJoinerUdpPort, 0xff, 0x00, 0x02, 0x12, 0x34, MeshCoP::Tlv::kCommissionerId, 0x00,
+        };
+
+        printf("\nExtended sub-TLV followed by an unknown sub-TLV");
+
+        leader->Populate(kNetworkData, sizeof(kNetworkData));
+
+        leader->GetCommissioningDataset(dataset);
+        VerifyOrQuit(dataset.mIsJoinerUdpPortSet);
+        VerifyOrQuit(dataset.mJoinerUdpPort == 0x1234);
+        VerifyOrQuit(dataset.mHasExtraTlv);
+    }
+
+    {
+        // Truncated sub-TLVs: the header, the extended header, or the value
+        // runs past the end of the Commissioning Data value. The walk must
+        // stop without reading past the end. The content is malformed rather
+        // than carrying an unknown sub-TLV, so `mHasExtraTlv` stays clear.
+
+        static const uint8_t kTruncatedHeader[]         = {0x08, 0x01, MeshCoP::Tlv::kBorderAgentLocator};
+        static const uint8_t kTruncatedExtendedHeader[] = {0x08, 0x03, MeshCoP::Tlv::kBorderAgentLocator, 0xff, 0x00};
+        static const uint8_t kTruncatedValue[]          = {0x08, 0x03, MeshCoP::Tlv::kBorderAgentLocator, 0x05, 0x00};
+        static const uint8_t kTruncatedExtendedValue[]  = {0x08, 0x05, MeshCoP::Tlv::kBorderAgentLocator, 0xff, 0x00,
+                                                           0x05, 0x00};
+
+        struct TestCase
+        {
+            const uint8_t *mNetworkData;
+            uint8_t        mNetworkDataLength;
+            const char    *mName;
+        };
+
+        static const TestCase kTestCases[] = {
+            {kTruncatedHeader, sizeof(kTruncatedHeader), "truncated header"},
+            {kTruncatedExtendedHeader, sizeof(kTruncatedExtendedHeader), "truncated extended header"},
+            {kTruncatedValue, sizeof(kTruncatedValue), "truncated value"},
+            {kTruncatedExtendedValue, sizeof(kTruncatedExtendedValue), "truncated extended value"},
+        };
+
+        for (const TestCase &testCase : kTestCases)
+        {
+            printf("\nSub-TLV with %s", testCase.mName);
+
+            leader->Populate(testCase.mNetworkData, testCase.mNetworkDataLength);
+
+            leader->GetCommissioningDataset(dataset);
+            VerifyOrQuit(!dataset.mIsLocatorSet);
+            VerifyOrQuit(!dataset.mHasExtraTlv);
+        }
+    }
+
+    printf("\n");
+
+    testFreeInstance(instance);
+}
+
 } // namespace NetworkData
 } // namespace ot
 
@@ -1129,6 +1238,7 @@ int main(void)
     ot::NetworkData::TestNetworkDataDsnSrpServices();
     ot::NetworkData::TestNetworkDataDsnSrpAnycastSeqNumSelection();
     ot::NetworkData::TestNetworkDataContextLength();
+    ot::NetworkData::TestNetworkDataCommissioningData();
 
     printf("\nAll tests passed\n");
     return 0;
