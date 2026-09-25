@@ -1127,7 +1127,7 @@ int SecureTransport::Extension::EcdheEcdsaInfo::SetSecureKeys(mbedtls_ssl_config
                                       static_cast<size_t>(mOwnCertLength));
         VerifyOrExit(rval == 0);
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000) && (MBEDTLS_VERSION_NUMBER < 0x04000000)
         rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
                                     static_cast<size_t>(mPrivateKeyLength), nullptr, 0,
                                     Crypto::MbedTls::CryptoSecurePrng, nullptr);
