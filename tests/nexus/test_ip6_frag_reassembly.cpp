@@ -47,8 +47,14 @@
  *          carries an extra Hop-by-Hop extension header), constructed so that any
  *          unwritten region would be exposed (with checksums precomputed against
  *          several possible region contents), must NOT produce an echo reply, since a
- *          reply only appears when the reassembled datagram incorporated bytes matching
- *          the checksum assumption.
+ *          the checksum assumption;
+ *  case C: fragment 1 carries a Hop-by-Hop extension header; the reassembled datagram
+ *          contains only the 40-byte base IPv6 header with NextHeader set to ICMPv6
+ *          and delivers the reassembled echo request directly to ICMPv6 without duplicate
+ *          extension header processing;
+ *  case D: both fragments carry the Hop-by-Hop extension header; reassembly similarly
+ *          completes with a 40-byte base header and direct upper-layer delivery, answering
+ *          the echo request.
  *
  * Gates: OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE (default 0; 1 in this nexus config),
  * default static message pool (heap builds zero via calloc).
@@ -414,12 +420,173 @@ void TestFragmentReassemblyHole(void)
     Log("TestFragmentReassemblyHole passed");
 }
 
+static void BuildAndSendFragmentsWithExtHeader(Node               &aSender,
+                                               Core               &aNexus,
+                                               const Ip6::Address &aSrc,
+                                               const Ip6::Address &aDst,
+                                               uint32_t            aFragId,
+                                               bool                aFrag2WithExt,
+                                               uint16_t            aEchoSeq)
+{
+    uint8_t          icmp[kPay1];
+    uint8_t          tail[kPay2];
+    uint16_t         csum;
+    Ip6::Icmp6Header echoHeader;
+
+    memset(icmp, kPayByte, sizeof(icmp));
+    memset(&icmp[kMarkerRunOffset], kMarker, kHole);
+
+    echoHeader.Clear();
+    echoHeader.SetType(Ip6::Icmp6Header::kTypeEchoRequest);
+    echoHeader.SetId(0x5678);
+    echoHeader.SetSequence(aEchoSeq);
+    memcpy(icmp, &echoHeader, sizeof(echoHeader));
+
+    memset(tail, kPay2Byte, sizeof(tail));
+
+    csum = IcmpChecksum(aSrc, aDst, icmp, kPay1, nullptr, 0, tail, kPay2);
+    echoHeader.SetChecksum(csum);
+    memcpy(icmp, &echoHeader, sizeof(echoHeader));
+
+    // ---- fragment 1: Hop-by-Hop extension header precedes the Fragment Header.
+    // Unfragmentable extension headers are processed per-fragment and not carried into reassembly.
+    {
+        Message            *message   = NewIp6Message(aSender);
+        Ip6::Header         ip6Header;
+        Ip6::HopByHopHeader hbhHeader;
+        Ip6::PadOption      padOption;
+        Ip6::FragmentHeader fragmentHeader;
+        uint16_t            extLength = static_cast<uint16_t>(sizeof(Ip6::HopByHopHeader) + kPadOptionSize);
+
+        ip6Header.InitVersionTrafficClassFlow();
+        ip6Header.SetPayloadLength(static_cast<uint16_t>(extLength + sizeof(Ip6::FragmentHeader) + kPay1));
+        ip6Header.SetNextHeader(Ip6::kProtoHopOpts);
+        ip6Header.SetHopLimit(kHopLimit);
+        ip6Header.SetSource(aSrc);
+        ip6Header.SetDestination(aDst);
+        SuccessOrQuit(message->Append(ip6Header));
+
+        hbhHeader.SetNextHeader(Ip6::kProtoFragment);
+        hbhHeader.SetLength(0); // one 8-byte unit in total
+        SuccessOrQuit(message->Append(hbhHeader));
+
+        padOption.InitForPadSize(kPadOptionSize);
+        SuccessOrQuit(message->AppendBytes(&padOption, padOption.GetSize()));
+
+        fragmentHeader.Init();
+        fragmentHeader.SetNextHeader(Ip6::kProtoIcmp6);
+        fragmentHeader.SetOffset(0);
+        fragmentHeader.SetMoreFlag();
+        fragmentHeader.SetIdentification(aFragId);
+        SuccessOrQuit(message->Append(fragmentHeader));
+
+        SuccessOrQuit(message->AppendBytes(icmp, kPay1));
+
+        SuccessOrQuit(aSender.Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(message)));
+    }
+
+    aNexus.AdvanceTime(400);
+
+    // ---- fragment 2 (final): optionally carries the same HBH extension header.
+    {
+        Message            *message   = NewIp6Message(aSender);
+        Ip6::Header         ip6Header;
+        Ip6::FragmentHeader fragmentHeader;
+        uint16_t            extLength = aFrag2WithExt ? static_cast<uint16_t>(sizeof(Ip6::HopByHopHeader) + kPadOptionSize) : 0;
+
+        ip6Header.InitVersionTrafficClassFlow();
+        ip6Header.SetPayloadLength(static_cast<uint16_t>(extLength + sizeof(Ip6::FragmentHeader) + kPay2));
+        ip6Header.SetNextHeader(aFrag2WithExt ? Ip6::kProtoHopOpts : Ip6::kProtoFragment);
+        ip6Header.SetHopLimit(kHopLimit);
+        ip6Header.SetSource(aSrc);
+        ip6Header.SetDestination(aDst);
+        SuccessOrQuit(message->Append(ip6Header));
+
+        if (aFrag2WithExt)
+        {
+            Ip6::HopByHopHeader hbhHeader;
+            Ip6::PadOption      padOption;
+
+            hbhHeader.SetNextHeader(Ip6::kProtoFragment);
+            hbhHeader.SetLength(0);
+            SuccessOrQuit(message->Append(hbhHeader));
+
+            padOption.InitForPadSize(kPadOptionSize);
+            SuccessOrQuit(message->AppendBytes(&padOption, padOption.GetSize()));
+        }
+
+        fragmentHeader.Init();
+        fragmentHeader.SetNextHeader(Ip6::kProtoIcmp6);
+        fragmentHeader.SetOffset(Ip6::FragmentHeader::BytesToFragmentOffset(kPay1));
+        fragmentHeader.ClearMoreFlag();
+        fragmentHeader.SetIdentification(aFragId);
+        SuccessOrQuit(message->Append(fragmentHeader));
+
+        SuccessOrQuit(message->AppendBytes(tail, kPay2));
+
+        SuccessOrQuit(aSender.Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(message)));
+    }
+}
+
+void TestFragmentReassemblyWithExtensionHeader(void)
+{
+    Core  nexus;
+    Node &leader = nexus.CreateNode();
+    Node &child  = nexus.CreateNode();
+
+    otIcmp6Handler handler;
+
+    memset(&handler, 0, sizeof(handler));
+    handler.mReceiveCallback = HandleIcmp;
+
+    leader.Form();
+    nexus.AdvanceTime(kFormNetworkTime);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    child.Join(leader);
+    nexus.AdvanceTime(20 * 1000);
+    VerifyOrQuit(child.Get<Mle::Mle>().IsAttached());
+
+    SuccessOrQuit(otIcmp6RegisterHandler(&child.GetInstance(), &handler));
+
+    const Ip6::Address &src = child.Get<Mle::Mle>().GetMeshLocalEid();
+    const Ip6::Address &dst = leader.Get<Mle::Mle>().GetMeshLocalEid();
+
+    Log("Case C: Fragment 1 carries HBH extension header, Fragment 2 without HBH");
+    Log("Reassembled datagram contains only the 40-byte base header with NextHeader");
+    Log("set to ICMPv6 and delivers directly to ICMPv6 without duplicate HBH processing.");
+    sGotReply          = false;
+    sReplyHasMarkerRun = false;
+    sReplyLength       = 0;
+    BuildAndSendFragmentsWithExtHeader(child, nexus, src, dst, 0x33330001, /* aFrag2WithExt */ false, 20);
+    nexus.AdvanceTime(3 * 1000);
+    VerifyOrQuit(sGotReply);
+    VerifyOrQuit(sReplyHasMarkerRun);
+    VerifyOrQuit(sReplyLength == kPay1 + kPay2);
+    Log("reply received (len %u, marker run verified)", sReplyLength);
+
+    Log("Case D: Both Fragment 1 and Fragment 2 carry HBH extension header");
+    Log("Reassembled datagram similarly completes with 40-byte base header and direct ICMPv6 delivery.");
+    sGotReply          = false;
+    sReplyHasMarkerRun = false;
+    sReplyLength       = 0;
+    BuildAndSendFragmentsWithExtHeader(child, nexus, src, dst, 0x33330002, /* aFrag2WithExt */ true, 21);
+    nexus.AdvanceTime(3 * 1000);
+    VerifyOrQuit(sGotReply);
+    VerifyOrQuit(sReplyHasMarkerRun);
+    VerifyOrQuit(sReplyLength == kPay1 + kPay2);
+    Log("reply received (len %u, marker run verified)", sReplyLength);
+
+    Log("TestFragmentReassemblyWithExtensionHeader passed");
+}
+
 } // namespace Nexus
 } // namespace ot
 
 int main(void)
 {
     ot::Nexus::TestFragmentReassemblyHole();
+    ot::Nexus::TestFragmentReassemblyWithExtensionHeader();
     printf("All tests passed\n");
     return 0;
 }
