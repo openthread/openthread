@@ -30,6 +30,7 @@
 
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
+#include "thread/child_table.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/tmf.hpp"
@@ -41,7 +42,7 @@ static constexpr uint32_t kFormNetworkTime    = 13 * 1000;
 static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 static constexpr uint32_t kPropagationTime    = 10 * 1000;
 
-void SendAddressError(Node &aSender, const Ip6::Address &aDestination, const Ip6::Address &aTarget)
+static void SendAddressError(Node &aSender, const Ip6::Address &aDestination, const Ip6::Address &aTarget)
 {
     Tmf::Message *message = aSender.Get<Tmf::Agent>().AllocateAndInitPostMessageTo(kUriAddressError, aDestination);
 
@@ -62,6 +63,8 @@ void TestAddressErrorLocator(void)
     victimRouter.SetName("VICTIM_ROUTER");
     joinedEndDevice.SetName("JOINED_END_DEVICE");
 
+    Log("1. Form a network with a router and an end device");
+
     AllowLinkBetween(leader, victimRouter);
     AllowLinkBetween(leader, joinedEndDevice);
     nexus.AdvanceTime(0);
@@ -76,28 +79,22 @@ void TestAddressErrorLocator(void)
     VerifyOrQuit(victimRouter.Get<Mle::Mle>().IsRouter());
     VerifyOrQuit(joinedEndDevice.Get<Mle::Mle>().IsChild());
 
-    const Ip6::Address victimRloc = victimRouter.Get<Mle::Mle>().GetMeshLocalRloc();
+    const Ip6::Address victimRloc      = victimRouter.Get<Mle::Mle>().GetMeshLocalRloc();
+    const Ip6::Address leaderRloc      = leader.Get<Mle::Mle>().GetMeshLocalRloc();
+    const Ip6::Address victimMle       = victimRouter.Get<Mle::Mle>().GetMeshLocalEid();
+    const Ip6::Address victimLinkLocal = victimRouter.Get<Mle::Mle>().GetLinkLocalAddress();
+    const Ip6::Address childMle        = joinedEndDevice.Get<Mle::Mle>().GetMeshLocalEid();
     Ip6::Address       leaderAloc;
 
     leader.Get<Mle::Mle>().ComposeLeaderAloc(leaderAloc);
     VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(victimRloc));
     VerifyOrQuit(leader.Get<ThreadNetif>().HasUnicastAddress(leaderAloc));
 
-    // A joined end device's Address Error must not remove a router's RLOC.
-    SendAddressError(joinedEndDevice, victimRloc, victimRloc);
-    nexus.AdvanceTime(kPropagationTime);
-    VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(victimRloc));
-    nexus.SendAndVerifyEchoRequest(joinedEndDevice, victimRloc);
+    Log("2. Confirm Address Errors remove ordinary EIDs on the router and leader");
 
-    // The same protection applies to a leader's anycast locator.
-    SendAddressError(joinedEndDevice, leader.Get<Mle::Mle>().GetMeshLocalRloc(), leaderAloc);
-    nexus.AdvanceTime(kPropagationTime);
-    VerifyOrQuit(leader.Get<ThreadNetif>().HasUnicastAddress(leaderAloc));
-
-    // Duplicate resolution must still be able to remove an ordinary EID.
     Ip6::Netif::UnicastAddress eid;
 
-    eid.InitAsThreadOriginGlobalScope();
+    eid.InitAsSlaacOrigin(/* aPrefixLength */ 64, /* aPreferred */ true);
     SuccessOrQuit(eid.GetAddress().FromString("2001:db8::1"));
     SuccessOrQuit(victimRouter.Get<ThreadNetif>().AddExternalUnicastAddress(eid));
     VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(eid.GetAddress()));
@@ -106,7 +103,52 @@ void TestAddressErrorLocator(void)
     nexus.AdvanceTime(kPropagationTime);
     VerifyOrQuit(!victimRouter.Get<ThreadNetif>().HasUnicastAddress(eid.GetAddress()));
 
-    // A non-mesh-local EID remains eligible even if its IID resembles a locator.
+    SuccessOrQuit(eid.GetAddress().FromString("2001:db8::2"));
+    SuccessOrQuit(leader.Get<ThreadNetif>().AddExternalUnicastAddress(eid));
+    VerifyOrQuit(leader.Get<ThreadNetif>().HasUnicastAddress(eid.GetAddress()));
+
+    SendAddressError(victimRouter, leaderRloc, eid.GetAddress());
+    nexus.AdvanceTime(kPropagationTime);
+    VerifyOrQuit(!leader.Get<ThreadNetif>().HasUnicastAddress(eid.GetAddress()));
+
+    Log("3. Keep the router RLOC and leader ALOC");
+
+    SendAddressError(joinedEndDevice, victimRloc, victimRloc);
+    nexus.AdvanceTime(kPropagationTime);
+    VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(victimRloc));
+    nexus.SendAndVerifyEchoRequest(joinedEndDevice, victimRloc);
+
+    SendAddressError(victimRouter, leaderRloc, leaderAloc);
+    nexus.AdvanceTime(kPropagationTime);
+    VerifyOrQuit(leader.Get<ThreadNetif>().HasUnicastAddress(leaderAloc));
+
+    Log("4. Keep the router ML-EID and link-local address");
+
+    VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(victimMle));
+    VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(victimLinkLocal));
+
+    SendAddressError(joinedEndDevice, victimRloc, victimMle);
+    nexus.AdvanceTime(kPropagationTime);
+    VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(victimMle));
+
+    SendAddressError(joinedEndDevice, victimRloc, victimLinkLocal);
+    nexus.AdvanceTime(kPropagationTime);
+    VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(victimLinkLocal));
+
+    Log("5. Keep the child's ML-EID in its parent address table");
+
+    Child *child =
+        leader.Get<ChildTable>().FindChild(joinedEndDevice.Get<Mac::Mac>().GetExtAddress(), Child::kInStateValid);
+
+    VerifyOrQuit(child != nullptr);
+    VerifyOrQuit(child->HasIp6Address(childMle));
+
+    SendAddressError(victimRouter, leaderRloc, childMle);
+    nexus.AdvanceTime(kPropagationTime);
+    VerifyOrQuit(child->HasIp6Address(childMle));
+
+    Log("6. Keep global EID duplicate resolution with a locator-like IID");
+
     SuccessOrQuit(eid.GetAddress().FromString("2001:db8::ff:fe00:1234"));
     SuccessOrQuit(victimRouter.Get<ThreadNetif>().AddExternalUnicastAddress(eid));
     VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(eid.GetAddress()));
@@ -114,8 +156,6 @@ void TestAddressErrorLocator(void)
     SendAddressError(joinedEndDevice, victimRloc, eid.GetAddress());
     nexus.AdvanceTime(kPropagationTime);
     VerifyOrQuit(!victimRouter.Get<ThreadNetif>().HasUnicastAddress(eid.GetAddress()));
-
-    nexus.AdvanceTime(10 * 60 * 1000);
     VerifyOrQuit(victimRouter.Get<Mle::Mle>().IsRouter());
     VerifyOrQuit(victimRouter.Get<ThreadNetif>().HasUnicastAddress(victimRloc));
     nexus.SendAndVerifyEchoRequest(joinedEndDevice, victimRloc);
