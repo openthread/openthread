@@ -105,7 +105,7 @@ int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
 
     VerifyOrExit(mSessionSocket != -1);
 
-#ifdef __linux__
+#ifdef MSG_NOSIGNAL
     // Don't die on SIGPIPE
     rval = send(mSessionSocket, buf, static_cast<size_t>(rval), MSG_NOSIGNAL);
 #else
@@ -136,18 +136,22 @@ void Daemon::InitializeSessionSocket(void)
 
     VerifyOrExit((rval = fcntl(newSessionSocket, F_SETFD, rval)) != -1);
 
-#ifndef __linux__
+#ifndef MSG_NOSIGNAL
     // some platforms (macOS, Solaris) don't have MSG_NOSIGNAL
     // SOME of those (macOS, but NOT Solaris) support SO_NOSIGPIPE
     // if we have SO_NOSIGPIPE, then set it. Otherwise, we're going
     // to simply ignore it.
 #if defined(SO_NOSIGPIPE)
-    rval = setsockopt(newSessionSocket, SOL_SOCKET, SO_NOSIGPIPE, &rval, sizeof(rval));
-    VerifyOrExit(rval != -1);
+    {
+        const int on = 1;
+
+        rval = setsockopt(newSessionSocket, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on));
+        VerifyOrExit(rval != -1);
+    }
 #else
 #warning "no support for MSG_NOSIGNAL or SO_NOSIGPIPE"
 #endif
-#endif // __linux__
+#endif // MSG_NOSIGNAL
 
     if (mSessionSocket != -1)
     {
