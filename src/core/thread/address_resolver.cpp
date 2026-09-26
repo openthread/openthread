@@ -748,6 +748,13 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
 
+    // Mesh-local and link-local addresses are not subject to Address Error duplicate resolution.
+    if (Get<Mle::Mle>().IsMeshLocalAddress(target) || target.IsLinkLocalUnicast())
+    {
+        LogInfo("Ignoring %s for target %s", UriToString<kUriAddressError>(), target.ToString().AsCString());
+        ExitNow();
+    }
+
     for (Ip6::Netif::UnicastAddress &address : Get<ThreadNetif>().GetUnicastAddresses())
     {
         if (address.GetAddress() == target && Get<Mle::Mle>().GetMeshLocalEid().GetIid() != meshLocalIid)
