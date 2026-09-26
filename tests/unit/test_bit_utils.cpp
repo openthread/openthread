@@ -239,6 +239,58 @@ void TestMaskForBitSize(void)
     printf("TestMaskForBitSize() passed\n");
 }
 
+static bool GetMaskBit(const uint8_t *aMask, uint16_t aBitIndex)
+{
+    return (aMask[aBitIndex / kBitsPerByte] & (0x80 >> (aBitIndex % kBitsPerByte))) != 0;
+}
+
+void TestRotateBitmask(void)
+{
+    // We use a 64-bit De Bruijn sequence B(2, 6) where every 6-bit
+    // window (000000 through 111111) appears exactly once, every prefix
+    // of length >= 2 is aperiodic, and every byte has its LSB set to 1.
+
+    static const uint8_t kPattern[8] = {0xb3, 0x81, 0x0d, 0x2b, 0x75, 0x17, 0x93, 0x1f};
+
+    uint8_t mask[sizeof(kPattern)];
+
+    for (uint16_t bitLen = 0; bitLen <= static_cast<uint16_t>(BitSizeOf(kPattern)); bitLen++)
+    {
+        uint16_t numBytes = BytesForBitSize(bitLen);
+
+        for (uint16_t shift = 0; shift <= static_cast<uint16_t>(BitSizeOf(kPattern) * 2 + 5); shift++)
+        {
+            memcpy(mask, kPattern, sizeof(mask));
+
+            if ((bitLen % kBitsPerByte) != 0)
+            {
+                mask[numBytes - 1] |= MaskForBitSize<uint8_t>(kBitsPerByte - (bitLen % kBitsPerByte));
+            }
+
+            RotateBitmask(mask, bitLen, shift);
+
+            for (uint16_t srcIndex = 0; srcIndex < bitLen; srcIndex++)
+            {
+                uint16_t dstIndex = (srcIndex + shift) % bitLen;
+
+                VerifyOrQuit(GetMaskBit(mask, dstIndex) == GetMaskBit(kPattern, srcIndex));
+            }
+
+            // Verify that unused trailing bits in the last byte are cleared
+            // and any remaining bytes beyond `numBytes` are unchanged.
+
+            for (uint16_t bitIndex = bitLen; bitIndex < numBytes * kBitsPerByte; bitIndex++)
+            {
+                VerifyOrQuit(!GetMaskBit(mask, bitIndex));
+            }
+
+            VerifyOrQuit(memcmp(mask + numBytes, kPattern + numBytes, sizeof(mask) - numBytes) == 0);
+        }
+    }
+
+    printf("TestRotateBitmask() passed\n");
+}
+
 } // namespace ot
 
 int main(void)
@@ -248,6 +300,7 @@ int main(void)
     ot::TestCountMatchingBitsExamples();
     ot::TestDetermineMinBitSize();
     ot::TestMaskForBitSize();
+    ot::TestRotateBitmask();
 
     printf("All tests passed\n");
     return 0;
