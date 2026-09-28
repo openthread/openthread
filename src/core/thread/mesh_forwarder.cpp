@@ -607,6 +607,11 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     mAddMeshHeader = false;
 
+    if (aMessage.GetSubType() == Message::kSubTypeJoinerEntrust)
+    {
+        VerifyOrExit(Get<KeyManager>().IsKekSet(), error = kErrorDrop);
+    }
+
     IgnoreError(aMessage.Read(0, ip6Header));
 
     VerifyOrExit(!ip6Header.GetSource().IsMulticast(), error = kErrorDrop);
@@ -723,6 +728,12 @@ Mac::TxFrame *MeshForwarder::PrepareFrame(Mac::TxFrames &aTxFrames)
             mSendMessage->SetLinkSecurityEnabled(true);
         }
 #endif
+        if ((mSendMessage->GetSubType() == Message::kSubTypeJoinerEntrust) && !Get<KeyManager>().IsKekSet())
+        {
+            mMessageNextOffset = mSendMessage->GetLength();
+            ExitNow(frame = nullptr);
+        }
+
         mMessageNextOffset = Get<MessageFramer>().PrepareFrame(*frame, *mSendMessage, mMacAddrs, mAddMeshHeader,
                                                                mMeshSource, mMeshDest, addFragHeader);
 

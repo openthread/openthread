@@ -513,4 +513,5 @@ if(TARGET nexus_live_demo)
     endif()
 endif()
 
+ot_nexus_test(joiner_entrust_kek "nexus")
 ot_nexus_test(joiner_finalize_reject "nexus")
