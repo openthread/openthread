@@ -796,6 +796,7 @@ void Mac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
     {
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     case Frame::kKeyIdMode0:
+        OT_ASSERT(keyManager.IsKekSet());
         aFrameInfo.GetTxFrame()->SetAesKey(keyManager.GetKek());
         extAddress = &GetExtAddress();
 
