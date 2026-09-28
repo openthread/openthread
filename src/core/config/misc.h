@@ -43,6 +43,7 @@
  * @{
  */
 
+#include "config/border_routing.h"
 #include "config/coap.h"
 #include "config/srp_server.h"
 
@@ -194,9 +195,15 @@
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.
+ *
+ * By default, this is set to 256 when `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` is enabled, and 44 otherwise.
  */
 #ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 256
+#else
 #define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 44
+#endif
 #endif
 
 /**

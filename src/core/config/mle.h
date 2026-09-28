@@ -34,6 +34,8 @@
 #ifndef OT_CORE_CONFIG_MLE_H_
 #define OT_CORE_CONFIG_MLE_H_
 
+#include "config/border_routing.h"
+
 /**
  * @addtogroup config-mle
  *
@@ -59,9 +61,15 @@
  * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
  *
  * The maximum number of children.
+ *
+ * By default, this is set to 64 when `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` is enabled, and 10 otherwise.
  */
 #ifndef OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 64
+#else
 #define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 10
+#endif
 #endif
 
 /**
@@ -77,9 +85,15 @@
  * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
  *
  * The maximum number of supported IPv6 address registrations per child.
+ *
+ * By default, this is set to 16 when `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` is enabled, and 4 otherwise.
  */
 #ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 16
+#else
 #define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 4
+#endif
 #endif
 
 /**
