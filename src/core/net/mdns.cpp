@@ -7290,6 +7290,7 @@ bool Core::RecordCache::Matches(const RecordQuerier &aQuerier) const
     }
     else
     {
+        VerifyOrExit(aQuerier.mNextLabels != nullptr);
         VerifyOrExit(NameMatch(mNextLabels, aQuerier.mNextLabels));
     }
 
