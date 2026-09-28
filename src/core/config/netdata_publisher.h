@@ -62,6 +62,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE
+ *
+ * Define to 1 to enable coalescing scheduled entry updates in Network Data Publisher.
+ *
+ * When enabled, Publisher attempts to align the random delay times of multiple pending entry additions or removals
+ * so they can be performed together, reducing the number of Server Data Notification messages sent to the Leader.
+ */
+#ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE
+#define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_ADD
  *
  * Specifies the maximum value (in milliseconds) of the random delay used before adding an entry in the Thread Network
