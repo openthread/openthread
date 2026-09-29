@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 11
+#define SPINEL_RCP_API_VERSION 13
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -3482,6 +3482,15 @@ enum
      *        in `otRadioFrame` (default zero).
      *  `C` : RX channel after TX done (default assumed to be same as
      *        channel in metadata)
+     *  `c` : TX power in dBm (default `OT_RADIO_POWER_INVALID`).
+     *  `S` : Total number of scheduled burst ticks/periods (default zero; if
+     *        omitted or zero, no burst occurs and the following burst fields
+     *        are ignored).
+     *  `S` : Burst repeat period in 625 us slot units (default zero for
+     *        back-to-back burst ticks).
+     *  `L` : 2.4 GHz IEEE 802.15.4 channel bitmask for multi-channel burst
+     *        transmission (`Bits 11..26` = Channels `11..26`; if omitted or
+     *        zero, transmits strictly on the primary channel).
      */
     SPINEL_PROP_STREAM_RAW = SPINEL_PROP_STREAM__BEGIN + 1,
 

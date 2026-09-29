@@ -708,7 +708,10 @@ protected:
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    otError DecodeStreamRawTxRequest(otRadioFrame &aFrame);
+    otError DecodeStreamRawTxRequest(otRadioFrame &aFrame,
+                                     uint16_t     &aBurstCount,
+                                     uint16_t     &aBurstPeriod,
+                                     uint32_t     &aBurstChannelMask);
     otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
 
