@@ -1225,6 +1225,14 @@ public:
      * @returns A reference to the indirect transmission `ChildMask`.
      */
     const ChildMask &GetIndirectTxChildMask(void) const { return GetMetadata().mChildMask; }
+
+    /**
+     * Indicates whether the message is scheduled for indirect transmission to any child.
+     *
+     * @retval TRUE   If the message is scheduled for indirect transmission.
+     * @retval FALSE  If the message is not scheduled for indirect transmission.
+     */
+    bool IsIndirectTransmission(void) const { return !GetMetadata().mChildMask.IsEmpty(); }
 #endif
 
     /**
@@ -1677,7 +1685,7 @@ public:
      * @retval TRUE   The message is scheduled for indirect transmission.
      * @retval FALSE  The message is not scheduled for indirect transmission.
      */
-    static bool AcceptIndirectTx(const Message &aMessage) { return !aMessage.GetIndirectTxChildMask().IsEmpty(); }
+    static bool AcceptIndirectTx(const Message &aMessage) { return aMessage.IsIndirectTransmission(); }
 #endif
 
 protected:

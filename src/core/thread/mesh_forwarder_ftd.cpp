@@ -270,12 +270,12 @@ void MeshForwarder::RemoveMessagesForChild(Child &aChild, Message::Checker aChec
 
 void MeshForwarder::FinalizeMessageIndirectTxs(Message &aMessage)
 {
-    VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
+    VerifyOrExit(aMessage.IsIndirectTransmission());
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
         IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
-        VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
+        VerifyOrExit(aMessage.IsIndirectTransmission());
     }
 
 exit:
