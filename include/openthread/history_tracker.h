@@ -31,6 +31,7 @@
 #include <stdint.h>
 
 #include <openthread/border_routing.h>
+#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
@@ -650,6 +651,69 @@ const otHistoryTrackerAilRouter *otHistoryTrackerIterateAilRoutersHistory(otInst
  * @param[in]  aSize     The size of @p aBuffer. Recommended to use `OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE`.
  */
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize);
+
+//----------------------------------------------------------------------------------------------------------------------
+// History Tracker Client function (requires `OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE`)
+
+/**
+ * Callback function pointer type to report the retrieved Network Info entries from a query to another device.
+ *
+ * Used when `OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE` is enabled.
+ *
+ * @param[in] aError        Indicates the status of the query and entries being reported:
+ *                          - `OT_ERROR_PENDING`: There are more entries to be reported.
+ *                          - `OT_ERROR_NONE`: This is the last entry, and the query is complete.
+ *                          - `OT_ERROR_RESPONSE_TIMEOUT`: Timed out waiting for a response.
+ *                          - `OT_ERROR_PARSE`: The received query answer does not follow the expected format.
+ * @param[in] aNetworkInfo  The network information entry. This may be `NULL` if `aError` is `OT_ERROR_NONE`
+ *                          (indicating the end of the list) or on certain error conditions.
+ * @param[in] aEntryAge     The entry age in milliseconds. Applicable only when @p aNetworkInfo is not `NULL`.
+ * @param[in] aContext      An arbitrary callback context provided by the caller during the query.
+ */
+typedef void (*otHistoryTrackerNetInfoCallback)(otError                            aError,
+                                                const otHistoryTrackerNetworkInfo *aNetworkInfo,
+                                                uint32_t                           aEntryAge,
+                                                void                              *aContext);
+
+/**
+ * Queries for Network Info history entries from a specified RLOC16.
+ *
+ * Requires `OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE`.
+ *
+ * Upon successful initiation of the query, the provided @p aCallback will be invoked to report the requested entries.
+ *
+ * The callback parameter `aError` indicates if any error occurs. If there are more entries to be provided, `aError`
+ * will be set to `OT_ERROR_PENDING`. The end of the list is indicated by `aError` being set to `OT_ERROR_NONE` with a
+ * null entry pointer. Any other errors, such as `OT_ERROR_RESPONSE_TIMEOUT` or `OT_ERROR_PARSE` (if the received
+ * response has an invalid format), will also be indicated by `aError`.
+ *
+ * @param[in] aInstance     The OpenThread instance.
+ * @param[in] aRloc16       The RLOC16 of the device to query.
+ * @param[in] aMaxEntries   The maximum number of entries to request (0 indicates all available entries).
+ * @param[in] aMaxEntryAge  The maximum age (in milliseconds) of entries to request (0 indicates no age limit).
+ * @param[in] aCallback     A pointer to a callback function to be called when the query response is received.
+ * @param[in] aContext      A user-defined context pointer to be passed to the callback function.
+ *
+ * @retval OT_ERROR_NONE           If the query was successfully sent.
+ * @retval OT_ERROR_BUSY           If a query is already in progress.
+ * @retval OT_ERROR_NO_BUFS        If there are insufficient message buffers to send the query.
+ * @retval OT_ERROR_INVALID_STATE  If device is not attached.
+ */
+otError otHistoryTrackerQueryNetInfo(otInstance                     *aInstance,
+                                     uint16_t                        aRloc16,
+                                     uint16_t                        aMaxEntries,
+                                     uint32_t                        aMaxEntryAge,
+                                     otHistoryTrackerNetInfoCallback aCallback,
+                                     void                           *aContext);
+
+/**
+ * Cancels any ongoing query.
+ *
+ * Requires `OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE`.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ */
+void otHistoryTrackerCancelQuery(otInstance *aInstance);
 
 /**
  * @}

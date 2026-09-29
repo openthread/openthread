@@ -38,10 +38,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/commissioner.h>
 #include <openthread/dataset.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/steering_data.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -851,33 +851,43 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 /**
  * Gets histogram of retries for a single direct packet until success.
  *
- * Is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ * Requires `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE`.
  *
- * @param[in]   aInstance          A pointer to an OpenThread instance.
- * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
+ * The configuration `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT` specifies the size of the
+ * direct TX histogram array.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aSize        A pointer to where the size of returned histogram array is placed.
  *
  * @returns     A pointer to the histogram of retries (in a form of an array).
  *              The n-th element indicates that the packet has been sent with n-th retry.
+ *              If the number of retries is larger than the histogram array max size, the last entry
+ *              counts all retries at or above the limit.
  */
-const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint16_t *aSize);
 
 /**
  * Gets histogram of retries for a single indirect packet until success.
  *
- * Is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ * Requires `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE`.
  *
- * @param[in]   aInstance          A pointer to an OpenThread instance.
- * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
+ * The configuration `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT` specifies the size of the
+ * indirect TX histogram array.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[out]  aSize       A pointer to where the size of returned histogram array is placed.
  *
  * @returns     A pointer to the histogram of retries (in a form of an array).
  *              The n-th element indicates that the packet has been sent with n-th retry.
+ *              If the number of retries is larger than the histogram array max size, the last entry
+ *              counts all retries at or above the limit.
  */
-const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint16_t *aSize);
 
 /**
  * Clears histogram statistics for direct and indirect transmissions.
  *
- * Is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ * Requires `OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE`.
  *
  * @param[in]   aInstance          A pointer to an OpenThread instance.
  */
@@ -1117,7 +1127,7 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
 /**
  * Gets the Wake-up channel.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -1128,7 +1138,7 @@ uint8_t otLinkGetWakeupChannel(otInstance *aInstance);
 /**
  * Sets the Wake-up channel.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aChannel   The Wake-up sample channel. Channel value should be `0` (Set Wake-up Channel unspecified,
@@ -1143,7 +1153,7 @@ otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel);
 /**
  * Enables or disables listening for wake-up frames.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aEnable       true to enable listening for wake-up frames, or false otherwise.
@@ -1157,7 +1167,7 @@ otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable);
 /**
  * Returns whether listening for wake-up frames is enabled.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  *
@@ -1169,7 +1179,7 @@ bool otLinkIsWakeupListenEnabled(otInstance *aInstance);
 /**
  * Get the wake-up listen parameters.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[out] aInterval   A pointer to return the wake-up listen interval in microseconds.
@@ -1183,7 +1193,7 @@ void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval,
  * The listen interval must be greater than the listen duration.
  * The listen duration must be greater or equal than the minimum supported.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aInterval   The wake-up listen interval in microseconds.

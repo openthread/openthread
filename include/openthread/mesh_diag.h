@@ -41,6 +41,7 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/netdiag.h>
 #include <openthread/thread.h>
 #include <openthread/platform/radio.h>
 
@@ -62,11 +63,15 @@ extern "C" {
 /**
  * Represents the set of configurations used when discovering mesh topology indicating which items to
  * discover.
+ *
+ * The `mExtraTlvTypes` pointer can be NULL if `mExtraTlvTypesLength` is zero.
  */
 typedef struct otMeshDiagDiscoverConfig
 {
-    bool mDiscoverIp6Addresses : 1; ///< Whether or not to discover IPv6 addresses of every router.
-    bool mDiscoverChildTable : 1;   ///< Whether or not to discover children of every router.
+    bool           mDiscoverIp6Addresses : 1; ///< Whether or not to discover IPv6 addresses of every router.
+    bool           mDiscoverChildTable : 1;   ///< Whether or not to discover children of every router.
+    const uint8_t *mExtraTlvTypes;            ///< An array of extra Net Diag TLV types to request from every router.
+    uint8_t        mExtraTlvTypesLength;      ///< The length of the `mExtraTlvTypes` array. Can be zero.
 } otMeshDiagDiscoverConfig;
 
 /**
@@ -82,6 +87,18 @@ typedef struct otMeshDiagIp6AddrIterator otMeshDiagIp6AddrIterator;
  * Pointers to instance of this type are provided in `otMeshDiagRouterInfo`.
  */
 typedef struct otMeshDiagChildIterator otMeshDiagChildIterator;
+
+/**
+ * An opaque iterator to iterate over the list of extra Network Diagnostic TLVs returned by a router.
+ *
+ * Pointers to instances of this type are provided in `otMeshDiagRouterInfo`.
+ */
+typedef struct otMeshDiagTlvIterator otMeshDiagTlvIterator;
+
+/**
+ * Represents information about a parsed Network Diagnostic TLV.
+ */
+typedef otNetworkDiagTlv otMeshDiagTlvInfo;
 
 /**
  * Specifies that Thread Version is unknown.
@@ -136,6 +153,16 @@ typedef struct otMeshDiagRouterInfo
      * if the router did not provide the list.
      */
     otMeshDiagChildIterator *mChildIterator;
+
+    /**
+     * A pointer to an iterator to go through the list of extra Network Diagnostic TLVs returned by the router.
+     *
+     * The pointer is valid only while `otMeshDiagRouterInfo` is valid. It can be used in `otMeshDiagGetNextTlvInfo`
+     * to iterate through the extra TLVs returned by the router.
+     *
+     * The pointer may be NULL if there are no extra TLVs (in `otMeshDiagDiscoverConfig`).
+     */
+    otMeshDiagTlvIterator *mTlvIterator;
 } otMeshDiagRouterInfo;
 
 /**
@@ -168,6 +195,39 @@ typedef void (*otMeshDiagDiscoverCallback)(otError aError, otMeshDiagRouterInfo 
 /**
  * Starts network topology discovery.
  *
+ * This function initiates a query to discover routers in the Thread network.
+ *
+ * The @p aConfig configuration controls what optional topology information is discovered:
+ * - If `mDiscoverIp6Addresses` is set to true, the list of IPv6 addresses for each router is discovered.
+ * - If `mDiscoverChildTable` is set to true, the list of children for each router is discovered.
+ *
+ * The @p aConfig parameter can be used to request additional standard Network Diagnostic TLVs to be retrieved from
+ * each discovered router during topology discovery. These extra TLVs can then be accessed via the `mTlvIterator` in
+ * the callback's router info.
+ *
+ * The following restrictions and recommendations apply to the use of `mExtraTlvTypes`:
+ * - It MUST NOT contain any of the TLV types that are already requested by the discovery process itself.
+ *   These are:
+ *   - `OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS`
+ *   - `OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS`
+ *   - `OT_NETWORK_DIAGNOSTIC_TLV_ROUTE`
+ *   - `OT_NETWORK_DIAGNOSTIC_TLV_VERSION`
+ *   - `OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST`
+ *   - `OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE`
+ *   If any of these types are included in @p aConfig.mExtraTlvTypes, `OT_ERROR_INVALID_ARGS` is returned.
+ * - The total number of requested TLV types is limited to 32. This limit applies to all TLV types combined, including
+ *   those automatically added by the discovery process and any additional TLVs specified by the caller in
+ *   `mExtraTlvTypes`. If the total count exceeds this limit, `OT_ERROR_NO_BUFS` is returned.
+ * - It is highly recommended to keep the number of additional TLVs small. Requesting many or large TLVs increases the
+ *   size of the Network Diagnostics responses, which can cause message fragmentation, higher network traffic, or
+ *   response packet drops.
+ * - Additional TLVs should be restricted to small metadata elements useful during topology discovery (for example,
+ *   `OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME`, `OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL`, etc).
+ *   For retrieving larger information (like counters, etc.), separate individual queries should be sent to specific
+ *   nodes instead of using this method.
+ * - The @p aConfig struct and the memory pointed to by its @p mExtraTlvTypes array do not need to persist beyond
+ *   the call to this function.
+ *
  * @param[in] aInstance        The OpenThread instance.
  * @param[in] aConfig          The configuration to use for discovery (e.g., which items to discover).
  * @param[in] aCallback        The callback to report the discovered routers.
@@ -176,7 +236,8 @@ typedef void (*otMeshDiagDiscoverCallback)(otError aError, otMeshDiagRouterInfo 
  * @retval OT_ERROR_NONE            The network topology discovery started successfully.
  * @retval OT_ERROR_BUSY            A previous discovery request is still ongoing.
  * @retval OT_ERROR_INVALID_STATE   Device is not attached.
- * @retval OT_ERROR_NO_BUFS         Could not allocate buffer to send discovery messages.
+ * @retval OT_ERROR_NO_BUFS         Could not allocate buffer to send discovery messages or too many extra TLVs.
+ * @retval OT_ERROR_INVALID_ARGS    Invalid @p aConfig (e.g., includes restricted extra TLVs as listed above).
  */
 otError otMeshDiagDiscoverTopology(otInstance                     *aInstance,
                                    const otMeshDiagDiscoverConfig *aConfig,
@@ -219,6 +280,20 @@ otError otMeshDiagGetNextIp6Address(otMeshDiagIp6AddrIterator *aIterator, otIp6A
  * @retval OT_ERROR_NOT_FOUND  No more child. Reached the end of the list.
  */
 otError otMeshDiagGetNextChildInfo(otMeshDiagChildIterator *aIterator, otMeshDiagChildInfo *aChildInfo);
+
+/**
+ * Iterates through the discovered extra Network Diagnostic TLVs of a router.
+ *
+ * This function MUST be used from the callback `otMeshDiagDiscoverCallback()` and use the `mTlvIterator` from the
+ * `aRouterInfo` struct that is provided as input to the callback.
+ *
+ * @param[in,out]  aIterator    The TLV iterator to use.
+ * @param[out]     aTlvInfo     A pointer to return the extra TLV info (if any).
+ *
+ * @retval OT_ERROR_NONE       Successfully retrieved the next extra TLV. @p aTlvInfo and @p aIterator are updated.
+ * @retval OT_ERROR_NOT_FOUND  No more extra TLVs. Reached the end of the list.
+ */
+otError otMeshDiagGetNextTlvInfo(otMeshDiagTlvIterator *aIterator, otMeshDiagTlvInfo *aTlvInfo);
 
 /**
  * Represents information about a child entry from `otMeshDiagQueryChildTable()`.

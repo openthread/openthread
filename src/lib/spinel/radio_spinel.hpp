@@ -31,8 +31,8 @@
  *   This file includes definitions for the spinel based radio transceiver.
  */
 
-#ifndef RADIO_SPINEL_HPP_
-#define RADIO_SPINEL_HPP_
+#ifndef OT_LIB_SPINEL_RADIO_SPINEL_HPP_
+#define OT_LIB_SPINEL_RADIO_SPINEL_HPP_
 
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -713,7 +713,7 @@ public:
      * Sets MAC key and key index to RCP.
      *
      * @param[in] aKeyIdMode  The key ID mode.
-     * @param[in] aKeyId      The key index.
+     * @param[in] aKeyIndex   The key index.
      * @param[in] aPrevKey    Pointer to previous MAC key.
      * @param[in] aCurrKey    Pointer to current MAC key.
      * @param[in] aNextKey    Pointer to next MAC key.
@@ -724,7 +724,7 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      */
     otError SetMacKey(uint8_t                 aKeyIdMode,
-                      uint8_t                 aKeyId,
+                      uint8_t                 aKeyIndex,
                       const otMacKeyMaterial *aPrevKey,
                       const otMacKeyMaterial *aCurrKey,
                       const otMacKeyMaterial *aNextKey);
@@ -1008,22 +1008,21 @@ public:
 #endif
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     /**
-     * Defines a vendor "set property handler" hook to process vendor spinel properties.
+     * Defines a vendor "value is" hook to process vendor spinel properties.
      *
-     * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "set" operation for the
-     * given property key. Otherwise, the vendor handler should behave like other property set handlers, i.e., it
-     * should first decode the value from the input spinel frame and then perform the corresponding set operation. The
-     * handler should not prepare the spinel response and therefore should not write anything to the NCP buffer. The
-     * `otError` returned from handler (other than `OT_ERROR_NOT_FOUND`) indicates the error in either parsing of the
-     * input or the error of the set operation. In case of a successful "set", `NcpBase` set command handler will call
-     * the `VendorGetPropertyHandler()` for the same property key to prepare the response.
+     * This hook is invoked when RadioSpinel receives a `SPINEL_CMD_PROP_VALUE_IS` command
+     * for a vendor property. Decode the value from `aBuffer`/`aLength` and process it.
+     * Return `OT_ERROR_NOT_FOUND` if the property key is not supported. Return
+     * another error (e.g., `OT_ERROR_PARSE`) if decoding or handling of the value fails.
      *
      * @param[in] aPropKey  The spinel property key.
+     * @param[in] aBuffer   A pointer to the buffer containing the property value.
+     * @param[in] aLength   The length of the @p aBuffer.
      *
-     * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, otherwise the error in either parsing
-     *          of the input or the "set" operation.
+     * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, or the error status if decoding
+     *          or handling of the value fails.
      */
-    otError VendorHandleValueIs(spinel_prop_key_t aPropKey);
+    otError VendorHandleValueIs(spinel_prop_key_t aPropKey, const uint8_t *aBuffer, uint16_t aLength);
 
     /**
      *  A callback type for restoring vendor properties.
@@ -1199,7 +1198,7 @@ private:
     }
 
     otError SetMacKey(uint8_t         aKeyIdMode,
-                      uint8_t         aKeyId,
+                      uint8_t         aKeyIndex,
                       const otMacKey &aPrevKey,
                       const otMacKey &aCurrKey,
                       const otMacKey &NextKey);
@@ -1308,7 +1307,7 @@ private:
 
     // Properties set by core.
     uint8_t  mKeyIdMode;
-    uint8_t  mKeyId;
+    uint8_t  mKeyIndex;
     otMacKey mPrevKey;
     otMacKey mCurrKey;
     otMacKey mNextKey;
@@ -1330,6 +1329,7 @@ private:
     bool mMacKeySet : 1;                   ///< Whether MAC key has been set.
     bool mCcaEnergyDetectThresholdSet : 1; ///< Whether CCA energy detect threshold has been set.
     bool mTransmitPowerSet : 1;            ///< Whether transmit power has been set.
+    bool mMaxPowerTableSet : 1;            ///< Whether any channel's max transmit power has been set.
     bool mCoexEnabledSet : 1;              ///< Whether coex enabled has been set.
     bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has been set.
     bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.
@@ -1370,4 +1370,4 @@ private:
 } // namespace Spinel
 } // namespace ot
 
-#endif // RADIO_SPINEL_HPP_
+#endif // OT_LIB_SPINEL_RADIO_SPINEL_HPP_

@@ -48,4 +48,29 @@ otError otBorderAgentTxtDataParse(const uint8_t *aTxtData, uint16_t aTxtDataLeng
     return AsCoreType(aInfo).ParseFrom(aTxtData, aTxtDataLength);
 }
 
+const char *otBorderAgentConnModeToString(otBorderAgentConnMode aConnMode)
+{
+    return MeshCoP::BorderAgent::TxtData::ConnModeToString(aConnMode);
+}
+
+const char *otBorderAgentIfStateToString(otBorderAgentThreadIfState aIfState)
+{
+    return MeshCoP::BorderAgent::TxtData::IfStateToString(aIfState);
+}
+
+const char *otBorderAgentAvailabilityToString(otBorderAgentAvailability aAvailability)
+{
+    return MeshCoP::BorderAgent::TxtData::AvailabilityToString(aAvailability);
+}
+
+const char *otBorderAgentThreadRoleToString(otBorderAgentThreadRole aRole)
+{
+    return MeshCoP::BorderAgent::TxtData::RoleToString(aRole);
+}
+
+const char *otBorderAgentMultiAilStateToString(otBorderAgentMultiAilState aState)
+{
+    return MeshCoP::BorderAgent::TxtData::MultiAilStateToString(aState);
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE

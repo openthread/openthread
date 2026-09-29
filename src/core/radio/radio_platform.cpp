@@ -53,12 +53,12 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (rxFrame != nullptr)
     {
-        rxFrame->SetRadioType(Mac::kRadioTypeIeee802154);
+        rxFrame->SetRadioType(Radio::kTypeIeee802154);
     }
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (instance.Get<Radio>().GetDiagMode())
+    if (instance.Get<Radio::Radio>().GetDiagMode())
     {
         instance.Get<Radio::Callbacks>().HandleDiagsReceiveDone(rxFrame, aError);
     }
@@ -80,7 +80,7 @@ extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame
     VerifyOrExit(instance.IsInitialized());
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
+    txFrame.SetRadioType(Radio::kTypeIeee802154);
 #endif
 
     instance.Get<Radio::Callbacks>().HandleTransmitStarted(txFrame);
@@ -100,17 +100,17 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (ackFrame != nullptr)
     {
-        ackFrame->SetRadioType(Mac::kRadioTypeIeee802154);
+        ackFrame->SetRadioType(Radio::kTypeIeee802154);
     }
 
-    txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
+    txFrame.SetRadioType(Radio::kTypeIeee802154);
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (instance.Get<Radio>().GetDiagMode())
+    if (instance.Get<Radio::Radio>().GetDiagMode())
     {
 #if OPENTHREAD_RADIO
-        uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;
+        uint8_t channel = txFrame.GetRxChannelAfterTxDone();
 
         if (channel != aFrame->mChannel)
         {
@@ -160,7 +160,7 @@ extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (rxFrame != nullptr)
     {
-        rxFrame->SetRadioType(Mac::kRadioTypeIeee802154);
+        rxFrame->SetRadioType(Radio::kTypeIeee802154);
     }
 #endif
 
@@ -171,7 +171,7 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
 {
     Mac::TxFrame &txFrame = *static_cast<Mac::TxFrame *>(aFrame);
 #if OPENTHREAD_RADIO
-    uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;
+    uint8_t channel = txFrame.GetRxChannelAfterTxDone();
 
     if (channel != aFrame->mChannel)
     {
@@ -180,7 +180,7 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
     }
 #endif
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
+    txFrame.SetRadioType(Radio::kTypeIeee802154);
 #endif
 
     AsCoreType(aInstance).Get<Radio::Callbacks>().HandleDiagsTransmitDone(txFrame, aError);
@@ -248,7 +248,7 @@ extern "C" OT_TOOL_WEAK otRadioState otPlatRadioGetState(otInstance *aInstance)
 
 extern "C" OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance             *aInstance,
                                                   uint8_t                 aKeyIdMode,
-                                                  uint8_t                 aKeyId,
+                                                  uint8_t                 aKeyIndex,
                                                   const otMacKeyMaterial *aPrevKey,
                                                   const otMacKeyMaterial *aCurrKey,
                                                   const otMacKeyMaterial *aNextKey,
@@ -256,7 +256,7 @@ extern "C" OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance             *aInsta
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aKeyIdMode);
-    OT_UNUSED_VARIABLE(aKeyId);
+    OT_UNUSED_VARIABLE(aKeyIndex);
     OT_UNUSED_VARIABLE(aPrevKey);
     OT_UNUSED_VARIABLE(aCurrKey);
     OT_UNUSED_VARIABLE(aNextKey);
@@ -293,7 +293,7 @@ extern "C" OT_TOOL_WEAK void otPlatRadioSetMacFrameCounterIfLarger(otInstance *a
 
 extern "C" OT_TOOL_WEAK uint64_t otPlatTimeGet(void) { return UINT64_MAX; }
 
-extern "C" OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK otRadioTime64 otPlatRadioGetNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -378,10 +378,10 @@ extern "C" OT_TOOL_WEAK otError otPlatRadioGetRegion(otInstance *aInstance, uint
     return kErrorNotImplemented;
 }
 
-extern "C" OT_TOOL_WEAK otError otPlatRadioReceiveAt(otInstance *aInstance,
-                                                     uint8_t     aChannel,
-                                                     uint32_t    aStart,
-                                                     uint32_t    aDuration)
+extern "C" OT_TOOL_WEAK otError otPlatRadioReceiveAt(otInstance   *aInstance,
+                                                     uint8_t       aChannel,
+                                                     otRadioTime32 aStart,
+                                                     uint32_t      aDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannel);

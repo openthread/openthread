@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv6 sockets.
  */
 
-#ifndef NET_SOCKET_HPP_
-#define NET_SOCKET_HPP_
+#ifndef OT_CORE_NET_SOCKET_HPP_
+#define OT_CORE_NET_SOCKET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -338,4 +338,4 @@ DefineCoreType(otSockAddr, Ip6::SockAddr);
 
 } // namespace ot
 
-#endif // NET_SOCKET_HPP_
+#endif // OT_CORE_NET_SOCKET_HPP_

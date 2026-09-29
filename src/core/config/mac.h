@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the MAC.
  */
 
-#ifndef CONFIG_MAC_H_
-#define CONFIG_MAC_H_
+#ifndef OT_CORE_CONFIG_MAC_H_
+#define OT_CORE_CONFIG_MAC_H_
 
 /**
  * @addtogroup config-mac
@@ -44,7 +44,6 @@
  */
 
 #include "config/time_sync.h"
-#include "config/wakeup.h"
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
@@ -374,12 +373,12 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
  *
- * Define to 1 to enable software rx off when idle switching.
+ * Define to 1 to enable software retransmission security logic.
  */
-#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE
-#define OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE 1
 #endif
 
 /**
@@ -398,16 +397,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 #define OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
- *
- * Define to 1 to enable support for IEEE 802.15.4 MAC Multipurpose frame format.
- */
-#ifndef OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-#define OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME \
-    (OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE)
 #endif
 
 /**
@@ -571,4 +560,4 @@
  * @}
  */
 
-#endif // CONFIG_MAC_H_
+#endif // OT_CORE_CONFIG_MAC_H_

@@ -26,15 +26,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_CORE_HPP_
-#define OT_NEXUS_CORE_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 
-#include "common/owning_list.hpp"
-#include "instance/instance.hpp"
+#include "openthread-core-config.h"
+
+#include <stdio.h>
 
 #include "nexus_alarm.hpp"
+#include "nexus_observer.hpp"
+#include "nexus_pcap.hpp"
 #include "nexus_radio.hpp"
 #include "nexus_utils.hpp"
+#include "common/array.hpp"
+#include "common/owning_list.hpp"
+#include "instance/instance.hpp"
+#include "thread/key_manager.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -49,23 +56,80 @@ public:
 
     static Core &Get(void) { return *sCore; }
 
-    Node             &CreateNode(void);
+    void AddObserver(Observer &aObserver) { mObservers.Push(aObserver); }
+    void RemoveObserver(Observer &aObserver) { IgnoreError(mObservers.Remove(aObserver)); }
+    void NotifyHeartbeat(void);
+    void NotifyDumpState(void);
+
+    Node &CreateNode(void);
+    Node *FindNodeById(uint32_t aNodeId);
+    Node *FindNodeByExtAddress(const Mac::ExtAddress &aExtAddress);
+
     LinkedList<Node> &GetNodes(void) { return mNodes; }
 
-    TimeMilli GetNow(void) { return mNow; }
+    TimeMilli GetNow(void) { return TimeMilli(static_cast<uint32_t>(mNow / 1000u)); }
+    TimeMicro GetNowMicro(void) { return TimeMicro(static_cast<uint32_t>(mNow)); }
+    uint64_t  GetNowMicro64(void) const { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
+
+    bool IsUiConnected(void) const;
+
+    void Reset(void);
+    void SetNodeEnabled(uint32_t aNodeId, bool aEnabled);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Test specific helper methods
+
+    void SaveTestInfo(const char *aFilename, Node *aLeaderNode = nullptr);
+    void AddNetworkKey(const NetworkKey &aKey);
+    void AddTestVar(const char *aName, const char *aValue);
+    void AddTestVar(const char *aName, uint32_t aValue);
+    void AddOmrPrefixTestVar(const char *aName, Node &aNode);
+    void SendAndVerifyEchoRequest(Node               &aSender,
+                                  const Ip6::Address &aDestination,
+                                  uint16_t            aPayloadSize     = 0,
+                                  uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                  uint32_t            aResponseTimeout = 1000);
+
+    void SendAndVerifyEchoRequest(Node               &aSender,
+                                  const Ip6::Address &aExpectedSource,
+                                  const Ip6::Address &aDestination,
+                                  uint16_t            aPayloadSize     = 0,
+                                  uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                  uint32_t            aResponseTimeout = 1000,
+                                  bool                aForceSource     = true);
+
+    void SendAndVerifyNoEchoResponse(Node               &aSender,
+                                     const Ip6::Address &aDestination,
+                                     uint16_t            aPayloadSize     = 0,
+                                     uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                     uint32_t            aResponseTimeout = 1000);
+
+    void SendAndVerifyNoEchoResponse(Node               &aSender,
+                                     const Ip6::Address &aSrcAddress,
+                                     const Ip6::Address &aDestination,
+                                     uint16_t            aPayloadSize     = 0,
+                                     uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                     uint32_t            aResponseTimeout = 1000);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Used by platform implementation
 
-    void  SetActiveNode(Node *aNode) { mActiveNode = aNode; }
-    Node *GetActiveNode(void) { return mActiveNode; }
-
-    void UpdateNextAlarmTime(const Alarm &aAlarm);
+    void UpdateNextAlarmMilli(const Alarm &aAlarm);
+    void UpdateNextAlarmMicro(const Alarm &aAlarm);
     void MarkPendingAction(void) { mPendingAction = true; }
 
+    Node *FindNodeByAddress(const Ip6::Address &aAddress);
+    bool  IsThreadAddress(const Ip6::Address &aAddress);
+    Node *FindNodeByThreadAddress(const Ip6::Address &aAddress);
+    Node *FindNodeByInfraIfAddress(const Ip6::Address &aAddress);
+
+    static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aInfo);
+    static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
+
 private:
-    static constexpr int8_t kDefaultRxRssi = -20;
+    static constexpr int8_t  kDefaultRxRssi = -20;
+    static constexpr uint8_t kDefaultRxLqi  = 255;
 
     enum AckMode : uint8_t
     {
@@ -74,27 +138,51 @@ private:
         kSendAckFramePending,
     };
 
+    struct IcmpEchoResponseContext
+    {
+        IcmpEchoResponseContext(Node &aNode, uint16_t aIdentifier);
+
+        Node        &mNode;
+        uint16_t     mIdentifier;
+        bool         mResponseReceived;
+        Ip6::Address mExpectedSource;
+        bool         mExpectedSourceCheck;
+    };
+
+    struct TestVar
+    {
+        String<32> mName;
+        String<64> mValue;
+    };
+
+    TestVar &NewTestVar(const char *aName);
+
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);
-    void ProcessMdns(Node &aNode);
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    void ProcessTrel(Node &aNode);
-#endif
+    void ProcessInfraIf(Node &aNode);
+
+    static void HandleIcmpResponse(void                *aContext,
+                                   otMessage           *aMessage,
+                                   const otMessageInfo *aMessageInfo,
+                                   const otIcmp6Header *aIcmpHeader);
 
     static Core *sCore;
     static bool  sInUse;
 
-    OwningList<Node> mNodes;
-    uint16_t         mCurNodeId;
-    bool             mPendingAction;
-    TimeMilli        mNow;
-    TimeMilli        mNextAlarmTime;
-    Node            *mActiveNode;
-};
+    OwningList<Node>      mNodes;
+    Pcap                  mPcap;
+    Array<NetworkKey, 16> mNetworkKeys;
+    Array<TestVar, 128>   mTestVars;
+    uint16_t              mCurNodeId;
+    bool                  mPendingAction;
+    bool                  mSaveNodeLogs;
+    uint64_t              mNow;
+    uint64_t              mNextAlarmTime;
 
-void Log(const char *aFormat, ...);
+    LinkedList<Observer> mObservers;
+};
 
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_CORE_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_

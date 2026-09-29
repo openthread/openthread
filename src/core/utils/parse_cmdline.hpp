@@ -31,8 +31,8 @@
  *   This file includes definitions for command line parser.
  */
 
-#ifndef PARSE_CMD_LINE_HPP_
-#define PARSE_CMD_LINE_HPP_
+#ifndef OT_CORE_UTILS_PARSE_CMDLINE_HPP_
+#define OT_CORE_UTILS_PARSE_CMDLINE_HPP_
 
 #include <stdint.h>
 #include <string.h>
@@ -237,7 +237,7 @@ otError ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid hex bytes and/or not @p aSize bytes.
  */
-template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aString, uint8_t (&aBuffer)[kBufferSize])
+template <uint16_t kBufferSize> inline otError ParseAsHexString(const char *aString, uint8_t (&aBuffer)[kBufferSize])
 {
     return ParseAsHexString(aString, aBuffer, kBufferSize);
 }
@@ -652,4 +652,4 @@ template <> inline otError Arg::ParseAs(otIp6Prefix &aValue) const { return Pars
 } // namespace Utils
 } // namespace ot
 
-#endif // PARSE_CMD_LINE_HPP_
+#endif // OT_CORE_UTILS_PARSE_CMDLINE_HPP_

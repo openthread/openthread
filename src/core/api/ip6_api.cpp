@@ -37,10 +37,26 @@
 
 using namespace ot;
 
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+otError otIp6Init(otInstance              *aInstance,
+                  otNetifAddress          *aUnicastAddrPool,
+                  uint16_t                 aUnicastAddrPoolSize,
+                  otNetifMulticastAddress *aMulticastAddrPool,
+                  uint16_t                 aMulticastAddrPoolSize)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().Init(AsCoreTypePtr(aUnicastAddrPool), aUnicastAddrPoolSize,
+                                                         AsCoreTypePtr(aMulticastAddrPool), aMulticastAddrPoolSize);
+}
+#endif
+
 otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 {
     Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    VerifyOrExit(instance.Get<ThreadNetif>().IsInitialized(), error = kErrorInvalidState);
+#endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(!instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
@@ -55,9 +71,9 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
         instance.Get<ThreadNetif>().Down();
     }
 
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    ExitNow();
+
 exit:
-#endif
     return error;
 }
 
@@ -120,19 +136,12 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
 
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
-    otError error;
-
-    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
-
-    error = AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(AsCoreTypePtr(aMessage)));
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(AsCoreTypePtr(aMessage)));
 }
 
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
-    return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(0, Message::Settings::From(aSettings));
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(Message::Settings::From(aSettings));
 }
 
 otMessage *otIp6NewMessageFromBuffer(otInstance              *aInstance,
@@ -175,7 +184,7 @@ bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress) { return AsCoreType(a
 
 void otIp6FormLinkLocalAddressFromExtAddress(const otExtAddress *aExtAddress, otIp6Address *aAddress)
 {
-    AsCoreType(aAddress).SetToLinkLocalAddress(AsCoreType(aExtAddress));
+    AsCoreType(aAddress).InitAsLinkLocalAddress(AsCoreType(aExtAddress));
 }
 
 void otIp6ExtractExtAddressFromIp6AddressIid(const otIp6Address *aAddress, otExtAddress *aExtAddress)
@@ -244,8 +253,8 @@ otError otIp6RegisterMulticastListeners(otInstance                             *
                                         otIp6RegisterMulticastListenersCallback aCallback,
                                         void                                   *aContext)
 {
-    return AsCoreType(aInstance).Get<MlrManager>().RegisterMulticastListeners(AsCoreTypePtr(aAddresses), aAddressNum,
-                                                                              aTimeout, aCallback, aContext);
+    return AsCoreType(aInstance).Get<Mlr::Manager>().RegisterMulticastListeners(AsCoreTypePtr(aAddresses), aAddressNum,
+                                                                                aTimeout, aCallback, aContext);
 }
 #endif
 
@@ -294,5 +303,17 @@ const otBorderRoutingCounters *otIp6GetBorderRoutingCounters(otInstance *aInstan
 void otIp6ResetBorderRoutingCounters(otInstance *aInstance)
 {
     AsCoreType(aInstance).Get<Ip6::Ip6>().ResetBorderRoutingCounters();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void otIp6SetAllowUnsecureWhenDisabled(otInstance *aInstance, bool aAllow)
+{
+    AsCoreType(aInstance).Get<Ip6::Filter>().SetAllowUnsecureWhenDisabled(aAllow);
+}
+
+bool otIp6IsUnsecureAllowedWhenDisabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Ip6::Filter>().IsUnsecureAllowedWhenDisabled();
 }
 #endif

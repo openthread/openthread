@@ -183,6 +183,11 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
     txtData.Init(aInfo.mTxtData, aInfo.mTxtLength);
     SuccessOrExit(txtData.Decode(txtInfo));
 
+    if (!aInfo.IsRemoved())
+    {
+        VerifyOrExit(!aInfo.GetSockAddr().GetAddress().IsUnspecified() && (aInfo.GetSockAddr().GetPort() != 0));
+    }
+
     VerifyOrExit(txtInfo.mExtAddress != Get<Mac::Mac>().GetExtAddress());
 
     if (aInfo.IsRemoved())
@@ -283,7 +288,7 @@ void PeerDiscoverer::RegisterService(uint16_t aPort, const TxtData &aTxtData)
 
     LogInfo("Registering service %s.%s", service.mServiceInstance, kTrelServiceType);
     LogInfo("    port:%u, ext-addr:%s, ext-panid:%s", aPort, Get<Mac::Mac>().GetExtAddress().ToString().AsCString(),
-            Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId().ToString().AsCString());
+            Get<MeshCoP::NetworkIdentity>().GetExtPanId().ToString().AsCString());
 
     Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, HandleRegisterDone);
 }
@@ -315,8 +320,7 @@ void PeerDiscoverer::HandleRegisterDone(Error aError)
     }
     else
     {
-        LogInfo("Failed to register DNS-SD service with name:%s, Error:%s", mServiceName.GetName(),
-                ErrorToString(aError));
+        LogInfoOnError(aError, "register DNS-SD service with name:%s", mServiceName.GetName());
         UnregisterService();
 
         // Generate a new name (appending a suffix index to the name)
@@ -751,23 +755,14 @@ Error PeerDiscoverer::TxtData::Decode(Info &aInfo)
 
     while ((error = iterator.GetNextEntry(entry)) == kErrorNone)
     {
-        // If the TXT data happens to have entries with key longer
-        // than `kMaxIterKeyLength`, `mKey` would be `nullptr` and full
-        // entry would be placed in `mValue`. We skip over such
-        // entries.
-        if (entry.mKey == nullptr)
-        {
-            continue;
-        }
-
-        if (StringMatch(entry.mKey, kExtAddressKey))
+        if (entry.MatchesKey(kExtAddressKey))
         {
             VerifyOrExit(!parsedExtAddress, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(Mac::ExtAddress), error = kErrorParse);
             aInfo.mExtAddress.Set(entry.mValue);
             parsedExtAddress = true;
         }
-        else if (StringMatch(entry.mKey, kExtPanIdKey))
+        else if (entry.MatchesKey(kExtPanIdKey))
         {
             VerifyOrExit(!parsedExtPanId, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(MeshCoP::ExtendedPanId), error = kErrorParse);
@@ -800,7 +795,7 @@ void PeerDiscoverer::TxtDataEncoder::Encode(void)
     Dns::TxtDataEncoder encoder(mBuffer, sizeof(mBuffer));
 
     SuccessOrAssert(encoder.AppendEntry(kExtAddressKey, Get<Mac::Mac>().GetExtAddress()));
-    SuccessOrAssert(encoder.AppendEntry(kExtPanIdKey, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrAssert(encoder.AppendEntry(kExtPanIdKey, Get<MeshCoP::NetworkIdentity>().GetExtPanId()));
 
     mData   = mBuffer;
     mLength = encoder.GetLength();

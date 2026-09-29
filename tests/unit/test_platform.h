@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEST_PLATFORM_H
-#define TEST_PLATFORM_H
+#ifndef OT_UNIT_TEST_PLATFORM_H_
+#define OT_UNIT_TEST_PLATFORM_H_
 
 #include <string.h>
 
@@ -43,6 +43,7 @@
 #include <openthread/platform/misc.h>
 #include <openthread/platform/multipan.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/tcp.h>
 #include <openthread/platform/trel.h>
 
 #include "common/code_utils.hpp"
@@ -51,9 +52,23 @@
 #include "test_util.h"
 
 ot::Instance *testInitInstance(void);
+ot::Instance *testResetInstance(ot::Instance *aInstance);
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 ot::Instance *testInitAdditionalInstance(uint8_t id);
 #endif
 void testFreeInstance(otInstance *aInstance);
 
-#endif // TEST_PLATFORM_H
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+#include <openthread/tcat.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern uint8_t  sPlatBleLastAdvSetData[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+extern uint16_t sPlatBleLastAdvSetDataLen;
+extern bool     sPlatBleAdvertising;
+#ifdef __cplusplus
+}
+#endif
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+
+#endif // OT_UNIT_TEST_PLATFORM_H_

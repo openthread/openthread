@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for DHCPv6 Client.
  */
 
-#ifndef CONFIG_DHCP6_CLIENT_H_
-#define CONFIG_DHCP6_CLIENT_H_
+#ifndef OT_CORE_CONFIG_DHCP6_CLIENT_H_
+#define OT_CORE_CONFIG_DHCP6_CLIENT_H_
 
 /**
  * @addtogroup config-dhcpv6-client
@@ -74,4 +74,4 @@
  * @}
  */
 
-#endif // CONFIG_DHCP6_CLIENT_H_
+#endif // OT_CORE_CONFIG_DHCP6_CLIENT_H_

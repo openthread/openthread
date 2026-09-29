@@ -117,7 +117,7 @@ void Verify6To4(const char    *aTestName,
                 uint16_t       aIp4Length,
                 Error          aError)
 {
-    Message *message = sInstance->Get<Ip6::Ip6>().NewMessage(0);
+    Message *message = sInstance->Get<Ip6::Ip6>().NewMessage();
     Error    error;
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - ");
@@ -161,7 +161,7 @@ void Verify4To6(const char    *aTestName,
                 uint16_t       aIp6Length,
                 Error          aError)
 {
-    Message *message = sInstance->Get<Ip6::Ip6>().NewMessage(0);
+    Message *message = sInstance->Get<Ip6::Ip6>().NewMessage();
     Error    error;
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - ");

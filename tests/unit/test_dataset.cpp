@@ -36,6 +36,19 @@
 namespace ot {
 namespace MeshCoP {
 
+template <size_t kSize> Error SetFromTlvsAndValidate(const uint8_t (&aTlvs)[kSize])
+{
+    Dataset dataset;
+
+    // `SetFrom()` takes the length as `uint8_t`, so guard against an array
+    // that would be silently narrowed when passed to it.
+    static_assert(kSize <= Dataset::kMaxLength, "aTlvs is too long for a Dataset");
+
+    SuccessOrQuit(dataset.SetFrom(aTlvs, kSize));
+
+    return dataset.ValidateTlvs();
+}
+
 void TestDataset(void)
 {
     static const uint8_t kTlvBytes[] = {
@@ -56,6 +69,29 @@ void TestDataset(void)
     static const uint8_t kDuplicateChannels[] = {
         0x00, 0x03, 0x00, 0x00, 0x1a, 0x00, 0x03, 0x00, 0x00, 0x1a,
     };
+
+    // PAN ID TLV - the broadcast PAN ID is not allowed.
+    static const uint8_t kInvalidPanId[] = {0x01, 0x02, 0xff, 0xff};
+    static const uint8_t kValidPanId[]   = {0x01, 0x02, 0xff, 0xfe};
+
+    // Extended PAN ID TLV - all-zeros and all-ones are disallowed.
+    static const uint8_t kInvalidExtPanIdAllZeros[] = {0x02, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    static const uint8_t kInvalidExtPanIdAllOnes[]  = {0x02, 0x08, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    static const uint8_t kValidExtPanId[]           = {0x02, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+
+    // Mesh-Local Prefix TLV - must be a locally assigned ULA prefix (`fd00::/8`).
+    static const uint8_t kInvalidMeshLocalPrefix[]     = {0x07, 0x08, 0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00};
+    static const uint8_t kInvalidMeshLocalPrefixLBit[] = {0x07, 0x08, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    static const uint8_t kValidMeshLocalPrefix[]       = {0x07, 0x08, 0xfd, 0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0x00};
+
+    // Network Name TLV - 1 to 16 bytes of valid UTF-8 without control characters.
+    // A zero-length name is valid only when `ALLOW_EMPTY_NETWORK_NAME` is enabled.
+    static const uint8_t kEmptyNetworkName[]          = {0x03, 0x00};
+    static const uint8_t kInvalidTooLongNetworkName[] = {0x03, 0x11, 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a',
+                                                         'a',  'a',  'a', 'a', 'a', 'a', 'a', 'a', 'a'};
+    static const uint8_t kInvalidUtf8NetworkName[]    = {0x03, 0x03, 'a', 0x00, 'b'};
+    static const uint8_t kValidMaxLenNetworkName[]    = {0x03, 0x10, 'a', 'a', 'a', 'a', 'a', 'a', 'a',
+                                                         'a',  'a',  'a', 'a', 'a', 'a', 'a', 'a', 'a'};
 
     static const Tlv::Type kDatasetTlvTypes[] = {
         Tlv::kChannel,    Tlv::kPanId,           Tlv::kExtendedPanId,  Tlv::kNetworkName,     Tlv::kPskc,
@@ -158,7 +194,13 @@ void TestDataset(void)
 
     // Invalid datasets
 
+    SuccessOrQuit(dataset.SetFrom(kTlvBytes, 1));
+    VerifyOrQuit(dataset.ValidateTlvs() == kErrorParse);
+
     SuccessOrQuit(dataset.SetFrom(kTlvBytes, sizeof(kTlvBytes) - 1));
+    VerifyOrQuit(dataset.ValidateTlvs() == kErrorParse);
+
+    SuccessOrQuit(dataset.SetFrom(kDuplicateChannels, sizeof(kDuplicateChannels) / 2 + 1));
     VerifyOrQuit(dataset.ValidateTlvs() == kErrorParse);
 
     SuccessOrQuit(dataset.SetFrom(kDuplicateChannels, sizeof(kDuplicateChannels)));
@@ -166,6 +208,28 @@ void TestDataset(void)
 
     SuccessOrQuit(dataset.SetFrom(kDuplicateChannels, sizeof(kDuplicateChannels) / 2));
     SuccessOrQuit(dataset.ValidateTlvs());
+
+    // Invalid TLV values
+
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidPanId) == kErrorParse);
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidExtPanIdAllZeros) == kErrorParse);
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidExtPanIdAllOnes) == kErrorParse);
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidMeshLocalPrefix) == kErrorParse);
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidMeshLocalPrefixLBit) == kErrorParse);
+#if OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
+    SuccessOrQuit(SetFromTlvsAndValidate(kEmptyNetworkName));
+#else
+    VerifyOrQuit(SetFromTlvsAndValidate(kEmptyNetworkName) == kErrorParse);
+#endif
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidTooLongNetworkName) == kErrorParse);
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidUtf8NetworkName) == kErrorParse);
+
+    // Valid variants of the same TLVs
+
+    SuccessOrQuit(SetFromTlvsAndValidate(kValidPanId));
+    SuccessOrQuit(SetFromTlvsAndValidate(kValidExtPanId));
+    SuccessOrQuit(SetFromTlvsAndValidate(kValidMeshLocalPrefix));
+    SuccessOrQuit(SetFromTlvsAndValidate(kValidMaxLenNetworkName));
 
     // Combining/Merging TLVs from two Datasets.
 
@@ -259,6 +323,65 @@ void TestDataset(void)
 
     VerifyOrQuit(!dataset2.IsSubsetOf(dataset));
     VerifyOrQuit(!dataset.IsSubsetOf(dataset2));
+
+    // Validate `Equals()`
+
+    SuccessOrQuit(dataset.SetFrom(kTlvBytes, sizeof(kTlvBytes)));
+    SuccessOrQuit(dataset2.SetFrom(kTlvBytes, sizeof(kTlvBytes)));
+
+    VerifyOrQuit(dataset.Equals(dataset2));
+    VerifyOrQuit(dataset2.Equals(dataset));
+
+    // Order of TLVs should not matter for `Equals()`
+    ChannelTlvValue channel;
+    channel.SetChannelAndPage(11);
+
+    dataset.Clear();
+    SuccessOrQuit(dataset.Write<PanIdTlv>(0xface));
+    SuccessOrQuit(dataset.Write<ChannelTlv>(channel));
+
+    dataset2.Clear();
+    SuccessOrQuit(dataset2.Write<ChannelTlv>(channel));
+    SuccessOrQuit(dataset2.Write<PanIdTlv>(0xface));
+
+    VerifyOrQuit(dataset.Equals(dataset2));
+    VerifyOrQuit(dataset2.Equals(dataset));
+
+    // Different TLVs
+
+    dataset.Clear();
+    SuccessOrQuit(dataset.Write<PanIdTlv>(0xface));
+
+    dataset2.Clear();
+    SuccessOrQuit(dataset2.Write<PanIdTlv>(0xface));
+    SuccessOrQuit(dataset2.Write<ChannelTlv>(channel));
+
+    VerifyOrQuit(!dataset.Equals(dataset2));
+    VerifyOrQuit(!dataset2.Equals(dataset));
+
+    // Validate `Equals()` with unknown TLVs
+
+    {
+        const uint8_t   kUnknownTlvValue[]  = {0x01, 0x02, 0x03, 0x04};
+        const uint8_t   kUnknownTlvValue2[] = {0x01, 0x02, 0x03, 0x05};
+        const Tlv::Type kUnknownTlvType     = static_cast<Tlv::Type>(222);
+
+        dataset.Clear();
+        SuccessOrQuit(dataset.Write<PanIdTlv>(0xface));
+        SuccessOrQuit(dataset.WriteTlv(kUnknownTlvType, kUnknownTlvValue, sizeof(kUnknownTlvValue)));
+
+        dataset2.Clear();
+        SuccessOrQuit(dataset2.WriteTlv(kUnknownTlvType, kUnknownTlvValue, sizeof(kUnknownTlvValue)));
+        SuccessOrQuit(dataset2.Write<PanIdTlv>(0xface));
+
+        VerifyOrQuit(dataset.Equals(dataset2));
+        VerifyOrQuit(dataset2.Equals(dataset));
+
+        // Different values for the same unknown TLV type
+        SuccessOrQuit(dataset2.WriteTlv(kUnknownTlvType, kUnknownTlvValue2, sizeof(kUnknownTlvValue2)));
+        VerifyOrQuit(!dataset.Equals(dataset2));
+        VerifyOrQuit(!dataset2.Equals(dataset));
+    }
 }
 
 } // namespace MeshCoP

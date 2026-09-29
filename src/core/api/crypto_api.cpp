@@ -64,22 +64,11 @@ void otCryptoAesCcm(const otCryptoKey *aKey,
                     bool               aEncrypt,
                     void              *aTag)
 {
-    AesCcm aesCcm;
-
     AssertPointerIsNotNull(aNonce);
     AssertPointerIsNotNull(aPlainText);
     AssertPointerIsNotNull(aCipherText);
     AssertPointerIsNotNull(aTag);
 
-    aesCcm.SetKey(AsCoreType(aKey));
-    aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength);
-
-    if (aHeaderLength != 0)
-    {
-        OT_ASSERT(aHeader != nullptr);
-        aesCcm.Header(aHeader, aHeaderLength);
-    }
-
-    aesCcm.Payload(aPlainText, aCipherText, aLength, aEncrypt ? AesCcm::kEncrypt : AesCcm::kDecrypt);
-    aesCcm.Finalize(aTag);
+    AesCcm::Perform(aEncrypt ? AesCcm::kEncrypt : AesCcm::kDecrypt, AsCoreType(aKey), aTagLength, aNonce, aNonceLength,
+                    aHeader, aHeaderLength, aPlainText, aCipherText, aLength, aTag);
 }

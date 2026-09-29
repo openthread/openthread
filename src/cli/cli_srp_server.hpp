@@ -31,8 +31,8 @@
  *   This file contains definitions for a simple CLI to control the SRP server.
  */
 
-#ifndef CLI_SRP_SERVER_HPP_
-#define CLI_SRP_SERVER_HPP_
+#ifndef OT_CLI_CLI_SRP_SERVER_HPP_
+#define OT_CLI_CLI_SRP_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -83,6 +83,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     void OutputHostAddresses(const otSrpServerHost *aHost);
+    void OutputLeaseInfo(const otSrpServerLeaseInfo &aLeaseInfo, bool aIsDeleted);
 };
 
 } // namespace Cli
@@ -90,4 +91,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
-#endif // CLI_SRP_SERVER_HPP_
+#endif // OT_CLI_CLI_SRP_SERVER_HPP_

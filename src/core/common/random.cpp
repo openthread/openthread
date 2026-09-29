@@ -37,6 +37,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 
 namespace ot {
 namespace Random {
@@ -129,30 +131,64 @@ uint32_t Manager::NonCryptoPrng::GetNext(void)
 
 namespace NonCrypto {
 
-uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
+static uint32_t GenerateInRange(uint32_t aMin, uint32_t aMax)
 {
-    OT_ASSERT(aMax > aMin);
+    uint32_t value;
+    uint32_t range;
 
-    return (aMin + (GetUint8() % (aMax - aMin)));
+    VerifyOrExit(aMin < aMax, value = aMin);
+
+    value = Generate<uint32_t>();
+
+    range = aMax - aMin;
+
+    VerifyOrExit(range < NumericLimits<uint32_t>::kMax);
+
+    value = aMin + (value % (range + 1));
+
+exit:
+    return value;
 }
 
-uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
+template <typename UintType> UintType GenerateUpToExcluding(UintType aMax)
 {
-    OT_ASSERT(aMax > aMin);
-    return (aMin + (GetUint16() % (aMax - aMin)));
+    return GenerateFromMinUpToExcluding<UintType>(0, aMax);
 }
 
-uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
+template <typename UintType> UintType GenerateFromMinUpToExcluding(UintType aMin, UintType aMax)
 {
-    OT_ASSERT(aMax > aMin);
-    return (aMin + (GetUint32() % (aMax - aMin)));
+    if (aMax > 0)
+    {
+        aMax--;
+    }
+
+    return GenerateInClosedRange<UintType>(aMin, aMax);
 }
+
+template <typename UintType> UintType GenerateInClosedRange(UintType aMin, UintType aMax)
+{
+    return static_cast<UintType>(GenerateInRange(aMin, aMax));
+}
+
+// Explicit instantiations
+
+template uint8_t  GenerateUpToExcluding<uint8_t>(uint8_t aMax);
+template uint16_t GenerateUpToExcluding<uint16_t>(uint16_t aMax);
+template uint32_t GenerateUpToExcluding<uint32_t>(uint32_t aMax);
+
+template uint8_t  GenerateFromMinUpToExcluding<uint8_t>(uint8_t aMin, uint8_t aMax);
+template uint16_t GenerateFromMinUpToExcluding<uint16_t>(uint16_t aMin, uint16_t aMax);
+template uint32_t GenerateFromMinUpToExcluding<uint32_t>(uint32_t aMin, uint32_t aMax);
+
+template uint8_t  GenerateInClosedRange<uint8_t>(uint8_t aMin, uint8_t aMax);
+template uint16_t GenerateInClosedRange<uint16_t>(uint16_t aMin, uint16_t aMax);
+template uint32_t GenerateInClosedRange<uint32_t>(uint32_t aMin, uint32_t aMax);
 
 void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
 {
     while (aSize-- != 0)
     {
-        *aBuffer++ = GetUint8();
+        *aBuffer++ = Generate<uint8_t>();
     }
 }
 
@@ -163,7 +199,7 @@ uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
     VerifyOrExit(aValue != 0);
 
     aJitter = (aJitter <= aValue) ? aJitter : static_cast<uint16_t>(aValue);
-    delay   = aValue + GetUint32InRange(0, 2 * aJitter + 1) - aJitter;
+    delay   = aValue + GenerateUpToExcluding<uint32_t>(2 * aJitter + 1) - aJitter;
 
 exit:
     return delay;

@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread global IPv6 address configuration with SLAAC.
  */
 
-#ifndef SLAAC_ADDRESS_HPP_
-#define SLAAC_ADDRESS_HPP_
+#ifndef OT_CORE_NET_SLAAC_ADDRESS_HPP_
+#define OT_CORE_NET_SLAAC_ADDRESS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -230,4 +230,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
-#endif // SLAAC_ADDRESS_HPP_
+#endif // OT_CORE_NET_SLAAC_ADDRESS_HPP_

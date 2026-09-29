@@ -31,8 +31,8 @@
  *   This file contains header for exit code utilities.
  */
 
-#ifndef PLATFORM_EXIT_CODE_H_
-#define PLATFORM_EXIT_CODE_H_
+#ifndef OT_LIB_PLATFORM_EXIT_CODE_H_
+#define OT_LIB_PLATFORM_EXIT_CODE_H_
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -132,9 +132,13 @@ const char *otExitCodeToString(uint8_t aExitCode);
  *
  * @param[in]  aError  An error code to be evaluated against OT_ERROR_NONE.
  */
-#define SuccessOrDie(aError)             \
-    VerifyOrDie(aError == OT_ERROR_NONE, \
-                (aError == OT_ERROR_INVALID_ARGS ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE))
+#define SuccessOrDie(aError)                                                                                      \
+    do                                                                                                            \
+    {                                                                                                             \
+        otError _successOrDieError = (aError);                                                                    \
+        VerifyOrDie(_successOrDieError == OT_ERROR_NONE,                                                          \
+                    (_successOrDieError == OT_ERROR_INVALID_ARGS ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE)); \
+    } while (false)
 
 /**
  * Unconditionally both records exit status and terminates the program.
@@ -161,4 +165,4 @@ const char *otExitCodeToString(uint8_t aExitCode);
 }
 #endif
 
-#endif // PLATFORM_EXIT_CODE_H_
+#endif // OT_LIB_PLATFORM_EXIT_CODE_H_

@@ -30,8 +30,8 @@
  *   This file contains the definitions of a spinel encoder.
  */
 
-#ifndef SPINEL_ENCODER_HPP_
-#define SPINEL_ENCODER_HPP_
+#ifndef OT_LIB_SPINEL_SPINEL_ENCODER_HPP_
+#define OT_LIB_SPINEL_SPINEL_ENCODER_HPP_
 
 #include "openthread-spinel-config.h"
 
@@ -663,4 +663,4 @@ private:
 } // namespace Spinel
 } // namespace ot
 
-#endif // SPINEL_ENCODER_HPP_
+#endif // OT_LIB_SPINEL_SPINEL_ENCODER_HPP_

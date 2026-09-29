@@ -31,8 +31,8 @@
  *   This file includes definitions for `Heap::Data` (heap allocated data).
  */
 
-#ifndef HEAP_DATA_HPP_
-#define HEAP_DATA_HPP_
+#ifndef OT_CORE_COMMON_HEAP_DATA_HPP_
+#define OT_CORE_COMMON_HEAP_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -141,6 +141,19 @@ public:
     void TakeFrom(Data &&aData);
 
     /**
+     * Sets the `Heap::Data` by taking ownership of a given heap-allocated buffer.
+     *
+     * After this call, the `Heap::Data` will take ownership of the buffer and free it when done.  The
+     * @p aHeapAllocatedBuffer pointer is set to `nullptr` to ensure the caller does not retain a pointer to the
+     * transferred buffer.
+     *
+     * @param[in,out] aHeapAllocatedBuffer  A reference to a pointer to a heap-allocated buffer.
+     *                                      On exit, it is set to `nullptr`.
+     * @param[in]     aLength               The length of the buffer (number of bytes).
+     */
+    void TakeFrom(uint8_t *&aHeapAllocatedBuffer, uint16_t aLength);
+
+    /**
      * Casts the `Heap::Data` to an rvalue reference.
      *
      * This method is intended to be used with `TakeFrom()` to explicitly indicate a move operation and transfer of
@@ -211,4 +224,4 @@ private:
 } // namespace Heap
 } // namespace ot
 
-#endif // HEAP_DATA_HPP_
+#endif // OT_CORE_COMMON_HEAP_DATA_HPP_

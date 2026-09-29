@@ -46,7 +46,7 @@ otError otSntpClientQuery(otInstance           *aInstance,
                           otSntpResponseHandler aHandler,
                           void                 *aContext)
 {
-    return AsCoreType(aInstance).Get<Sntp::Client>().Query(aQuery, aHandler, aContext);
+    return AsCoreType(aInstance).Get<Sntp::Client>().Query(AsCoreType(aQuery), aHandler, aContext);
 }
 
 void otSntpClientSetUnixEra(otInstance *aInstance, uint32_t aUnixEra)

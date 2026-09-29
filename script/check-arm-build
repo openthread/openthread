@@ -54,7 +54,6 @@ build_nrf52840()
         "-DOT_DIAGNOSTIC=ON"
         "-DOT_DNSSD_SERVER=ON"
         "-DOT_DNS_CLIENT=ON"
-        "-DOT_DUA=ON"
         "-DOT_ECDSA=ON"
         "-DOT_FULL_LOGS=ON"
         "-DOT_JAM_DETECTION=ON"

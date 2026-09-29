@@ -511,7 +511,12 @@ class VirtualTime(BaseSimulator):
         else:
             sock = self.devices[port].get('sock', None)
             if sock:
-                sent = sock.send(message)
+                try:
+                    sent = sock.send(message)
+                except (BrokenPipeError, ConnectionResetError):
+                    assert port in self._maybeoff_ports, f'The node {port} is unexpectedly off'
+                    dbg_print('skip sending message to off node', port)
+                    return
             else:
                 assert port in self._maybeoff_ports, f'The node {port} is unexpectedly off'
                 dbg_print('skip sending message to off node', port)
@@ -528,7 +533,8 @@ class VirtualTime(BaseSimulator):
 
         if len(event) == 5:
             event_time, sequence, port, type, datalen = event
-            dbg_print("Pop event: ", event_time, port, type, datalen)
+            data = b''
+            dbg_print("Pop event: ", event_time, port, type, datalen, "(no data)")
         else:
             event_time, sequence, port, type, datalen, data = event
             dbg_print(
@@ -562,6 +568,10 @@ class VirtualTime(BaseSimulator):
         elif type == self.OT_SIM_EVENT_UART_WRITE:
             message += data
             self._send_message(message, port)
+        else:
+            raise NotImplementedError(f'Unknown event type: {type}')
+
+        self.awake_devices.add(port)
 
     def sync_devices(self):
         self.current_time = self._pause_time

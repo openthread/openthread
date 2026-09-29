@@ -42,6 +42,7 @@
 #include <openthread/dataset.h>
 #include <openthread/error.h>
 #include <openthread/ip6.h>
+#include <openthread/netdiag.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -105,17 +106,29 @@ typedef enum otBorderAgentThreadRole
 } otBorderAgentThreadRole;
 
 /**
+ * Represents the Multi-AIL (Adjacent Infrastructure Link) detection state in a Border Agent State Bitmap.
+ */
+typedef enum otBorderAgentMultiAilState
+{
+    OT_BORDER_AGENT_MULTI_AIL_STATE_DISABLED     = 0, ///< Multi-AIL detection is disabled.
+    OT_BORDER_AGENT_MULTI_AIL_STATE_NOT_DETECTED = 1, ///< Multi-AIL detection is enabled, not detected.
+    OT_BORDER_AGENT_MULTI_AIL_STATE_DETECTED     = 2, ///< Multi-AIL detection is enabled, detected.
+} otBorderAgentMultiAilState;
+
+/**
  * Represents Border Agent State Bitmap information.
  */
 typedef struct otBorderAgentStateBitmap
 {
-    otBorderAgentConnMode      mConnMode;       ///< Connection Mode.
-    otBorderAgentThreadIfState mThreadIfState;  ///< Thread Interface Status.
-    otBorderAgentAvailability  mAvailability;   ///< Availability
-    otBorderAgentThreadRole    mThreadRole;     ///< Thread Role.
-    bool                       mBbrIsActive;    ///< Backbone Router function is active.
-    bool                       mBbrIsPrimary;   ///< Device is the Primary Backbone Router.
-    bool                       mEpskcSupported; ///< ePSKc Mode is supported.
+    otBorderAgentConnMode      mConnMode;          ///< Connection Mode.
+    otBorderAgentThreadIfState mThreadIfState;     ///< Thread Interface Status.
+    otBorderAgentAvailability  mAvailability;      ///< Availability
+    otBorderAgentThreadRole    mThreadRole;        ///< Thread Role.
+    bool                       mBbrIsActive;       ///< Backbone Router function is active.
+    bool                       mBbrIsPrimary;      ///< Device is the Primary Backbone Router.
+    bool                       mEpskcSupported;    ///< ePSKc Mode is supported.
+    otBorderAgentMultiAilState mMultiAilState;     ///< Multi-AIL detection state.
+    bool                       mAdmitterSupported; ///< Border Admitter function is supported.
 } otBorderAgentStateBitmap;
 
 /**
@@ -140,6 +153,7 @@ typedef struct otBorderAgentTxtDataInfo
     bool                     mHasExtAddress : 1;      ///< Indicates whether Extended Address is present.
     bool                     mHasVendorName : 1;      ///< Indicates whether Vendor Name is present.
     bool                     mHasModelName : 1;       ///< Indicates whether Model Name is present.
+    bool                     mHasVendorOui : 1;       ///< Indicates whether Vendor OUI is present.
     char                     mRecordVersion[OT_BORDER_AGENT_RECORD_VERSION_SIZE]; ///< Record Version string.
     otBorderAgentId          mAgentId;                                            ///< Agent ID.
     char                     mThreadVersion[OT_BORDER_AGENT_THREAD_VERSION_SIZE]; ///< Thread Version string.
@@ -155,6 +169,7 @@ typedef struct otBorderAgentTxtDataInfo
     otExtAddress             mExtAddress;                                         ///< Extended Address.
     char                     mVendorName[OT_BORDER_AGENT_VENDOR_NAME_SIZE];       ///< Vendor Name string.
     char                     mModelName[OT_BORDER_AGENT_MODEL_NAME_SIZE];         ///< Model Name string.
+    otThreadVendorOui        mVendorOui;                                          ///< Vendor OUI.
 } otBorderAgentTxtDataInfo;
 
 /**
@@ -170,6 +185,61 @@ typedef struct otBorderAgentTxtDataInfo
  * @retval OT_ERROR_PARSE    Failed to parse the TXT data.
  */
 otError otBorderAgentTxtDataParse(const uint8_t *aTxtData, uint16_t aTxtDataLength, otBorderAgentTxtDataInfo *aInfo);
+
+/**
+ * Converts a given Connection Mode in a Border Agent State Bitmap to a human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aConnMode   The Connection Mode to convert.
+ *
+ * @return The string representation of @p aConnMode.
+ */
+const char *otBorderAgentConnModeToString(otBorderAgentConnMode aConnMode);
+
+/**
+ * Converts a given Thread Interface State in a Border Agent State Bitmap to a human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aIfState   The Thread Interface State to convert.
+ *
+ * @return The string representation of @p aIfState.
+ */
+const char *otBorderAgentIfStateToString(otBorderAgentThreadIfState aIfState);
+
+/**
+ * Converts a given Availability Status in a Border Agent State Bitmap to a human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aAvailability   The Availability Status to convert.
+ *
+ * @return The string representation of @p aAvailability.
+ */
+const char *otBorderAgentAvailabilityToString(otBorderAgentAvailability aAvailability);
+
+/**
+ * Converts a given Thread Role in a Border Agent State Bitmap to a human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aRole   The Thread Role to convert.
+ *
+ * @return The string representation of @p aRole.
+ */
+const char *otBorderAgentThreadRoleToString(otBorderAgentThreadRole aRole);
+
+/**
+ * Converts a given Multi-AIL State in a Border Agent State Bitmap to a human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aState   The Multi-AIL State to convert.
+ *
+ * @return The string representation of @p aState.
+ */
+const char *otBorderAgentMultiAilStateToString(otBorderAgentMultiAilState aState);
 
 /**
  * @}

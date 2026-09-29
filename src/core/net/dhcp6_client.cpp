@@ -266,9 +266,9 @@ void Client::Solicit(uint16_t aRloc16)
     SuccessOrExit(error = AppendRapidCommitOption(*message));
 
 #if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
-    messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
+    messageInfo.SetPeerAddr(Ip6::Address::GetRealmLocalAllRoutersMulticast());
 #else
-    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
+    Get<Mle::Mle>().ComposeRloc(aRloc16, messageInfo.GetPeerAddr());
 #endif
     messageInfo.SetSockAddr(Get<Mle::Mle>().GetMeshLocalRloc());
     messageInfo.mPeerPort = kDhcpServerPort;
@@ -307,7 +307,7 @@ Error Client::AppendClientIdOption(Message &aMessage)
 {
     Mac::ExtAddress eui64;
 
-    Get<Radio>().GetIeeeEui64(eui64);
+    Get<Radio::Radio>().GetIeeeEui64(eui64);
 
     return ClientIdOption::AppendWithEui64Duid(aMessage, eui64);
 }
@@ -358,8 +358,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     Header header;
 
-    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), header));
-    aMessage.MoveOffset(sizeof(header));
+    SuccessOrExit(aMessage.ReadAtAndAdvanceOffset(header));
 
     if ((header.GetMsgType() == kMsgTypeReply) && (header.GetTransactionId() == mTransactionId))
     {
@@ -395,7 +394,7 @@ Error Client::ProcessClientIdOption(const Message &aMessage)
 {
     Mac::ExtAddress eui64;
 
-    Get<Radio>().GetIeeeEui64(eui64);
+    Get<Radio::Radio>().GetIeeeEui64(eui64);
 
     return ClientIdOption::MatchesEui64Duid(aMessage, eui64);
 }
@@ -408,9 +407,7 @@ Error Client::ProcessIaNaOption(const Message &aMessage)
     Option::Iterator iterator;
 
     SuccessOrExit(error = Option::FindOption(aMessage, Option::kIaNa, offsetRange));
-    SuccessOrExit(error = aMessage.Read(offsetRange, option));
-
-    offsetRange.AdvanceOffset(sizeof(IaNaOption));
+    SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, option));
 
     // Iterate over and check the sub-options within `IaNaOption`.
 

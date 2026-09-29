@@ -129,11 +129,6 @@ static uint8_t BorderRouterConfigToFlagByteExtended(const otBorderRouterConfig &
         flags |= SPINEL_NET_FLAG_EXT_DNS;
     }
 
-    if (aConfig.mDp)
-    {
-        flags |= SPINEL_NET_FLAG_EXT_DP;
-    }
-
     return flags;
 }
 
@@ -329,7 +324,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MLR_REQUEST>(v
 
     while (mDecoder.GetRemainingLengthInStruct())
     {
-        VerifyOrExit(addressesCount < Ip6AddressesTlv::kMaxAddresses, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(addressesCount < OT_IP6_MAX_MLR_ADDRESSES, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = mDecoder.ReadIp6Address(addresses[addressesCount]));
         ++addressesCount;
     }
@@ -1026,7 +1021,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ON_MESH_NET
         (mDecoder.ReadUint8(flagsExtended) == OT_ERROR_NONE))
     {
         borderRouterConfig.mNdDns = ((flagsExtended & SPINEL_NET_FLAG_EXT_DNS) != 0);
-        borderRouterConfig.mDp    = ((flagsExtended & SPINEL_NET_FLAG_EXT_DP) != 0);
+        borderRouterConfig.mDp    = false;
     }
 
     error = otBorderRouterAddOnMeshPrefix(mInstance, &borderRouterConfig);
@@ -2933,8 +2928,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
     otError         error = OT_ERROR_NONE;
     const uint32_t *histogramDirect;
     const uint32_t *histogramIndirect;
-    uint8_t         histogramDirectEntries;
-    uint8_t         histogramIndirectEntries;
+    uint16_t        histogramDirectEntries;
+    uint16_t        histogramIndirectEntries;
 
     histogramDirect   = otLinkGetTxDirectRetrySuccessHistogram(mInstance, &histogramDirectEntries);
     histogramIndirect = otLinkGetTxIndirectRetrySuccessHistogram(mInstance, &histogramIndirectEntries);
@@ -2944,7 +2939,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
 
     // Encode direct message retries histogram
     SuccessOrExit(error = mEncoder.OpenStruct());
-    for (uint8_t i = 0; i < histogramDirectEntries; i++)
+    for (uint16_t i = 0; i < histogramDirectEntries; i++)
     {
         SuccessOrExit(error = mEncoder.WriteUint32(histogramDirect[i]));
     }
@@ -2952,7 +2947,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
 
     // Encode indirect message retries histogram
     SuccessOrExit(error = mEncoder.OpenStruct());
-    for (uint8_t i = 0; i < histogramIndirectEntries; i++)
+    for (uint16_t i = 0; i < histogramIndirectEntries; i++)
     {
         SuccessOrExit(error = mEncoder.WriteUint32(histogramIndirect[i]));
     }
@@ -4833,7 +4828,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_WAKEUP_CHANNEL>(void)
 {
     uint8_t wakeupChannel;

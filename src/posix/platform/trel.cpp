@@ -79,6 +79,12 @@ static int  sSocket      = -1;
 
 static const char kLogModuleName[] = "Trel";
 
+static void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+
 static void LogCrit(const char *aFormat, ...)
 {
     va_list args;
@@ -242,14 +248,18 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
 
         switch (errno)
         {
-        case ENETUNREACH:
-        case ENETDOWN:
-        case EHOSTUNREACH:
-            error = OT_ERROR_ABORT;
+        case EAGAIN:
+#if EWOULDBLOCK != EAGAIN
+        case EWOULDBLOCK:
+#endif
+        case ENOBUFS:
+        case EINTR:
+            error = OT_ERROR_INVALID_STATE;
             break;
 
         default:
-            error = OT_ERROR_INVALID_STATE;
+            error = OT_ERROR_ABORT;
+            break;
         }
     }
     else
@@ -270,37 +280,50 @@ exit:
 
 static void ReceivePacket(int aSocket, otInstance *aInstance)
 {
-    struct sockaddr_in6 sockAddr;
-    socklen_t           sockAddrLen = sizeof(sockAddr);
-    ssize_t             ret;
+    const uint16_t kMaxRxPacketsPerIteration = 64;
 
-    memset(&sockAddr, 0, sizeof(sockAddr));
-
-    ret = recvfrom(aSocket, (char *)sRxPacketBuffer, sizeof(sRxPacketBuffer), 0, (struct sockaddr *)&sockAddr,
-                   &sockAddrLen);
-    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
-
-    sRxPacketLength = (uint16_t)(ret);
-
-    if (sRxPacketLength > sizeof(sRxPacketBuffer))
+    for (uint16_t i = 0; i < kMaxRxPacketsPerIteration;)
     {
-        sRxPacketLength = sizeof(sRxPacketLength);
-    }
+        struct sockaddr_in6 sockAddr;
+        socklen_t           sockAddrLen = sizeof(sockAddr);
+        ssize_t             ret;
 
-    LogDebg("ReceivePacket() - received from [%s]:%d, id:%d, pkt:%s", Ip6AddrToString(&sockAddr.sin6_addr),
-            ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id, BufferToString(sRxPacketBuffer, sRxPacketLength));
+        memset(&sockAddr, 0, sizeof(sockAddr));
 
-    if (sEnabled)
-    {
-        otSockAddr senderAddr;
+        ret = recvfrom(aSocket, (char *)sRxPacketBuffer, sizeof(sRxPacketBuffer), 0, (struct sockaddr *)&sockAddr,
+                       &sockAddrLen);
+        if (ret < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                break;
+            }
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            VerifyOrDie(false, OT_EXIT_ERROR_ERRNO);
+        }
 
-        ++sCounters.mRxPackets;
-        sCounters.mRxBytes += sRxPacketLength;
+        sRxPacketLength = (uint16_t)(ret);
 
-        memcpy(&senderAddr.mAddress, &sockAddr.sin6_addr, sizeof(otIp6Address));
-        senderAddr.mPort = ntohs(sockAddr.sin6_port);
+        LogDebg("ReceivePacket() - received from [%s]:%d, id:%d, pkt:%s", Ip6AddrToString(&sockAddr.sin6_addr),
+                ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id, BufferToString(sRxPacketBuffer, sRxPacketLength));
 
-        otPlatTrelHandleReceived(aInstance, sRxPacketBuffer, sRxPacketLength, &senderAddr);
+        if (sEnabled)
+        {
+            otSockAddr senderAddr;
+
+            ++sCounters.mRxPackets;
+            sCounters.mRxBytes += sRxPacketLength;
+
+            memcpy(&senderAddr.mAddress, &sockAddr.sin6_addr, sizeof(otIp6Address));
+            senderAddr.mPort = ntohs(sockAddr.sin6_port);
+
+            otPlatTrelHandleReceived(aInstance, sRxPacketBuffer, sRxPacketLength, &senderAddr);
+        }
+
+        i++;
     }
 }
 
@@ -652,6 +675,15 @@ void platformTrelInit(const char *aTrelUrl)
         ot::Posix::RadioUrl url(aTrelUrl);
 
         otSysTrelInit(url.GetPath());
+        {
+            const char *unusedParam = nullptr;
+
+            if (url.Validate(&unusedParam) != OT_ERROR_NONE)
+            {
+                otLogCritPlat("TREL radio URL contains unused parameter: \"%s\"", unusedParam);
+                DieNow(OT_EXIT_INVALID_ARGUMENTS);
+            }
+        }
     }
 }
 

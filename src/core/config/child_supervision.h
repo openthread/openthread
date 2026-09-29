@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Child Supervision.
  */
 
-#ifndef CONFIG_CHILD_SUPERVISION_H_
-#define CONFIG_CHILD_SUPERVISION_H_
+#ifndef OT_CORE_CONFIG_CHILD_SUPERVISION_H_
+#define OT_CORE_CONFIG_CHILD_SUPERVISION_H_
 
 /**
  * @addtogroup config-child-supervision
@@ -95,4 +95,4 @@
  * @}
  */
 
-#endif // CONFIG_CHILD_SUPERVISION_H_
+#endif // OT_CORE_CONFIG_CHILD_SUPERVISION_H_

@@ -46,7 +46,7 @@ otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aNetworkDiagTlv);
 
-    return NetworkDiagnostic::Client::GetNextDiagTlv(AsCoapMessage(aMessage), *aIterator, *aNetworkDiagTlv);
+    return NetDiag::Client::GetNextDiagTlv(AsCoapMessage(aMessage), *aIterator, *aNetworkDiagTlv);
 }
 
 otError otThreadSendDiagnosticGet(otInstance                    *aInstance,
@@ -56,8 +56,8 @@ otError otThreadSendDiagnosticGet(otInstance                    *aInstance,
                                   otReceiveDiagnosticGetCallback aCallback,
                                   void                          *aCallbackContext)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Client>().SendDiagnosticGet(
-        AsCoreType(aDestination), aTlvTypes, aCount, aCallback, aCallbackContext);
+    return AsCoreType(aInstance).Get<NetDiag::Client>().SendDiagnosticGet(AsCoreType(aDestination), aTlvTypes, aCount,
+                                                                          aCallback, aCallbackContext);
 }
 
 otError otThreadSendDiagnosticReset(otInstance         *aInstance,
@@ -65,67 +65,106 @@ otError otThreadSendDiagnosticReset(otInstance         *aInstance,
                                     const uint8_t       aTlvTypes[],
                                     uint8_t             aCount)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Client>().SendDiagnosticReset(AsCoreType(aDestination),
-                                                                                      aTlvTypes, aCount);
+    return AsCoreType(aInstance).Get<NetDiag::Client>().SendDiagnosticReset(AsCoreType(aDestination), aTlvTypes,
+                                                                            aCount);
 }
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 
-const char *otThreadGetVendorName(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorName();
-}
+const char *otThreadGetVendorName(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetName(); }
 
-const char *otThreadGetVendorModel(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorModel();
-}
+const char *otThreadGetVendorModel(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetModel(); }
 
 const char *otThreadGetVendorSwVersion(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorSwVersion();
+    return AsCoreType(aInstance).Get<VendorInfo>().GetSwVersion();
 }
 
 const char *otThreadGetVendorAppUrl(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorAppUrl();
+    return AsCoreType(aInstance).Get<VendorInfo>().GetAppUrl();
+}
+
+void otThreadGetVendorOuiInfo(otInstance *aInstance, otThreadVendorOui *aOui)
+{
+    AssertPointerIsNotNull(aOui);
+
+    *aOui = AsCoreType(aInstance).Get<VendorInfo>().GetOui();
+}
+
+void otThreadVendorOuiToString(const otThreadVendorOui *aOui, char *aBuffer, uint16_t aSize)
+{
+    AsCoreType(aOui).ToString(aBuffer, aSize);
+}
+
+uint32_t otThreadGetVendorOui(otInstance *aInstance)
+{
+    // This API is deprecated. Use `otThreadGetVendorOuiInfo()` instead
+
+    return AsCoreType(aInstance).Get<VendorInfo>().GetOui().GetAsOui24();
 }
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorName(aVendorName);
+    return AsCoreType(aInstance).Get<VendorInfo>().SetName(aVendorName);
 }
 
 otError otThreadSetVendorModel(otInstance *aInstance, const char *aVendorModel)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorModel(aVendorModel);
+    return AsCoreType(aInstance).Get<VendorInfo>().SetModel(aVendorModel);
 }
 
 otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwVersion)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorSwVersion(aVendorSwVersion);
+    return AsCoreType(aInstance).Get<VendorInfo>().SetSwVersion(aVendorSwVersion);
 }
 
 otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorAppUrl(aVendorAppUrl);
+    return AsCoreType(aInstance).Get<VendorInfo>().SetAppUrl(aVendorAppUrl);
 }
-#endif
+
+otError otThreadSetVendorOuiInfo(otInstance *aInstance, const otThreadVendorOui *aOui)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().SetOui(AsCoreType(aOui));
+}
+
+otError otThreadSetVendorOui(otInstance *aInstance, uint32_t aVendorOui)
+{
+    // This API is deprecated, use `otThreadSetVendorOuiInfo()` instead
+
+    Error           error;
+    VendorInfo::Oui oui;
+
+    VerifyOrExit(aVendorOui <= 0xffffff, error = kErrorInvalidArgs);
+
+    oui.Clear();
+    oui.mBitLength = 24;
+    BigEndian::WriteUint24(aVendorOui, oui.mBytes);
+
+    error = AsCoreType(aInstance).Get<VendorInfo>().SetOui(oui);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
 void otThreadSetNonPreferredChannels(otInstance *aInstance, otChannelMask aChannelMask)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetNonPreferredChannels(aChannelMask);
+    return AsCoreType(aInstance).Get<NetDiag::Server>().SetNonPreferredChannels(aChannelMask);
 }
 
 otChannelMask otThreadGetNonPreferredChannels(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetNonPreferredChannels();
+    return AsCoreType(aInstance).Get<NetDiag::Server>().GetNonPreferredChannels();
 }
 
 void otThreadSetNonPreferredChannelsResetCallback(otInstance                               *aInstance,
                                                   otThreadNonPreferredChannelsResetCallback aCallback,
                                                   void                                     *aContext)
 {
-    AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetNonPreferredChannelsResetCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<NetDiag::Server>().SetNonPreferredChannelsResetCallback(aCallback, aContext);
 }

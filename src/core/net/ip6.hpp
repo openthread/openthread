@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv6 packet processing.
  */
 
-#ifndef IP6_HPP_
-#define IP6_HPP_
+#ifndef OT_CORE_NET_IP6_HPP_
+#define OT_CORE_NET_IP6_HPP_
 
 #include "openthread-core-config.h"
 
@@ -48,6 +48,7 @@
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
+#include "common/message_allocator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/time_ticker.hpp"
@@ -86,6 +87,9 @@ namespace Ip6 {
  * @defgroup core-ip6-mpl MPL
  * @defgroup core-ip6-netif Network Interfaces
  * @defgroup core-ip6-slaac SLAAC
+ * @defgroup core-tcp TCP
+ * @defgroup core-tcp-ext TCP Extension
+ * @defgroup core-udp UDP
  *
  * @}
  */
@@ -102,7 +106,7 @@ namespace Ip6 {
 /**
  * Implements the core IPv6 message processing.
  */
-class Ip6 : public InstanceLocator, private NonCopyable
+class Ip6 : public InstanceLocator, public MessageAllocator<Ip6, ReservedHeaderSize::kIp6Message>, private NonCopyable
 {
     friend class ot::Instance;
     friend class ot::TimeTicker;
@@ -117,34 +121,6 @@ public:
      * @param[in]  aInstance   A reference to the otInstance object.
      */
     explicit Ip6(Instance &aInstance);
-
-    /**
-     * Allocates a new message buffer from the buffer pool with default settings (link security
-     * enabled and `kPriorityMedium`).
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *NewMessage(void);
-
-    /**
-     * Allocates a new message buffer from the buffer pool with default settings (link security
-     * enabled and `kPriorityMedium`).
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *NewMessage(uint16_t aReserved);
-
-    /**
-     * Allocates a new message buffer from the buffer pool.
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
-     * @param[in]  aSettings  The message settings.
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
     /**
      * Allocates a new message buffer from the buffer pool and writes the IPv6 datagram to the message.
@@ -187,11 +163,12 @@ public:
      *
      * @param[in]  aMessage   An owned pointer to a message (ownership is transferred to the method).
      *
-     * @retval kErrorNone     Successfully processed the message.
-     * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
-     * @retval kErrorNoBufs   Could not allocate necessary message buffers when processing the datagram.
-     * @retval kErrorNoRoute  No route to host.
-     * @retval kErrorParse    Encountered a malformed header when processing the message.
+     * @retval kErrorNone          Successfully processed the message.
+     * @retval kErrorDrop          Message was well-formed but not fully processed due to packet processing rules.
+     * @retval kErrorInvalidArgs   The message has invalid origin (`kOriginThreadNetif`).
+     * @retval kErrorNoBufs        Could not allocate necessary message buffers when processing the datagram.
+     * @retval kErrorNoRoute       No route to host.
+     * @retval kErrorParse         Encountered a malformed header when processing the message.
      */
     Error SendRaw(OwnedPtr<Message> aMessage);
 
@@ -206,7 +183,7 @@ public:
      * @retval kErrorNoRoute  No route to host.
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      */
-    Error HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled = false);
+    Error HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled = false, uint8_t aRecursionDepth = 0);
 
     /**
      * Sets the callback to provide received raw IPv6 datagrams.
@@ -345,7 +322,7 @@ public:
 #endif
 
 private:
-    static constexpr uint8_t kDefaultHopLimit   = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
+    static constexpr uint8_t kMaxRecursionDepth = 4;
     static constexpr uint8_t kReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT;
 
     static constexpr uint16_t kMinimalMtu = 1280;
@@ -377,20 +354,22 @@ private:
                                  const Header      &aHeader,
                                  uint8_t           &aNextHeader,
                                  bool              &aReceive);
+    Error ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHeader, OffsetRange &aOffsetRange) const;
+    bool  HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const;
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
     Error HandleFragment(Message &aMessage);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     void CleanupFragmentationBuffer(void);
     void HandleTimeTick(void);
     void UpdateReassemblyList(void);
-    void SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode);
+    void SendIcmpError(Message &aMessage, Icmp6Header::Type aIcmpType, Icmp6Header::Code aIcmpCode);
 #endif
     Error ReadHopByHopHeader(const Message &aMessage, OffsetRange &aOffsetRange, HopByHopHeader &aHbhHeader) const;
     Error AddMplOption(Message &aMessage, Header &aHeader);
     Error PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader);
     Error InsertMplOption(Message &aMessage, Header &aHeader);
     Error RemoveMplOption(Message &aMessage);
-    Error HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive);
+    Error HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive, bool aIsHopByHop);
     Error Receive(Header            &aIp6Header,
                   OwnedPtr<Message> &aMessagePtr,
                   uint8_t            aIpProto,
@@ -398,6 +377,8 @@ private:
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
     void UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound);
 #endif
+
+    static const uint8_t kForwardIcmpTypes[];
 
     using SendQueueTask = TaskletIn<Ip6, &Ip6::HandleSendQueue>;
 
@@ -549,7 +530,7 @@ public:
      *
      * @returns The UDP header.
      */
-    const Udp::Header &GetUdpHeader(void) const { return mHeader.mUdp; }
+    const UdpHeader &GetUdpHeader(void) const { return mHeader.mUdp; }
 
     /**
      * Returns the TCP header.
@@ -558,7 +539,7 @@ public:
      *
      * @returns The TCP header.
      */
-    const Tcp::Header &GetTcpHeader(void) const { return mHeader.mTcp; }
+    const TcpHeader &GetTcpHeader(void) const { return mHeader.mTcp; }
 
     /**
      * Returns the ICMPv6 header.
@@ -567,7 +548,7 @@ public:
      *
      * @returns The ICMPv6 header.
      */
-    const Icmp::Header &GetIcmpHeader(void) const { return mHeader.mIcmp; }
+    const Icmp6Header &GetIcmpHeader(void) const { return mHeader.mIcmp; }
 
     /**
      * Returns the source port number if header is UDP or TCP, or zero otherwise
@@ -601,9 +582,9 @@ private:
     Header mIp6Header;
     union
     {
-        Udp::Header  mUdp;
-        Tcp::Header  mTcp;
-        Icmp::Header mIcmp;
+        UdpHeader   mUdp;
+        TcpHeader   mTcp;
+        Icmp6Header mIcmp;
     } mHeader;
 };
 
@@ -614,4 +595,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // IP6_HPP_
+#endif // OT_CORE_NET_IP6_HPP_

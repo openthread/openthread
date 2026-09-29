@@ -31,8 +31,8 @@
  *   This file includes definitions for the multiplexed timer service.
  */
 
-#ifndef TIMER_HPP_
-#define TIMER_HPP_
+#ifndef OT_CORE_COMMON_TIMER_HPP_
+#define OT_CORE_COMMON_TIMER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -541,4 +541,4 @@ private:
 
 } // namespace ot
 
-#endif // TIMER_HPP_
+#endif // OT_CORE_COMMON_TIMER_HPP_

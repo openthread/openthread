@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI interpreter for Ping Sneder function.
  */
 
-#ifndef CLI_PING_SENDER_HPP_
-#define CLI_PING_SENDER_HPP_
+#ifndef OT_CLI_CLI_PING_HPP_
+#define OT_CLI_CLI_PING_HPP_
 
 #include "openthread-core-config.h"
 
@@ -81,8 +81,6 @@ private:
     static void HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext);
     void        HandlePingStatistics(const otPingSenderStatistics *aStatistics);
 
-    void OutputResult(otError aError);
-
     bool mPingIsAsync : 1;
 };
 
@@ -91,4 +89,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
-#endif // CLI_PING_SENDER_HPP_
+#endif // OT_CLI_CLI_PING_HPP_

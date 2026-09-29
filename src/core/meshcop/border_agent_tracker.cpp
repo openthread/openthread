@@ -156,7 +156,7 @@ void Tracker::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
     }
 
 exit:
-    LogOnError(error, "add new agent", aResult.mServiceInstance);
+    LogWarnOnError(error, "add new agent %s", aResult.mServiceInstance);
 }
 
 void Tracker::HandleSrvResult(otInstance *aInstance, const otPlatDnssdSrvResult *aResult)
@@ -241,39 +241,16 @@ bool Tracker::NameMatch(const Heap::String &aHeapString, const char *aName)
     return !aHeapString.IsNull() && StringMatch(aHeapString.AsCString(), aName, kStringCaseInsensitiveMatch);
 }
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-
-void Tracker::LogOnError(Error aError, const char *aText, const char *aName)
-{
-    if (aError != kErrorNone)
-    {
-        LogWarn("Error %s - Failed to %s - %s", ErrorToString(aError), aText, (aName != nullptr) ? aName : "");
-    }
-}
-
-#else
-
-void Tracker::LogOnError(Error, const char *, const char *) {}
-
-#endif
-
 const char *Tracker::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Stopped",
-        "PendingDnssd",
-        "Running",
-    };
+#define StateMapList(_)                   \
+    _(kStateStopped, "Stopped")           \
+    _(kStatePendingDnssd, "PendingDnssd") \
+    _(kStateRunning, "Running")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateStopped);
-        ValidateNextEnum(kStatePendingDnssd);
-        ValidateNextEnum(kStateRunning);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -282,7 +259,7 @@ const char *Tracker::StateToString(State aState)
 void Tracker::Iterator::Init(Instance &aInstance)
 {
     SetAgentEntry(aInstance.Get<Tracker>().mAgents.GetHead());
-    SetInitUptime(aInstance.Get<Uptime>().GetUptime());
+    SetInitUptime(aInstance.Get<UptimeTracker>().GetUptime());
 }
 
 Error Tracker::Iterator::GetNextAgentInfo(AgentInfo &aInfo)
@@ -323,7 +300,7 @@ Error Tracker::Host::SetNameAndStartAddrResolver(const char *aHostName)
     Get<Dnssd>().StartIp6AddressResolver(AddressResolver(mName.AsCString()));
 
 exit:
-    LogOnError(error, "set host name", aHostName);
+    LogWarnOnError(error, "set host name %s", aHostName);
     return error;
 }
 
@@ -355,7 +332,7 @@ void Tracker::Host::SetAddresses(const Dnssd::AddressResult &aResult)
     }
 
 exit:
-    LogOnError(error, "set host addresses", mName.AsCString());
+    LogWarnOnError(error, "set host addresses on %s", mName.AsCString());
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -364,7 +341,7 @@ exit:
 Tracker::Agent::Agent(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mNext(nullptr)
-    , mDiscoverUptime(aInstance.Get<Uptime>().GetUptime())
+    , mDiscoverUptime(aInstance.Get<UptimeTracker>().GetUptime())
     , mLastUpdateUptime(mDiscoverUptime)
     , mPort(0)
 {
@@ -467,7 +444,7 @@ void Tracker::Agent::SetTxtData(const uint8_t *aData, uint16_t aDataLength)
     SetUpdateTimeToNow();
 
 exit:
-    LogOnError(error, "set TXT data", mServiceName.AsCString());
+    LogWarnOnError(error, "set TXT data on %s", mServiceName.AsCString());
 }
 
 void Tracker::Agent::ClearTxtData(void)
@@ -481,7 +458,7 @@ exit:
     return;
 }
 
-void Tracker::Agent::SetUpdateTimeToNow(void) { mLastUpdateUptime = Get<Uptime>().GetUptime(); }
+void Tracker::Agent::SetUpdateTimeToNow(void) { mLastUpdateUptime = Get<UptimeTracker>().GetUptime(); }
 
 bool Tracker::Agent::Matches(MatchType aType, const char *aName) const
 {
@@ -503,7 +480,7 @@ exit:
     return matches;
 }
 
-void Tracker::Agent::CopyInfoTo(AgentInfo &aInfo, uint64_t aUptimeNow) const
+void Tracker::Agent::CopyInfoTo(AgentInfo &aInfo, UptimeMsec aUptimeNow) const
 {
     ClearAllBytes(aInfo);
 

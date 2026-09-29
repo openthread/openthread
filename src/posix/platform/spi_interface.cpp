@@ -412,8 +412,9 @@ otError SpiInterface::PushPullSpi(void)
     txFrame.SetHeaderAcceptLen(0);
     txFrame.SetHeaderDataLen(0);
 
-    // Sanity check.
-    if (mSpiSlaveDataLen > kMaxFrameSize)
+    // Sanity check. The header `data_len` carries the payload length only
+    // (it excludes header size), so the largest valid value is the MTU.
+    if (mSpiSlaveDataLen > kMaxFrameSize - kSpiFrameHeaderSize)
     {
         mSpiSlaveDataLen = 0;
     }
@@ -517,7 +518,8 @@ otError SpiInterface::PushPullSpi(void)
         slaveAcceptLen   = rxFrame.GetHeaderAcceptLen();
         mSpiSlaveDataLen = rxFrame.GetHeaderDataLen();
 
-        if (!rxFrame.IsValid() || (slaveAcceptLen > kMaxFrameSize) || (mSpiSlaveDataLen > kMaxFrameSize))
+        if (!rxFrame.IsValid() || (slaveAcceptLen > kMaxFrameSize - kSpiFrameHeaderSize) ||
+            (mSpiSlaveDataLen > kMaxFrameSize - kSpiFrameHeaderSize))
         {
             mInterfaceMetrics.mTransferredGarbageFrameCount++;
             mSpiTxRefusedCount++;

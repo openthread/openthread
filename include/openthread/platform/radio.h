@@ -183,6 +183,25 @@ struct otExtAddress
  */
 typedef struct otExtAddress otExtAddress;
 
+/**
+ * Represents a 64-bit radio time in microseconds referenced to a continuous monotonic local radio clock.
+ *
+ * This type is returned by `otPlatRadioGetNow()` and is used as the timestamp field (`mTimestamp`) in radio frames
+ * (`otRadioFrame`).
+ */
+typedef uint64_t otRadioTime64;
+
+/**
+ * Represents a 32-bit radio time in microseconds.
+ *
+ * This type holds the lower 32 bits (least significant bits) of a full 64-bit radio time (`otRadioTime64`).
+ *
+ * It is used in APIs such as `otPlatRadioReceiveAt()` and `otPlatRadioUpdateCslSampleTime()` and as the transmission
+ * delay base time (`mTxDelayBaseTime`) in `otRadioFrame`. It is important for radio platform implementations to
+ * correctly account for its roll-over.
+ */
+typedef uint32_t otRadioTime32;
+
 #define OT_MAC_KEY_SIZE 16 ///< Size of the MAC Key in bytes.
 
 /**
@@ -273,7 +292,7 @@ typedef struct otRadioFrame
              *
              * This field does not affect CCA behavior which is controlled by `mCsmaCaEnabled`.
              */
-            uint32_t mTxDelayBaseTime;
+            otRadioTime32 mTxDelayBaseTime;
 
             /**
              * The delay time in microseconds for this transmission referenced
@@ -359,7 +378,7 @@ typedef struct otRadioFrame
              * If `mIsHeaderUpdated` is not set, then the frame counter and key CSL IE not set in the frame by
              * OpenThread core and it is the responsibility of the radio platform to assign them. The platform
              * must update the frame header (assign counter and CSL IE values) before sending the frame over the air,
-             * however if the the transmission gets aborted and the frame is never sent over the air (e.g., channel
+             * however if the transmission gets aborted and the frame is never sent over the air (e.g., channel
              * access error) the platform may choose to not update the header. If the platform updates the header,
              * it must also set this flag before passing the frame back from the `otPlatRadioTxDone()` callback.
              */
@@ -381,7 +400,7 @@ typedef struct otRadioFrame
              *
              * The platform should update this field before otPlatRadioTxStarted() is fired for each transmit attempt.
              */
-            uint64_t mTimestamp;
+            otRadioTime64 mTimestamp;
         } mTxInfo;
 
         /**
@@ -393,7 +412,7 @@ typedef struct otRadioFrame
              * The time of the local radio clock in microseconds when the end of
              * the SFD was present at the local antenna.
              */
-            uint64_t mTimestamp;
+            otRadioTime64 mTimestamp;
 
             uint32_t mAckFrameCounter; ///< ACK security frame counter (applicable when `mAckedWithSecEnhAck` is set).
             uint8_t  mAckKeyId;        ///< ACK security key index (applicable when `mAckedWithSecEnhAck` is set).
@@ -700,17 +719,28 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
 void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable);
 
 /**
- * Update MAC keys and key index
+ * Update MAC keys and key index.
  *
- * Is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ * Is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
+ *
+ * Radio platform implementations MUST ignore the @p aKeyIdMode parameter entirely and treat the keys configured via
+ * this API as Key ID Mode 1 (standard Thread security).
+ *
+ * This API was originally introduced with the @p aKeyIdMode parameter for potential future extensions, and it is
+ * retained in the function signature for backward compatibility. However, in practice, platform transmit security
+ * is only intended and used for Key ID Mode 1. Attempting to support or interpret other Key ID modes in the radio
+ * platform introduces complexity and ambiguity regarding how @p aKeyIdMode values are represented (e.g.,
+ * bit-shifted as it appears in the IEEE 802.15.4 Security Control field vs. simple sequential mode values 0, 1, 2).
+ *
+ * A call to this API replaces any previously set MAC keys.
  *
  * The radio platform should reset the current security MAC frame counter tracked by the radio on this call. While this
  * is highly recommended, the OpenThread stack, as a safeguard, will also reset the frame counter using the
  * `otPlatRadioSetMacFrameCounter()` before calling this API.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[in]   aKeyIdMode   The key ID mode.
- * @param[in]   aKeyId       Current MAC key index.
+ * @param[in]   aKeyIdMode   The key ID mode (must be ignored by the radio platform).
+ * @param[in]   aKeyIndex    Current MAC key index.
  * @param[in]   aPrevKey     A pointer to the previous MAC key.
  * @param[in]   aCurrKey     A pointer to the current MAC key.
  * @param[in]   aNextKey     A pointer to the next MAC key.
@@ -718,7 +748,7 @@ void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable);
  */
 void otPlatRadioSetMacKey(otInstance             *aInstance,
                           uint8_t                 aKeyIdMode,
-                          uint8_t                 aKeyId,
+                          uint8_t                 aKeyIndex,
                           const otMacKeyMaterial *aPrevKey,
                           const otMacKeyMaterial *aCurrKey,
                           const otMacKeyMaterial *aNextKey,
@@ -765,7 +795,7 @@ void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacF
  * @returns The current time in microseconds. UINT64_MAX when platform does not
  * support or radio time is not ready.
  */
-uint64_t otPlatRadioGetNow(otInstance *aInstance);
+otRadioTime64 otPlatRadioGetNow(otInstance *aInstance);
 
 /**
  * Get the bus speed in bits/second between the host and the radio chip.
@@ -843,12 +873,29 @@ otError otPlatRadioDisable(otInstance *aInstance);
 bool otPlatRadioIsEnabled(otInstance *aInstance);
 
 /**
- * Transition the radio from Receive to Sleep (turn off the radio).
+ * Transition the radio to the Sleep state (turn off the radio).
  *
- * @param[in] aInstance  The OpenThread instance structure.
+ * If the radio is already in the Sleep state, this function MUST return `OT_ERROR_NONE` with no effect.
  *
- * @retval OT_ERROR_NONE          Successfully transitioned to Sleep.
- * @retval OT_ERROR_BUSY          The radio was transmitting.
+ * If `otPlatRadioSleep()` is called while the radio is in the middle of receiving a frame or transmitting an ACK
+ * (e.g., during AIFS/turnaround wait or actively transmitting the ACK frame), the radio MUST complete the ongoing
+ * operation (finish frame reception and/or ACK transmission) and transition to Sleep immediately thereafter. In this
+ * scenario:
+ * - The radio MUST return `OT_ERROR_NONE` to indicate that the sleep request has been accepted and scheduled.
+ * - Upon finishing the frame reception (and any associated ACK transmission), the radio driver MUST invoke
+ *   `otPlatRadioReceiveDone()` to deliver the received frame (or report reception error) before transitioning
+ *   to Sleep.
+ *
+ * If any subsequent radio state transition function (e.g., `otPlatRadioReceive()` or `otPlatRadioTransmit()`) is
+ * called while a scheduled transition to Sleep is pending, the pending Sleep transition MUST be canceled/superseded,
+ * and the radio MUST transition to the newly requested state upon completing the ongoing reception and/or ACK
+ * transmission.
+ *
+ * @param[in] aInstance           The OpenThread instance structure.
+ *
+ * @retval OT_ERROR_NONE          Successfully transitioned to Sleep, radio is already in Sleep, or transition is
+ *                                accepted and scheduled.
+ * @retval OT_ERROR_BUSY          The radio was transmitting a frame (initiated by `otPlatRadioTransmit()`).
  * @retval OT_ERROR_INVALID_STATE The radio was disabled.
  */
 otError otPlatRadioSleep(otInstance *aInstance);
@@ -865,36 +912,108 @@ otError otPlatRadioSleep(otInstance *aInstance);
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
 
 /**
- * Schedule a radio reception window at a specific time and duration.
+ * Schedules a radio reception window at a specific time and duration.
  *
- * After a radio reception is successfully scheduled for a future time and duration, a subsequent call to this
- * function MUST be handled as follows:
+ * This function is an optional platform API used to schedule a future reception window on a specific channel for
+ * features such as Coordinated Sampled Listening (CSL) or Thread Direct.
  *
- * - If the start time of the previously scheduled reception window has not yet been reached, the new call to
- *   `otPlatRadioReceiveAt()` MUST cancel the previous schedule, effectively replacing it.
+ * OpenThread supports two approaches for timed reception:
  *
- * - If the start of the previous window has already passed, the previous receive schedule is already being executed
- *   by the radio and MUST NOT be replaced or impacted. The new call to `otPlatRadioReceiveAt()` would then schedule
- *   a new future receive window. In particular, if the new `otPlatRadioReceiveAt()` call occurs after the start
- *   but while still within the previous reception window, the ongoing reception window MUST NOT be impacted.
+ * - Software-driven (default and recommended):
+ *   OpenThread's `SubMac` layer manages all timed RX internally using software timers and standard
+ *   `otPlatRadioReceive()` and `otPlatRadioSleep()` calls. In this mode, the radio platform does NOT need to implement
+ *   `otPlatRadioReceiveAt()`, and MUST omit the `OT_RADIO_CAPS_RECEIVE_TIMING` capability from `otPlatRadioGetCaps()`.
  *
+ * - Platform-offloaded (optional):
+ *   The radio platform explicitly declares `OT_RADIO_CAPS_RECEIVE_TIMING` via `otPlatRadioGetCaps()` and implements
+ *   `otPlatRadioReceiveAt()` to handle window timing directly in the platform layer or hardware.
+ *
+ * Because OpenThread's built-in `SubMac` software implementation is comprehensive, robust, and fully tested, it is
+ * strongly recommended that radio platform implementers rely on the default software-driven mode and do NOT implement
+ * `otPlatRadioReceiveAt()`, unless there is a clear justification for offloading timed reception to the radio platform.
+ *
+ * If the radio platform implements this function, the following rules and behaviors are expected:
+ *
+ * If this function is called while the radio is disabled (`OT_RADIO_STATE_DISABLED`), the radio platform MUST return
+ * `OT_ERROR_INVALID_STATE`.
+ *
+ * When the radio is enabled, this function can be called from any radio state (`OT_RADIO_STATE_SLEEP`,
+ * `OT_RADIO_STATE_RECEIVE`, or `OT_RADIO_STATE_TRANSMIT`). The radio platform driver MUST handle the scheduling
+ * internally: calling this function merely registers a (future) time window for the radio to sample/receive and MUST
+ * NOT immediately force the radio into Receive mode at the time of the call (unless the window is already active).
+ *
+ * The radio platform MUST execute the scheduled reception as follows:
+ *
+ * - Operational Precedence and Radio Sleep:
+ *   - Timed reception scheduled by this function is only applicable when the radio is in the Sleep state (whether
+ *     the radio is put to sleep explicitly via `otPlatRadioSleep()` or manages sleep state automatically on its own).
+ *   - Any active radio operation, such as transmission (`otPlatRadioTransmit()`) or continuous reception
+ *     (`otPlatRadioReceive()`), takes precedence over timed reception.
+ *
+ * - Starting the Reception Window:
+ *   - At the scheduled start time @p aStart, the radio receiver MUST enter Receive mode on channel @p aChannel,
+ *     provided the radio is not busy with another operation. This MUST behave the same as if `otPlatRadioReceive()`
+ *     were called at that time.
+ *   - The OpenThread stack already accounts for and includes any necessary radio ramp-up and receiver settling time
+ *     when computing @p aStart. Therefore, the radio platform driver does not need to adjust @p aStart or schedule
+ *     ramp-up ahead of time.
+ *
+ * - Ending the Reception Window:
+ *   - At the end of the duration (@p aStart + @p aDuration), the radio MUST automatically transition back to
+ *     Sleep unless it is actively receiving a frame.
+ *   - If frame reception has started (e.g., SHR detected) before the duration expires, the radio receiver
+ *     MUST remain on until the frame reception completes (either successfully or with an error) and any
+ *     subsequent acknowledgment transmission is finished, after which the radio transitions to Sleep.
+ *
+ * - Subsequent Schedules and Overlapping Windows:
+ *   - If the start time of a previously scheduled reception window has not yet arrived, a subsequent call to
+ *     `otPlatRadioReceiveAt()` MUST cancel and replace the previous schedule.
+ *   - If a previous reception window has already started and is currently active:
+ *     - A subsequent call to `otPlatRadioReceiveAt()` with a future start time MUST NOT abort or interrupt the
+ *       ongoing reception. The new window is scheduled to start at its specified time.
+ *     - At the start time of the new window (or immediately if its start time has already arrived), the radio
+ *       MUST honor the new window:
+ *       - Channel: If the new window specifies the same channel, reception SHOULD continue seamlessly without
+ *         toggling the receiver state off and on. If the new window specifies a different channel, the radio
+ *         MUST switch to the new channel. However, if the radio has started receiving a frame on the previous
+ *         channel (e.g., SHR detected) or is transmitting an acknowledgment, it MUST complete the frame reception
+ *         and any acknowledgment transmission before switching to the new channel (or transitioning to Sleep
+ *         if the new window has already expired).
+ *       - End time: The reception window MUST end according to the new window (@p aStart + @p aDuration). The
+ *         new window always dictates when reception ends, replacing any previous end time. Note that this
+ *         behavior is common and often used to shrink an ongoing sample window.
+ *   - If a new window starts immediately upon the end of the previous window (back-to-back), the transition
+ *     SHOULD occur seamlessly without cycling the radio through Sleep.
+ *
+ * - Interactions with Sleep and Other Operations:
+ *   - If the radio is busy executing another operation (such as transmission or continuous reception) when the
+ *     scheduled window starts or while it is active, that operation takes precedence. Once that operation completes
+ *     and the radio returns to Sleep, if the scheduled window is still ongoing (before @p aStart + @p aDuration),
+ *     the radio SHOULD start or resume the scheduled timed reception by entering Receive mode on @p aChannel for the
+ *     remaining duration of the window.
+ *   - Calls to `otPlatRadioSleep()` MUST NOT cancel a scheduled reception window, nor abort an ongoing active timed
+ *     reception window. If the radio is already in the Sleep state and performing an active scheduled timed reception,
+ *     subsequent calls to `otPlatRadioSleep()` MUST NOT interrupt or alter its operation.
+ *   - Calls to `otPlatRadioDisable()` MUST immediately abort and cancel any pending (scheduled) or ongoing active
+ *     timed reception window.
+ *
+ * @note While `otPlatRadioGetNow()` returns a 64-bit timestamp (`otRadioTime64`), @p aStart is a 32-bit value
+ * (`otRadioTime32`) representing the lower 32 bits of the radio clock. Radio platform drivers MUST account for
+ * 32-bit roll-over when scheduling and evaluating reception window timing (e.g., determining whether @p aStart has
+ * arrived or @p aStart + @p aDuration has elapsed).
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aChannel   The radio channel on which to receive.
- * @param[in]  aStart     The receive window start time relative to the local
- *                        radio clock, see `otPlatRadioGetNow`. The radio
- *                        receiver SHALL be on and ready to receive the first
- *                        symbol of a frame's SHR at the window start time.
- * @param[in]  aDuration  The receive window duration, in microseconds, as
- *                        measured by the local radio clock. The radio SHOULD be
- *                        turned off (or switched to TX mode if an ACK frame
- *                        needs to be sent) after that duration unless it is
- *                        still actively receiving a frame. In the latter case
- *                        the radio SHALL be kept in reception mode until frame
- *                        reception has either succeeded or failed.
+ * @param[in]  aStart     The receive window start time relative to the local radio clock (see `otPlatRadioGetNow()`),
+ *                        representing the lower 32 bits of the radio clock.
+ * @param[in]  aDuration  The receive window duration in microseconds.
  *
- * @retval OT_ERROR_NONE    Successfully scheduled receive window.
- * @retval OT_ERROR_FAILED  The receive window could not be scheduled. For example, if @p aStart is in the past.
+ * @retval OT_ERROR_NONE           Successfully scheduled receive window.
+ * @retval OT_ERROR_FAILED         The receive window could not be scheduled.
+ * @retval OT_ERROR_INVALID_STATE  The radio is disabled.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid arguments provided (e.g., invalid channel).
  */
-otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration);
+otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration);
 
 /**
  * The radio driver calls this function to notify OpenThread of a received frame.
@@ -1225,7 +1344,7 @@ otError otPlatRadioResetCsl(otInstance *aInstance);
  *                               the time when the first symbol of the MHR of
  *                               the frame is expected.
  */
-void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime);
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, otRadioTime32 aCslSampleTime);
 
 /**
  * Get the current estimated worst case accuracy (maximum ± deviation from the

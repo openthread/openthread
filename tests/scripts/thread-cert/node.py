@@ -91,11 +91,12 @@ class OtbrDocker:
         logging.info(f"socat running: device PTY: {rcp_device_pty}, device: {rcp_device}")
 
         ot_rcp_path = self._get_ot_rcp_path()
-        self._ot_rcp_proc = subprocess.Popen(f"{ot_rcp_path} {nodeid} > {rcp_device_pty} < {rcp_device_pty}",
-                                             shell=True,
-                                             stdin=subprocess.DEVNULL,
-                                             stdout=subprocess.DEVNULL,
-                                             stderr=subprocess.DEVNULL)
+        self._ot_rcp_proc = subprocess.Popen(
+            f"{ot_rcp_path} {'-U' if config.VIRTUAL_TIME else ''} {nodeid} > {rcp_device_pty} < {rcp_device_pty}",
+            shell=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL)
 
         try:
             self._ot_rcp_proc.wait(1)
@@ -644,8 +645,8 @@ class OtCli:
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE' in os.environ:
-                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
-                                                                                           nodeid)
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
@@ -660,8 +661,8 @@ class OtCli:
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE_1_1' in os.environ:
-                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
-                    os.environ['RADIO_DEVICE_1_1'], nodeid)
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE_1_1'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
@@ -689,8 +690,8 @@ class OtCli:
         # If Thread version of node matches the testing environment version.
         if self.version == self.env_version:
             if 'RADIO_DEVICE' in os.environ:
-                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
-                                                                                        nodeid)
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 args = ''
@@ -729,8 +730,8 @@ class OtCli:
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability.
         elif self.version == '1.1':
             if 'RADIO_DEVICE_1_1' in os.environ:
-                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE_1_1'],
-                                                                                        nodeid)
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE_1_1'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 args = ''
@@ -1156,7 +1157,11 @@ class NodeImpl:
                'fullname': 'my-host.default.service.arpa.',
                'name': 'my-host',
                'deleted': 'false',
-               'addresses': ['2001::1', '2001::2']
+               'addresses': ['2001::1', '2001::2'],
+               'lease': '7200',
+               'key-lease': '1209600',
+               'remaining lease': '6345.459',
+               'remaining key-lease': '1208734.459'
            }]
         """
 
@@ -1172,12 +1177,21 @@ class NodeImpl:
 
             host['deleted'] = lines.pop(0).strip().split(':')[1].strip()
             if host['deleted'] == 'true':
+                for _ in range(2):
+                    # `key-lease` and `remaining key-lease`
+                    key_value = lines.pop(0).strip().split(':')
+                    host[key_value[0].strip()] = key_value[1].strip()
                 host_list.append(host)
                 continue
 
             addresses = lines.pop(0).strip().split('[')[1].strip(' ]').split(',')
             map(str.strip, addresses)
             host['addresses'] = [addr.strip() for addr in addresses if addr]
+
+            for _ in range(4):
+                # `lease`, `key-lease`, `remaining lease` and `remaining key-lease`
+                key_value = lines.pop(0).strip().split(':')
+                host[key_value[0].strip()] = key_value[1].strip()
 
             host_list.append(host)
 
@@ -1209,7 +1223,9 @@ class NodeImpl:
                'weight': '0',
                'ttl': '7200',
                'lease': '7200',
-               'key-lease': '7200',
+               'key-lease': '1209600',
+               'remaining lease': '6345.459',
+               'remaining key-lease': '1208734.459',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -1234,11 +1250,15 @@ class NodeImpl:
 
             service['deleted'] = lines.pop(0).strip().split(':')[1].strip()
             if service['deleted'] == 'true':
+                for _ in range(2):
+                    key_value = lines.pop(0).strip().split(':')
+                    service[key_value[0].strip()] = key_value[1].strip()
                 service_list.append(service)
                 continue
 
-            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', and 'key-lease'
-            for i in range(0, 7):
+            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', 'key-lease',
+            # 'remaining lease', and `remaining key-lease`
+            for i in range(0, 9):
                 key_value = lines.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
 
@@ -1585,40 +1605,6 @@ class NodeImpl:
         if mlr_timeout is not None:
             cmd += ' timeout %d' % mlr_timeout
 
-        self.send_command(cmd)
-        self._expect_done()
-
-    def set_domain_prefix(self, prefix, flags='prosD'):
-        self.add_prefix(prefix, flags)
-        self.register_netdata()
-
-    def remove_domain_prefix(self, prefix):
-        self.remove_prefix(prefix)
-        self.register_netdata()
-
-    def set_next_dua_response(self, status: Union[str, int], iid=None):
-        # Convert 5.00 to COAP CODE 160
-        if isinstance(status, str):
-            assert '.' in status
-            status = status.split('.')
-            status = (int(status[0]) << 5) + int(status[1])
-
-        cmd = 'bbr mgmt dua {}'.format(status)
-        if iid is not None:
-            cmd += ' ' + str(iid)
-        self.send_command(cmd)
-        self._expect_done()
-
-    def set_dua_iid(self, iid: str):
-        assert len(iid) == 16
-        int(iid, 16)
-
-        cmd = 'dua iid {}'.format(iid)
-        self.send_command(cmd)
-        self._expect_done()
-
-    def clear_dua_iid(self):
-        cmd = 'dua iid clear'
         self.send_command(cmd)
         self._expect_done()
 
@@ -2133,7 +2119,7 @@ class NodeImpl:
         omr_addrs = []
         for addr in self.get_addrs():
             for prefix in prefixes:
-                if (addr.startswith(prefix)) and (addr != self.__getDua()):
+                if addr.startswith(prefix):
                     omr_addrs.append(addr)
                     break
 
@@ -2182,13 +2168,6 @@ class NodeImpl:
 
         return None
 
-    def __getDua(self) -> Optional[str]:
-        for ip6Addr in self.get_addrs():
-            if re.match(config.DOMAIN_PREFIX_REGEX_PATTERN, ip6Addr, re.I):
-                return ip6Addr
-
-        return None
-
     def get_ip6_address_by_prefix(self, prefix: Union[str, IPv6Network]) -> List[IPv6Address]:
         """Get addresses matched with given prefix.
 
@@ -2224,8 +2203,6 @@ class NodeImpl:
             return self.__getAloc()
         elif address_type == config.ADDRESS_TYPE.ML_EID:
             return self.__getMleid()
-        elif address_type == config.ADDRESS_TYPE.DUA:
-            return self.__getDua()
         elif address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
         elif address_type == config.ADDRESS_TYPE.OMR:
@@ -3092,20 +3069,20 @@ class NodeImpl:
         else:
             timeout = 5
 
-        self._expect(r'coap request from ([\da-f:]+)(?: OBS=(\d+))?'
-                     r'(?: with payload: ([\da-f]+))?\b',
-                     timeout=timeout)
-        (source, observe, payload) = self.pexpect.match.groups()
+        self._expect(
+            r'coap request from ([\da-f:]+) (GET|PUT|DELETE|POST)(?: OBS=(\d+))?'
+            r'(?: with payload: ([\da-f]+))?\b',
+            timeout=timeout)
+        (source, method, observe, payload) = self.pexpect.match.groups()
+
         source = source.decode('UTF-8')
+        method = method.decode('UTF-8')
 
         if observe is not None:
             observe = int(observe, base=10)
 
-        if payload is not None:
-            payload = binascii.a2b_hex(payload).decode('UTF-8')
-
         # Return the values received
-        return dict(source=source, observe=observe, payload=payload)
+        return dict(source=source, observe=observe, payload=payload, method=method)
 
     def coap_wait_subscribe(self):
         """

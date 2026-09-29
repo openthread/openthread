@@ -1,0 +1,87 @@
+/*
+ *  Copyright (c) 2026, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file includes implementation of methods in `ScanResult`.
+ */
+
+#include "scan_result.hpp"
+
+#include "common/frame_data.hpp"
+#include "mac/mac_beacon.hpp"
+
+namespace ot {
+
+Error ScanResult::PopulateFromBeacon(const Mac::RxFrame::ParseInfo &aFrameInfo)
+{
+    Error error = kErrorNone;
+
+    Clear();
+
+    VerifyOrExit(aFrameInfo.mType == Mac::Frame::kTypeBeacon, error = kErrorParse);
+
+    VerifyOrExit(aFrameInfo.mAddrs.mSource.IsExtended(), error = kErrorParse);
+    mExtAddress = aFrameInfo.mAddrs.mSource.GetExtended();
+
+    mPanId =
+        aFrameInfo.mPanIds.IsSourcePresent() ? aFrameInfo.mPanIds.GetSource() : aFrameInfo.mPanIds.GetDestination();
+
+    mChannel = aFrameInfo.GetRxFrame()->GetChannel();
+    mRssi    = aFrameInfo.GetRxFrame()->GetRssi();
+    mLqi     = aFrameInfo.GetRxFrame()->GetLqi();
+
+#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+    {
+        FrameData                 frameData;
+        const Mac::BeaconHeader  *beaconHeader;
+        const Mac::BeaconPayload *beaconPayload;
+
+        frameData = aFrameInfo.mPayload;
+
+        beaconHeader = frameData.Read<Mac::BeaconHeader>();
+        VerifyOrExit((beaconHeader != nullptr) && beaconHeader->IsValid());
+
+        beaconPayload = frameData.Read<Mac::BeaconPayload>();
+        VerifyOrExit((beaconPayload != nullptr) && beaconPayload->IsValid());
+
+        mVersion       = beaconPayload->GetProtocolVersion();
+        mIsJoinable    = beaconPayload->IsJoiningPermitted();
+        mIsNative      = beaconPayload->IsNative();
+        mExtendedPanId = beaconPayload->GetExtendedPanId();
+
+        IgnoreError(AsCoreType(&mNetworkName).Set(beaconPayload->GetNetworkName()));
+        VerifyOrExit(IsValidUtf8String(mNetworkName.m8), error = kErrorParse);
+    }
+#endif
+
+exit:
+    return error;
+}
+
+} // namespace ot

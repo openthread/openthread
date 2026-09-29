@@ -31,8 +31,8 @@
  *   This file includes definitions for time instance.
  */
 
-#ifndef TIME_HPP_
-#define TIME_HPP_
+#ifndef OT_CORE_COMMON_TIME_HPP_
+#define OT_CORE_COMMON_TIME_HPP_
 
 #include "openthread-core-config.h"
 
@@ -229,13 +229,25 @@ public:
     Time GetDistantPast(void) const { return Time(mValue - kDistantInterval); }
 
     /**
+     * Determines the remaining duration from a given current time to this `Time` instance.
+     *
+     * If this `Time` instance is in the past relative to @p aNow, this method returns zero. Otherwise, it returns the
+     * duration from @p aNow to this `Time` instance.
+     *
+     * @param[in] aNow  The current time.
+     *
+     * @returns The remaining duration from @p aNow to this `Time` instance, or zero if this `Time` is in the past.
+     */
+    uint32_t DetermineRemainingDurationFrom(Time aNow) const { return (aNow < *this) ? (*this - aNow) : 0; }
+
+    /**
      * Converts a given number of seconds to milliseconds.
      *
      * @param[in] aSeconds   The seconds value to convert to milliseconds.
      *
      * @returns The number of milliseconds.
      */
-    static uint32_t constexpr SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
+    static uint32_t constexpr SecToMsec(uint32_t aSeconds) { return aSeconds * kOneSecondInMsec; }
 
     /**
      * Converts a given number of milliseconds to seconds.
@@ -244,7 +256,25 @@ public:
      *
      * @returns The number of seconds.
      */
-    static uint32_t constexpr MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
+    static uint32_t constexpr MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / kOneSecondInMsec; }
+
+    /**
+     * Converts a given number of milliseconds to microseconds.
+     *
+     * @param[in] aMilliseconds  The milliseconds value to convert to microseconds.
+     *
+     * @returns The number of microseconds.
+     */
+    static uint32_t constexpr MsecToUsec(uint32_t aMilliseconds) { return aMilliseconds * kOneMsecInUsec; }
+
+    /**
+     * Converts a given number of microseconds to milliseconds.
+     *
+     * @param[in] aMicroseconds  The microseconds value to convert to milliseconds.
+     *
+     * @returns The number of milliseconds.
+     */
+    static uint32_t constexpr UsecToMsec(uint32_t aMicroseconds) { return aMicroseconds / kOneMsecInUsec; }
 
 private:
     static constexpr uint32_t kDistantInterval = (1UL << 31) - 1;
@@ -272,4 +302,4 @@ typedef Time TimeMicro;
 
 } // namespace ot
 
-#endif // TIME_HPP_
+#endif // OT_CORE_COMMON_TIME_HPP_

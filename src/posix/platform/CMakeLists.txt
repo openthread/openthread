@@ -51,8 +51,9 @@ if(OT_MULTIPAN_RCP)
     )
 endif()
 
+ot_option(OT_POSIX_INFRA_NETIF_LOST_EXIT OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE "exit on infrastructure network interface lost")
 
-option(OT_POSIX_INSTALL_EXTERNAL_ROUTES "Install External Routes as IPv6 routes" ON)
+option(OT_POSIX_INSTALL_EXTERNAL_ROUTES "Install External Routes as IPv6 routes" OFF)
 if(OT_POSIX_INSTALL_EXTERNAL_ROUTES)
     target_compile_definitions(ot-posix-config
         INTERFACE "OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE=1"
@@ -125,6 +126,7 @@ endif()
 add_library(openthread-posix
     alarm.cpp
     backtrace.cpp
+    bpf_tap.cpp
     ble.cpp
     configuration.cpp
     config_file.cpp
@@ -139,7 +141,9 @@ add_library(openthread-posix
     mdns_socket.cpp
     memory.cpp
     misc.cpp
+    multicast_forwarding.cpp
     multicast_routing.cpp
+    multicast_routing_bpf.cpp
     netif.cpp
     power.cpp
     radio.cpp
@@ -151,6 +155,7 @@ add_library(openthread-posix
     spinel_manager.cpp
     spi_interface.cpp
     system.cpp
+    tcp.cpp
     tmp_storage.cpp
     trel.cpp
     udp.cpp

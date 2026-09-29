@@ -32,8 +32,8 @@
  *  This file defines the OpenThread non cryptographic random number generator API.
  */
 
-#ifndef OPENTHREAD_RANDOM_H_
-#define OPENTHREAD_RANDOM_H_
+#ifndef OPENTHREAD_RANDOM_NONCRYPTO_H_
+#define OPENTHREAD_RANDOM_NONCRYPTO_H_
 
 #include <stdint.h>
 
@@ -131,4 +131,4 @@ uint32_t otRandomNonCryptoAddJitter(uint32_t aValue, uint16_t aJitter);
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_RANDOM_H_
+#endif // OPENTHREAD_RANDOM_NONCRYPTO_H_

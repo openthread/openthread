@@ -31,8 +31,8 @@
  *   This file includes definitions for managing Thread Network Data.
  */
 
-#ifndef NETWORK_DATA_HPP_
-#define NETWORK_DATA_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -274,7 +274,6 @@ public:
      *
      * - It has added at least one external route entry.
      * - It has added at least one prefix entry with default-route and on-mesh flags set.
-     * - It has added at least one domain prefix (domain and on-mesh flags set).
      *
      * Should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
      * full set and not the stable subset).
@@ -292,7 +291,6 @@ public:
      *
      * - It has added at least one external route entry.
      * - It has added at least one prefix entry with default-route and on-mesh flags set.
-     * - It has added at least one domain prefix (domain and on-mesh flags set).
      *
      * Should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
      * full set and not the stable subset).
@@ -311,7 +309,6 @@ public:
      *
      * - It has added at least one external route entry.
      * - It has added at least one prefix entry with default-route and on-mesh flags set.
-     * - It has added at least one domain prefix (domain and on-mesh flags set).
      *
      * Should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
      * full set and not the stable subset).
@@ -702,4 +699,4 @@ private:
 
 } // namespace ot
 
-#endif // NETWORK_DATA_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_HPP_

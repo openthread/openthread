@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Mesh Diagnostic module.
  */
 
-#ifndef CONFIG_MESH_DIAG_H_
-#define CONFIG_MESH_DIAG_H_
+#ifndef OT_CORE_CONFIG_MESH_DIAG_H_
+#define OT_CORE_CONFIG_MESH_DIAG_H_
 
 /**
  * @addtogroup config-mesh-diag
@@ -69,4 +69,4 @@
  * @}
  */
 
-#endif // CONFIG_MESH_DIAG_H_
+#endif // OT_CORE_CONFIG_MESH_DIAG_H_

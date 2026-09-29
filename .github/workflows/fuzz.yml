@@ -53,20 +53,20 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
     
     - name: Build Fuzzers (${{ matrix.sanitizer }})
       id: build
-      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@200c1902b1a3ce0d461b79aebd7b0d4c5b860601 # master
       with:
         oss-fuzz-project-name: 'openthread'
         language: 'c++'
         sanitizer: ${{ matrix.sanitizer }}
 
     - name: Run Fuzzers (${{ matrix.sanitizer }})
-      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@200c1902b1a3ce0d461b79aebd7b0d4c5b860601 # master
       with:
         oss-fuzz-project-name: 'openthread'
         language: 'c++'
@@ -75,7 +75,7 @@ jobs:
         output-sarif: true
 
     - name: Upload Crash
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: failure() && steps.build.outcome == 'success'
       with:
         name: ${{ matrix.sanitizer }}-artifacts
@@ -83,7 +83,7 @@ jobs:
 
     - name: Upload Sarif
       if: always() && steps.build.outcome == 'success'
-      uses: github/codeql-action/upload-sarif@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+      uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.38.1
       with:
         sarif_file: cifuzz-sarif/results.sarif
         checkout_path: cifuzz-sarif

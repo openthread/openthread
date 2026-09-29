@@ -159,11 +159,11 @@ void CorruptMessage(Message &aMessage)
     uint8_t  bitOffset;
     uint8_t  byte;
 
-    byteOffset = Random::NonCrypto::GetUint16InRange(0, aMessage.GetLength());
+    byteOffset = Random::NonCrypto::GenerateUpToExcluding<uint16_t>(aMessage.GetLength());
 
     SuccessOrQuit(aMessage.Read(byteOffset, byte));
 
-    bitOffset = Random::NonCrypto::GetUint8InRange(0, kBitsPerByte);
+    bitOffset = Random::NonCrypto::GenerateUpToExcluding<uint8_t>(kBitsPerByte);
 
     byte ^= (1 << bitOffset);
 
@@ -172,7 +172,7 @@ void CorruptMessage(Message &aMessage)
 
 void TestUdpMessageChecksum(void)
 {
-    constexpr uint16_t kMinSize = sizeof(Ip6::Udp::Header);
+    constexpr uint16_t kMinSize = sizeof(Ip6::UdpHeader);
     constexpr uint16_t kMaxSize = Buffer::kSize * 3 + 24;
 
     const char *kSourceAddress = "fd00:1122:3344:5566:7788:99aa:bbcc:ddee";
@@ -184,8 +184,8 @@ void TestUdpMessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message         *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Udp::Header));
-        Ip6::Udp::Header udpHeader;
+        Message         *message = instance->Get<Ip6::Ip6>().NewMessage();
+        Ip6::UdpHeader   udpHeader;
         Ip6::MessageInfo messageInfo;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
@@ -240,7 +240,7 @@ void TestUdpMessageChecksum(void)
 
 void TestIcmp6MessageChecksum(void)
 {
-    constexpr uint16_t kMinSize = sizeof(Ip6::Icmp::Header);
+    constexpr uint16_t kMinSize = sizeof(Ip6::Icmp6Header);
     constexpr uint16_t kMaxSize = Buffer::kSize * 3 + 24;
 
     const char *kSourceAddress = "fd00:feef:dccd:baab:9889:7667:5444:3223";
@@ -252,9 +252,9 @@ void TestIcmp6MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message          *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Icmp::Header));
-        Ip6::Icmp::Header icmp6Header;
-        Ip6::MessageInfo  messageInfo;
+        Message         *message = instance->Get<Ip6::Ip6>().NewMessage();
+        Ip6::Icmp6Header icmp6Header;
+        Ip6::MessageInfo messageInfo;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
         SuccessOrQuit(message->SetLength(size));
@@ -309,7 +309,7 @@ void TestIcmp6MessageChecksum(void)
 
 void TestTcp4MessageChecksum(void)
 {
-    constexpr size_t kMinSize = sizeof(Ip4::Tcp::Header);
+    constexpr size_t kMinSize = sizeof(Ip4::TcpHeader);
     constexpr size_t kMaxSize = Buffer::kSize * 3 + 24;
 
     const char *kSourceAddress = "12.34.56.78";
@@ -327,8 +327,8 @@ void TestTcp4MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message         *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip4::Tcp::Header));
-        Ip4::Tcp::Header tcpHeader;
+        Message       *message = instance->Get<Ip6::Ip6>().NewMessage();
+        Ip4::TcpHeader tcpHeader;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
         SuccessOrQuit(message->SetLength(size));
@@ -364,7 +364,7 @@ void TestTcp4MessageChecksum(void)
 
 void TestUdp4MessageChecksum(void)
 {
-    constexpr uint16_t kMinSize = sizeof(Ip4::Udp::Header);
+    constexpr uint16_t kMinSize = sizeof(Ip4::UdpHeader);
     constexpr uint16_t kMaxSize = Buffer::kSize * 3 + 24;
 
     const char *kSourceAddress = "12.34.56.78";
@@ -382,8 +382,8 @@ void TestUdp4MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message         *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip4::Udp::Header));
-        Ip4::Udp::Header udpHeader;
+        Message       *message = instance->Get<Ip6::Ip6>().NewMessage();
+        Ip4::UdpHeader udpHeader;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
         SuccessOrQuit(message->SetLength(size));
@@ -427,13 +427,13 @@ void TestIcmp4MessageChecksum(void)
                                                "\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33\x34\x35\x36\x37";
     uint16_t      kChecksumForExampleMessage = 0x5594;
     Instance     *instance                   = static_cast<Instance *>(testInitInstance());
-    Message      *message                    = instance->Get<Ip6::Ip6>().NewMessage(sizeof(kExampleIcmpMessage));
+    Message      *message                    = instance->Get<Ip6::Ip6>().NewMessage();
 
     Ip4::Address source;
     Ip4::Address dest;
 
-    uint8_t           mPayload[sizeof(kExampleIcmpMessage)];
-    Ip4::Icmp::Header icmpHeader;
+    uint8_t          mPayload[sizeof(kExampleIcmpMessage)];
+    Ip4::Icmp4Header icmpHeader;
 
     SuccessOrQuit(message->AppendBytes(kExampleIcmpMessage, sizeof(kExampleIcmpMessage)));
 

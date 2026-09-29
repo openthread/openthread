@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DNS_SERVER_HPP_
-#define DNS_SERVER_HPP_
+#ifndef OT_CORE_NET_DNSSD_SERVER_HPP_
+#define OT_CORE_NET_DNSSD_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -311,6 +311,7 @@ private:
     static constexpr bool     kBindUnspecifiedNetif         = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF;
     static constexpr uint32_t kQueryTimeout                 = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT;
     static constexpr uint16_t kMaxConcurrentUpstreamQueries = 32;
+    static constexpr uint16_t kMaxQuestionCount             = 2;
 
     static constexpr uint16_t kRrTypeA     = ResourceRecord::kTypeA;
     static constexpr uint16_t kRrTypeNs    = ResourceRecord::kTypeNs;
@@ -679,4 +680,4 @@ DefineCoreType(otPlatDnsUpstreamQuery, Dns::ServiceDiscovery::Server::UpstreamQu
 
 #endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
-#endif // DNS_SERVER_HPP_
+#endif // OT_CORE_NET_DNSSD_SERVER_HPP_

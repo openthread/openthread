@@ -351,7 +351,7 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         memcpy(&addr.sin_addr.s_addr, &ip4Addr, sizeof(otIp4Address));
-        addr.sin_port = htons(MDNS_PORT);
+        addr.sin_port = htons(aAddress->mPort);
 
         bytes = sendto(sMdnsFd4, buffer, length, 0, (struct sockaddr *)&addr, sizeof(addr));
 
@@ -363,7 +363,7 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
 
         memset(&addr6, 0, sizeof(addr6));
         addr6.sin6_family = AF_INET6;
-        addr6.sin6_port   = htons(MDNS_PORT);
+        addr6.sin6_port   = htons(aAddress->mPort);
         memcpy(&addr6.sin6_addr, &aAddress->mAddress, sizeof(otIp6Address));
 
         bytes = sendto(sMdnsFd6, buffer, length, 0, (struct sockaddr *)&addr6, sizeof(addr6));
@@ -411,7 +411,7 @@ void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 
         memset(&addrInfo, 0, sizeof(addrInfo));
         otIp4ToIp4MappedIp6Address((otIp4Address *)(&sockaddr.sin_addr.s_addr), &addrInfo.mAddress);
-        addrInfo.mPort         = MDNS_PORT;
+        addrInfo.mPort         = ntohs(sockaddr.sin_port);
         addrInfo.mInfraIfIndex = sInfraIfIndex;
 
         otPlatMdnsHandleReceive(aInstance, message, /* aInUnicast */ false, &addrInfo);
@@ -437,7 +437,7 @@ void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 
         memset(&addrInfo, 0, sizeof(addrInfo));
         memcpy(&addrInfo.mAddress, &sockaddr6.sin6_addr, sizeof(otIp6Address));
-        addrInfo.mPort         = MDNS_PORT;
+        addrInfo.mPort         = ntohs(sockaddr6.sin6_port);
         addrInfo.mInfraIfIndex = sInfraIfIndex;
 
         otPlatMdnsHandleReceive(aInstance, message, /* aInUnicast */ false, &addrInfo);

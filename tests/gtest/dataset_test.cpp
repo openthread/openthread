@@ -38,6 +38,8 @@
 #include <openthread/platform/time.h>
 #include "gmock/gmock.h"
 
+#include "instance/instance.hpp"
+
 #include "fake_platform.hpp"
 #include "mock_callback.hpp"
 
@@ -74,6 +76,240 @@ TEST(otDatasetSetActiveTlvs, shouldTriggerStateCallbackOnSuccess)
     otDatasetConvertToTlvs(&dataset, &datasetTlvs);
     error = otDatasetSetActiveTlvs(FakePlatform::CurrentInstance(), &datasetTlvs);
     assert(error == OT_ERROR_NONE);
+
+    fakePlatform.GoInMs(10000);
+}
+
+TEST(otDatasetIsValid, shouldReturnTrueForValidActiveDataset)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    EXPECT_TRUE(otDatasetIsValid(&datasetTlvs, true));
+}
+
+TEST(otDatasetIsValid, shouldReturnFalseForIncompleteActiveDataset)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+
+    // Remove a required field, e.g., Network Key
+    dataset.mComponents.mIsNetworkKeyPresent = false;
+
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    EXPECT_FALSE(otDatasetIsValid(&datasetTlvs, true));
+}
+
+TEST(otDatasetIsValid, shouldReturnFalseForDuplicatedTlvs)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    // Duplicate a TLV (e.g. Network Name TLV)
+    // TLV format: Type (1 byte), Length (1 byte), Value (n bytes)
+    datasetTlvs.mTlvs[datasetTlvs.mLength]     = OT_MESHCOP_TLV_NETWORKNAME; // Type: Network Name
+    datasetTlvs.mTlvs[datasetTlvs.mLength + 1] = 1;                          // Length: 1
+    datasetTlvs.mTlvs[datasetTlvs.mLength + 2] = 'A';
+    datasetTlvs.mLength += 3;
+
+    EXPECT_FALSE(otDatasetIsValid(&datasetTlvs, true));
+}
+
+TEST(otDatasetIsValid, shouldReturnTrueForValidPendingDataset)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+
+    // Pending Dataset MUST contain Pending Timestamp and Delay Timer.
+    dataset.mPendingTimestamp.mSeconds             = 100;
+    dataset.mPendingTimestamp.mTicks               = 0;
+    dataset.mComponents.mIsPendingTimestampPresent = true;
+    dataset.mDelay                                 = 30000;
+    dataset.mComponents.mIsDelayPresent            = true;
+
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    EXPECT_TRUE(otDatasetIsValid(&datasetTlvs, false));
+}
+
+TEST(otDatasetIsValid, shouldReturnFalseForIncompletePendingDataset)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+
+    // Provide Pending Timestamp but omit Delay Timer.
+    dataset.mPendingTimestamp.mSeconds             = 100;
+    dataset.mPendingTimestamp.mTicks               = 0;
+    dataset.mComponents.mIsPendingTimestampPresent = true;
+
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    EXPECT_FALSE(otDatasetIsValid(&datasetTlvs, false));
+}
+
+// Saves an Active Dataset with the given Active Timestamp as the local dataset and returns it.
+static otOperationalDataset SaveLocalActiveDataset(uint64_t aTimestampSeconds)
+{
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+
+    dataset.mActiveTimestamp.mSeconds = aTimestampSeconds;
+
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+    EXPECT_EQ(otDatasetSetActiveTlvs(FakePlatform::CurrentInstance(), &datasetTlvs), OT_ERROR_NONE);
+
+    return dataset;
+}
+
+// Saves @p aDataset, re-stamped with the given Active Timestamp, using `ActiveDatasetManager::Save()`. This is the
+// path taken for a dataset received from the network, e.g., in a Child ID Response. It updates the local dataset
+// only when the received Active Timestamp is newer than the local one.
+static void SaveActiveDatasetFromNetwork(otOperationalDataset aDataset, uint64_t aTimestampSeconds)
+{
+    otOperationalDatasetTlvs datasetTlvs;
+    MeshCoP::Dataset         dataset;
+
+    aDataset.mActiveTimestamp.mSeconds = aTimestampSeconds;
+    otDatasetConvertToTlvs(&aDataset, &datasetTlvs);
+
+    EXPECT_EQ(dataset.SetFrom(datasetTlvs), OT_ERROR_NONE);
+    EXPECT_EQ(AsCoreType(FakePlatform::CurrentInstance()).Get<MeshCoP::ActiveDatasetManager>().Save(dataset),
+              OT_ERROR_NONE);
+}
+
+// Registers a state changed callback on @p aMockStateCallback which fails the test if
+// `OT_CHANGED_ACTIVE_DATASET` is signaled.
+template <typename MockStateCallback> void ExpectNoActiveDatasetChangedEvent(MockStateCallback &aMockStateCallback)
+{
+    EXPECT_CALL(aMockStateCallback, Call).Times(AnyNumber());
+
+    EXPECT_CALL(aMockStateCallback, Call(Truly([](otChangedFlags aChangedFlags) -> bool {
+                    return (aChangedFlags & OT_CHANGED_ACTIVE_DATASET);
+                })))
+        .Times(0);
+
+    EXPECT_EQ(otSetStateChangedCallback(FakePlatform::CurrentInstance(), MockStateCallback::CallWithContext,
+                                        &aMockStateCallback),
+              OT_ERROR_NONE);
+}
+
+TEST(DatasetManagerSave, shouldNotTriggerStateCallbackWhenTimestampIsEqual)
+{
+    FakePlatform fakePlatform;
+
+    typedef MockCallback<void, otChangedFlags> MockStateCallback;
+
+    MockStateCallback    mockStateCallback;
+    otOperationalDataset dataset = SaveLocalActiveDataset(100);
+
+    // Let the event from the initial save be dispatched before registering the callback.
+    fakePlatform.GoInMs(1000);
+
+    ExpectNoActiveDatasetChangedEvent(mockStateCallback);
+
+    // The dataset is not saved, since its Active Timestamp is not newer than the local one.
+    SaveActiveDatasetFromNetwork(dataset, 100);
+
+    fakePlatform.GoInMs(10000);
+}
+
+TEST(DatasetManagerSave, shouldNotTriggerStateCallbackWhenTimestampIsOlder)
+{
+    FakePlatform fakePlatform;
+
+    typedef MockCallback<void, otChangedFlags> MockStateCallback;
+
+    MockStateCallback    mockStateCallback;
+    otOperationalDataset dataset = SaveLocalActiveDataset(100);
+
+    // Let the event from the initial save be dispatched before registering the callback.
+    fakePlatform.GoInMs(1000);
+
+    ExpectNoActiveDatasetChangedEvent(mockStateCallback);
+
+    // The dataset is not saved, since its Active Timestamp is older than the local one. Instead, an `MGMT_SET` is
+    // scheduled to push the newer local dataset back to the leader.
+    SaveActiveDatasetFromNetwork(dataset, 50);
+
+    // Go past `kSendSetDelay` so that the scheduled `MGMT_SET` is also covered.
+    fakePlatform.GoInMs(10000);
+}
+
+TEST(DatasetManagerSave, shouldTriggerStateCallbackWhenTimestampIsNewer)
+{
+    FakePlatform fakePlatform;
+
+    typedef MockCallback<void, otChangedFlags> MockStateCallback;
+
+    MockStateCallback    mockStateCallback;
+    otOperationalDataset dataset = SaveLocalActiveDataset(100);
+
+    fakePlatform.GoInMs(1000);
+
+    EXPECT_CALL(mockStateCallback, Call).Times(AnyNumber());
+
+    EXPECT_CALL(mockStateCallback, Call(Truly([](otChangedFlags aChangedFlags) -> bool {
+                    return (aChangedFlags & OT_CHANGED_ACTIVE_DATASET);
+                })))
+        .Times(AtLeast(1));
+
+    EXPECT_EQ(otSetStateChangedCallback(FakePlatform::CurrentInstance(), MockStateCallback::CallWithContext,
+                                        &mockStateCallback),
+              OT_ERROR_NONE);
+
+    // The dataset is saved, since its Active Timestamp is newer than the local one.
+    SaveActiveDatasetFromNetwork(dataset, 200);
+
+    fakePlatform.GoInMs(10000);
+}
+
+// Unlike `DatasetManager::Save()`, saving through the public API updates the local dataset even
+// when the Active Timestamp is older than the local one, and therefore always signals the change.
+TEST(otDatasetSetActiveTlvs, shouldTriggerStateCallbackEvenWhenTimestampIsOlder)
+{
+    FakePlatform fakePlatform;
+
+    typedef MockCallback<void, otChangedFlags> MockStateCallback;
+
+    MockStateCallback mockStateCallback;
+
+    SaveLocalActiveDataset(100);
+
+    // Let the event from the initial save be dispatched before registering the callback.
+    fakePlatform.GoInMs(1000);
+
+    EXPECT_CALL(mockStateCallback, Call).Times(AnyNumber());
+
+    EXPECT_CALL(mockStateCallback, Call(Truly([](otChangedFlags aChangedFlags) -> bool {
+                    return (aChangedFlags & OT_CHANGED_ACTIVE_DATASET);
+                })))
+        .Times(AtLeast(1));
+
+    EXPECT_EQ(otSetStateChangedCallback(FakePlatform::CurrentInstance(), MockStateCallback::CallWithContext,
+                                        &mockStateCallback),
+              OT_ERROR_NONE);
+
+    SaveLocalActiveDataset(50);
 
     fakePlatform.GoInMs(10000);
 }

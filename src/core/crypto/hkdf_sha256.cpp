@@ -42,12 +42,7 @@
 namespace ot {
 namespace Crypto {
 
-HkdfSha256::HkdfSha256(void)
-{
-    mContext.mContext     = mContextStorage;
-    mContext.mContextSize = sizeof(mContextStorage);
-    SuccessOrAssert(otPlatCryptoHkdfInit(&mContext));
-}
+HkdfSha256::HkdfSha256(void) { SuccessOrAssert(otPlatCryptoHkdfInit(&mContext)); }
 
 HkdfSha256::~HkdfSha256(void) { SuccessOrAssert(otPlatCryptoHkdfDeinit(&mContext)); }
 

@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Border Router services.
  */
 
-#ifndef CONFIG_BORDER_ROUTER_H_
-#define CONFIG_BORDER_ROUTER_H_
+#ifndef OT_CORE_CONFIG_BORDER_ROUTER_H_
+#define OT_CORE_CONFIG_BORDER_ROUTER_H_
 
 /**
  * @addtogroup config-border-router
@@ -66,7 +66,6 @@
  *
  * - It has added at least one external route entry.
  * - It has added at least one prefix entry with default-route and on-mesh flags set.
- * - It has added at least one domain prefix (domain and on-mesh flags set).
  *
  * A Border Router which provides IP connectivity and is acting as a REED is eligible to request a router role upgrade
  * by sending an "Address Solicit" request to leader with status reason `BorderRouterRequest`. This reason is used when
@@ -92,4 +91,4 @@
  * @}
  */
 
-#endif // CONFIG_BORDER_ROUTER_H_
+#endif // OT_CORE_CONFIG_BORDER_ROUTER_H_

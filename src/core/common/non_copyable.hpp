@@ -31,8 +31,8 @@
  *   This file includes a common base class for disabling copying.
  */
 
-#ifndef NON_COPYABLE_HPP_
-#define NON_COPYABLE_HPP_
+#ifndef OT_CORE_COMMON_NON_COPYABLE_HPP_
+#define OT_CORE_COMMON_NON_COPYABLE_HPP_
 
 namespace ot {
 
@@ -51,4 +51,4 @@ protected:
 
 } // namespace ot
 
-#endif // NON_COPYABLE_HPP_
+#endif // OT_CORE_COMMON_NON_COPYABLE_HPP_

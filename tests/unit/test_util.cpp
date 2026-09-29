@@ -32,10 +32,7 @@
 
 void DumpBuffer(const char *aTextMessage, const uint8_t *aBuffer, uint16_t aBufferLength)
 {
-    enum
-    {
-        kBytesPerLine = 16, // Number of bytes per line.
-    };
+    static constexpr uint16_t kBytesPerLine = 16; // Number of bytes per line.
 
     char     charBuff[kBytesPerLine + 1];
     uint16_t counter;

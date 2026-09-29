@@ -46,7 +46,7 @@ void TestBinarySearch(void)
     {
         int Compare(const char *aName) const { return strcmp(aName, mName); }
 
-        constexpr static bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
+        static constexpr bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
         {
             return AreStringsInOrder(aFirst.mName, aSecond.mName);
         }

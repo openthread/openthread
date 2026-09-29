@@ -421,6 +421,12 @@ class Node(object):
     def set_vendor_app_url(self, url):
         return self._cli_no_output('vendor appurl', url)
 
+    def get_vendor_oui(self):
+        return self._cli_single_output('vendor oui')
+
+    def set_vendor_oui(self, oui):
+        return self._cli_no_output('vendor oui', oui)
+
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # netdata
 
@@ -455,6 +461,9 @@ class Node(object):
 
     def get_netdata_contexts(self):
         return self.get_netdata()['contexts']
+
+    def get_netdata_commissioning(self):
+        return self.get_netdata()['commissioning']
 
     def get_netdata_versions(self):
         leaderdata = Node.parse_list(self.cli('leaderdata'))
@@ -541,6 +550,12 @@ class Node(object):
 
     def ba_ephemeral_key_get_port(self):
         return self._cli_single_output('ba ephemeralkey port')
+
+    def ba_ephemeral_key_generate_tap(self):
+        return self._cli_single_output('ba ephemeralkey generate-tap')
+
+    def ba_ephemeral_key_validate_tap(self, tapstring):
+        return self._cli_single_output('ba ephemeralkey validate-tap', tapstring)
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # UDP
@@ -706,15 +721,18 @@ class Node(object):
         self._cli_no_output('srp server lease', min_lease, max_lease, min_key_lease, max_key_lease)
 
     def srp_server_get_hosts(self):
-        """Returns the host list on the SRP server as a list of property
-           dictionary.
+        """Returns the host list on the SRP server as a list of property dictionary.
 
            Example output:
            [{
                'fullname': 'my-host.default.service.arpa.',
                'name': 'my-host',
                'deleted': 'false',
-               'addresses': ['2001::1', '2001::2']
+               'addresses': ['2001::1', '2001::2'],
+               'lease': '7200',
+               'key-lease': '1209600',
+               'remaining lease': '6345.459',
+               'remaining key-lease': '1208734.459'
            }]
         """
         outputs = self.cli('srp server host')
@@ -725,11 +743,19 @@ class Node(object):
             host['name'] = host['fullname'].split('.')[0]
             host['deleted'] = outputs.pop(0).strip().split(':')[1].strip()
             if host['deleted'] == 'true':
+                for _ in range(2):
+                    # `key-lease` and `remaining key-lease`
+                    key_value = outputs.pop(0).strip().split(':')
+                    host[key_value[0].strip()] = key_value[1].strip()
                 host_list.append(host)
                 continue
             addresses = outputs.pop(0).strip().split('[')[1].strip(' ]').split(',')
             map(str.strip, addresses)
             host['addresses'] = [addr for addr in addresses if addr]
+            for _ in range(4):
+                # `lease`, `key-lease`, `remaining lease`, and `remaining key-lease`
+                key_value = outputs.pop(0).strip().split(':')
+                host[key_value[0].strip()] = key_value[1].strip()
             host_list.append(host)
         return host_list
 
@@ -758,7 +784,9 @@ class Node(object):
                'weight': '0',
                'ttl': '7200',
                'lease': '7200',
-               'key-lease', '1209600',
+               'key-lease': '1209600',
+               'remaining lease': '6322.418',
+               'remaining key-lease': '1109587.418',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -777,10 +805,15 @@ class Node(object):
             service['name'] = '.'.join(name_labels[1:3])
             service['deleted'] = outputs.pop(0).strip().split(':')[1].strip()
             if service['deleted'] == 'true':
+                for _ in range(2):
+                    # `key-lease` and `remaining key-lease`
+                    key_value = outputs.pop(0).strip().split(':')
+                    service[key_value[0].strip()] = key_value[1].strip()
                 service_list.append(service)
                 continue
-            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', 'key-lease'
-            for i in range(0, 7):
+            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', 'key-lease',
+            # 'remaining lease', 'remaining key-lease'.
+            for i in range(0, 9):
                 key_value = outputs.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
             txt_entries = outputs.pop(0).strip().split('[')[1].strip(' ]').split(',')
@@ -855,6 +888,9 @@ class Node(object):
 
     def br_get_multiail(self):
         return self._cli_single_output('br multiail')
+
+    def br_get_multiail_state(self):
+        return self.cli('br multiail state')
 
     def br_get_ifaddrs(self):
         return self.cli('br ifaddrs')

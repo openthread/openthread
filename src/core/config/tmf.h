@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Thread Management Framework service.
  */
 
-#ifndef CONFIG_TMF_H_
-#define CONFIG_TMF_H_
+#ifndef OT_CORE_CONFIG_TMF_H_
+#define OT_CORE_CONFIG_TMF_H_
 
 /**
  * @addtogroup config-tmf
@@ -213,20 +213,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
- *
- * Define to 1 for Thread 1.2 FTD device to register DUA of its MTD children registered
- * even if it doesn't enable DUA feature itself.
- */
-#ifndef OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-#define OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#endif
-
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE && OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2
-#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE"
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
  *
  * This setting configures the Multicast Listener Registration parent proxying in Thread 1.2.
@@ -243,4 +229,4 @@
  * @}
  */
 
-#endif // CONFIG_TMF_H_
+#endif // OT_CORE_CONFIG_TMF_H_

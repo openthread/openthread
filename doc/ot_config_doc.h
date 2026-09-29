@@ -73,7 +73,6 @@
  * @defgroup config-nat64                    NAT64
  * @defgroup config-netdata-publisher        Network Data Publisher
  * @defgroup config-network-diagnostic       Network Diagnostics
- * @defgroup config-p2p                      Peer-to-Peer
  * @defgroup config-parent-search            Parent Search
  * @defgroup config-ping-sender              Ping Sender
  * @defgroup config-platform                 Platform Specific Services
@@ -83,10 +82,10 @@
  * @defgroup config-sntp-client              SNTP Client
  * @defgroup config-srp-client               SRP Client
  * @defgroup config-srp-server               SRP Server
+ * @defgroup config-thread-direct            Thread Direct
  * @defgroup config-time-sync                Time Sync Service
  * @defgroup config-tmf                      Thread Management Framework Service
  * @defgroup config-trel                     TREL
- * @defgroup config-wakeup                   Wake-up
  *
  * @}
  */

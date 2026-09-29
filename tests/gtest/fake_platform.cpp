@@ -225,7 +225,7 @@ otError FakePlatform::SettingsGet(uint16_t aKey, uint16_t aIndex, uint8_t *aValu
         return OT_ERROR_NOT_FOUND;
     }
 
-    if (aIndex > setting->second.size())
+    if (aIndex >= setting->second.size())
     {
         return OT_ERROR_NOT_FOUND;
     }
@@ -280,7 +280,13 @@ otError FakePlatform::SettingsDelete(uint16_t aKey, int aIndex)
         return OT_ERROR_NOT_FOUND;
     }
 
-    if (static_cast<std::size_t>(aIndex) >= setting->second.size())
+    if (aIndex == -1)
+    {
+        mSettings.erase(setting);
+        return OT_ERROR_NONE;
+    }
+
+    if (aIndex < 0 || static_cast<std::size_t>(aIndex) >= setting->second.size())
     {
         return OT_ERROR_NOT_FOUND;
     }
@@ -385,7 +391,7 @@ otError otPlatRadioSleep(otInstance *) { return OT_ERROR_NONE; }
 
 otError otPlatRadioReceive(otInstance *, uint8_t aChannel) { return FakePlatform::CurrentPlatform().Receive(aChannel); }
 
-otError otPlatRadioReceiveAt(otInstance *, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+otError otPlatRadioReceiveAt(otInstance *, uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration)
 {
     return FakePlatform::CurrentPlatform().ReceiveAt(aChannel, aStart, aDuration);
 }
@@ -406,6 +412,14 @@ bool otPlatRadioGetPromiscuous(otInstance *) { return false; }
 void otPlatRadioEnableSrcMatch(otInstance *, bool aEnabled)
 {
     FakePlatform::CurrentPlatform().SrcMatchEnable(aEnabled);
+}
+
+// Overrides the weak default in radio_platform.cpp, which reports
+// `kErrorNotImplemented`. Without this the fake RCP cannot accept a max power
+// table at all, so a test could not tell a correct restore from a missing one.
+otError otPlatRadioSetChannelMaxTransmitPower(otInstance *, uint8_t aChannel, int8_t aMaxPower)
+{
+    return FakePlatform::CurrentPlatform().ChannelMaxTxPowerSet(aChannel, aMaxPower);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *, uint16_t aShortAddr)
@@ -496,17 +510,22 @@ void otPlatDiagRadioReceived(otInstance *, otRadioFrame *, otError) {}
 
 void otPlatDiagAlarmCallback(otInstance *) {}
 
+OT_TOOL_WEAK void otPlatLogOutput(otInstance *, otLogLevel, const char *) {}
+
 OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...) {}
 
 void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
 void otPlatFree(void *aPtr) { free(aPtr); }
 
-bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
+bool otPlatInfraIfHasAddress(otInstance *, uint32_t, const otIp6Address *) { return false; }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t) { return OT_ERROR_FAILED; }
+otError otPlatInfraIfSendIcmp6Nd(otInstance *, uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
+{
+    return OT_ERROR_FAILED;
+}
 
-otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
+otError otPlatInfraIfDiscoverNat64Prefix(otInstance *, uint32_t) { return OT_ERROR_FAILED; }
 
 void otPlatDsoEnableListening(otInstance *, bool) {}
 
@@ -665,10 +684,6 @@ void otPlatDnssdStopIp4AddressResolver(otInstance *, const otPlatDnssdAddressRes
 void otPlatDnssdStartRecordQuerier(otInstance *, const otPlatDnssdRecordQuerier *) {}
 
 void otPlatDnssdStopRecordQuerier(otInstance *, const otPlatDnssdRecordQuerier *) {}
-
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-void otPlatOtnsStatus(const char *aStatus) { OT_UNUSED_VARIABLE(aStatus); }
-#endif
 
 void otPlatAssertFail(const char *, int) {}
 } // extern "C"

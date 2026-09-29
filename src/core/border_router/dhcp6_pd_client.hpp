@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Prefix Delegation (PD) Client.
  */
 
-#ifndef DHCP6_PD_CLIENT_HPP_
-#define DHCP6_PD_CLIENT_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_DHCP6_PD_CLIENT_HPP_
+#define OT_CORE_BORDER_ROUTER_DHCP6_PD_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -230,7 +230,7 @@ private:
     void      UpdateStateAfterRetxExhausted(void);
     Error     AppendIaPdOption(Message &aMessage);
     Error     AppendIaPrefixOption(Message &aMessage, const Ip6::Prefix &aPrefix);
-    void      HandleReceived(Message &aMessage);
+    void      HandleReceived(OwnedPtr<Message> aMessagePtr);
     Error     ParseHeaderAndValidateMessage(Message &aMessage, Dhcp6::Header &aHeader);
     void      HandleAdvertise(const Message &aMessage);
     void      HandleReply(const Message &aMessage);
@@ -246,9 +246,8 @@ private:
                                   PdPrefixArray                   &aPdPrefixes,
                                   Dhcp6::StatusCodeOption::Status &aStatus) const;
     bool      ShouldSkipPrefixOption(const Dhcp6::IaPrefixOption &aPrefixOption) const;
-    void      ProcessServerUnicastOption(const Message &aMessage, Ip6::Address &aServerAddress) const;
     void      ProcessPreferenceOption(const Message &aMessage, uint8_t &aPreference) const;
-    void      SaveServerDuidAndAddress(const Message &aMessage);
+    void      SaveServerDuid(const Message &aMessage);
     void      ClearServerDuid(void);
     void      ClearPdPrefix(void);
     void      CommitPdPrefix(const PdPrefix &aPdPrefix);
@@ -259,14 +258,13 @@ private:
 
     using DelayTimer = TimerMilliIn<Dhcp6PdClient, &Dhcp6PdClient::HandleTimer>;
 
-    State        mState;
-    bool         mPdPrefixCommited;
-    RetxTracker  mRetxTracker;
-    uint32_t     mMaxSolicitTimeout;
-    PdPrefix     mPdPrefix;
-    ServerDuid   mServerDuid;
-    Ip6::Address mServerAddress;
-    DelayTimer   mTimer;
+    State       mState;
+    bool        mPdPrefixCommited;
+    RetxTracker mRetxTracker;
+    uint32_t    mMaxSolicitTimeout;
+    PdPrefix    mPdPrefix;
+    ServerDuid  mServerDuid;
+    DelayTimer  mTimer;
 };
 
 } // namespace BorderRouter
@@ -274,4 +272,4 @@ private:
 
 #endif // OT_CONFIG_DHCP6_PD_CLIENT_ENABLE
 
-#endif // DHCP6_PD_CLIENT_HPP_
+#endif // OT_CORE_BORDER_ROUTER_DHCP6_PD_CLIENT_HPP_

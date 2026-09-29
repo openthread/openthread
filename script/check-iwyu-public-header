@@ -35,10 +35,12 @@ set -euxo pipefail
 
 main()
 {
-    find include -name '*.h' -exec iwyu -I include {} \; 2>&1 \
-        | fix_include -n --nosafe_headers \
-        | tee >(cat 1>&2) \
-        | grep 'IWYU edited 0 files on your behalf.'
+    find include -name '*.h' | while read -r header; do
+        echo "checking ${header}.."
+        iwyu -I include "${header}" 2>&1 | tee iwyu.out
+        fix_include -n --nosafe_headers <iwyu.out 2>&1 | tee iwyu.fix
+        grep 'IWYU edited 0 files on your behalf.' iwyu.fix
+    done
 }
 
 main "$@"

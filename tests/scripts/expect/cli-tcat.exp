@@ -90,9 +90,9 @@ expect_line "\tLEN:\t8"
 expect_line "\tVALUE:\t0xef1398c2fd504b67"
 
 send "provisioning_url\n"
-expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
-expect_line "\tLEN:\t9"
-expect_line "\tVALUE:\t0x64756d6d795f75726c"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tLEN:\t1"
+expect_line "\tVALUE:\t0x01"
 
 send "get_apps\n"
 expect_line "\tApplication 1 is UDP service: echo"

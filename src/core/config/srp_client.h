@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the SRP (Service Registration Protocol) Client.
  */
 
-#ifndef CONFIG_SRP_CLIENT_H_
-#define CONFIG_SRP_CLIENT_H_
+#ifndef OT_CORE_CONFIG_SRP_CLIENT_H_
+#define OT_CORE_CONFIG_SRP_CLIENT_H_
 
 /**
  * @addtogroup config-srp-client
@@ -52,6 +52,20 @@
  */
 #ifndef OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 #define OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+ *
+ * Define to 1 to enable SRP Client counters APIs (`otSrpClientGetCounters` and `otSrpClientResetCounters`).
+ *
+ * Defaults to enabled when both `OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE` and `OPENTHREAD_CONFIG_UPTIME_ENABLE` are
+ * enabled, and disabled otherwise. Requires `OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE` and
+ * `OPENTHREAD_CONFIG_UPTIME_ENABLE`.
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+#define OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE \
+    (OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE && OPENTHREAD_CONFIG_UPTIME_ENABLE)
 #endif
 
 /**
@@ -360,4 +374,4 @@
  * @}
  */
 
-#endif // CONFIG_SRP_CLIENT_H_
+#endif // OT_CORE_CONFIG_SRP_CLIENT_H_

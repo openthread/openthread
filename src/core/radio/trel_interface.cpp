@@ -137,7 +137,7 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
                 continue;
             }
 
-            if (!aIsDiscovery && (peer.GetExtPanId() != Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()))
+            if (!aIsDiscovery && (peer.GetExtPanId() != Get<MeshCoP::NetworkIdentity>().GetExtPanId()))
             {
                 continue;
             }

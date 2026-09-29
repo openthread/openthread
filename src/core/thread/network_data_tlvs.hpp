@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing Thread Network Data TLVs.
  */
 
-#ifndef NETWORK_DATA_TLVS_HPP_
-#define NETWORK_DATA_TLVS_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_TLVS_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -620,7 +620,7 @@ public:
     {
         return ((GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) &&
                 (GetLength() >= Ip6::Prefix::SizeForLength(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)) &&
-                (Ip6::Prefix::SizeForLength(mPrefixLength) <= sizeof(Ip6::Address)));
+                (mPrefixLength <= Ip6::Prefix::kMaxLength));
     }
 
     /**
@@ -656,7 +656,7 @@ public:
      *
      * @param[out] aPrefix  An `Ip6::Prefix` to copy the Prefix from TLV into.
      */
-    void CopyPrefixTo(Ip6::Prefix &aPrefix) const { aPrefix.Set(GetPrefix(), GetPrefixLength()); }
+    void CopyPrefixTo(Ip6::Prefix &aPrefix) const { aPrefix.InitFrom(GetPrefix(), GetPrefixLength()); }
 
     /**
      * Indicates whether the Prefix from TLV is equal to a given `Ip6::Prefix`.
@@ -946,14 +946,6 @@ public:
     bool IsNdDns(void) const { return (BigEndian::HostSwap16(mFlags) & kNdDnsFlag) != 0; }
 
     /**
-     * Indicates whether or not the Domain Prefix flag is set.
-     *
-     * @retval TRUE   If the Domain Prefix flag is set.
-     * @retval FALSE  If the Domain Prefix flag is not set.
-     */
-    bool IsDp(void) const { return (BigEndian::HostSwap16(mFlags) & kDpFlag) != 0; }
-
-    /**
      * Returns a pointer to the next BorderRouterEntry
      *
      * @returns A pointer to the next BorderRouterEntry.
@@ -999,7 +991,7 @@ private:
     static constexpr uint16_t kDefaultRouteFlag = 1 << 9;
     static constexpr uint16_t kOnMeshFlag       = 1 << 8;
     static constexpr uint16_t kNdDnsFlag        = 1 << 7;
-    static constexpr uint16_t kDpFlag           = 1 << 6;
+    // Flag bit 6 (1 << 6) was previously kDpFlag (Domain Prefix)
 
     uint16_t mRloc;
     uint16_t mFlags;
@@ -1128,7 +1120,10 @@ public:
      * @retval TRUE   If the TLV appears to be well-formed.
      * @retval FALSE  If the TLV does not appear to be well-formed.
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv); }
+    bool IsValid(void) const
+    {
+        return (GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) && (GetContextId() != 0);
+    }
 
     /**
      * Indicates whether or not the Compress flag is set.
@@ -1540,4 +1535,4 @@ private:
 } // namespace NetworkData
 } // namespace ot
 
-#endif // NETWORK_DATA_TLVS_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_TLVS_HPP_

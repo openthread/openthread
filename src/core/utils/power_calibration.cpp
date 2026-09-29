@@ -85,7 +85,8 @@ Error PowerCalibration::AddCalibratedPower(uint8_t        aChannel,
     uint8_t              chIndex;
 
     AssertPointerIsNotNull(aRawPowerSetting);
-    VerifyOrExit(IsChannelValid(aChannel) && aRawPowerSettingLength <= CalibratedPowerEntry::kMaxRawPowerSettingSize,
+    VerifyOrExit(Radio::IsChannelValid(aChannel) &&
+                     aRawPowerSettingLength <= CalibratedPowerEntry::kMaxRawPowerSettingSize,
                  error = kErrorInvalidArgs);
 
     chIndex = aChannel - Radio::kChannelMin;
@@ -118,7 +119,7 @@ Error PowerCalibration::SetChannelTargetPower(uint8_t aChannel, int16_t aTargetP
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsChannelValid(aChannel), error = kErrorInvalidArgs);
+    VerifyOrExit(Radio::IsChannelValid(aChannel), error = kErrorInvalidArgs);
     mTargetPowerTable[aChannel - Radio::kChannelMin] = aTargetPower;
 
     if (aChannel == mLastChannel)
@@ -145,7 +146,7 @@ Error PowerCalibration::GetPowerSettings(uint8_t   aChannel,
     int16_t minPower      = NumericLimits<int16_t>::kMax;
     uint8_t minPowerIndex = kInvalidIndex;
 
-    VerifyOrExit(IsChannelValid(aChannel), error = kErrorInvalidArgs);
+    VerifyOrExit(Radio::IsChannelValid(aChannel), error = kErrorInvalidArgs);
     VerifyOrExit((mLastChannel != aChannel) || IsPowerUpdated());
 
     chIndex     = aChannel - Radio::kChannelMin;

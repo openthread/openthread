@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_PLATFORM_POSIX_CONFIG_H_
-#define OPENTHREAD_PLATFORM_POSIX_CONFIG_H_
+#ifndef OT_POSIX_PLATFORM_OPENTHREAD_POSIX_CONFIG_H_
+#define OT_POSIX_PLATFORM_OPENTHREAD_POSIX_CONFIG_H_
 
 #include "openthread-core-config.h"
 
@@ -40,6 +40,17 @@
  * @brief
  *   This file includes the POSIX platform-specific configurations.
  */
+
+/**
+ * @def PACKAGE_VERSION
+ *
+ * The version string reported by `ot-ctl --version`. The OpenThread build
+ * systems define it; this fallback keeps the client compiling in custom
+ * build environments that do not.
+ */
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION "unknown"
+#endif
 
 /**
  * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
@@ -102,7 +113,7 @@
  * Define as 1 to enable max power table support.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE 0
+#define OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE 1
 #endif
 
 /**
@@ -203,7 +214,7 @@
  * Define as 1 to add external routes to POSIX kernel when external routes are changed in netdata.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE 1
+#define OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE 0
 #endif
 
 /**
@@ -420,7 +431,13 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF
  *
- * Define as 1 to let the upstream DNS bind the socket to infra network interface.
+ * Define as 1 to bind the sockets used to query recursive DNS servers discovered through RDNSS
+ * to the infra network interface. Those servers are discovered on the infra link, so queries to
+ * them are always sent out that interface, regardless of the host routing table.
+ *
+ * Nameservers from the host's resolv.conf (or set via `otSysUpstreamDnsSetServerList()`) are
+ * host-wide configuration and are always reached following the host's routing table, independent
+ * of this setting.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF
 #define OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF 1
@@ -495,4 +512,4 @@
 #error "OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET was removed (no longer applicable with TREL over DNS-SD)."
 #endif
 
-#endif // OPENTHREAD_PLATFORM_POSIX_CONFIG_H_
+#endif // OT_POSIX_PLATFORM_OPENTHREAD_POSIX_CONFIG_H_

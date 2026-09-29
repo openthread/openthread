@@ -40,170 +40,93 @@
 namespace ot {
 namespace Mac {
 
+//---------------------------------------------------------------------------------------------------------------------
+// Filter
+
 Filter::Filter(void)
     : mMode(kModeRssInOnly)
     , mDefaultRssIn(kFixedRssDisabled)
 {
-    for (FilterEntry &entry : mFilterEntries)
-    {
-        entry.mFiltered = false;
-        entry.mRssIn    = kFixedRssDisabled;
-    }
 }
 
-const Filter::FilterEntry *Filter::FindEntry(const ExtAddress &aExtAddress) const
+Error Filter::AddOrUpdateEntry(Type aType, const ExtAddress &aExtAddress, int8_t aRss)
 {
-    const FilterEntry *rval = nullptr;
-
-    for (const FilterEntry &entry : mFilterEntries)
-    {
-        if (entry.IsInUse() && (aExtAddress == entry.mExtAddress))
-        {
-            ExitNow(rval = &entry);
-        }
-    }
-
-exit:
-    return rval;
-}
-
-Filter::FilterEntry *Filter::FindAvailableEntry(void)
-{
-    FilterEntry *rval = nullptr;
-
-    for (FilterEntry &entry : mFilterEntries)
-    {
-        if (!entry.IsInUse())
-        {
-            ExitNow(rval = &entry);
-        }
-    }
-
-exit:
-    return rval;
-}
-
-Error Filter::AddAddress(const ExtAddress &aExtAddress)
-{
-    Error        error = kErrorNone;
-    FilterEntry *entry = FindEntry(aExtAddress);
+    Error  error = kErrorNone;
+    Entry *entry = mEntries.FindMatching(aExtAddress);
 
     if (entry == nullptr)
     {
-        VerifyOrExit((entry = FindAvailableEntry()) != nullptr, error = kErrorNoBufs);
-        entry->mExtAddress = aExtAddress;
-    }
-
-    entry->mFiltered = true;
-
-exit:
-    return error;
-}
-
-void Filter::RemoveAddress(const ExtAddress &aExtAddress)
-{
-    FilterEntry *entry = FindEntry(aExtAddress);
-
-    if (entry != nullptr)
-    {
-        entry->mFiltered = false;
-    }
-}
-
-void Filter::ClearAddresses(void)
-{
-    for (FilterEntry &entry : mFilterEntries)
-    {
-        entry.mFiltered = false;
-    }
-}
-
-Error Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
-{
-    Error error = kErrorNotFound;
-
-    for (; aIterator < GetArrayLength(mFilterEntries); aIterator++)
-    {
-        const FilterEntry &entry = mFilterEntries[aIterator];
-
-        if (entry.mFiltered)
-        {
-            aEntry.mExtAddress = entry.mExtAddress;
-            aEntry.mRssIn      = entry.mRssIn;
-            error              = kErrorNone;
-            aIterator++;
-            break;
-        }
-    }
-
-    return error;
-}
-
-Error Filter::AddRssIn(const ExtAddress &aExtAddress, int8_t aRss)
-{
-    Error        error = kErrorNone;
-    FilterEntry *entry = FindEntry(aExtAddress);
-
-    if (entry == nullptr)
-    {
-        entry = FindAvailableEntry();
+        entry = mEntries.PushBack();
         VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
-
-        entry->mExtAddress = aExtAddress;
+        entry->Init(aExtAddress);
     }
 
-    entry->mRssIn = aRss;
+    if (aType == kAddrFilter)
+    {
+        entry->SetInAddrFilter(true);
+    }
+    else
+    {
+        entry->SetRssIn(aRss);
+    }
 
 exit:
     return error;
 }
 
-void Filter::RemoveRssIn(const ExtAddress &aExtAddress)
+void Filter::RemoveEntry(Type aType, const ExtAddress &aExtAddress)
 {
-    FilterEntry *entry = FindEntry(aExtAddress);
+    Entry *entry = mEntries.FindMatching(aExtAddress);
 
     VerifyOrExit(entry != nullptr);
 
-    entry->mRssIn = kFixedRssDisabled;
+    if (aType == kAddrFilter)
+    {
+        entry->SetInAddrFilter(false);
+    }
+    else
+    {
+        entry->ClearRssIn();
+    }
+
+    if (entry->Matches(Entry::kNotInUse))
+    {
+        mEntries.Remove(*entry);
+    }
 
 exit:
     return;
 }
 
-void Filter::ClearAllRssIn(void)
-{
-    for (FilterEntry &entry : mFilterEntries)
-    {
-        entry.mRssIn = kFixedRssDisabled;
-    }
-
-    mDefaultRssIn = kFixedRssDisabled;
-}
-
-Error Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry) const
+Error Filter::GetNext(Type aType, Iterator &aIterator, EntryInfo &aInfo) const
 {
     Error error = kErrorNotFound;
 
-    for (; aIterator < GetArrayLength(mFilterEntries); aIterator++)
+    for (; aIterator < mEntries.GetLength(); aIterator++)
     {
-        const FilterEntry &entry = mFilterEntries[aIterator];
+        const Entry &entry = mEntries[aIterator];
 
-        if (entry.mRssIn != kFixedRssDisabled)
+        if ((aType == kAddrFilter) ? entry.IsInAddrFilter() : entry.IsInRssFilter())
         {
-            aEntry.mExtAddress = entry.mExtAddress;
-            aEntry.mRssIn      = entry.mRssIn;
-            error              = kErrorNone;
+            aInfo.mExtAddress = entry.GetExtAddress();
+            aInfo.mRssIn      = entry.GetRssIn();
+            error             = kErrorNone;
             aIterator++;
             ExitNow();
         }
     }
 
+    VerifyOrExit(aType == kRssFilter);
+
     // Return the default RssIn at the end of list
-    if ((aIterator == GetArrayLength(mFilterEntries)) && (mDefaultRssIn != kFixedRssDisabled))
+
+    VerifyOrExit(aIterator == mEntries.GetLength());
+
+    if (mDefaultRssIn != kFixedRssDisabled)
     {
-        AsCoreType(&aEntry.mExtAddress).Fill(0xff);
-        aEntry.mRssIn = mDefaultRssIn;
-        error         = kErrorNone;
+        AsCoreType(&aInfo.mExtAddress).Fill(0xff);
+        aInfo.mRssIn = mDefaultRssIn;
+        error        = kErrorNone;
         aIterator++;
     }
 
@@ -211,11 +134,44 @@ exit:
     return error;
 }
 
+void Filter::ClearAll(Type aType)
+{
+    for (Entry &entry : mEntries)
+    {
+        if (aType == kAddrFilter)
+        {
+            entry.SetInAddrFilter(false);
+        }
+        else
+        {
+            entry.ClearRssIn();
+        }
+    }
+
+    if (aType == kRssFilter)
+    {
+        mDefaultRssIn = kFixedRssDisabled;
+    }
+
+    mEntries.RemoveAllMatching(Entry::kNotInUse);
+}
+
+Error Filter::AddRssIn(const ExtAddress &aExtAddress, int8_t aRss)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aRss != kFixedRssDisabled, error = kErrorInvalidArgs);
+    error = AddOrUpdateEntry(kRssFilter, aExtAddress, aRss);
+
+exit:
+    return error;
+}
+
 Error Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss) const
 {
-    Error              error = kErrorNone;
-    const FilterEntry *entry = FindEntry(aExtAddress);
-    bool               isInFilterList;
+    Error        error = kErrorNone;
+    const Entry *entry = mEntries.FindMatching(aExtAddress);
+    bool         isInAddrFilterList;
 
     // Use the default RssIn setting for all receiving messages first.
     aRss = mDefaultRssIn;
@@ -223,7 +179,7 @@ Error Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss) const
     // In allowlist mode, entry must be present in the list, in
     // denylist mode it must not be present.
 
-    isInFilterList = (entry != nullptr) && entry->mFiltered;
+    isInAddrFilterList = (entry != nullptr) && entry->IsInAddrFilter();
 
     switch (mMode)
     {
@@ -231,17 +187,17 @@ Error Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss) const
         break;
 
     case kModeAllowlist:
-        VerifyOrExit(isInFilterList, error = kErrorAddressFiltered);
+        VerifyOrExit(isInAddrFilterList, error = kErrorAddressFiltered);
         break;
 
     case kModeDenylist:
-        VerifyOrExit(!isInFilterList, error = kErrorAddressFiltered);
+        VerifyOrExit(!isInAddrFilterList, error = kErrorAddressFiltered);
         break;
     }
 
-    if ((entry != nullptr) && (entry->mRssIn != kFixedRssDisabled))
+    if ((entry != nullptr) && entry->IsInRssFilter())
     {
-        aRss = entry->mRssIn;
+        aRss = entry->GetRssIn();
     }
 
 exit:
@@ -268,6 +224,16 @@ Error Filter::ApplyToRxFrame(RxFrame &aRxFrame, const ExtAddress &aExtAddress, N
 
 exit:
     return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Filter::Entry
+
+void Filter::Entry::Init(const ExtAddress &aExtAddress)
+{
+    mExtAddress   = aExtAddress;
+    mInAddrFilter = false;
+    mRssIn        = kFixedRssDisabled;
 }
 
 } // namespace Mac

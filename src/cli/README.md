@@ -50,7 +50,6 @@ Done
 - [discover](#discover-channel)
 - [dns](#dns-config)
 - [domainname](#domainname)
-- [dua](#dua-iid)
 - [eidcache](#eidcache)
 - [eui64](#eui64)
 - [extaddr](#extaddr)
@@ -90,7 +89,6 @@ Done
 - [networkname](#networkname)
 - [networktime](#networktime)
 - [nexthop](#nexthop)
-- [p2p](#p2p-link-extaddr-extaddr)
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
@@ -171,30 +169,6 @@ Done
 ```bash
 > bbr
 BBR Primary: None
-Done
-```
-
-### bbr mgmt dua \<status\|coap-code\> [meshLocalIid]
-
-Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status or COAP code.
-
-Only for testing/reference device.
-
-known status value:
-
-- 0: ST_DUA_SUCCESS
-- 1: ST_DUA_REREGISTER
-- 2: ST_DUA_INVALID
-- 3: ST_DUA_DUPLICATE
-- 4: ST_DUA_NO_RESOURCES
-- 5: ST_DUA_BBR_NOT_PRIMARY
-- 6: ST_DUA_GENERAL_FAILURE
-- 160: COAP code 5.00
-
-```bash
-> bbr mgmt dua 1 2f7c235e5025a2fd
-Done
-> bbr mgmt dua 160
 Done
 ```
 
@@ -421,7 +395,7 @@ Requires the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE` feature.
 
 The name can also be configured using the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME` configuration option (which is the recommended way to specify this name). This CLI command (and its corresponding API) is provided for projects where the name needs to be set after device initialization and at run-time.
 
-Per the Thread specification, the service instance should be a user-friendly name identifying the device model or product. A recommended format is "VendorName ProductName". To construct the full name and ensure name uniqueness, the OpenThread Border Agent module will append the Extended Address of the device (as 16-character hex digits) to the given base name. Note that the same name will be used for the ephemeral key service `_meshcop-e._udp` when the ephemeral key feature is enabled and used.
+Per the Thread specification, the service instance should be a user-friendly name identifying the device model or product. A recommended format is "VendorName ProductName". To construct the full name and ensure name uniqueness, the OpenThread Border Agent module appends a suffix (e.g., " #XXXX" where "XXXX" represents the last two bytes of the device's Extended Address in hex) to the given base name. If a name conflict is detected on the network, an additional index may be appended (e.g., " #XXXX (1)"). Note that the same name will be used for the ephemeral key service `_meshcop-e._udp` when the ephemeral key feature is enabled and used.
 
 ```bash
 ba servicebasename OpenThreadBorderAgent
@@ -440,6 +414,19 @@ Prints the list of Border Agent's sessions. Information per session:
 ```bash
 ba sessions
 [fe80:0:0:0:cc79:2a29:d311:1aea]:9202 connected:yes commissioner:no lifetime:1860
+Done
+```
+
+### ba evictcommissioner
+
+Forcefully evicts the current active Thread Commissioner.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE`.
+
+This command is intended as an administrator tool to address a misbehaving or stale commissioner session that may be connected through a different Border Agent. It provides a mechanism to clear the single Active Commissioner role within the Thread network, allowing a new candidate to be selected as the Active commissioner.
+
+```bash
+> ba evictcommissioner
 Done
 ```
 
@@ -583,6 +570,36 @@ Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE`.
 Done
 ```
 
+### ba ephemeralkey generate-tap
+
+Generates a cryptographically secure random Thread Administration One-Time Passcode (TAP) string.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+
+The TAP is a string of 9 characters, generated as a sequence of eight cryptographically secure random numeric digits [`0`-`9`] followed by a single check digit determined using the Verhoeff algorithm.
+
+Note that this command simply generates and outputs a TAP. It does not start ephemeral key use with this TAP on the Border Agent.
+
+```bash
+> ba ephemeralkey generate-tap
+989710128
+Done
+```
+
+### ba ephemeralkey validate-tap \<keystring\>
+
+Validates a given Thread Administration One-Time Passcode (TAP) string.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+
+Validates that the TAP string has the proper length, contains digit characters [`0`-`9`], and validates the Verhoeff checksum.
+
+```bash
+> ba ephemeralkey validate-tap 989710128
+validated
+Done
+```
+
 ### ba counters
 
 Get the border agent counter values.
@@ -607,6 +624,67 @@ pskcSecureSessionFailure: 0
 pskcCommissionerPetition: 0
 mgmtActiveGet: 0
 mgmtPendingGet: 0
+Done
+```
+
+### ba admitter
+
+Enables or disables Border Agent Admitter function, or outputs its status.
+
+All `ba admitter` sub-commands requires `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE` in addition to `OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE`.
+
+```bash
+> ba admitter
+Disabled
+Done
+
+> ba admitter enable
+Done
+
+> ba admitter
+Enabled
+Done
+```
+
+### ba admitter state
+
+Outputs the state of Border Agent Admitter.
+
+```bash
+> ba admitter state
+enabled: yes
+is-prime: yes
+is-active-commissioner: yes
+is-petition-rejected: no
+Done
+```
+
+### ba admitter joinerudpport
+
+Gets or sets the Border Agent Admitter Joiner UDP port.
+
+```bash
+> ba admitter joinerudpport
+1000
+Done
+
+> ba admitter joinerudpport 1001
+Done
+```
+
+### ba admitter enrollers
+
+Outputs the list of enrollers and accepted joiners per enroller.
+
+```bash
+> ba admitter enrollers
+Enroller - id: phone01275ABC
+    steering-data: [0042008000000000]
+    mode: 0xc0
+    msec-since-registered: 10478
+    Joiner - iid: a5d2e4f0c8b1937e
+        msec-since-accepted: 3299
+        msec-till-expiration: 418852
 Done
 ```
 
@@ -648,7 +726,7 @@ running
 Done
 ```
 
-### batracker agents
+### batracker agents [rawtxt]
 
 Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE`.
 
@@ -657,13 +735,54 @@ Outputs the list of discovered Border Agents. Information per Agent:
 - Service name
 - Port number
 - Host name
-- TXT data (key/value pairs per line)
+- TXT data (parsed human-readable information, or raw key/value pairs)
 - Host addresses
 - Milliseconds since agent was first discovered
 - Milliseconds since the last change to agent info (port, addresses, TXT data)
 
+By default, if `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE` is enabled, the TXT data is parsed and displayed in a human-readable format.
+
+The optional `rawtxt` argument forces the output of TXT data in its raw format (key/value pairs), even when the parser is enabled. If the parser is disabled, the raw format is always used.
+
 ```bash
 > batracker agents
+ServiceName: OTBR-by-Google-a7215b46a4f1fd
+    Port: 49154
+    Host: otbe345eefb12f7f9c
+    TxtData:
+        RecordVersion: 1
+        AgentId: e12f639deb66987e11a7215cd123
+        ThreadVersion: 1.4.0
+        NetworkName: ota7215b46a4f1fd
+        ExtendedPanId: 16dd92d88a32e63f
+        ActiveTimestamp: 1771558107
+        PartitionId: 0x10930b04
+        DomainName: DefaultDomain
+        BbrSeqNum: 23
+        BbrPort: 61631
+        OmrPrefix: fd70:ad65:47d9:1::/64
+        ExtAddress: 8e5d342e265b279c
+        VendorName: Google
+        ModelName: OTBR
+        StateBitmap:
+            ConnMode: pskc
+            ThreadIfState: active
+            Availability: high
+            ThreadRole: leader
+            BbrIsActive: yes
+            BbrIsPrimary: yes
+            EpskcSupported: yes
+            MultiAilState: not-detected
+            AdmitterSupported: yes
+    Address(es):
+        fd7c:af54:fada:4dcc:6aec:8aff:fe0d:e90b
+    MilliSecondsSinceDiscovered: 3523
+    MilliSecondsSinceLastChange: 3523
+Done
+```
+
+```bash
+> batracker agents rawtxt
 ServiceName: OTBR-by-Google-be345eefb12f7f9c
     Port: 49152
     Host: otbe345eefb12f7f9c
@@ -1391,11 +1510,10 @@ The generated output encompasses the following information:
 - Version
 - Current state
 - Uptime and attach time
-- Channel
-- PAN IDs, extended MAC address, and RLOC16
+- Extended MAC address and RLOC16
+- Active Operational Dataset (redacted)
 - Unicast and multicast IPv6 address list
 - Network Data
-- Partition ID
 - Leader Data
 - Buffer info
 - Network statistics
@@ -1592,7 +1710,7 @@ TransportProtocol: tcp
 Done
 ```
 
-We can leave some of the fields as unspecified (or use value zero). The unspecified fields are replaced by the corresponding OT config option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config.
+You can leave some of the fields as unspecified (or use value zero or `def`). This includes the DNS server IP address itself. Since an address has no "zero" form, use `def` (or, equivalently, the unspecified address `::`) to select the default server address. The unspecified fields are replaced by the corresponding OT config option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_<OPTION>` to form the default query config. Note that specifying a zero value for a boolean argument will mean _disabled_ and cannot be used to imply default behavior. For a boolean value `def` is the only option to specify the default value.
 
 ```bash
 > dns config fd00::2
@@ -1608,10 +1726,10 @@ TransportProtocol: udp
 Done
 ```
 
-This final example shows how only 'recursion desired' and the service mode are set, and all other parameters are set to their defaults:
+This final example shows how only the 'service mode' is set, and all other parameters are set to their defaults. Especially note that the boolean value 'recursion desired' is set to its default by using the `def` value, and that `def` is used for the DNS server IP address too (the literal unspecified address `::` works the same way, since it also has no "zero" form).
 
 ```bash
-> dns config :: 0 0 0 1 srv_txt_sep
+> dns config def 0 0 0 def srv_txt_sep
 Done
 
 > dns config
@@ -1629,7 +1747,7 @@ Done
 
 Send DNS Query to obtain IPv6 address for given hostname.
 
-The parameters after `hostname` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
+The parameters after `hostname` are optional. Any unspecified (or zero or `def`) value for these optional parameters is replaced by the value from the current default config (`dns config`). This includes the DNS server IP address itself. Use `def` (or, equivalently, the unspecified address `::`) to select the server address from the current default config while still overriding later parameters explicitly.
 
 To use tcp, `OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE` is required.
 
@@ -1645,6 +1763,14 @@ The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6 a
 ```bash
 > dns resolve example.com 8.8.8.8
 Synthesized IPv6 DNS server address: fdde:ad00:beef:2:0:0:808:808
+DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
+Done
+```
+
+Using `def` for the DNS server IP leaves it unspecified, so it is replaced by the server from the current default config while the port is still explicitly overridden:
+
+```bash
+> dns resolve example.com def 53
 DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
 Done
 ```
@@ -1771,9 +1897,11 @@ Done
 
 Enable/Disable the "DNS name compression" mode.
 
-By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed. This is applicable to OpenThread's DNS and SRP client/server modules.
+By default, DNS name compression is enabled. When disabled, DNS names are appended in full and are never compressed. This applies to OpenThread's DNS and SRP client/server modules.
 
-This is intended for testing only and available under `REFERENCE_DEVICE` config.
+DNS name compression cannot be disabled if the OpenThread mDNS module is enabled. Enabling the mDNS module will automatically enable name compression if it was previously disabled. Attempting to disable compression while the mDNS module is active will fail.
+
+This is intended for testing only and requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
 
 Get the current "DNS name compression" mode.
 
@@ -1810,34 +1938,6 @@ Set the Thread Domain Name for Thread 1.2 device.
 
 ```bash
 > domainname Test\ Thread
-Done
-```
-
-### dua iid
-
-Get the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
-
-```bash
-> dua iid
-0004000300020001
-Done
-```
-
-### dua iid \<iid\>
-
-Set the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
-
-```bash
-> dua iid 0004000300020001
-Done
-```
-
-### dua iid clear
-
-Clear the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
-
-```bash
-> dua iid clear
 Done
 ```
 
@@ -2410,7 +2510,7 @@ Locate the closest destination of an anycast address (i.e., find the destination
 
 `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is required.
 
-The closest destination is determined based on the the current routing table and path costs within the Thread mesh.
+The closest destination is determined based on the current routing table and path costs within the Thread mesh.
 
 Locate the leader using its anycast address:
 
@@ -3203,28 +3303,6 @@ nexthop 0x8001
 Done
 ```
 
-### p2p link extaddr \<extaddr\>
-
-Wakes up the peer identified by the extended address and establishes a peer-to-peer link with the peer.
-
-`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
-
-```bash
-> p2p link extaddr dead00beef00cafe
-Done
-```
-
-### p2p unlink \<extaddress\>
-
-Tears down the P2P link identified by the extended address.
-
-`OPENTHREAD_CONFIG_P2P_ENABLE` is required.
-
-```bash
-> p2p unlink dead00beef00cafe
-Done
-```
-
 ### panid
 
 Get the IEEE 802.15.4 PAN ID value.
@@ -3450,7 +3528,7 @@ Done
 
 ### prefix
 
-Get the prefix list in the local Network Data. Note: For the Thread 1.2 border router with backbone capability, the local Domain Prefix would be listed as well (with flag `D`), with preceding `-` if backbone functionality is disabled.
+Get the prefix list in the local Network Data.
 
 ```bash
 > prefix
@@ -3463,8 +3541,6 @@ Done
 
 Add a valid prefix to the Network Data.
 
-Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
-
 - p: Preferred flag
 - a: Stateless IPv6 Address Autoconfiguration flag
 - d: DHCPv6 IPv6 Address Configuration flag
@@ -3473,7 +3549,6 @@ Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 - o: On Mesh flag
 - s: Stable flag
 - n: Nd Dns flag
-- D: Domain Prefix flag
 - prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
@@ -4754,7 +4829,7 @@ Factory Diagnostics module is enabled only when building OpenThread with `OPENTH
 
 Get the wake-up channel.
 
-Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+Requires `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
 
 ```bash
 > wakeup channel
@@ -4766,7 +4841,7 @@ Done
 
 Set the wake-up channel.
 
-Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+Requires `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
 
 ```bash
 > wakeup channel 12
@@ -4777,7 +4852,7 @@ Done
 
 Get the wake-up listen interval and duration.
 
-Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
 
 ```bash
 > wakeup parameters
@@ -4790,7 +4865,7 @@ Done
 
 Set the wake-up listen interval and duration.
 
-Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+Requires `OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE`.
 
 ```bash
 > wakeup parameters 1000000 8000
@@ -4801,7 +4876,7 @@ Done
 
 Show the state of wake-up listening feature.
 
-`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+`OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE` is required.
 
 ```bash
 > wakeup listen
@@ -4813,7 +4888,7 @@ Done
 
 Enable/disable listening for wake-up frames.
 
-`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+`OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE` is required.
 
 ```bash
 > wakeup listen enable
@@ -4824,7 +4899,7 @@ Done
 
 Wakes a Wake-up End Device.
 
-`OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` is required.
+`OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` is required.
 
 ```bash
 > wakeup wake 1ece0a6c4653a7c1 7500 1090

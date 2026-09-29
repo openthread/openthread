@@ -35,19 +35,27 @@
 
 namespace ot {
 
-void ThreadLinkInfo::SetFrom(const Mac::RxFrame &aFrame)
+void ThreadLinkInfo::SetFrom(const Mac::RxFrame::ParseInfo &aFrameInfo)
 {
     Clear();
 
-    if (kErrorNone != aFrame.GetSrcPanId(mPanId))
+    if (aFrameInfo.mPanIds.IsSourcePresent())
     {
-        IgnoreError(aFrame.GetDstPanId(mPanId));
+        mPanId = aFrameInfo.mPanIds.GetSource();
+    }
+    else
+    {
+        mPanId = aFrameInfo.mPanIds.GetDestination();
     }
 
     {
         Mac::PanId dstPanId;
 
-        if (kErrorNone != aFrame.GetDstPanId(dstPanId))
+        if (aFrameInfo.mPanIds.IsDestinationPresent())
+        {
+            dstPanId = aFrameInfo.mPanIds.GetDestination();
+        }
+        else
         {
             dstPanId = mPanId;
         }
@@ -55,33 +63,39 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame &aFrame)
         mIsDstPanIdBroadcast = (dstPanId == Mac::kPanIdBroadcast);
     }
 
-    if (aFrame.GetSecurityEnabled())
-    {
-        uint8_t keyIdMode;
+    mLinkSecurity = false;
 
-        // MAC Frame Security was already validated at the MAC
-        // layer. As a result, `GetKeyIdMode()` will never return
-        // failure here.
-        IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
-
-        mLinkSecurity = (keyIdMode == Mac::Frame::kKeyIdMode0) || (keyIdMode == Mac::Frame::kKeyIdMode1);
-    }
-    else
+    if (aFrameInfo.mIsSecurityEnabled)
     {
-        mLinkSecurity = false;
+        switch (aFrameInfo.mKeyIdMode)
+        {
+        case Mac::Frame::kKeyIdMode0:
+        case Mac::Frame::kKeyIdMode1:
+            mLinkSecurity = true;
+            break;
+        default:
+            break;
+        }
     }
-    mChannel = aFrame.GetChannel();
-    mRss     = aFrame.GetRssi();
-    mLqi     = aFrame.GetLqi();
+
+    mChannel = aFrameInfo.GetRxFrame()->GetChannel();
+    mRss     = aFrameInfo.GetRxFrame()->GetRssi();
+    mLqi     = aFrameInfo.GetRxFrame()->GetLqi();
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aFrame.GetTimeIe() != nullptr)
     {
-        mNetworkTimeOffset = aFrame.ComputeNetworkTimeOffset();
-        mTimeSyncSeq       = aFrame.ReadTimeSyncSeq();
+        const Mac::TimeIe *timeIe = aFrameInfo.Find<Mac::TimeIe>();
+
+        if (timeIe != nullptr)
+        {
+            mNetworkTimeOffset = static_cast<int64_t>(timeIe->GetTime() - aFrameInfo.GetRxFrame()->GetTimestamp());
+            mTimeSyncSeq       = timeIe->GetSequence();
+        }
     }
 #endif
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    mRadioType = static_cast<uint8_t>(aFrame.GetRadioType());
+    mRadioType = static_cast<uint8_t>(aFrameInfo.GetRxFrame()->GetRadioType());
 #endif
 }
 

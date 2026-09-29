@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEST_LOWPAN_HPP
-#define TEST_LOWPAN_HPP
+#ifndef OT_UNIT_TEST_LOWPAN_HPP_
+#define OT_UNIT_TEST_LOWPAN_HPP_
 
 #include <stdint.h>
 
@@ -237,11 +237,11 @@ public:
     /**
      * This fields represent uncompressed IPv6 packet.
      */
-    Mac::Addresses   mMacAddrs;
-    Ip6::Header      mIpHeader;
-    Payload          mExtHeader;
-    Ip6::Header      mIpTunneledHeader;
-    Ip6::Udp::Header mUdpHeader;
+    Mac::Addresses mMacAddrs;
+    Ip6::Header    mIpHeader;
+    Payload        mExtHeader;
+    Ip6::Header    mIpTunneledHeader;
+    Ip6::UdpHeader mUdpHeader;
 
     /**
      * This fields represent compressed IPv6 packet.
@@ -259,6 +259,8 @@ public:
     const char *mTestName;
 };
 
+void TestLowpanDecompressRecursion(void);
+
 } // namespace ot
 
-#endif // TEST_LOWPAN_HPP
+#endif // OT_UNIT_TEST_LOWPAN_HPP_

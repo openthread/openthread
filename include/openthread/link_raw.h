@@ -338,9 +338,12 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
 /**
  * Update MAC keys and key index.
  *
+ * The input @p aKeyIdMode parameter is ignored and is always treated as Key ID Mode 1. This API mirrors the
+ * `otPlatRadioSetMacKey()` platform API. See `otPlatRadioSetMacKey()` for more information on Key ID Mode.
+ *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[in]   aKeyIdMode   The key ID mode.
- * @param[in]   aKeyId       The key index.
+ * @param[in]   aKeyIdMode   The key ID mode (ignored).
+ * @param[in]   aKeyIndex    The key index.
  * @param[in]   aPrevKey     The previous MAC key.
  * @param[in]   aCurrKey     The current MAC key.
  * @param[in]   aNextKey     The next MAC key.
@@ -350,7 +353,7 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
  */
 otError otLinkRawSetMacKey(otInstance     *aInstance,
                            uint8_t         aKeyIdMode,
-                           uint8_t         aKeyId,
+                           uint8_t         aKeyIndex,
                            const otMacKey *aPrevKey,
                            const otMacKey *aCurrKey,
                            const otMacKey *aNextKey);

@@ -45,6 +45,11 @@ target_link_libraries(ot-fake-platform
 )
 
 add_library(ot-fake-ftd INTERFACE)
+target_compile_definitions(ot-fake-ftd INTERFACE
+    OPENTHREAD_FTD=1
+    OPENTHREAD_MTD=0
+    OPENTHREAD_RADIO=0
+)
 target_link_libraries(ot-fake-ftd INTERFACE
     openthread-ftd
     ot-fake-platform
@@ -61,6 +66,55 @@ target_link_libraries(ot-ftd-gtest
     GTest::gtest_main
 )
 gtest_discover_tests(ot-ftd-gtest)
+
+add_executable(ot-posix-gtest
+    multicast_forwarding_test.cpp
+    ${openthread_SOURCE_DIR}/src/posix/platform/multicast_forwarding.cpp
+)
+
+target_include_directories(ot-posix-gtest PRIVATE
+    ${openthread_SOURCE_DIR}/src
+    ${openthread_SOURCE_DIR}/src/core
+    ${openthread_SOURCE_DIR}/src/posix/platform
+)
+
+target_link_libraries(ot-posix-gtest
+    ot-fake-ftd
+    GTest::gtest
+    GTest::gtest_main
+)
+
+gtest_discover_tests(ot-posix-gtest)
+
+# The BPF tap exists only where BPF does. Its source is compiled under the Backbone Router multicast routing
+# configuration, which the test turns on for itself so that it runs whether or not the build enables the Backbone
+# Router; only an explicit OT_BACKBONE_ROUTER=OFF, where ot-config already defines the guard as 0, leaves it out.
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND (OT_BACKBONE_ROUTER OR OT_BACKBONE_ROUTER STREQUAL ""))
+    add_executable(ot-posix-bpf-gtest
+        bpf_tap_test.cpp
+        ${openthread_SOURCE_DIR}/src/posix/platform/bpf_tap.cpp
+    )
+
+    target_compile_definitions(ot-posix-bpf-gtest PRIVATE
+        OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1
+        OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE=1
+        OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE=1
+    )
+
+    target_include_directories(ot-posix-bpf-gtest PRIVATE
+        ${openthread_SOURCE_DIR}/src
+        ${openthread_SOURCE_DIR}/src/core
+        ${openthread_SOURCE_DIR}/src/posix/platform
+    )
+
+    target_link_libraries(ot-posix-bpf-gtest
+        ot-fake-ftd
+        GTest::gtest
+        GTest::gtest_main
+    )
+
+    gtest_discover_tests(ot-posix-bpf-gtest)
+endif()
 
 add_library(ot-fake-rcp
     fake_coprocessor_platform.cpp

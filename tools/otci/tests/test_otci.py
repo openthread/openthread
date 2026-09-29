@@ -135,10 +135,6 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('fd00:dba::/64', leader.get_mesh_local_prefix())
         leader.set_mesh_local_prefix(TEST_MESH_LOCAL_PREFIX + '/64')
         leader.set_ml_iid('b1a5ed57a71571c5')
-        leader.set_dua_iid('ad4a011dad4a011d')
-        self.assertEqual('ad4a011dad4a011d', leader.get_dua_iid())
-        leader.clear_dua_iid()
-        self.assertEqual('', leader.get_dua_iid())
 
         self.assertFalse(leader.get_ifconfig_state())
         # ifconfig up
@@ -353,8 +349,8 @@ class TestOTCI(unittest.TestCase):
         logging.info('dataset active -x: %r', leader.get_dataset_bytes('active'))
         logging.info('dataset pending -x: %r', leader.get_dataset_bytes('pending'))
 
-        leader.set_vendor_name('OpenThread')
-        self.assertEqual('OpenThread', leader.get_vendor_name())
+        leader.set_vendor_name('RD:OpenThread')
+        self.assertEqual('RD:OpenThread', leader.get_vendor_name())
         leader.set_vendor_model('some_model')
         self.assertEqual('some_model', leader.get_vendor_model())
         leader.set_vendor_sw_version('1.0.0')
@@ -754,10 +750,10 @@ class TestOTCI(unittest.TestCase):
         rtt: Dict[str, float] = cast(Dict[str, float], statistics['round_trip_time'])
         self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
 
-        ed_report = commissioner.commissioner_energy_scan(3 << commissioner.get_channel(), 4, 32, 1000,
+        ed_report = commissioner.commissioner_energy_scan(3 << commissioner.get_channel(), 3, 32, 1000,
                                                           child1.get_ipaddr_rloc())
         comm_chan = commissioner.get_channel()
-        self.assertEqual({comm_chan: [-30, -30, -30, -30], comm_chan + 1: [-30, -30, -30, -30]}, ed_report)
+        self.assertEqual({comm_chan: [-30, -30, -30], comm_chan + 1: [-30, -30, -30]}, ed_report)
 
         commissioner.commissioner_announce(TEST_CHANNEL_MASK, 1, 32, child1.get_ipaddr_rloc())
 

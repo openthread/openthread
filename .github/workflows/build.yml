@@ -49,23 +49,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
-    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
-      with:
-        python-version: '3.12'
-        cache: pip
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y shellcheck iwyu
         sudo bash script/install-llvm.sh
-        python3 -m pip install yapf==0.31.0
+        python3 -m pip install yapf==0.43.0
         sudo snap install shfmt
         npm install prettier@2.0.4
     - name: Check
@@ -77,13 +75,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        persist-credentials: false
+
     - name: Run linkspector
-      uses: umbrelladocs/action-linkspector@874d01cae9fd488e3077b08952093235bd626977 # v1.3.7
+      uses: umbrelladocs/action-linkspector@6c637d70424624231467a4ca918be54fa3b792d0 # v1.5.4
+      env:
+        PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         reporter: github-pr-review
@@ -93,11 +96,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
     - name: Build
@@ -106,23 +113,46 @@ jobs:
         cmake --build --preset simulation
         ctest --preset simulation
 
+  cmake-presets-ccm-one-shot:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+        persist-credentials: false
+    - name: Bootstrap
+      timeout-minutes: 10
+      run: |
+        sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
+    - name: Build and test with platform CCM one-shot enabled
+      run: |
+        cmake --preset simulation -DOT_CRYPTO_CCM_ONE_SHOT=ON
+        cmake --build --preset simulation
+        ctest --preset simulation
+
   cmake-version:
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
         sudo apt-get remove cmake
         sudo apt-get purge --auto-remove cmake
-        wget http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
+        wget --timeout=30 --tries=4 http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
         tar xf cmake-3.10.3.tar.gz
         cd cmake-3.10.3
         ./configure
@@ -150,14 +180,16 @@ jobs:
       CXX: ${{ matrix.compiler_cpp }}
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
@@ -169,14 +201,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y clang-tools-14 ninja-build
@@ -188,22 +222,19 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
-        rm -rf third_party/mbedtls/repo
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        repository: ARMmbed/mbedtls
-        ref: v2.28.8
-        path: third_party/mbedtls/repo
+        cd third_party/mbedtls/repo && git fetch --tags && git checkout tags/v2.28.8
     - name: Build
       run: |
         OT_OPTIONS='-DCMAKE_POLICY_VERSION_MINIMUM=3.5' ./script/test build
@@ -215,9 +246,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - gcc_ver: 4
-            gcc_download_url: https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
-            gcc_extract_dir: gcc-arm-none-eabi-4_9-2015q3
           - gcc_ver: 5
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
             gcc_extract_dir: gcc-arm-none-eabi-5_4-2016q3
@@ -245,21 +273,26 @@ jobs:
           - gcc_ver: 14
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz
             gcc_extract_dir: arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi
+          - gcc_ver: 15
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz
+            gcc_extract_dir: arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         cd /tmp
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-        wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm
+        wget --timeout=30 --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm
         tar xf gcc-arm
     - name: Build
       env:
@@ -280,14 +313,16 @@ jobs:
       CXX: g++-${{ matrix.gcc_ver }}
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
         case ${{ matrix.gcc_ver }} in
@@ -313,16 +348,18 @@ jobs:
       CXX: clang++-${{ matrix.clang_ver }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          submodules: true
+          submodules: recursive
+          persist-credentials: false
       - name: Bootstrap
+        timeout-minutes: 10
         run: |
-          wget https://apt.llvm.org/llvm.sh
+          wget --timeout=30 --tries=4 https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ matrix.clang_ver }}
           sudo apt-get update
@@ -336,24 +373,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y ninja-build
-        cd /tmp
-        wget -O gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
-        unzip -o gn.zip
-        chmod a+x gn && mkdir -p bin && mv -f gn bin/
+        sudo apt-get --no-install-recommends install -y ninja-build gn
     - name: Build
       run: |
-        export PATH=/tmp/bin:$PATH
         script/check-gn-build
 
   macos:
@@ -372,49 +406,21 @@ jobs:
       CXX: ${{ matrix.CXX }}
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         brew update
-        wget --tries 4 https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip
+        wget --timeout=30 --tries 4 https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip
         unzip ninja-mac.zip && mv ninja /usr/local/bin/.
     - name: Build
       run: |
         script/check-posix-build
         script/check-simulation-build
-
-  android-ndk:
-    name: android-ndk
-    runs-on: ubuntu-24.04
-    container:
-      image: openthread/environment
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        submodules: true
-    - name: Install unzip
-      run: apt update && apt install -y unzip
-    - name: Setup NDK
-      id: setup-ndk
-      uses: nttld/setup-ndk@afb4c9964b521afb97c864b7d40b11e6911bd410 # v1.5.0
-      with:
-        ndk-version: r25c
-        local-cache: true
-
-    - name: Build
-      env:
-        NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
-      run: |
-        rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-daemon ot-ctl" script/cmake-build android-ndk
-        rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-cli" script/cmake-build android-ndk

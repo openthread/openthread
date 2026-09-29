@@ -31,8 +31,8 @@
  *  This file defines OpenThread Notifier class.
  */
 
-#ifndef NOTIFIER_HPP_
-#define NOTIFIER_HPP_
+#ifndef OT_CORE_COMMON_NOTIFIER_HPP_
+#define OT_CORE_COMMON_NOTIFIER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -316,4 +316,4 @@ private:
 
 } // namespace ot
 
-#endif // NOTIFIER_HPP_
+#endif // OT_CORE_COMMON_NOTIFIER_HPP_

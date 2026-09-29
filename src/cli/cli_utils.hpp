@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI util functions.
  */
 
-#ifndef CLI_UTILS_HPP_
-#define CLI_UTILS_HPP_
+#ifndef OT_CLI_CLI_UTILS_HPP_
+#define OT_CLI_CLI_UTILS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -42,6 +42,7 @@
 #include <openthread/border_routing.h>
 #include <openthread/cli.h>
 #include <openthread/joiner.h>
+#include <openthread/netdiag.h>
 #include <openthread/thread.h>
 
 #include "cli_config.h"
@@ -67,39 +68,35 @@ typedef uint64_t CommandId;
  *
  * @returns The associated `CommandId` with @p aString.
  */
-constexpr static CommandId Cmd(const char *aString)
+static constexpr CommandId Cmd(const char *aString)
 {
     return (aString[0] == '\0') ? 0 : (static_cast<uint8_t>(aString[0]) + Cmd(aString + 1) * 255u);
 }
 
 class Utils;
+class Interpreter;
 
 /**
- * Implements the basic output functions.
+ * Implements the basic output functions acting as a base class for `Interpreter`.
  */
 class OutputImplementer
 {
     friend class Utils;
 
 public:
-    /**
-     * Initializes the `OutputImplementer` object.
-     *
-     * @param[in] aCallback           A pointer to an `otCliOutputCallback` to deliver strings to the CLI console.
-     * @param[in] aCallbackContext    An arbitrary context to pass in when invoking @p aCallback.
-     */
-    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
-
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void SetEmittingCommandOutput(bool aEmittingOutput) { mEmittingCommandOutput = aEmittingOutput; }
 #else
     void SetEmittingCommandOutput(bool) {}
 #endif
 
+protected:
+    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
+
 private:
     static constexpr uint16_t kInputOutputLogStringSize = OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE;
 
-    void OutputV(const char *aFormat, va_list aArguments);
+    void OutputV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
     otCliOutputCallback mCallback;
     void               *mCallbackContext;
@@ -146,7 +143,7 @@ public:
          * @retval TRUE  if @p aFirst and @p aSecond are in order, i.e. `aFirst < aSecond`.
          * @retval FALSE if @p aFirst and @p aSecond are not in order, i.e. `aFirst >= aSecond`.
          */
-        constexpr static bool AreInOrder(const CommandEntry &aFirst, const CommandEntry &aSecond)
+        static constexpr bool AreInOrder(const CommandEntry &aFirst, const CommandEntry &aSecond)
         {
             return AreStringsInOrder(aFirst.mName, aSecond.mName);
         }
@@ -198,6 +195,22 @@ public:
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
+     * Returns the associated CLI `Interpreter`.
+     *
+     * @returns A reference to the associated CLI `Interpreter`.
+     */
+    Interpreter &GetInterpreter(void);
+
+    /**
+     * Converts a boolean to "yes" or "no" string.
+     *
+     * @param[in] aBool  A boolean value to convert.
+     *
+     * @returns The converted string representation of @p aBool ("yes" for TRUE and "no" for FALSE).
+     */
+    static const char *ToYesNo(bool aBool);
+
+    /**
      * Represents a buffer which is used when converting a `uint64` value to string in decimal format.
      */
     struct Uint64StringBuffer
@@ -216,6 +229,16 @@ public:
      * @returns A pointer to the start of the string (null-terminated) representation of @p aUint64.
      */
     static const char *Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer);
+
+    /**
+     * Outputs the command result.
+     *
+     * This is called to end the current command. `OT_ERROR_PENDING` can be used to indicate command execution is
+     * continuing asynchronously.
+     *
+     * @param[in]  aError Error code value.
+     */
+    void OutputResult(otError aError);
 
     /**
      * Delivers a formatted output string to the CLI console.
@@ -342,6 +365,15 @@ public:
      */
     void OutputEnabledDisabledStatus(bool aEnabled);
 
+    /**
+     * Outputs a given duration interval in seconds including the msec remainder.
+     *
+     * The duration is outputted in seconds with msec remainder, e.g., 12.047.
+     *
+     * @param[in] aMsecDuration   A duration interval in msec.
+     */
+    void OutputMsecDurationInSec(uint32_t aMsecDuration);
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
     /**
@@ -399,6 +431,20 @@ public:
      * @param[in] aSockAddr   A reference to the IPv6 socket address.
      */
     void OutputSockAddrLine(const otSockAddr &aSockAddr);
+
+    /**
+     * Outputs the Vendor OUI to the CLI console.
+     *
+     * @param[in] aOui  A reference to the Vendor OUI.
+     */
+    void OutputVendorOui(const otThreadVendorOui &aOui);
+
+    /**
+     * Outputs the Vendor OUI to the CLI console and appends a newline.
+     *
+     * @param[in] aOui  A reference to the Vendor OUI.
+     */
+    void OutputVendorOuiLine(const otThreadVendorOui &aOui);
 
     /**
      * Outputs DNS TXT data to the CLI console.
@@ -553,7 +599,10 @@ public:
         otError error = OT_ERROR_NONE;
 
         VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
         OutputLine(FormatStringFor<ValueType>(), aGetHandler(GetInstancePtr()));
+#pragma GCC diagnostic pop
 
     exit:
         return error;
@@ -640,24 +689,20 @@ public:
     static const char *PreferenceToString(signed int aPreference);
 
     /**
-     * Parses the argument as an IP address.
+     * Parses the argument as an IPv6 address or synthesizes it from an IPv4 address.
      *
      * If the argument string is an IPv4 address, this method will try to synthesize an IPv6 address using preferred
      * NAT64 prefix in the network data.
      *
-     * @param[in]  aInstance       A pointer to OpenThread instance.
      * @param[in]  aArg            The argument string to parse.
-     * @param[out] aAddress        A reference to an `otIp6Address` to output the parsed IPv6 address.
+     * @param[out] aAddress        A reference to an `otIp6Address` to output the parsed/synthesized IPv6 address.
      * @param[out] aSynthesized    Whether @p aAddress is synthesized from an IPv4 address.
      *
-     * @retval OT_ERROR_NONE           The argument was parsed successfully.
+     * @retval OT_ERROR_NONE           The argument was parsed/synthesized successfully.
      * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid IP address.
      * @retval OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
      */
-    static otError ParseToIp6Address(otInstance   *aInstance,
-                                     const Arg    &aArg,
-                                     otIp6Address &aAddress,
-                                     bool         &aSynthesized);
+    otError ParseOrSynthesizeIp6Address(const Arg &aArg, otIp6Address &aAddress, bool &aSynthesized);
 
     /**
      * Parses the argument as a Joiner Discerner.
@@ -728,7 +773,7 @@ public:
     static const char *BorderRoutingStateToString(otBorderRoutingState aState);
 
 protected:
-    void OutputFormatV(const char *aFormat, va_list aArguments);
+    void OutputFormatV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void LogInput(const Arg *aArgs);
@@ -755,13 +800,9 @@ template <> inline constexpr const char *Utils::FormatStringFor<uint8_t>(void) {
 
 template <> inline constexpr const char *Utils::FormatStringFor<uint16_t>(void) { return "%u"; }
 
-template <> inline constexpr const char *Utils::FormatStringFor<uint32_t>(void) { return "%lu"; }
-
 template <> inline constexpr const char *Utils::FormatStringFor<int8_t>(void) { return "%d"; }
 
 template <> inline constexpr const char *Utils::FormatStringFor<int16_t>(void) { return "%d"; }
-
-template <> inline constexpr const char *Utils::FormatStringFor<int32_t>(void) { return "%ld"; }
 
 template <> inline constexpr const char *Utils::FormatStringFor<const char *>(void) { return "%s"; }
 
@@ -772,7 +813,8 @@ template <> inline otError Utils::ProcessGet<uint32_t>(Arg aArgs[], GetHandler<u
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine(FormatStringFor<uint32_t>(), ToUlong(aGetHandler(GetInstancePtr())));
+    static_assert(sizeof(unsigned long) >= sizeof(uint32_t), "OpenThread assumes unsigned long is at least 32bit");
+    OutputLine("%lu", ToUlong(aGetHandler(GetInstancePtr())));
 
 exit:
     return error;
@@ -783,7 +825,8 @@ template <> inline otError Utils::ProcessGet<int32_t>(Arg aArgs[], GetHandler<in
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine(FormatStringFor<int32_t>(), static_cast<long int>(aGetHandler(GetInstancePtr())));
+    static_assert(sizeof(long) >= sizeof(int32_t), "OpenThread assumes long is at least 32bit");
+    OutputLine("%ld", static_cast<long int>(aGetHandler(GetInstancePtr())));
 
 exit:
     return error;
@@ -792,4 +835,4 @@ exit:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_UTILS_HPP_
+#endif // OT_CLI_CLI_UTILS_HPP_

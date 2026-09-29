@@ -96,10 +96,6 @@ void UpdateIpSets(otInstance *aInstance)
     // 2. Update otbr-deny-src-swap
     while (otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        if (config.mDp)
-        {
-            continue;
-        }
         otIp6PrefixToString(&config.mPrefix, prefixBuf, sizeof(prefixBuf));
         SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressDenySrcSwapIpSet, prefixBuf));
     }

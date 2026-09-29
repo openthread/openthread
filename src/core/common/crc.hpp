@@ -31,8 +31,8 @@
  *   This file includes definitions for CRC computations.
  */
 
-#ifndef CRC_HPP_
-#define CRC_HPP_
+#ifndef OT_CORE_COMMON_CRC_HPP_
+#define OT_CORE_COMMON_CRC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -58,8 +58,8 @@ constexpr uint32_t kCrc32AnsiPolynomial = 0x04c11db7;
  */
 template <typename UintType> class CrcCalculator
 {
-    constexpr static bool kIsUint16 = TypeTraits::IsSame<UintType, uint16_t>::kValue;
-    constexpr static bool kIsUint32 = TypeTraits::IsSame<UintType, uint32_t>::kValue;
+    static constexpr bool kIsUint16 = TypeTraits::IsSame<UintType, uint16_t>::kValue;
+    static constexpr bool kIsUint32 = TypeTraits::IsSame<UintType, uint32_t>::kValue;
 
     static_assert(kIsUint16 || kIsUint32, "UintType MUST be either `uint16_t` or `uint32_t`");
 
@@ -133,4 +133,4 @@ private:
 
 } // namespace ot
 
-#endif // CRC_HPP_
+#endif // OT_CORE_COMMON_CRC_HPP_

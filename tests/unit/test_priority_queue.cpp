@@ -697,6 +697,57 @@ void TestPriorityQueue(void)
 
     testFreeInstance(instance);
 }
+
+void TestPriorityQueueEvictIteration(void)
+{
+    Instance     *instance;
+    MessagePool  *messagePool;
+    PriorityQueue queue;
+    Message      *lowMsg;
+    Message      *normalMsg;
+    Message      *foundMsg = nullptr;
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
+
+    messagePool = &instance->Get<MessagePool>();
+
+    lowMsg = messagePool->Allocate(Message::kTypeIp6, 0, Message::Settings(Message::kPriorityLow));
+    VerifyOrQuit(lowMsg != nullptr);
+    normalMsg = messagePool->Allocate(Message::kTypeIp6, 0, Message::Settings(Message::kPriorityNormal));
+    VerifyOrQuit(normalMsg != nullptr);
+
+    queue.Enqueue(*lowMsg);
+    queue.Enqueue(*normalMsg);
+
+    // Verify fixed inner loop iteration: GetHeadForPriority(static_cast<Message::Priority>(priority))
+    for (uint8_t priority = Message::kPriorityLow; priority < Message::kNumPriorities; priority++)
+    {
+        for (Message *message = queue.GetHeadForPriority(static_cast<Message::Priority>(priority)); message;
+             message          = message->GetNext())
+        {
+            if (message->GetPriority() != priority)
+            {
+                break;
+            }
+
+            if (message == normalMsg)
+            {
+                foundMsg = message;
+                break;
+            }
+        }
+    }
+
+    VerifyOrQuit(foundMsg == normalMsg, "Failed to inspect equal-or-higher priority message in PriorityQueue");
+
+    queue.Dequeue(*lowMsg);
+    queue.Dequeue(*normalMsg);
+    lowMsg->Free();
+    normalMsg->Free();
+
+    testFreeInstance(instance);
+}
 // NOLINTEND(modernize-loop-convert)
 
 } // namespace ot
@@ -704,6 +755,7 @@ void TestPriorityQueue(void)
 int main(void)
 {
     ot::TestPriorityQueue();
+    ot::TestPriorityQueueEvictIteration();
     printf("All tests passed\n");
     return 0;
 }

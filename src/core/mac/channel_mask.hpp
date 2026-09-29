@@ -31,8 +31,8 @@
  *   This file includes definitions for MAC Channel Mask
  */
 
-#ifndef MAC_CHANNEL_MASK_HPP_
-#define MAC_CHANNEL_MASK_HPP_
+#ifndef OT_CORE_MAC_CHANNEL_MASK_HPP_
+#define OT_CORE_MAC_CHANNEL_MASK_HPP_
 
 #include "openthread-core-config.h"
 
@@ -237,4 +237,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_CHANNEL_MASK_HPP_
+#endif // OT_CORE_MAC_CHANNEL_MASK_HPP_

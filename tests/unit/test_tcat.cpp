@@ -35,6 +35,8 @@
 
 #include <openthread/ble_secure.h>
 
+#include "instance/instance.hpp"
+
 #define OT_TCAT_X509_CERT                                                \
     "-----BEGIN CERTIFICATE-----\n"                                      \
     "MIIB6TCCAZCgAwIBAgICNekwCgYIKoZIzj0EAwIwcTEmMCQGA1UEAwwdVGhyZWFk\n" \
@@ -73,29 +75,208 @@
     "eVFOwC8bd//D99KiHAIgU84kwFHIyDvFqu6y+u1hFqBGsiuTmKwZ2PHhVe/xK1k=\n" \
     "-----END CERTIFICATE-----\n"
 
-namespace ot {
+#define COMM_NETWORK_NAME "OpenThread-c64e"
+#define COMM_XPAN_ID {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe}
+#define COMM_XPAN_ID_ALT {0xef, 0x13, 0x98, 0xc2, 0xfd, 0x50, 0x4b, 0x67}
 
+// Fake time/alarm platform, overriding the weak definitions in test_platform.cpp. Time only
+// progresses when a test calls AdvanceTime().
+static uint32_t sNow = 0;
+static uint32_t sAlarmTime;
+static bool     sAlarmOn = false;
+
+extern "C" {
+
+void otPlatAlarmMilliStop(otInstance *) { sAlarmOn = false; }
+
+void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
+{
+    sAlarmOn   = true;
+    sAlarmTime = aT0 + aDt;
+}
+
+uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
+
+// Override the weak test platform stub to prevent buffer NULL dereference during the tests.
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *)
+{
+    static otRadioFrame sTxFrame;
+    static uint8_t      sTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
+
+    sTxFrame.mPsdu = sTxPsdu;
+    return &sTxFrame;
+}
+
+} // extern "C"
+
+namespace ot {
+namespace MeshCoP {
+
+static constexpr char     kPskdVendor[]                  = "J01NM3";
+static constexpr char     kUrl[]                         = "dummy_url";
+static constexpr char     kDomainName[]                  = "DefaultDomain";
+static constexpr char     kNetworkName[]                 = COMM_NETWORK_NAME;
+static constexpr char     kWrongName[]                   = "WrongName";
+static const uint8_t      kExtPanId[8]                   = COMM_XPAN_ID;
+static const uint8_t      kExtPanIdAlt[8]                = COMM_XPAN_ID_ALT;
+static constexpr uint16_t kConnectionId                  = 0;
+static constexpr int      kCertificateThreadVersion      = 2;
+static constexpr int      kCertificateAuthorizationField = 3;
+
+static constexpr otTcatVendorInfo vendorInfo = {.mProvisioningUrl = kUrl, .mPskdString = kPskdVendor};
+
+// TCAT command class bits for expressing any combination of classes in tests
+static constexpr uint16_t kClassNone            = 0;
+static constexpr uint16_t kClassGeneral         = 1 << TcatAgent::kGeneral;
+static constexpr uint16_t kClassCommissioning   = 1 << TcatAgent::kCommissioning;
+static constexpr uint16_t kClassExtraction      = 1 << TcatAgent::kExtraction;
+static constexpr uint16_t kClassDecommissioning = 1 << TcatAgent::kDecommissioning;
+static constexpr uint16_t kClassApplication     = 1 << TcatAgent::kApplication;
+
+// TCAT authorization fields
+static const uint8_t kDeviceCert1AuthField[5] = {0x20, 0x01, 0x01, 0x01, 0x01};
+static const uint8_t kDeviceCert2AuthField[5] = {0x20, 0x02, 0x03, 0x04, 0x24};
+static const uint8_t kCommCert1AuthField[5]   = {0x21, 0x01, 0x01, 0x01, 0x01};
+static const uint8_t kCommCert2AuthField[5]   = {0x21, 0x1F, 0x3F, 0x3F, 0x3F};
+static const uint8_t kCommCert4AuthField[5]   = {0x21, 0x21, 0x05, 0x09, 0x11};
+static const uint8_t kCommCert5AuthField[5]   = {0x21, 0x03, 0x02, 0x83, 0x41};
+
+static const otOperationalDataset kFullDataset = {
+    .mActiveTimestamp =
+        {
+            .mSeconds       = 1,
+            .mTicks         = 0,
+            .mAuthoritative = false,
+        },
+    .mNetworkKey =
+        {
+            .m8 = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+        },
+    .mNetworkName = {COMM_NETWORK_NAME},
+    .mExtendedPanId =
+        {
+            .m8 = COMM_XPAN_ID,
+        },
+    .mMeshLocalPrefix =
+        {
+            .m8 = {0xfd, 0x00, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+        },
+    .mPanId   = 0x1234,
+    .mChannel = 11,
+    .mPskc =
+        {
+            .m8 = {0xc2, 0x3a, 0x76, 0xe9, 0x8f, 0x1a, 0x64, 0x83, 0x63, 0x9b, 0x1a, 0xc1, 0x27, 0x1e, 0x2e, 0x27},
+        },
+    .mSecurityPolicy =
+        {
+            .mRotationTime                 = 672,
+            .mObtainNetworkKeyEnabled      = true,
+            .mNativeCommissioningEnabled   = true,
+            .mRoutersEnabled               = true,
+            .mExternalCommissioningEnabled = true,
+        },
+    .mChannelMask = 0x07fff800,
+    .mComponents =
+        {
+            .mIsActiveTimestampPresent = true,
+            .mIsNetworkKeyPresent      = true,
+            .mIsNetworkNamePresent     = true,
+            .mIsExtendedPanIdPresent   = true,
+            .mIsMeshLocalPrefixPresent = true,
+            .mIsPanIdPresent           = true,
+            .mIsChannelPresent         = true,
+            .mIsPskcPresent            = true,
+            .mIsSecurityPolicyPresent  = true,
+            .mIsChannelMaskPresent     = true,
+        },
+};
+
+static const otOperationalDataset kPartialDataset = {
+    .mNetworkKey =
+        {
+            .m8 = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+        },
+    .mComponents =
+        {
+            .mIsActiveTimestampPresent = false,
+            .mIsNetworkKeyPresent      = true,
+            .mIsNetworkNamePresent     = false,
+            .mIsExtendedPanIdPresent   = false,
+            .mIsMeshLocalPrefixPresent = false,
+            .mIsPanIdPresent           = false,
+            .mIsChannelPresent         = false,
+            .mIsPskcPresent            = false,
+            .mIsSecurityPolicyPresent  = false,
+            .mIsChannelMaskPresent     = false,
+        },
+};
+
+static Dataset::Info                            sFullDataset, sPartialDataset;
+static NetworkName                              sCommNetworkName, sCommDomainName;
+static ExtendedPanId                            sCommExtPanId;
+static TcatAgent::CertificateAuthorizationField sCommAuth, sDeviceAuth;
+
+// Helper class to test the BLE Secure connection state and validate the documented connect-callback contract.
 class TestBleSecure
 {
 public:
     TestBleSecure(void)
         : mIsConnected(false)
         , mIsBleConnectionOpen(false)
+        , mConnectCallbackCount(0)
+        , mContractHonored(true)
     {
     }
 
     void HandleBleSecureConnect(bool aConnected, bool aBleConnectionOpen)
     {
+        // A TLS session cannot exist without an open BLE link to carry it.
+        if (aConnected && !aBleConnectionOpen)
+        {
+            printf("TestBleSecure: illegal pair reported (aConnected=1, aBleConnectionOpen=0)\n");
+            mContractHonored = false;
+        }
+
+        // The callback must fire only on a change of the pair, so never twice in a row with identical values.
+        if (aConnected == mIsConnected && aBleConnectionOpen == mIsBleConnectionOpen)
+        {
+            printf("TestBleSecure: pair repeated without change (aConnected=%d, aBleConnectionOpen=%d)\n", aConnected,
+                   aBleConnectionOpen);
+            mContractHonored = false;
+        }
+
         mIsConnected         = aConnected;
         mIsBleConnectionOpen = aBleConnectionOpen;
+        mConnectCallbackCount++;
     }
 
-    bool IsConnected(void) const { return mIsConnected; }
-    bool IsBleConnectionOpen(void) const { return mIsBleConnectionOpen; }
+    // Returns TRUE if the contract has been honored by every callback so far AND the currently reported state and
+    // the callback count (since the last reset) match the expected values.
+    bool Verify(bool aConnected, bool aBleConnectionOpen, uint32_t aExpectedCallbackCount) const
+    {
+        bool ok = mContractHonored && (mIsConnected == aConnected) && (mIsBleConnectionOpen == aBleConnectionOpen) &&
+                  (mConnectCallbackCount == aExpectedCallbackCount);
+
+        if (!ok)
+        {
+            printf("TestBleSecure::Verify mismatch: got (aConnected=%d, aBleConnectionOpen=%d, count=%lu, "
+                   "contractHonored=%d), expected (aConnected=%d, aBleConnectionOpen=%d, count=%lu)\n",
+                   mIsConnected, mIsBleConnectionOpen, ToUlong(mConnectCallbackCount), mContractHonored, aConnected,
+                   aBleConnectionOpen, ToUlong(aExpectedCallbackCount));
+        }
+
+        return ok;
+    }
+
+    bool     IsContractHonored(void) const { return mContractHonored; }
+    uint32_t GetConnectCallbackCount(void) const { return mConnectCallbackCount; }
+    void     ResetConnectCallbackCount(void) { mConnectCallbackCount = 0; }
 
 private:
-    bool mIsConnected;
-    bool mIsBleConnectionOpen;
+    bool     mIsConnected;
+    bool     mIsBleConnectionOpen;
+    uint32_t mConnectCallbackCount;
+    bool     mContractHonored;
 };
 
 static void HandleBleSecureConnect(otInstance *aInstance, bool aConnected, bool aBleConnectionOpen, void *aContext)
@@ -105,43 +286,162 @@ static void HandleBleSecureConnect(otInstance *aInstance, bool aConnected, bool 
     static_cast<TestBleSecure *>(aContext)->HandleBleSecureConnect(aConnected, aBleConnectionOpen);
 }
 
-void TestTcat(void)
+// test helper to validate that only classes set '1' in aCommandClassesBitmap are authorized and others not.
+static bool CommandClassesAuthorized(const TcatAgent *aAgent, const uint16_t aCommandClassesBitmap)
 {
-    const char         kPskdVendor[]                  = "J01NM3";
-    const char         kUrl[]                         = "dummy_url";
-    constexpr uint16_t kConnectionId                  = 0;
-    const int          kCertificateThreadVersion      = 2;
-    const int          kCertificateAuthorizationField = 3;
-    const uint8_t      expectedTcatAuthField[5]       = {0x20, 0x01, 0x01, 0x01, 0x01};
-    uint8_t            attributeBuffer[8];
-    size_t             attributeLen;
+    bool validationResult = true;
 
-    TestBleSecure ble;
-    Instance     *instance = testInitInstance();
+    static_assert(TcatAgent::kInvalid < 16, "kInvalid must be less than 16 to fit in uint16_t");
+    for (uint16_t i = TcatAgent::kGeneral; i <= TcatAgent::kInvalid; i++)
+    {
+        const bool isAuthorizedByAgent     = aAgent->IsCommandClassAuthorized(static_cast<TcatAgent::CommandClass>(i));
+        const bool isAuthorizationExpected = (aCommandClassesBitmap & (1 << i)) != 0;
+        if (isAuthorizedByAgent != isAuthorizationExpected)
+        {
+            printf("Expected command class %d authorization '%d', but TCAT Agent reports '%d'\n", i,
+                   isAuthorizationExpected, isAuthorizedByAgent);
+            validationResult = false;
+        }
+    }
+    return validationResult;
+}
 
-    otTcatVendorInfo vendorInfo = {.mProvisioningUrl = kUrl, .mPskdString = kPskdVendor};
+// test helper to validate if the Set Active Dataset command would be successful, given the dataset to write
+// and the current state of the device/agent.
+static bool IsSetActiveDatasetSuccessful(const TcatAgent *aAgent, const Dataset::Info &aDatasetInfo)
+{
+    Dataset dataset;
+
+    // Convert high-level Dataset::Info into TLVs representation required by IsSetActiveDatasetAuthorized()
+    VerifyOrQuit(dataset.WriteTlvsFrom(aDatasetInfo) == kErrorNone);
+    return aAgent->Get<Mle::Mle>().IsDisabled() && aAgent->IsSetActiveDatasetAuthorized(&dataset);
+}
+
+// Advances fake time by aDuration, firing any expired alarms and processing tasklets along the way.
+static void AdvanceTime(Instance *aInstance, uint32_t aDuration)
+{
+    uint32_t time = sNow + aDuration;
+
+    while (sAlarmOn && TimeMilli(sAlarmTime) <= TimeMilli(time))
+    {
+        sNow     = sAlarmTime;
+        sAlarmOn = false;
+        otPlatAlarmMilliFired(aInstance);
+        otTaskletsProcess(aInstance);
+    }
+
+    sNow = time;
+    otTaskletsProcess(aInstance);
+}
+
+// Observer for the TCAT join callback (`otHandleTcatJoin`), counting join (Start) vs. leave (Stop) invocations.
+struct TcatJoinCounters
+{
+    uint32_t mJoinCount;  // invocations reporting aIsJoin == true  (StartThreadInterface)
+    uint32_t mLeaveCount; // invocations reporting aIsJoin == false (StopThreadInterface / Decommission)
+    Error    mLastError;
+};
+
+static void HandleTcatJoin(otInstance *aInstance, bool aIsJoin, otError aError, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    TcatJoinCounters &counters = *static_cast<TcatJoinCounters *>(aContext);
+
+    if (aIsJoin)
+    {
+        counters.mJoinCount++;
+    }
+    else
+    {
+        counters.mLeaveCount++;
+    }
+    counters.mLastError = static_cast<Error>(aError);
+}
+
+// Observer for the public OpenThread state-changed callback (`otStateChangedCallback`). Used to verify
+// that the Notifier coalesces multiple changes into a single notification rather than delivering them
+// across several callbacks.
+struct StateChangeObserver
+{
+    uint32_t mTotalCount;      // total number of state-changed callbacks received
+    uint32_t mNetworkKeyCount; // callbacks that reported OT_CHANGED_NETWORK_KEY
+    uint32_t mExtPanIdCount;   // callbacks that reported OT_CHANGED_THREAD_EXT_PANID
+    uint32_t mBothInOneCount;  // callbacks that reported BOTH of the above together (i.e. coalesced)
+};
+
+static void HandleNotifierStateChanged(otChangedFlags aFlags, void *aContext)
+{
+    static constexpr otChangedFlags kBothFlags = OT_CHANGED_NETWORK_KEY | OT_CHANGED_THREAD_EXT_PANID;
+
+    StateChangeObserver &observer = *static_cast<StateChangeObserver *>(aContext);
+
+    observer.mTotalCount++;
+
+    if (aFlags & OT_CHANGED_NETWORK_KEY)
+    {
+        observer.mNetworkKeyCount++;
+    }
+
+    if (aFlags & OT_CHANGED_THREAD_EXT_PANID)
+    {
+        observer.mExtPanIdCount++;
+    }
+
+    if ((aFlags & kBothFlags) == kBothFlags)
+    {
+        observer.mBothInOneCount++;
+    }
+}
+
+static Instance *TestInitInstanceTcat(void)
+{
+    Instance *instance = testInitInstance();
+
+    sAlarmOn = false; // discard any pending alarm of a previous test's instance
 
     otBleSecureSetCertificate(instance, reinterpret_cast<const uint8_t *>(OT_TCAT_X509_CERT), sizeof(OT_TCAT_X509_CERT),
                               reinterpret_cast<const uint8_t *>(OT_TCAT_PRIV_KEY), sizeof(OT_TCAT_PRIV_KEY));
-
     otBleSecureSetCaCertificateChain(instance, reinterpret_cast<const uint8_t *>(OT_TCAT_TRUSTED_ROOT_CERTIFICATE),
                                      sizeof(OT_TCAT_TRUSTED_ROOT_CERTIFICATE));
-
     otBleSecureSetSslAuthMode(instance, true);
 
-    // Validate BLE secure and Tcat start APIs
     SuccessOrQuit(otBleSecureSetTcatVendorInfo(instance, &vendorInfo));
+
+    // reset default data items used across tests
+    sFullDataset    = AsCoreType(&kFullDataset);
+    sPartialDataset = AsCoreType(&kPartialDataset);
+    IgnoreError(sCommNetworkName.Set(kNetworkName));
+    IgnoreError(sCommDomainName.Set(kDomainName));
+    memcpy(&sCommExtPanId, &kExtPanId, sizeof(sCommExtPanId));
+    memcpy(&sCommAuth, &kCommCert1AuthField, sizeof(sCommAuth));
+    memcpy(&sDeviceAuth, &kDeviceCert1AuthField, sizeof(sDeviceAuth));
+    sPlatBleLastAdvSetDataLen = 0;
+    memset(sPlatBleLastAdvSetData, 0, OT_TCAT_ADVERTISEMENT_MAX_LEN);
+    sPlatBleAdvertising = false;
+
+    return instance;
+}
+
+void TestTcatConnectionAndCertAttributes(void)
+{
+    uint8_t       attributeBuffer[8];
+    size_t        attributeLen;
+    TestBleSecure ble;
+    Instance     *instance = TestInitInstanceTcat();
+
+    // Validate BLE secure and Tcat start APIs
     VerifyOrQuit(otBleSecureTcatStart(instance, nullptr) == kErrorInvalidState);
     SuccessOrQuit(otBleSecureStart(instance, HandleBleSecureConnect, nullptr, true, &ble));
     VerifyOrQuit(otBleSecureStart(instance, HandleBleSecureConnect, nullptr, true, nullptr) == kErrorAlready);
     SuccessOrQuit(otBleSecureTcatStart(instance, nullptr));
 
-    // Validate connection callbacks when platform informs that peer has connected/disconnected
+    // Validate connection callbacks when platform informs that peer has connected/disconnected.
     VerifyOrQuit(!otBleSecureIsConnected(instance));
     otPlatBleGapOnConnected(instance, kConnectionId);
-    VerifyOrQuit(!ble.IsConnected() && ble.IsBleConnectionOpen());
+    VerifyOrQuit(ble.Verify(/* aConnected */ false, /* aBleConnectionOpen */ true, /* aExpectedCallbackCount */ 1));
     otPlatBleGapOnDisconnected(instance, kConnectionId);
-    VerifyOrQuit(!ble.IsConnected() && !ble.IsBleConnectionOpen());
+    VerifyOrQuit(ble.Verify(/* aConnected */ false, /* aBleConnectionOpen */ false, /* aExpectedCallbackCount */ 2));
 
     // Verify that Thread-attribute parsing isn't available yet when not connected as client or server.
     attributeLen = sizeof(attributeBuffer);
@@ -154,40 +454,926 @@ void TestTcat(void)
 
     // Validate connection callbacks when calling `otBleSecureDisconnect()`
     otPlatBleGapOnConnected(instance, kConnectionId);
-    VerifyOrQuit(!ble.IsConnected() && ble.IsBleConnectionOpen());
+    VerifyOrQuit(ble.Verify(/* aConnected */ false, /* aBleConnectionOpen */ true, /* aExpectedCallbackCount */ 3));
+    ble.ResetConnectCallbackCount();
     otBleSecureDisconnect(instance);
-    VerifyOrQuit(!ble.IsConnected() && !ble.IsBleConnectionOpen());
+    // Regression test: a locally-initiated disconnect (with no TLS session) must invoke the connect callback
+    // exactly once, with the fully-disconnected pair.
+    VerifyOrQuit(ble.Verify(/* aConnected */ false, /* aBleConnectionOpen */ false, /* aExpectedCallbackCount */ 1));
 
-    // Validate TLS connection can be started only when peer is connected
+    // Validate TLS connection can be started (as client) only when peer is BLE-connected
     otPlatBleGapOnConnected(instance, kConnectionId);
     SuccessOrQuit(otBleSecureConnect(instance));
     VerifyOrQuit(otBleSecureIsConnectionActive(instance));
 
     // Once in TLS client connecting state, the below cert eval functions are available.
-    // Test that the Thread-specific attributes can be decoded properly.
+    // Test that the Thread-specific attributes from own certificate can be decoded properly.
     attributeLen = 1;
     SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateThreadVersion,
                                                                   &attributeBuffer[0], &attributeLen));
     VerifyOrQuit(attributeLen == 1 && attributeBuffer[0] >= kThreadVersion1p4);
 
-    static_assert(5 == sizeof(expectedTcatAuthField), "expectedTcatAuthField size incorrect for test");
+    static_assert(5 == sizeof(kDeviceCert1AuthField), "expectedTcatAuthField size incorrect for test");
     attributeLen = 5;
     SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateAuthorizationField,
                                                                   &attributeBuffer[0], &attributeLen));
-    VerifyOrQuit(attributeLen == 5 && memcmp(&expectedTcatAuthField, &attributeBuffer, attributeLen) == 0);
+    VerifyOrQuit(attributeLen == 5 && memcmp(&kDeviceCert1AuthField, &attributeBuffer, attributeLen) == 0);
 
-    // Validate TLS connection can be started only when peer is connected
+    // Validate TLS client connection can be started only when peer is BLE-connected
     otBleSecureDisconnect(instance);
     VerifyOrQuit(otBleSecureConnect(instance) == kErrorInvalidState);
 
-    // Validate Tcat state changes after stopping BLE secure
+    // Validate Tcat agent state changes after stopping BLE secure
     VerifyOrQuit(otBleSecureIsTcatAgentStarted(instance));
     otBleSecureStop(instance);
     VerifyOrQuit(!otBleSecureIsTcatAgentStarted(instance));
 
+    VerifyOrQuit(ble.IsContractHonored());
+
     testFreeInstance(instance);
 }
 
+void TestTcatAdvertisementUpdates(void)
+{
+    TestBleSecure ble;
+    Instance     *instance = TestInitInstanceTcat();
+    uint8_t       advDataSnapshot[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+    uint16_t      advDataSnapshotLen;
+
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == 0, "Adv data should be unset before BleSecure start");
+
+    SuccessOrQuit(otBleSecureStart(instance, HandleBleSecureConnect, nullptr, true, &ble));
+    SuccessOrQuit(otBleSecureTcatStart(instance, nullptr));
+
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen > 0, "Adv data should be set after BleSecure start");
+    VerifyOrQuit(sPlatBleAdvertising, "Advertising should be started after BleSecure start");
+    advDataSnapshotLen = sPlatBleLastAdvSetDataLen;
+    memcpy(advDataSnapshot, sPlatBleLastAdvSetData, advDataSnapshotLen);
+
+    otPlatBleGapOnConnected(instance, kConnectionId);
+    sPlatBleAdvertising = false; // model BLE platform behavior: advertising stops when a client connects.
+    SuccessOrQuit(otBleSecureConnect(instance)); // mock "TLS handshake active" by initiating a client connection.
+
+    // BLE connect and initiating TLS does not change the adv data.
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == advDataSnapshotLen &&
+                     memcmp(sPlatBleLastAdvSetData, advDataSnapshot, advDataSnapshotLen) == 0,
+                 "Adv data changed unexpectedly after BLE connect");
+    advDataSnapshotLen = sPlatBleLastAdvSetDataLen;
+    memcpy(advDataSnapshot, sPlatBleLastAdvSetData, advDataSnapshotLen);
+
+    // Commissioner sets dataset, then disconnects its BLE suddenly
+    instance->Get<ActiveDatasetManager>().SaveLocal(sPartialDataset);
+    otPlatBleGapOnDisconnected(instance, kConnectionId);
+
+    // Since the TLS session teardown is ongoing, no change in advertisement state yet.
+    VerifyOrQuit(!sPlatBleAdvertising, "Advertising restarted while TLS teardown is still ongoing");
+
+    // Still within the TLS teardown guard time (kGuardTimeNewConnectionMilli). Meanwhile time advances and
+    // the advertisement data is updated to reflect the new sPartialDataset state. But not advertising yet.
+    AdvanceTime(instance, 1000);
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == advDataSnapshotLen, "Adv data length changed unexpectedly");
+    VerifyOrQuit(memcmp(sPlatBleLastAdvSetData, advDataSnapshot, advDataSnapshotLen) != 0,
+                 "Adv data did not change after processing sPartialDataset, which it should due to S flag");
+    VerifyOrQuit(!sPlatBleAdvertising, "Advertising already restarted while TLS teardown is still ongoing");
+
+    // Take new snapshot of advertisement data.
+    advDataSnapshotLen = sPlatBleLastAdvSetDataLen;
+    memcpy(advDataSnapshot, sPlatBleLastAdvSetData, advDataSnapshotLen);
+
+    // Advance time beyond the guard time, so that the TLS session fully disconnects and the (deferred)
+    // advertising restart is performed now.
+    AdvanceTime(instance, 1000 + 10);
+    VerifyOrQuit(sPlatBleAdvertising, "Advertising was not restarted after TLS teardown completed");
+
+    // Adv content itself is not changed now - it was already done while waiting for the TLS guard time.
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == advDataSnapshotLen, "Adv data length changed unexpectedly");
+    VerifyOrQuit(memcmp(sPlatBleLastAdvSetData, advDataSnapshot, advDataSnapshotLen) == 0,
+                 "Adv data changed unexpectedly after TLS guard timeout expired");
+
+    otBleSecureStop(instance);
+
+    VerifyOrQuit(ble.IsContractHonored());
+
+    testFreeInstance(instance);
+}
+
+class UnitTester
+{
+private:
+    // Mock action: TCAT Commissioner connects with authorization aCommAuth while device has aDeviceAuth.
+    static void MockCommissionerConnected(TcatAgent                                     *aAgent,
+                                          const TcatAgent::CertificateAuthorizationField aCommAuth,
+                                          const TcatAgent::CertificateAuthorizationField aDeviceAuth,
+                                          bool                                           aIsCommissionedAtStart)
+    {
+        // This mock function mimics the steps in TcatAgent::Connected() without requiring the actual TLS
+        // session object.
+        aAgent->ClearCommissionerState();
+        aAgent->mCommissionerAuthorizationField = aCommAuth;
+        aAgent->mDeviceAuthorizationField       = aDeviceAuth;
+        aAgent->mCanOverwriteDataset            = !aIsCommissionedAtStart;
+
+        aAgent->mNextState =
+            (aAgent->mState == TcatAgent::kStateActiveTemporary) ? TcatAgent::kStateStandby : TcatAgent::kStateActive;
+        aAgent->mState = TcatAgent::kStateConnected;
+        aAgent->NotifyStateChange();
+    }
+
+    // Mock condition: commissioner has or has not the given Extended Pan ID in its certificate.
+    static void MockExtPanId(TcatAgent *aAgent, bool aCommHasExtPanId, const ExtendedPanId *aExtPanId)
+    {
+        aAgent->mCommissionerHasExtendedPanId = aCommHasExtPanId;
+        aAgent->mCommissionerExtendedPanId    = *aExtPanId;
+    }
+
+    // Mock condition: commissioner has or has not the given Network Name in its certificate.
+    static void MockNetworkName(TcatAgent *aAgent, bool aCommHasNetworkName, const NetworkName *aNetworkName)
+    {
+        aAgent->mCommissionerHasNetworkName = aCommHasNetworkName;
+        aAgent->mCommissionerNetworkName    = *aNetworkName;
+    }
+
+    // Mock condition: commissioner has or has not the given Domain Name in its certificate.
+    static void MockDomainName(TcatAgent *aAgent, bool aCommHasDomainName, const NetworkName *aDomainName)
+    {
+        aAgent->mCommissionerHasDomainName = aCommHasDomainName;
+        aAgent->mCommissionerDomainName    = *aDomainName;
+    }
+
+    // Mock operation: TCAT Commissioner writes `aDataset` as the new local Active Operational Dataset.
+    // It models the behavior of `HandleSetActiveOperationalDataset()`, without checking authorization.
+    static void MockWriteActiveDataset(Instance *aInstance, const Dataset::Info &aDataset)
+    {
+        SuccessOrQuit(aInstance->Get<Mle::Mle>().Disable());
+        aInstance->Get<ActiveDatasetManager>().SaveLocal(aDataset);
+        aInstance->Get<TcatAgent>().mIsSourceOfDatasetChange = true;
+        otTaskletsProcess(aInstance);
+    }
+
+    // Mock operation: some entity other than a TCAT Commissioner / Agent caused a dataset change.
+    // The existing state of Thread (MLE) is not changed.
+    static void MockActiveDatasetChanged(Instance *aInstance, const Dataset::Info &aDataset)
+    {
+        aInstance->Get<ActiveDatasetManager>().SaveLocal(aDataset);
+        otTaskletsProcess(aInstance);
+    }
+
+    // Mock operation: an entity other than a TCAT Commissioner clears the active dataset.
+    static void MockActiveDatasetCleared(Instance *aInstance)
+    {
+        SuccessOrQuit(aInstance->Get<Mle::Mle>().Disable());
+        aInstance->Get<ActiveDatasetManager>().Clear();
+        otTaskletsProcess(aInstance);
+    }
+
+    // Mock operation: TCAT Commissioner sends the Decommission command. `HandleDecommission()` itself can't be
+    // called here because it reads the peer certificate from a real (mbedtls) TLS session, which these unit
+    // tests don't set up. So its authorization check is mimicked and the rest of it - `Decommission()` - is
+    // invoked with a stand-in commissioner certificate.
+    static void MockDecommission(Instance *aInstance)
+    {
+        static uint8_t sCommissionerCert[] = {0x30, 0x82, 0x01, 0x00};
+
+        TcatAgent &agent = aInstance->Get<TcatAgent>();
+
+        VerifyOrQuit(agent.IsCommandClassAuthorized(TcatAgent::kDecommissioning));
+        agent.Decommission(sCommissionerCert, sizeof(sCommissionerCert));
+        agent.mJoinCallback.InvokeIfSet(aInstance, /* aIsJoin */ false, kErrorNone);
+        otTaskletsProcess(aInstance);
+    }
+
+    // Mock operation: the device attaches to a Thread network. Implemented by directly becoming Leader,
+    // which is synchronous (no need to drive the attach state machine) and signals `kEventThreadRoleChanged`
+    // just like a real attach. Requires a complete Active Dataset to be present.
+    static void MockDeviceAttachedToNetwork(Instance *aInstance)
+    {
+        SuccessOrQuit(otThreadBecomeLeader(aInstance));
+        otTaskletsProcess(aInstance);
+        VerifyOrQuit(otThreadGetDeviceRole(aInstance) == OT_DEVICE_ROLE_LEADER);
+    }
+
+    static void MockDeviceDetachedFromNetwork(Instance *aInstance)
+    {
+        otTaskletsProcess(aInstance);
+        VerifyOrQuit(otThreadGetDeviceRole(aInstance) == OT_DEVICE_ROLE_DISABLED);
+    }
+
+public:
+    static void TestTcatCommissioner1Auth(void)
+    {
+        Instance  *instance = TestInitInstanceTcat();
+        TcatAgent *agent    = &instance->Get<TcatAgent>();
+
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+
+        // validate no Commissioner authorizations if not connected
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassNone));
+
+        // Mock TCAT Commissioner 1 connects to the agent - verify it has access to all classes
+        // ====================================================================================
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, false);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Write a partial Active Dataset and verify that Commissioner can still overwrite this with another dataset
+        // if needed.
+        MockWriteActiveDataset(instance, sPartialDataset);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsPartiallyComplete());
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // Write a full Active Dataset and verify that Commissioner can still overwrite this.
+        MockWriteActiveDataset(instance, sFullDataset);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsPartiallyComplete());
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // And back to partial dataset.
+        MockWriteActiveDataset(instance, sPartialDataset);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsPartiallyComplete());
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // provide PSKc proof-of-possession - verify access is same as before
+        agent->mPskcVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsPartiallyComplete());
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        testFreeInstance(instance);
+    }
+
+    static void TestTcatCommissioner2Auth(void)
+    {
+        Instance  *instance = TestInitInstanceTcat();
+        TcatAgent *agent    = &instance->Get<TcatAgent>();
+
+        // Mock TCAT Commissioner 2 connects to the agent - verify it only has access to class General by default.
+        // CommCert2 contains Network Name and Extended PAN ID in this initial test, but not the (also-required)
+        // Thread Domain Name.
+        // =======================================================================================================
+        memcpy(&sCommAuth, &kCommCert2AuthField, sizeof(sCommAuth));
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, false);
+        MockNetworkName(agent, true, &sCommNetworkName);
+        MockExtPanId(agent, true, &sCommExtPanId);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+
+        // Verify that Set Active Dataset can't be used yet, despite a matching XPAN ID and Network Name for the
+        // dataset that the Commissioner wants to write.
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // provide PSKd proof-of-possession - this is required for all 4 command classes, but not sufficient yet.
+        // So verify there's no change.
+        agent->mPskdVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // Commissioner cert now has a matching Domain Name - does not unlock any new classes, because
+        // Network Name and XPAN ID can't match, due to Device being uncommissioned. Writing Active Dataset works now.
+        MockDomainName(agent, true, &sCommDomainName);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // Writing a partial dataset does not work: misses the required Network Name and XPAN ID
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Commissioner now has no XPAN ID anymore in cert - verify this prevents Set Active Dataset.
+        // It's a misconfig in the Commissioner's cert.
+        MockExtPanId(agent, false, &sCommExtPanId);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Commissioner now has correct XPAN ID in cert, but not matching the dataset it wants to write.
+        MockExtPanId(agent, true, &sCommExtPanId);
+        sFullDataset.mExtendedPanId.m8[2]++; // modify bits in dataset to be written.
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Commissioner now attempts to write a dataset with XPAN ID matching to that in cert.
+        sFullDataset.mExtendedPanId = sCommExtPanId;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // New situation: Active Dataset is now configured (device is commissioned), but XPAN ID in Dataset
+        // doesn't match the XPAN ID in the Commissioner's cert; and PSKc proof is not given yet,
+        // so most classes remain unavailable.
+        sFullDataset.mExtendedPanId.m8[2]++; // modify bits in dataset to be written.
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // XPAN ID now matches again; class Commissioning authorization (0x1F) is restored. It doesn't require
+        // PSKc proof.
+        sFullDataset.mExtendedPanId = sCommExtPanId;
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+        // Active Dataset can be overwritten because Device was uncommissioned at session start.
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Now PSKc proof is given, unlocking more command classes
+        agent->mPskcVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Commissioner connects again - this time, the Device is already commissioned at the start of the session.
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, true);
+        MockNetworkName(agent, true, &sCommNetworkName);
+        MockExtPanId(agent, true, &sCommExtPanId);
+        MockDomainName(agent, true, &sCommDomainName);
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // PSKd proof does not authorize Set Active Dataset - because device is already commissioned.
+        agent->mPskdVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        agent->mPskcVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        testFreeInstance(instance);
+    }
+
+    static void TestTcatCommissioner4Auth(void)
+    {
+        Instance  *instance = TestInitInstanceTcat();
+        TcatAgent *agent    = &instance->Get<TcatAgent>();
+
+        // Mock TCAT Commissioner 4 connects to the Device - verify it only has access to class General by default.
+        // The Device is commissioned already at start of the TCAT Link.
+        // =======================================================================================================
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        memcpy(&sCommAuth, &kCommCert4AuthField, sizeof(sCommAuth));
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, true);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // PSKc proof - satisfies 0x21. Set Active Dataset is not allowed: Device already commissioned.
+        agent->mPskcVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // Matching network name now in Commissioner cert - satisfies 0x05
+        MockNetworkName(agent, true, &sCommNetworkName);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // New situation: matching XPAN ID present in Comm cert - satisfies 0x09
+        MockExtPanId(agent, true, &sCommExtPanId);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // New situation: Thread Domain name in cert matches - Application class added.
+        MockDomainName(agent, true, &sCommDomainName);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // New situation: PSKc proof not given - Commissioning class is revoked
+        agent->mPskcVerified = false;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction | kClassDecommissioning |
+                                                         kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // New situation: network name present, but mismatch - Extraction revoked
+        NetworkName wrongNetworkName;
+        SuccessOrQuit(wrongNetworkName.Set("WrongName"));
+        MockNetworkName(agent, true, &wrongNetworkName);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // New situation: XPAN ID present, but mismatch - Decommissioning revoked
+        sFullDataset.mExtendedPanId.m8[4]++; // change bits to force a mismatch
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        MockExtPanId(agent, true, &sCommExtPanId);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // New situation: XPAN ID not present in dataset - same as before
+        sFullDataset.mExtendedPanId                      = sCommExtPanId; // restore changes bits of above
+        sFullDataset.mComponents.mIsExtendedPanIdPresent = false;
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // New situation: Network Name not present in dataset - same as before
+        sFullDataset.mComponents.mIsNetworkNamePresent = false;
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // New situation: Device is decommissioned (by some other Commissioner). Then, this Commissioner
+        // connects again and does PSKc proof. Set Active Dataset access should now be allowed.
+        instance->Get<ActiveDatasetManager>().Clear();
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, false);
+        agent->mPskcVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        testFreeInstance(instance);
+    }
+
+    static void TestTcatCommissioner5Auth(void)
+    {
+        Instance  *instance = TestInitInstanceTcat();
+        TcatAgent *agent    = &instance->Get<TcatAgent>();
+
+        // Mock TCAT Commissioner 5 connects to the agent - it requires checks that are unknown to the Device
+        // ==================================================================================================
+        memcpy(&sCommAuth, &kCommCert5AuthField, sizeof(sCommAuth));
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, true);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // PSKd proof is given: it won't enable Extraction, because Extraction access flag bit 0 = 0.
+        // Also it won't enable Decommissioning, because this class has an unknown flag bit 7 set i.e. the Commissioner
+        // is configured to require a method that the TCAT Device doesn't know about. Application class is also not
+        // enabled, since it requires a check with unknown flag bit 6. Device will enable Commissioning class.
+        agent->mPskdVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Connect again and test the situation that Device was uncommissioned at connection start.
+        // Commissioning is now enabled with PSKd proof.
+        instance->Get<ActiveDatasetManager>().Clear();
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, false);
+        agent->mPskdVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        testFreeInstance(instance);
+    }
+
+    static void TestTcatCommissioner1AuthWithDeviceRequirements(void)
+    {
+        Instance  *instance = TestInitInstanceTcat();
+        TcatAgent *agent    = &instance->Get<TcatAgent>();
+
+        // test different auth info: for TCAT Device 2 which has specific authorization requirements per class.
+        memcpy(&sDeviceAuth, &kDeviceCert2AuthField, sizeof(sDeviceAuth));
+
+        // Mock TCAT Commissioner 1 connects to the agent - verify
+        // ====================================================================================
+        memcpy(&sCommAuth, &kCommCert1AuthField, sizeof(sCommAuth));
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, false);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // PSKd proof
+        agent->mPskdVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // New situation: Device is commissioned and Commissioner has matching Network Name; and connects.
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, true);
+        MockNetworkName(agent, true, &sCommNetworkName);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction | kClassDecommissioning |
+                                                         kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // PSKc proof
+        agent->mPskcVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction | kClassDecommissioning |
+                                                         kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // If Network Name does not match
+        NetworkName wrongNetworkName;
+        SuccessOrQuit(wrongNetworkName.Set(kWrongName));
+        MockNetworkName(agent, true, &wrongNetworkName);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        agent->mPskdVerified = true;
+        agent->mPskcVerified = false;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        agent->mPskcVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        testFreeInstance(instance);
+    }
+
+    static void TestTcatCommissioner2AuthWithDeviceRequirements(void)
+    {
+        Instance  *instance = TestInitInstanceTcat();
+        TcatAgent *agent    = &instance->Get<TcatAgent>();
+
+        // test different auth info: for TCAT Device 2 which has specific authorization requirements per class.
+        memcpy(&sDeviceAuth, &kDeviceCert2AuthField, sizeof(sDeviceAuth));
+
+        // Mock TCAT Commissioner 2 connects to the agent
+        // ==============================================
+        memcpy(&sCommAuth, &kCommCert2AuthField, sizeof(sCommAuth));
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, false);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // PSKd proof
+        agent->mPskdVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Network Name match
+        MockNetworkName(agent, true, &sCommNetworkName);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // XPAN ID match
+        MockExtPanId(agent, true, &sCommExtPanId);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Domain Name match - but Commissioning in general is still not authorized, due to missing Active Dataset.
+        // Hence the Network Name and XPAN ID checks cannot succeed in general. They will succeed now for the
+        // specific 'Set Active Dataset' command.
+        MockDomainName(agent, true, &sCommDomainName);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // the partial dataset cannot be written, because it lacks the required Network Name and XPAN ID combo.
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // PSKc proof
+        agent->mPskcVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Try write a full dataset with differing XPAN ID - this fails
+        sFullDataset.mExtendedPanId.m8[2]++;
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // Test an equivalent case to above where the device does have a full dataset stored already, and the
+        // Commissioner connects. Now it has full access to all classes due to matching Network Name / XPAN ID combo.
+        sFullDataset = AsCoreType(&kFullDataset);
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, true);
+        agent->mPskdVerified = true;
+        agent->mPskcVerified = true;
+        MockNetworkName(agent, true, &sCommNetworkName);
+        MockExtPanId(agent, true, &sCommExtPanId);
+        MockDomainName(agent, true, &sCommDomainName);
+
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassDecommissioning |
+                                                         kClassExtraction | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        testFreeInstance(instance);
+    }
+
+    static void TestTcatCommissioner4AuthWithExistingPartialDataset(void)
+    {
+        Instance  *instance = TestInitInstanceTcat();
+        TcatAgent *agent    = &instance->Get<TcatAgent>();
+
+        // TCAT device was commissioned earlier on with a partial dataset.
+        instance->Get<ActiveDatasetManager>().SaveLocal(sPartialDataset);
+
+        // Mock TCAT Commissioner 4 connects to the Device.
+        // static const uint8_t kCommCert4AuthField[5]   = {0x21, 0x21, 0x05, 0x09, 0x11};
+        memcpy(&sCommAuth, &kCommCert4AuthField, sizeof(sCommAuth));
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, true);
+        MockNetworkName(agent, true, &sCommNetworkName);
+        MockExtPanId(agent, true, &sCommExtPanId);
+
+        // It wants access to Extraction class (0x05) based on matching Network Name, but it's denied.
+        // Decommissioning (0x09) based on matching XPAN ID is also denied.
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // PSKc proof - satisfies 0x21. Set Active Dataset is not allowed: Device already commissioned.
+        agent->mPskcVerified = true;
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // As a sanity check, redo the test assuming that a (matching) full dataset was initially in the Device.
+        // Now, Extraction and Commissioning classes do work because of matching elements in the Commcert.
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        testFreeInstance(instance);
+    }
+
+    static void TestTcatDatasetOverwrite(void)
+    {
+        Instance  *instance = TestInitInstanceTcat();
+        TcatAgent *agent    = &instance->Get<TcatAgent>();
+
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+
+        // A fresh session on an uncommissioned device: writing the Active Dataset is allowed.
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ false);
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // TCAT agent itself writes a dataset. Overwriting this is allowed.
+        MockWriteActiveDataset(instance, sFullDataset);
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+
+        // A bumped Active Timestamp (e.g. applied by the network) is a change not made by this Agent,
+        // however the network key and ExtPanId remain the same, so dataset-overwriting is still allowed -
+        // considering it still as 'same network'.
+        {
+            Dataset::Info bumpedInfo = sFullDataset;
+
+            bumpedInfo.mActiveTimestamp.mSeconds = 272899;
+            MockActiveDatasetChanged(instance, bumpedInfo);
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        }
+
+        // Another module/process changes the Active Dataset content significantly (here: a different Network Key).
+        // The agent now refuses to overwrite the dataset.
+        {
+            Dataset::Info externalInfo = sFullDataset;
+
+            externalInfo.mNetworkKey.m8[0] ^= 0xff;
+            MockActiveDatasetChanged(instance, externalInfo);
+            VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        }
+
+        // After the Active Dataset is cleared (decommissioned), by an entity other than the TCAT agent,
+        // the agent still consider the TCAT session as no longer authorized to overwrite datasets.
+        // The TCAT Commissioner would need a fresh reconnection to authorize dataset-(over)writing again.
+        MockActiveDatasetCleared(instance);
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // TCAT Commissioner reconnects and can write a dataset again.
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ false);
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        testFreeInstance(instance);
+    }
+
+    static void TestTcatDatasetOverwriteAfterAttach(void)
+    {
+        Instance  *instance = TestInitInstanceTcat();
+        TcatAgent *agent    = &instance->Get<TcatAgent>();
+
+        // TCAT Commissioner connects and writes dataset.
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ false);
+        MockWriteActiveDataset(instance, sFullDataset);
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+
+        // Before attaching, the agent still permits overwriting its own freshly-written dataset.
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        for (int i = 0; i < 3; i++)
+        {
+            // Once the device is attached to a Thread network, the TCAT Commissioner can no longer overwrite the
+            // Active Dataset (this prevents a dataset from propagating to other already-networked devices).
+            SuccessOrQuit(agent->HandleStartThreadInterface());
+            MockDeviceAttachedToNetwork(instance);
+            VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+            // When the device has detached from Thread, the TCAT Commissioner can overwrite the Active Dataset
+            // even without a Decommission command, because it's still in the same TCAT session.
+            SuccessOrQuit(agent->HandleStopThreadInterface());
+            MockDeviceDetachedFromNetwork(instance);
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        }
+
+        // Attach to Thread Network again to prepare for the next test.
+        SuccessOrQuit(agent->HandleStartThreadInterface());
+        MockDeviceAttachedToNetwork(instance);
+
+        // Another module/process changes the Active Dataset content significantly (here: a different Network Key).
+        {
+            Dataset::Info externalInfo = sFullDataset;
+
+            externalInfo.mNetworkKey.m8[0] ^= 0xff;
+            MockActiveDatasetChanged(instance, externalInfo);
+            VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        }
+
+        // Thread is stopped
+        SuccessOrQuit(agent->HandleStopThreadInterface());
+        MockDeviceDetachedFromNetwork(instance);
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // Attach to Thread Network again
+        SuccessOrQuit(agent->HandleStartThreadInterface());
+        MockDeviceAttachedToNetwork(instance);
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // After the Active Dataset is cleared (decommissioned) by an external source, the agent
+        // still cannot set the active dataset.
+        MockActiveDatasetCleared(instance);
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        // TCAT Commissioner reconnects and then can write a dataset again.
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ false);
+        VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        testFreeInstance(instance);
+    }
+
+    static void TestTcatRepeatedCommandActivation(void)
+    {
+        Instance        *instance = TestInitInstanceTcat();
+        TcatAgent       *agent    = &instance->Get<TcatAgent>();
+        TcatJoinCounters counters = {};
+
+        // Set up a commissioned device: Commissioning class authorized, a full Active Dataset present, and the
+        // Thread interface initially down. Observe the TCAT join callback throughout.
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ false);
+        MockWriteActiveDataset(instance, sFullDataset);
+        agent->mJoinCallback.Set(HandleTcatJoin, &counters);
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(instance->Get<Mle::Mle>().IsDisabled());
+
+        // First StartThreadInterface brings the interface up and reports a successful join.
+        SuccessOrQuit(agent->HandleStartThreadInterface());
+        VerifyOrQuit(!instance->Get<Mle::Mle>().IsDisabled());
+        VerifyOrQuit(counters.mJoinCount == 1 && counters.mLastError == kErrorNone);
+
+        // Repeated StartThreadInterface while already started is an idempotent success (TCAT spec): the interface
+        // stays up and the successful-join response is repeated on each invocation.
+        SuccessOrQuit(agent->HandleStartThreadInterface());
+        SuccessOrQuit(agent->HandleStartThreadInterface());
+        VerifyOrQuit(!instance->Get<Mle::Mle>().IsDisabled());
+        VerifyOrQuit(counters.mJoinCount == 1 && counters.mLeaveCount == 0 && counters.mLastError == kErrorNone);
+
+        // First StopThreadInterface brings the interface back down and reports a successful leave.
+        SuccessOrQuit(agent->HandleStopThreadInterface());
+        VerifyOrQuit(instance->Get<Mle::Mle>().IsDisabled());
+        VerifyOrQuit(counters.mLeaveCount == 1 && counters.mLastError == kErrorNone && counters.mJoinCount == 1);
+
+        // Repeated StopThreadInterface while already stopped is an idempotent success (TCAT spec), but the
+        // 'already stopped' case does NOT re-invoke the join callback.
+        SuccessOrQuit(agent->HandleStopThreadInterface());
+        SuccessOrQuit(agent->HandleStopThreadInterface());
+        VerifyOrQuit(instance->Get<Mle::Mle>().IsDisabled());
+        VerifyOrQuit(counters.mLeaveCount == 1 && counters.mLastError == kErrorNone && counters.mJoinCount == 1);
+
+        testFreeInstance(instance);
+    }
+
+    // Verifies that a Decommission command restores the Commissioner's authorization to (over)write the Active
+    // Dataset within the same TCAT session, so that commissioning/decommissioning cycles can be repeated.
+    static void TestTcatDecommissionRestoresDatasetWrite(void)
+    {
+        Instance        *instance = TestInitInstanceTcat();
+        TcatAgent       *agent    = &instance->Get<TcatAgent>();
+        TcatJoinCounters counters = {};
+
+        // A device that was commissioned by some other entity (not this TCAT Agent) before the session started.
+        MockActiveDatasetChanged(instance, sFullDataset);
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+
+        // The Commissioner connects: it is not authorized to overwrite the existing Active Dataset, but it is
+        // authorized to decommission the device.
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ true);
+        agent->mJoinCallback.Set(HandleTcatJoin, &counters);
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        for (int i = 0; i < 3; i++)
+        {
+            // Decommission erases the Active Dataset and reports a successful 'leave'.
+            MockDecommission(instance);
+            VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+            VerifyOrQuit(instance->Get<Mle::Mle>().IsDisabled());
+            VerifyOrQuit(counters.mLeaveCount == static_cast<uint32_t>(i + 1) && counters.mJoinCount == 0 &&
+                         counters.mLastError == kErrorNone);
+
+            // Regression test: decommissioning clears the Network Key, which signals a Notifier event that would
+            // otherwise be mistaken for an external dataset change and immediately revoke the authorization again.
+            VerifyOrQuit(agent->mCanOverwriteDataset, "Decommission must restore dataset-write authorization");
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+            // The Commissioner recommissions the device in the same session, and may still overwrite afterwards.
+            MockWriteActiveDataset(instance, sFullDataset);
+            VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sFullDataset));
+            VerifyOrQuit(IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+        }
+
+        // A dataset change by another module still revokes the authorization after a Decommission.
+        MockDecommission(instance);
+        VerifyOrQuit(agent->mCanOverwriteDataset);
+        MockActiveDatasetChanged(instance, sFullDataset);
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sFullDataset));
+        VerifyOrQuit(!IsSetActiveDatasetSuccessful(agent, sPartialDataset));
+
+        testFreeInstance(instance);
+    }
+
+    // Verifies the OpenThread Notifier assumption that TcatAgent::HandleNotifierEvents() relies on:
+    // multiple state changes that occur back-to-back are coalesced into a single notification carrying all of
+    // the corresponding event flags.
+    static void TestTcatNotifierCoalescesEvents(void)
+    {
+        Instance           *instance = TestInitInstanceTcat();
+        TcatAgent          *agent    = &instance->Get<TcatAgent>();
+        StateChangeObserver observer = {};
+
+        // Commit a baseline Active Dataset and drain all resulting notifications.
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        otTaskletsProcess(instance);
+
+        // A Commissioner connects to the (uncommissioned) device
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ false);
+        VerifyOrQuit(agent->IsStarted());
+        VerifyOrQuit(agent->mCanOverwriteDataset);
+
+        // Start observing state-changed notifications.
+        SuccessOrQuit(otSetStateChangedCallback(instance, HandleNotifierStateChanged, &observer));
+
+        // The agent writes a new Active Dataset that differs in exactly 2 items - signalled as two distinct
+        // Notifier events.
+        {
+            Dataset::Info changed = sFullDataset;
+
+            changed.mNetworkKey.m8[0] ^= 0xff;
+            changed.mExtendedPanId.m8[0] ^= 0xff;
+            instance->Get<ActiveDatasetManager>().SaveLocal(changed);
+            agent->mIsSourceOfDatasetChange = true; // model that this Agent is the source of the change
+        }
+
+        // repeat the tasklets processing to ensure subsequent notifer calls are not made.
+        for (int i = 0; i < 3; i++)
+        {
+            // Process pending tasklets: this drives the Notifier to emit the accumulated events.
+            otTaskletsProcess(instance);
+
+            VerifyOrQuit(observer.mTotalCount == 1, "two changes must produce exactly one notification, not two");
+            VerifyOrQuit(observer.mNetworkKeyCount == 1, "Network Key change must be reported exactly once");
+            VerifyOrQuit(observer.mExtPanIdCount == 1, "Extended PAN ID change must be reported exactly once");
+            VerifyOrQuit(observer.mBothInOneCount == 1, "both changes must be coalesced into the same notification");
+
+            // Because the agent saw both events coalesced while mIsSourceOfDatasetChange was set, it recognizes the
+            // change as its own and retains the Commissioner's authorization to overwrite the dataset.
+            VerifyOrQuit(agent->mCanOverwriteDataset, "a self-made dataset change must not revoke authorization");
+        }
+
+        otRemoveStateChangeCallback(instance, HandleNotifierStateChanged, &observer);
+        testFreeInstance(instance);
+    }
+
+}; // class UnitTester
+
+} // namespace MeshCoP
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -195,11 +1381,23 @@ void TestTcat(void)
 int main(void)
 {
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    ot::TestTcat();
+    ot::MeshCoP::TestTcatConnectionAndCertAttributes();
+    ot::MeshCoP::TestTcatAdvertisementUpdates();
+    ot::MeshCoP::UnitTester::TestTcatCommissioner1Auth();
+    ot::MeshCoP::UnitTester::TestTcatCommissioner2Auth();
+    ot::MeshCoP::UnitTester::TestTcatCommissioner4Auth();
+    ot::MeshCoP::UnitTester::TestTcatCommissioner5Auth();
+    ot::MeshCoP::UnitTester::TestTcatCommissioner1AuthWithDeviceRequirements();
+    ot::MeshCoP::UnitTester::TestTcatCommissioner2AuthWithDeviceRequirements();
+    ot::MeshCoP::UnitTester::TestTcatCommissioner4AuthWithExistingPartialDataset();
+    ot::MeshCoP::UnitTester::TestTcatDatasetOverwrite();
+    ot::MeshCoP::UnitTester::TestTcatDatasetOverwriteAfterAttach();
+    ot::MeshCoP::UnitTester::TestTcatRepeatedCommandActivation();
+    ot::MeshCoP::UnitTester::TestTcatDecommissionRestoresDatasetWrite();
+    ot::MeshCoP::UnitTester::TestTcatNotifierCoalescesEvents();
     printf("All tests passed\n");
 #else
-    printf("Tcat is not enabled\n");
-    return -1;
+    printf("TCAT feature is not enabled\n");
 #endif
     return 0;
 }

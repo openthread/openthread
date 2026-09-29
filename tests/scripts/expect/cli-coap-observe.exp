@@ -1,0 +1,113 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2025, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+setup_two_nodes
+
+# Start CoAP server and set resource contents
+switch_node 1
+send "coap start\n"
+expect_line "Done"
+send "coap resource test/resource\n"
+expect_line "Done"
+send "coap set Testing123\n"
+expect_line "Done"
+set addr_1 [get_ipaddr mleid]
+
+# Start CoAP client and observe resource
+switch_node 2
+send "coap start\n"
+expect_line "Done"
+send "coap observe $addr_1 test/resource\n"
+expect_line "Done"
+expect "coap response from $addr_1 OBS=0 with payload: 54657374696e67313233" # ASCII of "Testing123"
+
+set addr_2 [get_ipaddr mleid]
+
+# Verify that server creates the subscription
+switch_node 1
+expect "coap request from $addr_2 GET OBS=0"
+expect "Subscribing client"
+expect "coap response sent"
+send "coap resource\n"
+expect "test/resource"
+expect_line "Done"
+send "coap set\n"
+expect "Testing123"
+expect_line "Done"
+
+# Server modifies resource several times; client gets notification. The 6th notification is sent as CON,
+# to validate the client's interest to keep receiving these notifications.
+for {set i 1} {$i <= 9} {incr i} {
+    switch_node 1
+    send "coap set TestValue2_$i\n"
+    expect "sending coap notification to $addr_2"
+    expect_line "Done"
+    switch_node 2
+    expect "coap response from $addr_1 OBS=$i with payload: 5465737456616c7565325f[binary encode hex $i]"
+    if {$i == 6} {
+        switch_node 1
+        expect "Received coap notification ACK from $addr_2"
+    }
+}
+
+# Client cancels subscription, server removes it.
+send "coap cancel\n"
+expect_line "Done"
+switch_node 1
+expect "Removed subscriber $addr_2"
+
+# CoAP client performs CON observe, server sends piggybacked response.
+switch_node 2
+send "coap observe $addr_1 test/resource con\n"
+expect_line "Done"
+expect "coap response from $addr_1 OBS=10 with payload: 5465737456616c7565325f39" # value from previous for loop
+switch_node 1
+
+# Server sends CON notification, client sends empty Ack.
+switch_node 1
+send "coap set TestValue3\n"
+expect "sending coap notification to $addr_2"
+expect_line "Done"
+expect "Received coap notification ACK from $addr_2"
+switch_node 2
+expect "coap response from $addr_1 OBS=11 with payload: 5465737456616c756533"
+
+# Server sends next CON notification, client sends empty Ack.
+switch_node 1
+send "coap set TestValue4\n"
+expect "sending coap notification to $addr_2"
+expect_line "Done"
+expect "Received coap notification ACK from $addr_2"
+switch_node 2
+expect "coap response from $addr_1 OBS=12 with payload: 5465737456616c756534"
+
+dispose_all

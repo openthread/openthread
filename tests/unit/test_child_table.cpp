@@ -40,10 +40,7 @@ namespace ot {
 
 static Instance *sInstance;
 
-enum
-{
-    kMaxChildren = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
-};
+constexpr uint16_t kMaxChildren = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN;
 
 struct TestChild
 {

@@ -238,6 +238,18 @@ otError otBorderRoutingGetNextRouterEntry(otInstance                         *aI
     return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(*aIterator, *aEntry);
 }
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+otError otBorderRoutingGetNextNat64PrefixEntry(otInstance                         *aInstance,
+                                               otBorderRoutingPrefixTableIterator *aIterator,
+                                               otBorderRoutingNat64PrefixEntry    *aEntry)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextNat64PrefixEntry(*aIterator, *aEntry);
+}
+#endif
+
 otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         *aInstance,
                                              otBorderRoutingPrefixTableIterator *aIterator,
                                              otBorderRoutingRdnssAddrEntry      *aEntry)
@@ -289,22 +301,6 @@ uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge)
 
     return AsCoreType(aInstance).Get<BorderRouter::NetDataBrTracker>().CountBrs(
         BorderRouter::NetDataBrTracker::kExcludeThisDevice, *aMinAge);
-}
-
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
-bool otBorderRoutingIsMultiAilDetected(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().IsDetected();
-}
-
-void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstance,
-                                        otBorderRoutingMultiAilCallback aCallback,
-                                        void                           *aContext)
-{
-    AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().SetCallback(aCallback, aContext);
 }
 
 #endif

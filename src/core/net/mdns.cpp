@@ -141,6 +141,10 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequeste
     {
         LogInfo("%snabling on infra-if-index %lu", (aRequester == kRequesterAuto) ? "Auto-e" : "E",
                 ToUlong(mInfraIfIndex));
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        SuccessOrAssert(GetInstance().SetDnsNameCompressionEnabled(true));
+#endif
     }
     else
     {
@@ -1215,10 +1219,7 @@ void Core::Entry::SetState(State aState)
 
 void Core::Entry::Register(const Key &aKey, const Callback &aCallback)
 {
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     mKeyRecord.UpdateTtl(DetermineTtl(aKey.mTtl, kDefaultKeyTtl));
     mKeyRecord.UpdateProperty(mKeyData, aKey.mKeyData, aKey.mKeyDataLength);
@@ -1322,6 +1323,25 @@ void Core::Entry::InvokeCallbacks(void)
     }
 }
 
+void Core::Entry::DecideToProbeOnRegister(void)
+{
+    // Checks whether we should start probing when `Register()` is
+    // called. If a conflict was previously detected, we send a probe
+    // again upon an explicit `Register()` request.
+
+    switch (mState)
+    {
+    case kRegistered:
+    case kProbing:
+        break;
+
+    case kRemoving:
+    case kConflict:
+        StartProbing();
+        break;
+    }
+}
+
 void Core::Entry::StartProbing(void)
 {
     SetState(kProbing);
@@ -1335,9 +1355,15 @@ void Core::Entry::SetStateToConflict(void)
     switch (GetState())
     {
     case kProbing:
-    case kRegistered:
         SetState(kConflict);
         break;
+
+    case kRegistered:
+#if !OPENTHREAD_CONFIG_MULTICAST_DNS_PERSIST_STATE_ON_POST_PROBE_CONFLICT
+        SetState(kConflict);
+#endif
+        break;
+
     case kConflict:
     case kRemoving:
         break;
@@ -1951,10 +1977,7 @@ exit:
 
 void Core::HostEntry::Register(const Host &aHost, const Callback &aCallback)
 {
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     SetCallback(aCallback);
 
@@ -2543,10 +2566,7 @@ void Core::ServiceEntry::Register(const Service &aService, const Callback &aCall
     const char *hostName;
     uint32_t    ttl = DetermineTtl(aService.mTtl, kDefaultServiceTtl);
 
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     SetCallback(aCallback);
 
@@ -4085,25 +4105,16 @@ bool Core::TxMessage::ShouldClearAppendStateOnReinit(const Entry &aEntry) const
 
 const char *Core::TxMessage::TypeToString(Type aType)
 {
-    static const char *const kTypeStrings[] = {
-        "multicast probe",         // kMulticastProbe
-        "multicast query",         // kMulticastQuery
-        "multicast response",      // kMulticastResponse
-        "unicast response",        // kUnicastResponse
-        "legacy-unicast response", // kLegacyUnicastResponse
-    };
+#define TypeMapList(_)                          \
+    _(kMulticastProbe, "multicast probe")       \
+    _(kMulticastQuery, "multicast query")       \
+    _(kMulticastResponse, "multicast response") \
+    _(kUnicastResponse, "unicast response")     \
+    _(kLegacyUnicastResponse, "legacy-unicast response")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kMulticastProbe);
-        ValidateNextEnum(kMulticastQuery);
-        ValidateNextEnum(kMulticastResponse);
-        ValidateNextEnum(kUnicastResponse);
-        ValidateNextEnum(kLegacyUnicastResponse);
-    };
+    DefineEnumStringArray(TypeMapList);
 
-    return kTypeStrings[aType];
+    return kStrings[aType];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -4213,7 +4224,7 @@ Error Core::RxMessage::Init(Instance          &aInstance,
 
     mStartOffset[kQuestionSection] = offset;
 
-    SuccessOrAssert(mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
+    SuccessOrExit(error = mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
 
     for (numRecords = mRecordCounts.GetFor(kQuestionSection); numRecords > 0; numRecords--)
     {
@@ -4264,12 +4275,7 @@ Error Core::RxMessage::Init(Instance          &aInstance,
     mMessagePtr = aMessagePtr.PassOwnership();
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogInfo("Failed to parse message from %s, error:%s", aSenderAddress.GetAddress().ToString().AsCString(),
-                ErrorToString(error));
-    }
-
+    LogInfoOnError(error, "parse message from %s", aSenderAddress.GetAddress().ToString().AsCString());
     return error;
 }
 
@@ -4331,7 +4337,7 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
 
     if (shouldDelay)
     {
-        delay = Random::NonCrypto::GetUint16InRange(kMinResponseDelay, kMaxResponseDelay);
+        delay = Random::NonCrypto::GenerateInClosedRange(kMinResponseDelay, kMaxResponseDelay);
     }
 
     for (const Question &question : mQuestions)
@@ -4957,6 +4963,8 @@ void Core::MultiPacketRxMessages::AddNew(OwnedPtr<RxMessage> &aRxMessagePtr)
 
     mRxMsgEntries.RemoveMatching(aRxMessagePtr->GetSenderAddress());
 
+    VerifyOrExit(mRxMsgEntries.CountAllEntries() < kMaxRxMsgEntries);
+
     newEntry = RxMsgEntry::Allocate(GetInstance());
     VerifyOrExit(newEntry != nullptr);
 
@@ -5016,26 +5024,18 @@ exit:
 
 void Core::MultiPacketRxMessages::RxMsgEntry::Add(OwnedPtr<RxMessage> &aRxMessagePtr)
 {
-    uint16_t numMsgs = 0;
+    // If a subsequent received `RxMessage` is also marked as
+    // truncated, we again delay the process time. To avoid
+    // continuous delay and piling up of messages in the list,
+    // we limit the number of messages.
 
-    for (const RxMessage &rxMsg : mRxMessages)
-    {
-        // If a subsequent received `RxMessage` is also marked as
-        // truncated, we again delay the process time. To avoid
-        // continuous delay and piling up of messages in the list,
-        // we limit the number of messages.
-
-        numMsgs++;
-        VerifyOrExit(numMsgs < kMaxNumMessages);
-
-        OT_UNUSED_VARIABLE(rxMsg);
-    }
+    VerifyOrExit(mRxMessages.CountAllEntries() < kMaxNumMessagesPerEntry);
 
     mProcessTime = TimerMilli::GetNow();
 
     if (aRxMessagePtr->IsTruncated())
     {
-        mProcessTime += Random::NonCrypto::GetUint32InRange(kMinProcessDelay, kMaxProcessDelay);
+        mProcessTime += Random::NonCrypto::GenerateInClosedRange(kMinProcessDelay, kMaxProcessDelay);
     }
 
     // We push the new `RxMessage` at tail of the list to keep the
@@ -5131,6 +5131,7 @@ Error Core::Start(const BrowserResolverType &aBrowserOrResolver)
 
     VerifyOrExit(mIsEnabled, error = kErrorInvalidState);
     VerifyOrExit(aBrowserOrResolver.mCallback != nullptr, error = kErrorInvalidArgs);
+    SuccessOrExit(error = ValidateNamesIn(aBrowserOrResolver));
 
     cacheEntry = GetCacheList<CacheType>().FindMatching(aBrowserOrResolver);
 
@@ -5156,6 +5157,7 @@ Error Core::Stop(const BrowserResolverType &aBrowserOrResolver)
 
     VerifyOrExit(mIsEnabled, error = kErrorInvalidState);
     VerifyOrExit(aBrowserOrResolver.mCallback != nullptr, error = kErrorInvalidArgs);
+    SuccessOrExit(error = ValidateNamesIn(aBrowserOrResolver));
 
     cacheEntry = GetCacheList<CacheType>().FindMatching(aBrowserOrResolver);
     VerifyOrExit(cacheEntry != nullptr);
@@ -5205,6 +5207,8 @@ Error Core::StartRecordQuerier(const RecordQuerier &aQuerier)
     return error;
 }
 
+Error Core::StopRecordQuerier(const RecordQuerier &aQuerier) { return Stop<RecordCache, RecordQuerier>(aQuerier); }
+
 Error Core::StopIp6AddressResolver(const AddressResolver &aResolver)
 {
     return Stop<Ip6AddrCache, AddressResolver>(aResolver);
@@ -5220,7 +5224,62 @@ Error Core::StopIp4AddressResolver(const AddressResolver &aResolver)
     return Stop<Ip4AddrCache, AddressResolver>(aResolver);
 }
 
-Error Core::StopRecordQuerier(const RecordQuerier &aQuerier) { return Stop<RecordCache, RecordQuerier>(aQuerier); }
+Error Core::ValidateNamesIn(const Browser &aBrowser) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateName(aBrowser.mServiceType));
+
+    if (aBrowser.mSubTypeLabel != nullptr)
+    {
+        error = Name::ValidateLabel(aBrowser.mSubTypeLabel);
+    }
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const SrvResolver &aSrvResolver) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aSrvResolver.mServiceInstance));
+    error = Name::ValidateName(aSrvResolver.mServiceType);
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const TxtResolver &aTxtResolver) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aTxtResolver.mServiceInstance));
+    error = Name::ValidateName(aTxtResolver.mServiceType);
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const AddressResolver &aAddressResolver) const
+{
+    return Name::ValidateName(aAddressResolver.mHostName);
+}
+
+Error Core::ValidateNamesIn(const RecordQuerier &aRecordQuerier) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aRecordQuerier.mFirstLabel));
+
+    if (aRecordQuerier.mNextLabels != nullptr)
+    {
+        error = Name::ValidateName(aRecordQuerier.mNextLabels);
+    }
+
+exit:
+    return error;
+}
 
 void Core::AddPassiveSrvTxtCache(const char *aServiceInstance, const char *aServiceType)
 {
@@ -5357,7 +5416,7 @@ TimeMilli Core::RandomizeFirstProbeTxTime(void)
 
     if ((mNextProbeTxTime - now) >= kMaxProbeDelay)
     {
-        mNextProbeTxTime = now + Random::NonCrypto::GetUint32InRange(kMinProbeDelay, kMaxProbeDelay);
+        mNextProbeTxTime = now + Random::NonCrypto::GenerateInClosedRange(kMinProbeDelay, kMaxProbeDelay);
     }
 
     return mNextProbeTxTime;
@@ -5369,7 +5428,7 @@ TimeMilli Core::RandomizeInitialQueryTxTime(void)
 
     if ((mNextQueryTxTime - now) >= kMaxInitialQueryDelay)
     {
-        mNextQueryTxTime = now + Random::NonCrypto::GetUint32InRange(kMinInitialQueryDelay, kMaxInitialQueryDelay);
+        mNextQueryTxTime = now + Random::NonCrypto::GenerateInClosedRange(kMinInitialQueryDelay, kMaxInitialQueryDelay);
     }
 
     return mNextQueryTxTime;
@@ -5491,7 +5550,7 @@ void Core::CacheRecordInfo::UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry)
 
         if (queryTime > now)
         {
-            queryTime += Random::NonCrypto::GetUint32InRange(0, GetClampedTtl() * kQueryTtlVariation);
+            queryTime += Random::NonCrypto::GenerateUpToExcluding(GetClampedTtl() * kQueryTtlVariation);
             aCacheEntry.ScheduleQuery(queryTime);
             break;
         }
@@ -5559,12 +5618,14 @@ void Core::CacheEntry::Init(Instance &aInstance, Type aType)
 {
     InstanceLocatorInit::Init(aInstance);
 
-    mType               = aType;
-    mInitalQueries      = 0;
-    mQueryPending       = false;
-    mLastQueryTimeValid = false;
-    mIsActive           = false;
-    mDeleteTime         = TimerMilli::GetNow() + kNonActiveDeleteTimeout;
+    mType                  = aType;
+    mContinuousRetry       = false;
+    mQueryPending          = false;
+    mLastQueryTimeValid    = false;
+    mIsActive              = false;
+    mDeleteTime            = TimerMilli::GetNow() + kNonActiveDeleteTimeout;
+    mRetryInterval         = 0;
+    mJitteredRetryInterval = 0;
 }
 
 void Core::CacheEntry::SetIsActive(bool aIsActive)
@@ -5602,9 +5663,11 @@ bool Core::CacheEntry::ShouldDelete(TimeMilli aNow) const { return !mIsActive &&
 
 void Core::CacheEntry::StartInitialQueries(void)
 {
-    mInitalQueries      = 0;
-    mLastQueryTimeValid = false;
-    mLastQueryTime      = Get<Core>().RandomizeInitialQueryTxTime();
+    mContinuousRetry       = true;
+    mRetryInterval         = 0;
+    mJitteredRetryInterval = 0;
+    mLastQueryTimeValid    = false;
+    mLastQueryTime         = Get<Core>().RandomizeInitialQueryTxTime();
 
     ScheduleQuery(mLastQueryTime);
 }
@@ -5840,11 +5903,9 @@ void Core::CacheEntry::DetermineNextFireTime(void)
 {
     mQueryPending = false;
 
-    if (mInitalQueries < kNumberOfInitalQueries)
+    if (mContinuousRetry)
     {
-        uint32_t interval = (mInitalQueries == 0) ? 0 : (1U << (mInitalQueries - 1)) * kInitialQueryInterval;
-
-        ScheduleQuery(mLastQueryTime + interval);
+        ScheduleQuery(mLastQueryTime + mJitteredRetryInterval);
     }
 
     if (!mIsActive)
@@ -5873,6 +5934,26 @@ void Core::CacheEntry::DetermineNextFireTime(void)
         As<RecordCache>().DetermineRecordFireTime();
         break;
     }
+}
+
+void Core::CacheEntry::UpdateQueryRetryInterval(void)
+{
+    uint16_t maxJitter;
+
+    VerifyOrExit(mContinuousRetry);
+
+    mRetryInterval *= kQueryRetryGrowthFactor;
+    mRetryInterval = Clamp(mRetryInterval, kMinQueryRetryInterval, kMaxQueryRetryInterval);
+
+    // We pre-calculate the jittered retry interval to ensure
+    // `DetermineNextFireTime()` uses a consistent value.
+
+    maxJitter = ClampToUint16(mRetryInterval / kQueryRetryJitterDivisor);
+
+    mJitteredRetryInterval = Random::NonCrypto::AddJitter(mRetryInterval, maxJitter);
+
+exit:
+    return;
 }
 
 void Core::CacheEntry::ScheduleTimer(void) { ScheduleFireTimeOn(Get<Core>().mCacheTimer); }
@@ -5916,10 +5997,7 @@ void Core::CacheEntry::PrepareQuery(CacheContext &aContext)
     mLastQueryTimeValid = true;
     mLastQueryTime      = aContext.GetNow();
 
-    if (mInitalQueries < kNumberOfInitalQueries)
-    {
-        mInitalQueries++;
-    }
+    UpdateQueryRetryInterval();
 
     // Let the cache entry super-classes update their state
     // after query was sent.
@@ -6467,7 +6545,7 @@ void Core::SrvCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
 
     if (mRecord.IsPresent())
     {
-        StopInitialQueries();
+        StopQueryRetries();
 
         // If not present already, we add a passive `TxtCache` for the
         // same service name, and an `Ip6AddrCache` for the host name.
@@ -6643,7 +6721,7 @@ void Core::TxtCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
 
     if (mRecord.IsPresent())
     {
-        StopInitialQueries();
+        StopQueryRetries();
     }
 
     ConvertTo(result);
@@ -7056,7 +7134,7 @@ void Core::AddrCache::CommitNewResponseEntries(void)
         }
     }
 
-    StopInitialQueries();
+    StopQueryRetries();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invoke callbacks if there is any change.
@@ -7164,7 +7242,7 @@ void Core::Ip4AddrCache::ProcessResponseRecord(const Message &aMessage, uint16_t
     SuccessOrExit(aMessage.Read(aRecordOffset, aRecord));
     VerifyOrExit(aRecord.GetLength() >= sizeof(Ip4::Address));
 
-    address.SetToIp4Mapped(aRecord.GetAddress());
+    address.InitAsIp4Mapped(aRecord.GetAddress());
 
     AddNewResponseAddress(address, aRecord.GetTtl(), aRecord.GetClass() & kClassCacheFlushFlag);
 
@@ -7212,6 +7290,7 @@ bool Core::RecordCache::Matches(const RecordQuerier &aQuerier) const
     }
     else
     {
+        VerifyOrExit(aQuerier.mNextLabels != nullptr);
         VerifyOrExit(NameMatch(mNextLabels, aQuerier.mNextLabels));
     }
 
@@ -7428,7 +7507,7 @@ void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
 
         if (mRecordType != ResourceRecord::kTypeAny)
         {
-            StopInitialQueries();
+            StopQueryRetries();
         }
     }
 

@@ -31,8 +31,8 @@
  *  This file defines OpenThread `Callback` class.
  */
 
-#ifndef CALLBACK_HPP_
-#define CALLBACK_HPP_
+#ifndef OT_CORE_COMMON_CALLBACK_HPP_
+#define OT_CORE_COMMON_CALLBACK_HPP_
 
 #include "openthread-core-config.h"
 
@@ -277,4 +277,4 @@ public:
 
 } // namespace ot
 
-#endif // CALLBACK_HPP_
+#endif // OT_CORE_COMMON_CALLBACK_HPP_

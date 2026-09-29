@@ -40,12 +40,7 @@
 namespace ot {
 namespace Crypto {
 
-Sha256::Sha256(void)
-{
-    mContext.mContext     = mContextStorage;
-    mContext.mContextSize = sizeof(mContextStorage);
-    SuccessOrAssert(otPlatCryptoSha256Init(&mContext));
-}
+Sha256::Sha256(void) { SuccessOrAssert(otPlatCryptoSha256Init(&mContext)); }
 
 Sha256::~Sha256(void) { SuccessOrAssert(otPlatCryptoSha256Deinit(&mContext)); }
 

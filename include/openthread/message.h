@@ -234,7 +234,7 @@ void otMessageSetLoopbackToHostAllowed(otMessage *aMessage, bool aAllowLoopbackT
  * Indicates whether the given message may be looped back in a case of a multicast destination address.
  *
  * If @p aMessage is used along with an `otMessageInfo`, the `mMulticastLoop` field from `otMessageInfo` structure
- * takes precedence and will be used instead of the the value set on @p aMessage.
+ * takes precedence and will be used instead of the value set on @p aMessage.
  *
  * This API is mainly intended for use along with `otIp6Send()` which expects an already prepared IPv6 message.
  *
@@ -394,6 +394,21 @@ uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, 
  * @sa otMessageRead
  */
 int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
+
+/**
+ * Creates a clone of a given message.
+ *
+ * The new message is allocated from the same message pool as @p aMessage. The entire message content from @p aMessage
+ * is copied to the new message.
+ *
+ * The caller takes ownership of the returned message and must free it by calling `otMessageFree()` when it is no
+ * longer needed.
+ *
+ * @param[in] aMessage   A pointer to the message to clone.
+ *
+ * @returns A pointer to the new message clone, or `nullptr` if no message buffers are available.
+ */
+otMessage *otMessageClone(const otMessage *aMessage);
 
 /**
  * Represents an OpenThread message queue.

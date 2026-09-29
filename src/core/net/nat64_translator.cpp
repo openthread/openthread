@@ -33,35 +33,27 @@
 
 #include "nat64_translator.hpp"
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-
 #include "instance/instance.hpp"
 
 namespace ot {
 namespace Nat64 {
 
-RegisterLogModule("Nat64");
-
 const char *StateToString(State aState)
 {
-    static const char *const kStateString[] = {
-        "Disabled",
-        "NotRunning",
-        "Idle",
-        "Active",
-    };
+#define StateMapList(_)               \
+    _(kStateDisabled, "Disabled")     \
+    _(kStateNotRunning, "NotRunning") \
+    _(kStateIdle, "Idle")             \
+    _(kStateActive, "Active")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisabled);
-        ValidateNextEnum(kStateNotRunning);
-        ValidateNextEnum(kStateIdle);
-        ValidateNextEnum(kStateActive);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateString[aState];
+    return kStrings[aState];
 }
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
+RegisterLogModule("Nat64");
 
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -84,7 +76,7 @@ Translator::Translator(Instance &aInstance)
 
 Message *Translator::NewIp4Message(const Message::Settings &aSettings)
 {
-    Message *message = Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Header) - sizeof(Ip4::Header), aSettings);
+    Message *message = Get<Ip6::Ip6>().NewMessage(aSettings);
 
     if (message != nullptr)
     {
@@ -195,7 +187,7 @@ Error Translator::TranslateIp6ToIp4(Message &aMessage)
     }
 
     // TODO: Implement the logic for replying ICMP messages.
-    ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
+    ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.DetermineLengthAfterOffset());
 
     Checksum::UpdateMessageChecksum(aMessage, ip4Header.GetSource(), ip4Header.GetDestination(),
                                     ip4Header.GetProtocol());
@@ -257,7 +249,7 @@ Error Translator::TranslateIp4ToIp6(Message &aMessage)
     dstPortOrId = GetDestinationPortOrIcmp4Id(ip4Headers);
 #endif
 
-    aMessage.RemoveHeader(sizeof(Ip4::Header));
+    aMessage.RemoveHeader(ip4Headers.GetIp4Header().GetHeaderLength());
 
     ip6Header.Clear();
     ip6Header.InitVersionTrafficClassFlow();
@@ -293,7 +285,7 @@ Error Translator::TranslateIp4ToIp6(Message &aMessage)
     }
 
     // TODO: Implement the logic for replying ICMP datagrams.
-    ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
+    ip6Header.SetPayloadLength(aMessage.DetermineLengthAfterOffset());
 
     Checksum::UpdateMessageChecksum(aMessage, ip6Header.GetSource(), ip6Header.GetDestination(),
                                     ip6Header.GetNextHeader());
@@ -351,7 +343,7 @@ void Translator::Mapping::CopyTo(AddressMapping &aMapping, TimeMilli aNow) const
     // might become active again before actually removed. Report the
     // mapping to be "just expired" to avoid confusion.
 
-    aMapping.mRemainingTimeMs = (mExpirationTime < aNow) ? 0 : mExpirationTime - aNow;
+    aMapping.mRemainingTimeMs = mExpirationTime.DetermineRemainingDurationFrom(aNow);
 }
 
 void Translator::Mapping::Free(void)
@@ -373,7 +365,7 @@ uint16_t Translator::AllocateSourcePort(uint16_t aSrcPort)
 
     do
     {
-        port = Random::NonCrypto::GetUint16InRange(kMinTranslationPort, kMaxTranslationPort);
+        port = Random::NonCrypto::GenerateInClosedRange(kMinTranslationPort, kMaxTranslationPort);
 
         // The NAT64 SHOULD preserve the port parity (odd/even), as
         // per Section 4.2.2 of [RFC4787]). Determine if original and
@@ -630,9 +622,9 @@ exit:
 
 Error Translator::TranslateIcmp4(Message &aMessage, uint16_t aOriginalId)
 {
-    Error             error = kErrorNone;
-    Ip4::Icmp::Header icmp4Header;
-    Ip6::Icmp::Header icmp6Header;
+    Error            error = kErrorNone;
+    Ip4::Icmp4Header icmp4Header;
+    Ip6::Icmp6Header icmp6Header;
 
     // TODO: Implement the translation of other ICMP messages.
 
@@ -642,12 +634,12 @@ Error Translator::TranslateIcmp4(Message &aMessage, uint16_t aOriginalId)
 
     switch (icmp4Header.GetType())
     {
-    case Ip4::Icmp::Header::Type::kTypeEchoReply:
+    case Ip4::Icmp4Header::Type::kTypeEchoReply:
         // The only difference between ICMPv6 echo and ICMP4 echo is
         // the message type field, so we can reinterpret it as ICMP6
         // header and set the message type.
         SuccessOrExit(error = aMessage.Read(0, icmp6Header));
-        icmp6Header.SetType(Ip6::Icmp::Header::kTypeEchoReply);
+        icmp6Header.SetType(Ip6::Icmp6Header::kTypeEchoReply);
         icmp6Header.SetId(aOriginalId);
         aMessage.Write(0, icmp6Header);
         break;
@@ -663,9 +655,9 @@ exit:
 
 Error Translator::TranslateIcmp6(Message &aMessage, uint16_t aTranslatedId)
 {
-    Error             error = kErrorNone;
-    Ip4::Icmp::Header icmp4Header;
-    Ip6::Icmp::Header icmp6Header;
+    Error            error = kErrorNone;
+    Ip4::Icmp4Header icmp4Header;
+    Ip6::Icmp6Header icmp6Header;
 
     // TODO: Implement the translation of other ICMP messages.
 
@@ -675,12 +667,12 @@ Error Translator::TranslateIcmp6(Message &aMessage, uint16_t aTranslatedId)
 
     switch (icmp6Header.GetType())
     {
-    case Ip6::Icmp::Header::kTypeEchoRequest:
+    case Ip6::Icmp6Header::kTypeEchoRequest:
         // The only difference between ICMPv6 echo and ICMP4 echo is
-        // the message type field, so we can reinterpret it as ICMP6
+        // the message type field, so we can reinterpret it as ICMP4
         // header and set the message type.
         SuccessOrExit(error = aMessage.Read(0, icmp4Header));
-        icmp4Header.SetType(Ip4::Icmp::Header::Type::kTypeEchoRequest);
+        icmp4Header.SetType(Ip4::Icmp4Header::Type::kTypeEchoRequest);
         icmp4Header.SetId(aTranslatedId);
         aMessage.Write(0, icmp4Header);
         break;
@@ -767,6 +759,11 @@ void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 
     mNat64Prefix = aNat64Prefix;
     UpdateState();
+
+    // `UpdateState()` only signals when the state itself changes. Signal here
+    // as well (similar to `SetIp4Cidr()`), so that a prefix change while the
+    // translator is already active gets reported too.
+    Get<Notifier>().Signal(kEventNat64TranslatorStateChanged);
 
 exit:
     return;
@@ -914,7 +911,7 @@ void Translator::SetEnabled(bool aEnable)
     }
 }
 
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
 } // namespace Nat64
 } // namespace ot
-
-#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE

@@ -28,12 +28,15 @@
 
 #include "platform-simulation.h"
 
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+
 #include <errno.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <openthread/error.h>
+#include <openthread/logging.h>
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 
@@ -43,7 +46,11 @@
 #define PLAT_BLE_MSG_DATA_MAX 2048
 static uint8_t sBleBuffer[PLAT_BLE_MSG_DATA_MAX];
 
-static int sFd = -1;
+static int  sFd              = -1;
+static bool sIsConnected     = false;
+static bool sIsDisconnecting = false;
+static bool sIsAdvertising   = false;
+static bool sIsEnabled       = false;
 
 static const uint16_t kPortBase = 10000;
 static uint16_t       sPort     = 0;
@@ -103,33 +110,63 @@ otError otPlatBleGetAdvertisementBuffer(otInstance *aInstance, uint8_t **aAdvert
 otError otPlatBleEnable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    initFds();
+    if (!sIsEnabled)
+    {
+        initFds();
+        sIsEnabled       = true;
+        sIsConnected     = false;
+        sIsDisconnecting = false;
+        sIsAdvertising   = false;
+    }
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleDisable(otInstance *aInstance)
 {
-    deinitFds();
     OT_UNUSED_VARIABLE(aInstance);
+    if (sIsEnabled)
+    {
+        deinitFds();
+        sIsEnabled = false;
+    }
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aInterval);
+    if (sIsConnected || !sIsEnabled)
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
+    otLogDebgPlat("BLE adv start (interval %u)", aInterval);
+    sIsAdvertising = true;
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    if (!sIsEnabled)
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
+    otLogDebgPlat("BLE adv stop");
+    sIsAdvertising = false;
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapDisconnect(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    if (!sIsConnected)
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
+    otLogDebgPlat("BLE GAP disconnect");
+    // Only flag the disconnection here. The 'disconnected' event is delivered asynchronously
+    // by platformBleProcess() (via otPlatBleGapOnDisconnected), per API contract.
+    sIsDisconnecting = true;
     return OT_ERROR_NONE;
 }
 
@@ -164,7 +201,6 @@ void platformBleDeinit(void) { deinitFds(); }
 
 void platformBleUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
 {
-    OT_UNUSED_VARIABLE(aTimeout);
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
     if (aReadFdSet != NULL && sFd != -1)
@@ -176,6 +212,13 @@ void platformBleUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct time
             *aMaxFd = sFd;
         }
     }
+
+    // A pending disconnection must be delivered promptly; ensure the main loop does not block.
+    if (sIsDisconnecting && aTimeout != NULL)
+    {
+        aTimeout->tv_sec  = 0;
+        aTimeout->tv_usec = 0;
+    }
 }
 
 void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
@@ -184,7 +227,19 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
 
     otEXPECT(sFd != -1);
 
-    if (FD_ISSET(sFd, aReadFdSet))
+    // Deliver a pending disconnection (requested earlier via otPlatBleGapDisconnect).
+    if (sIsDisconnecting)
+    {
+        // Drain any remaining data and drop it: prevent stale data from triggering a new connection later on.
+        while (recvfrom(sFd, sBleBuffer, sizeof(sBleBuffer), MSG_DONTWAIT, NULL, NULL) >= 0)
+        {
+        }
+
+        sIsConnected     = false;
+        sIsDisconnecting = false;
+        otPlatBleGapOnDisconnected(aInstance, 0);
+    }
+    else if (FD_ISSET(sFd, aReadFdSet))
     {
         socklen_t len = sizeof(sSockaddr);
         ssize_t   rval;
@@ -193,6 +248,19 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
         if (rval > 0)
         {
             otBleRadioPacket myPacket;
+
+            if (!sIsConnected)
+            {
+                // Only accept a new connection while advertising. This helps to ignore trailing data from a
+                // closing TCAT session until the device is ready again for a new session.
+                otEXPECT(sIsAdvertising);
+
+                sIsConnected   = true;
+                sIsAdvertising = false; // per API contract, advertising stops once a client connects
+                otLogDebgPlat("BLE client connected");
+                otPlatBleGapOnConnected(aInstance, 0);
+            }
+
             myPacket.mValue  = sBleBuffer;
             myPacket.mLength = (uint16_t)rval;
             myPacket.mPower  = 0;
@@ -202,8 +270,13 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
         }
         else if (rval == 0)
         {
-            // socket is closed, which should not happen
-            assert(false);
+            // A zero-length datagram: simulates Commissioner suddenly disconnected the BLE link.
+            if (sIsConnected)
+            {
+                sIsConnected = false;
+                otLogDebgPlat("BLE client link disconnected");
+                otPlatBleGapOnDisconnected(aInstance, 0);
+            }
         }
         else if (errno != EINTR && errno != EAGAIN)
         {
@@ -211,8 +284,25 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
             DieNow(OT_EXIT_FAILURE);
         }
     }
+
 exit:
     return;
+}
+
+/* Weak stubs for callbacks defined in the FTD/MTD core library, not available for RCP targets. */
+
+OT_TOOL_WEAK void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+    assert(false);
+}
+
+OT_TOOL_WEAK void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+    assert(false);
 }
 
 OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance             *aInstance,
@@ -223,9 +313,6 @@ OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance             *aIns
     OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aPacket);
     assert(false);
-    /* In case of rcp there is a problem with linking to otPlatBleGattServerOnWriteRequest
-     * which is available in FTD/MTD library.
-     */
 }
 
 void otPlatBleGetLinkCapabilities(otInstance *aInstance, otBleLinkCapabilities *aBleLinkCapabilities)
@@ -241,6 +328,10 @@ otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementDat
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aAdvertisementData);
     OT_UNUSED_VARIABLE(aAdvertisementLen);
+    if (!sIsEnabled || sIsAdvertising)
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
     return OT_ERROR_NONE;
 }
 
@@ -249,11 +340,17 @@ otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisement
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aAdvertisementData);
     OT_UNUSED_VARIABLE(aAdvertisementLen);
+    if (!sIsEnabled || !sIsAdvertising)
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
     return OT_ERROR_NONE;
 }
 
 bool otPlatBleSupportsMultiRadio(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return false;
+    return true;
 }
+
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE

@@ -31,8 +31,8 @@
  *   This file includes definitions for performing HMAC SHA-256 computations.
  */
 
-#ifndef HMAC_SHA256_HPP_
-#define HMAC_SHA256_HPP_
+#ifndef OT_CORE_CRYPTO_HMAC_SHA256_HPP_
+#define OT_CORE_CRYPTO_HMAC_SHA256_HPP_
 
 #include "openthread-core-config.h"
 
@@ -123,8 +123,7 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kHmacSha256ContextSize, uint64_t);
+    ContextWith<kHmacSha256ContextSize> mContext;
 };
 
 /**
@@ -134,4 +133,4 @@ private:
 } // namespace Crypto
 } // namespace ot
 
-#endif // HMAC_SHA256_HPP_
+#endif // OT_CORE_CRYPTO_HMAC_SHA256_HPP_

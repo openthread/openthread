@@ -31,8 +31,8 @@
  *   This file includes definitions for link-specific information for messages received from the Thread radio.
  */
 
-#ifndef THREAD_LINK_INFO_HPP_
-#define THREAD_LINK_INFO_HPP_
+#ifndef OT_CORE_THREAD_THREAD_LINK_INFO_HPP_
+#define OT_CORE_THREAD_THREAD_LINK_INFO_HPP_
 
 #include "openthread-core-config.h"
 
@@ -115,11 +115,11 @@ public:
      *
      * @param[in] aFrame  A received frame.
      */
-    void SetFrom(const Mac::RxFrame &aFrame);
+    void SetFrom(const Mac::RxFrame::ParseInfo &aFrameInfo);
 };
 
 DefineCoreType(otThreadLinkInfo, ThreadLinkInfo);
 
 } // namespace ot
 
-#endif // THREAD_LINK_INFO_HPP_
+#endif // OT_CORE_THREAD_THREAD_LINK_INFO_HPP_

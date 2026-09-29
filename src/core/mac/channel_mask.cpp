@@ -80,7 +80,7 @@ uint8_t ChannelMask::ChooseRandomChannel(void) const
 
     VerifyOrExit(!IsEmpty());
 
-    randomIndex = Random::NonCrypto::GetUint8InRange(0, GetNumberOfChannels());
+    randomIndex = Random::NonCrypto::GenerateUpToExcluding(GetNumberOfChannels());
 
     SuccessOrExit(GetNextChannel(channel));
 

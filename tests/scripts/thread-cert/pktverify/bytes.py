@@ -119,14 +119,14 @@ class Bytes(bytearray):
         """
         Check if bytes is equal to other.
         """
-        if other is None:
+        from pktverify.null_field import nullField
+
+        if other is None or other is nullField:
             return False
         elif not isinstance(other, Bytes):
             other = self.__class__(other)
 
-        eq = super().__eq__(other)
-        print("[%r %s %r]" % (self, "==" if eq else "!=", other), file=sys.stderr)
-        return eq
+        return super().__eq__(other)
 
 
 if __name__ == '__main__':

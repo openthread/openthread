@@ -38,20 +38,17 @@ namespace ot {
 
 static Instance *sInstance;
 
-enum
-{
-    kMaxRssValue = 0,
-    kMinRssValue = -128,
+constexpr int8_t kMaxRssValue = 0;
+constexpr int8_t kMinRssValue = -128;
 
-    kStringBuffferSize = 80,
+constexpr uint16_t kStringBuffferSize = 80;
 
-    kRssAverageMaxDiff = 16,
-    kNumRssAdds        = 300,
+constexpr uint8_t  kRssAverageMaxDiff = 16;
+constexpr uint16_t kNumRssAdds        = 300;
 
-    kRawAverageBitShift = 3,
-    kRawAverageMultiple = (1 << kRawAverageBitShift),
-    kRawAverageBitMask  = (1 << kRawAverageBitShift) - 1,
-};
+constexpr uint8_t kRawAverageBitShift = 3;
+constexpr uint8_t kRawAverageMultiple = (1 << kRawAverageBitShift);
+constexpr uint8_t kRawAverageBitMask  = (1 << kRawAverageBitShift) - 1;
 
 #define MIN_RSS(_rss1, _rss2) (((_rss1) < (_rss2)) ? (_rss1) : (_rss2))
 #define MAX_RSS(_rss1, _rss2) (((_rss1) < (_rss2)) ? (_rss2) : (_rss1))

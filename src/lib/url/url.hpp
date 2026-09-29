@@ -192,6 +192,16 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The parameter value was not contain valid number (e.g., value out of range).
      */
     otError ParseInt8(const char *aName, int8_t &aValue) const;
+
+    /**
+     * Checks if all parameters are used.
+     *
+     * @param[out] aUnusedParam  A pointer to a string to store the name of the first unused parameter.
+     *
+     * @retval OT_ERROR_NONE          All parameters were used.
+     * @retval OT_ERROR_INVALID_ARGS  Some parameters were not used.
+     */
+    otError Validate(const char **aUnusedParam = nullptr) const;
 };
 
 } // namespace Url

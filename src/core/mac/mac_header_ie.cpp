@@ -36,48 +36,48 @@
 namespace ot {
 namespace Mac {
 
-void HeaderIe::Init(uint16_t aId, uint8_t aLen)
+void HeaderIe::Init(uint8_t aId, uint8_t aLen)
 {
-    Init();
-    SetId(aId);
+    mLenIdType = 0;
     SetLength(aLen);
+    SetId(aId);
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-Error ConnectionIe::SetWakeupId(WakeupId aWakeupId)
+Error HeaderIe::StartIe(FrameBuilder &aBuilder, uint8_t aId, Bookmark &aBookmark)
 {
-    Error           error          = kErrorNone;
-    const HeaderIe *headerIe       = GetHeaderIe();
-    uint8_t         wakeupIdLength = GetWakeupIdLength(aWakeupId);
+    Error     error = kErrorNone;
+    HeaderIe *ie;
 
-    VerifyOrExit(headerIe->GetLength() > sizeof(ConnectionIe), error = kErrorParse);
-    VerifyOrExit(headerIe->GetLength() - sizeof(ConnectionIe) == wakeupIdLength, error = kErrorParse);
-    aWakeupId = LittleEndian::HostSwap64(aWakeupId);
-    memcpy(GetWakeupIdData(), reinterpret_cast<uint8_t *>(&aWakeupId), wakeupIdLength);
+    aBookmark = aBuilder.GetLength();
+
+    ie = aBuilder.Append<HeaderIe>();
+    VerifyOrExit(ie != nullptr, error = kErrorNoBufs);
+
+    ie->Init(aId, 0);
 
 exit:
     return error;
 }
 
-Error ConnectionIe::GetWakeupId(WakeupId &aWakeupId) const
+Error HeaderIe::EndIe(FrameBuilder &aBuilder, const Bookmark &aBookmark)
 {
-    Error           error    = kErrorNone;
-    const HeaderIe *headerIe = GetHeaderIe();
-    uint8_t         wakeupIdLength;
+    Error     error  = kErrorNone;
+    uint16_t  offset = aBookmark;
+    uint16_t  length;
+    HeaderIe *ie;
 
-    VerifyOrExit(headerIe->GetLength() > sizeof(ConnectionIe), error = kErrorParse);
+    VerifyOrExit(offset + sizeof(HeaderIe) <= aBuilder.GetLength(), error = kErrorInvalidArgs);
 
-    wakeupIdLength = headerIe->GetLength() - sizeof(ConnectionIe);
-    VerifyOrExit(wakeupIdLength <= sizeof(WakeupId), error = kErrorParse);
+    ie = aBuilder.Read<HeaderIe>(offset);
 
-    aWakeupId = 0;
-    memcpy(reinterpret_cast<uint8_t *>(&aWakeupId), GetWakeupIdData(), wakeupIdLength);
-    aWakeupId = LittleEndian::HostSwap64(aWakeupId);
+    length = aBuilder.GetLength() - offset - sizeof(HeaderIe);
+    VerifyOrExit(length <= kMaxLength, error = kErrorInvalidArgs);
+
+    ie->SetLength(static_cast<uint8_t>(length));
 
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 } // namespace Mac
 } // namespace ot

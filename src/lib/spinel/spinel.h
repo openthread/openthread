@@ -30,8 +30,8 @@
  *   This file contains definitions of spinel.
  */
 
-#ifndef SPINEL_HEADER_INCLUDED
-#define SPINEL_HEADER_INCLUDED 1
+#ifndef OT_LIB_SPINEL_SPINEL_H_
+#define OT_LIB_SPINEL_SPINEL_H_
 
 /*
  *   Spinel is a host-controller protocol designed to enable
@@ -437,7 +437,9 @@
  *
  *  The maximum size of SPINEL frame.
  */
+#ifndef SPINEL_FRAME_MAX_SIZE
 #define SPINEL_FRAME_MAX_SIZE 1300
+#endif
 
 /**
  * @def SPINEL_FRAME_MAX_COMMAND_HEADER_SIZE
@@ -4925,6 +4927,97 @@ enum
      */
     SPINEL_PROP_DNSSD_BROWSE_RESULT = SPINEL_PROP_DNSSD__BEGIN + 7,
 
+    /// DNS-SD Service Resolver
+    /**
+     * Format: `UULD`: Inserted/Removed
+     *
+     * `U`: The service instance label.
+     * `U`: The service type.
+     * `L`: The infrastructure network interface index.
+     * `D`: The context of the request. A pointer to the callback to receive the result.
+     *
+     * NCP uses this property to resolve services.
+     */
+    SPINEL_PROP_DNSSD_SRV_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 8,
+
+    /**
+     * DNS-SD SRV Resolution Result
+     *
+     * Format: `UUt(U)SSSLLD`: Set
+     *
+     * Reports the result of a DNS-SD service resolution on the infrastructure
+     * network.
+     *
+     * Content of the `otPlatDnssdSrvResult` struct:
+     *  `U`: The service instance name label.
+     *  `U`: The service type.
+     *  `U`: The host name (e.g., "myhost"). Can be NULL when `mTtl` is zero.
+     *  `S`: The service port number.
+     *  `S`: The service priority.
+     *  `S`: The service weight.
+     *  `L`: The service TTL in seconds. Zero TTL indicates SRV record is removed.
+     *  `L`: The infrastructure network interface index.
+     *  `D`: The context of the request. A pointer to the callback to receive the result.
+     */
+    SPINEL_PROP_DNSSD_SRV_RESULT = SPINEL_PROP_DNSSD__BEGIN + 9,
+
+    /// DNS-SD TXT Resolver
+    /**
+     * Format: `UULD`: Inserted/Removed
+     *
+     * `U`: The service instance label.
+     * `U`: The service type.
+     * `L`: The infrastructure network interface index.
+     * `D`: The context of the request (pointer to `otPlatDnssdTxtCallback`).
+     */
+    SPINEL_PROP_DNSSD_TXT_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 10,
+
+    /// DNS-SD TXT Resolution Result
+    /**
+     * Format: `UUdLLD`: Set
+     *
+     * `U`: Service instance label.
+     * `U`: Service type.
+     * `d`: Encoded TXT data bytes (empty if removed).
+     * `L`: TTL in seconds (zero indicates removal).
+     * `L`: Infrastructure interface index.
+     * `D`: Callback context (`sizeof(otPlatDnssdTxtCallback)`).
+     */
+    SPINEL_PROP_DNSSD_TXT_RESULT = SPINEL_PROP_DNSSD__BEGIN + 11,
+
+    /// DNS-SD IPv6 Address Resolver
+    /**
+     * Format: `ULD`: Inserted/Removed
+     *
+     * `U`: Host name (no domain).
+     * `L`: Infrastructure interface index.
+     * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
+     */
+    SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 12,
+
+    /// DNS-SD IPv6 Address Resolution Result
+    /**
+     * Format: `ULt(A(6L))D`: Set
+     *
+     * `U`: Host name.
+     * `L`: Infrastructure interface index.
+     * `t(A(6L))`: Struct containing an array of IPv6 addresses, each followed by a TTL as `uint32_t`.
+     * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
+     */
+    SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 13,
+
+    /// DNS-SD IPv4 Address Resolver
+    /**
+     * Format: `ULD`: Inserted/Removed (same as IPv6 resolver; IPv4 uses IPv4-mapped IPv6 in results).
+     */
+    SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 14,
+
+    /// DNS-SD IPv4 Address Resolution Result
+    /**
+     * Format: Same as `SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT`.
+     */
+    SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 15,
+
     SPINEL_PROP_DNSSD__END = 0x950,
 
     SPINEL_PROP_BORDER_AGENT__BEGIN = 0x950,
@@ -5013,6 +5106,32 @@ enum
     SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER = SPINEL_PROP_BACKBONE_ROUTER__BEGIN + 3,
 
     SPINEL_PROP_BACKBONE_ROUTER__END = 0x990,
+
+    SPINEL_PROP_BORDER_ROUTER__BEGIN = 0x990,
+
+    /// Enables or Disables DHCPv6 Prefix Delegation
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: Enables or disables DHCPv6 Prefix Delegation
+     */
+    SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE = SPINEL_PROP_BORDER_ROUTER__BEGIN + 1,
+
+    /// Process DHCPv6 Prefix Delegation Prefix
+    /**
+     * Format: `6CLL` - Write-Only
+     *
+     * This property is used to provide a DHCPv6 Prefix Delegation (PD) prefix to the OpenThread stack
+     * via the NCP interface. It calls `otPlatBorderRoutingProcessDhcp6PdPrefix()`.
+     *
+     * `6` : IPv6 prefix address
+     * `C` : Prefix length in bits
+     * `L` : Valid lifetime in seconds
+     * `L` : Preferred lifetime in seconds
+     */
+    SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX = SPINEL_PROP_BORDER_ROUTER__BEGIN + 2,
+
+    SPINEL_PROP_BORDER_ROUTER__END = 0x9A0,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 
@@ -5292,4 +5411,4 @@ SPINEL_API_EXTERN const char *spinel_link_metrics_status_to_cstr(uint8_t status)
 }
 #endif
 
-#endif /* defined(SPINEL_HEADER_INCLUDED) */
+#endif // OT_LIB_SPINEL_SPINEL_H_

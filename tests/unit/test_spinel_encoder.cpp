@@ -35,10 +35,7 @@
 namespace ot {
 namespace Spinel {
 
-enum
-{
-    kTestBufferSize = 800,
-};
+constexpr uint16_t kTestBufferSize = 800;
 
 otError ReadFrame(Spinel::Buffer &aNcpBuffer, uint8_t *aFrame, uint16_t &aFrameLen)
 {

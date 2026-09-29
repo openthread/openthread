@@ -31,8 +31,8 @@
  *   This file includes definitions for the IEEE 802.15.4 MAC layer (sub-MAC).
  */
 
-#ifndef SUB_MAC_HPP_
-#define SUB_MAC_HPP_
+#ifndef OT_CORE_MAC_SUB_MAC_HPP_
+#define OT_CORE_MAC_SUB_MAC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,6 +41,7 @@
 #include <openthread/platform/crypto.h>
 
 #include "common/callback.hpp"
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -60,26 +61,42 @@ namespace ot {
 
 namespace Mac {
 
+//----------------------------------------------------------------------------------------------------------------------
+// Derived configs
+
+#ifdef OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+#error "OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE MUST NOT be defined directly. It is derived from other configs"
+#endif
+
+#define OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE                                                        \
+    (OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || \
+     ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE))
+
+#ifdef OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+#error "OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE MUST NOT be defined directly. It is derived from other configs"
+#endif
+
+#define OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE                                                    \
+    (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE || \
+     ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE))
+
+//----------------------------------------------------------------------------------------------------------------------
+// Config validity checks
+
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE."
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE."
 #endif
 
-#if !OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE && !OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 #error "Microsecond timer OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE is required for "\
-    "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE"
+       "TARGET TIME RX feature (CSL, Thread direct wakeup listener, etc)."
 #endif
 
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE && !OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-#error "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE is required for OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE."
-#endif
+//----------------------------------------------------------------------------------------------------------------------
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 class LinkRaw;
@@ -107,6 +124,9 @@ class SubMac : public InstanceLocator, private NonCopyable
     friend class LinkRaw;
 
 public:
+    using Capability   = Radio::Capability;   ///< A radio capability.
+    using Capabilities = Radio::Capabilities; ///< A bit-vector of radio capabilities.
+
     /**
      * Defines the callbacks notifying `SubMac` user of changes and events.
      */
@@ -148,7 +168,7 @@ public:
          * @note Unlike `TransmitDone` which is invoked after all re-transmission attempts to indicate the final status
          * of a frame transmission, this method is invoked on all frame transmission attempts.
          *
-         * @param[in] aFrame      The transmitted frame.
+         * @param[in] aFrameInfo  The transmitted frame information.
          * @param[in] aError      kErrorNone when the frame was transmitted successfully,
          *                        kErrorNoAck when the frame was transmitted but no ACK was received,
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -157,20 +177,23 @@ public:
          * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
          *                        when there was an error in current transmission attempt.
          */
-        void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
+        void RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
+                                       Error                     aError,
+                                       uint8_t                   aRetryCount,
+                                       bool                      aWillRetx);
 
         /**
          * The method notifies user of `SubMac` that the transmit operation has completed, providing, if applicable,
          * the received ACK frame.
          *
-         * @param[in]  aFrame     The transmitted frame.
+         * @param[in]  aFrameInfo The transmitted frame information.
          * @param[in]  aAckFrame  A pointer to the ACK frame, `nullptr` if no ACK was received.
          * @param[in]  aError     kErrorNone when the frame was transmitted,
          *                        kErrorNoAck when the frame was transmitted but no ACK was received,
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
          *                        kErrorAbort when transmission was aborted for other reasons.
          */
-        void TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+        void TransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError);
 
         /**
          * Notifies user of `SubMac` that energy scan is complete.
@@ -213,16 +236,20 @@ public:
     /**
      * Gets the capabilities provided by platform radio.
      *
-     * @returns The capability bit vector (see `OT_RADIO_CAP_*` definitions).
+     * @returns The capability bit vector (see `Radio::Capability` definitions).
      */
-    otRadioCaps GetRadioCaps(void) const { return mRadioCaps; }
+    Capabilities GetRadioCaps(void) const { return mRadioCaps; }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * Gets the capabilities provided by `SubMac` layer.
      *
-     * @returns The capability bit vector (see `OT_RADIO_CAP_*` definitions).
+     * @returns The capability bit vector (see `Radio::Capability` definitions).
      */
-    otRadioCaps GetCaps(void) const;
+    Capabilities GetCaps(void) const;
+#elif OPENTHREAD_RADIO
+    Capabilities GetCaps(void) const { return mRadioCaps | kSwEnabledCapabilities; }
+#endif
 
     /**
      * Sets the PAN ID.
@@ -274,16 +301,22 @@ public:
     void SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
+     * Indicates whether a given MAC address matches this device's short, alternate short, or extended address.
+     *
+     * @param[in] aAddress  The MAC address to check.
+     *
+     * @retval TRUE   If @p aAddress matches any of this device's addresses.
+     * @retval FALSE  If @p aAddress does not match any of this device's addresses.
+     */
+    bool HasAddress(const Address &aAddress) const;
+
+    /**
      * Registers a callback to provide received packet capture for IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     *                               or `nullptr` to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     * @param[in]  aCallback   The packet capture callback, or `nullptr` to disable packet capture.
+     * @param[in]  aContext    A pointer to application-specific context.
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
-    {
-        mPcapCallback.Set(aPcapCallback, aCallbackContext);
-    }
+    void SetPcapCallback(PcapCallback aCallback, void *aContext) { mPcapCallback.Set(aCallback, aContext); }
 
     /**
      * Indicates whether radio should stay in Receive or Sleep during idle periods.
@@ -335,6 +368,28 @@ public:
      * @retval kErrorInvalidState  The radio was disabled or transmitting.
      */
     Error Receive(uint8_t aChannel);
+
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    /**
+     * Schedules a radio reception window at a specific time and duration.
+     *
+     * `SubMac` supports one active and one pending reception window. If an unstarted receive window is already
+     * pending when this method is called, the new window will replace the existing pending window.
+     *
+     * @param[in] aStartTime  The start time in microseconds.
+     * @param[in] aDuration   The duration of the receive window in microseconds.
+     * @param[in] aChannel    The channel to use for receiving.
+     */
+    void ReceiveAt(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel);
+
+    /**
+     * Cancels any pending scheduled receive window (`ReceiveAt()`).
+     *
+     * If a scheduled reception window is currently pending (waiting to start), it is cancelled. If a timed reception
+     * window is already active (radio is currently receiving), this method does not interrupt the ongoing reception.
+     */
+    void CancelPendingReceiveAt(void);
+#endif
 
     /**
      * Gets the radio transmit frame.
@@ -398,69 +453,50 @@ public:
      * @param[in]  aShortAddr The short source address of CSL receiver's peer.
      * @param[in]  aExtAddr   The extended source address of CSL receiver's peer.
      */
-    void SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
+    void SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
+    {
+        mCslReceiver.SetParams(aPeriod, aChannel, aShortAddr, aExtAddr);
+    }
 
     /**
      * Returns parent CSL accuracy (clock accuracy and uncertainty).
      *
      * @returns The parent CSL accuracy.
      */
-    const CslAccuracy &GetCslParentAccuracy(void) const { return mCslParentAccuracy; }
+    const CslAccuracy &GetCslParentAccuracy(void) const { return mCslReceiver.GetParentAccuracy(); }
 
     /**
      * Sets parent CSL accuracy.
      *
      * @param[in] aCslAccuracy  The parent CSL accuracy.
      */
-    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy) { mCslParentAccuracy = aCslAccuracy; }
+    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy) { mCslReceiver.SetParentAccuracy(aCslAccuracy); }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
-     * Sets MAC keys and key index.
+     * Gets a MAC key of a given type from `SubMac`.
      *
-     * @param[in] aKeyIdMode  MAC key ID mode.
-     * @param[in] aKeyId      The key ID.
+     * @param[in] aType  The key type (`KeyTrio::kPrev`, `KeyTrio::kCur`, or `KeyTrio::kNext`).
+     *
+     * @returns A reference to the requested MAC key.
+     */
+    const KeyMaterial &GetMacKey(KeyTrio::Type aType) const { return mKeyTrio.GetKey(aType); }
+
+    /**
+     * Sets MAC keys and key index for Key ID Mode 1.
+     *
+     * @param[in] aKeyIndex   The key index.
      * @param[in] aPrevKey    The previous MAC key.
-     * @param[in] aCurrKey    The current MAC key.
+     * @param[in] aCurKey     The current MAC key.
      * @param[in] aNextKey    The next MAC key.
      */
-    void SetMacKey(uint8_t            aKeyIdMode,
-                   uint8_t            aKeyId,
-                   const KeyMaterial &aPrevKey,
-                   const KeyMaterial &aCurrKey,
-                   const KeyMaterial &aNextKey);
-
-    /**
-     * Returns a reference to the current MAC key.
-     *
-     * @returns A reference to the current MAC key.
-     */
-    const KeyMaterial &GetCurrentMacKey(void) const { return mCurrKey; }
-
-    /**
-     * Returns a reference to the previous MAC key.
-     *
-     * @returns A reference to the previous MAC key.
-     */
-    const KeyMaterial &GetPreviousMacKey(void) const { return mPrevKey; }
-
-    /**
-     * Returns a reference to the next MAC key.
-     *
-     * @returns A reference to the next MAC key.
-     */
-    const KeyMaterial &GetNextMacKey(void) const { return mNextKey; }
+    void SetMode1MacKeys(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
 
     /**
      * Clears the stored MAC keys.
      */
-    void ClearMacKeys(void)
-    {
-        mPrevKey.Clear();
-        mCurrKey.Clear();
-        mNextKey.Clear();
-    }
+    void ClearMacKeys(void) { mKeyTrio.Clear(); }
 
     /**
      * Returns the current MAC frame counter value.
@@ -499,44 +535,7 @@ public:
     bool IsRadioFilterEnabled(void) const { return mRadioFilterEnabled; }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    /**
-     * Configures wake-up listening parameters in all radios.
-     *
-     * @param[in]  aEnable    Whether to enable or disable wake-up listening.
-     * @param[in]  aInterval  The wake-up listen interval in microseconds.
-     * @param[in]  aDuration  The wake-up listen duration in microseconds.
-     * @param[in]  aChannel   The wake-up channel.
-     */
-    void UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel);
-#endif
-
 private:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void        CslInit(void);
-    void        RestartCslTimerAfterSyncUpdate(void);
-    void        UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
-    void        UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
-    static void HandleCslTimer(Timer &aTimer);
-    void        HandleCslTimer(void);
-    void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
-    uint32_t    GetLocalTime(void);
-    bool        IsCslEnabled(void) const { return mCslPeriod > 0; }
-#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-    void LogReceived(RxFrame *aFrame);
-#endif
-    void HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter);
-    void HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter);
-    void LogCslWindow(uint32_t aWinStart, uint32_t aWinDuration);
-#endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    void        WedInit(void);
-    static void HandleWedTimer(Timer &aTimer);
-    void        HandleWedTimer(void);
-    void        HandleWedReceiveAt(void);
-    void        HandleWedReceiveOrSleep(void);
-#endif
-
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
     static constexpr uint8_t  kCsmaMaxBe         = 5;                  // macMaxBE (IEEE 802.15.4-2006).
     static constexpr uint32_t kUnitBackoffPeriod = 20;                 // Number of symbols (IEEE 802.15.4-2006).
@@ -554,6 +553,35 @@ private:
     static constexpr uint32_t kEnergyScanRssiSampleInterval = 1000; // RSSI sample interval for energy scan, in usec
 #endif
 
+    static constexpr Capability kCapAckTimeout         = Radio::kCapAckTimeout;
+    static constexpr Capability kCapEnergyScan         = Radio::kCapEnergyScan;
+    static constexpr Capability kCapTransmitRetries    = Radio::kCapTransmitRetries;
+    static constexpr Capability kCapCsmaBackoff        = Radio::kCapCsmaBackoff;
+    static constexpr Capability kCapSleepToTx          = Radio::kCapSleepToTx;
+    static constexpr Capability kCapTransmitSec        = Radio::kCapTransmitSec;
+    static constexpr Capability kCapTransmitTiming     = Radio::kCapTransmitTiming;
+    static constexpr Capability kCapReceiveTiming      = Radio::kCapReceiveTiming;
+    static constexpr Capability kCapRxOnWhenIdle       = Radio::kCapRxOnWhenIdle;
+    static constexpr Capability kCapTransmitFramePower = Radio::kCapTransmitFramePower;
+    static constexpr Capability kCapAltShortAddr       = Radio::kCapAltShortAddr;
+
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
+#define ConditionalCap(kCapability, kEnableConfig) ((kEnableConfig) ? kCapability : 0)
+
+    static constexpr Capabilities kSwEnabledCapabilities =
+        ConditionalCap(kCapAckTimeout, OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE) |
+        ConditionalCap(kCapEnergyScan, OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE) |
+        ConditionalCap(kCapTransmitRetries, OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE) |
+        ConditionalCap(kCapCsmaBackoff, OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE) |
+        ConditionalCap(kCapTransmitSec, OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE) |
+        ConditionalCap(kCapTransmitTiming, OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE) |
+        ConditionalCap(kCapSleepToTx, OPENTHREAD_RADIO);
+
+#undef ConditionalCap
+
+#endif
+
     enum State : uint8_t
     {
         kStateDisabled,    // Radio is disabled.
@@ -565,66 +593,108 @@ private:
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
         kStateDelayBeforeRetx, // Delay before retx
 #endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        kStateCslTransmit, // CSL transmission.
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+        kStateTimedTransmit, // Timed TX (e.g., for CSL)
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
-                           // sample state.
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+        kStateTimedReceive, // Timed RX (CSL sampling or wake listening)
 #endif
     };
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    // Radio on times needed before and after MHR time for proper frame detection
-    static constexpr uint32_t kMinReceiveOnAhead = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD;
-    static constexpr uint32_t kMinReceiveOnAfter = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
-
-    // CSL/wake-up listening receivers would wake up `kCslReceiveTimeAhead` earlier
-    // than expected sample window. The value is in usec.
-    static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    // Lead time (in microseconds) to schedule a delayed tx earlier
+    // than expected target tx time. Only used when radio does not
+    // itself support `kCapTransmitTiming`.
+    static constexpr uint32_t kTimedTxLeadTime =
+        OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD + kCcaSampleInterval + Radio::kHeaderShrDuration;
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    // Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval.
-    // The value is in usec.
-    static constexpr uint32_t kWedReceiveTimeAfter = OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER;
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    class TimedRx : public Clearable<TimedRx>
+    {
+    public:
+        TimedRx(void) { Clear(); }
+
+        void          Init(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel);
+        bool          IsSpecified(void) const { return mIsSpecified; }
+        Radio::Time64 GetStartTime(void) const { return mStartTime; }
+        Radio::Time64 GetEndTime(void) const { return mStartTime + mDuration; }
+        uint8_t       GetChannel(void) const { return mChannel; }
+        bool          HasStarted(const Radio::SyncedTime &aNow) const { return mStartTime <= aNow.GetAsTime64(); }
+        bool          HasEnded(const Radio::SyncedTime &aNow) const { return GetEndTime() <= aNow.GetAsTime64(); }
+        void          ScheduleOnRadio(Radio::Radio &aRadio) const;
+
+    private:
+        Radio::Time64 mStartTime;
+        uint32_t      mDuration;
+        uint8_t       mChannel;
+        bool          mIsSpecified;
+    };
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    // CSL transmitter would schedule delayed transmission `kCslTransmitTimeAhead` earlier
-    // than expected delayed transmit time. The value is in usec.
-    // Only for radios not supporting OT_RADIO_CAPS_TRANSMIT_TIMING.
-    static constexpr uint32_t kCslTransmitTimeAhead = OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD;
-#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    void HandleCslReceiverTimer(void) { mCslReceiver.HandleTimer(); }
 
-    /**
-     * Initializes the states of the sub-MAC layer.
-     */
+    class CslReceiver : public InstanceLocator
+    {
+    public:
+        explicit CslReceiver(Instance &aInstance);
+
+        void Init(void);
+        void Stop(void) { mTimer.Stop(); }
+        void SetParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
+        void ProcessTxDone(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame);
+        void ProcessRxFrame(const RxFrame &aFrame);
+        void HandleTimer(void) { ScheduleSampleWindow(); }
+
+        const CslAccuracy &GetParentAccuracy(void) const { return mParentAccuracy; }
+        void               SetParentAccuracy(const CslAccuracy &aCslAccuracy) { mParentAccuracy = aCslAccuracy; }
+
+    private:
+        static constexpr uint32_t kMinReceiveOnAhead = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD;
+        static constexpr uint32_t kMinReceiveOnAfter = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
+        static constexpr uint32_t kReceiveTimeAhead  = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+
+        struct Window
+        {
+            Radio::SyncedTime mStartTime;
+            uint32_t          mDuration;
+        };
+
+        void     RestartTimerAfterSyncUpdate(void);
+        void     SetLastSyncToNow(void);
+        void     ScheduleSampleWindow(void);
+        void     DetermineWindow(const Radio::SyncedTime &aSampleTime, Window &aWindow) const;
+        uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
+        bool     IsEnabled(void) const { return mPeriod > 0; }
+        void     LogReceived(const RxFrame &aFrame);
+
+        using CslTimer = TimerMicroIn<SubMac, &SubMac::HandleCslReceiverTimer>;
+
+        uint16_t          mPeriod;
+        uint8_t           mChannel;
+        uint16_t          mPeerShort;
+        Radio::SyncedTime mSampleTime;
+        CslAccuracy       mParentAccuracy;
+        CslTimer          mTimer;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+        TimeMicro mLastSync;
+#else
+        Radio::Time64 mLastSync;
+#endif
+    };
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
     void Init(void);
 
-    bool RadioSupportsCsmaBackoff(void) const
-    {
-        return ((mRadioCaps & (OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES)) != 0);
-    }
+    bool RadioSupports(Capability aCapability) const { return (mRadioCaps & aCapability) != 0; }
+    bool ShouldHandle(Capability aCapability) const;
+    bool ShouldHandleCsmaBackoff(void) const;
 
-    bool RadioSupportsTransmitSecurity(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) != 0); }
-    bool RadioSupportsRetries(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0); }
-    bool RadioSupportsAckTimeout(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0); }
-    bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
-    bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
-    bool RadioSupportsReceiveTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RECEIVE_TIMING) != 0); }
-    bool RadioSupportsRxOnWhenIdle(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RX_ON_WHEN_IDLE) != 0); }
-
-    bool ShouldHandleTransmitSecurity(void) const;
-    bool ShouldHandleCsmaBackOff(void) const;
-    bool ShouldHandleAckTimeout(void) const;
-    bool ShouldHandleRetries(void) const;
-    bool ShouldHandleEnergyScan(void) const;
-    bool ShouldHandleTransmitTargetTime(void) const;
-    bool ShouldHandleTransitionToSleep(void) const;
-
-    void ProcessTransmitSecurity(void);
-    void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId);
+    void ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo);
+    void ReprocessSecurityForRetx(TxFrame::ParseInfo &aFrameInfo);
+    void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyIndex);
     void StartCsmaBackoff(void);
     void StartTimerForBackoff(uint8_t aBackoffExponent);
     void BeginTransmit(void);
@@ -635,32 +705,29 @@ private:
     void HandleReceiveDone(RxFrame *aFrame, Error aError);
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
-    void SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame);
+    void SignalFrameCounterUsedOnTxDone(const TxFrame::ParseInfo &aFrameInfo);
     void HandleEnergyScanDone(int8_t aMaxRssi);
     void HandleTimer(void);
 
-    Error RadioSleep(void);
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    void StartPendingTimedRx(void);
+    void ProcessTimedRx(void);
+#endif
 
     void               SetState(State aState);
     static const char *StateToString(State aState);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    bool IsRadioSampleEnabled(void) const;
-    void UpdateRadioSampleState(void);
-    void RadioSample(void);
-#endif
 #if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
     void HandleRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries);
 #endif
 
-    using SubMacTimer =
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-        TimerMicroIn<SubMac, &SubMac::HandleTimer>;
+    using SubMacTimer = TimerMicroIn<SubMac, &SubMac::HandleTimer>;
 #else
-        TimerMilliIn<SubMac, &SubMac::HandleTimer>;
+    using SubMacTimer = TimerMilliIn<SubMac, &SubMac::HandleTimer>;
 #endif
 
-    otRadioCaps  mRadioCaps;
+    Capabilities mRadioCaps;
     State        mState;
     uint8_t      mCsmaBackoffs;
     uint8_t      mTransmitRetries;
@@ -671,44 +738,25 @@ private:
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     bool mRadioFilterEnabled : 1;
 #endif
-    int8_t                       mEnergyScanMaxRssi;
-    TimeMilli                    mEnergyScanEndTime;
-    TxFrame                     &mTransmitFrame;
-    Callbacks                    mCallbacks;
-    Callback<otLinkPcapCallback> mPcapCallback;
-    KeyMaterial                  mPrevKey;
-    KeyMaterial                  mCurrKey;
-    KeyMaterial                  mNextKey;
-    uint32_t                     mFrameCounter;
-    uint8_t                      mKeyId;
+    int8_t                 mEnergyScanMaxRssi;
+    TimeMilli              mEnergyScanEndTime;
+    TxFrame               &mTransmitFrame;
+    Callbacks              mCallbacks;
+    Callback<PcapCallback> mPcapCallback;
+    KeyTrio                mKeyTrio;
+    uint32_t               mFrameCounter;
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-    uint8_t mRetxDelayBackOffExponent;
+    uint8_t mRetxDelayBackoffExponent;
 #endif
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    TimedRx mActiveTimedRx;
+    TimedRx mPendingTimedRx;
+#endif
+
     SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint16_t mCslPeriod;             // The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t  mCslChannel : 7;        // The CSL sample channel.
-    bool     mIsCslSampling : 1;     // Indicates that the current time is in CSL sample window
-                                     // for platforms not supporting `Radio::ReceiveAt()`.
-    uint16_t    mCslPeerShort;       // The CSL peer short address.
-    uint32_t    mCslSampleTimeRadio; // The CSL sample time of the current period based on radio time (lower 32-bit).
-    TimeMicro   mCslSampleTimeLocal; // The CSL sample time of the current period based on local time.
-    TimeMicro   mCslLastSync;        // The timestamp of the last successful CSL synchronization.
-    CslAccuracy mCslParentAccuracy;  // The parent's CSL accuracy (clock accuracy and uncertainty).
-    TimerMicro  mCslTimer;
-#endif
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    bool mIsWedSampling : 1;          // Indicates that the current time is in WED's sample window
-                                      // for platforms not supporting `Radio::ReceiveAt()`.
-    bool       mIsWedEnabled : 1;     // Indicates if the WED is enabled.
-    uint32_t   mWakeupListenInterval; // The wake-up listen interval, in microseconds.
-    uint32_t   mWakeupListenDuration; // The wake-up listen duration, in microseconds.
-    uint8_t    mWakeupChannel;        // The wake-up sample channel.
-    TimeMicro  mWedSampleTime;        // The WED sample time of the current interval in local time.
-    uint64_t   mWedSampleTimeRadio;   // The WED sample time of the current interval in radio time.
-    TimerMicro mWedTimer;
+    CslReceiver mCslReceiver;
 #endif
 };
 
@@ -719,4 +767,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // SUB_MAC_HPP_
+#endif // OT_CORE_MAC_SUB_MAC_HPP_

@@ -58,6 +58,10 @@ MessagePool::MessagePool(Instance &aInstance)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+MessagePool::~MessagePool(void) { otPlatMessagePoolDeinit(&GetInstance()); }
+#endif
+
 Message *MessagePool::Allocate(Message::Type aType, uint16_t aReserveHeader, const Message::Settings &aSettings)
 {
     Error    error = kErrorNone;
@@ -153,7 +157,10 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     }
 }
 
-Error MessagePool::ReclaimBuffers(Message::Priority aPriority) { return Get<MeshForwarder>().EvictMessage(aPriority); }
+Error MessagePool::ReclaimBuffers(Message::Priority aPriority)
+{
+    return Get<MeshForwarder>().EvictMessage(aPriority, MeshForwarder::kEvictReasonNoMessageBuffer);
+}
 
 uint16_t MessagePool::GetFreeBufferCount(void) const
 {
@@ -274,10 +281,19 @@ Error Message::SetLength(uint16_t aLength)
     GetMetadata().mLength = aLength;
 
     // Correct the offset in case shorter length is set.
-    if (GetOffset() > aLength)
-    {
-        SetOffset(aLength);
-    }
+    SetOffset(GetOffset());
+
+exit:
+    return error;
+}
+
+Error Message::IncreaseLength(uint16_t aSize)
+{
+    Error    error;
+    uint16_t length = GetLength();
+
+    VerifyOrExit(CanAddSafely<uint16_t>(length, aSize), error = kErrorNoBufs);
+    error = SetLength(length + aSize);
 
 exit:
     return error;
@@ -295,17 +311,20 @@ uint8_t Message::GetBufferCount(void) const
     return rval;
 }
 
-void Message::MoveOffset(int aDelta)
+void Message::MoveOffset(int16_t aDelta)
 {
-    OT_ASSERT(GetOffset() + aDelta <= GetLength());
-    GetMetadata().mOffset += static_cast<int16_t>(aDelta);
-    OT_ASSERT(GetMetadata().mOffset <= GetLength());
+    int32_t newOffset = static_cast<int32_t>(GetOffset()) + aDelta;
+
+    newOffset = Clamp<int32_t>(newOffset, 0, NumericLimits<uint16_t>::kMax);
+
+    SetOffset(static_cast<uint16_t>(newOffset));
 }
 
-void Message::SetOffset(uint16_t aOffset)
+void Message::SetOffset(uint16_t aOffset) { GetMetadata().mOffset = Min(aOffset, GetLength()); }
+
+uint16_t Message::DetermineLengthAfterOffset(void) const
 {
-    OT_ASSERT(aOffset <= GetLength());
-    GetMetadata().mOffset = aOffset;
+    return (GetOffset() <= GetLength()) ? GetLength() - GetOffset() : 0;
 }
 
 bool Message::IsMleCommand(Mle::Command aMleCommand) const
@@ -332,23 +351,15 @@ exit:
 
 const char *Message::PriorityToString(Priority aPriority)
 {
-    static const char *const kPriorityStrings[] = {
-        "low",    // (0) kPriorityLow
-        "normal", // (1) kPriorityNormal
-        "high",   // (2) kPriorityHigh
-        "net",    // (3) kPriorityNet
-    };
+#define PriorityMapList(_)       \
+    _(kPriorityLow, "low")       \
+    _(kPriorityNormal, "normal") \
+    _(kPriorityHigh, "high")     \
+    _(kPriorityNet, "net")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kPriorityLow);
-        ValidateNextEnum(kPriorityNormal);
-        ValidateNextEnum(kPriorityHigh);
-        ValidateNextEnum(kPriorityNet);
-    };
+    DefineEnumStringArray(PriorityMapList);
 
-    return kPriorityStrings[aPriority];
+    return kStrings[aPriority];
 }
 
 void Message::RegisterTxCallback(TxCallback aCallback, void *aContext)
@@ -363,20 +374,22 @@ void Message::InvokeTxCallback(Error aError)
 
     if (callback != nullptr)
     {
+        bool originalEvictFlag = GetDoNotEvict();
+
         GetMetadata().mTxCallback = nullptr;
+        SetDoNotEvict(true);
         callback(this, aError, GetMetadata().mTxContext);
+        SetDoNotEvict(originalEvictFlag);
     }
 }
 
 Error Message::AppendBytes(const void *aBuf, uint16_t aLength)
 {
     Error    error;
-    uint16_t oldLength = GetLength();
+    uint16_t offset = GetLength();
 
-    VerifyOrExit(CanAddSafely<uint16_t>(oldLength, aLength), error = kErrorNoBufs);
-
-    SuccessOrExit(error = SetLength(oldLength + aLength));
-    WriteBytes(oldLength, aBuf, aLength);
+    SuccessOrExit(error = IncreaseLength(aLength));
+    WriteBytes(offset, aBuf, aLength);
 
 exit:
     return error;
@@ -389,7 +402,7 @@ Error Message::AppendBytesFromMessage(const Message &aMessage, const OffsetRange
 
 Error Message::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
-    Error    error       = kErrorNone;
+    Error    error;
     uint16_t writeOffset = GetLength();
     Chunk    chunk;
 
@@ -397,8 +410,7 @@ Error Message::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset,
 
     VerifyOrExit(aMessage.GetLength() >= aOffset + aLength, error = kErrorParse);
 
-    VerifyOrExit(CanAddSafely<uint16_t>(GetLength(), aLength), error = kErrorNoBufs);
-    SuccessOrExit(error = SetLength(GetLength() + aLength));
+    SuccessOrExit(error = IncreaseLength(aLength));
 
     aMessage.GetFirstChunk(aOffset, aLength, chunk);
 
@@ -655,6 +667,29 @@ exit:
     return error;
 }
 
+Error Message::ReadAndAdvance(OffsetRange &aOffsetRange, void *aBuf, uint16_t aLength) const
+{
+    Error error = Read(aOffsetRange, aBuf, aLength);
+
+    if (error == kErrorNone)
+    {
+        aOffsetRange.AdvanceOffset(aLength);
+    }
+
+    return error;
+}
+
+Error Message::ReadAtAndAdvanceOffset(void *aBuf, uint16_t aLength)
+{
+    Error error;
+
+    SuccessOrExit(error = Read(GetOffset(), aBuf, aLength));
+    MoveOffset(aLength);
+
+exit:
+    return error;
+}
+
 bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength, ByteMatcher aMatcher) const
 {
     uint16_t       bytesToCompare = aLength;
@@ -766,39 +801,50 @@ void Message::WriteBytesFromMessage(uint16_t       aWriteOffset,
     }
 }
 
-Message *Message::Clone(uint16_t aLength) const
+Message *Message::Clone(uint16_t aLength, uint16_t aReserveHeader) const
 {
-    Error    error = kErrorNone;
-    Message *messageCopy;
-    Settings settings(IsLinkSecurityEnabled() ? kWithLinkSecurity : kNoLinkSecurity, GetPriority());
-    uint16_t offset;
+    Error            error = kErrorNone;
+    Message         *clone;
+    LinkSecurityMode linkSecurityMode = IsLinkSecurityEnabled() ? kWithLinkSecurity : kNoLinkSecurity;
 
-    aLength     = Min(GetLength(), aLength);
-    messageCopy = Get<MessagePool>().Allocate(GetType(), GetReserved(), settings);
-    VerifyOrExit(messageCopy != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = messageCopy->AppendBytesFromMessage(*this, 0, aLength));
+    clone = Get<MessagePool>().Allocate(GetType(), aReserveHeader, Settings(linkSecurityMode, GetPriority()));
+    VerifyOrExit(clone != nullptr, error = kErrorNoBufs);
+
+    aLength = Min(aLength, GetLength());
+
+    SuccessOrExit(error = clone->AppendBytesFromMessage(*this, 0, aLength));
 
     // Copy selected message information.
 
-    offset = Min(GetOffset(), aLength);
-    messageCopy->SetOffset(offset);
+    clone->SetOffset(Min(GetOffset(), aLength));
 
-    messageCopy->SetSubType(GetSubType());
-    messageCopy->SetLoopbackToHostAllowed(IsLoopbackToHostAllowed());
-    messageCopy->SetOrigin(GetOrigin());
-    messageCopy->SetTimestamp(GetTimestamp());
-    messageCopy->SetMeshDest(GetMeshDest());
-    messageCopy->SetPanId(GetPanId());
-    messageCopy->SetChannel(GetChannel());
-    messageCopy->SetRssAverager(GetRssAverager());
-    messageCopy->SetLqiAverager(GetLqiAverager());
+    clone->SetSubType(GetSubType());
+    clone->SetLoopbackToHostAllowed(IsLoopbackToHostAllowed());
+    clone->SetOrigin(GetOrigin());
+    clone->SetTimestamp(GetTimestamp());
+    clone->SetMeshDest(GetMeshDest());
+    clone->SetPanId(GetPanId());
+    clone->SetChannel(GetChannel());
+    clone->SetRssAverager(GetRssAverager());
+    clone->SetLqiAverager(GetLqiAverager());
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    messageCopy->SetTimeSync(IsTimeSync());
+    clone->SetTimeSync(IsTimeSync());
 #endif
 
 exit:
-    FreeAndNullMessageOnError(messageCopy, error);
-    return messageCopy;
+    FreeAndNullMessageOnError(clone, error);
+    return clone;
+}
+
+template <> Message *Message::Clone<kNoReservedHeader>(void) const { return Clone(GetLength(), 0); }
+
+template <> Message *Message::Clone<kSameReservedHeader>(void) const { return Clone(GetLength(), GetReserved()); }
+
+template <> Message *Message::Clone<kNoReservedHeader>(uint16_t aLength) const { return Clone(aLength, 0); }
+
+template <> Message *Message::Clone<kSameReservedHeader>(uint16_t aLength) const
+{
+    return Clone(aLength, GetReserved());
 }
 
 Error Message::GetLinkInfo(ThreadLinkInfo &aLinkInfo) const
@@ -844,7 +890,7 @@ void Message::UpdateLinkInfoFrom(const ThreadLinkInfo &aLinkInfo)
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
+    SetRadioType(static_cast<Radio::Type>(aLinkInfo.mRadioType));
 #endif
 }
 
@@ -948,6 +994,30 @@ void MessageQueue::DequeueAndFreeAll(void)
     {
         DequeueAndFree(*message);
     }
+}
+
+void MessageQueue::EnqueueAllFrom(MessageQueue &aOtherQueue)
+{
+    VerifyOrExit(&aOtherQueue != this);
+
+    VerifyOrExit(aOtherQueue.GetHead() != nullptr);
+
+    if (GetHead() == nullptr)
+    {
+        SetHead(aOtherQueue.GetHead());
+    }
+    else
+    {
+        GetTail()->Next()             = aOtherQueue.GetHead();
+        aOtherQueue.GetHead()->Prev() = GetTail();
+    }
+
+    SetTail(aOtherQueue.GetTail());
+
+    aOtherQueue.Clear();
+
+exit:
+    return;
 }
 
 Message::Iterator MessageQueue::begin(void) { return Message::Iterator(GetHead()); }

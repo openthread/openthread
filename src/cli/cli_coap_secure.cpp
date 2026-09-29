@@ -336,7 +336,7 @@ otError CoapSecure::ProcessIsRequest(Arg aArgs[], bool (*IsChecker)(otInstance *
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine("%s", IsChecker(GetInstancePtr()) ? "yes" : "no");
+    OutputLine("%s", ToYesNo(IsChecker(GetInstancePtr())));
 
 exit:
     return error;
@@ -525,7 +525,7 @@ otError CoapSecure::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     message = otCoapNewMessage(GetInstancePtr(), nullptr);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
-    otCoapMessageInit(message, coapType, aCoapCode);
+    SuccessOrExit(error = otCoapMessageInit(message, coapType, aCoapCode));
     otCoapMessageGenerateToken(message, OT_COAP_DEFAULT_TOKEN_LENGTH);
     SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
 

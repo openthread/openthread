@@ -345,11 +345,10 @@ typedef struct otRadioContext
     otExtAddress     mExtAddress; ///< In little-endian byte order.
     uint32_t         mMacFrameCounter;
     uint32_t         mPrevMacFrameCounter;
-    uint32_t         mCslSampleTime;   ///< The sample time based on the microsecond timer.
+    otRadioTime32    mCslSampleTime;   ///< The sample time based on the microsecond timer.
     uint16_t         mCslPeriod;       ///< In unit of 10 symbols.
     otShortAddress   mCslShortAddress; ///< The short address of the CSL receiver's peer.
     otExtAddress     mCslExtAddress;   ///< The extended address of the CSL receiver's peer.
-    bool             mCslPresent : 1;  ///< Indicates whether the CSL header IE is present.
     otShortAddress   mShortAddress;
     otShortAddress   mAlternateShortAddress;
     otRadioKeyType   mKeyType;

@@ -32,8 +32,8 @@
  *   SHA-256.
  */
 
-#ifndef HKDF_SHA256_HPP_
-#define HKDF_SHA256_HPP_
+#ifndef OT_CORE_CRYPTO_HKDF_SHA256_HPP_
+#define OT_CORE_CRYPTO_HKDF_SHA256_HPP_
 
 #include "openthread-core-config.h"
 
@@ -42,6 +42,7 @@
 #include "common/code_utils.hpp"
 #include "crypto/context_size.hpp"
 #include "crypto/hmac_sha256.hpp"
+#include "crypto/storage.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -93,8 +94,7 @@ public:
     void Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength);
 
 private:
-    otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kHkdfContextSize, uint64_t);
+    ContextWith<kHkdfContextSize> mContext;
 };
 
 /**
@@ -104,4 +104,4 @@ private:
 } // namespace Crypto
 } // namespace ot
 
-#endif // HKDF_SHA256_HPP_
+#endif // OT_CORE_CRYPTO_HKDF_SHA256_HPP_

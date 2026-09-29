@@ -31,8 +31,8 @@
  *   This file includes definitions for the message buffer pool and message buffers.
  */
 
-#ifndef MESSAGE_HPP_
-#define MESSAGE_HPP_
+#ifndef OT_CORE_COMMON_MESSAGE_HPP_
+#define OT_CORE_COMMON_MESSAGE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -70,6 +70,7 @@ struct otMessage
 
 namespace ot {
 
+class UnitTester;
 template <typename UintType> class CrcCalculator;
 
 namespace Crypto {
@@ -79,6 +80,10 @@ class Sha256;
 class HmacSha256;
 
 } // namespace Crypto
+
+namespace Ip6 {
+class PlatTcp;
+} // namespace Ip6
 
 /**
  * @addtogroup core-message
@@ -156,6 +161,15 @@ enum LinkSecurityMode : bool
 };
 
 /**
+ * Represents the clone mode indicating how the reserved header should be configured on the cloned message.
+ */
+enum CloneMode : uint8_t
+{
+    kNoReservedHeader,  ///< The clone message will have no reserved header.
+    kSameReservedHeader ///< The clone message will have the same reserved header size as the original `Message`.
+};
+
+/**
  * Represents a Message buffer.
  */
 class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
@@ -213,7 +227,7 @@ protected:
         uint8_t mOrigin : 2;   // The origin of the message.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         uint8_t mRadioType : 2; // The radio link type the message was received on, or should be sent on.
-        static_assert(Mac::kNumRadioTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
+        static_assert(Radio::kNumTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
 #endif
         uint8_t mType : 3;    // The message type.
         uint8_t mSubType : 4; // The message sub type.
@@ -248,14 +262,14 @@ protected:
     static constexpr uint16_t kBufferDataSize     = kSize - sizeof(otMessageBuffer);
     static constexpr uint16_t kHeadBufferDataSize = kBufferDataSize - sizeof(Metadata);
 
-    Metadata       &GetMetadata(void) { return mBuffer.mHead.mMetadata; }
-    const Metadata &GetMetadata(void) const { return mBuffer.mHead.mMetadata; }
+    Metadata       &GetMetadata(void) OT_LIFETIME_BOUND { return mBuffer.mHead.mMetadata; }
+    const Metadata &GetMetadata(void) const OT_LIFETIME_BOUND { return mBuffer.mHead.mMetadata; }
 
-    uint8_t       *GetFirstData(void) { return mBuffer.mHead.mData; }
-    const uint8_t *GetFirstData(void) const { return mBuffer.mHead.mData; }
+    uint8_t       *GetFirstData(void) OT_LIFETIME_BOUND { return mBuffer.mHead.mData; }
+    const uint8_t *GetFirstData(void) const OT_LIFETIME_BOUND { return mBuffer.mHead.mData; }
 
-    uint8_t       *GetData(void) { return mBuffer.mData; }
-    const uint8_t *GetData(void) const { return mBuffer.mData; }
+    uint8_t       *GetData(void) OT_LIFETIME_BOUND { return mBuffer.mData; }
+    const uint8_t *GetData(void) const OT_LIFETIME_BOUND { return mBuffer.mData; }
 
 private:
     union
@@ -275,7 +289,7 @@ static_assert(sizeof(Buffer) >= Buffer::kSize,
 /**
  * Represents a message.
  */
-class Message : public otMessage, public Buffer, public GetProvider<Message>
+class OT_GSL_OWNER Message : public otMessage, public Buffer, public GetProvider<Message>
 {
     friend class Checksum;
     friend class CrcCalculator<uint16_t>;
@@ -283,9 +297,11 @@ class Message : public otMessage, public Buffer, public GetProvider<Message>
     friend class Crypto::HmacSha256;
     friend class Crypto::Sha256;
     friend class Crypto::AesCcm;
+    friend class Ip6::PlatTcp;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
+    friend class ot::UnitTester;
 
 public:
     /**
@@ -334,6 +350,16 @@ public:
         kOriginHostTrusted   = OT_MESSAGE_ORIGIN_HOST_TRUSTED,   // Message from a trusted source on host.
         kOriginHostUntrusted = OT_MESSAGE_ORIGIN_HOST_UNTRUSTED, // Message from an untrusted source on host.
     };
+
+    /**
+     * Defines a predicate function reference which is used to check or filter a message.
+     *
+     * @param[in] aMessage   The message to check.
+     *
+     * @retval TRUE   If the message matches the criteria.
+     * @retval FALSE  If the message does not match the criteria.
+     */
+    typedef bool (&Checker)(const Message &aMessage);
 
     /**
      * Represents settings used for creating a new message.
@@ -465,7 +491,7 @@ public:
      * @returns A reference to the `Instance`.
      */
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Instance &GetInstance(void) const { return *GetMetadata().mInstance; }
+    Instance &GetInstance(void) const { return *UpdateActiveInstance(GetMetadata().mInstance); }
 #else
     Instance &GetInstance(void) const { return GetSingleInstance(); }
 #endif
@@ -500,6 +526,16 @@ public:
     Error SetLength(uint16_t aLength);
 
     /**
+     * Increases the message length by a given number of bytes.
+     *
+     * @param[in]  aSize     The number of bytes to increase the message length by.
+     *
+     * @retval kErrorNone    Successfully increased the length of the message.
+     * @retval kErrorNoBufs  Failed to allocate new buffers to grow the message.
+     */
+    Error IncreaseLength(uint16_t aSize);
+
+    /**
      * Returns the number of buffers in the message.
      */
     uint8_t GetBufferCount(void) const;
@@ -516,7 +552,7 @@ public:
      *
      * @param[in]  aDelta  The number of bytes to move the current offset, which may be positive or negative.
      */
-    void MoveOffset(int aDelta);
+    void MoveOffset(int16_t aDelta);
 
     /**
      * Sets the byte offset within the message.
@@ -524,6 +560,13 @@ public:
      * @param[in]  aOffset  The byte offset within the message.
      */
     void SetOffset(uint16_t aOffset);
+
+    /**
+     * Determines the length (number of bytes) in the message from the current message offset to the end of the message.
+     *
+     * @return Number of bytes in the message starting from the current message offset to the end of the message.
+     */
+    uint16_t DetermineLengthAfterOffset(void) const;
 
     /**
      * Returns the type of the message.
@@ -916,6 +959,65 @@ public:
     }
 
     /**
+     * Reads a given number of bytes from the message at a given offset range and advances the offset range.
+     *
+     * @param[in,out] aOffsetRange  The offset range in the message to read from. On success, it is advanced.
+     * @param[out]    aBuf          A pointer to a data buffer to copy the read bytes into.
+     * @param[in]     aLength       Number of bytes to read.
+     *
+     * @retval kErrorNone     Requested bytes were successfully read from message. @p aOffsetRange is advanced.
+     * @retval kErrorParse    Not enough bytes remaining to read the requested @p aLength. @p aOffsetRange is unchanged.
+     */
+    Error ReadAndAdvance(OffsetRange &aOffsetRange, void *aBuf, uint16_t aLength) const;
+
+    /**
+     * Reads an object from the message at a given offset range and advances the offset range.
+     *
+     * @tparam     ObjectType   The object type to read from the message.
+     *
+     * @param[in,out] aOffsetRange  The offset range in the message to read from. On success, it is advanced.
+     * @param[out]    aObject       A reference to the object to read into.
+     *
+     * @retval kErrorNone     Object @p aObject was successfully read from message. @p aOffsetRange is advanced.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object. @p aOffsetRange is
+     * unchanged.
+     */
+    template <typename ObjectType> Error ReadAndAdvance(OffsetRange &aOffsetRange, ObjectType &aObject) const
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return ReadAndAdvance(aOffsetRange, &aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * Reads a given number of bytes from the message at the current message offset and advances the message offset.
+     *
+     * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
+     * @param[in]  aLength  Number of bytes to read.
+     *
+     * @retval kErrorNone     Requested bytes were successfully read from message. Message offset is advanced.
+     * @retval kErrorParse    Not enough bytes remaining to read the requested @p aLength. Message offset is unchanged.
+     */
+    Error ReadAtAndAdvanceOffset(void *aBuf, uint16_t aLength);
+
+    /**
+     * Reads an object from the message at the current message offset and advances the message offset.
+     *
+     * @tparam     ObjectType   The object type to read from the message.
+     *
+     * @param[out] aObject      A reference to the object to read into.
+     *
+     * @retval kErrorNone     Object @p aObject was successfully read from message. Message offset is advanced.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object. Offset is unchanged.
+     */
+    template <typename ObjectType> Error ReadAtAndAdvanceOffset(ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return ReadAtAndAdvanceOffset(&aObject, sizeof(ObjectType));
+    }
+
+    /**
      * Compares the bytes in the message at a given offset with a given byte array.
      *
      * If there are fewer bytes available in the message than the requested @p aLength, the comparison is treated as
@@ -1053,28 +1155,42 @@ public:
     }
 
     /**
-     * Creates a copy of the message.
+     * Creates a copy of the message using a given configuration.
      *
-     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
-     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
-     * cloned message are also copied from the original one.
+     * The `Type`, `SubType`, `LinkSecurity`, `Offset`, `Priority`, `LoopbackToHostAllowed`, `Origin`, `Timestamp`,
+     * `MeshDest`, `PanId`, `Channel`, `RssAverager`, `LqiAverager`, and `TimeSync` fields on the cloned message are
+     * also copied from the original one.
      *
-     * @param[in] aLength  Number of payload bytes to copy.
+     * @param[in] aLength         Number of message bytes to copy.
+     * @param[in] aReserveHeader  Number of header bytes to reserve in the new cloned message.
      *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      */
-    Message *Clone(uint16_t aLength) const;
+    Message *Clone(uint16_t aLength, uint16_t aReserveHeader) const;
 
     /**
      * Creates a copy of the message.
      *
-     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
-     * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
-     * copied from the original one.
+     * @tparam kMode Specifies the clone mode (whether to keep the same reserved header size or have none).
+     *
+     * See the non-templated `Clone()` method for details on which message fields are also copied.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      */
-    Message *Clone(void) const { return Clone(GetLength()); }
+    template <CloneMode kMode> Message *Clone(void) const;
+
+    /**
+     * Creates a copy of the message.
+     *
+     * @tparam kMode Specifies the clone mode (whether to keep the same reserved header size or have none).
+     *
+     * See the non-templated `Clone()` method for details on which message fields are also copied.
+     *
+     * @param[in] aLength  Number of message bytes to copy.
+     *
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
+     */
+    template <CloneMode kMode> Message *Clone(uint16_t aLength) const;
 
     /**
      * Returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
@@ -1467,14 +1583,14 @@ public:
      *
      * @returns The radio link type of the message.
      */
-    Mac::RadioType GetRadioType(void) const { return static_cast<Mac::RadioType>(GetMetadata().mRadioType); }
+    Radio::Type GetRadioType(void) const { return static_cast<Radio::Type>(GetMetadata().mRadioType); }
 
     /**
      * Sets the radio link type the message was received on, or should be sent on.
      *
      * @param[in] aRadioType   A radio link type of the message.
      */
-    void SetRadioType(Mac::RadioType aRadioType)
+    void SetRadioType(Radio::Type aRadioType)
     {
         GetMetadata().mIsRadioTypeSet = true;
         GetMetadata().mRadioType      = aRadioType;
@@ -1489,8 +1605,83 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Helper common predicate `Checker` functions
+
+    /**
+     * Predicate checker function that matches and accepts any message.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   Always matches and accepts the message.
+     */
+    static bool AcceptAny(const Message &aMessage)
+    {
+        OT_UNUSED_VARIABLE(aMessage);
+        return true;
+    }
+
+    /**
+     * Predicate checker function that checks whether a message matches a specific type.
+     *
+     * @tparam kType        The message type to match.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message type matches @p kType.
+     * @retval FALSE  The message type does not match @p kType.
+     */
+    template <Type kType> static bool AcceptType(const Message &aMessage) { return aMessage.GetType() == kType; }
+
+    /**
+     * Predicate checker function that checks whether a message is of MLE subtype.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message is of MLE subtype.
+     * @retval FALSE  The message is not of MLE subtype.
+     */
+    static bool AcceptAnyMle(const Message &aMessage) { return aMessage.IsSubTypeMle(); }
+
+    /**
+     * Predicate checker function that checks whether a message is a specific MLE command.
+     *
+     * @tparam kMleCommand  The MLE command to match.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message is an MLE command of @p kMleCommand type.
+     * @retval FALSE  The message is not an MLE command of @p kMleCommand type.
+     */
+    template <Mle::Command kMleCommand> static bool AcceptMle(const Message &aMessage)
+    {
+        return aMessage.IsMleCommand(kMleCommand);
+    }
+
+    /**
+     * Predicate checker function that checks whether a message is scheduled for direct transmission.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message is scheduled for direct transmission.
+     * @retval FALSE  The message is not scheduled for direct transmission.
+     */
+    static bool AcceptDirectTx(const Message &aMessage) { return aMessage.IsDirectTransmission(); }
+
+#if OPENTHREAD_FTD
+    /**
+     * Predicate checker function that checks whether a message is scheduled for indirect transmission to any child.
+     *
+     * @param[in] aMessage  The message to check.
+     *
+     * @retval TRUE   The message is scheduled for indirect transmission.
+     * @retval FALSE  The message is not scheduled for indirect transmission.
+     */
+    static bool AcceptIndirectTx(const Message &aMessage) { return !aMessage.GetIndirectTxChildMask().IsEmpty(); }
+#endif
+
 protected:
-    class ConstIterator : public ItemPtrIterator<const Message, ConstIterator>
+    class OT_GSL_POINTER ConstIterator : public ItemPtrIterator<const Message, ConstIterator>
     {
         friend class ItemPtrIterator<const Message, ConstIterator>;
 
@@ -1506,7 +1697,7 @@ protected:
         void Advance(void) { mItem = mItem->GetNext(); }
     };
 
-    class Iterator : public ItemPtrIterator<Message, Iterator>
+    class OT_GSL_POINTER Iterator : public ItemPtrIterator<Message, Iterator>
     {
         friend class ItemPtrIterator<Message, Iterator>;
 
@@ -1533,20 +1724,21 @@ protected:
     void     SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
 
 private:
-    class Chunk : public Data<kWithUint16Length>
+    class OT_GSL_POINTER Chunk : public Data<kWithUint16Length>
     {
     public:
-        const Buffer *GetBuffer(void) const { return mBuffer; }
+        // Note: `GetBytes() const OT_LIFETIME_BOUND` is inherited from `Data<kWithUint16Length>`.
+        const Buffer *GetBuffer(void) const OT_LIFETIME_BOUND { return mBuffer; }
         void          SetBuffer(const Buffer *aBuffer) { mBuffer = aBuffer; }
 
     private:
         const Buffer *mBuffer; // Buffer containing the chunk
     };
 
-    class MutableChunk : public Chunk
+    class OT_GSL_POINTER MutableChunk : public Chunk
     {
     public:
-        uint8_t *GetBytes(void) { return AsNonConst(Chunk::GetBytes()); }
+        uint8_t *GetBytes(void) OT_LIFETIME_BOUND { return AsNonConst(Chunk::GetBytes()); }
     };
 
     void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) const;
@@ -1569,10 +1761,10 @@ private:
     void SetRssAverager(const RssAverager &aRssAverager) { GetMetadata().mRssAverager = aRssAverager; }
     void SetLqiAverager(const LqiAverager &aLqiAverager) { GetMetadata().mLqiAverager = aLqiAverager; }
 
-    Message       *&Next(void) { return GetMetadata().mNext; }
-    Message *const &Next(void) const { return GetMetadata().mNext; }
-    Message       *&Prev(void) { return GetMetadata().mPrev; }
-    Message *const &Prev(void) const { return GetMetadata().mPrev; }
+    Message       *&Next(void) OT_LIFETIME_BOUND { return GetMetadata().mNext; }
+    Message *const &Next(void) const OT_LIFETIME_BOUND { return GetMetadata().mNext; }
+    Message       *&Prev(void) OT_LIFETIME_BOUND { return GetMetadata().mPrev; }
+    Message *const &Prev(void) const OT_LIFETIME_BOUND { return GetMetadata().mPrev; }
 
     static Message       *NextOf(Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
     static const Message *NextOf(const Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
@@ -1612,6 +1804,14 @@ public:
      */
     ~MessageQueue(void) { DequeueAndFreeAll(); }
 #endif
+
+    /**
+     * Indicates whether the message queue is empty.
+     *
+     * @retval TRUE   The message queue is empty.
+     * @retval FALSE  The message queue is not empty.
+     */
+    bool IsEmpty(void) const { return GetHead() == nullptr; }
 
     /**
      * Returns a pointer to the first message.
@@ -1660,6 +1860,15 @@ public:
      * Removes and frees all messages from the queue.
      */
     void DequeueAndFreeAll(void);
+
+    /**
+     * Enqueues all messages from another message queue at the end of this queue.
+     *
+     * Upon return, @p aOtherQueue will be empty.
+     *
+     * @param[in,out] aOtherQueue  The other message queue to enqueue from.
+     */
+    void EnqueueAllFrom(MessageQueue &aOtherQueue);
 
     /**
      * Gets the information about number of messages and buffers in the queue.
@@ -1849,6 +2058,13 @@ public:
      */
     explicit MessagePool(Instance &aInstance);
 
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    /**
+     * Tears down the object and releases platform managed resources.
+     */
+    ~MessagePool(void);
+#endif
+
     /**
      * Allocates a new message with specified settings.
      *
@@ -1929,6 +2145,12 @@ private:
     uint16_t mMaxAllocated;
 };
 
+// Declare specializations of `Message::Clone<CloneMode>()` (implemented in `message.cpp`).
+template <> Message *Message::Clone<kNoReservedHeader>(void) const;
+template <> Message *Message::Clone<kSameReservedHeader>(void) const;
+template <> Message *Message::Clone<kNoReservedHeader>(uint16_t aLength) const;
+template <> Message *Message::Clone<kSameReservedHeader>(uint16_t aLength) const;
+
 /**
  * @}
  */
@@ -1942,4 +2164,4 @@ DefineMapEnum(otMessageOrigin, Message::Origin);
 
 } // namespace ot
 
-#endif // MESSAGE_HPP_
+#endif // OT_CORE_COMMON_MESSAGE_HPP_

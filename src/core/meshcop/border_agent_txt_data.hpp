@@ -31,8 +31,8 @@
  *   This file includes definitions for Border Agent MeshCoP service TXT data.
  */
 
-#ifndef BORDER_AGENT_TXT_DATA_HPP_
-#define BORDER_AGENT_TXT_DATA_HPP_
+#ifndef OT_CORE_MESHCOP_BORDER_AGENT_TXT_DATA_HPP_
+#define OT_CORE_MESHCOP_BORDER_AGENT_TXT_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -40,13 +40,18 @@
 #include <openthread/border_agent_txt_data.h>
 
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/error.hpp"
+#include "common/heap_data.hpp"
 #include "common/locator.hpp"
+#include "common/notifier.hpp"
+#include "common/tasklet.hpp"
 #include "common/type_traits.hpp"
 #include "net/dns_types.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/vendor_info.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -56,11 +61,15 @@ namespace BorderAgent {
 
 class TxtData : public InstanceLocator
 {
+    friend class ot::Notifier;
+    friend class ot::VendorInfo;
+
 public:
-    typedef otBorderAgentConnMode      ConnMode;     ///< Connection Mode in a Border Agent State Bitmap.
-    typedef otBorderAgentThreadIfState IfState;      ///< Thread Interface State in a Border Agent State Bitmap.
-    typedef otBorderAgentAvailability  Availability; ///< Availability Status in a Border Agent State Bitmap.
-    typedef otBorderAgentThreadRole    Role;         ///< Thread Role in a Border Agent State Bitmap.
+    typedef otBorderAgentConnMode      ConnMode;      ///< Connection Mode in a Border Agent State Bitmap.
+    typedef otBorderAgentThreadIfState IfState;       ///< Thread Interface State in a Border Agent State Bitmap.
+    typedef otBorderAgentAvailability  Availability;  ///< Availability Status in a Border Agent State Bitmap.
+    typedef otBorderAgentThreadRole    Role;          ///< Thread Role in a Border Agent State Bitmap.
+    typedef otBorderAgentMultiAilState MultiAilState; ///< Multi-AIL detection state in a Border Agent State Bitmap.
 
     static constexpr ConnMode kConnModeDisabled = OT_BORDER_AGENT_CONN_MODE_DISABLED; ///< Not allowed.
     static constexpr ConnMode kConnModePskc     = OT_BORDER_AGENT_CONN_MODE_PSKC;     ///< DTLS with PSKc.
@@ -79,6 +88,10 @@ public:
     static constexpr Role kRoleChild            = OT_BORDER_AGENT_THREAD_ROLE_CHILD;                ///< Child.
     static constexpr Role kRoleRouter           = OT_BORDER_AGENT_THREAD_ROLE_ROUTER;               ///< Router.
     static constexpr Role kRoleLeader           = OT_BORDER_AGENT_THREAD_ROLE_LEADER;               ///< Leader.
+
+    static constexpr MultiAilState kMultiAilDisabled    = OT_BORDER_AGENT_MULTI_AIL_STATE_DISABLED;     ///< Disabled.
+    static constexpr MultiAilState kMultiAilNotDetected = OT_BORDER_AGENT_MULTI_AIL_STATE_NOT_DETECTED; ///< Not det.
+    static constexpr MultiAilState kMultiAilDetected    = OT_BORDER_AGENT_MULTI_AIL_STATE_DETECTED;     ///< Detected.
 
     /**
      * Initializes the `TxtData` object.
@@ -112,6 +125,7 @@ public:
         static bool ReadValue(const Dns::TxtEntry &aEntry, void *aBuffer, uint16_t aSize);
         static void ReadStringValue(const Dns::TxtEntry &aEntry, char *aString, uint16_t aStringSize);
         static bool ReadOmrPrefix(const Dns::TxtEntry &aEntry, Ip6::Prefix &aPrefix);
+        static bool ReadVendorOui(const Dns::TxtEntry &aEntry, VendorInfo::Oui &aOui);
 
         template <typename ObjectType> bool ReadValue(const Dns::TxtEntry &aEntry, ObjectType &aObject)
         {
@@ -143,23 +157,57 @@ public:
         }
     };
 
+    /**
+     * Converts a given Connection Mode in a Border Agent State Bitmap to a human-readable string.
+     *
+     * @param[in] aConnMode   The Connection Mode to convert.
+     *
+     * @return The string representation of @p aConnMode.
+     */
+    static const char *ConnModeToString(ConnMode aConnMode);
+
+    /**
+     * Converts a given Thread Interface State in a Border Agent State Bitmap to a human-readable string.
+     *
+     * @param[in] aIfState   The Thread Interface State to convert.
+     *
+     * @return The string representation of @p aIfState.
+     */
+    static const char *IfStateToString(IfState aIfState);
+
+    /**
+     * Converts a given Availability Status in a Border Agent State Bitmap to a human-readable string.
+     *
+     * @param[in] aAvailability   The Availability Status to convert.
+     *
+     * @return The string representation of @p aAvailability.
+     */
+    static const char *AvailabilityToString(Availability aAvailability);
+
+    /**
+     * Converts a given Thread Role in a Border Agent State Bitmap to a human-readable string.
+     *
+     * @param[in] aRole   The Thread Role to convert.
+     *
+     * @return The string representation of @p aRole.
+     */
+    static const char *RoleToString(Role aRole);
+
+    /**
+     * Converts a given Multi-AIL State in a Border Agent State Bitmap to a human-readable string.
+     *
+     * @param[in] aState   The Multi-AIL State to convert.
+     *
+     * @return The string representation of @p aState.
+     */
+    static const char *MultiAilStateToString(MultiAilState aState);
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
-    typedef otBorderAgentMeshCoPServiceTxtData ServiceTxtData; ///< Service TXT Data.
-
-    /**
-     * Prepares the MeshCoP service TXT data.
-     *
-     * @param[out]    aBuffer        A pointer to a buffer to store the TXT data.
-     * @param[in]     aBufferSize    The size of @p aBuffer.
-     * @param[out]    aLength        On exit, the length of the prepared TXT data.
-     *
-     * @retval kErrorNone      Successfully prepared the TXT data.
-     * @retval kErrorNoBufs    The @p aBufferSize is too small.
-     */
-    Error Prepare(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength);
+    typedef otBorderAgentMeshCoPServiceTxtData         ServiceTxtData;  ///< Service TXT Data.
+    typedef otBorderAgentMeshCoPServiceChangedCallback ChangedCallback; ///< Service TXT Data changed callback.
 
     /**
      * Prepares the MeshCoP service TXT data.
@@ -171,9 +219,69 @@ public:
      */
     Error Prepare(ServiceTxtData &aTxtData);
 
+    /**
+     * Sets the callback function used to notify any changes on the MeshCoP service TXT Data.
+     *
+     * The callback is invoked when the state of MeshCoP service TXT values changes. For example, it is
+     * invoked when the network name or the extended PAN ID changes.
+     *
+     * This callback is invoked once right after this API is called to provide initial states of the MeshCoP
+     * service to the application.
+     *
+     * @param[in] aCallback  The callback to invoke when there are any changes of the MeshCoP service.
+     * @param[in] aContext   A pointer to application-specific context.
+     */
+    void SetChangedCallback(ChangedCallback aCallback, void *aContext);
+
+    /**
+     * Requests a refresh of the MeshCoP service TXT data.
+     *
+     * This method is used to notify the `TxtData` module that a network parameter impacting one of the MeshCoP service
+     * TXT data entries has changed. For example, `RoutingManager` uses this method when the favored OMR prefix is
+     * changed.
+     */
+    void Refresh(void) { mChangedTask.Post(); }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    /**
+     * Prepares the MeshCoP service TXT data including the vendor extra TXT data.
+     *
+     * The TXT data generated by the Border Agent itself is appended with the vendor extra TXT data (if any).
+     * If the vendor extra TXT data does not include vendor name or model entries, they are added automatically
+     * using the values from `VendorInfo`.
+     *
+     * @param[out] aTxtData   A reference to a `Heap::Data` object to output the prepared TXT data.
+     */
+    void PrepareWithVendorData(Heap::Data &aTxtData);
+
+    /**
+     * Sets the vendor extra TXT data to be included when the Border Agent advertises the mDNS `_meshcop._udp` service.
+     *
+     * The provided @p aVendorData bytes are appended as they appear in the buffer to the end of the TXT data generated
+     * by the Border Agent itself, and are then included in the advertised mDNS `_meshcop._udp` service.
+     *
+     * This method itself does not perform any validation of the format of the provided @p aVendorData. Therefore, the
+     * caller MUST ensure it is formatted properly. Per the Thread specification, vendor-specific Key-Value TXT data
+     * pairs use TXT keys starting with 'v'. For example, `vn` for vendor name.
+     *
+     * The `BorderAgent` will create and retain its own copy of the bytes in @p aVendorData. So, the buffer passed to
+     * this method does not need to persist beyond the scope of the call.
+     *
+     * The vendor TXT data can be set at any time while the Border Agent is in any state. If there is a change from the
+     * previously set value, it will trigger an update of the registered mDNS service to advertise the new TXT data.
+     *
+     * @param[in] aVendorData        A pointer to the buffer containing the vendor TXT data.
+     * @param[in] aVendorDataLength  The length of @p aVendorData in bytes.
+     */
+    void SetVendorData(const uint8_t *aVendorData, uint16_t aVendorDataLength);
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 private:
+    static constexpr uint16_t kMaxSizeNoVendorData = OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH;
+
     static const char kRecordVersion[];
 
     struct Key
@@ -191,29 +299,32 @@ private:
         static const char kBbrPort[];
         static const char kOmrPrefix[];
         static const char kExtAddress[];
-#if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
         static const char kVendorName[];
         static const char kModelName[];
-#endif
+        static const char kVendorOui[];
     };
 
     struct StateBitmap
     {
-        static constexpr uint8_t kOffsetConnMode       = 0;
-        static constexpr uint8_t kOffsetIfState        = 3;
-        static constexpr uint8_t kOffsetAvailability   = 5;
-        static constexpr uint8_t kOffsetBbrIsActive    = 7;
-        static constexpr uint8_t kOffsetBbrIsPrimary   = 8;
-        static constexpr uint8_t kOffsetRole           = 9;
-        static constexpr uint8_t kOffsetEpskcSupported = 11;
+        static constexpr uint8_t kOffsetConnMode          = 0;
+        static constexpr uint8_t kOffsetIfState           = 3;
+        static constexpr uint8_t kOffsetAvailability      = 5;
+        static constexpr uint8_t kOffsetBbrIsActive       = 7;
+        static constexpr uint8_t kOffsetBbrIsPrimary      = 8;
+        static constexpr uint8_t kOffsetRole              = 9;
+        static constexpr uint8_t kOffsetEpskcSupported    = 11;
+        static constexpr uint8_t kOffsetMultiAilState     = 12;
+        static constexpr uint8_t kOffsetAdmitterSupported = 14;
 
-        static constexpr uint32_t kMaskConnMode       = 7 << kOffsetConnMode;
-        static constexpr uint32_t kMaskIfState        = 3 << kOffsetIfState;
-        static constexpr uint32_t kMaskAvailability   = 3 << kOffsetAvailability;
-        static constexpr uint32_t kFlagBbrIsActive    = 1 << kOffsetBbrIsActive;
-        static constexpr uint32_t kFlagBbrIsPrimary   = 1 << kOffsetBbrIsPrimary;
-        static constexpr uint32_t kMaskRole           = 3 << kOffsetRole;
-        static constexpr uint32_t kFlagEpskcSupported = 1 << kOffsetEpskcSupported;
+        static constexpr uint32_t kMaskConnMode          = 7 << kOffsetConnMode;
+        static constexpr uint32_t kMaskIfState           = 3 << kOffsetIfState;
+        static constexpr uint32_t kMaskAvailability      = 3 << kOffsetAvailability;
+        static constexpr uint32_t kFlagBbrIsActive       = 1 << kOffsetBbrIsActive;
+        static constexpr uint32_t kFlagBbrIsPrimary      = 1 << kOffsetBbrIsPrimary;
+        static constexpr uint32_t kMaskRole              = 3 << kOffsetRole;
+        static constexpr uint32_t kFlagEpskcSupported    = 1 << kOffsetEpskcSupported;
+        static constexpr uint32_t kMaskMultiAilState     = 3 << kOffsetMultiAilState;
+        static constexpr uint32_t kFlagAdmitterSupported = 1 << kOffsetAdmitterSupported;
 
         static_assert(kConnModeDisabled == 0, "kConnModeDisabled is incorrect");
         static_assert(kConnModePskc == 1, "kConnModePskc is incorrect");
@@ -233,6 +344,10 @@ private:
         static_assert(kRoleRouter == 2, "kRoleRouter is incorrect");
         static_assert(kRoleLeader == 3, "kRoleLeader is incorrect");
 
+        static_assert(kMultiAilDisabled == 0, "kMultiAilDisabled is incorrect");
+        static_assert(kMultiAilNotDetected == 1, "kMultiAilNotDetected is incorrect");
+        static_assert(kMultiAilDetected == 2, "kMultiAilDetected is incorrect");
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
         typedef otBorderAgentStateBitmap Info;
 
@@ -243,6 +358,35 @@ private:
         static uint32_t Determine(Instance &aInstance);
 #endif
     };
+
+    Error Prepare(uint8_t  *aBuffer,
+                  uint16_t  aBufferSize,
+                  uint16_t &aLength,
+                  bool      aAddVendorName,
+                  bool      aAddVendorModel,
+                  bool      aAddVendorOui);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    // Callback from Notifier
+    void HandleNotifierEvents(Events aEvents);
+    // Callbacks from VendorInfo
+    void HandleVendorNameChange(void);
+    void HandleVendorModelChange(void);
+    void HandleVendorOuiChange(void);
+
+    void HandleChangedTask(void);
+
+    using ChangedTask = TaskletIn<TxtData, &TxtData::HandleChangedTask>;
+
+    Callback<ChangedCallback> mChangedCallback;
+    ChangedTask               mChangedTask;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Heap::Data mVendorData;
+    bool       mShouldAddVendorName;
+    bool       mShouldAddVendorModel;
+    bool       mShouldAddVendorOui;
+#endif
+#endif
 };
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
@@ -256,4 +400,4 @@ DefineCoreType(otBorderAgentTxtDataInfo, MeshCoP::BorderAgent::TxtData::Info);
 
 } // namespace ot
 
-#endif // BORDER_AGENT_TXT_DATA_HPP_
+#endif // OT_CORE_MESHCOP_BORDER_AGENT_TXT_DATA_HPP_

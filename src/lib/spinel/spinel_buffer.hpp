@@ -30,8 +30,8 @@
  *   This file contains definitions for the NCP frame buffer class.
  */
 
-#ifndef NCP_FRAME_BUFFER_HPP_
-#define NCP_FRAME_BUFFER_HPP_
+#ifndef OT_LIB_SPINEL_SPINEL_BUFFER_HPP_
+#define OT_LIB_SPINEL_SPINEL_BUFFER_HPP_
 
 #include "openthread-spinel-config.h"
 
@@ -624,4 +624,4 @@ private:
 } // namespace Spinel
 } // namespace ot
 
-#endif // NCP_FRAME_BUFFER_HPP_
+#endif // OT_LIB_SPINEL_SPINEL_BUFFER_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for `Heap::String` (a heap allocated string).
  */
 
-#ifndef HEAP_STRING_HPP_
-#define HEAP_STRING_HPP_
+#ifndef OT_CORE_COMMON_HEAP_STRING_HPP_
+#define OT_CORE_COMMON_HEAP_STRING_HPP_
 
 #include "openthread-core-config.h"
 
@@ -50,7 +50,7 @@ namespace Heap {
  * be reused and/or freed and reallocated when the string is set. The `Heap::String` destructor will always free the
  * allocated buffer.
  */
-class String : public Unequatable<String>
+class OT_GSL_OWNER String : public Unequatable<String>
 {
 public:
     /**
@@ -92,7 +92,7 @@ public:
      *
      * @returns A pointer to C string buffer or `nullptr` if the `String` is null (never set or freed).
      */
-    const char *AsCString(void) const { return mStringBuffer; }
+    const char *AsCString(void) const OT_LIFETIME_BOUND { return mStringBuffer; }
 
     /**
      * Sets the string from a given C string.
@@ -132,7 +132,7 @@ public:
      *
      * @returns An rvalue reference to this `String`.
      */
-    String &&Move(void) { return static_cast<String &&>(*this); }
+    String &&Move(void) OT_LIFETIME_BOUND { return static_cast<String &&>(*this); }
 
     /**
      * Frees any buffer allocated by the `String`.
@@ -192,4 +192,4 @@ private:
 } // namespace Heap
 } // namespace ot
 
-#endif // HEAP_STRING_HPP_
+#endif // OT_CORE_COMMON_HEAP_STRING_HPP_

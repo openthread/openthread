@@ -49,7 +49,7 @@ otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aE
 }
 
 otError otDnsEncodeTxtData(const otDnsTxtEntry *aTxtEntries,
-                           uint8_t              aNumTxtEntries,
+                           uint16_t             aNumTxtEntries,
                            uint8_t             *aTxtData,
                            uint16_t            *aTxtDataLength)
 {
@@ -69,9 +69,15 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-void otDnsSetNameCompressionEnabled(bool aEnabled) { Instance::SetDnsNameCompressionEnabled(aEnabled); }
+otError otDnsSetNameCompressionEnabled(otInstance *aInstance, bool aEnabled)
+{
+    return AsCoreType(aInstance).SetDnsNameCompressionEnabled(aEnabled);
+}
 
-bool otDnsIsNameCompressionEnabled(void) { return Instance::IsDnsNameCompressionEnabled(); }
+bool otDnsIsNameCompressionEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).IsDnsNameCompressionEnabled();
+}
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

@@ -40,10 +40,15 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <openthread/openthread-system.h>
+
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
+static otSysCrashCallback sCrashCallback = nullptr;
+
+void otSysRegisterCrashCallback(otSysCrashCallback aCallback) { sCrashCallback = aCallback; }
 #if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
 #if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 #include <log/log.h>
@@ -155,6 +160,11 @@ static void signalCritical(int sig, siginfo_t *info, void *ucontext)
     dumpStack();
 
     otLogCritPlat("------------------ END OF CRASH ------------------");
+
+    if (sCrashCallback != nullptr)
+    {
+        sCrashCallback();
+    }
 
     resetSignalActions();
     raise(sig);

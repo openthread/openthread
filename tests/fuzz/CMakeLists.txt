@@ -31,12 +31,15 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/tests/nexus
+    ${PROJECT_SOURCE_DIR}/tests/nexus/platform
+    ${PROJECT_SOURCE_DIR}/examples/platforms/utils
 )
 
 set(COMMON_COMPILE_OPTIONS
     -DOPENTHREAD_FTD=1
     -DOPENTHREAD_MTD=0
     -DOPENTHREAD_RADIO=0
+    -DOPENTHREAD_CONFIG_USE_STD_NEW=1
 )
 
 set(COMMON_LIBS
@@ -46,6 +49,7 @@ set(COMMON_LIBS
     ${OT_MBEDTLS}
     $ENV{LIB_FUZZING_ENGINE}
     ot-config
+    openthread-cli-ftd
 )
 
 target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")
@@ -56,12 +60,12 @@ macro(ot_nexus_test name)
 
     # Macro to add an OpenThread nexus test.
     #
-    #   Nexus test name will be `nexus_{name}`. Test source file of
-    #   `test_{name}.cpp` is used. Optional extra arguments can be
+    #   Nexus test name will be `{name}-fuzzer`. Test source file of
+    #   `fuzz_{name}.cpp` is used. Optional extra arguments can be
     #   passed to provide additional source files.
 
     add_executable(${name}-fuzzer
-        ${name}.cpp ${ARGN}
+        fuzz_${name}.cpp ${ARGN}
     )
 
     target_include_directories(${name}-fuzzer

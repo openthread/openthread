@@ -48,7 +48,7 @@ void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout)
 
 const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 {
-    return &AsCoreType(aInstance).Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
+    return &AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().GetExtPanId();
 }
 
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
@@ -59,7 +59,7 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *a
 
     VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 
-    instance.Get<MeshCoP::ExtendedPanIdManager>().SetExtPanId(extPanId);
+    instance.Get<MeshCoP::NetworkIdentity>().SetExtPanId(extPanId);
 
     instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
     instance.Get<MeshCoP::PendingDatasetManager>().Clear();
@@ -73,7 +73,7 @@ otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
     Error error = kErrorNone;
 
     VerifyOrExit(!AsCoreType(aInstance).Get<Mle::Mle>().HasRloc16(Mle::kInvalidRloc16), error = kErrorDetached);
-    AsCoreType(aInstance).Get<Mle::Mle>().GetLeaderRloc(AsCoreType(aLeaderRloc));
+    AsCoreType(aInstance).Get<Mle::Mle>().ComposeLeaderRloc(AsCoreType(aLeaderRloc));
 
 exit:
     return error;
@@ -189,7 +189,7 @@ otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6A
     Error error = kErrorNone;
 
     VerifyOrExit(!AsCoreType(aInstance).Get<Mle::Mle>().HasRloc16(Mle::kInvalidRloc16), error = kErrorDetached);
-    AsCoreType(aInstance).Get<Mle::Mle>().GetServiceAloc(aServiceId, AsCoreType(aServiceAloc));
+    AsCoreType(aInstance).Get<Mle::Mle>().ComposeServiceAloc(aServiceId, AsCoreType(aServiceAloc));
 
 exit:
     return error;
@@ -197,7 +197,7 @@ exit:
 
 const char *otThreadGetNetworkName(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString();
+    return AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().GetNetworkName().GetAsCString();
 }
 
 otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
@@ -212,7 +212,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
     VerifyOrExit(nullptr != aNetworkName && aNetworkName[0] != kNullChar, error = kErrorInvalidArgs);
 #endif
 
-    error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetNetworkName(aNetworkName);
+    error = AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().SetNetworkName(aNetworkName);
     AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Clear();
     AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Clear();
 
@@ -223,7 +223,7 @@ exit:
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 const char *otThreadGetDomainName(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsCString();
+    return AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().GetDomainName().GetAsCString();
 }
 
 otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
@@ -232,42 +232,11 @@ otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 
-    error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetDomainName(aDomainName);
+    error = AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().SetDomainName(aDomainName);
 
 exit:
     return error;
 }
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-otError otThreadSetFixedDuaInterfaceIdentifier(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid)
-{
-    Error error = kErrorNone;
-
-    if (aIid)
-    {
-        error = AsCoreType(aInstance).Get<DuaManager>().SetFixedDuaInterfaceIdentifier(AsCoreType(aIid));
-    }
-    else
-    {
-        AsCoreType(aInstance).Get<DuaManager>().ClearFixedDuaInterfaceIdentifier();
-    }
-
-    return error;
-}
-
-const otIp6InterfaceIdentifier *otThreadGetFixedDuaInterfaceIdentifier(otInstance *aInstance)
-{
-    Instance                       &instance = AsCoreType(aInstance);
-    const otIp6InterfaceIdentifier *iid      = nullptr;
-
-    if (instance.Get<DuaManager>().IsFixedDuaInterfaceIdentifierSet())
-    {
-        iid = &instance.Get<DuaManager>().GetFixedDuaInterfaceIdentifier();
-    }
-
-    return iid;
-}
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -419,6 +388,7 @@ otError otThreadDiscover(otInstance              *aInstance,
         /* aFilterIndexes (use hash of factory EUI64) */ nullptr, aCallback, aCallbackContext);
 }
 
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
 otError otThreadSetJoinerAdvertisement(otInstance    *aInstance,
                                        uint32_t       aOui,
                                        const uint8_t *aAdvData,
@@ -426,6 +396,7 @@ otError otThreadSetJoinerAdvertisement(otInstance    *aInstance,
 {
     return AsCoreType(aInstance).Get<Mle::DiscoverScanner>().SetJoinerAdvertisement(aOui, aAdvData, aAdvDataLength);
 }
+#endif
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)
 {
@@ -512,26 +483,21 @@ uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-otError otThreadWakeup(otInstance         *aInstance,
-                       const otExtAddress *aWedAddress,
-                       uint16_t            aWakeupIntervalUs,
-                       uint16_t            aWakeupDurationMs,
-                       otWakeupCallback    aCallback,
-                       void               *aCallbackContext)
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
+otError otThreadWakeup(otInstance *, const otExtAddress *, uint16_t, uint16_t, otWakeupCallback, void *)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().Wakeup(AsCoreType(aWedAddress), aWakeupIntervalUs, aWakeupDurationMs,
-                                                        aCallback, aCallbackContext);
+    return kErrorNotImplemented;
 }
 #endif
-
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint16_t aSize)
 {
     StringWriter writer(aBuffer, aSize);
+    UptimeMsec   uptime = static_cast<UptimeMsec>(aDuration) * Time::kOneSecondInMsec;
 
-    Uptime::UptimeToString(Uptime::SecToMsec(aDuration), writer, /* aIncludeMsec */ false);
+    UptimeToString(uptime, writer, /* aFlags */ 0);
 }
 #endif
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD

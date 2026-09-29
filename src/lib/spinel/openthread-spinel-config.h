@@ -31,8 +31,8 @@
  *   This file includes compile-time configuration constants for OpenThread.
  */
 
-#ifndef OPENTHREAD_SPINEL_CONFIG_H_
-#define OPENTHREAD_SPINEL_CONFIG_H_
+#ifndef OT_LIB_SPINEL_OPENTHREAD_SPINEL_CONFIG_H_
+#define OT_LIB_SPINEL_OPENTHREAD_SPINEL_CONFIG_H_
 
 /**
  * Include project specific lib config file if defined.
@@ -86,6 +86,19 @@
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT
 #define OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT 0
+#endif
+
+/**
+ * @def OPENTHREAD_SPINEL_CONFIG_RCP_KEY_ID_MODE_CHECK_COMPATIBILITY_WORKAROUND_ENABLE
+ *
+ * Define to 1 to enable backward compatibility workaround for Key ID Mode check in RCP.
+ *
+ * Older RCP builds enforce a validation check in `NcpBase` expecting the legacy bit-shifted value `(1 << 3)` for
+ * Key ID Mode 1. When enabled, `RadioSpinel` maps `aKeyIdMode` to the legacy bit-shifted value `(1 << 3)` when
+ * setting `SPINEL_PROP_RCP_MAC_KEY` to maintain compatibility with older RCP builds.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_KEY_ID_MODE_CHECK_COMPATIBILITY_WORKAROUND_ENABLE
+#define OPENTHREAD_SPINEL_CONFIG_RCP_KEY_ID_MODE_CHECK_COMPATIBILITY_WORKAROUND_ENABLE 1
 #endif
 
 /**
@@ -172,4 +185,31 @@
 #define OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE 0
 #endif
 
-#endif // OPENTHREAD_SPINEL_CONFIG_H_
+/**
+ * @def OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY
+ *
+ * Enables skipping reset if it's ready.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY
+#if defined(OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE) && OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+// Avoid resetting the device twice in a row in Multipan RCP architecture
+#define OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY 1
+#else
+#define OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY 0
+#endif
+#endif
+
+/**
+ * @def OPENTHREAD_SPINEL_CONFIG_MAX_INTERFACE_ID
+ *
+ * Specifies the maximum number of Spinel interface IDs.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_MAX_INTERFACE_ID
+#if defined(OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE) && OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+#define OPENTHREAD_SPINEL_CONFIG_MAX_INTERFACE_ID 4
+#else
+#define OPENTHREAD_SPINEL_CONFIG_MAX_INTERFACE_ID 1
+#endif
+#endif
+
+#endif // OT_LIB_SPINEL_OPENTHREAD_SPINEL_CONFIG_H_

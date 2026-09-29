@@ -50,7 +50,7 @@ void TimeTicker::RegisterReceiver(Receiver aReceiver)
 
     if (!mTimer.IsRunning())
     {
-        mTimer.Start(Random::NonCrypto::GetUint32InRange(0, kTickInterval + 1));
+        mTimer.Start(Random::NonCrypto::GenerateInClosedRange<uint32_t>(0, kTickInterval));
     }
 }
 
@@ -101,20 +101,6 @@ void TimeTicker::HandleTimer(void)
     if (mReceivers & Mask(kIp6FragmentReassembler))
     {
         Get<Ip6::Ip6>().HandleTimeTick();
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    if (mReceivers & Mask(kDuaManager))
-    {
-        Get<DuaManager>().HandleTimeTick();
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-    if (mReceivers & Mask(kMlrManager))
-    {
-        Get<MlrManager>().HandleTimeTick();
     }
 #endif
 

@@ -49,7 +49,7 @@ target_link_libraries(ot-ncp-ftd PRIVATE
 )
 
 if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+    if(APPLE)
         target_link_libraries(ot-ncp-ftd PRIVATE -Wl,-map,ot-ncp-ftd.map)
     else()
         target_link_libraries(ot-ncp-ftd PRIVATE -Wl,-Map=ot-ncp-ftd.map)

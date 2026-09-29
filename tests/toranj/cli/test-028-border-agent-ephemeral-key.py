@@ -70,6 +70,19 @@ verify(int(leader.ba_ephemeral_key_get_port()) == 1234)
 leader.ba_ephemeral_key_stop()
 verify(leader.ba_ephemeral_key_get_state() == 'Stopped')
 
+tap = leader.ba_ephemeral_key_generate_tap()
+verify(leader.ba_ephemeral_key_validate_tap(tap) == 'validated')
+
+errored = False
+
+try:
+    leader.ba_ephemeral_key_validate_tap("123456789")
+except cli.CliError as e:
+    verify(e.message == 'Failed')
+    errored = True
+
+verify(errored)
+
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 

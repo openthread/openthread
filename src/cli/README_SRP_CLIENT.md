@@ -7,6 +7,7 @@ Usage : `srp client [command] ...`
 - [help](#help)
 - [autostart](#autostart)
 - [callback](#callback)
+- [counters](#counters)
 - [host](#host)
 - [keyleaseinterval](#keyleaseinterval)
 - [leaseinterval](#leaseinterval)
@@ -125,6 +126,43 @@ Host info:
 Service list:
 Removed service list:
     instance:"ins1", name:"_test1._udp", state:Removed, port:777, priority:0, weight:0
+```
+
+### counters
+
+Usage: `srp client counters [reset]`
+
+Get the SRP client counters. Requires `OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE` to be enabled.
+
+```bash
+> srp client counters
+Tx Updates: 12
+Update Attempts: 11
+Success: 11
+Rejected Duplicate: 0
+Rejected Security: 0
+Rejected Other: 0
+Timeouts: 1
+Host Address Changes: 0
+Server Changes: 1
+Service Adds: 1
+Service Removes: 0
+Service Clears: 0
+Host And Services Removes: 0
+Host And Services Clears: 0
+Tx Total Bytes: 4380
+Registered Time Milli: 845321
+Anycast Available Time Milli: 0
+Unicast Available Time Milli: 901002
+Tracked Time Milli: 901002
+Done
+```
+
+Reset the SRP client counters.
+
+```bash
+> srp client counters reset
+Done
 ```
 
 ### host

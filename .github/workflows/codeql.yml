@@ -54,19 +54,22 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - name: Checkout repository
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
+      with:
+        submodules: recursive
+        persist-credentials: false
     - name: Bootstrap
+      timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+      uses: github/codeql-action/init@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.38.1
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -80,6 +83,6 @@ jobs:
         ./script/test build
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+      uses: github/codeql-action/analyze@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.38.1
       with:
         category: "/language:${{matrix.language}}"

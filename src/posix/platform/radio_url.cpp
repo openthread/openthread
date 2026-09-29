@@ -85,6 +85,7 @@ const char *otSysGetRadioUrlHelpString(void)
     "    uart-flow-control              Enable flow control, disabled by default.\n"                 \
     "    uart-init-deassert             Deassert lines on init when flow control is disabled.\n"     \
     "    uart-reset                     Reset connection after hard resetting RCP(USB CDC ACM).\n"   \
+    "    uart-exclusive                 Lock uart device using flock / TIOCEXCL.\n"                  \
     "\n"
 #else
 #define OT_SPINEL_HDLC_RADIO_URL_HELP_BUS
@@ -107,8 +108,15 @@ const char *otSysGetRadioUrlHelpString(void)
     "                                  If the number of values is less than that of supported channels,\n" \
     "                                  the last value will be applied to all remaining channels.\n"        \
     "                                  Special value 0x7f disables a channel.\n"
+
+// Only meaningful while max-power-table is compiled in; without it the note
+// would point at a parameter the help does not list.
+#define OT_RADIO_URL_HELP_TX_POWER_CAP                                                                \
+    "                                  max-power-table only caps the power; the radio transmits at\n" \
+    "                                  min(tx-power, max-power-table).\n"
 #else
 #define OT_RADIO_URL_HELP_MAX_POWER_TABLE
+#define OT_RADIO_URL_HELP_TX_POWER_CAP
 #endif
 
     return "RadioURL:\n" OT_RADIO_URL_HELP_BUS OT_SPINEL_SPI_RADIO_URL_HELP_BUS OT_SPINEL_HDLC_RADIO_URL_HELP_BUS
@@ -116,6 +124,7 @@ const char *otSysGetRadioUrlHelpString(void)
            "    region[=region-code]          Set the radio's region code. The region code must be an\n"
            "                                  ISO 3166 alpha-2 code.\n"
            "    cca-threshold[=dbm]           Set the radio's CCA ED threshold in dBm measured at antenna connector.\n"
+           "    tx-power[=dbm]                Set the radio's transmit power in dBm.\n" OT_RADIO_URL_HELP_TX_POWER_CAP
            "    enable-coex[=1|0]             If not specified, RCP coex operates with its default configuration.\n"
            "                                  Disable coex with 0, and enable it with other values.\n"
            "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"
@@ -148,8 +157,10 @@ void RadioUrl::Init(const char *aUrl)
 {
     if (aUrl != nullptr)
     {
-        VerifyOrDie(strnlen(aUrl, sizeof(mUrl)) < sizeof(mUrl), OT_EXIT_INVALID_ARGUMENTS);
-        strncpy(mUrl, aUrl, sizeof(mUrl) - 1);
+        size_t len = strlen(aUrl);
+
+        VerifyOrDie(len + 1 < sizeof(mUrl), OT_EXIT_INVALID_ARGUMENTS);
+        strcpy(mUrl, aUrl);
         SuccessOrDie(Url::Url::Init(mUrl));
     }
 }

@@ -30,8 +30,8 @@
  *   This file contains definitions of the SPI frame.
  */
 
-#ifndef SPINEL_SPI_FRAME_HPP_
-#define SPINEL_SPI_FRAME_HPP_
+#ifndef OT_LIB_SPINEL_SPI_FRAME_HPP_
+#define OT_LIB_SPINEL_SPI_FRAME_HPP_
 
 #include <stdint.h>
 
@@ -100,7 +100,7 @@ namespace Spinel {
  *   This protocol can be used either unidirectionally or bidirectionally,
  *   determined by the behavior of the master and the slave.
  *
- *   If the the master notices "PATTERN" is not set correctly, the master
+ *   If the master notices "PATTERN" is not set correctly, the master
  *   should consider the transaction to have failed and try again after 10
  *   milliseconds, retrying up to 200 times.  After unsuccessfully trying
  *   200 times in a row, the master MAY take appropriate remedial action
@@ -235,4 +235,4 @@ private:
 
 } // namespace Spinel
 } // namespace ot
-#endif // SPINEL_SPI_FRAME_HPP_
+#endif // OT_LIB_SPINEL_SPI_FRAME_HPP_

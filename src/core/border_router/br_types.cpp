@@ -72,6 +72,18 @@ void OnLinkPrefix::SetFrom(const PrefixTableEntry &aPrefixTableEntry)
     mLastUpdateTime    = TimerMilli::GetNow();
 }
 
+void OnLinkPrefix::Deprecate(void)
+{
+    TimeMilli twoHoursFromNow = TimerMilli::GetNow() + Time::SecToMsec(kTwoHoursLifetime);
+
+    mPreferredLifetime = 0;
+
+    if (GetExpireTime() > twoHoursFromNow)
+    {
+        mValidLifetime = Time::MsecToSec(twoHoursFromNow.DetermineRemainingDurationFrom(mLastUpdateTime));
+    }
+}
+
 bool OnLinkPrefix::IsDeprecated(void) const { return GetDeprecationTime() <= TimerMilli::GetNow(); }
 
 TimeMilli OnLinkPrefix::GetDeprecationTime(void) const { return CalculateExpirationTime(mPreferredLifetime); }
@@ -83,8 +95,6 @@ TimeMilli OnLinkPrefix::GetStaleTime(void) const
 
 void OnLinkPrefix::AdoptFlagsAndValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix)
 {
-    constexpr uint32_t kTwoHoursInSeconds = 2 * 3600;
-
     // Per RFC 4862 section 5.5.3.e:
     //
     // 1.  If the received Valid Lifetime is greater than 2 hours or
@@ -96,13 +106,13 @@ void OnLinkPrefix::AdoptFlagsAndValidAndPreferredLifetimesFrom(const OnLinkPrefi
     // 3.  Otherwise, reset the valid lifetime of the corresponding
     //     address to 2 hours.
 
-    if (aPrefix.mValidLifetime > kTwoHoursInSeconds || aPrefix.GetExpireTime() > GetExpireTime())
+    if (aPrefix.mValidLifetime > kTwoHoursLifetime || aPrefix.GetExpireTime() > GetExpireTime())
     {
         mValidLifetime = aPrefix.mValidLifetime;
     }
-    else if (GetExpireTime() > TimerMilli::GetNow() + TimeMilli::SecToMsec(kTwoHoursInSeconds))
+    else if (GetExpireTime() > TimerMilli::GetNow() + Time::SecToMsec(kTwoHoursLifetime))
     {
-        mValidLifetime = kTwoHoursInSeconds;
+        mValidLifetime = kTwoHoursLifetime;
     }
 
     mPreferredLifetime    = aPrefix.GetPreferredLifetime();
@@ -231,7 +241,7 @@ void RdnssAddress::CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli aNow) const
 //---------------------------------------------------------------------------------------------------------------------
 // IfAddress
 
-void IfAddress::SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow)
+void IfAddress::SetFrom(const Ip6::Address &aAddress, UptimeSec aUptimeNow)
 {
     mAddress       = aAddress;
     mLastUseUptime = aUptimeNow;
@@ -239,7 +249,7 @@ void IfAddress::SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow)
 
 bool IfAddress::Matches(const InvalidChecker &aChecker) const { return !aChecker.Get<InfraIf>().HasAddress(mAddress); }
 
-void IfAddress::CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptimeNow) const
+void IfAddress::CopyInfoTo(IfAddrEntry &aEntry, UptimeSec aUptimeNow) const
 {
     aEntry.mAddress         = mAddress;
     aEntry.mSecSinceLastUse = aUptimeNow - mLastUseUptime;
@@ -253,6 +263,11 @@ void OmrPrefix::SetPrefix(const Ip6::Prefix &aPrefix, RoutePreference aPreferenc
     Clear();
     mPrefix     = aPrefix;
     mPreference = aPreference;
+}
+
+bool OmrPrefix::Matches(const Ip6::Prefix &aPrefix, RoutePreference aPreference) const
+{
+    return (mPreference == aPreference) && (mPrefix == aPrefix);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -269,16 +284,14 @@ bool FavoredOmrPrefix::IsInfrastructureDerived(void) const
 
 void FavoredOmrPrefix::SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
 {
-    mPrefix         = aOnMeshPrefixConfig.GetPrefix();
-    mPreference     = aOnMeshPrefixConfig.GetPreference();
-    mIsDomainPrefix = aOnMeshPrefixConfig.mDp;
+    mPrefix     = aOnMeshPrefixConfig.GetPrefix();
+    mPreference = aOnMeshPrefixConfig.GetPreference();
 }
 
 void FavoredOmrPrefix::SetFrom(const OmrPrefix &aOmrPrefix)
 {
-    mPrefix         = aOmrPrefix.GetPrefix();
-    mPreference     = aOmrPrefix.GetPreference();
-    mIsDomainPrefix = aOmrPrefix.IsDomainPrefix();
+    mPrefix     = aOmrPrefix.GetPrefix();
+    mPreference = aOmrPrefix.GetPreference();
 }
 
 bool FavoredOmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const

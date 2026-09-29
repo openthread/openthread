@@ -1,0 +1,258 @@
+/*
+ *  Copyright (c) 2026, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "platform/nexus_core.hpp"
+#include "platform/nexus_node.hpp"
+
+namespace ot {
+namespace Nexus {
+
+void TestCliBasic(void)
+{
+    // Validate basic CLI commands.
+
+    static constexpr uint16_t kNumRouters = 8;
+
+    Core nexus;
+
+    Node &leader = nexus.CreateNode();
+    Node *routers[kNumRouters];
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNone));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Initial state");
+
+    VerifyOrQuit(leader.GetCliOutputLines().GetLength() == 0);
+
+    leader.InputCli("state");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+    VerifyOrQuit(leader.GetCliOutputLines()[0].Matches("disabled"));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network on `leader`");
+
+    leader.InputCli("dataset init new");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    leader.InputCli("dataset");
+
+    Log("`dataset` command output on `leader`");
+
+    for (const Node::CliOutputLine &line : leader.GetCliOutputLines())
+    {
+        Log("- %s", line.GetLine());
+    }
+
+    leader.InputCli("dataset commit active");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    leader.InputCli("ifconfig up");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    leader.InputCli("thread start");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    nexus.AdvanceTime(2 * Time::kOneMinuteInMsec);
+
+    leader.InputCli("state");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+    VerifyOrQuit(leader.GetCliOutputLines()[0].Matches("leader"));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Join %u routers to same network", kNumRouters);
+
+    for (Node *&router : routers)
+    {
+        router = &nexus.CreateNode();
+
+        router->InputCli("state");
+        VerifyOrQuit(router->IsCliOutputSuccess());
+        VerifyOrQuit(router->GetCliOutputLines()[0].Matches("disabled"));
+
+        router->InputCli("dataset clear");
+
+        // Set network key and channel
+
+        leader.InputCli("networkkey");
+        VerifyOrQuit(leader.IsCliOutputSuccess());
+        router->InputCli("dataset networkkey %s", leader.GetCliOutputLines()[0].GetLine());
+        VerifyOrQuit(router->IsCliOutputSuccess());
+
+        leader.InputCli("channel");
+        VerifyOrQuit(leader.IsCliOutputSuccess());
+        router->InputCli("dataset channel %s", leader.GetCliOutputLines()[0].GetLine());
+        VerifyOrQuit(router->IsCliOutputSuccess());
+
+        router->InputCli("dataset commit active");
+        VerifyOrQuit(router->IsCliOutputSuccess());
+
+        router->InputCli("ifconfig up");
+        VerifyOrQuit(router->IsCliOutputSuccess());
+
+        router->InputCli("thread start");
+        VerifyOrQuit(router->IsCliOutputSuccess());
+
+        nexus.AdvanceTime(100 * Time::kOneSecondInMsec);
+    }
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Make sure all routers are attached");
+
+    nexus.AdvanceTime(7 * Time::kOneMinuteInMsec);
+
+    for (Node *router : routers)
+    {
+        router->InputCli("state");
+        VerifyOrQuit(router->IsCliOutputSuccess());
+        VerifyOrQuit(router->GetCliOutputLines()[0].Matches("router"));
+    }
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("The neighbor table");
+
+    leader.InputCli("neighbor table");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    for (const Node::CliOutputLine &line : leader.GetCliOutputLines())
+    {
+        Log("- %s", line.GetLine());
+    }
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("The router table");
+
+    leader.InputCli("router table");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    for (const Node::CliOutputLine &line : leader.GetCliOutputLines())
+    {
+        Log("- %s", line.GetLine());
+    }
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Check `dns config` with `def` placeholders");
+
+    // Explicitly set every field, using "def" to request the default value
+    // for the port, response timeout, max tx attempts, and recursion
+    // desired fields, while still setting the service mode and transport
+    // protocol explicitly. "def" lets a field be explicitly requested as
+    // default while later fields are still set explicitly (previously,
+    // leaving a field unspecified also forced every field after it to
+    // remain unspecified).
+    leader.InputCli("dns config def def def def def def def");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    leader.InputCli("dns config fd00::1 def def def def srv_txt_sep udp");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    leader.InputCli("dns config");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    {
+        bool foundResponseTimeout  = false;
+        bool foundMaxTxAttempts    = false;
+        bool foundRecursionDesired = false;
+        bool foundServiceMode      = false;
+
+        for (const Node::CliOutputLine &line : leader.GetCliOutputLines())
+        {
+            Log("- %s", line.GetLine());
+
+            foundResponseTimeout |= line.Matches("ResponseTimeout: 7000 ms");
+            foundMaxTxAttempts |= line.Matches("MaxTxAttempts: 3");
+            foundRecursionDesired |= line.Matches("RecursionDesired: yes");
+            foundServiceMode |= line.Matches("ServiceMode: srv_txt_sep");
+        }
+
+        VerifyOrQuit(foundResponseTimeout);
+        VerifyOrQuit(foundMaxTxAttempts);
+        VerifyOrQuit(foundRecursionDesired);
+        VerifyOrQuit(foundServiceMode);
+    }
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Check `dns resolve` accepts `def` for the DNS server IP");
+
+    // Before this, the DNS server IP was one of the parameters that could
+    // not be replaced with "def" - specifying it always required a real
+    // (parsable) IPv6 (or synthesized IPv4) address. `def` now selects the
+    // server address from the current default config (`dns config`), same
+    // as it already did for every other parameter, while the port is still
+    // set explicitly.
+    leader.InputCli("dns resolve example.com def 53");
+
+    // The request is asynchronous (`OT_ERROR_PENDING`), so no output line
+    // is produced yet. If `def` were rejected as an invalid IPv6 address
+    // (the bug being fixed here), a synchronous "Error 7: InvalidArgs" line
+    // would have appeared immediately instead.
+    VerifyOrQuit(leader.GetCliOutputLines().GetLength() == 0);
+
+    // Let the query run its course. There is no real DNS server reachable
+    // in this topology, so it times out after exhausting all (3) tx
+    // attempts, each waiting the full response timeout (7000 ms) - the
+    // point here is only that the request was accepted, dispatched, and
+    // ran to completion (rather than being rejected as invalid at parse
+    // time, or hanging indefinitely on a malformed server address).
+    nexus.AdvanceTime(25 * Time::kOneSecondInMsec);
+
+    for (const Node::CliOutputLine &line : leader.GetCliOutputLines())
+    {
+        Log("- %s", line.GetLine());
+    }
+
+    VerifyOrQuit(leader.GetCliOutputLines().GetLength() == 1);
+    VerifyOrQuit(leader.GetCliOutputLines()[0].EndsWith("Error 28: ResponseTimeout"));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Check behavior with an invalid CLI command");
+
+    leader.InputCli("invalidcommand");
+    VerifyOrQuit(!leader.IsCliOutputSuccess());
+    VerifyOrQuit(leader.GetCliOutputLines().GetLength() == 1);
+    VerifyOrQuit(leader.GetCliOutputLines()[0].StartsWith("Error "));
+
+    for (const Node::CliOutputLine &line : leader.GetCliOutputLines())
+    {
+        Log("- %s", line.GetLine());
+    }
+}
+
+} // namespace Nexus
+} // namespace ot
+
+int main(void)
+{
+    ot::Nexus::TestCliBasic();
+    printf("All tests passed\n");
+    return 0;
+}

@@ -31,8 +31,8 @@
  *   This file includes definitions for data poll (mac data request command) sender.
  */
 
-#ifndef DATA_POLL_MANAGER_HPP_
-#define DATA_POLL_MANAGER_HPP_
+#ifndef OT_CORE_MAC_DATA_POLL_SENDER_HPP_
+#define OT_CORE_MAC_DATA_POLL_SENDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -122,16 +122,15 @@ public:
     uint32_t GetExternalPollPeriod(void) const { return mExternalPollPeriod; }
 
     /**
-     * Informs the data poll sender of success/error status of a previously requested poll frame
-     * transmission.
+     * Informs the data poll sender that a data poll frame transmission has completed.
      *
      * In case of transmit failure, the data poll sender may choose to send the next data poll more quickly (up to
      * some fixed number of attempts).
      *
-     * @param[in] aFrame     The data poll frame.
-     * @param[in] aError     Error status of a data poll message transmission.
+     * @param[in] aFrameInfo  The data poll frame information.
+     * @param[in] aError      Error status of a data poll frame transmission.
      */
-    void HandlePollSent(Mac::TxFrame &aFrame, Error aError);
+    void HandlePollTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
 
     /**
      * Informs the data poll sender that a data poll timeout happened, i.e., when the ack in response to
@@ -144,22 +143,24 @@ public:
     /**
      * Informs the data poll sender to process a received MAC frame.
      *
-     * @param[in] aFrame     A reference to the received frame to process.
+     * @param[in] aFrameInfo     The received frame parsed information to process.
      */
-    void ProcessRxFrame(const Mac::RxFrame &aFrame);
+    void ProcessRxFrame(const Mac::RxFrame::ParseInfo &aFrameInfo);
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
      * Informs the data poll sender to process a transmitted MAC frame.
      *
-     * @param[in]  aFrame      A reference to the frame that was transmitted.
-     * @param[in]  aAckFrame   A pointer to the ACK frame, `nullptr` if no ACK was received.
-     * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
-     *                         kErrorNoAck when the frame was transmitted but no ACK was received,
-     *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,
-     *                         kErrorAbort when transmission was aborted for other reasons.
+     * @param[in]  aFrameInfo     The sent frame information.
+     * @param[in]  aAckFrameInfo  The ACK frame information (its `mFrame` may be `nullptr` if no ACK was received).
+     * @param[in]  aError         kErrorNone when the frame was transmitted successfully,
+     *                            kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                            kErrorChannelAccessFailure when the tx failed due to activity on the channel,
+     *                            kErrorAbort when transmission was aborted for other reasons.
      */
-    void ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFrame *aAckFrame, Error aError);
+    void ProcessTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo,
+                       const Mac::RxFrame::ParseInfo &aAckFrameInfo,
+                       Error                          aError);
 #endif
 
     /**
@@ -259,7 +260,7 @@ private:
     const Neighbor &GetParent(void) const;
     void            HandlePollTimer(void) { IgnoreError(SendDataPoll()); }
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    Error GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
+    Error GetPollDestinationAddress(Mac::Address &aDest, Radio::Type &aRadioType) const;
 #else
     Error GetPollDestinationAddress(Mac::Address &aDest) const;
 #endif
@@ -287,4 +288,4 @@ private:
 
 } // namespace ot
 
-#endif // DATA_POLL_MANAGER_HPP_
+#endif // OT_CORE_MAC_DATA_POLL_SENDER_HPP_

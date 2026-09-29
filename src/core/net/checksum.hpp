@@ -31,8 +31,8 @@
  *   This file includes definitions for checksum calculation.
  */
 
-#ifndef CHECKSUM_HPP_
-#define CHECKSUM_HPP_
+#ifndef OT_CORE_NET_CHECKSUM_HPP_
+#define OT_CORE_NET_CHECKSUM_HPP_
 
 #include "openthread-core-config.h"
 
@@ -133,4 +133,4 @@ private:
 
 } // namespace ot
 
-#endif // CHECKSUM_HPP_
+#endif // OT_CORE_NET_CHECKSUM_HPP_

@@ -31,8 +31,8 @@
  *   This file provides a compile time counter and utilities based on it.
  */
 
-#ifndef OT_UTILS_STATIC_COUNTER_HPP_
-#define OT_UTILS_STATIC_COUNTER_HPP_
+#ifndef OT_CORE_UTILS_STATIC_COUNTER_HPP_
+#define OT_CORE_UTILS_STATIC_COUNTER_HPP_
 
 namespace ot {
 
@@ -65,4 +65,4 @@ public:
 
 } // namespace ot
 
-#endif // OT_UTILS_STATIC_COUNTER_HPP_
+#endif // OT_CORE_UTILS_STATIC_COUNTER_HPP_

@@ -30,6 +30,10 @@
 
 #include "openthread-posix-config.h"
 
+#include <stdarg.h>
+
+#include <openthread/platform/toolchain.h>
+
 #include "core/common/non_copyable.hpp"
 
 #include "logger.hpp"
@@ -49,10 +53,10 @@ public:
     void TearDown(void);
     void Update(Mainloop::Context &aContext) override;
     void Process(const Mainloop::Context &aContext) override;
-    int  OutputFormatV(const char *aFormat, va_list aArguments);
+    int  OutputFormatV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 private:
-    int  OutputFormat(const char *aFormat, ...);
+    int  OutputFormat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
     void createListenSocketOrDie(void);
     void InitializeSessionSocket(void);
 

@@ -31,7 +31,6 @@ add_library(openthread-platform-utils OBJECT
     link_metrics.cpp
     logging_rtt.c
     mac_frame.cpp
-    otns_utils.cpp
     settings_ram.c
     soft_source_match_table.c
     uart_rtt.c
@@ -46,6 +45,10 @@ if(OT_RTT_UART)
         OPENTHREAD_UART_RTT_ENABLE=1
     )
 endif()
+
+target_compile_options(openthread-platform-utils PRIVATE
+    ${OT_CFLAGS}
+)
 
 target_include_directories(openthread-platform-utils PRIVATE
     ${OT_PUBLIC_INCLUDES}

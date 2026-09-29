@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread EID-to-RLOC mapping and caching.
  */
 
-#ifndef ADDRESS_RESOLVER_HPP_
-#define ADDRESS_RESOLVER_HPP_
+#ifndef OT_CORE_THREAD_ADDRESS_RESOLVER_HPP_
+#define OT_CORE_THREAD_ADDRESS_RESOLVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -122,7 +122,7 @@ public:
      * @param[out]    aInfo      An `EntryInfo` where the EID cache entry information is placed.
      * @param[in,out] aIterator  An iterator. It will be updated to point to the next entry on success.
      *                           To get the first entry, initialize the iterator by setting all its fields to zero.
-     *                           e.g., `memset` the the iterator structure to zero.
+     *                           e.g., `memset` the iterator structure to zero.
      *
      * @retval kErrorNone      Successfully populated @p aInfo with the info for the next EID cache entry.
      * @retval kErrorNotFound  No more entries in the address cache table.
@@ -228,7 +228,7 @@ public:
      */
     void SendAddressError(const Ip6::Address             &aTarget,
                           const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                          const Ip6::Address             *aDestination);
+                          const Ip6::Address             &aDestination);
 
 private:
     static constexpr uint16_t kCacheEntries = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES;
@@ -358,7 +358,7 @@ private:
 
 #endif // OPENTHREAD_FTD
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
 #if OPENTHREAD_FTD
 
@@ -366,9 +366,9 @@ private:
                                   otMessage           *aMessage,
                                   const otMessageInfo *aMessageInfo,
                                   const otIcmp6Header *aIcmpHeader);
-    void        HandleIcmpReceive(Message                 &aMessage,
-                                  const Ip6::MessageInfo  &aMessageInfo,
-                                  const Ip6::Icmp::Header &aIcmpHeader);
+    void        HandleIcmpReceive(Message                &aMessage,
+                                  const Ip6::MessageInfo &aMessageInfo,
+                                  const Ip6::Icmp6Header &aIcmpHeader);
 
     void        HandleTimeTick(void);
     void        LogCacheEntryChange(EntryChange       aChange,
@@ -378,6 +378,11 @@ private:
     const char *ListToString(const CacheEntryList *aList) const;
 
     static AddressResolver::CacheEntry *GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    static const char *EntryChangeToString(EntryChange aChange);
+    static const char *ReasonToString(Reason aReason);
+#endif
 
     CacheEntryPool     mCacheEntryPool;
     CacheEntryList     mCachedList;
@@ -405,4 +410,4 @@ DefineMapEnum(otCacheEntryState, AddressResolver::EntryInfo::State);
 
 } // namespace ot
 
-#endif // ADDRESS_RESOLVER_HPP_
+#endif // OT_CORE_THREAD_ADDRESS_RESOLVER_HPP_

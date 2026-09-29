@@ -35,8 +35,12 @@
 #ifndef OPENTHREAD_BORDER_AGENT_TRACKER_H_
 #define OPENTHREAD_BORDER_AGENT_TRACKER_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_SPINEL_MANAGER_HPP_
-#define POSIX_PLATFORM_SPINEL_MANAGER_HPP_
+#ifndef OT_POSIX_PLATFORM_SPINEL_MANAGER_HPP_
+#define OT_POSIX_PLATFORM_SPINEL_MANAGER_HPP_
 
 #include <assert.h>
 
@@ -91,6 +91,13 @@ public:
         return *mSpinelInterface;
     }
 
+    /**
+     * Returns the radio URL.
+     *
+     * @returns The radio URL.
+     */
+    RadioUrl &GetRadioUrl(void) { return mUrl; }
+
 private:
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     void VirtualTimeInit(void);
@@ -123,4 +130,4 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_PLATFORM_SPINEL_MANAGER_HPP_
+#endif // OT_POSIX_PLATFORM_SPINEL_MANAGER_HPP_

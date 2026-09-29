@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Service.
  */
 
-#ifndef DHCP6_TYPES_HPP_
-#define DHCP6_TYPES_HPP_
+#ifndef OT_CORE_NET_DHCP6_TYPES_HPP_
+#define OT_CORE_NET_DHCP6_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -161,7 +161,6 @@ public:
         kElapsedTime               = 8,  ///< Elapsed Time Option.
         kRelayMessage              = 9,  ///< Relay Message Option.
         kAuthentication            = 11, ///< Authentication Option.
-        kServerUnicast             = 12, ///< Server Unicast Option.
         kStatusCode                = 13, ///< Status Code Option.
         kRapidCommit               = 14, ///< Rapid Commit Option.
         kUserClass                 = 15, ///< User Class Option.
@@ -1020,36 +1019,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Represents a Server Unicast Option.
- */
-OT_TOOL_PACKED_BEGIN
-class ServerUnicastOption : public Option
-{
-public:
-    /**
-     * Initializes the DHCPv6 Option.
-     */
-    void Init(void) { SetCode(kServerUnicast), SetLength(sizeof(*this) - sizeof(Option)); }
-
-    /**
-     * Returns the server IPv6 address.
-     *
-     * @returns the server IPv6 address.
-     */
-    const Ip6::Address &GetServerAddress(void) const { return mServerAddress; }
-
-    /**
-     * Sets the server IPv6 address.
-     *
-     * @param[in] aServerAddress  The server IPv6 address.
-     */
-    void SetServerAddress(const Ip6::Address &aServerAddress) { mServerAddress = aServerAddress; }
-
-private:
-    Ip6::Address mServerAddress;
-} OT_TOOL_PACKED_END;
-
-/**
  * Represents an SOL_MAX_RT Option (Max Solicit timeout value).
  */
 OT_TOOL_PACKED_BEGIN
@@ -1089,4 +1058,4 @@ private:
 } // namespace Dhcp6
 } // namespace ot
 
-#endif // DHCP6_TYPES_HPP_
+#endif // OT_CORE_NET_DHCP6_TYPES_HPP_

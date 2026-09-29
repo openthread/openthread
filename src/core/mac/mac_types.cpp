@@ -37,6 +37,7 @@
 
 #include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -52,7 +53,7 @@ PanId GenerateRandomPanId(void)
 
     do
     {
-        panId = Random::NonCrypto::GetUint16();
+        panId = Random::NonCrypto::Generate<uint16_t>();
     } while (panId == kPanIdBroadcast);
 
     return panId;
@@ -75,8 +76,6 @@ void ExtAddress::SetFromIid(const Ip6::InterfaceIdentifier &aIid)
 
 #endif
 
-bool ExtAddress::operator==(const ExtAddress &aOther) const { return (memcmp(m8, aOther.m8, sizeof(m8)) == 0); }
-
 ExtAddress::InfoString ExtAddress::ToString(void) const
 {
     InfoString string;
@@ -84,6 +83,29 @@ ExtAddress::InfoString ExtAddress::ToString(void) const
     string.AppendHexBytes(m8, sizeof(ExtAddress));
 
     return string;
+}
+
+Error ExtAddress::FromString(const char *aString)
+{
+    Error   error = kErrorNone;
+    uint8_t high;
+    uint8_t low;
+
+    VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
+
+    for (uint8_t &byte : m8)
+    {
+        SuccessOrExit(error = ParseHexDigit(*aString, high));
+        aString++;
+        SuccessOrExit(error = ParseHexDigit(*aString, low));
+        aString++;
+        byte = static_cast<uint8_t>((high << 4) | low);
+    }
+
+    VerifyOrExit(*aString == kNullChar, error = kErrorParse);
+
+exit:
+    return error;
 }
 
 void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder aByteOrder)
@@ -181,90 +203,20 @@ void PanIds::SetBothSourceDestination(PanId aPanId)
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
-const RadioType RadioTypes::kAllRadioTypes[kNumRadioTypes] = {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    kRadioTypeIeee802154,
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    kRadioTypeTrel,
-#endif
-};
-
-void RadioTypes::AddAll(void)
-{
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    Add(kRadioTypeIeee802154);
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    Add(kRadioTypeTrel);
-#endif
-}
-
-RadioTypes::InfoString RadioTypes::ToString(void) const
-{
-    InfoString string;
-    bool       addComma = false;
-
-    string.Append("{");
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (Contains(kRadioTypeIeee802154))
-    {
-        string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeIeee802154));
-        addComma = true;
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    if (Contains(kRadioTypeTrel))
-    {
-        string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeTrel));
-        addComma = true;
-    }
-#endif
-
-    OT_UNUSED_VARIABLE(addComma);
-
-    string.Append(" }");
-
-    return string;
-}
-
-const char *RadioTypeToString(RadioType aRadioType)
-{
-    const char *str = "unknown";
-
-    switch (aRadioType)
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case kRadioTypeIeee802154:
-        str = "15.4";
-        break;
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case kRadioTypeTrel:
-        str = "trel";
-        break;
-#endif
-    }
-
-    return str;
-}
-
-uint32_t LinkFrameCounters::Get(RadioType aRadioType) const
+uint32_t LinkFrameCounters::Get(Radio::Type aRadioType) const
 {
     uint32_t counter = 0;
 
     switch (aRadioType)
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case kRadioTypeIeee802154:
+    case Radio::kTypeIeee802154:
         counter = m154Counter;
         break;
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case kRadioTypeTrel:
+    case Radio::kTypeTrel:
         counter = mTrelCounter;
         break;
 #endif
@@ -273,18 +225,18 @@ uint32_t LinkFrameCounters::Get(RadioType aRadioType) const
     return counter;
 }
 
-void LinkFrameCounters::Set(RadioType aRadioType, uint32_t aCounter)
+void LinkFrameCounters::Set(Radio::Type aRadioType, uint32_t aCounter)
 {
     switch (aRadioType)
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    case kRadioTypeIeee802154:
+    case Radio::kTypeIeee802154:
         m154Counter = aCounter;
         break;
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    case kRadioTypeTrel:
+    case Radio::kTypeTrel:
         mTrelCounter = aCounter;
         break;
 #endif
@@ -348,11 +300,11 @@ void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
 
         DestroyKey();
 
-        SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeAes,
-                                                   Crypto::Storage::kKeyAlgorithmAesEcb,
-                                                   (aIsExportable ? Crypto::Storage::kUsageExport : 0) |
-                                                       Crypto::Storage::kUsageEncrypt | Crypto::Storage::kUsageDecrypt,
-                                                   Crypto::Storage::kTypeVolatile, aKey.GetBytes(), Key::kSize));
+        SuccessOrAssert(Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeAes,
+                                                 Crypto::Storage::kKeyAlgorithmAesEcb,
+                                                 (aIsExportable ? Crypto::Storage::kUsageExport : 0) |
+                                                     Crypto::Storage::kUsageEncrypt | Crypto::Storage::kUsageDecrypt,
+                                                 Crypto::Storage::kTypeVolatile, aKey.GetBytes(), Key::kSize));
 
         SetKeyRef(keyRef);
     }
@@ -371,7 +323,7 @@ void KeyMaterial::ExtractKey(Key &aKey) const
     {
         size_t keySize;
 
-        SuccessOrAssert(Crypto::Storage::ExportKey(GetKeyRef(), aKey.m8, Key::kSize, keySize));
+        SuccessOrAssert(Crypto::Storage::ReadKey(GetKeyRef(), aKey.m8, Key::kSize, keySize));
     }
 #else
     aKey = GetKey();
@@ -405,46 +357,77 @@ bool KeyMaterial::operator==(const KeyMaterial &aOther) const
 #endif
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-uint8_t GetWakeupIdLength(WakeupId aWakeupId)
+void KeyTrio::Clear(void)
 {
-    uint8_t zeroBytesCount = 0;
+    mKeyIndex = 0;
 
-    for (int i = static_cast<int>(sizeof(WakeupId)) - 1; i >= 1; --i)
+    for (KeyMaterial &key : mKeys)
     {
-        if (((aWakeupId >> (i * kBitsPerByte)) & 0xFF) == 0)
-        {
-            zeroBytesCount++;
-        }
-        else
-        {
-            break;
-        }
+        key.Clear();
+    }
+}
+
+void KeyTrio::Set(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey)
+{
+    mKeyIndex = aKeyIndex;
+    mKeys[kPrev].SetFrom(aPrevKey, kIsExportable);
+    mKeys[kCur].SetFrom(aCurKey, kIsExportable);
+    mKeys[kNext].SetFrom(aNextKey, kIsExportable);
+}
+
+const KeyMaterial &KeyTrio::SelectKey(uint8_t aKeyIndex) const
+{
+    const KeyMaterial *key = &GetKey(kCur);
+
+    if (aKeyIndex == mKeyIndex)
+    {
+        ExitNow();
     }
 
-    return sizeof(WakeupId) - zeroBytesCount;
-}
-#endif
+    VerifyOrExit(IsValueInRange(mKeyIndex, kMinKeyIndex, kMaxKeyIndex));
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-void WakeupRequest::SetExtAddress(const ExtAddress &aExtAddress)
+    if (aKeyIndex == DeterminePrevKeyIndex(mKeyIndex))
+    {
+        key = &GetKey(kPrev);
+    }
+    else if (aKeyIndex == DetermineNextKeyIndex(mKeyIndex))
+    {
+        key = &GetKey(kNext);
+    }
+
+exit:
+    return *key;
+}
+
+uint8_t DetermineKeyIndexFor(uint32_t aKeySequence) { return static_cast<uint8_t>((aKeySequence & 0x7f) + 1); }
+
+uint8_t DetermineNextKeyIndex(uint8_t aKeyIndex)
 {
-    SetType(kTypeExtAddress);
-    aExtAddress.CopyTo(mShared.mExtAddress.m8);
+    uint8_t nextIndex = aKeyIndex;
+
+    nextIndex++;
+
+    if (nextIndex > kMaxKeyIndex)
+    {
+        nextIndex = kMinKeyIndex;
+    }
+
+    return nextIndex;
 }
 
-const ExtAddress &WakeupRequest::GetExtAddress(void) const { return AsCoreType(&mShared.mExtAddress); }
+uint8_t DeterminePrevKeyIndex(uint8_t aKeyIndex)
+{
+    uint8_t prevIndex = aKeyIndex;
 
-ExtAddress &WakeupRequest::GetExtAddress(void) { return AsCoreType(&mShared.mExtAddress); }
+    prevIndex--;
 
-void WakeupRequest::SetType(Type aType) { mType = MapEnum(aType); }
+    if (prevIndex < kMinKeyIndex)
+    {
+        prevIndex = kMaxKeyIndex;
+    }
 
-bool WakeupRequest::IsWakeupByExtAddress(void) const { return MapEnum(mType) == kTypeExtAddress; }
-
-bool WakeupRequest::IsWakeupById(void) const { return MapEnum(mType) == kTypeWakeupId; }
-
-bool WakeupRequest::IsWakeupByGroupId(void) const { return MapEnum(mType) == kTypeGroupWakeupId; }
-#endif
+    return prevIndex;
+}
 
 #if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 SlotEntry::Type SlotEntry::GetSlotType(void) const { return MapEnum(mSlotType); }

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COPROCESSOR_TYPE_H_
-#define COPROCESSOR_TYPE_H_
+#ifndef OT_LIB_SPINEL_COPROCESSOR_TYPE_H_
+#define OT_LIB_SPINEL_COPROCESSOR_TYPE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,4 +47,4 @@ typedef enum CoprocessorType
 #ifdef __cplusplus
 }
 #endif
-#endif // COPROCESSOR_TYPE_H_
+#endif // OT_LIB_SPINEL_COPROCESSOR_TYPE_H_

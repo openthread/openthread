@@ -79,28 +79,14 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 uint8_t otLinkGetWakeupChannel(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupChannel();
 }
 
-otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel)
-{
-    Error     error    = kErrorNone;
-    Instance &instance = AsCoreType(aInstance);
-
-    VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
-
-    SuccessOrExit(error = instance.Get<Mac::Mac>().SetWakeupChannel(aChannel));
-
-    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
-    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+otError otLinkSetWakeupChannel(otInstance *, uint8_t) { return kErrorNotImplemented; }
+#endif
 
 uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance)
 {
@@ -142,7 +128,7 @@ exit:
 
 void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64)
 {
-    AsCoreType(aInstance).Get<Radio>().GetIeeeEui64(AsCoreType(aEui64));
+    AsCoreType(aInstance).Get<Radio::Radio>().GetIeeeEui64(AsCoreType(aEui64));
 }
 
 otPanId otLinkGetPanId(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetPanId(); }
@@ -307,24 +293,24 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint16_t *aSize)
 {
-    AssertPointerIsNotNull(aNumberOfEntries);
+    AssertPointerIsNotNull(aSize);
 
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetDirectRetrySuccessHistogram(*aNumberOfEntries);
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetDirectRetrySuccessHistogram(*aSize);
 }
 
-const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint16_t *aSize)
 {
     const uint32_t *histogram = nullptr;
 
-    AssertPointerIsNotNull(aNumberOfEntries);
+    AssertPointerIsNotNull(aSize);
 
 #if OPENTHREAD_FTD
-    histogram = AsCoreType(aInstance).Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(*aNumberOfEntries);
+    histogram = AsCoreType(aInstance).Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(*aSize);
 #else
     OT_UNUSED_VARIABLE(aInstance);
-    *aNumberOfEntries = 0;
+    *aSize = 0;
 #endif
 
     return histogram;
@@ -429,7 +415,10 @@ otError otLinkSetCslChannel(otInstance *aInstance, uint8_t aChannel)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(Radio::IsCslChannelValid(aChannel), error = kErrorInvalidArgs);
+    if (aChannel != 0)
+    {
+        VerifyOrExit(Radio::IsChannelValid(aChannel), error = kErrorInvalidArgs);
+    }
 
     AsCoreType(aInstance).Get<Mac::Mac>().SetCslChannel(aChannel);
 
@@ -439,7 +428,7 @@ exit:
 
 uint32_t otLinkGetCslPeriod(otInstance *aInstance)
 {
-    return Mac::Mac::CslPeriodToUsec(AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod());
+    return Mac::CslPeriodToUsec(AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod());
 }
 
 otError otLinkSetCslPeriod(otInstance *aInstance, uint32_t aPeriod)
@@ -453,9 +442,9 @@ otError otLinkSetCslPeriod(otInstance *aInstance, uint32_t aPeriod)
     }
     else
     {
-        VerifyOrExit((aPeriod % kUsPerTenSymbols) == 0, error = kErrorInvalidArgs);
-        periodInTenSymbolsUnit = ClampToUint16(aPeriod / kUsPerTenSymbols);
-        VerifyOrExit(periodInTenSymbolsUnit >= kMinCslPeriod, error = kErrorInvalidArgs);
+        VerifyOrExit((aPeriod % Radio::kTenSymbolsDuration) == 0, error = kErrorInvalidArgs);
+        periodInTenSymbolsUnit = ClampToUint16(aPeriod / Radio::kTenSymbolsDuration);
+        VerifyOrExit(periodInTenSymbolsUnit >= Mac::kMinCslPeriod, error = kErrorInvalidArgs);
     }
 
     AsCoreType(aInstance).Get<Mac::Mac>().SetCslPeriod(periodInTenSymbolsUnit);
@@ -468,13 +457,7 @@ uint32_t otLinkGetCslTimeout(otInstance *aInstance) { return AsCoreType(aInstanc
 
 otError otLinkSetCslTimeout(otInstance *aInstance, uint32_t aTimeout)
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(kMaxCslTimeout >= aTimeout, error = kErrorInvalidArgs);
-    AsCoreType(aInstance).Get<Mle::Mle>().SetCslTimeout(aTimeout);
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetCslTimeout(aTimeout);
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -507,24 +490,12 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
     return error;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenEnabled(aEnable);
-}
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+otError otLinkSetWakeUpListenEnabled(otInstance *, bool) { return kErrorNotImplemented; }
 
-bool otLinkIsWakeupListenEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().IsWakeupListenEnabled();
-}
+bool otLinkIsWakeupListenEnabled(otInstance *) { return false; }
 
-void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval, uint32_t *aDuration)
-{
-    AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupListenParameters(*aInterval, *aDuration);
-}
+void otLinkGetWakeupListenParameters(otInstance *, uint32_t *, uint32_t *) {}
 
-otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterval, uint32_t aDuration)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenParameters(aInterval, aDuration);
-}
-#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+otError otLinkSetWakeupListenParameters(otInstance *, uint32_t, uint32_t) { return kErrorNotImplemented; }
+#endif

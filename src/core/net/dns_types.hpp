@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing DNS headers.
  */
 
-#ifndef DNS_HEADER_HPP_
-#define DNS_HEADER_HPP_
+#ifndef OT_CORE_NET_DNS_TYPES_HPP_
+#define OT_CORE_NET_DNS_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -619,7 +619,7 @@ public:
      *
      * If the name is empty (not specified), then root "." is appended to @p aMessage. If the name is from a C string
      * then the string is checked and appended (similar to static `AppendName(const char *aName, Message &)` method).
-     * If the the name is from a message, then it is read from the message and appended to @p aMessage. Note that in
+     * If the name is from a message, then it is read from the message and appended to @p aMessage. Note that in
      * this case independent of whether the name is compressed or not in its original message, the name is appended
      * as full (uncompressed) in @p aMessage.
      *
@@ -814,7 +814,7 @@ public:
      * Can be used to compare labels one by one. It checks whether the label read from @p aMessage matches
      * @p aLabel string (case-insensitive comparison).
      *
-     * Unlike `CompareName()` which requires the labels in the the name string to contain no dot '.' character, this
+     * Unlike `CompareName()` which requires the labels in the name string to contain no dot '.' character, this
      * method allows @p aLabel to include any character.
      *
      * @param[in]     aMessage        The message to read the label from to compare. `aMessage.GetOffset()` MUST point
@@ -1222,6 +1222,16 @@ public:
         mValue       = aValue;
         mValueLength = aValueLength;
     }
+
+    /**
+     * Indicates whether the entry's key (`mKey`) matches a given key string using a case-insensitive comparison.
+     *
+     * @param[in] aKey  A pointer to a key string to compare with.
+     *
+     * @retval TRUE   The entry's key matches the given @p aKey.
+     * @retval FALSE  The entry's key does not match or `mKey` is `nullptr`.
+     */
+    bool MatchesKey(const char *aKey) const;
 
     /**
      * Encodes and appends the `TxtEntry` to a message.
@@ -1754,7 +1764,7 @@ private:
     {
         int Compare(uint16_t aRecordType) const { return (aRecordType - mRecordType); }
 
-        constexpr static bool AreInOrder(const DataRecipe &aFirst, const DataRecipe &aSecond)
+        static constexpr bool AreInOrder(const DataRecipe &aFirst, const DataRecipe &aSecond)
         {
             return (aFirst.mRecordType < aSecond.mRecordType);
         }
@@ -3009,4 +3019,4 @@ DefineCoreType(otDnsTxtEntryIterator, Dns::TxtEntry::Iterator);
 
 } // namespace ot
 
-#endif // DNS_HEADER_HPP_
+#endif // OT_CORE_NET_DNS_TYPES_HPP_

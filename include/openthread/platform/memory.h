@@ -51,18 +51,17 @@ extern "C" {
  */
 
 /*
- * OpenThread only requires dynamic memory allocation when supporting multiple simultaneous instances, for MbedTls.
+ * Dynamic memory allocation is primarily needed for Thread Border Router functionalities and protocols
+ * such as SRP (server), mDNS or DHCPv6 PD. It may also be used for OpenThread message buffers.
  */
 
 /**
- * Dynamically allocates new memory. On platforms that support it, should just redirect to calloc. For
- * those that don't support calloc, should support the same functionality:
+ * Dynamically allocates new memory. On platforms that support it, they should redirect to `calloc`. For
+ * those that don't support `calloc`, they should implement the standard `calloc` behavior.
  *
- *   "The calloc() function contiguously allocates enough space for count objects that are size bytes of
- *   memory each and returns a pointer to the allocated memory. The allocated memory is filled with bytes
- *   of value zero."
+ * See: https://man7.org/linux/man-pages/man3/calloc.3.html
  *
- * Is required for OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE.
+ * Is required for `OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE`.
  *
  * @param[in] aNum   The number of blocks to allocate
  * @param[in] aSize  The size of each block to allocate
@@ -73,9 +72,9 @@ extern "C" {
 void *otPlatCAlloc(size_t aNum, size_t aSize);
 
 /**
- * Frees memory that was dynamically allocated.
+ * Frees memory that was dynamically allocated by `otPlatCAlloc()`.
  *
- * Is required for OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE.
+ * Is required for `OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE`.
  *
  * @param[in] aPtr  A pointer the memory blocks to free. The pointer may be NULL.
  */

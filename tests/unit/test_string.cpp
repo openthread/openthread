@@ -36,10 +36,7 @@
 
 namespace ot {
 
-enum
-{
-    kStringSize = 10,
-};
+constexpr uint16_t kStringSize = 10;
 
 template <uint16_t kSize> void PrintString(const char *aName, const String<kSize> aString)
 {
@@ -465,6 +462,15 @@ static_assert(!ot::AreStringsInOrder("cd", "cd"), "AreStringsInOrder() failed");
 static_assert(!ot::AreStringsInOrder("z", "abcd"), "AreStringsInOrder() failed");
 static_assert(!ot::AreStringsInOrder("0", ""), "AreStringsInOrder() failed");
 #endif
+
+static_assert(ot::CheckConstStringPrefix("abc", "a"), "CheckConstStringPrefix() failed");
+static_assert(ot::CheckConstStringPrefix("abc", "ab"), "CheckConstStringPrefix() failed");
+static_assert(ot::CheckConstStringPrefix("abc", "abc"), "CheckConstStringPrefix() failed");
+static_assert(ot::CheckConstStringPrefix("abc", ""), "CheckConstStringPrefix() failed");
+
+static_assert(!ot::CheckConstStringPrefix("abc", "b"), "CheckConstStringPrefix() failed");
+static_assert(!ot::CheckConstStringPrefix("abc", "abcd"), "CheckConstStringPrefix() failed");
+static_assert(!ot::CheckConstStringPrefix("", "a"), "CheckConstStringPrefix() failed");
 
 } // namespace ot
 

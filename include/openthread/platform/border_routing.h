@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for border routing manager.
  */
 
-#ifndef OPENTHREAD_PLATFORM_BORDER_ROUTER_H_
-#define OPENTHREAD_PLATFORM_BORDER_ROUTER_H_
+#ifndef OPENTHREAD_PLATFORM_BORDER_ROUTING_H_
+#define OPENTHREAD_PLATFORM_BORDER_ROUTING_H_
 
 #include <stdint.h>
 
@@ -100,4 +100,4 @@ extern void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance                  
 }
 #endif
 
-#endif // OPENTHREAD_PLATFORM_BORDER_ROUTER_H_
+#endif // OPENTHREAD_PLATFORM_BORDER_ROUTING_H_

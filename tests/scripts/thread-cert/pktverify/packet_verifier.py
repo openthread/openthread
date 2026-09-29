@@ -125,9 +125,7 @@ class PacketVerifier(object):
             name = self.test_info.get_node_name(i)
             self._vars[name + '_IPADDRS'] = addrs
             for addr in addrs:
-                if addr.is_dua:
-                    key = name + '_DUA'
-                elif addr.is_backbone_gua:
+                if addr.is_backbone_gua:
                     key = name + '_BGUA'
                 elif addr.is_link_local and (name + '_BGUA') in self._vars:
                     # FIXME: assume the link-local address after Backbone GUA is the Backbone Link Local address
@@ -160,10 +158,6 @@ class PacketVerifier(object):
         for i, omr in self.test_info.omrs.items():
             key = self.test_info.get_node_name(i) + '_OMR'
             self._vars[key] = omr
-
-        for i, dua in self.test_info.duas.items():
-            key = self.test_info.get_node_name(i) + '_DUA'
-            self._vars[key] = dua
 
         if self.test_info.leader_aloc:
             self._vars['LEADER_ALOC'] = self.test_info.leader_aloc
@@ -216,72 +210,6 @@ class PacketVerifier(object):
 
         return result
 
-    def verify_ping(self, src: str, dst: str, bbr: str = None, pkts: 'PacketVerifier' = None) -> VerifyResult:
-        """
-        Verify the ping process.
-
-        :param src: The source device name.
-        :param dst: The destination device name.
-        :param bbr: The Backbone Router name.
-                    If specified, this method also verifies that the ping request and reply be forwarded by the Backbone Router.
-        :param pkts: The PacketFilter to search.
-
-        :return: The verification result.
-        """
-        if bbr:
-            assert not (self.is_thread_device(src) and self.is_thread_device(dst)), \
-                f"both {src} and {dst} are WPAN devices"
-            assert not (self.is_backbone_device(src) and self.is_backbone_device(dst)), \
-                f"both {src} and {dst} are ETH devices"
-
-        if pkts is None:
-            pkts = self.pkts
-
-        src_dua = self.vars[src + '_DUA']
-        dst_dua = self.vars[dst + '_DUA']
-        if bbr:
-            bbr_ext = self.vars[bbr]
-            bbr_eth = self.vars[bbr + '_ETH']
-
-        result = VerifyResult()
-        ping_req = pkts.filter_ping_request().filter_ipv6_dst(dst_dua)
-        if self.is_backbone_device(src):
-            p = ping_req.filter_eth_src(self.vars[src + '_ETH']).must_next()
-        else:
-            p = ping_req.filter_wpan_src64(self.vars[src]).must_next()
-
-        # pkts.last().show()
-        ping_id = p.icmpv6.echo.identifier
-        logging.info("verify_ping: ping_id=%x", ping_id)
-        result.record_last('ping_request', pkts)
-        ping_req = ping_req.filter(lambda p: p.icmpv6.echo.identifier == ping_id)
-
-        # BBR unicasts the ping packet to TD.
-        if bbr:
-            if self.is_backbone_device(src):
-                ping_req.filter_wpan_src64(bbr_ext).must_next()
-            else:
-                ping_req.filter_eth_src(bbr_eth).must_next()
-
-        ping_reply = pkts.filter_ping_reply().filter_ipv6_dst(src_dua).filter(
-            lambda p: p.icmpv6.echo.identifier == ping_id)
-        # TD receives ping packet and responds back to Host via SBBR.
-        if self.is_thread_device(dst):
-            ping_reply.filter_wpan_src64(self.vars[dst]).must_next()
-        else:
-            ping_reply.filter_eth_src(self.vars[dst + '_ETH']).must_next()
-
-        result.record_last('ping_reply', pkts)
-
-        if bbr:
-            # SBBR forwards the ping response packet to Host.
-            if self.is_thread_device(dst):
-                ping_reply.filter_eth_src(bbr_eth).must_next()
-            else:
-                ping_reply.filter_wpan_src64(bbr_ext).must_next()
-
-        return result
-
     def is_thread_device(self, name: str) -> bool:
         """
         Returns if the device is an WPAN device.
@@ -314,45 +242,3 @@ class PacketVerifier(object):
             eth_idx = max(eth_idx, ei)
 
         return wpan_idx, eth_idx
-
-    def verify_dua_registration(self, src64, dua, *, pbbr_eth, sbbr_eth=None, pbbr_src64=None):
-        pv, pkts = self, self.pkts
-        MM = pv.vars['MM_PORT']
-        BB = pv.vars['BB_PORT']
-
-        # Router1 should send /n/dr for DUA registration
-        dr = pkts.filter_wpan_src64(src64).filter_coap_request('/n/dr', port=MM).filter(
-            'thread_nm.tlv.target_eid == {ROUTER1_DUA}', ROUTER1_DUA=dua).must_next()
-
-        # SBBR should not send /b/bq for Router1's DUA
-        if sbbr_eth is not None:
-            pkts.filter_backbone_query(dua, eth_src=sbbr_eth, port=BB).must_not_next()
-
-        # PBBR should respond to /n/dr
-        if pbbr_src64 is not None:
-            pkts.filter_wpan_src64(pbbr_src64).filter_coap_ack(
-                '/n/dr', port=MM).must_next().must_verify('thread_nm.tlv.status == 0')
-
-        # PBBR should send /b/bq for Router1's DUA (1st time)
-        bq1 = pkts.filter_backbone_query(dua, eth_src=pbbr_eth, port=BB).must_next()
-        bq1_index = pkts.index
-
-        assert bq1.sniff_timestamp - dr.sniff_timestamp <= 1.01, bq1.sniff_timestamp - dr.sniff_timestamp
-
-        # PBBR should send /b/bq for Router1's DUA (2nd time)
-        bq2 = pkts.filter_backbone_query(dua, eth_src=pbbr_eth, port=BB).must_next()
-
-        assert 0.9 < bq2.sniff_timestamp - bq1.sniff_timestamp < 1.1, bq2.sniff_timestamp - bq1.sniff_timestamp
-
-        # PBBR should send /b/bq for Router1's DUA (3rd time)
-        bq3 = pkts.filter_backbone_query(dua, eth_src=pbbr_eth, port=BB).must_next()
-
-        assert 0.9 < bq3.sniff_timestamp - bq2.sniff_timestamp < 1.1, bq3.sniff_timestamp - bq2.sniff_timestamp
-
-        # PBBR should send PRO_BB.ntf for Router's DUA when DAD completed
-        pkts.filter_eth_src(pbbr_eth).filter_backbone_answer(dua, port=BB, confirmable=False).must_next().show()
-
-        # PBBR should not recv /b/ba response from other BBRs during this period
-        pkts.range(bq1_index, pkts.index,
-                   cascade=False).filter('eth.src != {PBBR_ETH}',
-                                         PBBR_ETH=pbbr_eth).filter_backbone_answer(dua, port=BB).must_not_next()

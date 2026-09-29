@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,11 @@
 """
 
 import base64
+import string
 
 from tlv import advertised_tlv
+
+PRINTABLE_ASCII_BYTES = set(string.printable.encode('ascii'))
 
 
 def get_int_in_range(min_value, max_value):
@@ -143,3 +146,17 @@ def superimpose_centered_string(background: str, foreground: str) -> str:
     end_index = start_index + len_fg
 
     return background[:start_index] + foreground + background[end_index:]
+
+
+def is_printable_ascii(data: bytes) -> bool:
+    """
+    Checks if a byte array contains only printable and human-readable ASCII characters.
+
+    Args:
+        data: The byte array to check.
+
+    Returns:
+        True if all bytes are printable ASCII, False otherwise.
+    """
+    # The all() function stops as soon as it finds a failing case.
+    return all(byte_val in PRINTABLE_ASCII_BYTES for byte_val in data)

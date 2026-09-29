@@ -212,6 +212,8 @@ private:
 
 #ifdef __linux__
     int mNetLinkSocket = -1;
+#else
+    int mRouteSocket = -1;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -228,7 +230,11 @@ private:
     bool HasLinkLocalAddress(void) const;
 
 #ifdef __linux__
+    void ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage);
     void ReceiveNetLinkMessage(void);
+#else
+    void ReceiveRouteMessage(void);
+    void UpdateInfraIfState(void);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

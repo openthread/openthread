@@ -94,6 +94,7 @@ extern "C" {
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX 41 ///< Border Router DHCPv6-PD OMR Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX 42     ///< Border Router Local On-link Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX 43   ///< Border Router Favored On-link Prefix TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_OUI 44             ///< Vendor OUI TLV
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH 32         ///< Max length of Vendor Model TLV.
@@ -274,6 +275,50 @@ typedef struct otNetworkDiagChildTable
 typedef otBorderRoutingState otNetworkDiagBrState;
 
 /**
+ * Specifies the maximum size of a Thread Vendor OUI in bytes.
+ */
+#define OT_THREAD_VENDOR_OUI_MAX_SIZE 5
+
+/**
+ * Specifies the bit length of a MAC Address Block Large (MA-L) Vendor OUI.
+ */
+#define OT_THREAD_VENDOR_OUI_MA_L_BIT_LENGTH 24
+
+/**
+ * Specifies the bit length of a MAC Address Block Medium (MA-M) Vendor OUI.
+ */
+#define OT_THREAD_VENDOR_OUI_MA_M_BIT_LENGTH 28
+
+/**
+ * Specifies the bit length of a MAC Address Block Small (MA-S) Vendor OUI.
+ */
+#define OT_THREAD_VENDOR_OUI_MA_S_BIT_LENGTH 36
+
+/**
+ * Represents a Thread Vendor OUI (Organizationally Unique Identifier) which can have different lengths.
+ *
+ * A Vendor OUI can be assigned in one of the following formats:
+ *
+ * - 24-bit Prefix (MA-L): Exactly 3 bytes (24 bits).
+ *   Example: `00-1A-2B` is represented with `mBitLength = 24` and `mBytes = [0x00, 0x1A, 0x2B, 0x00, 0x00]`.
+ *
+ * - 28-bit Prefix (MA-M): Exactly 3.5 bytes (28 bits).
+ *   The half-byte (4 bits) at the end of the prefix occupies the Most Significant Nibble of the 4th byte.
+ *   The Least Significant Nibble of the 4th byte is set to zero.
+ *   Example: `00-1A-2B-3` is represented with `mBitLength = 28` and `mBytes = [0x00, 0x1A, 0x2B, 0x30, 0x00]`.
+ *
+ * - 36-bit Prefix (MA-S): Exactly 4.5 bytes (36 bits).
+ *   The half-byte (4 bits) at the end of the prefix occupies the Most Significant Nibble of the 5th byte.
+ *   The Least Significant Nibble of the 5th byte is set to zero.
+ *   Example: `00-1A-2B-3C-4` is represented with `mBitLength = 36` and `mBytes = [0x00, 0x1A, 0x2B, 0x3C, 0x40]`.
+ */
+typedef struct otThreadVendorOui
+{
+    uint8_t mBitLength;                            ///< The OUI prefix length in bits (24, 28, or 36).
+    uint8_t mBytes[OT_THREAD_VENDOR_OUI_MAX_SIZE]; ///< The OUI bytes in big-endian order.
+} otThreadVendorOui;
+
+/**
  * Represents a Network Diagnostic TLV.
  */
 typedef struct otNetworkDiagTlv
@@ -304,6 +349,7 @@ typedef struct otNetworkDiagTlv
         char                      mVendorSwVersion[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_SW_VERSION_TLV_LENGTH + 1];
         char                      mThreadStackVersion[OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH + 1];
         char                      mVendorAppUrl[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH + 1];
+        otThreadVendorOui         mVendorOui;
         otChannelMask             mNonPreferredChannels;
         otNetworkDiagData         mChannelPages;
         otNetworkDiagChildTable   mChildTable;
@@ -426,6 +472,79 @@ const char *otThreadGetVendorSwVersion(otInstance *aInstance);
 const char *otThreadGetVendorAppUrl(otInstance *aInstance);
 
 /**
+ * Gets the vendor OUI.
+ *
+ * If no vendor OUI is yet set/configured on device, the `mBitLength` in @p aOui will be zero.
+ *
+ * @param[in]   aInstance  A pointer to an OpenThread instance.
+ * @param[out]  aOui       A pointer to an `otThreadVendorOui` to return the vendor OUI.
+ */
+void otThreadGetVendorOuiInfo(otInstance *aInstance, otThreadVendorOui *aOui);
+
+/**
+ * Sets the vendor OUI.
+ *
+ * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aOui       A pointer to the `otThreadVendorOui` to set.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the vendor OUI.
+ * @retval OT_ERROR_INVALID_ARGS   @p aOui has an invalid length.
+ */
+otError otThreadSetVendorOuiInfo(otInstance *aInstance, const otThreadVendorOui *aOui);
+
+#define OT_THREAD_VENDOR_OUI_STRING_SIZE 16 ///< Recommended size for string representation of a vendor OUI.
+
+/**
+ * Converts a given vendor OUI to a human-readable string.
+ *
+ * The generated string format is hyphen-separated uppercase hexadecimal bytes (e.g., "00-1A-2B" for a 24-bit OUI).
+ * For 28-bit and 36-bit OUIs, the trailing 4-bit nibble is appended as a single hexadecimal digit (e.g., "00-1A-2B-3"
+ * for a 28-bit OUI). If @p aOui is invalid or unspecified, the string "unspecified" is returned.
+ *
+ * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
+ * but the outputted string is always null-terminated.
+ *
+ * @param[in]  aOui      The vendor OUI to convert.
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
+ * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_THREAD_VENDOR_OUI_STRING_SIZE`.
+ */
+void otThreadVendorOuiToString(const otThreadVendorOui *aOui, char *aBuffer, uint16_t aSize);
+
+#define OT_THREAD_UNSPECIFIED_VENDOR_OUI (0xffffffff) ///< Represents an unspecified Vendor OUI.
+
+/**
+ * Gets the vendor OUI-24.
+ *
+ * @deprecated This function is deprecated. Use `otThreadGetVendorOuiInfo()` instead.
+ *
+ * If the configured Vendor OUI has a prefix length greater than 24 bits, this function returns the most significant
+ * 24 bits (first 3 bytes) of the OUI to maintain backward compatibility.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The vendor OUI-24 value, or `OT_THREAD_UNSPECIFIED_VENDOR_OUI` if not specified.
+ */
+uint32_t otThreadGetVendorOui(otInstance *aInstance);
+
+/**
+ * Sets the vendor OUI-24.
+ *
+ * @deprecated This function is deprecated. Use `otThreadSetVendorOuiInfo()` instead.
+ *
+ * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
+ *
+ * @param[in] aInstance    A pointer to an OpenThread instance.
+ * @param[in] aVendorOui   The vendor OUI-24 value in Hexadecimal representation (e.g., OUI 64-16-66 is represented as
+ *                         `0x641666`). Must be a 24-bit value.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the vendor OUI.
+ * @retval OT_ERROR_INVALID_ARGS  @p aVendorOui is not a valid 24-bit value.
+ */
+otError otThreadSetVendorOui(otInstance *aInstance, uint32_t aVendorOui);
+
+/**
  * Set the vendor name string.
  *
  * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
@@ -433,11 +552,16 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance);
  * @p aVendorName should be UTF8 with max length of 32 chars (`MAX_VENDOR_NAME_TLV_LENGTH`). Maximum length does not
  * include the null `\0` character.
  *
+ * If `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled, @p aVendorName must start with the "RD:" prefix.
+ * This is enforced to ensure reference devices are identifiable. If @p aVendorName does not follow this pattern,
+ * the name is rejected, and `OT_ERROR_INVALID_ARGS` is returned.
+ *
  * @param[in] aInstance       A pointer to an OpenThread instance.
  * @param[in] aVendorName     The vendor name string.
  *
  * @retval OT_ERROR_NONE          Successfully set the vendor name.
- * @retval OT_ERROR_INVALID_ARGS  @p aVendorName is not valid (too long or not UTF8).
+ * @retval OT_ERROR_INVALID_ARGS  @p aVendorName is not valid. It is too long, is not UTF-8, or does not start with
+ *                                the "RD:" prefix when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
  */
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName);
 

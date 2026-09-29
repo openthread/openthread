@@ -31,9 +31,10 @@
  *   This file includes compile-time configurations for platform-specific services.
  */
 
-#ifndef CONFIG_PLATFORM_H_
-#define CONFIG_PLATFORM_H_
+#ifndef OT_CORE_CONFIG_PLATFORM_H_
+#define OT_CORE_CONFIG_PLATFORM_H_
 
+#include "config/crypto.h"
 #include "config/srp_server.h"
 
 /**
@@ -156,7 +157,19 @@
  * Define to 1 if you want to enable key ref usage support as defined by platform.
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-#define OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE 0
+#define OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE \
+    (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CRYPTO_INVALID_KEY_REF
+ *
+ * The sentinel `KeyRef` value that marks "no key set". Depends on the crypto backend in use. A backend whose
+ * platform reserves a different value as invalid can override this definition. Defaults to `PSA_KEY_ID_NULL`,
+ * as used by the default PSA backend.
+ */
+#ifndef OPENTHREAD_CONFIG_CRYPTO_INVALID_KEY_REF
+#define OPENTHREAD_CONFIG_CRYPTO_INVALID_KEY_REF 0
 #endif
 
 /**
@@ -199,4 +212,4 @@
  * @}
  */
 
-#endif // CONFIG_PLATFORM_H_
+#endif // OT_CORE_CONFIG_PLATFORM_H_

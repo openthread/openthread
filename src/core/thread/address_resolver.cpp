@@ -123,8 +123,7 @@ Error AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) 
         VerifyOrExit(entry->IsLastTransactionTimeValid());
 
         aInfo.mLastTransTime = entry->GetLastTransactionTime();
-        AsCoreType(&aInfo.mMeshLocalEid).SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
-        AsCoreType(&aInfo.mMeshLocalEid).SetIid(entry->GetMeshLocalIid());
+        Get<Mle::Mle>().ComposeMeshLocalAddress(entry->GetMeshLocalIid(), AsCoreType(&aInfo.mMeshLocalEid));
 
         ExitNow();
     }
@@ -611,18 +610,15 @@ exit:
 
 Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 {
-    Error            error;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriAddressQuery);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityNonConfirmablePostMessage(kUriAddressQuery);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aEid));
 
-    messageInfo.SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast();
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, Ip6::Address::GetRealmLocalAllRoutersMulticast()));
 
     LogInfo("Sent %s for %s", UriToString<kUriAddressQuery>(), aEid.ToString().AsCString());
 
@@ -631,22 +627,10 @@ exit:
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
     FreeMessageOnError(message, error);
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(aEid))
-    {
-        uint16_t selfRloc16 = Get<Mle::Mle>().GetRloc16();
-
-        LogInfo("Extending %s to %s for target %s, rloc16=%04x(self)", UriToString<kUriAddressQuery>(),
-                UriToString<kUriBackboneQuery>(), aEid.ToString().AsCString(), selfRloc16);
-        IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(aEid, selfRloc16));
-    }
-#endif
-
     return error;
 }
 
-template <>
-void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Msg &aMsg)
 {
     Ip6::Address             target;
     Ip6::InterfaceIdentifier meshLocalIid;
@@ -656,13 +640,13 @@ void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, cons
     CacheEntry              *entry;
     CacheEntry              *prev;
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
-    SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMessage, target));
-    SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
-    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16));
+    SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
+    SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
+    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMsg.mMessage, rloc16));
 
-    switch (Tlv::Find<ThreadLastTransactionTimeTlv>(aMessage, lastTransactionTime))
+    switch (Tlv::Find<ThreadLastTransactionTimeTlv>(aMsg.mMessage, lastTransactionTime))
     {
     case kErrorNone:
         break;
@@ -674,24 +658,25 @@ void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, cons
     }
 
     LogInfo("Received %s from 0x%04x for %s to 0x%04x", UriToString<kUriAddressNotify>(),
-            aMessageInfo.GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString(), rloc16);
+            aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString(), rloc16);
 
     entry = FindCacheEntry(target, list, prev);
     VerifyOrExit(entry != nullptr);
 
-    if (list == &mCachedList)
+    if ((list == &mCachedList) && entry->IsLastTransactionTimeValid())
     {
-        if (entry->IsLastTransactionTimeValid())
+        // Receiving multiple Address Notification for an EID from
+        // different mesh-local IIDs indicates address is in use
+        // by more than one device. Try to resolve the duplicate
+        // address by sending an Address Error message.
+
+        if (entry->GetMeshLocalIid() != meshLocalIid)
         {
-            // Receiving multiple Address Notification for an EID from
-            // different mesh-local IIDs indicates address is in use
-            // by more than one device. Try to resolve the duplicate
-            // address by sending an Address Error message.
-
-            VerifyOrExit(entry->GetMeshLocalIid() == meshLocalIid, SendAddressError(target, meshLocalIid, nullptr));
-
-            VerifyOrExit(lastTransactionTime < entry->GetLastTransactionTime());
+            SendAddressError(target, meshLocalIid, Ip6::Address::GetRealmLocalAllRoutersMulticast());
+            ExitNow();
         }
+
+        VerifyOrExit(lastTransactionTime < entry->GetLastTransactionTime());
     }
 
     entry->SetRloc16(rloc16);
@@ -705,7 +690,7 @@ void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, cons
 
     LogCacheEntryChange(kEntryUpdated, kReasonReceivedNotification, *entry);
 
-    if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
+    if (Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriAddressNotify>());
     }
@@ -718,47 +703,29 @@ exit:
 
 void AddressResolver::SendAddressError(const Ip6::Address             &aTarget,
                                        const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                       const Ip6::Address             *aDestination)
+                                       const Ip6::Address             &aDestination)
 {
-    Error            error;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    message->Init(aDestination == nullptr ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable, Coap::kCodePost);
-    SuccessOrExit(error = message->AppendUriPathOptions(PathForUri(kUriAddressError)));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().AllocateAndInitPostMessageTo(kUriAddressError, aDestination);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
     SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, aMeshLocalIid));
 
-    if (aDestination == nullptr)
-    {
-        messageInfo.SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast();
-    }
-    else
-    {
-        messageInfo.SetSockAddrToRlocPeerAddrTo(*aDestination);
-    }
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aDestination));
 
     LogInfo("Sent %s for target %s", UriToString<kUriAddressError>(), aTarget.ToString().AsCString());
 
 exit:
-
-    if (error != kErrorNone)
-    {
-        FreeMessage(message);
-        LogInfo("Failed to send %s: %s", UriToString<kUriAddressError>(), ErrorToString(error));
-    }
+    FreeMessageOnError(message, error);
+    LogInfoOnError(error, "send %s", UriToString<kUriAddressError>());
 }
 
 #endif // OPENTHREAD_FTD
 
-template <>
-void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
 {
     Error                    error = kErrorNone;
     Ip6::Address             target;
@@ -768,37 +735,25 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
     Ip6::Address    destination;
 #endif
 
-    VerifyOrExit(aMessage.IsPostRequest(), error = kErrorDrop);
-
     LogInfo("Received %s", UriToString<kUriAddressError>());
 
-    if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
+    if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
+        if (Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
         {
             LogInfo("Sent %s ack", UriToString<kUriAddressError>());
         }
     }
 
-    SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, target));
-    SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
+    SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
+    SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
 
     for (Ip6::Netif::UnicastAddress &address : Get<ThreadNetif>().GetUnicastAddresses())
     {
         if (address.GetAddress() == target && Get<Mle::Mle>().GetMeshLocalEid().GetIid() != meshLocalIid)
         {
             // Target EID matches address and Mesh Local EID differs
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address.GetAddress()))
-            {
-                Get<DuaManager>().NotifyDuplicateDomainUnicastAddress();
-            }
-            else
-#endif
-            {
-                Get<ThreadNetif>().RemoveUnicastAddress(address);
-            }
-
+            Get<ThreadNetif>().RemoveUnicastAddress(address);
             ExitNow();
         }
     }
@@ -820,9 +775,9 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
 
             if (child.RemoveIp6Address(target) == kErrorNone)
             {
-                destination.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), child.GetRloc16());
+                Get<Mle::Mle>().ComposeRloc(child.GetRloc16(), destination);
 
-                SendAddressError(target, meshLocalIid, &destination);
+                SendAddressError(target, meshLocalIid, destination);
                 ExitNow();
             }
         }
@@ -830,32 +785,27 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
 #endif // OPENTHREAD_FTD
 
 exit:
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Error %s when processing %s", ErrorToString(error), UriToString<kUriAddressError>());
-    }
+    LogWarnOnError(error, "process %s", UriToString<kUriAddressError>());
 }
 
 #if OPENTHREAD_FTD
 
-template <>
-void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
 {
     Ip6::Address target;
     uint32_t     lastTransactionTime;
 
-    VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
-    SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMessage, target));
+    SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
 
     LogInfo("Received %s from 0x%04x for target %s", UriToString<kUriAddressQuery>(),
-            aMessageInfo.GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString());
+            aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString());
 
     if (Get<ThreadNetif>().HasUnicastAddress(target))
     {
         SendAddressQueryResponse(target, Get<Mle::Mle>().GetMeshLocalEid().GetIid(), nullptr,
-                                 aMessageInfo.GetPeerAddr());
+                                 aMsg.mMessageInfo.GetPeerAddr());
         ExitNow();
     }
 
@@ -869,21 +819,11 @@ void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const
         if (child.HasIp6Address(target))
         {
             lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child.GetLastHeard());
-            SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime, aMessageInfo.GetPeerAddr());
+            SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime,
+                                     aMsg.mMessageInfo.GetPeerAddr());
             ExitNow();
         }
     }
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(target))
-    {
-        uint16_t srcRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
-
-        LogInfo("Extending %s to %s for target %s rloc16=%04x", UriToString<kUriAddressQuery>(),
-                UriToString<kUriBackboneQuery>(), target.ToString().AsCString(), srcRloc16);
-        IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(target, srcRloc16));
-    }
-#endif
 
 exit:
     return;
@@ -894,11 +834,10 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address             &a
                                                const uint32_t                 *aLastTransactionTime,
                                                const Ip6::Address             &aDestination)
 {
-    Error            error;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriAddressNotify);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriAddressNotify);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
@@ -910,9 +849,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address             &a
         SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, *aLastTransactionTime));
     }
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aDestination);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aDestination));
 
     LogInfo("Sent %s for target %s", UriToString<kUriAddressNotify>(), aTarget.ToString().AsCString());
 
@@ -1047,16 +984,16 @@ void AddressResolver::HandleIcmpReceive(void                *aContext,
                                                                 AsCoreType(aIcmpHeader));
 }
 
-void AddressResolver::HandleIcmpReceive(Message                 &aMessage,
-                                        const Ip6::MessageInfo  &aMessageInfo,
-                                        const Ip6::Icmp::Header &aIcmpHeader)
+void AddressResolver::HandleIcmpReceive(Message                &aMessage,
+                                        const Ip6::MessageInfo &aMessageInfo,
+                                        const Ip6::Icmp6Header &aIcmpHeader)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     Ip6::Header ip6Header;
 
-    VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp::Header::kTypeDstUnreach);
-    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::Icmp::Header::kCodeDstUnreachNoRoute);
+    VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp6Header::kTypeDstUnreach);
+    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::Icmp6Header::kCodeDstUnreachNoRoute);
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), ip6Header));
 
     Remove(ip6Header.GetDestination(), kReasonReceivedIcmpDstUnreachNoRoute);
@@ -1069,51 +1006,43 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
+const char *AddressResolver::EntryChangeToString(EntryChange aChange)
+{
+#define EntryChangeMapList(_)   \
+    _(kEntryAdded, "added")     \
+    _(kEntryUpdated, "updated") \
+    _(kEntryRemoved, "removed")
+
+    DefineEnumStringArray(EntryChangeMapList);
+
+    return kStrings[aChange];
+}
+
+const char *AddressResolver::ReasonToString(Reason aReason)
+{
+#define ReasonMapList(_)                                        \
+    _(kReasonQueryRequest, "query request")                     \
+    _(kReasonSnoop, "snoop")                                    \
+    _(kReasonReceivedNotification, "rx notification")           \
+    _(kReasonRemovingRouterId, "removing router id")            \
+    _(kReasonRemovingRloc16, "removing rloc16")                 \
+    _(kReasonReceivedIcmpDstUnreachNoRoute, "rx icmp no route") \
+    _(kReasonEvictingForNewEntry, "evicting for new entry")     \
+    _(kReasonRemovingEid, "removing eid")
+
+    DefineEnumStringArray(ReasonMapList);
+
+    return kStrings[aReason];
+}
+
 void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
                                           Reason            aReason,
                                           const CacheEntry &aEntry,
                                           CacheEntryList   *aList)
 {
-    static const char *const kChangeStrings[] = {
-        "added",   // (0) kEntryAdded
-        "updated", // (1) kEntryUpdated
-        "removed", // (2) kEntryRemoved
-    };
-
-    static const char *const kReasonStrings[] = {
-        "query request",          // (0) kReasonQueryRequest
-        "snoop",                  // (1) kReasonSnoop
-        "rx notification",        // (2) kReasonReceivedNotification
-        "removing router id",     // (3) kReasonRemovingRouterId
-        "removing rloc16",        // (4) kReasonRemovingRloc16
-        "rx icmp no route",       // (5) kReasonReceivedIcmpDstUnreachNoRoute
-        "evicting for new entry", // (6) kReasonEvictingForNewEntry
-        "removing eid",           // (7) kReasonRemovingEid
-    };
-
-    struct ChangeEnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kEntryAdded);
-        ValidateNextEnum(kEntryUpdated);
-        ValidateNextEnum(kEntryRemoved);
-    };
-
-    struct ReasonEnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kReasonQueryRequest);
-        ValidateNextEnum(kReasonSnoop);
-        ValidateNextEnum(kReasonReceivedNotification);
-        ValidateNextEnum(kReasonRemovingRouterId);
-        ValidateNextEnum(kReasonRemovingRloc16);
-        ValidateNextEnum(kReasonReceivedIcmpDstUnreachNoRoute);
-        ValidateNextEnum(kReasonEvictingForNewEntry);
-        ValidateNextEnum(kReasonRemovingEid);
-    };
-
-    LogInfo("Cache entry %s: %s, 0x%04x%s%s - %s", kChangeStrings[aChange], aEntry.GetTarget().ToString().AsCString(),
-            aEntry.GetRloc16(), (aList == nullptr) ? "" : ", list:", ListToString(aList), kReasonStrings[aReason]);
+    LogInfo("Cache entry %s: %s, 0x%04x%s%s - %s", EntryChangeToString(aChange),
+            aEntry.GetTarget().ToString().AsCString(), aEntry.GetRloc16(),
+            (aList == nullptr) ? "" : ", list:", ListToString(aList), ReasonToString(aReason));
 }
 
 const char *AddressResolver::ListToString(const CacheEntryList *aList) const

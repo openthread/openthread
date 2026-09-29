@@ -1164,6 +1164,10 @@ class OTCI(object):
 
                     v = v[1:-1]
                     info['addresses'] = list(map(Ip6Addr, v.split(', ')))
+
+                elif k in ('lease', 'key-lease', 'remaining lease', 'remaining key-lease'):
+                    info[k] = v
+
                 else:
                     raise UnexpectedCommandOutput(output)
 
@@ -1195,6 +1199,8 @@ class OTCI(object):
                     info[k] = list() if v == '(null)' else list(v.split(','))
                 elif k in ('port', 'weight', 'priority', 'ttl', 'lease', 'key-lease'):
                     info[k] = int(v)
+                elif k in ('remaining lease', 'remaining key-lease'):
+                    info[k] = v
                 elif k in ('host',):
                     info[k] = v
                 elif k == 'TXT':
@@ -2077,7 +2083,6 @@ class OTCI(object):
         #
         # Active Timestamp: 1
         # Channel: 22
-        # Wake-up Channel: 11
         # Channel Mask: 0x07fff800
         # Ext PAN ID: 5c93ae980ff22d35
         # Mesh Local Prefix: fdc7:55fe:6363:bd01::/64
@@ -2097,8 +2102,6 @@ class OTCI(object):
                 dataset['active_timestamp'] = int(val)
             elif key == 'Channel':
                 dataset['channel'] = int(val)
-            elif key == 'Wake-up Channel':
-                dataset['wakeupchannel'] = int(val)
             elif key == 'Channel Mask':
                 dataset['channel_mask'] = int(val, 16)
             elif key == 'Ext PAN ID':
@@ -2147,7 +2150,6 @@ class OTCI(object):
     def dataset_set_buffer(self,
                            active_timestamp: Optional[int] = None,
                            channel: Optional[int] = None,
-                           wakeupchannel: Optional[int] = None,
                            channel_mask: Optional[int] = None,
                            extpanid: Optional[str] = None,
                            mesh_local_prefix: Optional[str] = None,
@@ -2162,9 +2164,6 @@ class OTCI(object):
 
         if channel is not None:
             self.execute_command(f'dataset channel {channel}')
-
-        if wakeupchannel is not None:
-            self.execute_command(f'dataset wakeupchannel {wakeupchannel}')
 
         if channel_mask is not None:
             self.execute_command(f'dataset channelmask {channel_mask:#08x}')
@@ -2430,14 +2429,6 @@ class OTCI(object):
     #
 
     # TODO: bbr mgmt ...
-    def set_bbr_dua_response_status(self, status: int, mliid: Optional[str] = None):
-        """Set Backbone Router Data Unicast Address Response status/coap-code.
-
-        Only for testing/reference devices
-        """
-        _mliid = mliid if mliid is not None else ""
-        self.execute_command(f'bbr mgmt dua {status} {_mliid}')
-
     def set_bbr_mlr_response_status(self, status: int):
         """Set Backbone Router Multicast Listener Response status."""
         self.execute_command(f'bbr mgmt mlr response {status}')
@@ -2577,7 +2568,7 @@ class OTCI(object):
         return listeners
 
     #
-    # Thread 1.2 and DUA/MLR utilities
+    # Thread 1.2 and MLR utilities
     #
 
     def get_domain_name(self) -> str:
@@ -2587,23 +2578,6 @@ class OTCI(object):
     def set_domain_name(self, name: str):
         """Set the Thread Domain Name for Thread 1.2 device."""
         self.execute_command(f'domainname {self.__escape_escapable(name)}')
-
-    def get_dua_iid(self) -> str:
-        """Get the DUA IID for Thread 1.2 device."""
-        raw_iid = self.execute_command('dua iid')
-        if raw_iid:
-            return self.__parse_iid(raw_iid)
-        else:
-            return ''
-
-    def set_dua_iid(self, iid: str):
-        """Set the DUA IID for Thread 1.2 device."""
-        self.__validate_iid(iid)
-        self.execute_command(f'dua iid {iid}')
-
-    def clear_dua_iid(self):
-        """Clear the DUA IID for Thread 1.2 device."""
-        self.execute_command('dua iid clear')
 
     # TODO: mlr reg <ipaddr> ... [timeout]
 
@@ -3286,7 +3260,7 @@ class OTCI(object):
         self.execute_command('diag rawpowersetting disable')
 
     def is_command_supported(self, command: str) -> bool:
-        """Check whether the the given command is supported by the device."""
+        """Check whether the given command is supported by the device."""
         output = self.__otcmd.execute_command(command, timeout=10)
 
         if re.match(r"Error \d+: \w*", output[-1]):
@@ -3308,13 +3282,12 @@ class OTCI(object):
                        panid: Optional[int] = None,
                        pskc: Optional[str] = None,
                        security_policy: Optional[tuple[int, str]] = None,
-                       pending_timestamp: Optional[int] = None,
-                       wakeup_channel: Optional[int] = None) -> bytes:
+                       pending_timestamp: Optional[int] = None) -> bytes:
         """Creates a new Operational Dataset with given parameters."""
         self.dataset_clear_buffer()
         self.dataset_init_buffer()
-        self.dataset_set_buffer(active_timestamp, channel, wakeup_channel, channel_mask, extpanid, mesh_local_prefix,
-                                network_key, network_name, panid, pskc, security_policy, pending_timestamp)
+        self.dataset_set_buffer(active_timestamp, channel, channel_mask, extpanid, mesh_local_prefix, network_key,
+                                network_name, panid, pskc, security_policy, pending_timestamp)
         return self.get_dataset_tlvs_bytes()
 
     def join(self, dataset: bytes) -> None:

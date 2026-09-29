@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread security material generation.
  */
 
-#ifndef KEY_MANAGER_HPP_
-#define KEY_MANAGER_HPP_
+#ifndef OT_CORE_THREAD_KEY_MANAGER_HPP_
+#define OT_CORE_THREAD_KEY_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -229,6 +229,15 @@ public:
     explicit KeyManager(Instance &aInstance);
 
     /**
+     * Initializes the `KeyManager`.
+     *
+     * This method is called after OpenThread `Instance` is fully initialized (from `Instance::AfterInit()`). This
+     * ensures that all `Instance` components (including `KeyManager`) have been constructed and are safe to interact
+     * with (e.g., to save a default key in `Crypto::Storage::KeyRefManager`).
+     */
+    void Init(void);
+
+    /**
      * Starts KeyManager rotation timer and sets guard timer to initial value.
      */
     void Start(void);
@@ -358,15 +367,6 @@ public:
      */
     const Mle::KeyMaterial &GetTemporaryMleKey(uint32_t aKeySequence);
 
-    /**
-     * Returns a temporary MAC key Material computed from the given key sequence.
-     *
-     * @param[in]  aKeySequence  The key sequence value.
-     *
-     * @returns The temporary MAC key.
-     */
-    const Mle::KeyMaterial &GetTemporaryMacKey(uint32_t aKeySequence);
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     /**
      * Returns the current MAC Frame Counter value for 15.4 radio link.
@@ -448,6 +448,14 @@ public:
     const KekKeyMaterial &GetKek(void) const { return mKek; }
 
     /**
+     * Indicates whether or not the KEK is set.
+     *
+     * @retval TRUE   If the KEK is set.
+     * @retval FALSE  If the KEK is not set.
+     */
+    bool IsKekSet(void) const { return mIsKekSet; }
+
+    /**
      * Retrieves the KEK as literal `Kek` key.
      *
      * @param[out] aKek  A reference to a `Kek` to output the retrieved KEK.
@@ -467,6 +475,11 @@ public:
      * @param[in]  aKekBytes  A pointer to the KEK bytes.
      */
     void SetKek(const uint8_t *aKekBytes) { SetKek(*reinterpret_cast<const Kek *>(aKekBytes)); }
+
+    /**
+     * Clears the KEK.
+     */
+    void ClearKek(void);
 
     /**
      * Returns the current KEK Frame Counter value.
@@ -549,7 +562,6 @@ public:
 private:
     static constexpr uint16_t kDefaultKeySwitchGuardTime    = 624; // ~ 93% of 672 (default key rotation time)
     static constexpr uint32_t kKeySwitchGuardTimePercentage = 93;  // Percentage of key rotation time.
-    static constexpr bool     kExportableMacKeys            = OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE;
 
     static_assert(kDefaultKeySwitchGuardTime ==
                       SecurityPolicy::kDefaultKeyRotationTime * kKeySwitchGuardTimePercentage / 100,
@@ -607,10 +619,6 @@ private:
     Mle::KeyMaterial mMleKey;
     Mle::KeyMaterial mTemporaryMleKey;
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    Mle::KeyMaterial mTemporaryMacKey;
-#endif
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Mac::KeyMaterial mTrelKey;
     Mac::KeyMaterial mTemporaryTrelKey;
@@ -637,6 +645,7 @@ private:
 
     SecurityPolicy mSecurityPolicy;
     bool           mIsPskcSet : 1;
+    bool           mIsKekSet : 1;
 };
 
 /**
@@ -649,4 +658,4 @@ DefineCoreType(otPskc, Pskc);
 
 } // namespace ot
 
-#endif // KEY_MANAGER_HPP_
+#endif // OT_CORE_THREAD_KEY_MANAGER_HPP_

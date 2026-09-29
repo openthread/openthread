@@ -214,6 +214,24 @@ class OtCliCommandRunner(OTCommandHandler):
                         break
 
             if not done:
+                deadline = time.monotonic() + 0.1
+                while True:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        break
+
+                    try:
+                        line = self.__pending_lines.get(timeout=remaining)
+                    except queue.Empty:
+                        break
+
+                    output.append(line)
+
+                    if match_line(line, expect_line):
+                        done = True
+                        break
+
+            if not done:
                 raise ExpectLineTimeoutError(expect_line)
 
         return output

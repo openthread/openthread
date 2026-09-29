@@ -42,148 +42,84 @@
 
 namespace ot {
 
-static Instance *sInstance;
-
 using namespace ot::BackboneRouter;
-
-static const otIp6Address MA201 = {
-    {{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}};
-static const otIp6Address MA301 = {
-    {{0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}};
-static const otIp6Address MA401 = {
-    {{0xff, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}};
-static const otIp6Address MA501 = {
-    {{0xff, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}};
-
-uint32_t sNow;
-
-extern "C" uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
-
-void testMulticastListenersTableAPIs(Instance *aInstance);
 
 void TestMulticastListenersTable(void)
 {
-    sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != nullptr);
+    static constexpr uint16_t kMaxSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS;
 
-    MulticastListenersTable &table = sInstance->Get<MulticastListenersTable>();
+    MulticastListenersTable *table;
+    Instance                *instance;
+    Ip6::Address             kMa201;
+    Ip6::Address             kMa301;
+    Ip6::Address             kMa401;
+    Ip6::Address             kMa501;
+    TimeMilli                now(0);
 
-    for (MulticastListenersTable::Listener &listener : table.Iterate())
-    {
-        VerifyOrQuit(false, "MulticastListenersTable should be empty when created");
-    }
+    SuccessOrQuit(kMa201.FromString("ff02::01"));
+    SuccessOrQuit(kMa301.FromString("ff03::01"));
+    SuccessOrQuit(kMa401.FromString("ff04::01"));
+    SuccessOrQuit(kMa501.FromString("ff05::01"));
 
-    // Removing from empty table should be OK
-    table.Remove(static_cast<const Ip6::Address &>(MA401));
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
 
-    sNow = 1;
-    // Add valid MAs should succeed
-    SuccessOrQuit(table.Add(static_cast<const Ip6::Address &>(MA401), TimerMilli::GetNow()));
-    SuccessOrQuit(table.Add(static_cast<const Ip6::Address &>(MA501), TimerMilli::GetNow()));
-    VerifyOrQuit(table.Count() == 2, "Table count is wrong");
+    table = &instance->Get<MulticastListenersTable>();
+
+    VerifyOrQuit(table->Count() == 0);
+
+    table->Remove(kMa201);
+
+    VerifyOrQuit(table->Count() == 0);
+
+    SuccessOrQuit(table->Add(kMa401, now));
+    SuccessOrQuit(table->Add(kMa501, now));
+    VerifyOrQuit(table->Count() == 2);
 
     // Add invalid MAs should fail with kErrorInvalidArgs
-    VerifyOrQuit(table.Add(static_cast<const Ip6::Address &>(MA201), TimerMilli::GetNow()) == kErrorInvalidArgs,
-                 "failed to detect bad arg");
-    VerifyOrQuit(table.Add(static_cast<const Ip6::Address &>(MA301), TimerMilli::GetNow()) == kErrorInvalidArgs,
-                 "failed to detect bad arg");
+    VerifyOrQuit(table->Add(kMa201, now) == kErrorInvalidArgs);
+    VerifyOrQuit(table->Add(kMa301, now) == kErrorInvalidArgs);
+    VerifyOrQuit(table->Count() == 2);
 
-    // Expire should expire outdated Listeners
-    sNow = 2;
-    table.Expire();
-    VerifyOrQuit(table.Count() == 0, "Table count is wrong");
+    // Re-add an existing entry
+    SuccessOrQuit(table->Add(kMa501, now));
+    VerifyOrQuit(table->Count() == 2);
 
-    // Add different addresses until the table is full
-    sNow = 10;
-    for (uint16_t i = 0; i < OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS; i++)
+    VerifyOrQuit(table->Has(kMa401));
+    VerifyOrQuit(table->Has(kMa501));
+    VerifyOrQuit(!table->Has(kMa201));
+    VerifyOrQuit(!table->Has(kMa301));
+
+    table->Clear();
+    VerifyOrQuit(table->Count() == 0);
+
+    for (uint16_t i = 0; i < kMaxSize; i++)
     {
         Ip6::Address address;
 
-        address                = static_cast<const Ip6::Address &>(MA401);
+        address                = kMa401;
         address.mFields.m16[7] = BigEndian::HostSwap16(i);
 
-        SuccessOrQuit(table.Add(address, TimerMilli::GetNow() + i));
-        VerifyOrQuit(table.Count() == i + 1, "Table count is wrong");
+        SuccessOrQuit(table->Add(address, now));
+
+        VerifyOrQuit(table->Count() == i + 1);
+        VerifyOrQuit(table->Has(address));
     }
 
-    // Now the table is full, we can't add more addresses
-    VerifyOrQuit(table.Add(static_cast<const Ip6::Address &>(MA501), TimerMilli::GetNow()) == kErrorNoBufs,
-                 "succeeded when table is full");
+    // Now the table is full, adding more entries should fail
+    VerifyOrQuit(table->Add(kMa501, now) == kErrorNoBufs);
 
-    // Expire one Listener at a time
-    for (uint16_t i = 0; i < OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS; i++)
-    {
-        table.Expire();
-        VerifyOrQuit(table.Count() == OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS - i - 1, "Table count is wrong");
+    VerifyOrQuit(table->Count() == kMaxSize);
 
-        sNow += 1;
-    }
-
-    // Now the table should be empty
-    VerifyOrQuit(table.Count() == 0, "Table count is wrong");
-
-    // Now test the APIs
-    testMulticastListenersTableAPIs(sInstance);
-
-    // Do some fuzzy test
-    for (uint16_t i = 0; i < 10000; i++)
+    for (uint16_t i = 0; i < kMaxSize; i++)
     {
         Ip6::Address address;
-        sNow += 10;
 
-        table.Expire();
+        address                = kMa401;
+        address.mFields.m16[7] = BigEndian::HostSwap16(i);
 
-        for (MulticastListenersTable::Listener &listener : table.Iterate())
-        {
-            OT_ASSERT(listener.GetAddress().IsMulticastLargerThanRealmLocal());
-            OT_ASSERT(listener.GetExpireTime() > TimerMilli::GetNow());
-        }
-
-        address = static_cast<const Ip6::Address &>(MA401);
-
-        address.mFields.m16[7] = Random::NonCrypto::GetUint16InRange(1, 1000);
-        IgnoreError(table.Add(address, TimerMilli::GetNow() + Random::NonCrypto::GetUint32InRange(1, 100)));
-
-        address.mFields.m16[7] = Random::NonCrypto::GetUint16InRange(1, 1000);
-        if (Random::NonCrypto::GetUint16InRange(0, 2) == 0)
-        {
-            table.Remove(address);
-        }
+        VerifyOrQuit(table->Has(address));
     }
-}
-
-void testMulticastListenersTableAPIs(Instance *aInstance)
-{
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    otBackboneRouterMulticastListenerIterator iter = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT;
-    otBackboneRouterMulticastListenerInfo     info;
-    size_t                                    table_size = 0;
-
-    while (otBackboneRouterMulticastListenerGetNext(aInstance, &iter, &info) == kErrorNone)
-    {
-        VerifyOrQuit(false, "Table should be empty");
-    }
-
-    SuccessOrQuit(otBackboneRouterMulticastListenerAdd(aInstance, &MA401, 30));
-
-    table_size = 0, iter = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT;
-    while (otBackboneRouterMulticastListenerGetNext(aInstance, &iter, &info) == kErrorNone)
-    {
-        table_size++;
-
-        VerifyOrQuit(memcmp(&info.mAddress, &MA401, sizeof(otIp6Address)) == 0, "bad address");
-        VerifyOrQuit(info.mTimeout == 30, "bad timeout");
-    }
-    VerifyOrQuit(table_size == 1, "Table size is wrong");
-
-    otBackboneRouterMulticastListenerClear(aInstance);
-
-    iter = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT;
-    while (otBackboneRouterMulticastListenerGetNext(aInstance, &iter, &info) == kErrorNone)
-    {
-        VerifyOrQuit(false, "Table should be empty");
-    }
-#endif
 }
 
 } // namespace ot

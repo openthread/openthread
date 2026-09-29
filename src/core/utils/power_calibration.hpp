@@ -31,8 +31,8 @@
  * @brief
  *   This file includes definitions for the platform power calibration module.
  */
-#ifndef POWER_CALIBRATION_HPP_
-#define POWER_CALIBRATION_HPP_
+#ifndef OT_CORE_UTILS_POWER_CALIBRATION_HPP_
+#define OT_CORE_UTILS_POWER_CALIBRATION_HPP_
 
 #include "openthread-core-config.h"
 
@@ -143,10 +143,6 @@ private:
     };
 
     bool IsPowerUpdated(void) const { return mCalibratedPowerIndex == kInvalidIndex; }
-    bool IsChannelValid(uint8_t aChannel) const
-    {
-        return ((aChannel >= Radio::kChannelMin) && (aChannel <= Radio::kChannelMax));
-    }
 
     static constexpr uint8_t  kInvalidIndex = NumericLimits<uint8_t>::kMax;
     static constexpr uint16_t kInvalidPower = NumericLimits<int16_t>::kMax;
@@ -168,4 +164,4 @@ private:
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-#endif // POWER_CALIBRATION_HPP_
+#endif // OT_CORE_UTILS_POWER_CALIBRATION_HPP_

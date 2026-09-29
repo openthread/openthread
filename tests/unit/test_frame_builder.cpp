@@ -49,6 +49,8 @@ void TestFrameBuilder(void)
     uint8_t      buffer[kMaxBufferSize];
     uint8_t      zeroBuffer[kMaxBufferSize];
     FrameBuilder frameBuilder;
+    uint16_t     u16;
+    uint32_t     u32;
 
     printf("TestFrameBuilder\n");
 
@@ -93,14 +95,17 @@ void TestFrameBuilder(void)
     VerifyOrQuit(!frameBuilder.CanAppend(sizeof(buffer) - sizeof(kData1) + 1));
 
     SuccessOrQuit(frameBuilder.AppendUint8(0x01));
-    SuccessOrQuit(frameBuilder.AppendBigEndianUint16(0x0203));
-    SuccessOrQuit(frameBuilder.AppendLittleEndianUint16(0x0504));
+    u16 = 0x203;
+    SuccessOrQuit(frameBuilder.AppendUint<kBigEndian>(u16));
+    u16 = 0x0504;
+    SuccessOrQuit(frameBuilder.AppendUint<kLittleEndian>(u16));
     VerifyOrQuit(frameBuilder.GetLength() == sizeof(kData1) * 2);
     VerifyOrQuit(frameBuilder.GetBytes() == buffer);
     VerifyOrQuit(memcmp(buffer, kData1, sizeof(kData1)) == 0);
     VerifyOrQuit(memcmp(buffer + sizeof(kData1), kData1, sizeof(kData1)) == 0);
 
-    SuccessOrQuit(frameBuilder.AppendBigEndianUint32(0x01020304));
+    u32 = 0x01020304;
+    SuccessOrQuit(frameBuilder.AppendUint<kBigEndian>(u32));
     SuccessOrQuit(frameBuilder.AppendUint8(0x05));
     VerifyOrQuit(frameBuilder.GetLength() == sizeof(kData1) * 3);
     VerifyOrQuit(frameBuilder.GetBytes() == buffer);
@@ -124,7 +129,8 @@ void TestFrameBuilder(void)
     VerifyOrQuit(frameBuilder.GetLength() == 0);
     VerifyOrQuit(frameBuilder.GetMaxLength() == sizeof(buffer));
 
-    SuccessOrQuit(frameBuilder.AppendLittleEndianUint32(0x04030201));
+    u32 = 0x04030201;
+    SuccessOrQuit(frameBuilder.AppendUint<kLittleEndian>(u32));
     SuccessOrQuit(frameBuilder.AppendUint8(0x05));
     VerifyOrQuit(frameBuilder.GetLength() == sizeof(kData1));
     VerifyOrQuit(frameBuilder.GetBytes() == buffer);

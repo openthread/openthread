@@ -175,25 +175,29 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeyRotationTimer(aInstance)
     , mKekFrameCounter(0)
     , mIsPskcSet(false)
+    , mIsKekSet(false)
 {
     otPlatCryptoInit();
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    {
-        NetworkKey networkKey;
-
-        mNetworkKeyRef = Crypto::Storage::kInvalidKeyRef;
-        mPskcRef       = Crypto::Storage::kInvalidKeyRef;
-
-        IgnoreError(networkKey.GenerateRandom());
-        StoreNetworkKey(networkKey, /* aOverWriteExisting */ false);
-    }
+    mNetworkKeyRef = Crypto::Storage::kInvalidKeyRef;
+    mPskcRef       = Crypto::Storage::kInvalidKeyRef;
 #else
     IgnoreError(mNetworkKey.GenerateRandom());
     mPskc.Clear();
 #endif
 
     mMacFrameCounters.Reset();
+}
+
+void KeyManager::Init(void)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    NetworkKey networkKey;
+
+    IgnoreError(networkKey.GenerateRandom());
+    StoreNetworkKey(networkKey, /* aOverWriteExisting */ false);
+#endif
 }
 
 void KeyManager::Start(void)
@@ -336,19 +340,14 @@ void KeyManager::UpdateKeyMaterial(void)
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     {
-        Mac::KeyMaterial curKey;
-        Mac::KeyMaterial prevKey;
-        Mac::KeyMaterial nextKey;
+        HashKeys prevHashKeys;
+        HashKeys nextHashKeys;
 
-        curKey.SetFrom(hashKeys.GetMacKey(), kExportableMacKeys);
+        ComputeKeys(mKeySequence - 1, prevHashKeys);
+        ComputeKeys(mKeySequence + 1, nextHashKeys);
 
-        ComputeKeys(mKeySequence - 1, hashKeys);
-        prevKey.SetFrom(hashKeys.GetMacKey(), kExportableMacKeys);
-
-        ComputeKeys(mKeySequence + 1, hashKeys);
-        nextKey.SetFrom(hashKeys.GetMacKey(), kExportableMacKeys);
-
-        Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prevKey, curKey, nextKey);
+        Get<Mac::SubMac>().SetMode1MacKeys(Mac::DetermineKeyIndexFor(mKeySequence), prevHashKeys.GetMacKey(),
+                                           hashKeys.GetMacKey(), nextHashKeys.GetMacKey());
     }
 #endif
 
@@ -425,18 +424,6 @@ const Mle::KeyMaterial &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
     return mTemporaryMleKey;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-const Mle::KeyMaterial &KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)
-{
-    HashKeys hashKeys;
-
-    ComputeKeys(aKeySequence, hashKeys);
-    mTemporaryMacKey.SetFrom(hashKeys.GetMacKey());
-
-    return mTemporaryMacKey;
-}
-#endif
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 const Mac::KeyMaterial &KeyManager::GetTemporaryTrelMacKey(uint32_t aKeySequence)
 {
@@ -509,6 +496,13 @@ void KeyManager::SetKek(const Kek &aKek)
 {
     mKek.SetFrom(aKek, /* aIsExportable */ true);
     mKekFrameCounter = 0;
+    mIsKekSet        = true;
+}
+
+void KeyManager::ClearKek(void)
+{
+    mKek.Clear();
+    mIsKekSet = false;
 }
 
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
@@ -574,7 +568,7 @@ void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
     {
         size_t keyLen;
 
-        SuccessOrAssert(Crypto::Storage::ExportKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen));
+        SuccessOrAssert(Crypto::Storage::ReadKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen));
         OT_ASSERT(keyLen == NetworkKey::kSize);
     }
     else
@@ -593,7 +587,7 @@ void KeyManager::GetPskc(Pskc &aPskc) const
     {
         size_t keyLen;
 
-        SuccessOrAssert(Crypto::Storage::ExportKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen));
+        SuccessOrAssert(Crypto::Storage::ReadKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen));
         OT_ASSERT(keyLen == Pskc::kSize);
     }
     else
@@ -615,9 +609,10 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 
     if (!aOverWriteExisting)
     {
-        // Check if there is already a network key stored in ITS. If
-        // stored, and we are not overwriting the existing key,
-        // return without doing anything.
+        // Check if there is already a network key stored in secure
+        // storage. If stored, and we are not overwriting the existing
+        // key, return without doing anything.
+
         if (Crypto::Storage::HasKey(keyRef))
         {
             ExitNow();
@@ -626,10 +621,10 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 
     Crypto::Storage::DestroyKey(keyRef);
 
-    SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
-                                               Crypto::Storage::kKeyAlgorithmHmacSha256,
-                                               Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
-                                               Crypto::Storage::kTypePersistent, aNetworkKey.m8, NetworkKey::kSize));
+    SuccessOrAssert(Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeHmac,
+                                             Crypto::Storage::kKeyAlgorithmHmacSha256,
+                                             Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
+                                             Crypto::Storage::kTypePersistent, aNetworkKey.m8, NetworkKey::kSize));
 
 exit:
     if (mNetworkKeyRef != keyRef)
@@ -646,9 +641,9 @@ void KeyManager::StorePskc(const Pskc &aPskc)
 
     Crypto::Storage::DestroyKey(keyRef);
 
-    SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeRaw,
-                                               Crypto::Storage::kKeyAlgorithmVendor, Crypto::Storage::kUsageExport,
-                                               Crypto::Storage::kTypePersistent, aPskc.m8, Pskc::kSize));
+    SuccessOrAssert(Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeRaw, Crypto::Storage::kKeyAlgorithmVendor,
+                                             Crypto::Storage::kUsageExport, Crypto::Storage::kTypePersistent, aPskc.m8,
+                                             Pskc::kSize));
 
     if (mPskcRef != keyRef)
     {
@@ -692,8 +687,8 @@ void KeyManager::DestroyTemporaryKeys(void)
 {
     mMleKey.Clear();
     mKek.Clear();
+    mIsKekSet = false;
     Get<Mac::SubMac>().ClearMacKeys();
-    Get<Mac::Mac>().ClearMode2Key();
 }
 
 void KeyManager::DestroyPersistentKeys(void) { Get<Crypto::Storage::KeyRefManager>().DestroyPersistentKeys(); }

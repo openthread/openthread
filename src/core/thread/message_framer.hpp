@@ -31,8 +31,8 @@
  *   This file includes definitions for `MessageFramer`.
  */
 
-#ifndef MESSAGE_FRAMER_HPP_
-#define MESSAGE_FRAMER_HPP_
+#ifndef OT_CORE_THREAD_MESSAGE_FRAMER_HPP_
+#define OT_CORE_THREAD_MESSAGE_FRAMER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -131,11 +131,15 @@ private:
     // (requiring one hop) and one as additional guard increment.
     static constexpr uint8_t kMeshHeaderHopsLeft = Mle::kMaxRouteCost + 3;
 
-    void PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::Info &aTxFrameInfo, const Message *aMessage);
+    void PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::BuildInfo &aBuildInfo);
+    void PrepareMacHeaders(Mac::TxFrame                 &aTxFrame,
+                           Mac::TxFrame::BuildInfo      &aBuildInfo,
+                           Mac::TxFrame::PayloadBuilder &aPayloadBuilder,
+                           const Message                *aMessage);
 
     uint16_t mFragTag;
 };
 
 } // namespace ot
 
-#endif // MESSAGE_FRAMER_HPP_
+#endif // OT_CORE_THREAD_MESSAGE_FRAMER_HPP_

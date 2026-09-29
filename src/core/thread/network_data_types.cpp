@@ -45,7 +45,7 @@ static bool IsPrefixValid(Instance &aInstance, const Ip6::Prefix &aPrefix)
     // Check that prefix length is within the valid range and the prefix
     // does not overlap with the mesh-local prefix.
 
-    return aPrefix.IsValid() && !aPrefix.ContainsPrefix(aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
+    return aPrefix.IsValid() && !aPrefix.IsCoveredBy(aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
 }
 
 bool OnMeshPrefixConfig::IsValid(Instance &aInstance) const
@@ -116,13 +116,6 @@ uint16_t OnMeshPrefixConfig::ConvertToTlvFlags(void) const
         flags |= BorderRouterEntry::kNdDnsFlag;
     }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if (mDp)
-    {
-        flags |= BorderRouterEntry::kDpFlag;
-    }
-#endif
-
     flags |= (static_cast<uint16_t>(RoutePreferenceToValue(mPreference)) << BorderRouterEntry::kPreferenceOffset);
 
     return flags;
@@ -151,7 +144,7 @@ void OnMeshPrefixConfig::SetFromTlvFlags(uint16_t aFlags)
     mDefaultRoute = ((aFlags & BorderRouterEntry::kDefaultRouteFlag) != 0);
     mOnMesh       = ((aFlags & BorderRouterEntry::kOnMeshFlag) != 0);
     mNdDns        = ((aFlags & BorderRouterEntry::kNdDnsFlag) != 0);
-    mDp           = ((aFlags & BorderRouterEntry::kDpFlag) != 0);
+    mDp           = false;
     mPreference   = RoutePreferenceFromValue(static_cast<uint8_t>(aFlags >> BorderRouterEntry::kPreferenceOffset));
 }
 
@@ -259,8 +252,8 @@ void LowpanContextInfo::SetFrom(const PrefixTlv &aPrefixTlv, const ContextTlv &a
     mContextId    = aContextTlv.GetContextId();
     mCompressFlag = aContextTlv.IsCompress();
     mStable       = aContextTlv.IsStable();
+    // Context Length field is deprecated; prefix length is taken directly from `aPrefixTlv`.
     aPrefixTlv.CopyPrefixTo(GetPrefix());
-    GetPrefix().SetLength(aContextTlv.GetContextLength());
 }
 
 } // namespace NetworkData

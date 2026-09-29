@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Multicast DNS (mDNS).
  */
 
-#ifndef CONFIG_MULTICAST_DNS_H_
-#define CONFIG_MULTICAST_DNS_H_
+#ifndef OT_CORE_CONFIG_MDNS_H_
+#define OT_CORE_CONFIG_MDNS_H_
 
 /**
  * @addtogroup config-mdns
@@ -96,6 +96,25 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MULTICAST_DNS_PERSIST_STATE_ON_POST_PROBE_CONFLICT
+ *
+ * Specifies the behavior of the mDNS module when a late conflict is detected. A late conflict occurs after a name has
+ * been successfully probed and claimed (post-probe). When enabled, the mDNS module will continue advertising/answering
+ * for the claimed name. The device essentially prioritizes the stability of the established advertisement. When
+ * disabled the mDNS module will transition the entry to the "conflict" state and stop answering/advertising for the
+ * name. Regardless of this configuration, the conflict callback is still invoked, informing other modules (such as the
+ * module that requested the registration) so they can decide on a higher-level resolution action.
+ *
+ * This configuration is enabled by default, especially in Thread use cases like the SRP Advertising Proxy. This is
+ * because post-probe conflicts are often transient or benign in these environments. Since the device (acting as
+ * the SRP Server) has already accepted an SRP registration from a remote Thread Node (SRP client), it is desirable for
+ * the mDNS advertisement to mirror the SRP registered service and maintain its discoverability.
+ */
+#ifndef OPENTHREAD_CONFIG_MULTICAST_DNS_PERSIST_STATE_ON_POST_PROBE_CONFLICT
+#define OPENTHREAD_CONFIG_MULTICAST_DNS_PERSIST_STATE_ON_POST_PROBE_CONFLICT 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
  *
  * Define as 1 to enable the multicast DNS (mDNS) verbose logging feature at build-time.
@@ -136,4 +155,4 @@
  * @}
  */
 
-#endif // CONFIG_MULTICAST_DNS_H_
+#endif // OT_CORE_CONFIG_MDNS_H_

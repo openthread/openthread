@@ -87,7 +87,7 @@ inline void CopyIp6AddressTo(const otIp6Address &aAddress, void *aBuffer)
 }
 
 /**
- * Reads and set the the IPv6 address bytes from a given buffer.
+ * Reads and set the IPv6 address bytes from a given buffer.
  *
  * @param[in] aBuffer    A pointer to buffer to read from.
  * @param[out] aAddress  A reference to populate with the read IPv6 address.

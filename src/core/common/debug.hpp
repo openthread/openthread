@@ -31,8 +31,8 @@
  *   This file includes functions for debugging.
  */
 
-#ifndef DEBUG_HPP_
-#define DEBUG_HPP_
+#ifndef OT_CORE_COMMON_DEBUG_HPP_
+#define OT_CORE_COMMON_DEBUG_HPP_
 
 #include "openthread-core-config.h"
 
@@ -131,4 +131,4 @@
 #define AssertPointerIsNotNull(aPointer)
 #endif
 
-#endif // DEBUG_HPP_
+#endif // OT_CORE_COMMON_DEBUG_HPP_

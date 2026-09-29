@@ -37,7 +37,7 @@ COPY . openthread
 RUN set -x \
     && cd openthread \
     && ./script/bootstrap \
-    && mkdir build \
+    && mkdir -p build \
     && cd build \
     && cmake -GNinja -DOT_COMMISSIONER=ON -DOT_JOINER=ON -DOT_PLATFORM=simulation .. \
     && ninja

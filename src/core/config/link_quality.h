@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Link Quality service.
  */
 
-#ifndef CONFIG_LINK_QUALITY_H_
-#define CONFIG_LINK_QUALITY_H_
+#ifndef OT_CORE_CONFIG_LINK_QUALITY_H_
+#define OT_CORE_CONFIG_LINK_QUALITY_H_
 
 /**
  * @addtogroup config-link-quality
@@ -83,4 +83,4 @@
  * @}
  */
 
-#endif // CONFIG_LINK_QUALITY_H_
+#endif // OT_CORE_CONFIG_LINK_QUALITY_H_

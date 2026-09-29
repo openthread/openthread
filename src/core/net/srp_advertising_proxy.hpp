@@ -31,8 +31,8 @@
  *   This file includes definitions for Advertising Proxy.
  */
 
-#ifndef SRP_ADVERTISING_PROXY_HPP_
-#define SRP_ADVERTISING_PROXY_HPP_
+#ifndef OT_CORE_NET_SRP_ADVERTISING_PROXY_HPP_
+#define OT_CORE_NET_SRP_ADVERTISING_PROXY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -295,4 +295,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
 
-#endif // SRP_ADVERTISING_PROXY_HPP_
+#endif // OT_CORE_NET_SRP_ADVERTISING_PROXY_HPP_

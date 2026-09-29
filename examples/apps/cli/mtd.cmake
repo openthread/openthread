@@ -56,7 +56,7 @@ target_link_libraries(ot-cli-mtd PRIVATE
 )
 
 if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+    if(APPLE)
         target_link_libraries(ot-cli-mtd PRIVATE -Wl,-map,ot-cli-mtd.map)
     else()
         target_link_libraries(ot-cli-mtd PRIVATE -Wl,-Map=ot-cli-mtd.map)

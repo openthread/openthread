@@ -86,7 +86,7 @@ void Checksum::WriteToMessage(uint16_t aOffset, Message &aMessage) const
 
     if (checksum != 0xffff)
     {
-        checksum = ~checksum;
+        checksum = static_cast<uint16_t>(~checksum);
     }
 
     checksum = BigEndian::HostSwap16(checksum);
@@ -100,7 +100,7 @@ void Checksum::Calculate(const Ip6::Address &aSource,
                          const Message      &aMessage)
 {
     Message::Chunk chunk;
-    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t       length = aMessage.DetermineLengthAfterOffset();
 
     // Pseudo-header for checksum calculation (RFC-2460).
 
@@ -126,7 +126,7 @@ void Checksum::Calculate(const Ip4::Address &aSource,
                          const Message      &aMessage)
 {
     Message::Chunk chunk;
-    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t       length = aMessage.DetermineLengthAfterOffset();
 
     // Pseudo-header for checksum calculation (RFC-768/792/793).
     // Note: ICMP checksum won't count the pseudo header like TCP and UDP.
@@ -176,15 +176,15 @@ void Checksum::UpdateMessageChecksum(Message            &aMessage,
     switch (aIpProto)
     {
     case Ip6::kProtoTcp:
-        headerOffset = Ip6::Tcp::Header::kChecksumFieldOffset;
+        headerOffset = Ip6::TcpHeader::kChecksumFieldOffset;
         break;
 
     case Ip6::kProtoUdp:
-        headerOffset = Ip6::Udp::Header::kChecksumFieldOffset;
+        headerOffset = Ip6::UdpHeader::kChecksumFieldOffset;
         break;
 
     case Ip6::kProtoIcmp6:
-        headerOffset = Ip6::Icmp::Header::kChecksumFieldOffset;
+        headerOffset = Ip6::Icmp6Header::kChecksumFieldOffset;
         break;
 
     default:
@@ -211,15 +211,15 @@ void Checksum::UpdateMessageChecksum(Message            &aMessage,
     switch (aIpProto)
     {
     case Ip4::kProtoTcp:
-        headerOffset = Ip4::Tcp::Header::kChecksumFieldOffset;
+        headerOffset = Ip4::TcpHeader::kChecksumFieldOffset;
         break;
 
     case Ip4::kProtoUdp:
-        headerOffset = Ip4::Udp::Header::kChecksumFieldOffset;
+        headerOffset = Ip4::UdpHeader::kChecksumFieldOffset;
         break;
 
     case Ip4::kProtoIcmp:
-        headerOffset = Ip4::Icmp::Header::kChecksumFieldOffset;
+        headerOffset = Ip4::Icmp4Header::kChecksumFieldOffset;
         break;
 
     default:
@@ -241,7 +241,7 @@ void Checksum::UpdateIp4HeaderChecksum(Ip4::Header &aHeader)
 
     aHeader.SetChecksum(0);
     checksum.AddData(reinterpret_cast<const uint8_t *>(&aHeader), sizeof(aHeader));
-    aHeader.SetChecksum(~checksum.GetValue());
+    aHeader.SetChecksum(static_cast<uint16_t>(~checksum.GetValue()));
 }
 
 } // namespace ot

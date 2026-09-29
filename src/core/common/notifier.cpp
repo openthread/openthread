@@ -104,6 +104,9 @@ void Notifier::EmitEvents(void)
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     Get<BackboneRouter::Leader>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Get<BackboneRouter::Local>().HandleNotifierEvents(events);
+#endif
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
     Get<Dhcp6::Server>().HandleNotifierEvents(events);
 #endif
@@ -132,12 +135,17 @@ void Notifier::EmitEvents(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     Get<MeshCoP::BorderAgent::Manager>().HandleNotifierEvents(events);
+    Get<MeshCoP::BorderAgent::TxtData>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    Get<MeshCoP::BorderAgent::Admitter>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Get<Ble::BleSecure>().HandleNotifierEvents(events);
+    Get<MeshCoP::TcatAgent>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-    Get<MlrManager>().HandleNotifierEvents(events);
-#endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    Get<DuaManager>().HandleNotifierEvents(events);
+    Get<Mlr::Manager>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Get<Trel::Link>().HandleNotifierEvents(events);
@@ -165,6 +173,9 @@ void Notifier::EmitEvents(void)
     Get<BorderRouter::RoutingManager>().HandleNotifierEvents(events);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
     Get<BorderRouter::NetDataBrTracker>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    Get<BorderRouter::MultiAilDetector>().HandleNotifierEvents(events);
 #endif
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE

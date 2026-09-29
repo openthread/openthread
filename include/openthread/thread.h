@@ -303,17 +303,24 @@ otError otThreadDiscover(otInstance              *aInstance,
 bool otThreadIsDiscoverInProgress(otInstance *aInstance);
 
 /**
- * Sets the Thread Joiner Advertisement when discovering Thread network.
+ * Sets the Thread Joiner Advertisement used when discovering a Thread network.
  *
- * Thread Joiner Advertisement is used to allow a Joiner to advertise its own application-specific information
- * (such as Vendor ID, Product ID, Discriminator, etc.) via a newly-proposed Joiner Advertisement TLV,
- * and to make this information available to Commissioners or Commissioner Candidates without human interaction.
+ * Requires `OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE`.
+ *
+ * @note This is an experimental feature and is not part of the Thread specification. OpenThread's implementation is
+ *       partial: it provides the mechanism for a Joiner to include a new Joiner Adv TLV in its emitted Discovery Scan
+ *       Request messages, but does not include the corresponding logic for the receiver of Scan Request to read or
+ *       parse this TLV.
+ *
+ * A Joiner can use this to advertise its own application-specific information (such as Vendor ID, Product ID,
+ * Discriminator, etc.) using a newly proposed Joiner Advertisement TLV (`OT_MESHCOP_TLV_JOINERADVERTISEMENT`).
+ * This TLV is appended as a sub-TLV within the MLE Discovery TLV in an MLE Discovery Scan Request message.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aOui             The Vendor IEEE OUI value that will be included in the Joiner Advertisement. Only the
  *                              least significant 3 bytes will be used, and the most significant byte will be ignored.
  * @param[in]  aAdvData         A pointer to the AdvData that will be included in the Joiner Advertisement.
- * @param[in]  aAdvDataLength   The length of AdvData in bytes.
+ * @param[in]  aAdvDataLength   The length of AdvData in bytes. Must not exceed `OT_JOINER_ADVDATA_MAX_LENGTH`.
  *
  * @retval OT_ERROR_NONE         Successfully set Joiner Advertisement.
  * @retval OT_ERROR_INVALID_ARGS Invalid AdvData.
@@ -620,38 +627,6 @@ const char *otThreadGetDomainName(otInstance *aInstance);
  * @sa otThreadGetDomainName
  */
 otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName);
-
-/**
- * Sets or clears the Interface Identifier manually specified for the Thread Domain Unicast Address.
- *
- * Available when `OPENTHREAD_CONFIG_DUA_ENABLE` is enabled.
- *
- * @note Only available since Thread 1.2.
- *
- * @param[in]  aInstance   A pointer to an OpenThread instance.
- * @param[in]  aIid        A pointer to the Interface Identifier to set or NULL to clear.
- *
- * @retval OT_ERROR_NONE           Successfully set/cleared the Interface Identifier.
- * @retval OT_ERROR_INVALID_ARGS   The specified Interface Identifier is reserved.
- *
- * @sa otThreadGetFixedDuaInterfaceIdentifier
- */
-otError otThreadSetFixedDuaInterfaceIdentifier(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid);
-
-/**
- * Gets the Interface Identifier manually specified for the Thread Domain Unicast Address.
- *
- * Available when `OPENTHREAD_CONFIG_DUA_ENABLE` is enabled.
- *
- * @note Only available since Thread 1.2.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @returns A pointer to the Interface Identifier which was set manually, or NULL if none was set.
- *
- * @sa otThreadSetFixedDuaInterfaceIdentifier
- */
-const otIp6InterfaceIdentifier *otThreadGetFixedDuaInterfaceIdentifier(otInstance *aInstance);
 
 /**
  * Gets the thrKeySequenceCounter.
@@ -991,6 +966,8 @@ typedef void (*otThreadDiscoveryRequestCallback)(const otThreadDiscoveryRequestI
 /**
  * Sets a callback to receive MLE Discovery Request data.
  *
+ * Requires `OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE`.
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aCallback  A pointer to a function that is called upon receiving an MLE Discovery Request message.
  * @param[in]  aContext   A pointer to callback application-specific context.
@@ -1064,24 +1041,6 @@ void otThreadSendAddressNotification(otInstance               *aInstance,
                                      otIp6InterfaceIdentifier *aMlIid);
 
 /**
- * Sends a Proactive Backbone Notification (PRO_BB.ntf) message on the Backbone link.
- *
- * Is only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
- *
- * @param[in]  aInstance                    A pointer to an OpenThread instance.
- * @param[in]  aTarget                      The target address of the PRO_BB.ntf message.
- * @param[in]  aMlIid                       The ML-IID of the PRO_BB.ntf message.
- * @param[in]  aTimeSinceLastTransaction    Time since last transaction (in seconds).
- *
- * @retval OT_ERROR_NONE           Successfully sent PRO_BB.ntf on backbone link.
- * @retval OT_ERROR_NO_BUFS        If insufficient message buffers available.
- */
-otError otThreadSendProactiveBackboneNotification(otInstance               *aInstance,
-                                                  otIp6Address             *aTarget,
-                                                  otIp6InterfaceIdentifier *aMlIid,
-                                                  uint32_t                  aTimeSinceLastTransaction);
-
-/**
  * Notifies other nodes in the network (if any) and then stops Thread protocol operation.
  *
  * It sends an Address Release if it's a router, or sets its child timeout to 0 if it's a child.
@@ -1144,7 +1103,7 @@ uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance);
 /**
  * Attempts to wake a Wake-up End Device.
  *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` to be enabled.
+ * Requires `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` to be enabled.
  *
  * The wake-up starts with transmitting a wake-up frame sequence to the Wake-up End Device.
  * During the wake-up sequence, and for a short time after the last wake-up frame is sent, the Wake-up Coordinator keeps

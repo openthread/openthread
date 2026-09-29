@@ -31,8 +31,8 @@
  *   This file includes definitions for child supervision feature.
  */
 
-#ifndef CHILD_SUPERVISION_HPP_
-#define CHILD_SUPERVISION_HPP_
+#ifndef OT_CORE_THREAD_CHILD_SUPERVISION_HPP_
+#define OT_CORE_THREAD_CHILD_SUPERVISION_HPP_
 
 #include "openthread-core-config.h"
 
@@ -50,8 +50,6 @@
 #include "thread/child.hpp"
 
 namespace ot {
-
-class ThreadNetif;
 
 /**
  *
@@ -225,4 +223,4 @@ private:
 
 } // namespace ot
 
-#endif // CHILD_SUPERVISION_HPP_
+#endif // OT_CORE_THREAD_CHILD_SUPERVISION_HPP_

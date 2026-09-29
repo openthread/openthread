@@ -34,6 +34,7 @@
 #include "test_util.hpp"
 
 #include "common/array.hpp"
+#include "common/string.hpp"
 #include "instance/instance.hpp"
 #include "net/dns_types.hpp"
 
@@ -41,11 +42,8 @@ namespace ot {
 
 void TestDnsName(void)
 {
-    enum
-    {
-        kMaxSize       = 300,
-        kMaxNameLength = Dns::Name::kMaxNameSize - 1,
-    };
+    static constexpr uint16_t kMaxSize       = 300;
+    static constexpr uint16_t kMaxNameLength = Dns::Name::kMaxNameSize - 1;
 
     struct TestName
     {
@@ -161,6 +159,14 @@ void TestDnsName(void)
         {"My Lovely Instance._mt._udp.local.", "mY lovely instancE", "_mt._udp", "local.", true},
         {"My Lovely Instance._mt._udp.local.", nullptr, "mY lovely instancE._mt._udp", "local.", true},
         {"_s1._sub._srv._udp.default.service.arpa.", "_s1", "_sub._srv._udp", "default.service.arpa.", true},
+    };
+
+    typedef uint8_t EncodedNameWithNullChar[6];
+
+    static const EncodedNameWithNullChar kEncodedNamesWithNullChar[] = {
+        {4, 0, 'a', 'b', 'c', 0}, // Null char at the start of the label
+        {4, 'a', 0, 'c', 'd', 0}, // Null char in the middle of the label
+        {4, 'a', 'b', 'c', 0, 0}  // Null char in the end of the label
     };
 
     printf("================================================================\n");
@@ -485,9 +491,13 @@ void TestDnsName(void)
 
         IgnoreError(message->SetLength(0));
 
-        printf("\"%s\"\n", maxLengthName);
+        printf("\"%s\" (len:%u)\n", maxLengthName, static_cast<uint16_t>(strlen(maxLengthName)));
+
+        SuccessOrQuit(Dns::Name::ValidateName(maxLengthName));
 
         SuccessOrQuit(Dns::Name::AppendName(maxLengthName, *message));
+
+        VerifyOrQuit(message->GetLength() == Dns::Name::kMaxNameSize);
     }
 
     printf("----------------------------------------------------------------\n");
@@ -497,7 +507,9 @@ void TestDnsName(void)
     {
         IgnoreError(message->SetLength(0));
 
-        printf("\"%s\"\n", invalidName);
+        printf("\"%s\" (len:%u)\n", invalidName, static_cast<uint16_t>(strlen(invalidName)));
+
+        VerifyOrQuit(Dns::Name::ValidateName(invalidName) != kErrorNone);
 
         VerifyOrQuit(Dns::Name::AppendName(invalidName, *message) == kErrorInvalidArgs);
     }
@@ -622,25 +634,36 @@ void TestDnsName(void)
                                          "012345678901234567890123456789012345678901234567890123456789012") ==
                  kErrorInvalidArgs);
 
+    printf("----------------------------------------------------------------\n");
+    printf("Name::ReadLabel() when there is null-char \'\\0\' in the label\n");
+
+    for (const EncodedNameWithNullChar &encodedName : kEncodedNamesWithNullChar)
+    {
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->AppendBytes(encodedName, sizeof(encodedName)));
+
+        SuccessOrQuit(message->Read(0, buffer, message->GetLength()));
+        DumpBuffer("EncodedName", buffer, message->GetLength());
+
+        offset      = 0;
+        labelLength = sizeof(label);
+        VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == kErrorParse);
+    }
+
     message->Free();
     testFreeInstance(instance);
 }
 
 void TestDnsCompressedName(void)
 {
-    enum
-    {
-        kHeaderOffset   = 10,
-        kGuardBlockSize = 20,
-        kMaxBufferSize  = 100,
-        kLabelSize      = 64,
-        kNameSize       = 256,
-
-        kName2EncodedSize = 4 + 2,  // encoded "FOO" + pointer label (2 bytes)
-        kName3EncodedSize = 2,      // pointer label (2 bytes)
-        kName4EncodedSize = 15 + 2, // encoded "Human.Readable" + pointer label (2 bytes).
-
-    };
+    static constexpr uint8_t  kHeaderOffset     = 10;
+    static constexpr uint8_t  kGuardBlockSize   = 20;
+    static constexpr uint16_t kMaxBufferSize    = 100;
+    static constexpr uint16_t kLabelSize        = 64;
+    static constexpr uint16_t kNameSize         = 256;
+    static constexpr uint16_t kName2EncodedSize = 4 + 2;  // encoded "FOO" + pointer label (2 bytes)
+    static constexpr uint16_t kName3EncodedSize = 2;      // pointer label (2 bytes)
+    static constexpr uint16_t kName4EncodedSize = 15 + 2; // encoded "Human.Readable" + pointer label (2 bytes).
 
     const char kName[]          = "F.ISI.ARPA";
     const char kLabel1[]        = "FOO";
@@ -1148,19 +1171,16 @@ void TestDnsCompressedName(void)
 
 void TestHeaderAndResourceRecords(void)
 {
-    enum
-    {
-        kHeaderOffset    = 0,
-        kQuestionCount   = 1,
-        kAnswerCount     = 2,
-        kAdditionalCount = 6,
-        kTtl             = 7200,
-        kTxtTtl          = 7300,
-        kSrvPort         = 1234,
-        kSrvPriority     = 1,
-        kSrvWeight       = 2,
-        kMaxSize         = 600,
-    };
+    static constexpr uint8_t  kHeaderOffset    = 0;
+    static constexpr uint16_t kQuestionCount   = 1;
+    static constexpr uint16_t kAnswerCount     = 2;
+    static constexpr uint16_t kAdditionalCount = 6;
+    static constexpr uint32_t kTtl             = 7200;
+    static constexpr uint32_t kTxtTtl          = 7300;
+    static constexpr uint16_t kSrvPort         = 1234;
+    static constexpr uint16_t kSrvPriority     = 1;
+    static constexpr uint16_t kSrvWeight       = 2;
+    static constexpr uint16_t kMaxSize         = 600;
 
     const char    kMessageString[]  = "DnsMessage";
     const char    kDomainName[]     = "example.com.";
@@ -1626,10 +1646,8 @@ void TestHeaderAndResourceRecords(void)
 
 void TestDnsTxtEntry(void)
 {
-    enum
-    {
-        kMaxTxtDataSize = 255,
-    };
+    static constexpr uint16_t kMaxTxtDataSize   = 255;
+    static constexpr uint16_t kMaxKeyStringSize = Dns::TxtEntry::kMaxIterKeyLength;
 
     struct EncodedTxtData
     {
@@ -1712,6 +1730,7 @@ void TestDnsTxtEntry(void)
     Dns::TxtEntry                  txtEntry;
     Dns::TxtEntry::Iterator        iterator;
     MutableData<kWithUint16Length> data;
+    char                           keyString[kMaxKeyStringSize];
 
     printf("================================================================\n");
     printf("TestDnsTxtEntry()\n");
@@ -1766,6 +1785,14 @@ void TestDnsTxtEntry(void)
         }
 
         VerifyOrQuit(strcmp(txtEntry.mKey, expectedTxtEntry.mKey) == 0);
+
+        SuccessOrQuit(StringCopy(keyString, expectedTxtEntry.mKey));
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+        StringConvertToLowercase(keyString);
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+        StringConvertToUppercase(keyString);
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+
         VerifyOrQuit(txtEntry.mValueLength == expectedTxtEntry.mValueLength);
 
         if (txtEntry.mValueLength != 0)

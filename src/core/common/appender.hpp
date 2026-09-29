@@ -31,8 +31,8 @@
  *  This file defines OpenThread `Appender` class.
  */
 
-#ifndef APPENDER_HPP_
-#define APPENDER_HPP_
+#ifndef OT_CORE_COMMON_APPENDER_HPP_
+#define OT_CORE_COMMON_APPENDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -169,4 +169,4 @@ private:
 
 } // namespace ot
 
-#endif // APPENDER_HPP_
+#endif // OT_CORE_COMMON_APPENDER_HPP_

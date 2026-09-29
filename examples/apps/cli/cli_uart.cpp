@@ -29,11 +29,10 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
 
-#include <openthread-system.h>
 #include <openthread/cli.h>
 #include <openthread/logging.h>
+#include <openthread/platform/debug_uart.h>
 
 #include "cli/cli_config.h"
 #include "common/code_utils.hpp"
@@ -221,7 +220,7 @@ static void Send(void)
     {
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
         /* duplicate the output to the debug uart */
-        otSysDebugUart_write_bytes(reinterpret_cast<uint8_t *>(sTxBuffer + sTxHead), sSendLength);
+        otPlatDebugUart_write_bytes(reinterpret_cast<uint8_t *>(sTxBuffer + sTxHead), sSendLength);
 #endif
         IgnoreError(otPlatUartSend(reinterpret_cast<uint8_t *>(sTxBuffer + sTxHead), sSendLength));
     }
@@ -291,6 +290,9 @@ static int Output(const char *aBuf, uint16_t aBufLength)
 }
 
 static int CliUartOutput(void *aContext, const char *aFormat, va_list aArguments)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+
+static int CliUartOutput(void *aContext, const char *aFormat, va_list aArguments)
 {
     OT_UNUSED_VARIABLE(aContext);
 
@@ -340,7 +342,6 @@ static int CliUartOutput(void *aContext, const char *aFormat, va_list aArguments
                 else
                 {
                     // Flush did not succeed, so abandon buffered output.
-                    otLogWarnPlat("Failed to output CLI: %s", otThreadErrorToString(error));
                     break;
                 }
             }

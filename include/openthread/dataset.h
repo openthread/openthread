@@ -207,7 +207,6 @@ typedef struct otOperationalDatasetComponents
     bool mIsPskcPresent;             ///< TRUE if PSKc is present, FALSE otherwise.
     bool mIsSecurityPolicyPresent;   ///< TRUE if Security Policy is present, FALSE otherwise.
     bool mIsChannelMaskPresent;      ///< TRUE if Channel Mask is present, FALSE otherwise.
-    bool mIsWakeupChannelPresent;    ///< TRUE if Wake-up Channel is present, FALSE otherwise.
 } otOperationalDatasetComponents;
 
 /**
@@ -236,7 +235,6 @@ typedef struct otOperationalDataset
     uint32_t                       mDelay;            ///< Delay Timer
     otPanId                        mPanId;            ///< PAN ID
     uint16_t                       mChannel;          ///< Channel
-    uint16_t                       mWakeupChannel;    ///< Wake-up Channel
     otPskc                         mPskc;             ///< PSKc
     otSecurityPolicy               mSecurityPolicy;   ///< Security Policy
     otChannelMask                  mChannelMask;      ///< Channel Mask
@@ -303,10 +301,12 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_SCAN_DURATION            = 56,  ///< meshcop Scan Duration TLV
     OT_MESHCOP_TLV_ENERGY_LIST              = 57,  ///< meshcop Energy List TLV
     OT_MESHCOP_TLV_THREAD_DOMAIN_NAME       = 59,  ///< meshcop Thread Domain Name TLV
-    OT_MESHCOP_TLV_WAKEUP_CHANNEL           = 74,  ///< meshcop Wake-up Channel TLV
+    OT_MESHCOP_TLV_ADMITTER_STATE           = 90,  ///< meshcop Admitter State TLV
+    OT_MESHCOP_TLV_ENROLLER_ID              = 91,  ///< meshcop Enroller ID TLV
+    OT_MESHCOP_TLV_ENROLLER_MODE            = 92,  ///< meshcop Enroller Mode TLV
     OT_MESHCOP_TLV_DISCOVERYREQUEST         = 128, ///< meshcop Discovery Request TLV
     OT_MESHCOP_TLV_DISCOVERYRESPONSE        = 129, ///< meshcop Discovery Response TLV
-    OT_MESHCOP_TLV_JOINERADVERTISEMENT      = 241, ///< meshcop Joiner Advertisement TLV
+    OT_MESHCOP_TLV_JOINERADVERTISEMENT      = 241, ///< meshcop Joiner Advertisement TLV (experimental)
 } otMeshcopTlvType;
 
 /**
@@ -565,6 +565,30 @@ otError otDatasetGeneratePskc(const char            *aPassPhrase,
 otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString);
 
 /**
+ * Indicates whether or not the given Operational Dataset TLVs is a valid Active or Pending Dataset.
+ *
+ * A valid Active Dataset MUST contain all the required TLVs (Active Timestamp, Channel, Channel Mask, Extended PAN ID,
+ * Mesh-Local Prefix, Network Key, Network Name, PAN ID, PSKc, and Security Policy).
+ *
+ * A valid Pending Dataset MUST contain all the required TLVs for an Active Dataset and additionally MUST contain
+ * Pending Timestamp and Delay Timer TLVs.
+ *
+ * This method also checks whether there are duplicated TLVs or the TLVs are not well-formed in the @p aDatasetTlvs.
+ *
+ * In addition to the TLV lengths, the values of the following TLVs are validated: Channel and Wake-up Channel (the
+ * channel page must be supported and the channel within range), Channel Mask (well-formed entries), PAN ID (must not
+ * be the broadcast PAN ID 0xffff), Extended PAN ID (must not be all-zeros or all-ones), Mesh-Local Prefix (must be a
+ * locally assigned ULA prefix, i.e., `fd00::/8`), Network Name (1 to 16 bytes, valid UTF-8, no control characters),
+ * and Security Policy.
+ *
+ * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
+ * @param[in]  aActive       TRUE for Active Dataset, FALSE for Pending Dataset.
+ *
+ * @returns TRUE if @p aDatasetTlvs is a valid Dataset, FALSE otherwise.
+ */
+bool otDatasetIsValid(const otOperationalDatasetTlvs *aDatasetTlvs, bool aActive);
+
+/**
  * Parses an Operational Dataset from a given `otOperationalDatasetTlvs`.
  *
  * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
@@ -574,6 +598,21 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
  * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs's length is longer than `OT_OPERATIONAL_DATASET_MAX_LENGTH`.
  */
 otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset);
+
+/**
+ * Compares two Operational Dataset TLVs to determine if they contain the same set of TLVs.
+ *
+ * This function performs a deep comparison. It parses both @p aDatasetTlvsA and @p aDatasetTlvsB and checks if
+ * they contain the exact same set of TLVs (same type and same value). The order of TLVs within the
+ * `otOperationalDatasetTlvs` does not matter.
+ *
+ * @param[in]  aDatasetTlvsA  A pointer to dataset TLVs A. Must not be NULL.
+ * @param[in]  aDatasetTlvsB  A pointer to dataset TLVs B. Must not be NULL.
+ *
+ * @returns TRUE if the two Operational Dataset TLVs match, FALSE otherwise (e.g., if any TLV differs,
+ *          is missing, or if the TLVs are not well-formed).
+ */
+bool otDatasetTlvsCompare(const otOperationalDatasetTlvs *aDatasetTlvsA, const otOperationalDatasetTlvs *aDatasetTlvsB);
 
 /**
  * Converts a given Operational Dataset to `otOperationalDatasetTlvs`.
@@ -596,6 +635,24 @@ void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalD
  * @retval OT_ERROR_NO_BUFS       Not enough space space in @p aDatasetTlvs to apply the update.
  */
 otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
+
+/**
+ * Indicates whether or not a given Operational Dataset (in TLVs format) affects connectivity.
+ *
+ * A Dataset affects connectivity if it contains a different Channel, PAN ID, Mesh Local Prefix, Network Key, or
+ * Security Policy than the current values in use.
+ *
+ * The following security policy changes are considered to affect connectivity:
+ * - Disabling routers (R bit: 1 to 0).
+ * - Enabling non-CCM routers (NCR bit: 0 to 1).
+ * - Increasing the version threshold for routing (VR field).
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aDatasetTlvs  A pointer to Operational Dataset TLVs.
+ *
+ * @returns TRUE if @p aDatasetTlvs affects connectivity, FALSE otherwise.
+ */
+bool otDatasetAffectsConnectivity(otInstance *aInstance, const otOperationalDatasetTlvs *aDatasetTlvs);
 
 /**
  * @}

@@ -297,7 +297,18 @@ Error Flash::Delete(uint16_t aKey, int aIndex)
 
 void Flash::Wipe(void)
 {
-    otPlatFlashErase(&GetInstance(), 0);
+    // The non-active page is erased first so that an interrupted wipe
+    // cannot leave a stale-but-active secondary page to be resurrected on
+    // the next `Init()`. `Init()` may invoke `Wipe()` with `mSwapIndex ==
+    // 2` (no active page found), so the active index is determined
+    // defensively before any erase.
+
+    uint8_t activeIndex   = (mSwapIndex <= 1) ? mSwapIndex : 0;
+    uint8_t inactiveIndex = !activeIndex;
+
+    otPlatFlashErase(&GetInstance(), inactiveIndex);
+    otPlatFlashErase(&GetInstance(), activeIndex);
+
     otPlatFlashWrite(&GetInstance(), 0, 0, &sSwapActive, sizeof(sSwapActive));
 
     mSwapIndex = 0;

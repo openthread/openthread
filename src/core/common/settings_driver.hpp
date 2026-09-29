@@ -31,8 +31,8 @@
  *   This file includes definitions for settings driver.
  */
 
-#ifndef SETTINGS_DRIVER_HPP_
-#define SETTINGS_DRIVER_HPP_
+#ifndef OT_CORE_COMMON_SETTINGS_DRIVER_HPP_
+#define OT_CORE_COMMON_SETTINGS_DRIVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -240,4 +240,4 @@ private:
 
 } // namespace ot
 
-#endif // SETTINGS_DRIVER_HPP_
+#endif // OT_CORE_COMMON_SETTINGS_DRIVER_HPP_

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DNS_CLIENT_HPP_
-#define DNS_CLIENT_HPP_
+#ifndef OT_CORE_NET_DNS_CLIENT_HPP_
+#define OT_CORE_NET_DNS_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -397,7 +397,7 @@ public:
          * MUST only be used from `AddressCallback`.
          *
          * The response may include multiple IPv6 address records. @p aIndex can be used to iterate through the list of
-         * addresses. Index zero gets the the first address and so on. When we reach end of the list, this method
+         * addresses. Index zero gets the first address and so on. When we reach end of the list, this method
          * returns `kErrorNotFound`.
          *
          * @param[in]  aIndex        The address record index to retrieve.
@@ -455,7 +455,7 @@ public:
          * MUST only be used from `BrowseCallback`.
          *
          * A response may include multiple service instance records. @p aIndex can be used to iterate through the list.
-         * Index zero gives the the first record. When we reach end of the list, `kErrorNotFound` is returned.
+         * Index zero gives the first record. When we reach end of the list, `kErrorNotFound` is returned.
          *
          * Note that this method gets the service instance label and not the full service instance name which is of the
          * form `<Instance>.<Service>.<Domain>`.
@@ -1043,4 +1043,4 @@ DefineMapEnum(otDnsRecordSection, Dns::Client::RecordInfo::RecordSection);
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
-#endif // DNS_CLIENT_HPP_
+#endif // OT_CORE_NET_DNS_CLIENT_HPP_

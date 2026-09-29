@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 class UdpStream:
     BASE_PORT = 10000
-    MAX_SERVER_TIMEOUT_SEC = 10
+    MAX_SERVER_TIMEOUT_SEC = 0.010
 
     def __init__(self, address, node_id):
         self.__receive_buffer = b''
@@ -58,4 +58,13 @@ class UdpStream:
             logger.debug(f'rx {len(data)} bytes')
             return data
         else:
-            raise socket.timeout('simulation UdpStream recv timeout - likely, TCAT is stopped on TCAT Device')
+            return b''
+
+    async def simulation_ble_disconnect(self):
+        # Simulate a BLE link break (e.g. peer out of range) by sending a zero-length UDP
+        # datagram. Unlike `disconnect`, this does not send a Disconnect TLV and does not
+        # perform a clean TLS shutdown.
+        self.socket.sendto(b'', self.address)
+
+    async def disconnect(self):
+        self.socket.close()

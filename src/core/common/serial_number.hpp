@@ -31,8 +31,8 @@
  *   This file includes definitions for serial number comparison similar to RFC-1982.
  */
 
-#ifndef SERIAL_NUMBER_HPP_
-#define SERIAL_NUMBER_HPP_
+#ifndef OT_CORE_COMMON_SERIAL_NUMBER_HPP_
+#define OT_CORE_COMMON_SERIAL_NUMBER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -93,4 +93,4 @@ public:
 
 } // namespace ot
 
-#endif // SERIAL_NUMBER_HPP_
+#endif // OT_CORE_COMMON_SERIAL_NUMBER_HPP_

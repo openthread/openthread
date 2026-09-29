@@ -96,7 +96,7 @@ otError PingSender::Process(Arg aArgs[])
         aArgs++;
     }
 
-    SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64Synth));
+    SuccessOrExit(error = ParseOrSynthesizeIp6Address(aArgs[0], config.mDestination, nat64Synth));
 
     if (nat64Synth)
     {
@@ -233,8 +233,8 @@ void PingSender::HandlePingStatistics(const otPingSenderStatistics *aStatistics)
 
     if (aStatistics->mReceivedCount != 0)
     {
-        uint32_t avgRoundTripTime =
-            1000 * static_cast<uint64_t>(aStatistics->mTotalRoundTripTime) / aStatistics->mReceivedCount;
+        uint32_t avgRoundTripTime = static_cast<uint32_t>(
+            1000 * static_cast<uint64_t>(aStatistics->mTotalRoundTripTime) / aStatistics->mReceivedCount);
 
         OutputFormat(" Round-trip min/avg/max = %u/%u.%03u/%u ms.", aStatistics->mMinRoundTripTime,
                      static_cast<uint16_t>(avgRoundTripTime / 1000), static_cast<uint16_t>(avgRoundTripTime % 1000),
@@ -248,8 +248,6 @@ void PingSender::HandlePingStatistics(const otPingSenderStatistics *aStatistics)
         OutputResult(OT_ERROR_NONE);
     }
 }
-
-void PingSender::OutputResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
 
 } // namespace Cli
 } // namespace ot

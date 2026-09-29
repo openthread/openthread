@@ -173,9 +173,25 @@ void NcpBase::LinkRawTransmitDone(uint8_t aIid, otRadioFrame *aFrame, otRadioFra
 
     if (mCurTransmitTID[aIid])
     {
-        uint8_t header        = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(aIid) | mCurTransmitTID[aIid];
-        bool    framePending  = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
-        bool    headerUpdated = static_cast<Mac::TxFrame *>(aFrame)->IsHeaderUpdated();
+        uint8_t                 header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(aIid) | mCurTransmitTID[aIid];
+        Mac::TxFrame::ParseInfo txFrameInfo;
+        bool                    framePending;
+        bool                    headerUpdated;
+
+        IgnoreError(txFrameInfo.ParseFrom(*static_cast<Mac::TxFrame *>(aFrame), Mac::Frame::kParseFully));
+        headerUpdated = txFrameInfo.GetTxFrame()->IsHeaderUpdated();
+
+        if (aAckFrame != nullptr)
+        {
+            Mac::RxFrame::ParseInfo ackFrameInfo;
+
+            IgnoreError(ackFrameInfo.ParseFrom(*static_cast<Mac::RxFrame *>(aAckFrame), Mac::Frame::kParseFully));
+            framePending = ackFrameInfo.mIsFramePending;
+        }
+        else
+        {
+            framePending = false;
+        }
 
         // Clear cached transmit TID
         mCurTransmitTID[aIid] = 0;
@@ -190,17 +206,14 @@ void NcpBase::LinkRawTransmitDone(uint8_t aIid, otRadioFrame *aFrame, otRadioFra
             SuccessOrExit(PackRadioFrame(aAckFrame, aError));
         }
 
-        if (static_cast<Mac::TxFrame *>(aFrame)->GetSecurityEnabled() && headerUpdated)
+        if (txFrameInfo.mIsSecurityEnabled && headerUpdated)
         {
-            uint8_t  keyId;
-            uint32_t frameCounter;
+            // If the frame uses Key ID Mode 0, there is no Key Index
+            // field in the Security Header. We default and still
+            // write `txFrameInfo.mKeyIndex` (as zero) in this case.
 
-            // Transmit frame auxiliary key index and frame counter
-            SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetKeyId(keyId));
-            SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetFrameCounter(frameCounter));
-
-            SuccessOrExit(mEncoder.WriteUint8(keyId));
-            SuccessOrExit(mEncoder.WriteUint32(frameCounter));
+            SuccessOrExit(mEncoder.WriteUint8(txFrameInfo.mKeyIndex));
+            SuccessOrExit(mEncoder.WriteUint32(txFrameInfo.mFrameCounter));
         }
 
         SuccessOrExit(mEncoder.EndFrame());
@@ -541,16 +554,15 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
 {
     otError        error = OT_ERROR_NONE;
     uint8_t        keyIdMode;
-    uint8_t        keyId;
+    uint8_t        keyIndex;
     uint16_t       keySize;
     const uint8_t *prevKey;
     const uint8_t *currKey;
     const uint8_t *nextKey;
 
     SuccessOrExit(error = mDecoder.ReadUint8(keyIdMode));
-    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1, error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = mDecoder.ReadUint8(keyId));
+    SuccessOrExit(error = mDecoder.ReadUint8(keyIndex));
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(prevKey, keySize));
     VerifyOrExit(keySize == sizeof(otMacKey), error = OT_ERROR_INVALID_ARGS);
@@ -562,7 +574,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
     VerifyOrExit(keySize == sizeof(otMacKey), error = OT_ERROR_INVALID_ARGS);
 
     error =
-        otLinkRawSetMacKey(mInstance, keyIdMode, keyId, reinterpret_cast<const otMacKey *>(prevKey),
+        otLinkRawSetMacKey(mInstance, keyIdMode, keyIndex, reinterpret_cast<const otMacKey *>(prevKey),
                            reinterpret_cast<const otMacKey *>(currKey), reinterpret_cast<const otMacKey *>(nextKey));
 
 exit:

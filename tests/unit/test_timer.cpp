@@ -37,14 +37,10 @@
 
 namespace ot {
 
-enum
-{
-    kCallCountIndexAlarmStop = 0,
-    kCallCountIndexAlarmStart,
-    kCallCountIndexTimerHandler,
-
-    kCallCountIndexMax
-};
+constexpr uint16_t kCallCountIndexAlarmStop    = 0;
+constexpr uint16_t kCallCountIndexAlarmStart   = 1;
+constexpr uint16_t kCallCountIndexTimerHandler = 2;
+constexpr uint16_t kCallCountIndexMax          = 3;
 
 uint32_t sNow;
 uint32_t sPlatT0;

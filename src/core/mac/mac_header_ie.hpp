@@ -31,14 +31,17 @@
  *   This file includes definitions for generating and processing IEEE 802.15.4 IE (Information Element).
  */
 
-#ifndef MAC_HEADER_IE_HPP_
-#define MAC_HEADER_IE_HPP_
+#ifndef OT_CORE_MAC_MAC_HEADER_IE_HPP_
+#define OT_CORE_MAC_MAC_HEADER_IE_HPP_
 
 #include "openthread-core-config.h"
 
 #include "common/as_core_type.hpp"
 #include "common/bit_utils.hpp"
+#include "common/const_cast.hpp"
 #include "common/encoding.hpp"
+#include "common/frame_builder.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "mac/mac_types.hpp"
 
@@ -52,84 +55,143 @@ namespace Mac {
  */
 
 /**
- * Implements IEEE 802.15.4 IE (Information Element) header generation and parsing.
+ * Implements IEEE 802.15.4 IE (Information Element) generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
 class HeaderIe
 {
 public:
-    /**
-     * Initializes the Header IE.
-     */
-    void Init(void) { mFields.m16 = 0; }
+    static constexpr uint8_t kMaxLength = 127; ///< Maximum Header IE length in bytes.
 
     /**
-     * Initializes the Header IE with Id and Length.
+     * Returns the IE Element ID.
      *
-     * @param[in]  aId   The IE Element Id.
-     * @param[in]  aLen  The IE content length.
+     * @returns the IE Element ID.
      */
-    void Init(uint16_t aId, uint8_t aLen);
-
-    /**
-     * Returns the IE Element Id.
-     *
-     * @returns the IE Element Id.
-     */
-    uint16_t GetId(void) const { return ReadBitsLittleEndian<uint16_t, kIdMask>(mFields.m16); }
-
-    /**
-     * Sets the IE Element Id.
-     *
-     * @param[in]  aId  The IE Element Id.
-     */
-    void SetId(uint16_t aId) { mFields.m16 = UpdateBitsLittleEndian<uint16_t, kIdMask>(mFields.m16, aId); }
+    uint8_t GetId(void) const { return static_cast<uint8_t>(ReadBitsIn<kLittleEndian, uint16_t, kIdMask>(mLenIdType)); }
 
     /**
      * Returns the IE content length.
      *
      * @returns the IE content length.
      */
-    uint8_t GetLength(void) const { return ReadBits<uint8_t, kLengthMask>(mFields.m8[0]); }
+    uint8_t GetLength(void) const
+    {
+        return static_cast<uint8_t>(ReadBitsIn<kLittleEndian, uint16_t, kLenMask>(mLenIdType));
+    }
 
     /**
-     * Sets the IE content length.
+     * Returns the total size of the Header IE (descriptor header plus content length) in bytes.
      *
-     * @param[in]  aLength  The IE content length.
+     * @note The total size fits in a `uint8_t` since the content length is limited to 7 bits (max 127 bytes).
+     *
+     * @returns The total size of the Header IE in bytes.
      */
-    void SetLength(uint8_t aLength) { WriteBits<uint8_t, kLengthMask>(mFields.m8[0], aLength); }
+    uint8_t GetSize(void) const { return GetLength() + sizeof(HeaderIe); }
+
+    /**
+     * Returns a pointer to the IE content bytes.
+     *
+     * @returns A pointer to the IE content bytes.
+     */
+    const uint8_t *GetContent(void) const { return GetBytes() + sizeof(HeaderIe); }
+
+    /**
+     * Returns a pointer to the IE content bytes.
+     *
+     * @returns A pointer to the IE content bytes.
+     */
+    uint8_t *GetContent(void) { return AsNonConst(AsConst(this)->GetContent()); }
+
+    /**
+     * Validates whether a given Header IE matches a specific IE subclass.
+     *
+     * This method checks whether @p aIe matches the Element ID of @p IeType (`IeType::kId`) and also casts @p aIe
+     * to @p IeType to validate its content structure via `IeType::IsValid()`.
+     *
+     * @tparam IeType  The IE subclass type to validate against.
+     *
+     * @param[in] aIe  The Header IE to validate.
+     *
+     * @retval TRUE   @p aIe matches @p IeType and its content is well-formed.
+     * @retval FALSE  @p aIe does not match @p IeType or its content is malformed.
+     */
+    template <typename IeType> static bool ValidateAs(const HeaderIe &aIe)
+    {
+        return (aIe.GetId() == IeType::kId) && static_cast<const IeType *>(&aIe)->IsValid();
+    }
+
+    /**
+     * Represents the opaque type for a bookmark used by `StartIe()/EndIe()`.
+     */
+    typedef uint16_t Bookmark;
+
+    /**
+     * Starts appending a (variable-length) `HeaderIe` in a `FrameBuilder`.
+     *
+     * On success, this method appends a `HeaderIe` descriptor (with length initialized to zero) to @p aBuilder and
+     * saves the current byte offset as @p aBookmark. The caller can then append the IE content bytes to @p aBuilder,
+     * and finally call `EndIe()` to update the IE length field automatically.
+     *
+     * @param[in,out] aBuilder   The `FrameBuilder` instance to append to.
+     * @param[in]     aId        The IE Element ID.
+     * @param[out]    aBookmark  A reference to a `Bookmark` to save the start offset.
+     *
+     * @retval kErrorNone    Successfully started the `HeaderIe`.
+     * @retval kErrorNoBufs  Insufficient space in @p aBuilder to append the `HeaderIe` header.
+     */
+    static Error StartIe(FrameBuilder &aBuilder, uint8_t aId, Bookmark &aBookmark);
+
+    /**
+     * Finishes appending a `HeaderIe` in a `FrameBuilder`.
+     *
+     * This method updates the length field of the `HeaderIe` previously started using `StartIe()`. It determines the
+     * IE length based on the number of bytes appended to @p aBuilder since `StartIe()` was called.
+     *
+     * @param[in,out] aBuilder   The `FrameBuilder` instance.
+     * @param[in]     aBookmark  The `Bookmark` used when calling `StartIe()`.
+     *
+     * @retval kErrorNone         Successfully finalized the `HeaderIe` length.
+     * @retval kErrorInvalidArgs  The @p aBookmark is invalid or the appended IE length exceeds `kMaxLength`.
+     */
+    static Error EndIe(FrameBuilder &aBuilder, const Bookmark &aBookmark);
+
+protected:
+    void           Init(uint8_t aId, uint8_t aLen);
+    uint8_t       *GetBytes(void) { return reinterpret_cast<uint8_t *>(this); }
+    const uint8_t *GetBytes(void) const { return reinterpret_cast<const uint8_t *>(this); }
 
 private:
-    // Header IE format:
+    // IEEE 802.15.4 Header IE descriptor (2 bytes, little-endian):
     //
-    // +-----------+------------+--------+
-    // | Bits: 0-6 |    7-14    |   15   |
-    // +-----------+------------+--------+
-    // | Length    | Element ID | Type=0 |
-    // +-----------+------------+--------+
+    // Bits 0-6  (7 bits) : Length of IE content in bytes (max 127).
+    // Bits 7-14 (8 bits) : Element ID.
+    // Bit 15    (1 bit)  : Type (0 for Header IE).
 
-    static constexpr uint8_t  kSize       = 2;
-    static constexpr uint8_t  kIdOffset   = 7;
-    static constexpr uint8_t  kLengthMask = 0x7f;
-    static constexpr uint16_t kIdMask     = 0x00ff << kIdOffset;
+    static constexpr uint16_t kLenMask = 0x007f << 0;
+    static constexpr uint16_t kIdMask  = 0x00ff << 7;
 
-    union OT_TOOL_PACKED_FIELD
-    {
-        uint8_t  m8[kSize];
-        uint16_t m16;
-    } mFields;
+    void SetId(uint8_t aId) { mLenIdType = UpdateBitsIn<kLittleEndian, uint16_t, kIdMask>(mLenIdType, aId); }
+    void SetLength(uint8_t aLen) { mLenIdType = UpdateBitsIn<kLittleEndian, uint16_t, kLenMask>(mLenIdType, aLen); }
 
+    uint16_t mLenIdType;
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements CSL IE data structure.
+ * Represents a CSL IE.
  */
 OT_TOOL_PACKED_BEGIN
-class CslIe
+class CslIe : public HeaderIe
 {
+    friend class HeaderIe;
+
 public:
-    static constexpr uint8_t kHeaderIeId    = 0x1a;
-    static constexpr uint8_t kIeContentSize = sizeof(uint16_t) * 2;
+    static constexpr uint8_t kId = 0x1a; ///< The CSL IE Element ID.
+
+    /**
+     * Initializes the CSL IE.
+     */
+    void Init(void) { HeaderIe::Init(kId, sizeof(CslIe) - sizeof(HeaderIe)); }
 
     /**
      * Returns the CSL Period.
@@ -160,31 +222,40 @@ public:
     void SetPhase(uint16_t aPhase) { mPhase = LittleEndian::HostSwap16(aPhase); }
 
 private:
+    bool IsValid(void) const { return GetSize() >= sizeof(CslIe); }
+
     uint16_t mPhase;
     uint16_t mPeriod;
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Termination2 IE.
- *
- * Is empty for template specialization.
- */
-class Termination2Ie
-{
-public:
-    static constexpr uint8_t kHeaderIeId    = 0x7f;
-    static constexpr uint8_t kIeContentSize = 0;
-};
-
-/**
- * Implements vendor specific Header IE generation and parsing.
+ * Represents a Termination2 IE.
  */
 OT_TOOL_PACKED_BEGIN
-class VendorIeHeader
+class Termination2Ie : public HeaderIe
+{
+    friend class HeaderIe;
+
+public:
+    static constexpr uint8_t kId = 0x7f; ///< The Termination2 IE Element ID.
+
+    /**
+     * Initializes the Termination2 IE.
+     */
+    void Init(void) { HeaderIe::Init(kId, sizeof(Termination2Ie) - sizeof(HeaderIe)); }
+
+private:
+    bool IsValid(void) const { return true; }
+} OT_TOOL_PACKED_END;
+
+/**
+ * Represents a Vendor Header IE.
+ */
+OT_TOOL_PACKED_BEGIN
+class VendorIe : public HeaderIe
 {
 public:
-    static constexpr uint8_t kHeaderIeId    = 0x00;
-    static constexpr uint8_t kIeContentSize = sizeof(uint8_t) * 4;
+    static constexpr uint8_t kId = 0x00; ///< The Vendor Specific IE Element ID.
 
     /**
      * Returns the Vendor OUI.
@@ -194,24 +265,14 @@ public:
     uint32_t GetVendorOui(void) const { return LittleEndian::ReadUint24(mOui); }
 
     /**
-     * Sets the Vendor OUI.
-     *
-     * @param[in]  aVendorOui  A Vendor OUI.
-     */
-    void SetVendorOui(uint32_t aVendorOui) { LittleEndian::WriteUint24(aVendorOui, mOui); }
-
-    /**
      * Returns the Vendor IE sub-type.
      *
      * @returns The Vendor IE sub-type.
      */
     uint8_t GetSubType(void) const { return mSubType; }
 
-    /**
-     * Sets the Vendor IE sub-type.
-     *
-     * @param[in]  aSubType  The Vendor IE sub-type.
-     */
+protected:
+    void SetVendorOui(uint32_t aVendorOui) { LittleEndian::WriteUint24(aVendorOui, mOui); }
     void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
 
 private:
@@ -223,24 +284,25 @@ private:
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
- * Implements Time Header IE generation and parsing.
+ * Represents a Time Header IE.
+ *
+ * This IE is not specified in the Thread specification and is a custom feature in OpenThread (using Vendor IE
+ * with Nest OUI).
  */
 OT_TOOL_PACKED_BEGIN
-class TimeIe : public VendorIeHeader
+class TimeIe : public VendorIe
 {
-public:
-    static constexpr uint32_t kVendorOuiNest = 0x18b430;
-    static constexpr uint8_t  kVendorIeTime  = 0x01;
-    static constexpr uint8_t  kHeaderIeId    = VendorIeHeader::kHeaderIeId;
-    static constexpr uint8_t  kIeContentSize = VendorIeHeader::kIeContentSize + sizeof(uint8_t) + sizeof(uint64_t);
+    friend class HeaderIe;
 
+public:
     /**
-     * Initializes the time IE.
+     * Initializes the Time IE.
      */
     void Init(void)
     {
+        HeaderIe::Init(kId, sizeof(TimeIe) - sizeof(HeaderIe));
         SetVendorOui(kVendorOuiNest);
-        SetSubType(kVendorIeTime);
+        SetSubType(kSubType);
     }
 
     /**
@@ -271,153 +333,99 @@ public:
      */
     void SetTime(uint64_t aTime) { mTime = LittleEndian::HostSwap64(aTime); }
 
+    /**
+     * Returns a pointer to the start of Time IE specific data content (i.e., sequence field).
+     *
+     * @returns A pointer to the Time IE data content bytes.
+     */
+    const uint8_t *GetData(void) const { return &mSequence; }
+
 private:
+    bool IsValid(void) const
+    {
+        return (GetSize() >= sizeof(TimeIe)) && (GetVendorOui() == kVendorOuiNest) && (GetSubType() == kSubType);
+    }
+
+    static constexpr uint32_t kVendorOuiNest = 0x18b430;
+    static constexpr uint8_t  kSubType       = 0x01;
+
     uint8_t  mSequence;
     uint64_t mTime;
 } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-class ThreadIe
-{
-public:
-    static constexpr uint8_t  kHeaderIeId               = VendorIeHeader::kHeaderIeId;
-    static constexpr uint8_t  kIeContentSize            = VendorIeHeader::kIeContentSize;
-    static constexpr uint32_t kVendorOuiThreadCompanyId = 0xeab89b;
-    static constexpr uint8_t  kEnhAckProbingIe          = 0x00;
-};
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 /**
- * This class implements Rendezvous Time IE data structure.
- *
- * IEEE 802.15.4 Rendezvous Time IE contains two fields, Rendezvous Time and
- * Wake-up Interval, but the Wake-up Interval is not used in Thread, so it is
- * not included in this class.
+ * Represents a Thread Vendor IE.
  */
 OT_TOOL_PACKED_BEGIN
-class RendezvousTimeIe
+class ThreadVendorIe : public VendorIe
 {
-public:
-    static constexpr uint8_t kHeaderIeId    = 0x1d;
-    static constexpr uint8_t kIeContentSize = sizeof(uint16_t);
-
-    /**
-     * This method returns the Rendezvous Time.
-     *
-     * @returns the Rendezvous Time in the units of 10 symbols.
-     */
-    uint16_t GetRendezvousTime(void) const { return LittleEndian::HostSwap16(mRendezvousTime); }
-
-    /**
-     * This method sets the Rendezvous Time.
-     *
-     * @param[in]  aRendezvousTime  The Rendezvous Time in the units of 10 symbols.
-     */
-    void SetRendezvousTime(uint16_t aRendezvousTime) { mRendezvousTime = LittleEndian::HostSwap16(aRendezvousTime); }
-
-private:
-    uint16_t mRendezvousTime;
+protected:
+    static constexpr uint32_t kVendorOuiThread = 0xeab89b;
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Connection IE data structure.
+ * Represents a Link Metrics Probing IE (using in Enhanced Ack).
  */
 OT_TOOL_PACKED_BEGIN
-class ConnectionIe : public VendorIeHeader
+class LinkMetricsProbingIe : public ThreadVendorIe
 {
+    friend class HeaderIe;
+
 public:
-    static constexpr uint8_t kHeaderIeId      = ThreadIe::kHeaderIeId;
-    static constexpr uint8_t kIeContentSize   = ThreadIe::kIeContentSize + sizeof(uint8_t);
-    static constexpr uint8_t kThreadIeSubtype = 0x01;
+    /**
+     * The maximum length of Link Metrics Data in bytes (Thread specification limits metrics to 2).
+     */
+    static constexpr uint8_t kMaxMetricsDataLen = 2;
 
     /**
-     * Initializes the Connection IE.
+     * Initializes the Link Metrics Probing IE.
+     *
+     * @param[in] aMetricsDataLen  The requested length of Link Metrics Data. If greater than `kMaxMetricsDataLen`,
+     *                             then `kMaxMetricsDataLen` is used instead.
      */
-    void Init(void)
+    void Init(uint8_t aMetricsDataLen)
     {
-        SetVendorOui(ThreadIe::kVendorOuiThreadCompanyId);
-        SetSubType(kThreadIeSubtype);
-        mConnectionWindow = 0;
+        HeaderIe::Init(kId, sizeof(LinkMetricsProbingIe) - sizeof(HeaderIe) + Min(aMetricsDataLen, kMaxMetricsDataLen));
+        SetVendorOui(kVendorOuiThread);
+        SetSubType(kSubType);
     }
 
     /**
-     * Returns the Retry Interval.
+     * Returns the length of Link Metrics Data in bytes.
      *
-     * The Retry Interval defines how frequently the Wake-up End Device is
-     * supposed to retry sending the Parent Request to the Wake-up Coordinator.
-     *
-     * @returns the Retry Interval in the units of Wake-up Intervals (7.5ms by default).
+     * @returns The length of Link Metrics Data in bytes.
      */
-    uint8_t GetRetryInterval(void) const { return ReadBits<uint8_t, kRetryIntervalMask>(mConnectionWindow); }
+    uint8_t GetMetricsDataLen(void) const { return GetSize() - sizeof(LinkMetricsProbingIe); }
 
     /**
-     * Sets the Retry Interval.
+     * Returns a pointer to the Link Metrics Data bytes.
      *
-     * @param[in]  aRetryInterval  The Retry Interval in the units of Wake-up Intervals (7.5ms by default).
+     * @returns A pointer to the Link Metrics Data bytes.
      */
-    void SetRetryInterval(uint8_t aRetryInterval)
+    const uint8_t *GetMetricsData(void) const { return GetBytes() + sizeof(LinkMetricsProbingIe); }
+
+    /**
+     * Writes Link Metrics Data content from a given buffer.
+     *
+     * @param[in] aData  A pointer to a buffer containing the data to write. The caller must ensure that at least
+     *                   `GetMetricsDataLen()` bytes are available in @p aData.
+     */
+    void WriteMetricsDataFrom(const uint8_t *aData)
     {
-        WriteBits<uint8_t, kRetryIntervalMask>(mConnectionWindow, aRetryInterval);
-    }
-
-    /**
-     * Returns the Retry Count.
-     *
-     * The Retry Count defines how many times the Wake-up End Device is supposed
-     * to retry sending the Parent Request to the Wakeup Coordinator.
-     *
-     * @returns the Retry Count.
-     */
-    uint8_t GetRetryCount(void) const { return ReadBits<uint8_t, kRetryCountMask>(mConnectionWindow); }
-
-    /**
-     * Sets the Retry Count
-     *
-     * @param[in]  aRetryCount  The Retry Count.
-     */
-    void SetRetryCount(uint8_t aRetryCount) { WriteBits<uint8_t, kRetryCountMask>(mConnectionWindow, aRetryCount); }
-
-    /**
-     * Sets the Wake-up Identifier.
-     *
-     * @param[in]  aWakeupId  The Wake-up Identifier.
-     *
-     * @retval kErrorNone   Successfully set the Wake-up Identifier.
-     * @retval kErrorParse  The length of the given Wake-up Identifier didn't match the reserved length.
-     */
-    Error SetWakeupId(WakeupId aWakeupId);
-
-    /**
-     * Gets the Wake-up Identifier.
-     *
-     * @param[out]  aWakeupId  A reference to the Wake-up Identifier.
-     *
-     * @retval kErrorNone    Successfully got the Wake-up Identifier.
-     * @retval kErrorParse   Failed to parse the Wake-up Identifier from the Connection IE.
-     */
-    Error GetWakeupId(WakeupId &aWakeupId) const;
-
-    /**
-     * Gets the pointer to the HeaderIe of this ConnectionIe.
-     *
-     * @returns A pointer to the HeaderIe.
-     */
-    const HeaderIe *GetHeaderIe(void) const
-    {
-        return reinterpret_cast<const HeaderIe *>(reinterpret_cast<const uint8_t *>(this) - sizeof(HeaderIe));
+        memcpy(AsNonConst(GetMetricsData()), aData, GetMetricsDataLen());
     }
 
 private:
-    static constexpr uint8_t kRetryIntervalOffset = 4;
-    static constexpr uint8_t kRetryIntervalMask   = 0x3 << kRetryIntervalOffset;
-    static constexpr uint8_t kRetryCountMask      = 0xf;
+    static constexpr uint8_t kSubType = 0x00;
 
-    const uint8_t *GetWakeupIdData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
-    uint8_t       *GetWakeupIdData(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
+    bool IsValid(void) const
+    {
+        return (GetSize() >= sizeof(LinkMetricsProbingIe)) && (GetVendorOui() == kVendorOuiThread) &&
+               (GetSubType() == kSubType);
+    }
 
-    uint8_t mConnectionWindow;
 } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 /**
  * @}
@@ -426,4 +434,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_HEADER_IE_HPP_
+#endif // OT_CORE_MAC_MAC_HEADER_IE_HPP_

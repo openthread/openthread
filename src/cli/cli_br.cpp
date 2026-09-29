@@ -86,7 +86,7 @@ template <> otError Br::Process<Cmd("infraif")>(Arg aArgs[])
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error = otBorderRoutingGetInfraIfInfo(GetInstancePtr(), &ifIndex, &isRunning));
-    OutputLine("if-index:%lu, is-running:%s", ToUlong(ifIndex), isRunning ? "yes" : "no");
+    OutputLine("if-index:%lu, is-running:%s", ToUlong(ifIndex), ToYesNo(isRunning));
 
 exit:
     return error;
@@ -196,6 +196,40 @@ template <> otError Br::Process<Cmd("multiail")>(Arg aArgs[])
         }
 
         otBorderRoutingSetMultiAilCallback(GetInstancePtr(), callback, this);
+    }
+    /**
+     * @cli br multiail state
+     * @code
+     * br multiail state
+     * Enabled: yes
+     * Running: yes
+     * Detected: no
+     * Done
+     * @endcode
+     * @par
+     * Outputs full state of multi-AIL detector:
+     * - Whether the detector is enabled.
+     * - Whether the detector is running (when it is enabled and the infra-if interface is also active).
+     * - Whether multi-AIL was detected.
+     */
+    else if (aArgs[0] == "state")
+    {
+        OutputLine("Enabled: %s", ToYesNo(otBorderRoutingIsMultiAilDetectionEnabled(GetInstancePtr())));
+        OutputLine("Running: %s", ToYesNo(otBorderRoutingIsMultiAilDetectionRunning(GetInstancePtr())));
+        OutputLine("Detected: %s", ToYesNo(otBorderRoutingIsMultiAilDetected(GetInstancePtr())));
+    }
+    /**
+     * @cli br multiail (enable, disable)
+     * @code
+     * br multiail enable
+     * Done
+     * @endcode
+     * @cparam br multiail @ca{enable|disable}
+     * @par api_copy
+     * #otBorderRoutingSetMultiAilDetectionEnabled
+     */
+    else if (ProcessEnableDisable(aArgs, otBorderRoutingSetMultiAilDetectionEnabled) == OT_ERROR_NONE)
+    {
     }
     else
     {
@@ -568,6 +602,50 @@ exit:
     return error;
 }
 
+/**
+ * @cli br nat64prefixtable
+ * @code
+ * br nat64prefixtable
+ * prefix:fd00:1234:5678:0:0:0::/96, ms-since-rx:29526, lifetime:1800, router:fe80:0:0:0:0:0:0:1 (M:0 O:0 S:1)
+ * prefix:fd11:2233:4455:0:0:0::/96, ms-since-rx:29527, lifetime:1800, router:fe80:0:0:0:0:0:0:1 (M:0 O:0 S:1)
+ * Done
+ * @endcode
+ * @par
+ * Get the RA-discovered NAT64 prefixes by Border Routing Manager on the infrastructure link.
+ * Info per prefix entry:
+ * - The prefix
+ * - Milliseconds since last received Router Advertisement containing this prefix
+ * - Prefix lifetime in seconds
+ * - The router IPv6 address which advertises this prefix
+ * - Flags in received Router Advertisement header:
+ *   - M: Managed Address Config flag
+ *   - O: Other Config flag
+ *   - S: SNAC Router flag
+ * @sa otBorderRoutingGetNextNat64PrefixEntry
+ */
+template <> otError Br::Process<Cmd("nat64prefixtable")>(Arg aArgs[])
+{
+    otError                            error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableIterator iterator;
+    otBorderRoutingNat64PrefixEntry    entry;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
+
+    while (otBorderRoutingGetNextNat64PrefixEntry(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
+    {
+        char string[OT_IP6_PREFIX_STRING_SIZE];
+
+        otIp6PrefixToString(&entry.mPrefix, string, sizeof(string));
+        OutputFormat("prefix:%s, ms-since-rx:%lu, lifetime:%lu, router:", string, ToUlong(entry.mMsecSinceLastUpdate),
+                     ToUlong(entry.mLifetime));
+        OutputRouterInfo(entry.mRouter, kShortVersion);
+    }
+
+exit:
+    return error;
+}
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
@@ -592,7 +670,6 @@ template <> otError Br::Process<Cmd("peers")>(Arg aArgs[])
      * Data entries:
      * - It has added at least one external route entry.
      * - It has added at least one prefix entry with both the default-route and on-mesh flags set.
-     * - It has added at least one domain prefix (with both the domain and on-mesh flags set).
      * The list of peer BRs specifically excludes the current device, even if its is itself acting as a BR.
      * Info per BR entry:
      * - RLOC16 of the BR
@@ -667,7 +744,7 @@ exit:
  * - Prefix lifetime in seconds
  * - Preferred lifetime in seconds only if prefix is on-link
  * - Route preference (low, med, high) only if prefix is route (not on-link)
- * - The router IPv6 address which advertising this prefix
+ * - The router IPv6 address which advertises this prefix
  * - Flags in received Router Advertisement header:
  *   - M: Managed Address Config flag
  *   - O: Other Config flag
@@ -689,7 +766,7 @@ template <> otError Br::Process<Cmd("prefixtable")>(Arg aArgs[])
         char string[OT_IP6_PREFIX_STRING_SIZE];
 
         otIp6PrefixToString(&entry.mPrefix, string, sizeof(string));
-        OutputFormat("prefix:%s, on-link:%s, ms-since-rx:%lu, lifetime:%lu, ", string, entry.mIsOnLink ? "yes" : "no",
+        OutputFormat("prefix:%s, on-link:%s, ms-since-rx:%lu, lifetime:%lu, ", string, ToYesNo(entry.mIsOnLink),
                      ToUlong(entry.mMsecSinceLastUpdate), ToUlong(entry.mValidLifetime));
 
         if (entry.mIsOnLink)
@@ -932,7 +1009,7 @@ void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutput
         otConvertDurationInSecondsToString(aEntry.mAge, ageString, sizeof(ageString));
 
         OutputFormat(" ms-since-rx:%lu reachable:%s age:%s", ToUlong(aEntry.mMsecSinceLastUpdate),
-                     aEntry.mIsReachable ? "yes" : "no", ageString);
+                     ToYesNo(aEntry.mIsReachable), ageString);
 
         if (aEntry.mIsLocalDevice)
         {
@@ -1122,7 +1199,7 @@ template <> otError Br::Process<Cmd("counters")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    Interpreter::GetInterpreter().OutputBorderRouterCounters();
+    GetInterpreter().OutputBorderRouterCounters();
 
 exit:
     return error;
@@ -1138,23 +1215,23 @@ otError Br::Process(Arg aArgs[])
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
         CmdEntry("counters"),
 #endif
-        CmdEntry("disable"),     CmdEntry("enable"),    CmdEntry("ifaddrs"),      CmdEntry("infraif"),
+        CmdEntry("disable"),     CmdEntry("enable"),           CmdEntry("ifaddrs"),      CmdEntry("infraif"),
         CmdEntry("init"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         CmdEntry("multiail"),
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        CmdEntry("nat64prefix"),
+        CmdEntry("nat64prefix"), CmdEntry("nat64prefixtable"),
 #endif
-        CmdEntry("omrconfig"),   CmdEntry("omrprefix"), CmdEntry("onlinkprefix"),
+        CmdEntry("omrconfig"),   CmdEntry("omrprefix"),        CmdEntry("onlinkprefix"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
         CmdEntry("pd"),
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
         CmdEntry("peers"),
 #endif
-        CmdEntry("prefixtable"), CmdEntry("raoptions"), CmdEntry("rdnsstable"),   CmdEntry("rioprf"),
-        CmdEntry("routeprf"),    CmdEntry("routers"),   CmdEntry("state"),
+        CmdEntry("prefixtable"), CmdEntry("raoptions"),        CmdEntry("rdnsstable"),   CmdEntry("rioprf"),
+        CmdEntry("routeprf"),    CmdEntry("routers"),          CmdEntry("state"),
     };
 
 #undef CmdEntry

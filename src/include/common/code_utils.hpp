@@ -31,8 +31,8 @@
  *   This file includes macros for validating runtime conditions.
  */
 
-#ifndef OT_INCLUDE_COMMON_UTILS_CODE_UTILS_HPP_
-#define OT_INCLUDE_COMMON_UTILS_CODE_UTILS_HPP_
+#ifndef OT_INCLUDE_COMMON_CODE_UTILS_HPP_
+#define OT_INCLUDE_COMMON_CODE_UTILS_HPP_
 
 #include <openthread/error.h>
 
@@ -163,4 +163,4 @@
  */
 static inline void IgnoreError(otError aError) { OT_UNUSED_VARIABLE(aError); }
 
-#endif // OT_INCLUDE_COMMON_UTILS_CODE_UTILS_HPP_
+#endif // OT_INCLUDE_COMMON_CODE_UTILS_HPP_

@@ -46,16 +46,50 @@
 #include "common/debug.hpp"
 #include "posix/platform/settings_file.hpp"
 
+void platformSettingsInit(const char *aDataPath, const char *aSettingsFileName)
+{
+    ot::Posix::SettingsFile::SetSettingsPath(aDataPath);
+    ot::Posix::SettingsFile::SetSettingsFileName(aSettingsFileName);
+}
+
 namespace ot {
 namespace Posix {
 
+char SettingsFile::sSettingsPath[]                         = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+char SettingsFile::sSettingsFileName[kMaxFileBaseNameSize] = "";
+
+const char *SettingsFile::GetSettingsPath(void) { return sSettingsPath; }
+void        SettingsFile::SetSettingsPath(const char *aSettingsPath)
+{
+    snprintf(sSettingsPath, sizeof(sSettingsPath), "%s",
+             aSettingsPath == nullptr ? OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH : aSettingsPath);
+}
+
+const char *SettingsFile::GetSettingsFileName(void)
+{
+    return sSettingsFileName[0] != '\0' ? sSettingsFileName : nullptr;
+}
+void SettingsFile::SetSettingsFileName(const char *aSettingsFileName)
+{
+    if (aSettingsFileName != nullptr)
+    {
+        snprintf(sSettingsFileName, sizeof(sSettingsFileName), "%s", aSettingsFileName);
+    }
+    else
+    {
+        sSettingsFileName[0] = '\0';
+    }
+}
+
 otError SettingsFile::Init(const char *aSettingsFileBaseName)
 {
-    otError     error     = OT_ERROR_NONE;
-    const char *directory = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+    otError     error           = OT_ERROR_NONE;
+    const char *directory       = GetSettingsPath();
+    off_t       lastValidOffset = 0;
 
-    OT_ASSERT((aSettingsFileBaseName != nullptr) && (strlen(aSettingsFileBaseName) < kMaxFileBaseNameSize));
-    strncpy(mSettingFileBaseName, aSettingsFileBaseName, sizeof(mSettingFileBaseName) - 1);
+    OT_ASSERT(strlen(directory) < kMaxFileBasePathNameSize);
+    OT_ASSERT((aSettingsFileBaseName != nullptr) && strlen(aSettingsFileBaseName) < kMaxFileBaseNameSize);
+    snprintf(mSettingsFileFullPathName, sizeof(mSettingsFileFullPathName), "%s/%s", directory, aSettingsFileBaseName);
 
     {
         struct stat st;
@@ -77,6 +111,8 @@ otError SettingsFile::Init(const char *aSettingsFileBaseName)
 
     for (off_t size = lseek(mSettingsFd, 0, SEEK_END), offset = lseek(mSettingsFd, 0, SEEK_SET); offset < size;)
     {
+        lastValidOffset = offset;
+
         uint16_t key;
         uint16_t length;
         ssize_t  rval;
@@ -94,7 +130,20 @@ otError SettingsFile::Init(const char *aSettingsFileBaseName)
 exit:
     if (error == OT_ERROR_PARSE)
     {
-        VerifyOrDie(ftruncate(mSettingsFd, 0) == 0, OT_EXIT_ERROR_ERRNO);
+        off_t fileSize = lseek(mSettingsFd, 0, SEEK_END);
+
+        if (lastValidOffset > 0)
+        {
+            otLogCritPlat("Settings file corrupt at offset %jd of %jd bytes, truncating to preserve %jd bytes of "
+                          "valid entries",
+                          (intmax_t)lastValidOffset, (intmax_t)fileSize, (intmax_t)lastValidOffset);
+        }
+        else
+        {
+            otLogCritPlat("Settings file corrupt from start (%jd bytes), truncating entire file", (intmax_t)fileSize);
+        }
+
+        VerifyOrDie(ftruncate(mSettingsFd, lastValidOffset) == 0, OT_EXIT_ERROR_ERRNO);
     }
 
     return error;
@@ -306,8 +355,10 @@ void SettingsFile::Wipe(void) { VerifyOrDie(0 == ftruncate(mSettingsFd, 0), OT_E
 
 void SettingsFile::GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap)
 {
-    snprintf(aFileName, kMaxFilePathSize, OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/%s.%s", mSettingFileBaseName,
-             (aSwap ? "Swap" : "data"));
+    int length;
+
+    length = snprintf(aFileName, kMaxFilePathSize, "%s.%s", mSettingsFileFullPathName, (aSwap ? "Swap" : "data"));
+    VerifyOrDie(length > 0 && static_cast<size_t>(length) < kMaxFilePathSize, OT_EXIT_FAILURE);
 }
 
 int SettingsFile::SwapOpen(void)
@@ -353,6 +404,20 @@ void SettingsFile::SwapPersist(int aFd)
     VerifyOrDie(0 == close(mSettingsFd), OT_EXIT_ERROR_ERRNO);
     VerifyOrDie(0 == fsync(aFd), OT_EXIT_ERROR_ERRNO);
     VerifyOrDie(0 == rename(swapFile, dataFile), OT_EXIT_ERROR_ERRNO);
+
+    // Best-effort: sync the parent directory so that the rename metadata
+    // reaches stable storage. Without this, a power loss between rename()
+    // and the next journal commit can lose the rename, leaving a partially-
+    // written swap file that causes a parse error on next Init().
+    {
+        int dirFd = open(GetSettingsPath(), O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+
+        if (dirFd >= 0)
+        {
+            fsync(dirFd);
+            close(dirFd);
+        }
+    }
 
     mSettingsFd = aFd;
 }

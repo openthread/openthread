@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Backbone Router services.
  */
 
-#ifndef CONFIG_BACKBONE_ROUTER_H_
-#define CONFIG_BACKBONE_ROUTER_H_
+#ifndef OT_CORE_CONFIG_BACKBONE_ROUTER_H_
+#define OT_CORE_CONFIG_BACKBONE_ROUTER_H_
 
 /**
  * @addtogroup config-backbone-router
@@ -53,21 +53,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
- *
- * Define to 1 to enable Backbone Router ND Proxying for Thread 1.2 DUA feature.
- * It's turned on by default for Thread 1.2 Backbone Router.
- */
-#ifndef OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-#define OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-#endif
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE && !OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-#error \
-    "OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE is required for OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE"
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
  *
  * Define to 1 to enable Backbone Router Multicast Routing for Thread 1.2 MLR feature.
@@ -83,10 +68,9 @@
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-#if !OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE && \
-    !OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#if !OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 #error \
-    "At least one of OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE and OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE must be enabled for OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE"
+    "OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE must be enabled for OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE"
 #endif
 #endif
 
@@ -105,19 +89,7 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM
- *
- * The maximum number of supported DUA that Backbone Router could proxy.
- *
- * Note: According to Thread Conformance v1.2.0, a Thread Border Router MUST be able to hold a DUA Devices Table in
- * memory with at least two hundred and fifty (250) entries.
- */
-#ifndef OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM
-#define OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM 250
-#endif
-
-/**
  * @}
  */
 
-#endif // CONFIG_BACKBONE_ROUTER_H_
+#endif // OT_CORE_CONFIG_BACKBONE_ROUTER_H_

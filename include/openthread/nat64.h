@@ -411,6 +411,19 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
 otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr);
 
 /**
+ * Gets the IPv6 prefix configured in the NAT64 translator.
+ *
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[out] aPrefix           A pointer to an `otIp6Prefix` to output the prefix.
+ *
+ * @retval OT_ERROR_NONE       The prefix was successfully filled.
+ * @retval OT_ERROR_NOT_FOUND  The translator is not configured with an IPv6 prefix.
+ */
+otError otNat64GetIp6Prefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
  * Test if two IPv4 addresses are the same.
  *
  * @param[in]  aFirst   A pointer to the first IPv4 address to compare.
@@ -523,6 +536,15 @@ otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress);
  * @returns  OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
  */
 otError otNat64SynthesizeIp6Address(otInstance *aInstance, const otIp4Address *aIp4Address, otIp6Address *aIp6Address);
+
+/**
+ * Converts a given `otNat64State` to a human-readable string.
+ *
+ * @param[in] aState  The NAT64 state.
+ *
+ * @returns The string representation of @p aState.
+ */
+const char *otNat64StateToString(otNat64State aState);
 
 /**
  * @}

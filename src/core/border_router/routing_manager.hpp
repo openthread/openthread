@@ -31,8 +31,8 @@
  *   This file includes definitions for the RA-based routing management.
  */
 
-#ifndef ROUTING_MANAGER_HPP_
-#define ROUTING_MANAGER_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_ROUTING_MANAGER_HPP_
+#define OT_CORE_BORDER_ROUTER_ROUTING_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -409,14 +409,16 @@ public:
     Error GetFavoredNat64Prefix(Ip6::Prefix &aPrefix, RoutePreference &aRoutePreference);
 
     /**
-     * Informs `RoutingManager` of the result of the discovery request of NAT64 prefix on infrastructure
-     * interface (`InfraIf::DiscoverNat64Prefix()`).
+    // Informs `RoutingManager` of a discovered NAT64 prefix from the platform.
+    //
+    // This is intended to be used by `InfraIf` to pass a NAT64 prefix that is discovered through a platform-specific
+    // mechanism (e.g., from DNS as per RFC 7050).
      *
-     * @param[in]  aPrefix  The discovered NAT64 prefix on `InfraIf`.
+     * @param[in]  aPrefix  The discovered NAT64 prefix.
      */
-    void HandleInfraIfDiscoverNat64PrefixDone(const Ip6::Prefix &aPrefix)
+    void HandlePlatformDiscoveredNat64PrefixDone(const Ip6::Prefix &aPrefix)
     {
-        mNat64PrefixManager.HandleInfraIfDiscoverDone(aPrefix);
+        mNat64PrefixManager.HandlePlatformDiscoveredPrefix(aPrefix);
     }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -581,8 +583,8 @@ private:
     // randomly selected within the range [interval - jitter,
     // interval + jitter].
 
-    static constexpr uint32_t kInitalRaTxCount    = 3;
-    static constexpr uint32_t kInitalRaInterval   = Time::kOneSecondInMsec * 16;
+    static constexpr uint32_t kInitialRaTxCount   = 3;
+    static constexpr uint32_t kInitialRaInterval  = Time::kOneSecondInMsec * 16;
     static constexpr uint16_t kInitialRaJitter    = Time::kOneSecondInMsec * 2;
     static constexpr uint32_t kRaBeaconInterval   = Time::kOneSecondInMsec * 180; // 3 minutes
     static constexpr uint16_t kRaBeaconJitter     = Time::kOneSecondInMsec * 15;
@@ -615,6 +617,8 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Nested types
 
+    void HandleOmrPrefixManagerTimer(void) { mOmrPrefixManager.HandleTimer(); }
+
     class OmrPrefixManager : public InstanceLocator
     {
     public:
@@ -623,7 +627,7 @@ private:
         void                    Init(const Ip6::Prefix &aBrUlaPrefix);
         void                    Start(void);
         void                    Stop(void);
-        bool                    IsInitalEvaluationDone(void) const;
+        bool                    IsInitialEvaluationDone(void) const;
         OmrConfig               GetConfig(Ip6::Prefix *aPrefix, RoutePreference *aPreference) const;
         Error                   SetConfig(OmrConfig aConfig, const Ip6::Prefix *aPrefix, RoutePreference aPreference);
         void                    Evaluate(void);
@@ -632,31 +636,63 @@ private:
         const Ip6::Prefix      &GetGeneratedPrefix(void) const { return mGeneratedPrefix; }
         const OmrPrefix        &GetLocalPrefix(void) const { return mLocalPrefix; }
         const FavoredOmrPrefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
+        void                    HandleTimer(void);
+        void                    HandleNetDataChange(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        void HandlePdPrefixManagerEvent(void);
+#endif
 
     private:
+        // All times are in msec
+        static constexpr uint32_t kMinDelayToAdd  = 250;
+        static constexpr uint32_t kMaxDelayToAdd  = kMinDelayToAdd + 3500;
+        static constexpr uint32_t kRetryDelay     = 1500;
+        static constexpr uint16_t kRetryJitter    = 150;
         static constexpr uint16_t kInfoStringSize = 85;
 
         typedef String<kInfoStringSize> InfoString;
+
+        enum PrefixOrigin : uint8_t // of `mLocalPrefix`
+        {
+            kSelfGenerated,
+            kCustom,
+            kDhcp6Pd,
+        };
+
+        enum LocalPrefixState : uint8_t // State of `mLocalPrefix` in Network Data
+        {
+            kNotAdded,
+            kToAdd,
+            kAdded,
+        };
 
         void       SetFavoredPrefix(const OmrPrefix &aOmrPrefix);
         void       ClearFavoredPrefix(void) { SetFavoredPrefix(OmrPrefix()); }
         void       DetermineFavoredPrefixInNetData(FavoredOmrPrefix &aFavoredPrefix);
         void       UpdateLocalPrefix(void);
-        Error      AddLocalToNetData(void);
+        bool       IsLocalAddedInNetData(void) const { return (mLocalInNetDataState == kAdded); }
+        void       AddLocalToNetData(void);
         Error      AddOrUpdateLocalInNetData(void);
         void       RemoveLocalFromNetData(void);
         InfoString LocalToString(void) const;
         InfoString FavoredToString(const FavoredOmrPrefix &aFavoredPrefix) const;
 
         static const char *OmrConfigToString(OmrConfig aConfig);
+        static const char *PrefixOriginToString(PrefixOrigin aOrigin);
+
+        using DelayTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleOmrPrefixManagerTimer>;
 
         OmrConfig        mConfig;
         OmrPrefix        mLocalPrefix;
         OmrPrefix        mCustomPrefix;
         Ip6::Prefix      mGeneratedPrefix;
         FavoredOmrPrefix mFavoredPrefix;
-        bool             mIsLocalAddedInNetData;
-        bool             mDefaultRoute;
+        DelayTimer       mTimer;
+        PrefixOrigin     mLocalPrefixOrigin;
+        LocalPrefixState mLocalInNetDataState;
+        bool             mDefaultRoute : 1;
+        bool             mIsInitialized : 1;
+        bool             mIsRunning : 1;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -678,7 +714,7 @@ private:
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
         bool               AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const;
-        bool               IsInitalEvaluationDone(void) const;
+        bool               IsInitialEvaluationDone(void) const;
         void               HandleRxRaTrackerChanged(void);
         bool               ShouldPublishUlaRoute(void) const;
         Error              AppendAsPiosTo(RouterAdvert::TxMessage &aRaMessage);
@@ -696,6 +732,7 @@ private:
         {
             kIdle,
             kPublishing,
+            kToAdvertise,
             kAdvertising,
             kDeprecating,
         };
@@ -705,6 +742,7 @@ private:
             bool Matches(const Ip6::Prefix &aPrefix) const { return mPrefix == aPrefix; }
 
             Ip6::Prefix mPrefix;
+            TimeMilli   mDeprecateTime;
             TimeMilli   mExpireTime;
         };
 
@@ -826,7 +864,7 @@ private:
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
         void               Evaluate(void);
-        void               HandleInfraIfDiscoverDone(const Ip6::Prefix &aPrefix);
+        void               HandlePlatformDiscoveredPrefix(const Ip6::Prefix &aPrefix);
         void               HandleRxRaTrackerChanged(void);
         void               HandleTimer(void);
 
@@ -839,7 +877,7 @@ private:
 
         bool            mEnabled;
         Ip6::Prefix     mRaTrackerPrefix;     // The best NAT64 prefix discovered from RAs (RFC 8781).
-        Ip6::Prefix     mInfraIfPrefix;       // The platform-provided NAT64 prefix (e.g., using DNS - RFC 7050).
+        Ip6::Prefix     mPlatformPrefix;      // The platform-provided NAT64 prefix (e.g., using DNS - RFC 7050).
         Ip6::Prefix     mLocalPrefix;         // The local prefix (from BR ULA prefix).
         Ip6::Prefix     mPublishedPrefix;     // The prefix to publish in Net Data (empty or local or from infra-if).
         RoutePreference mPublishedPreference; // The published prefix preference.
@@ -938,9 +976,7 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
     void HandlePdPrefixManagerTimer(void) { mPdPrefixManager.HandleTimer(); }
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    void HandlePdPrefixManagerTask(void) { mPdPrefixManager.HandleRecordHistoryTask(); }
-#endif
+    void HandlePdPrefixManagerEventTask(void) { mPdPrefixManager.HandleEventTask(); }
 
     class PdPrefixManager : public InstanceLocator
     {
@@ -953,14 +989,31 @@ private:
 
         static constexpr RoutePreference kPdRoutePreference = RoutePreference::kRoutePreferenceMedium;
 
+        enum ConflictCheckEvent : uint8_t
+        {
+            kPdPrefixChanged,
+            kRxRaPrefixTableChanged,
+        };
+
+        enum Event : uint8_t
+        {
+            kEventStateChanged         = 1 << 0,
+            kEventPdPrefixChanged      = 1 << 1,
+            kEventConflictStateChanged = 1 << 2,
+        };
+
+        typedef uint8_t Events;
+
         explicit PdPrefixManager(Instance &aInstance);
 
         void               SetEnabled(bool aEnabled);
         void               Start(void) { Evaluate(); }
-        void               Stop(void) { Evaluate(); }
+        void               Stop(void);
         bool               HasPrefix(void) const { return !mPrefix.IsEmpty(); }
+        bool               HasConflict(void) const { return mOnLinkPrefixConflict || mRoutePrefixConflict; }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
         State              GetState(void) const { return mState; }
+        void               CheckConflict(ConflictCheckEvent aEvent);
 
         void  ProcessPrefixesFromRa(const InfraIf::Icmp6Packet &aRaPacket);
         void  ProcessPrefix(const Dhcp6PdPrefix &aPrefix);
@@ -969,9 +1022,7 @@ private:
         void  HandleTimer(void) { WithdrawPrefix(); }
         void  SetStateCallback(Dhcp6PdCallback aCallback, void *aContext) { mStateCallback.Set(aCallback, aContext); }
         void  Evaluate(void);
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        void HandleRecordHistoryTask(void);
-#endif
+        void  HandleEventTask(void);
 
     private:
         class PdPrefix : public OnLinkPrefix
@@ -985,28 +1036,31 @@ private:
 
         void UpdateState(void);
         void SetState(State aState);
+        void SignalEvent(Event aEvent);
         void EvaluateCandidatePrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
         void ApplyFavoredPrefix(const PdPrefix &aFavoredPrefix);
         void WithdrawPrefix(void);
+        void CheckConflictWithOnLinkPrefixes(void);
+        void CheckConflictWithRoutePrefixes(ConflictCheckEvent aEvent);
+        void UpdateConflictFlag(bool &aConflictFlag, bool aNewFlag, const char *aPrefixType);
 
         static const char *StateToString(State aState);
 
         using PrefixTimer   = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
         using StateCallback = Callback<Dhcp6PdCallback>;
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        using RecordHistoryTask = TaskletIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTask>;
-#endif
+        using EventTask     = TaskletIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerEventTask>;
 
         State         mState;
+        Events        mEvents;
+        bool          mOnLinkPrefixConflict;
+        bool          mRoutePrefixConflict;
         uint32_t      mNumPlatformPioProcessed;
         uint32_t      mNumPlatformRaReceived;
         TimeMilli     mLastPlatformRaTime;
         StateCallback mStateCallback;
         PrefixTimer   mTimer;
+        EventTask     mEventTask;
         PdPrefix      mPrefix;
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        RecordHistoryTask mRecordHistoryTask;
-#endif
     };
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
@@ -1085,4 +1139,4 @@ DefineMapEnum(otBorderRoutingDhcp6PdState, BorderRouter::RoutingManager::Dhcp6Pd
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // ROUTING_MANAGER_HPP_
+#endif // OT_CORE_BORDER_ROUTER_ROUTING_MANAGER_HPP_

@@ -38,6 +38,14 @@
 
 // crypto key storage stubs
 
+bool otPlatCryptoIsKeyRefValid(otCryptoKeyRef aKeyRef)
+{
+    OT_UNUSED_VARIABLE(aKeyRef);
+
+    // No key ref is ever actually stored by this stub, so none is valid.
+    return false;
+}
+
 otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
                               otCryptoKeyType      aKeyType,
                               otCryptoKeyAlgorithm aKeyAlgorithm,

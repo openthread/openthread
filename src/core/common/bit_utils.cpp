@@ -38,6 +38,19 @@
 
 namespace ot {
 
+uint8_t CountBitsInMask(uint32_t aMask)
+{
+    uint8_t count = 0;
+
+    while (aMask != 0)
+    {
+        aMask &= aMask - 1;
+        count++;
+    }
+
+    return count;
+}
+
 uint16_t CountMatchingBits(const uint8_t *aFirst, const uint8_t *aSecond, uint16_t aMaxBitLength)
 {
     uint16_t remainingLen = aMaxBitLength;
@@ -77,6 +90,19 @@ uint16_t CountMatchingBits(const uint8_t *aFirst, const uint8_t *aSecond, uint16
 
 exit:
     return matchedLen;
+}
+
+uint8_t DetermineMinBitSizeFor(uint32_t aValue)
+{
+    uint8_t bitSize = 0;
+
+    do
+    {
+        bitSize++;
+        aValue >>= 1;
+    } while (aValue != 0);
+
+    return bitSize;
 }
 
 } // namespace ot

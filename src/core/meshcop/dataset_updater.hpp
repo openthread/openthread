@@ -31,8 +31,8 @@
  *   This file includes definitions for Dataset Updater.
  */
 
-#ifndef DATASET_UPDATER_HPP_
-#define DATASET_UPDATER_HPP_
+#ifndef OT_CORE_MESHCOP_DATASET_UPDATER_HPP_
+#define OT_CORE_MESHCOP_DATASET_UPDATER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -127,4 +127,4 @@ private:
 
 #endif // (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 
-#endif // DATASET_UPDATER_HPP_
+#endif // OT_CORE_MESHCOP_DATASET_UPDATER_HPP_

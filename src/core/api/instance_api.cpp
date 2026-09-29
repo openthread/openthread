@@ -107,13 +107,17 @@ otError otInstanceResetToBootloader(otInstance *aInstance) { return AsCoreType(a
 #endif
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-uint64_t otInstanceGetUptime(otInstance *aInstance) { return AsCoreType(aInstance).Get<Uptime>().GetUptime(); }
+uint64_t otInstanceGetUptime(otInstance *aInstance) { return AsCoreType(aInstance).Get<UptimeTracker>().GetUptime(); }
 
 void otInstanceGetUptimeAsString(otInstance *aInstance, char *aBuffer, uint16_t aSize)
 {
     AssertPointerIsNotNull(aBuffer);
 
-    AsCoreType(aInstance).Get<Uptime>().GetUptime(aBuffer, aSize);
+    {
+        StringWriter writer(aBuffer, aSize);
+
+        UptimeToString(AsCoreType(aInstance).Get<UptimeTracker>().GetUptime(), writer, kUptimeStringIncludeMsec);
+    }
 }
 #endif
 
@@ -194,5 +198,5 @@ const char *otGetVersionString(void)
 
 const char *otGetRadioVersionString(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Radio>().GetVersionString();
+    return AsCoreType(aInstance).Get<Radio::Radio>().GetVersionString();
 }

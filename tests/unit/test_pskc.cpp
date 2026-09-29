@@ -29,6 +29,7 @@
 
 #include "meshcop/commissioner.hpp"
 #include "meshcop/meshcop.hpp"
+#include "thread/key_manager.hpp"
 
 #include "test_platform.h"
 #include "test_util.h"
@@ -108,6 +109,22 @@ void TestExampleInSpec(void)
     testFreeInstance(instance);
 }
 
+void TestKeyManagerKek(void)
+{
+    Instance   *instance   = testInitInstance();
+    KeyManager &keyManager = instance->Get<KeyManager>();
+
+    VerifyOrQuit(!keyManager.IsKekSet());
+
+    Kek kek;
+    memset(kek.m8, 0xaa, sizeof(kek.m8));
+    keyManager.SetKek(kek);
+
+    VerifyOrQuit(keyManager.IsKekSet());
+
+    testFreeInstance(instance);
+}
+
 } // namespace MeshCoP
 } // namespace ot
 
@@ -119,6 +136,7 @@ int main(void)
     ot::MeshCoP::TestMinimumPassphrase();
     ot::MeshCoP::TestMaximumPassphrase();
     ot::MeshCoP::TestExampleInSpec();
+    ot::MeshCoP::TestKeyManagerKek();
     printf("All tests passed\n");
 #else
     printf("PSKc generation is not supported on non-ftd build\n");

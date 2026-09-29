@@ -31,8 +31,8 @@
  *   This file includes definitions to support History Tracker module.
  */
 
-#ifndef HISTORY_TRACKER_HPP_
-#define HISTORY_TRACKER_HPP_
+#ifndef OT_CORE_UTILS_HISTORY_TRACKER_HPP_
+#define OT_CORE_UTILS_HISTORY_TRACKER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -89,14 +89,21 @@ public:
      * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
      * the beginning of the list.
      */
-    void Init(void) { ResetEntryNumber(), SetInitTime(); }
+    void Init(void) { Init(TimerMilli::GetNow()); }
+
+    /**
+     * Initializes an `Iterator`
+     *
+     * @param[in] aNow  The now time.
+     */
+    void Init(TimeMilli aNow) { ResetEntryNumber(), SetInitTime(aNow); }
 
 private:
     uint16_t  GetEntryNumber(void) const { return mData16; }
     void      ResetEntryNumber(void) { mData16 = 0; }
     void      IncrementEntryNumber(void) { mData16++; }
     TimeMilli GetInitTime(void) const { return TimeMilli(mData32); }
-    void      SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
+    void      SetInitTime(TimeMilli aNow) { mData32 = aNow.GetValue(); }
 };
 
 typedef otHistoryTrackerNetworkInfo          NetworkInfo;          ///< Thread network info.
@@ -508,9 +515,7 @@ private:
                        bool                aIsTxSuccess = true);
     void RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo);
     void RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aUnicastAddress);
-    void RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
-                            const Ip6::Netif::MulticastAddress &aMulticastAddress,
-                            Ip6::Netif::AddressOrigin           aAddressOrigin);
+    void RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::MulticastAddress &aMulticastAddress);
     void HandleNotifierEvents(Events aEvents);
     void HandleTimer(void);
 #if OPENTHREAD_FTD
@@ -600,4 +605,4 @@ DefineCoreType(otHistoryTrackerExternalRouteInfo, HistoryTracker::ExternalRouteI
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
-#endif // HISTORY_TRACKER_HPP_
+#endif // OT_CORE_UTILS_HISTORY_TRACKER_HPP_

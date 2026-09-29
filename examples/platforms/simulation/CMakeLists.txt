@@ -90,6 +90,7 @@ add_library(openthread-simulation
     simul_utils.c
     spi-stubs.c
     system.c
+    tcp.c
     trel.c
     uart.c
     virtual_time/alarm-sim.c

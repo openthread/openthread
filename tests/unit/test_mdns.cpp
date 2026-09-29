@@ -68,7 +68,7 @@ static constexpr uint16_t kClassMask              = 0x7fff;
 static constexpr uint16_t kStringSize             = 300;
 static constexpr uint16_t kMaxDataSize            = 400;
 static constexpr uint16_t kNumAnnounces           = 3;
-static constexpr uint16_t kNumInitalQueries       = 3;
+static constexpr uint16_t kNumInitialQueries      = 15;
 static constexpr uint16_t kNumRefreshQueries      = 4;
 static constexpr bool     kCacheFlush             = true;
 static constexpr uint16_t kMdnsPort               = 5353;
@@ -1331,6 +1331,53 @@ static void SendPtrResponse(const char *aName, const char *aPtrName, uint32_t aT
     otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
 }
 
+static void SendPtrResponseWithEmptyInstanceLabel(const char *aName, uint32_t aTtl)
+{
+    // Sends a PTR response whose target name starts with a single
+    // NUL-byte (empty) label, i.e. the wire label `01 00` followed by
+    // `aName`. The RDLENGTH is computed from the appended target bytes.
+
+    static const uint8_t kEmptyLabel[] = {1, 0};
+
+    Message          *message;
+    Header            header;
+    PtrRecord         ptr;
+    Core::AddressInfo senderAddrInfo;
+    uint16_t          ptrOffset;
+    uint16_t          rdataOffset;
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    header.Clear();
+    header.SetType(Header::kTypeResponse);
+    header.SetAnswerCount(1);
+
+    SuccessOrQuit(message->Append(header));
+    SuccessOrQuit(Name::AppendName(aName, *message));
+
+    ptr.Init();
+    ptr.SetTtl(aTtl);
+    ptr.SetLength(0);
+    ptrOffset = message->GetLength();
+    SuccessOrQuit(message->Append(ptr));
+
+    rdataOffset = message->GetLength();
+    SuccessOrQuit(message->AppendBytes(kEmptyLabel, sizeof(kEmptyLabel)));
+    SuccessOrQuit(Name::AppendName(aName, *message));
+
+    ptr.SetLength(message->GetLength() - rdataOffset);
+    message->WriteBytes(ptrOffset, &ptr, sizeof(ptr));
+
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    senderAddrInfo.mPort         = kMdnsPort;
+    senderAddrInfo.mInfraIfIndex = 0;
+
+    Log("Sending PTR response for %s with empty instance label, ttl:%lu", aName, ToUlong(aTtl));
+
+    otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
+}
+
 static void SendSrvResponse(const char *aServiceName,
                             const char *aHostName,
                             uint16_t    aPort,
@@ -1677,26 +1724,26 @@ static void SendEmtryPtrQueryWithKnownAnswers(const char *aName, const KnownAnsw
 
 extern "C" {
 
-#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-    OT_UNUSED_VARIABLE(aFormat);
-
 #if ENABLE_TEST_LOG
+
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+void otPlatLogOutput(otInstance *, otLogLevel, const char *aLogLine) { printf("   %s\n", aLogLine); }
+#else
+void otPlatLog(otLogLevel, otLogRegion, const char *aFormat, ...)
+{
     va_list args;
 
     printf("   ");
     va_start(args, aFormat);
     vprintf(aFormat, args);
     va_end(args);
-
     printf("\n");
-#endif
 }
-
 #endif
+#endif
+
+#endif // ENABLE_TEST_LOG
 
 //----------------------------------------------------------------------------------------------------------------------
 // `otPlatAlarm`
@@ -2271,7 +2318,7 @@ void TestLocalHost(void)
 
     SuccessOrQuit(ip4Address.FromString("200.1.5.6"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     AdvanceTime(4);
@@ -2436,17 +2483,17 @@ void TestLocalHost(void)
 
     SuccessOrQuit(ip4Address.FromString("200.1.5.7"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     SuccessOrQuit(ip4Address.FromString("200.1.2.100"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     SuccessOrQuit(ip4Address.FromString("200.1.4.0"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     Log("Validate the announcements");
@@ -2481,7 +2528,7 @@ void TestLocalHost(void)
 
     for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
     }
 
@@ -2510,7 +2557,7 @@ void TestLocalHost(void)
 
     for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
     }
 
@@ -2562,7 +2609,7 @@ void TestLocalHost(void)
 
     for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
     }
 
@@ -2589,7 +2636,7 @@ void TestLocalHost(void)
 
     for (const Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ false, kInfraIfIndex);
     }
 
@@ -5319,23 +5366,7 @@ void TestHostConflict(void)
     VerifyOrQuit(!sConflictCallback.mWasCalled);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Register the conflicted `HostEntry` again, and make sure no probes are sent");
-
-    sRegCallbacks[1].Reset();
-    sConflictCallback.Reset();
-    sDnsMessages.Clear();
-
-    SuccessOrQuit(mdns->RegisterHost(host, 1, HandleCallback));
-    AdvanceTime(5000);
-
-    VerifyOrQuit(sRegCallbacks[1].mWasCalled);
-    VerifyOrQuit(sRegCallbacks[1].mError == kErrorDuplicated);
-    VerifyOrQuit(!sConflictCallback.mWasCalled);
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Unregister the conflicted host and register it again immediately, make sure we see probes");
-
-    SuccessOrQuit(mdns->UnregisterHost(host));
+    Log("Register the conflicted `HostEntry` again, and make sure probes are sent");
 
     sConflictCallback.Reset();
     sRegCallbacks[0].Reset();
@@ -5481,23 +5512,7 @@ void TestServiceConflict(void)
     VerifyOrQuit(!sConflictCallback.mWasCalled);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Register the conflicted `ServiceEntry` again, and make sure no probes are sent");
-
-    sRegCallbacks[1].Reset();
-    sConflictCallback.Reset();
-    sDnsMessages.Clear();
-
-    SuccessOrQuit(mdns->RegisterService(service, 1, HandleCallback));
-    AdvanceTime(5000);
-
-    VerifyOrQuit(sRegCallbacks[1].mWasCalled);
-    VerifyOrQuit(sRegCallbacks[1].mError == kErrorDuplicated);
-    VerifyOrQuit(!sConflictCallback.mWasCalled);
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Unregister the conflicted host and register it again immediately, make sure we see probes");
-
-    SuccessOrQuit(mdns->UnregisterService(service));
+    Log("Register the conflicted `ServiceEntry` again, and make sure probes are sent");
 
     sConflictCallback.Reset();
     sRegCallbacks[0].Reset();
@@ -5857,6 +5872,28 @@ void HandleRecordResultAlternate(otInstance *aInstance, const otMdnsRecordResult
     HandleRecordResult(aInstance, aResult);
 }
 
+uint32_t DetermineQueryWaitTime(uint8_t aQueryCount)
+{
+    uint32_t interval = 125;
+
+    if (aQueryCount == 0)
+    {
+        interval = 125;
+    }
+    else if (aQueryCount <= 12)
+    {
+        interval = (1U << (aQueryCount - 1)) * 1000;
+        interval += (interval / 32) + 1;
+    }
+    else
+    {
+        interval = 3600 * 1000;
+        interval += (interval / 32) + 1;
+    }
+
+    return interval;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 
 void TestBrowser(void)
@@ -5889,11 +5926,11 @@ void TestBrowser(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartBrowser(browser));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -6189,7 +6226,7 @@ void TestBrowser(void)
 
     sDnsMessages.Clear();
 
-    SendPtrResponse("_srv._udp.local.", "mysrv._srv._udp.local.", 120, kInAnswerSection);
+    SendPtrResponse("_srv._udp.local.", "mysrv._srv._udp.local.", 20 * 3600, kInAnswerSection);
 
     AdvanceTime(1);
 
@@ -6198,19 +6235,19 @@ void TestBrowser(void)
     VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
     VerifyOrQuit(!browseCallback->mIsSubType);
     VerifyOrQuit(browseCallback->mServiceInstance.Matches("mysrv"));
-    VerifyOrQuit(browseCallback->mTtl == 120);
+    VerifyOrQuit(browseCallback->mTtl == 20 * 3600);
     VerifyOrQuit(browseCallback->GetNext() == nullptr);
 
     sBrowseCallbacks.Clear();
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Validate initial esquires are still sent and include known-answer");
+    Log("Validate initial queries are still sent and include known-answer");
 
-    for (uint8_t queryCount = 1; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 1; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -6224,6 +6261,69 @@ void TestBrowser(void)
     sDnsMessages.Clear();
     AdvanceTime(50 * 1000);
     VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
+void TestBrowserMalformedPtrName(void)
+{
+    Core             *mdns = InitTest();
+    Core::Browser     browser;
+    const DnsMessage *dnsMsg;
+    uint16_t          heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestBrowserMalformedPtrName");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    ClearAllBytes(browser);
+    browser.mServiceType  = "_srv._udp";
+    browser.mSubTypeLabel = nullptr;
+    browser.mInfraIfIndex = kInfraIfIndex;
+    browser.mCallback     = HandleBrowseResult;
+
+    sDnsMessages.Clear();
+    sBrowseCallbacks.Clear();
+    SuccessOrQuit(mdns->StartBrowser(browser));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a PTR response whose service-instance label is a single NUL byte");
+
+    SendPtrResponseWithEmptyInstanceLabel("_srv._udp.local.", 120);
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate that the malformed record is dropped and no result is reported");
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate that the browser keeps querying with no known-answer for the dropped record");
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(browser);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
 
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
@@ -6263,11 +6363,11 @@ void TestSrvResolver(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartSrvResolver(resolver));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -6642,11 +6742,16 @@ void TestSrvResolver(void)
 
     sSrvCallbacks.Clear();
 
-    AdvanceTime(15 * 1000);
+    AdvanceTime(20 * 1000);
+
+    // Initial query intervals use exponential backoff: 1, 2, 4,
+    // 8, ... seconds. Cumulative send times would be 0, 1, 3, 7,
+    // 15, 31, ... So within 20 seconds, we should see a total of 5
+    // queries.
 
     dnsMsg = sDnsMessages.GetHead();
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount <= 4; queryCount++)
     {
         VerifyOrQuit(dnsMsg != nullptr);
         dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
@@ -6696,11 +6801,11 @@ void TestTxtResolver(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartTxtResolver(resolver));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -7063,11 +7168,16 @@ void TestTxtResolver(void)
 
     sTxtCallbacks.Clear();
 
-    AdvanceTime(15 * 1000);
+    AdvanceTime(20 * 1000);
+
+    // Initial query intervals use exponential backoff: 1, 2, 4,
+    // 8, ... seconds. Cumulative send times would be 0, 1, 3, 7,
+    // 15, 31, ... So within 20 seconds, we should see a total of 5
+    // queries.
 
     dnsMsg = sDnsMessages.GetHead();
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount <= 4; queryCount++)
     {
         VerifyOrQuit(dnsMsg != nullptr);
         dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
@@ -7117,11 +7227,11 @@ void TestIp6AddrResolver(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartIp6AddressResolver(resolver));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -7571,11 +7681,16 @@ void TestIp6AddrResolver(void)
 
     sAddrCallbacks.Clear();
 
-    AdvanceTime(15 * 1000);
+    AdvanceTime(20 * 1000);
+
+    // Initial query intervals use exponential backoff: 1, 2, 4,
+    // 8, ... seconds. Cumulative send times would be 0, 1, 3, 7,
+    // 15, 31, ... So within 20 seconds, we should see a total of 5
+    // queries.
 
     dnsMsg = sDnsMessages.GetHead();
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount <= 4; queryCount++)
     {
         VerifyOrQuit(dnsMsg != nullptr);
         dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
@@ -7631,11 +7746,11 @@ void TestRecordQuerier(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartRecordQuerier(querier));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -8084,6 +8199,124 @@ void TestRecordQuerier(void)
     testFreeInstance(sInstance);
 }
 
+void TestRecordQuerierNullNextLabels(void)
+{
+    static constexpr uint8_t kMaxResponseRecords = 1;
+
+    // Two record queriers sharing a first label, where the second one has a
+    // `nullptr` `mNextLabels`. The public API documents `mNextLabels` as
+    // optional ("`mFirstLabel` MUST be non-NULL but `mNextLabels` can be
+    // `NULL` if there are no other labels"), and `ValidateNamesIn()` accepts
+    // `nullptr`, so such a querier reaches `RecordCache::Matches()` and is
+    // compared against the already cached entry, whose `mNextLabels` is set.
+
+    Core                 *mdns = InitTest();
+    Core::RecordQuerier   querier;
+    Core::RecordQuerier   querier2;
+    const RecordCallback *recordCallback;
+    RecordData            records[kMaxResponseRecords];
+    uint16_t              heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestRecordQuerierNullNextLabels");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a record querier with non-null `mNextLabels`");
+
+    ClearAllBytes(querier);
+
+    querier.mFirstLabel   = "mysrv";
+    querier.mNextLabels   = "_srv._udp";
+    querier.mRecordType   = ResourceRecord::kTypeKey;
+    querier.mInfraIfIndex = kInfraIfIndex;
+    querier.mCallback     = HandleRecordResult;
+
+    SuccessOrQuit(mdns->StartRecordQuerier(querier));
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a second querier, same first label and record type, null `mNextLabels`");
+
+    ClearAllBytes(querier2);
+
+    querier2.mFirstLabel   = "mysrv";
+    querier2.mNextLabels   = nullptr;
+    querier2.mRecordType   = ResourceRecord::kTypeKey;
+    querier2.mInfraIfIndex = kInfraIfIndex;
+    querier2.mCallback     = HandleRecordResultAlternate;
+
+    SuccessOrQuit(mdns->StartRecordQuerier(querier2));
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response for `mysrv.local.` and validate that only the null `mNextLabels`");
+    Log("querier is matched (exercises the `mNextLabels == nullptr` paths).");
+
+    records[0].mType       = ResourceRecord::kTypeKey;
+    records[0].mData       = kKey1;
+    records[0].mLength     = sizeof(kKey1);
+    records[0].mTtl        = 120;
+    records[0].mCacheFlush = false;
+
+    sRecordCallbacks.Clear();
+    SendRecordResponse("mysrv.local.", 1, records);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+    VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+    VerifyOrQuit(recordCallback->mNextLabels.Matches(""));
+    VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(recordCallback->MatchesData(kKey1));
+    VerifyOrQuit(recordCallback->mTtl == 120);
+    VerifyOrQuit(recordCallback->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop both queriers in the same order");
+
+    SuccessOrQuit(mdns->StopRecordQuerier(querier));
+    SuccessOrQuit(mdns->StopRecordQuerier(querier2));
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Clear the cache list so the next ordering starts from an empty `mRecordCacheList`");
+
+    // `StopRecordQuerier()` only marks the `RecordCache` entries passive; they are retained for
+    // `kNonActiveDeleteTimeout`. Toggling disables and re-enables to drop them, so the ordering
+    // below genuinely starts from an empty cache list.
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start the null-`mNextLabels` querier first, then the non-null one");
+
+    SuccessOrQuit(mdns->StartRecordQuerier(querier2));
+    AdvanceTime(1);
+    SuccessOrQuit(mdns->StartRecordQuerier(querier));
+    AdvanceTime(1);
+
+    SuccessOrQuit(mdns->StopRecordQuerier(querier));
+    SuccessOrQuit(mdns->StopRecordQuerier(querier2));
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of TestRecordQuerierNullNextLabels");
+
+    testFreeInstance(sInstance);
+}
+
 void TestRecordQuerierForAny(void)
 {
     static constexpr uint8_t kMaxResponseRecords = 6;
@@ -8120,11 +8353,11 @@ void TestRecordQuerierForAny(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartRecordQuerier(querier));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -8918,10 +9151,12 @@ int main(void)
     ot::Dns::Multicast::TestServiceConflict();
 
     ot::Dns::Multicast::TestBrowser();
+    ot::Dns::Multicast::TestBrowserMalformedPtrName();
     ot::Dns::Multicast::TestSrvResolver();
     ot::Dns::Multicast::TestTxtResolver();
     ot::Dns::Multicast::TestIp6AddrResolver();
     ot::Dns::Multicast::TestRecordQuerier();
+    ot::Dns::Multicast::TestRecordQuerierNullNextLabels();
     ot::Dns::Multicast::TestRecordQuerierForAny();
     ot::Dns::Multicast::TestPassiveCache();
     ot::Dns::Multicast::TestLegacyUnicastResponse();

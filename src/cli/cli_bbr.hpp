@@ -31,8 +31,8 @@
  *   This file contains definitions for CLI to backbone router.
  */
 
-#ifndef CLI_BBR_HPP_
-#define CLI_BBR_HPP_
+#ifndef OT_CLI_CLI_BBR_HPP_
+#define OT_CLI_CLI_BBR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -90,4 +90,4 @@ private:
 
 #endif //  (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-#endif // CLI_BBR_HPP_
+#endif // OT_CLI_CLI_BBR_HPP_

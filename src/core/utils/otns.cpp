@@ -68,20 +68,26 @@ void Otns::EmitStatus(const StatusString &aString) const { otPlatOtnsStatus(aStr
 
 void Otns::EmitTransmit(const Mac::TxFrame &aFrame) const
 {
-    StatusString string;
-    Mac::Address dst;
+    uint16_t                fcf = 0;
+    Mac::TxFrame::ParseInfo frameInfo;
+    StatusString            string;
 
-    IgnoreError(aFrame.GetDstAddr(dst));
+    IgnoreError(frameInfo.ParseFrom(aFrame, Mac::Frame::kParseAddrFields));
 
-    string.Append("transmit=%d,%04x,%d", aFrame.GetChannel(), aFrame.GetFrameControlField(), aFrame.GetSequence());
-
-    if (dst.IsShort())
+    if (aFrame.GetLength() >= sizeof(uint16_t))
     {
-        string.Append(",%04x", dst.GetShort());
+        fcf = LittleEndian::ReadUint16(aFrame.GetPsdu());
     }
-    else if (dst.IsExtended())
+
+    string.Append("transmit=%u,%04x,%u", aFrame.GetChannel(), fcf, frameInfo.mSequenceNum);
+
+    if (frameInfo.mAddrs.mDestination.IsShort())
     {
-        string.Append(",%s", dst.ToString().AsCString());
+        string.Append(",%04x", frameInfo.mAddrs.mDestination.GetShort());
+    }
+    else if (frameInfo.mAddrs.mDestination.IsExtended())
+    {
+        string.Append(",%s", frameInfo.mAddrs.mDestination.ToString().AsCString());
     }
 
     EmitStatus(string);
@@ -199,13 +205,15 @@ void Otns::EmitCoapStatus(const char             *aAction,
                           const Ip6::MessageInfo &aMessageInfo,
                           Error                  *aError) const
 {
-    Error        error;
-    char         uriPath[Coap::Message::kMaxReceivedUriPath + 1];
-    StatusString string;
+    Error                              error;
+    Coap::Message::UriPathStringBuffer uriPath;
+    StatusString                       string;
+    Coap::HeaderInfo                   header;
 
+    SuccessOrExit(error = aMessage.ParseHeaderInfo(header));
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
-    string.Append("coap=%s,%d,%d,%d,%s,%s,%d", aAction, aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
+    string.Append("coap=%s,%d,%d,%d,%s,%s,%d", aAction, header.GetMessageId(), header.GetType(), header.GetCode(),
                   uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
 
     if (aError != nullptr)
@@ -219,6 +227,15 @@ exit:
     LogWarnOnError(error, "EmitCoapStatus");
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+//---------------------------------------------------------------------------------------------------------------------
+// Default/weak implementation of OTNS platform APIs
+
+extern "C" OT_TOOL_WEAK void otPlatOtnsStatus(const char *aStatus)
+{
+    OT_UNUSED_VARIABLE(aStatus);
+    LogAt(kLogLevelNone, "%s", aStatus);
+}
 
 } // namespace Utils
 } // namespace ot

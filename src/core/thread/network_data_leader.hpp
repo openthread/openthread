@@ -31,8 +31,8 @@
  *   This file includes definitions for manipulating Thread Network Data managed by the Thread Leader.
  */
 
-#ifndef NETWORK_DATA_LEADER_HPP_
-#define NETWORK_DATA_LEADER_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_LEADER_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_LEADER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -187,30 +187,6 @@ public:
     Coap::Message *ProcessCommissionerGetRequest(const Coap::Message &aMessage) const;
 
     /**
-     * Searches for given sub-TLV in Commissioning Data TLV.
-     *
-     * @tparam SubTlvType    The sub-TLV type to search for.
-     *
-     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no such sub-TLV exists.
-     */
-    template <typename SubTlvType> const SubTlvType *FindInCommissioningData(void) const
-    {
-        return As<SubTlvType>(FindCommissioningDataSubTlv(SubTlvType::kType));
-    }
-
-    /**
-     * Searches for given sub-TLV in Commissioning Data TLV.
-     *
-     * @tparam SubTlvType    The sub-TLV type to search for.
-     *
-     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no such sub-TLV exists.
-     */
-    template <typename SubTlvType> SubTlvType *FindInCommissioningData(void)
-    {
-        return As<SubTlvType>(FindCommissioningDataSubTlv(SubTlvType::kType));
-    }
-
-    /**
      * Finds and reads the Commissioning Session ID in Commissioning Data TLV.
      *
      * @param[out] aSessionId  A reference to return the read session ID.
@@ -231,6 +207,14 @@ public:
      * @retval kErrorParse      Failed to parse Commissioning Data TLV (invalid format).
      */
     Error FindBorderAgentRloc(uint16_t &aRloc16) const;
+
+    /**
+     * Indicates whether the Commissioning Data contains a valid Border Agent Locator sub-TLV.
+     *
+     * @retval TRUE   The Commissioning Data contains a valid Border Agent Locator sub-TLV.
+     * @retval FALSE  The Commissioning Data does not contain a valid Border Agent Locator sub-TLV.
+     */
+    bool HasBorderAgentRloc(void) const;
 
     /**
      * Finds and reads the Joiner UDP Port in Commissioning Data TLV.
@@ -357,6 +341,18 @@ public:
     void IncrementVersionAndStableVersion(void);
 
     /**
+     * Updates the Border Agent Locator sub-TLV in the Commissioning Data.
+     *
+     * If the Border Agent Locator sub-TLV is present in the Commissioning Data and its value differs from @p aRloc16,
+     * this method updates its value in-place and increments the Thread Network Data version. If the sub-TLV is not
+     * present, or if its value already matches @p aRloc16, no changes are made and the Network Data version is not
+     * incremented.
+     *
+     * @param[in] aRloc16  The new Border Agent RLOC16 value.
+     */
+    void UpdateBorderAgentRloc(uint16_t aRloc16);
+
+    /**
      * Performs anycast ALOC route lookup using the Network Data.
      *
      * @param[in]   aAloc16     The ALOC16 destination to lookup.
@@ -432,6 +428,13 @@ private:
 
     typedef bool (&EntryChecker)(const BorderRouterEntry &aEntry);
 
+    struct CommissioningDataSubTlvInfo
+    {
+        const Tlv     *mTlv;
+        const uint8_t *mValue;
+        uint16_t       mLength;
+    };
+
     const PrefixTlv *FindNextMatchingPrefixTlv(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const;
     const PrefixTlv *FindPrefixTlvForContextId(uint8_t aContextId, const ContextTlv *&aContextTlv) const;
 
@@ -453,11 +456,7 @@ private:
     void  SignalNetDataChanged(void);
     const CommissioningDataTlv *FindCommissioningData(void) const;
     CommissioningDataTlv *FindCommissioningData(void) { return AsNonConst(AsConst(this)->FindCommissioningData()); }
-    const MeshCoP::Tlv   *FindCommissioningDataSubTlv(uint8_t aType) const;
-    MeshCoP::Tlv         *FindCommissioningDataSubTlv(uint8_t aType)
-    {
-        return AsNonConst(AsConst(this)->FindCommissioningDataSubTlv(aType));
-    }
+    Error                 FindCommissioningDataSubTlv(uint8_t aType, CommissioningDataSubTlvInfo &aSubTlvInfo) const;
 
 #if OPENTHREAD_FTD
     static constexpr uint32_t kMaxNetDataSyncWait = 60 * 1000; // Maximum time to wait for netdata sync in msec.
@@ -544,7 +543,7 @@ private:
 #endif
     };
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     void HandleTimer(void);
 
@@ -617,9 +616,7 @@ private:
     Error UpdateCommissioningData(uint16_t aDataLength, CommissioningDataTlv *&aDataTlv);
     Error SetCommissioningData(const Message &aMessage);
 
-    void SendCommissioningSetResponse(const Coap::Message     &aRequest,
-                                      const Ip6::MessageInfo  &aMessageInfo,
-                                      MeshCoP::StateTlv::State aState);
+    void SendCommissioningSetResponse(const Coap::Msg &aMsg, MeshCoP::StateTlv::State aState);
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 
@@ -659,4 +656,4 @@ DeclareTmfHandler(Leader, kUriCommissionerSet);
 } // namespace NetworkData
 } // namespace ot
 
-#endif // NETWORK_DATA_LEADER_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_LEADER_HPP_

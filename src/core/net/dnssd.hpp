@@ -31,8 +31,8 @@
  *   This file includes definitions for DNS-SD module.
  */
 
-#ifndef DNSSD_HPP_
-#define DNSSD_HPP_
+#ifndef OT_CORE_NET_DNSSD_HPP_
+#define OT_CORE_NET_DNSSD_HPP_
 
 #include "openthread-core-config.h"
 
@@ -454,4 +454,4 @@ DefineCoreType(otPlatDnssdKey, Dnssd::Key);
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
-#endif // DNSSD_HPP_
+#endif // OT_CORE_NET_DNSSD_HPP_

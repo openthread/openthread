@@ -41,18 +41,9 @@
 using namespace ot;
 using namespace ot::Ncp;
 
-enum
-{
-    kTestBufferSize = 800
-};
+constexpr uint16_t kTestBufferSize = 800;
 
-enum
-{
-    kTestMacScanChannelMask = 0x01
-};
-
-OT_TOOL_PACKED_BEGIN
-struct RadioMessage
+OT_TOOL_PACKED_BEGIN struct RadioMessage
 {
     uint8_t mChannel;
     uint8_t mPsdu[OT_RADIO_FRAME_MAX_SIZE];

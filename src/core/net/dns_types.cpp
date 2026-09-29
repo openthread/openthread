@@ -285,7 +285,7 @@ Error Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
     uint16_t value;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (!Instance::IsDnsNameCompressionEnabled())
+    if (!aMessage.GetInstance().IsDnsNameCompressionEnabled())
     {
         // If "DNS name compression" mode is disabled, instead of
         // appending the pointer label, read the name from the message
@@ -639,6 +639,9 @@ Error Name::LabelIterator::ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, 
     aLabelBuffer[mLabelLength] = kNullChar;
     aLabelLength               = mLabelLength;
 
+    // Check that there is no `kNullChar` (`\0`) in the read label.
+    VerifyOrExit(StringLength(aLabelBuffer, mLabelLength) == mLabelLength, error = kErrorParse);
+
     if (!aAllowDotCharInLabel)
     {
         VerifyOrExit(StringFind(aLabelBuffer, kLabelSeparatorChar) == nullptr, error = kErrorParse);
@@ -774,6 +777,15 @@ Error Name::ValidateName(const char *aName)
 
     VerifyOrExit(length > 0, error = kErrorInvalidArgs);
     VerifyOrExit(length <= kMaxNameLength, error = kErrorInvalidArgs);
+
+    if (length == kMaxNameLength)
+    {
+        // Allow `kMaxNameLength` only if the `aName` ends with a dot.
+        // This ensures that the encoded name always fits within the
+        // `kMaxEncodedLength = 255` octets.
+
+        VerifyOrExit(aName[length - 1] == kLabelSeparatorChar, error = kErrorInvalidArgs);
+    }
 
     do
     {
@@ -1037,7 +1049,7 @@ Error ResourceRecord::ReadName(const Message &aMessage,
     // `ResourceRecord`. `aSkipRecord` indicates whether to skip over
     // the entire resource record or just the read name. On exit, when
     // successfully read, `aOffset` is updated to either point after the
-    // end of record or after the the name field.
+    // end of record or after the name field.
     //
     // When read successfully, this method returns `kErrorNone`. On a
     // parse error (invalid format) returns `kErrorParse`. If the
@@ -1369,6 +1381,11 @@ Error TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
 
 exit:
     return error;
+}
+
+bool TxtEntry::MatchesKey(const char *aKey) const
+{
+    return (mKey != nullptr) && StringMatch(mKey, aKey, kStringCaseInsensitiveMatch);
 }
 
 Error TxtEntry::AppendTo(Message &aMessage) const

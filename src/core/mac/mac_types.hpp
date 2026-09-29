@@ -31,8 +31,8 @@
  *   This file includes definitions for MAC types.
  */
 
-#ifndef MAC_TYPES_HPP_
-#define MAC_TYPES_HPP_
+#ifndef OT_CORE_MAC_MAC_TYPES_HPP_
+#define OT_CORE_MAC_MAC_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -42,14 +42,17 @@
 #include <openthread/link.h>
 #include <openthread/thread.h>
 #include <openthread/platform/provisional/radio.h>
-#include <openthread/provisional/link.h>
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/data.hpp"
 #include "common/equatable.hpp"
+#include "common/non_copyable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/string.hpp"
+#include "common/time.hpp"
 #include "crypto/storage.hpp"
+#include "radio/radio_types.hpp"
 
 namespace ot {
 
@@ -83,9 +86,14 @@ constexpr ShortAddress kShortAddrBroadcast = OT_RADIO_BROADCAST_SHORT_ADDR; ///<
 constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///< Invalid Short Address.
 
 /**
- * Represents the wake-up identifier.
+ * Represents the packet capture callback function pointer.
  */
-typedef otWakeupId WakeupId;
+typedef otLinkPcapCallback PcapCallback;
+
+/**
+ * Represents the MAC layer counters.
+ */
+typedef otMacCounters Counters;
 
 /**
  * Generates a random IEEE 802.15.4 PAN ID.
@@ -222,21 +230,25 @@ public:
     }
 
     /**
-     * Overloads operator `==` to evaluate whether or not two `ExtAddress` instances are equal.
-     *
-     * @param[in]  aOther  The other `ExtAddress` instance to compare with.
-     *
-     * @retval TRUE   If the two `ExtAddress` instances are equal.
-     * @retval FALSE  If the two `ExtAddress` instances are not equal.
-     */
-    bool operator==(const ExtAddress &aOther) const;
-
-    /**
      * Converts an address to a string.
      *
      * @returns An `InfoString` containing the string representation of the Extended Address.
      */
     InfoString ToString(void) const;
+
+    /**
+     * Parses an Extended Address from a string.
+     *
+     * The string must be a hex representation of the address (e.g., "0123456789abcdef").
+     * The parsing is case-insensitive.
+     *
+     * @param[in]  aString  A pointer to the string to parse.
+     *
+     * @retval kErrorNone          Successfully parsed the Extended Address.
+     * @retval kErrorInvalidArgs   @p aString is `nullptr`.
+     * @retval kErrorParse         @p aString is not a valid hex string representation of an Extended Address.
+     */
+    Error FromString(const char *aString);
 
 private:
     static constexpr uint8_t kGroupFlag = (1 << 0);
@@ -633,159 +645,106 @@ private:
     void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
 };
 
-#if OPENTHREAD_CONFIG_MULTI_RADIO
+class SubMac;
 
 /**
- * Defines the radio link types.
+ * Represents a trio of MAC keys (previous, current, and next) and their associated key index.
  */
-enum RadioType : uint8_t
+class KeyTrio : private NonCopyable
 {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    kRadioTypeIeee802154, ///< IEEE 802.15.4 (2.4GHz) link type.
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    kRadioTypeTrel, ///< Thread Radio Encapsulation link type.
-#endif
-};
+    friend class SubMac;
 
-/**
- * This constant specifies the number of supported radio link types.
- */
-constexpr uint8_t kNumRadioTypes = (((OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE) ? 1 : 0) +
-                                    ((OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE) ? 1 : 0));
-
-/**
- * Represents a set of radio links.
- */
-class RadioTypes
-{
 public:
-    static constexpr uint16_t kInfoStringSize = 32; ///< Max chars for the info string (`ToString()`).
-
     /**
-     * Defines the fixed-length `String` object returned from `ToString()`.
+     * Represents the key type (previous, current, or next).
      */
-    typedef String<kInfoStringSize> InfoString;
-
-    /**
-     * This static class variable defines an array containing all supported radio link types.
-     */
-    static const RadioType kAllRadioTypes[kNumRadioTypes];
-
-    /**
-     * Initializes a `RadioTypes` object as empty set
-     */
-    RadioTypes(void)
-        : mBitMask(0)
+    enum Type : uint8_t
     {
-    }
+        kPrev, ///< Previous MAC key.
+        kCur,  ///< Current MAC key.
+        kNext, ///< Next MAC key.
+    };
 
     /**
-     * Initializes a `RadioTypes` object with a given bit-mask.
-     *
-     * @param[in] aMask   A bit-mask representing the radio types (the first bit corresponds to radio type 0, and so on)
+     * Clears the stored keys and key index.
      */
-    explicit RadioTypes(uint8_t aMask)
-        : mBitMask(aMask)
-    {
-    }
+    void Clear(void);
 
     /**
-     * Clears the set.
+     * Gets a MAC key of a given type from the trio.
+     *
+     * @param[in] aType  The key type (`kPrev`, `kCur`, or `kNext`).
+     *
+     * @returns A reference to the requested MAC key.
      */
-    void Clear(void) { mBitMask = 0; }
+    const KeyMaterial &GetKey(Type aType) const { return mKeys[aType]; }
 
     /**
-     * Indicates whether the set is empty or not
+     * Gets the MAC key index.
      *
-     * @returns TRUE if the set is empty, FALSE otherwise.
+     * @returns The MAC key index.
      */
-    bool IsEmpty(void) const { return (mBitMask == 0); }
+    uint8_t GetKeyIndex(void) const { return mKeyIndex; }
 
     /**
-     *  This method indicates whether the set contains only a single radio type.
+     * Selects the MAC key from the trio for a given key index.
      *
-     * @returns TRUE if the set contains a single radio type, FALSE otherwise.
+     * This method always returns a valid key. If the given key index matches the current, previous, or next key index
+     * in the trio, the corresponding key material is returned. If the given key index does not match any of these,
+     * the current key material is returned by default. This is a safety precaution to ensure that any frame with
+     * security enabled is encrypted using a valid key.
+     *
+     * @param[in] aKeyIndex  The key index to select.
+     *
+     * @returns A reference to the selected MAC key.
      */
-    bool ContainsSingleRadio(void) const { return !IsEmpty() && ((mBitMask & (mBitMask - 1)) == 0); }
-
-    /**
-     * Indicates whether or not the set contains a given radio type.
-     *
-     * @param[in] aType  A radio link type.
-     *
-     * @returns TRUE if the set contains @p aType, FALSE otherwise.
-     */
-    bool Contains(RadioType aType) const { return ((mBitMask & BitFlag(aType)) != 0); }
-
-    /**
-     * Adds a radio type to the set.
-     *
-     * @param[in] aType  A radio link type.
-     */
-    void Add(RadioType aType) { mBitMask |= BitFlag(aType); }
-
-    /**
-     * Adds another radio types set to the current one.
-     *
-     * @param[in] aTypes   A radio link type set to add.
-     */
-    void Add(RadioTypes aTypes) { mBitMask |= aTypes.mBitMask; }
-
-    /**
-     * Adds all radio types supported by device to the set.
-     */
-    void AddAll(void);
-
-    /**
-     * Removes a given radio type from the set.
-     *
-     * @param[in] aType  A radio link type.
-     */
-    void Remove(RadioType aType) { mBitMask &= ~BitFlag(aType); }
-
-    /**
-     * Gets the radio type set as a bitmask.
-     *
-     * The first bit in the mask corresponds to first radio type (radio type with value zero), and so on.
-     *
-     * @returns A bitmask representing the set of radio types.
-     */
-    uint8_t GetAsBitMask(void) const { return mBitMask; }
-
-    /**
-     * Overloads operator `-` to return a new set which is the set difference between current set and
-     * a given set.
-     *
-     * @param[in] aOther  Another radio type set.
-     *
-     * @returns A new set which is set difference between current one and @p aOther.
-     */
-    RadioTypes operator-(const RadioTypes &aOther) const { return RadioTypes(mBitMask & ~aOther.mBitMask); }
-
-    /**
-     * Converts the radio set to human-readable string.
-     *
-     * @return A string representation of the set of radio types.
-     */
-    InfoString ToString(void) const;
+    const KeyMaterial &SelectKey(uint8_t aKeyIndex) const;
 
 private:
-    static uint8_t BitFlag(RadioType aType) { return static_cast<uint8_t>(1U << static_cast<uint8_t>(aType)); }
+    static constexpr bool    kIsExportable = OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE;
+    static constexpr uint8_t kNumTypes     = 3;
 
-    uint8_t mBitMask;
+    void Set(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
+
+    KeyMaterial mKeys[kNumTypes];
+    uint8_t     mKeyIndex;
 };
 
-/**
- * Converts a link type to a string
- *
- * @param[in] aRadioType  A link type value.
- *
- * @returns A string representation of the link type.
- */
-const char *RadioTypeToString(RadioType aRadioType);
+constexpr uint8_t kMinKeyIndex = 1;    ///< Minimum Key Index value.
+constexpr uint8_t kMaxKeyIndex = 0x80; ///< Maximum Key Index value.
 
-#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+/**
+ * Determines the MAC Key Index for a given Key Sequence.
+ *
+ * @param[in] aKeySequence  The Key Sequence value.
+ *
+ * @returns The MAC Key Index corresponding to @p aKeySequence.
+ */
+uint8_t DetermineKeyIndexFor(uint32_t aKeySequence);
+
+/**
+ * Determines the next MAC Key Index (handling 1-128 wrap-around).
+ *
+ * The caller MUST ensure @p aKeyIndex is valid and within range (`kMinKeyIndex` to `kMaxKeyIndex`), otherwise the
+ * behavior is undefined.
+ *
+ * @param[in] aKeyIndex  The current Key Index value.
+ *
+ * @returns The next MAC Key Index value.
+ */
+uint8_t DetermineNextKeyIndex(uint8_t aKeyIndex);
+
+/**
+ * Determines the previous MAC Key Index (handling 1-128 wrap-around).
+ *
+ * The caller MUST ensure @p aKeyIndex is valid and within range (`kMinKeyIndex` to `kMaxKeyIndex`), otherwise the
+ * behavior is undefined.
+ *
+ * @param[in] aKeyIndex  The current Key Index value.
+ *
+ * @returns The previous MAC Key Index value.
+ */
+uint8_t DeterminePrevKeyIndex(uint8_t aKeyIndex);
 
 /**
  * Represents Link Frame Counters for all supported radio links.
@@ -807,7 +766,7 @@ public:
      *
      * @returns The Link Frame Counter for radio link @p aRadioType.
      */
-    uint32_t Get(RadioType aRadioType) const;
+    uint32_t Get(Radio::Type aRadioType) const;
 
     /**
      * Sets the Link Frame Counter for a given radio link.
@@ -815,7 +774,7 @@ public:
      * @param[in] aRadioType  A radio link type.
      * @param[in] aCounter    The new counter value.
      */
-    void Set(RadioType aRadioType, uint32_t aCounter);
+    void Set(Radio::Type aRadioType, uint32_t aCounter);
 
 #else
 
@@ -907,6 +866,31 @@ private:
 };
 
 /**
+ * Converts a given CSL period in units of 10 symbols to microseconds.
+ *
+ * @param[in] aCslPeriod  The CSL period in units of 10 symbols.
+ *
+ * @returns The CSL period in microseconds.
+ */
+inline constexpr uint32_t CslPeriodToUsec(uint16_t aCslPeriod) { return Radio::kTenSymbolsDuration * aCslPeriod; }
+
+/**
+ * Minimum CSL period supported in units of 10 symbols.
+ */
+constexpr uint16_t kMinCslPeriod =
+    static_cast<uint16_t>(Time::MsecToUsec(OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD) / Radio::kTenSymbolsDuration);
+
+static_assert(kMinCslPeriod > 0, "kMinCslPeriod must be greater than zero");
+static_assert((Time::MsecToUsec(OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD) / Radio::kTenSymbolsDuration) <=
+                  NumericLimits<uint16_t>::kMax,
+              "kMinCslPeriod is too large to fit in uint16_t");
+
+/**
+ * Minimum CSL period supported in microseconds.
+ */
+constexpr uint32_t kMinCslPeriodInUsec = CslPeriodToUsec(kMinCslPeriod);
+
+/**
  * Represents CSL accuracy.
  */
 class CslAccuracy
@@ -941,155 +925,21 @@ public:
     /**
      * Returns the CSL uncertainty.
      *
-     * @returns The uncertainty in units 10 microseconds.
+     * @returns The uncertainty in units of 10 microseconds (`Radio::kUncertaintyUnit`).
      */
     uint8_t GetUncertainty(void) const { return mUncertainty; }
 
     /**
-     * Gets the CLS uncertainty in microseconds.
-     *
-     * @returns the CLS uncertainty in microseconds.
-     */
-    uint16_t GetUncertaintyInMicrosec(void) const { return static_cast<uint16_t>(mUncertainty) * kUsPerUncertUnit; }
-
-    /**
      * Sets the CSL uncertainty.
      *
-     * @param[in]  aUncertainty  The CSL uncertainty in units 10 microseconds.
+     * @param[in]  aUncertainty  The CSL uncertainty in units of 10 microseconds.
      */
     void SetUncertainty(uint8_t aUncertainty) { mUncertainty = aUncertainty; }
 
 private:
-    static constexpr uint8_t kUsPerUncertUnit = 10;
-
     uint8_t mClockAccuracy;
     uint8_t mUncertainty;
 };
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-/**
- * Gets the length of the wake-up identifier.
- *
- * The length is the number of bytes remaining after removing the most significant zero bytes.
- *
- * @param[in]  aWakeupId  The wake-up identifier.
- *
- * @returns The length of the @p aWakeupId.
- */
-uint8_t GetWakeupIdLength(WakeupId aWakeupId);
-#endif
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-/**
- * Represents a wake-up request.
- */
-class WakeupRequest : public otWakeupRequest
-{
-public:
-    /**
-     * Represents a wake-up request type.
-     */
-    enum Type : uint8_t
-    {
-        kTypeExtAddress    = OT_WAKEUP_TYPE_EXT_ADDRESS,
-        kTypeWakeupId      = OT_WAKEUP_TYPE_IDENTIFIER,
-        kTypeGroupWakeupId = OT_WAKEUP_TYPE_GROUP_IDENTIFIER,
-    };
-
-    /**
-     * Sets the wake-up request with an Extended Address.
-     *
-     * The type is also updated to indicate that the wake-up request type is `kTypeExtAddress`.
-     *
-     * @param[in]  aExtAddress  An Extended Address.
-     */
-    void SetExtAddress(const ExtAddress &aExtAddress);
-
-    /**
-     * Gets the Extended Address of the wake-up request.
-     *
-     * MUST be used only if the wake-up request type is `kTypeExtAddress`.
-     *
-     * @returns A constant reference to the Extended Address.
-     */
-    const ExtAddress &GetExtAddress(void) const;
-
-    /**
-     * Gets the Extended Address of the wake-up request.
-     *
-     * MUST be used only if the wake-up request type is `kTypeExtAddress`.
-     *
-     * @returns A reference to the Extended Address.
-     */
-    ExtAddress &GetExtAddress(void);
-
-    /**
-     * Gets the Wake-up Identifier of the wake-up request.
-     *
-     * MUST be used only if the wake-up request type is `kTypeWakeupId` or `kTypeGroupWakeupId`.
-     *
-     * @returns The Wake-up Identifier.
-     */
-    WakeupId GetWakeupId(void) const { return mShared.mWakeupId; }
-
-    /**
-     * Sets the wake-up request with the Wake-up Identifier.
-     *
-     * The type is also updated to indicate that the wake-up request type is `kTypeWakeupId`.
-     *
-     * @param[in]  aWakeupId  A Wake-up Identifier.
-     */
-    void SetWakeupId(WakeupId aWakeupId)
-    {
-        SetType(kTypeWakeupId);
-        mShared.mWakeupId = aWakeupId;
-    }
-
-    /**
-     * Sets the wake-up request type.
-     *
-     * @param[in]  aType  The wake-up request type.
-     */
-    void SetType(Type aType);
-
-    /**
-     * Indicates whether the peer is set to be woken up by the extended address.
-     *
-     * @retval TRUE   If the peer is set to be woken up by the extended address.
-     * @retval FALSE  If the peer is not not set to be woken up by the extended address.
-     */
-    bool IsWakeupByExtAddress(void) const;
-
-    /**
-     * Indicates whether the peer is set to be woken up by the wake-up identifier.
-     *
-     * @retval TRUE   If the peer is set to be woken up by the wake-up identifier.
-     * @retval FALSE  If the peer is not set to be woken up by the wake-up identifier.
-     */
-    bool IsWakeupById(void) const;
-
-    /**
-     * Indicates whether the peer is set to be woken up by the group wake-up identifier.
-     *
-     * @retval TRUE   If the peer is set to be woken up by the group wake-up identifier.
-     * @retval FALSE  If the peer is not set to be woken up by the group wake-up identifier.
-     */
-    bool IsWakeupByGroupId(void) const;
-};
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-/**
- * Represents the information of the received wake-up frame.
- */
-struct WakeupInfo
-{
-    ExtAddress mExtAddress;        ///< The extended address of the Wake-up Coordinator.
-    uint32_t   mAttachDelayMs;     ///< The delay before linking to the peer.
-    uint8_t    mRetryInterval : 2; ///< The interval of the periodic connection windows.
-    uint8_t    mRetryCount : 4;    ///< The maximum number of retries the action by the Wake-up Listener.
-};
-#endif
 
 #if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 /**
@@ -1134,10 +984,7 @@ public:
 
 DefineCoreType(otExtAddress, Mac::ExtAddress);
 DefineCoreType(otMacKey, Mac::Key);
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-DefineCoreType(otWakeupRequest, Mac::WakeupRequest);
-DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);
-#endif
+DefineCoreType(otMacKeyMaterial, Mac::KeyMaterial);
 #if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 DefineCoreType(otSlotEntry, Mac::SlotEntry);
 DefineMapEnum(otSlotType, Mac::SlotEntry::Type);
@@ -1145,4 +992,4 @@ DefineMapEnum(otSlotType, Mac::SlotEntry::Type);
 
 } // namespace ot
 
-#endif // MAC_TYPES_HPP_
+#endif // OT_CORE_MAC_MAC_TYPES_HPP_

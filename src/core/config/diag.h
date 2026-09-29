@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the DIAG service.
  */
 
-#ifndef CONFIG_DIAG_H_
-#define CONFIG_DIAG_H_
+#ifndef OT_CORE_CONFIG_DIAG_H_
+#define OT_CORE_CONFIG_DIAG_H_
 
 /**
  * @addtogroup config-diag
@@ -83,4 +83,4 @@
  * @}
  */
 
-#endif // CONFIG_DIAG_H_
+#endif // OT_CORE_CONFIG_DIAG_H_

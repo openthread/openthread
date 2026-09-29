@@ -135,15 +135,22 @@ enum
     OT_POSIX_OPT_PERSISTENT_INTERFACE    = 'p',
     OT_POSIX_OPT_TIME_SPEED              = 's',
     OT_POSIX_OPT_VERBOSE                 = 'v',
+    OT_POSIX_OPT_VERSION                 = 'V',
 
     OT_POSIX_OPT_SHORT_MAX = 128,
 
+    OT_POSIX_OPT_DATA_PATH,
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
+    OT_POSIX_OPT_SETTINGS_FILE,
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    OT_POSIX_OPT_TUN_DEVICE,
+#endif
 };
 
 static const struct option kOptions[] = {
     {"backbone-interface-name", required_argument, NULL, OT_POSIX_OPT_BACKBONE_INTERFACE_NAME},
+    {"data-path", required_argument, NULL, OT_POSIX_OPT_DATA_PATH},
     {"debug-level", required_argument, NULL, OT_POSIX_OPT_DEBUG_LEVEL},
     {"dry-run", no_argument, NULL, OT_POSIX_OPT_DRY_RUN},
     {"help", no_argument, NULL, OT_POSIX_OPT_HELP},
@@ -151,8 +158,13 @@ static const struct option kOptions[] = {
     {"persistent-interface", no_argument, NULL, OT_POSIX_OPT_PERSISTENT_INTERFACE},
     {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
+    {"settings-file", required_argument, NULL, OT_POSIX_OPT_SETTINGS_FILE},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    {"tun-device", required_argument, NULL, OT_POSIX_OPT_TUN_DEVICE},
+#endif
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
+    {"version", no_argument, NULL, OT_POSIX_OPT_VERSION},
     {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -161,6 +173,11 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] RadioURL [RadioURL]\n"
             "Options:\n"
+            "        --data-path               Path of directory to store data.\n"
+            "        --settings-file           Fixed settings file base name (overrides EUI64-based naming).\n"
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+            "        --tun-device              POSIX TUN Device.\n"
+#endif
             "    -B  --backbone-interface-name Backbone network interface name.\n"
             "    -d  --debug-level             Debug level of logging.\n"
             "    -h  --help                    Display this usage information.\n"
@@ -169,7 +186,8 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "        --radio-version           Print radio firmware version.\n"
             "    -p  --persistent-interface    Persistent the created thread network interface\n"
             "    -s  --time-speed factor       Time speed up factor.\n"
-            "    -v  --verbose                 Also log to stderr.\n",
+            "    -v  --verbose                 Also log to stderr.\n"
+            "    -V  --version                 Display version information.\n",
             aProgramName);
 #ifdef SIGRTMIN
     fprintf(aStream,
@@ -189,6 +207,10 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
     aConfig->mPlatformConfig.mInterfaceName       = OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
+    aConfig->mPlatformConfig.mDataPath            = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    aConfig->mPlatformConfig.mTunDevice = NULL;
+#endif
 #ifdef SIGRTMIN
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif
@@ -198,7 +220,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:nps:v", kOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:nps:vV", kOptions, &index);
 
         if (option == -1)
         {
@@ -241,8 +263,18 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case OT_POSIX_OPT_VERBOSE:
             aConfig->mIsVerbose = true;
             break;
+        case OT_POSIX_OPT_VERSION:
+            printf("%s\n", otGetVersionString());
+            exit(OT_EXIT_SUCCESS);
+            break;
         case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;
+            break;
+        case OT_POSIX_OPT_DATA_PATH:
+            aConfig->mPlatformConfig.mDataPath = optarg;
+            break;
+        case OT_POSIX_OPT_SETTINGS_FILE:
+            aConfig->mPlatformConfig.mSettingsFile = optarg;
             break;
 #ifdef SIGRTMIN
         case OT_POSIX_OPT_REAL_TIME_SIGNAL:
@@ -254,6 +286,11 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             {
                 aConfig->mPlatformConfig.mRealTimeSignal = atoi(optarg);
             }
+            break;
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+        case OT_POSIX_OPT_TUN_DEVICE:
+            aConfig->mPlatformConfig.mTunDevice = optarg;
             break;
 #endif
         case '?':

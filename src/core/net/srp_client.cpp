@@ -232,7 +232,7 @@ uint32_t Client::TxJitter::DetermineDelay(void)
         mRequestedMax = 0;
     }
 
-    delay = Random::NonCrypto::GetUint32InRange(kMinTxJitter, maxJitter);
+    delay = Random::NonCrypto::GenerateInClosedRange(kMinTxJitter, maxJitter);
     LogInfo("Use random tx jitter %lu from [%lu, %lu]", ToUlong(delay), ToUlong(kMinTxJitter), ToUlong(maxJitter));
 
     return delay;
@@ -241,27 +241,17 @@ uint32_t Client::TxJitter::DetermineDelay(void)
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 const char *Client::TxJitter::ReasonToString(Reason aReason)
 {
-    static const char *const kReasonStrings[] = {
-        "OnDeviceReboot",    // (0) kOnDeviceReboot
-        "OnServerStart",     // (1) kOnServerStart
-        "OnServerRestart",   // (2) kOnServerRestart
-        "OnServerSwitch",    // (3) kOnServerSwitch
-        "OnSlaacAddrAdd",    // (4) kOnSlaacAddrAdd
-        "OnSlaacAddrRemove", // (5) kOnSlaacAddrRemove
-    };
+#define ReasonMapList(_)                   \
+    _(kOnDeviceReboot, "OnDeviceReboot")   \
+    _(kOnServerStart, "OnServerStart")     \
+    _(kOnServerRestart, "OnServerRestart") \
+    _(kOnServerSwitch, "OnServerSwitch")   \
+    _(kOnSlaacAddrAdd, "OnSlaacAddrAdd")   \
+    _(kOnSlaacAddrRemove, "OnSlaacAddrRemove")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kOnDeviceReboot);
-        ValidateNextEnum(kOnServerStart);
-        ValidateNextEnum(kOnServerRestart);
-        ValidateNextEnum(kOnServerSwitch);
-        ValidateNextEnum(kOnSlaacAddrAdd);
-        ValidateNextEnum(kOnSlaacAddrRemove);
-    };
+    DefineEnumStringArray(ReasonMapList);
 
-    return kReasonStrings[aReason];
+    return kStrings[aReason];
 }
 #endif
 
@@ -270,10 +260,14 @@ const char *Client::TxJitter::ReasonToString(Reason aReason)
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
-Client::AutoStart::AutoStart(void)
+Client::AutoStart::AutoStart(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mState(kDefaultMode ? kFirstTimeSelecting : kDisabled)
+    , mAnycastSeqNum(0)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+    , mTimeoutFailureCount(0)
+#endif
 {
-    Clear();
-    mState = kDefaultMode ? kFirstTimeSelecting : kDisabled;
 }
 
 bool Client::AutoStart::HasSelectedServer(void) const
@@ -301,6 +295,9 @@ void Client::AutoStart::SetState(State aState)
 {
     if (mState != aState)
     {
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        Get<Client>().UpdateTimeCounters();
+#endif
         LogInfo("AutoStartState %s -> %s", StateToString(mState), StateToString(aState));
         mState = aState;
     }
@@ -314,27 +311,17 @@ void Client::AutoStart::InvokeCallback(const Ip6::SockAddr *aServerSockAddr) con
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 const char *Client::AutoStart::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disabled",      // (0) kDisabled
-        "1stTimeSelect", // (1) kFirstTimeSelecting
-        "Reselect",      // (2) kReselecting
-        "Unicast-prf",   // (3) kSelectedUnicastPreferred
-        "Anycast",       // (4) kSelectedAnycast
-        "Unicast",       // (5) kSelectedUnicast
-    };
+#define AutoStartStateMapList(_)                \
+    _(kDisabled, "Disabled")                    \
+    _(kFirstTimeSelecting, "1stTimeSelect")     \
+    _(kReselecting, "Reselect")                 \
+    _(kSelectedUnicastPreferred, "Unicast-prf") \
+    _(kSelectedAnycast, "Anycast")              \
+    _(kSelectedUnicast, "Unicast")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDisabled);
-        ValidateNextEnum(kFirstTimeSelecting);
-        ValidateNextEnum(kReselecting);
-        ValidateNextEnum(kSelectedUnicastPreferred);
-        ValidateNextEnum(kSelectedAnycast);
-        ValidateNextEnum(kSelectedUnicast);
-    };
+    DefineEnumStringArray(AutoStartStateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 #endif
 
@@ -352,6 +339,7 @@ Client::Client(Instance &aInstance)
     , mShouldRemoveKeyLease(false)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mServiceKeyRecordEnabled(false)
+    , mHostKeyRecordEnabled(true)
     , mUseShortLeaseOption(false)
 #endif
     , mCurMessageId(0)
@@ -367,6 +355,7 @@ Client::Client(Instance &aInstance)
     , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     , mGuardTimer(aInstance)
+    , mAutoStart(aInstance)
 #endif
 {
     // The `Client` implementation uses different constant array of
@@ -389,6 +378,11 @@ Client::Client(Instance &aInstance)
     };
 
     mHostInfo.Init();
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    ClearAllBytes(mCounters);
+    mLastUpdatedTimestamp = Get<UptimeTracker>().GetUptime();
+#endif
 }
 
 Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
@@ -404,8 +398,7 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
 
     if (error != kErrorNone)
     {
-        LogInfo("Failed to connect to server %s: %s", aServerSockAddr.GetAddress().ToString().AsCString(),
-                ErrorToString(error));
+        LogInfoOnError(error, "connect to server %s", aServerSockAddr.GetAddress().ToString().AsCString());
         IgnoreError(mSocket.Close());
         ExitNow();
     }
@@ -755,6 +748,10 @@ Error Client::UpdateHostInfoStateOnAddressChange(void)
     VerifyOrExit((mHostInfo.GetState() != kToRemove) && (mHostInfo.GetState() != kRemoving),
                  error = kErrorInvalidState);
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mHostAddressChanges++;
+#endif
+
     if (mHostInfo.GetState() == kRemoved)
     {
         mHostInfo.SetState(kToAdd);
@@ -777,6 +774,10 @@ Error Client::AddService(Service &aService)
     SuccessOrExit(error = aService.Init());
     mServices.Push(aService);
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mServiceAdds++;
+#endif
+
     aService.SetState(kToAdd);
     UpdateState();
 
@@ -790,6 +791,10 @@ Error Client::RemoveService(Service &aService)
     LinkedList<Service> removedServices;
 
     VerifyOrExit(mServices.Contains(aService), error = kErrorNotFound);
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mServiceRemoves++;
+#endif
 
     UpdateServiceStateToRemove(aService);
     UpdateState();
@@ -811,6 +816,11 @@ Error Client::ClearService(Service &aService)
     Error error;
 
     SuccessOrExit(error = mServices.Remove(aService));
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mServiceClears++;
+#endif
+
     aService.SetNext(nullptr);
     aService.SetState(kRemoved);
     UpdateState();
@@ -850,6 +860,10 @@ Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease, bool aSendUnregT
         ExitNow();
     }
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mHostAndServicesRemoves++;
+#endif
+
     mHostInfo.SetState(kToRemove);
     UpdateState();
 
@@ -860,6 +874,10 @@ exit:
 void Client::ClearHostAndServices(void)
 {
     LogInfo("Clear host & services");
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mHostAndServicesClears++;
+#endif
 
     switch (GetState())
     {
@@ -887,6 +905,11 @@ void Client::SetState(State aState)
     VerifyOrExit(aState != mState);
 
     LogInfo("State %s -> %s", StateToString(mState), StateToString(aState));
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    UpdateTimeCounters();
+#endif
+
     mState = aState;
 
     switch (mState)
@@ -911,6 +934,45 @@ void Client::SetState(State aState)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+
+const Client::Counters &Client::GetCounters(void)
+{
+    UpdateTimeCounters();
+    return mCounters;
+}
+
+void Client::ResetCounters(void)
+{
+    ClearAllBytes(mCounters);
+    mLastUpdatedTimestamp = Get<UptimeTracker>().GetUptime();
+}
+
+void Client::UpdateTimeCounters(void)
+{
+    UptimeMsec now      = Get<UptimeTracker>().GetUptime();
+    UptimeMsec duration = now - mLastUpdatedTimestamp;
+
+    mLastUpdatedTimestamp = now;
+    mCounters.mTrackedTime += duration;
+
+    if (mState == kStateUpdated)
+    {
+        mCounters.mRegisteredTime += duration;
+
+        if (GetServerAddress().GetAddress().GetIid().IsAnycastServiceLocator())
+        {
+            mCounters.mAnycastAvailableTime += duration;
+        }
+        else
+        {
+            mCounters.mUnicastAvailableTime += duration;
+        }
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
 
 bool Client::ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode)
 {
@@ -996,6 +1058,9 @@ void Client::SendUpdate(void)
     MsgInfo  info;
     uint32_t length;
     bool     anyChanged;
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    uint16_t txPayloadLength;
+#endif
 
     info.mMessage.Reset(mSocket.NewMessage());
     VerifyOrExit(info.mMessage != nullptr, error = kErrorNoBufs);
@@ -1003,7 +1068,7 @@ void Client::SendUpdate(void)
     info.mSingleServiceMode = false;
     SuccessOrExit(error = PrepareUpdateMessage(info));
 
-    length = info.mMessage->GetLength() + sizeof(Ip6::Udp::Header) + sizeof(Ip6::Header);
+    length = info.mMessage->GetLength() + sizeof(Ip6::UdpHeader) + sizeof(Ip6::Header);
 
     if (length >= Ip6::kMaxDatagramLength)
     {
@@ -1032,11 +1097,23 @@ void Client::SendUpdate(void)
     if (anyChanged)
     {
         SelectNewMessageId();
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        mCounters.mUpdateAttempts++;
+#endif
     }
 
     SuccessOrExit(error = UpdateIdAndSignatureInUpdateMessage(info));
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    txPayloadLength = info.mMessage->GetLength();
+#endif
+
     SuccessOrExit(error = mSocket.SendTo(*info.mMessage, Ip6::MessageInfo()));
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mTxUpdates++;
+    mCounters.mTxTotalBytes += txPayloadLength;
+#endif
 
     // Ownership of the message is transferred to the socket upon a
     // successful `SendTo()` call.
@@ -1069,7 +1146,7 @@ exit:
         // continue to retry using the `mRetryWaitInterval` (which keeps
         // growing on each failure).
 
-        LogInfo("Failed to send update: %s", ErrorToString(error));
+        LogInfoOnError(error, "send update");
 
         SetState(kStateToRetry);
 
@@ -1190,7 +1267,7 @@ Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
 
     if (error == kErrorNone)
     {
-        if (aKeyInfo.ImportKeyPair(keyPair) != kErrorNone)
+        if (aKeyInfo.SaveKeyPair(keyPair) != kErrorNone)
         {
             SuccessOrExit(error = aKeyInfo.Generate());
         }
@@ -1566,7 +1643,12 @@ Error Client::AppendHostDescriptionInstruction(MsgInfo &aInfo)
     // KEY RR
 
     SuccessOrExit(error = AppendHostName(aInfo));
-    SuccessOrExit(error = AppendKeyRecord(aInfo));
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mHostKeyRecordEnabled)
+#endif
+    {
+        SuccessOrExit(error = AppendKeyRecord(aInfo));
+    }
 
 exit:
     return error;
@@ -1835,6 +1917,21 @@ void Client::ProcessResponse(Message &aMessage)
     {
         LogInfo("Server rejected %s code:%d", ErrorToString(error), header.GetResponseCode());
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        switch (error)
+        {
+        case kErrorDuplicated:
+            mCounters.mRejectedDuplicate++;
+            break;
+        case kErrorSecurity:
+            mCounters.mRejectedSecurity++;
+            break;
+        default:
+            mCounters.mRejectedOther++;
+            break;
+        }
+#endif
+
         if (mHostInfo.GetState() == kAdding)
         {
             // Since server rejected the update message, we go back to
@@ -1944,14 +2041,15 @@ void Client::ProcessResponse(Message &aMessage)
 
     ChangeHostAndServiceStates(kNewStateOnUpdateDone, kForServicesAppendedInMessage);
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mSuccess++;
+#endif
+
     HandleUpdateDone();
     UpdateState();
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogInfo("Failed to process response %s", ErrorToString(error));
-    }
+    LogInfoOnError(error, "process response");
 }
 
 void Client::SelectNewMessageId(void)
@@ -1960,7 +2058,7 @@ void Client::SelectNewMessageId(void)
 
     do
     {
-        mCurMessageId = Random::NonCrypto::GetUint16();
+        mCurMessageId = Random::NonCrypto::Generate<uint16_t>();
     } while (oldId == mCurMessageId);
 }
 
@@ -2065,7 +2163,7 @@ void Client::UpdateState(void)
 
         mHostInfo.SetState(kToRefresh);
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kToAdd:
     case kToRefresh:
@@ -2075,7 +2173,7 @@ void Client::UpdateState(void)
         // for empty service list.
         VerifyOrExit(!mServices.IsEmpty() && (mHostInfo.IsAutoAddressEnabled() || (mHostInfo.GetNumAddresses() > 0)));
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kToRemove:
         shouldUpdate = true;
@@ -2215,6 +2313,9 @@ void Client::HandleTimer(void)
     case kStateUpdating:
         LogRetryWaitInterval();
         LogInfo("Timed out, no response");
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        mCounters.mTimeouts++;
+#endif
         GrowRetryWaitInterval();
         SetState(kStateToUpdate);
         InvokeCallback(kErrorResponseTimeout);
@@ -2412,6 +2513,10 @@ void Client::ProcessAutoStart(void)
         break;
     }
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mServerChanges++;
+#endif
+
     IgnoreError(Start(serverSockAddr, kRequesterAuto));
 
 exit:
@@ -2576,45 +2681,36 @@ exit:
 
 const char *Client::ItemStateToString(ItemState aState)
 {
-    static const char *const kItemStateStrings[] = {
-        "ToAdd",      // kToAdd      (0)
-        "Adding",     // kAdding     (1)
-        "ToRefresh",  // kToRefresh  (2)
-        "Refreshing", // kRefreshing (3)
-        "ToRemove",   // kToRemove   (4)
-        "Removing",   // kRemoving   (5)
-        "Registered", // kRegistered (6)
-        "Removed",    // kRemoved    (7)
-    };
+#define ItemStateMapList(_)      \
+    _(kToAdd, "ToAdd")           \
+    _(kAdding, "Adding")         \
+    _(kToRefresh, "ToRefresh")   \
+    _(kRefreshing, "Refreshing") \
+    _(kToRemove, "ToRemove")     \
+    _(kRemoving, "Removing")     \
+    _(kRegistered, "Registered") \
+    _(kRemoved, "Removed")
 
-    return kItemStateStrings[aState];
+    DefineEnumStringArray(ItemStateMapList);
+
+    return kStrings[aState];
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *Client::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Stopped",  // kStateStopped  (0)
-        "Paused",   // kStatePaused   (1)
-        "ToUpdate", // kStateToUpdate (2)
-        "Updating", // kStateUpdating (3)
-        "Updated",  // kStateUpdated  (4)
-        "ToRetry",  // kStateToRetry  (5)
-    };
+#define StateMapList(_)           \
+    _(kStateStopped, "Stopped")   \
+    _(kStatePaused, "Paused")     \
+    _(kStateToUpdate, "ToUpdate") \
+    _(kStateUpdating, "Updating") \
+    _(kStateUpdated, "Updated")   \
+    _(kStateToRetry, "ToRetry")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateStopped);
-        ValidateNextEnum(kStatePaused);
-        ValidateNextEnum(kStateToUpdate);
-        ValidateNextEnum(kStateUpdating);
-        ValidateNextEnum(kStateUpdated);
-        ValidateNextEnum(kStateToRetry);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 void Client::LogRetryWaitInterval(void) const

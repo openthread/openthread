@@ -31,8 +31,8 @@
  *   This file includes definitions for locator class for OpenThread objects.
  */
 
-#ifndef LOCATOR_HPP_
-#define LOCATOR_HPP_
+#ifndef OT_CORE_COMMON_LOCATOR_HPP_
+#define OT_CORE_COMMON_LOCATOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -46,6 +46,13 @@ class Instance;
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 extern uint64_t gInstanceRaw[];
+#endif
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+extern Instance *gActiveInstance;
+inline Instance *UpdateActiveInstance(Instance *aInstance) { return gActiveInstance = aInstance; }
+#else
+inline Instance *UpdateActiveInstance(Instance *aInstance) { return aInstance; }
 #endif
 
 /**
@@ -90,7 +97,7 @@ public:
      *
      * @returns A reference to the `Type` object of the instance.
      */
-    template <typename Type> inline Type &Get(void) const; // Implemented in `locator_getters.hpp`.
+    template <typename Type> inline Type &Get(void) const; // Implemented in `instance.hpp`.
 
 protected:
     GetProvider(void) = default;
@@ -117,7 +124,7 @@ public:
      * @returns A reference to the parent otInstance.
      */
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Instance &GetInstance(void) const { return *mInstance; }
+    Instance &GetInstance(void) const { return *UpdateActiveInstance(mInstance); }
 #else
     Instance &GetInstance(void) const { return GetSingleInstance(); }
 #endif
@@ -187,4 +194,4 @@ protected:
 
 } // namespace ot
 
-#endif // LOCATOR_HPP_
+#endif // OT_CORE_COMMON_LOCATOR_HPP_

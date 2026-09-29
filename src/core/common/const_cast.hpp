@@ -31,8 +31,8 @@
  *   This file includes helper methods to cast between const and non-const objects and/or pointers.
  */
 
-#ifndef CONST_CAST_HPP_
-#define CONST_CAST_HPP_
+#ifndef OT_CORE_COMMON_CONST_CAST_HPP_
+#define OT_CORE_COMMON_CONST_CAST_HPP_
 
 #include "openthread-core-config.h"
 
@@ -84,4 +84,4 @@ template <typename Type> Type *AsNonConst(const Type *aPointer) { return const_c
 
 } // namespace ot
 
-#endif // CONST_CAST_HPP_
+#endif // OT_CORE_COMMON_CONST_CAST_HPP_

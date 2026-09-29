@@ -32,8 +32,8 @@
  *   This file includes the platform-specific initializers.
  */
 
-#ifndef OT_PLATFORM_POSIX_H_
-#define OT_PLATFORM_POSIX_H_
+#ifndef OT_POSIX_PLATFORM_PLATFORM_POSIX_H_
+#define OT_POSIX_PLATFORM_PLATFORM_POSIX_H_
 
 #include "openthread-posix-config.h"
 
@@ -169,6 +169,16 @@ void platformRadioProcess(otInstance *aInstance, const otSysMainloopContext *aCo
  * Initializes the random number service used by OpenThread.
  */
 void platformRandomInit(void);
+
+/**
+ * Initializes the platform settings.
+ *
+ * @note This function is called before OpenThread instance is created.
+ *
+ * @param[in]  aDataPath           The data path to store setting files.
+ * @param[in]  aSettingsFileName   The fixed settings file base name, or nullptr to use EUI-64 based naming.
+ */
+void platformSettingsInit(const char *aDataPath, const char *aSettingsFileName);
 
 /**
  * Initializes the logging service used by OpenThread.
@@ -425,4 +435,4 @@ void platformCoprocessorResetFailed(void *aContext);
 #ifdef __cplusplus
 }
 #endif
-#endif // OT_PLATFORM_POSIX_H_
+#endif // OT_POSIX_PLATFORM_PLATFORM_POSIX_H_

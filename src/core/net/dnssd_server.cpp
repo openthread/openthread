@@ -352,7 +352,7 @@ Server::ResponseCode Server::Request::ParseQuestions(uint8_t aTestMode, bool &aS
         VerifyOrExit(!(aTestMode & kTestModeRejectMultiQuestionQuery));
         VerifyOrExit(!(aTestMode & kTestModeIgnoreMultiQuestionQuery), aShouldRespond = false);
 
-        VerifyOrExit(questionCount == 2);
+        VerifyOrExit(questionCount == kMaxQuestionCount);
 
         // Allow SRV and TXT questions for the same service
         // instance name in the same query.
@@ -1107,15 +1107,19 @@ exit:
 bool Server::ShouldForwardToUpstream(const Request &aRequest) const
 {
     bool         shouldForward = false;
+    uint16_t     questionCount = aRequest.mHeader.GetQuestionCount();
     uint16_t     readOffset;
     Name::Buffer name;
 
     VerifyOrExit(mEnableUpstreamQuery);
 
     VerifyOrExit(aRequest.mHeader.IsRecursionDesiredFlagSet());
+
+    VerifyOrExit((questionCount > 0) && (questionCount <= kMaxQuestionCount));
+
     readOffset = sizeof(Header);
 
-    for (uint16_t i = 0; i < aRequest.mHeader.GetQuestionCount(); i++)
+    for (uint16_t i = 0; i < questionCount; i++)
     {
         SuccessOrExit(Name::ReadName(*aRequest.mMessage, readOffset, name));
         readOffset += sizeof(Question);
@@ -1653,7 +1657,7 @@ void Server::ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error
     else
     {
         mCounters.mUpstreamDnsCounters.mFailures++;
-        LogWarn("Upstream query transaction %d closed: %s.", index, ErrorToString(aError));
+        LogWarnOnError(aError, "handle upstream query transaction %d", index);
     }
     aTxn.Reset();
 }

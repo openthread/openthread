@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Border Agent.
  */
 
-#ifndef CONFIG_BORDER_AGENT_H_
-#define CONFIG_BORDER_AGENT_H_
+#ifndef OT_CORE_CONFIG_BORDER_AGENT_H_
+#define OT_CORE_CONFIG_BORDER_AGENT_H_
 
 /**
  * @addtogroup config-border-agent
@@ -116,10 +116,22 @@
  * Per the Thread specification, the service instance should be a user-friendly name identifying the device model or
  * product. A recommended format is "VendorName ProductName".
  *
- * The name MUST have a length less than or equal to `OT_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME_MAX_LENGTH` (47 chars).
+ * The name MUST have a length less than or equal to `OT_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME_MAX_LENGTH`.
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME
-#define OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME "OpenThread BR (unspecified vendor) "
+#define OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME "OpenThread BR (unspecified vendor)"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+ *
+ * Define to 1 to enable the `otBorderAgentEvictActiveCommissioner()` API.
+ *
+ * This API provides a mechanism to evict the active Thread Commissioner from the network. This is primarily intended
+ * for administrative use to handle misbehaving or stale commissioner sessions.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE 0
 #endif
 
 /**
@@ -147,4 +159,4 @@
  * @}
  */
 
-#endif // CONFIG_BORDER_AGENT_H_
+#endif // OT_CORE_CONFIG_BORDER_AGENT_H_

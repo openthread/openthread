@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI interpreter.
  */
 
-#ifndef CLI_DATASET_HPP_
-#define CLI_DATASET_HPP_
+#ifndef OT_CLI_CLI_DATASET_HPP_
+#define OT_CLI_CLI_DATASET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -77,7 +77,7 @@ private:
     {
         int Compare(const char *aName) const { return strcmp(aName, mName); }
 
-        constexpr static bool AreInOrder(const ComponentMapper &aFirst, const ComponentMapper &aSecond)
+        static constexpr bool AreInOrder(const ComponentMapper &aFirst, const ComponentMapper &aSecond)
         {
             return AreStringsInOrder(aFirst.mName, aSecond.mName);
         }
@@ -92,7 +92,6 @@ private:
 
     void OutputActiveTimestamp(const otOperationalDataset &aDataset);
     void OutputChannel(const otOperationalDataset &aDataset);
-    void OutputWakeupChannel(const otOperationalDataset &aDataset);
     void OutputChannelMask(const otOperationalDataset &aDataset);
     void OutputDelay(const otOperationalDataset &aDataset);
     void OutputExtendedPanId(const otOperationalDataset &aDataset);
@@ -106,7 +105,6 @@ private:
 
     otError ParseActiveTimestamp(Arg *&aArgs, otOperationalDataset &aDataset);
     otError ParseChannel(Arg *&aArgs, otOperationalDataset &aDataset);
-    otError ParseWakeupChannel(Arg *&aArgs, otOperationalDataset &aDataset);
     otError ParseChannelMask(Arg *&aArgs, otOperationalDataset &aDataset);
     otError ParseDelay(Arg *&aArgs, otOperationalDataset &aDataset);
     otError ParseExtendedPanId(Arg *&aArgs, otOperationalDataset &aDataset);
@@ -141,4 +139,4 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_DATASET_HPP_
+#endif // OT_CLI_CLI_DATASET_HPP_

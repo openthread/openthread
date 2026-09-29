@@ -58,12 +58,41 @@ void NetworkNameTlv::SetNetworkName(const NameData &aNameData)
     SetLength(len);
 }
 
-bool NetworkNameTlv::IsValid(void) const { return IsValidUtf8String(mNetworkName, GetLength()); }
-
-void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
+bool NetworkNameTlv::IsValid(void) const
 {
-    aSteeringData.Init(GetSteeringDataLength());
-    memcpy(aSteeringData.GetData(), mSteeringData, GetSteeringDataLength());
+    bool isValid = false;
+
+#if OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
+    if (GetLength() == 0)
+    {
+        ExitNow(isValid = true);
+    }
+#endif
+
+    VerifyOrExit(IsValueInRange<uint8_t>(GetLength(), 1, NetworkName::kMaxSize));
+    VerifyOrExit(IsValidUtf8String(mNetworkName, GetLength()));
+    isValid = true;
+
+exit:
+    return isValid;
+}
+
+Error SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
+{
+    return aSteeringData.Init(GetSteeringDataLength(), mSteeringData);
+}
+
+Error SteeringDataTlv::FindIn(const Message &aMessage, SteeringData &aSteeringData)
+{
+    Error       error;
+    OffsetRange offsetRange;
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kSteeringData, offsetRange));
+    SuccessOrExit(error = aSteeringData.Init(ClampToUint8(offsetRange.GetLength())));
+    error = aMessage.Read(offsetRange, aSteeringData.GetData(), aSteeringData.GetLength());
+
+exit:
+    return error;
 }
 
 bool SecurityPolicyTlv::IsValid(void) const

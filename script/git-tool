@@ -65,7 +65,8 @@ try_clone()
         shift
         git clone "$@" 2>&1
     else
-        dest_dir="$(git clone "$@" 2>&1 | tee | cut -d\' -f2)"
+        dest_dir="$(LC_ALL=C git clone "$@" 2>&1 | tee /dev/stderr | sed -n "s/^Cloning into '\([^']*\)'.*/\1/p")"
+        dest_dir="${dest_dir%%$'\n'*}"
 
         cd "${dest_dir}"
         apply_dependencies

@@ -34,6 +34,7 @@
 #include "ip4_types.hpp"
 
 #include "common/numeric_limits.hpp"
+#include "common/offset_range.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -71,7 +72,7 @@ Error Address::ExtractFromIp4MappedIp6Address(const Ip6::Address &aIp6Address)
     Error error = kErrorNone;
 
     VerifyOrExit(aIp6Address.IsIp4Mapped(), error = kErrorParse);
-    SetBytes(&aIp6Address.GetBytes()[12]);
+    InitFrom(&aIp6Address.GetBytes()[12]);
 
 exit:
     return error;
@@ -208,10 +209,57 @@ Error Header::ParseFrom(const Message &aMessage)
     VerifyOrExit(IsValid());
     VerifyOrExit(GetTotalLength() == aMessage.GetLength());
 
+    if (GetIhl() > kMinIhl)
+    {
+        VerifyOrExit(!HasSourceRouteOption(aMessage));
+    }
+
     error = kErrorNone;
 
 exit:
     return error;
+}
+
+bool Header::HasSourceRouteOption(const Message &aMessage) const
+{
+    bool        hasSourceRoute = false;
+    uint16_t    headerLen      = GetHeaderLength();
+    OffsetRange range;
+
+    VerifyOrExit(headerLen <= aMessage.GetLength());
+    range.InitFromRange(sizeof(Header), headerLen);
+
+    while (!range.IsEmpty())
+    {
+        uint8_t optionType;
+        uint8_t optionLen;
+
+        SuccessOrExit(aMessage.ReadAndAdvance(range, optionType));
+
+        if (optionType == kOptionEnd)
+        {
+            break;
+        }
+
+        if (optionType == kOptionNop)
+        {
+            continue;
+        }
+
+        SuccessOrExit(aMessage.Read(range, optionLen));
+        VerifyOrExit(optionLen >= 2 && range.Contains(optionLen - 1));
+
+        if (optionType == kOptionLsrr || optionType == kOptionSsrr)
+        {
+            hasSourceRoute = true;
+            ExitNow();
+        }
+
+        range.AdvanceOffset(optionLen - 1);
+    }
+
+exit:
+    return hasSourceRoute;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -219,22 +267,25 @@ exit:
 
 Error Headers::ParseFrom(const Message &aMessage)
 {
-    Error error = kErrorParse;
+    Error    error = kErrorParse;
+    uint16_t headerLen;
 
     Clear();
 
     SuccessOrExit(mIp4Header.ParseFrom(aMessage));
 
+    headerLen = mIp4Header.GetHeaderLength();
+
     switch (mIp4Header.GetProtocol())
     {
     case kProtoUdp:
-        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mUdp));
+        SuccessOrExit(aMessage.Read(headerLen, mHeader.mUdp));
         break;
     case kProtoTcp:
-        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mTcp));
+        SuccessOrExit(aMessage.Read(headerLen, mHeader.mTcp));
         break;
     case kProtoIcmp:
-        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mIcmp));
+        SuccessOrExit(aMessage.Read(headerLen, mHeader.mIcmp));
         break;
     default:
         break;

@@ -73,10 +73,22 @@
 #include <ifaddrs.h>
 #ifdef __linux__
 #include <linux/if_addr.h>
+#include <linux/if_addrlabel.h>
 #include <linux/if_link.h>
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+
+#if !OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && \
+    (OPENTHREAD_POSIX_CONFIG_NETIF_LINK_LOCAL_ROUTE_METRIC || OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC)
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 18, 0)
+#error "Cannot set route metric on kernel < 4.18. " \
+    "Consider using OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE "\
+    "to install OMR routes with higher priority on kernel < 4.18"
+#endif // LINUX_VERSION_CODE >= KERNEL_VERSION(4, 18, 0)
+#endif
+
 #endif // __linux__
 #include <math.h>
 #include <net/if.h>
@@ -194,7 +206,14 @@ using namespace ot::Posix::Ip6Utils;
 #endif // OPENTHREAD_POSIX_TUN_DEVICE
 
 #ifdef __linux__
-static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
+static constexpr uint32_t kMeshLocalAddrLabel = 99;
+static uint32_t           sNetlinkSequence    = 0; ///< Netlink message sequence.
+static otMeshLocalPrefix  sLabeledMeshLocalPrefix;
+static bool               sIsMeshLocalPrefixLabeled = false;
+
+static void AddAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen, uint32_t aLabel);
+static void DeleteAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen);
+static void UpdateMeshLocalPrefixLabel(otInstance *aInstance);
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && defined(__linux__)
@@ -284,6 +303,12 @@ static bool sIsSyncingState = false;
 #define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
 
 static const char kLogModuleName[] = "Netif";
+
+static void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 static void LogCrit(const char *aFormat, ...)
 {
@@ -415,6 +440,238 @@ void AddRtAttrUint32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, 
     AddRtAttr(aHeader, aMaxLen, aType, &aData, sizeof(aData));
 }
 
+struct PendingNetlinkTxQueue
+{
+    static constexpr size_t kMaxBufferSize = 512;
+    static constexpr size_t kMaxEntries    = 16;
+
+    struct Entry
+    {
+        uint16_t mLength;
+        alignas(struct nlmsghdr) uint8_t mBuffer[kMaxBufferSize];
+    };
+
+    bool IsEmpty(void) const { return mCount == 0; }
+    bool IsFull(void) const { return mCount == kMaxEntries; }
+
+    void Clear(void)
+    {
+        mHead  = 0;
+        mCount = 0;
+    }
+
+    const Entry &Front(void) const { return mEntries[mHead]; }
+
+    void PopFront(void)
+    {
+        mHead = (mHead + 1) % kMaxEntries;
+        mCount--;
+    }
+
+    void PushBack(const void *aBuffer, size_t aLength)
+    {
+        Entry &entry = mEntries[(mHead + mCount) % kMaxEntries];
+
+        memcpy(entry.mBuffer, aBuffer, aLength);
+        entry.mLength = static_cast<uint16_t>(aLength);
+        mCount++;
+    }
+
+    Entry  mEntries[kMaxEntries];
+    size_t mHead  = 0;
+    size_t mCount = 0;
+};
+
+static PendingNetlinkTxQueue sPendingNetlinkTxQueue;
+
+static void ProcessPendingNetlinkTx(void)
+{
+    VerifyOrExit(sNetlinkFd >= 0);
+
+    while (!sPendingNetlinkTxQueue.IsEmpty())
+    {
+        const PendingNetlinkTxQueue::Entry &entry = sPendingNetlinkTxQueue.Front();
+        ssize_t                             rval;
+
+        do
+        {
+            rval = send(sNetlinkFd, entry.mBuffer, entry.mLength, 0);
+        } while (rval < 0 && errno == EINTR);
+
+        if (rval < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                ExitNow();
+            }
+
+            uint32_t seq = 0;
+
+            if (entry.mLength >= sizeof(struct nlmsghdr))
+            {
+                seq = reinterpret_cast<const struct nlmsghdr *>(entry.mBuffer)->nlmsg_seq;
+            }
+
+            LogWarn("Failed to send queued netlink message#%u: %s", seq, strerror(errno));
+        }
+
+        sPendingNetlinkTxQueue.PopFront();
+    }
+
+exit:
+    return;
+}
+
+static otError SendNetlinkMessage(const void *aBuffer, size_t aLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(aLength <= PendingNetlinkTxQueue::kMaxBufferSize, error = OT_ERROR_INVALID_ARGS);
+
+    ProcessPendingNetlinkTx();
+
+    if (sPendingNetlinkTxQueue.IsEmpty())
+    {
+        ssize_t rval;
+
+        do
+        {
+            rval = send(sNetlinkFd, aBuffer, aLength, 0);
+        } while (rval < 0 && errno == EINTR);
+
+        if (rval >= 0)
+        {
+            ExitNow();
+        }
+
+        if (errno != EAGAIN && errno != EWOULDBLOCK)
+        {
+            ExitNow(error = OT_ERROR_FAILED);
+        }
+    }
+
+    VerifyOrExit(!sPendingNetlinkTxQueue.IsFull(), error = OT_ERROR_BUSY);
+
+    sPendingNetlinkTxQueue.PushBack(aBuffer, aLength);
+
+exit:
+    return error;
+}
+
+struct PendingNetlinkRequest
+{
+    static constexpr size_t kMaxPayloadLen = 512;
+
+    PendingNetlinkRequest *mNext;
+    bool                   mInUse;
+    uint32_t               mSeq;
+    uint16_t               mType;
+    uint8_t                mRetryCount;
+    otIp6Address           mAddress;
+    uint8_t                mPrefixLength;
+    uint16_t               mPayloadLen;
+    alignas(struct nlmsghdr) uint8_t mPayload[kMaxPayloadLen];
+};
+
+static constexpr size_t       kMaxPendingNetlinkRequests = 16;
+static constexpr uint8_t      kMaxNetlinkRequestRetries  = 3;
+static PendingNetlinkRequest  sPendingNetlinkRequests[kMaxPendingNetlinkRequests];
+static PendingNetlinkRequest *sPendingNetlinkRequestsHead = nullptr;
+
+static void PushPendingNetlinkRequest(PendingNetlinkRequest &aRequest)
+{
+    aRequest.mInUse             = true;
+    aRequest.mNext              = sPendingNetlinkRequestsHead;
+    sPendingNetlinkRequestsHead = &aRequest;
+}
+
+static void ClearPendingNetlinkRequests(void)
+{
+    sPendingNetlinkRequestsHead = nullptr;
+
+    for (PendingNetlinkRequest &entry : sPendingNetlinkRequests)
+    {
+        entry.mInUse = false;
+        entry.mNext  = nullptr;
+    }
+}
+
+static void RecordPendingNetlinkRequest(uint32_t            aSeq,
+                                        uint16_t            aType,
+                                        const void         *aPayload,
+                                        size_t              aPayloadLen,
+                                        const otIp6Address *aAddress      = nullptr,
+                                        uint8_t             aPrefixLength = 0)
+{
+    PendingNetlinkRequest *entry = nullptr;
+
+    for (PendingNetlinkRequest &candidate : sPendingNetlinkRequests)
+    {
+        if (!candidate.mInUse)
+        {
+            entry = &candidate;
+            break;
+        }
+    }
+
+    if (entry == nullptr)
+    {
+        PendingNetlinkRequest **prev = &sPendingNetlinkRequestsHead;
+
+        while ((*prev)->mNext != nullptr)
+        {
+            prev = &(*prev)->mNext;
+        }
+
+        entry = *prev;
+        *prev = nullptr;
+        LogWarn("Pending netlink request queue full, evicting request#%u", entry->mSeq);
+    }
+
+    memset(entry, 0, sizeof(*entry));
+
+    entry->mSeq          = aSeq;
+    entry->mType         = aType;
+    entry->mRetryCount   = 0;
+    entry->mPrefixLength = aPrefixLength;
+    if (aAddress != nullptr)
+    {
+        entry->mAddress = *aAddress;
+    }
+
+    if (aPayloadLen <= sizeof(entry->mPayload))
+    {
+        entry->mPayloadLen = static_cast<uint16_t>(aPayloadLen);
+        memcpy(entry->mPayload, aPayload, aPayloadLen);
+    }
+    else
+    {
+        LogWarn("Netlink request payload too large to record (%zu bytes)", aPayloadLen);
+    }
+
+    PushPendingNetlinkRequest(*entry);
+}
+
+static PendingNetlinkRequest *RemovePendingNetlinkRequest(uint32_t aSeq)
+{
+    PendingNetlinkRequest *removed = nullptr;
+
+    for (PendingNetlinkRequest **prev = &sPendingNetlinkRequestsHead; *prev != nullptr; prev = &(*prev)->mNext)
+    {
+        if ((*prev)->mSeq == aSeq)
+        {
+            removed         = *prev;
+            *prev           = removed->mNext;
+            removed->mNext  = nullptr;
+            removed->mInUse = false;
+            break;
+        }
+    }
+
+    return removed;
+}
+
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
 static bool IsOmrAddress(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo)
 {
@@ -423,6 +680,94 @@ static bool IsOmrAddress(otInstance *aInstance, const otIp6AddressInfo &aAddress
     return otNetDataContainsOmrPrefix(aInstance, &addressPrefix);
 }
 #endif
+
+struct PendingRemoveAddress
+{
+    bool Matches(const otIp6AddressInfo &aAddressInfo) const
+    {
+        return (mPrefixLength == aAddressInfo.mPrefixLength) &&
+               (memcmp(&mAddress, aAddressInfo.mAddress, sizeof(otIp6Address)) == 0);
+    }
+
+    otIp6Address mAddress;
+    uint8_t      mPrefixLength;
+    uint8_t      mScope;
+};
+
+static constexpr size_t     kMaxPendingRemoveAddrs = 4;
+static PendingRemoveAddress sPendingRemoveAddrs[kMaxPendingRemoveAddrs];
+static size_t               sPendingRemoveAddrsCount = 0;
+
+static otError SendDeleteAddress(const PendingRemoveAddress &aAddress)
+{
+    otError error;
+    struct
+    {
+        struct nlmsghdr  nh;
+        struct ifaddrmsg ifa;
+        char             buf[512];
+    } req;
+
+    memset(&req, 0, sizeof(req));
+
+    req.nh.nlmsg_len   = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
+    req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
+    req.nh.nlmsg_type  = RTM_DELADDR;
+    req.nh.nlmsg_pid   = 0;
+    req.nh.nlmsg_seq   = ++sNetlinkSequence;
+
+    req.ifa.ifa_family    = AF_INET6;
+    req.ifa.ifa_prefixlen = aAddress.mPrefixLength;
+    req.ifa.ifa_flags     = IFA_F_NODAD;
+    req.ifa.ifa_scope     = aAddress.mScope;
+    req.ifa.ifa_index     = gNetifIndex;
+
+    AddRtAttr(&req.nh, sizeof(req), IFA_LOCAL, &aAddress.mAddress, sizeof(aAddress.mAddress));
+
+    // Route through `SendNetlinkMessage()` (rather than a raw `send()`) so that this delete is
+    // ordered against any add/replace for the same address still sitting in the pending netlink
+    // TX queue (e.g., due to a prior `EAGAIN`), instead of racing ahead of it.
+    error = SendNetlinkMessage(&req, req.nh.nlmsg_len);
+
+    if (error == OT_ERROR_NONE)
+    {
+        LogInfo("Sent request#%u to remove %s/%u", sNetlinkSequence, Ip6AddressString(&aAddress.mAddress).AsCString(),
+                aAddress.mPrefixLength);
+        RecordPendingNetlinkRequest(sNetlinkSequence, req.nh.nlmsg_type, &req, req.nh.nlmsg_len, &aAddress.mAddress,
+                                    aAddress.mPrefixLength);
+    }
+    else
+    {
+        LogWarn("Failed to send request#%u to remove %s/%u: %s", sNetlinkSequence,
+                Ip6AddressString(&aAddress.mAddress).AsCString(), aAddress.mPrefixLength, otThreadErrorToString(error));
+    }
+
+    return error;
+}
+
+static void FlushPendingRemoveAddresses(void)
+{
+    size_t remaining = 0;
+
+    for (size_t i = 0; i < sPendingRemoveAddrsCount; i++)
+    {
+        // `OT_ERROR_BUSY` (the pending netlink TX queue is full) is the only retryable outcome.
+        // Once hit, stop attempting later entries and instead keep this one and all subsequent
+        // entries pending for the next flush, so that a later removal can't end up queued ahead
+        // of this one once space frees up. Any other outcome (sent, or a non-retryable failure
+        // such as the netlink socket being unavailable) consumes the entry.
+        if (SendDeleteAddress(sPendingRemoveAddrs[i]) == OT_ERROR_BUSY)
+        {
+            for (; i < sPendingRemoveAddrsCount; i++)
+            {
+                sPendingRemoveAddrs[remaining++] = sPendingRemoveAddrs[i];
+            }
+            break;
+        }
+    }
+
+    sPendingRemoveAddrsCount = remaining;
+}
 
 static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
 {
@@ -436,11 +781,55 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
         char             buf[512];
     } req;
 
+    if (!aIsAdded)
+    {
+        // Defer deletion to give an immediate address property update (e.g., preferred status
+        // change) a chance to update the address in-place using NLM_F_REPLACE without route churn.
+        for (size_t i = 0; i < sPendingRemoveAddrsCount; i++)
+        {
+            if (sPendingRemoveAddrs[i].Matches(aAddressInfo))
+            {
+                ExitNow();
+            }
+        }
+
+        if (sPendingRemoveAddrsCount == kMaxPendingRemoveAddrs)
+        {
+            IgnoreError(SendDeleteAddress(sPendingRemoveAddrs[0]));
+            for (size_t i = 1; i < sPendingRemoveAddrsCount; i++)
+            {
+                sPendingRemoveAddrs[i - 1] = sPendingRemoveAddrs[i];
+            }
+            sPendingRemoveAddrsCount--;
+        }
+
+        sPendingRemoveAddrs[sPendingRemoveAddrsCount].mAddress      = *aAddressInfo.mAddress;
+        sPendingRemoveAddrs[sPendingRemoveAddrsCount].mPrefixLength = aAddressInfo.mPrefixLength;
+        sPendingRemoveAddrs[sPendingRemoveAddrsCount].mScope        = aAddressInfo.mScope;
+        sPendingRemoveAddrsCount++;
+
+        ExitNow();
+    }
+
+    // Check if this address was queued for pending removal and cancel it to update in-place.
+    for (size_t i = 0; i < sPendingRemoveAddrsCount; i++)
+    {
+        if (sPendingRemoveAddrs[i].Matches(aAddressInfo))
+        {
+            for (size_t j = i + 1; j < sPendingRemoveAddrsCount; j++)
+            {
+                sPendingRemoveAddrs[j - 1] = sPendingRemoveAddrs[j];
+            }
+            sPendingRemoveAddrsCount--;
+            break;
+        }
+    }
+
     memset(&req, 0, sizeof(req));
 
     req.nh.nlmsg_len   = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
-    req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | (aIsAdded ? (NLM_F_CREATE | NLM_F_EXCL) : 0);
-    req.nh.nlmsg_type  = aIsAdded ? RTM_NEWADDR : RTM_DELADDR;
+    req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_REPLACE;
+    req.nh.nlmsg_type  = RTM_NEWADDR;
     req.nh.nlmsg_pid   = 0;
     req.nh.nlmsg_seq   = ++sNetlinkSequence;
 
@@ -452,12 +841,12 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 
     AddRtAttr(&req.nh, sizeof(req), IFA_LOCAL, aAddressInfo.mAddress, sizeof(*aAddressInfo.mAddress));
 
-    if (!aAddressInfo.mPreferred || aAddressInfo.mMeshLocal || aAddressInfo.mScope == kLinkLocalScope)
     {
         struct ifa_cacheinfo cacheinfo;
 
         memset(&cacheinfo, 0, sizeof(cacheinfo));
-        cacheinfo.ifa_valid = UINT32_MAX;
+        cacheinfo.ifa_valid    = UINT32_MAX;
+        cacheinfo.ifa_prefered = (aAddressInfo.mPreferred && aAddressInfo.mScope != kLinkLocalScope) ? UINT32_MAX : 0;
 
         AddRtAttr(&req.nh, sizeof(req), IFA_CACHEINFO, &cacheinfo, sizeof(cacheinfo));
     }
@@ -467,10 +856,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
     {
         // Remove prefix route for OMR address if `OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE` is enabled to
         // avoid having two routes.
-        if (aIsAdded)
-        {
-            AddRtAttrUint32(&req.nh, sizeof(req), IFA_FLAGS, IFA_F_NOPREFIXROUTE);
-        }
+        AddRtAttrUint32(&req.nh, sizeof(req), IFA_FLAGS, IFA_F_NOPREFIXROUTE);
     }
     else
 #endif
@@ -495,16 +881,21 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 #endif
     }
 
-    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
+    if (SendNetlinkMessage(&req, req.nh.nlmsg_len) == OT_ERROR_NONE)
     {
-        LogInfo("Sent request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
+        LogInfo("Sent request#%u to add/replace %s/%u", sNetlinkSequence,
                 Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
+        RecordPendingNetlinkRequest(sNetlinkSequence, req.nh.nlmsg_type, &req, req.nh.nlmsg_len, aAddressInfo.mAddress,
+                                    aAddressInfo.mPrefixLength);
     }
     else
     {
-        LogWarn("Failed to send request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
+        LogWarn("Failed to send request#%u to add/replace %s/%u", sNetlinkSequence,
                 Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
     }
+
+exit:
+    return;
 }
 
 #pragma GCC diagnostic pop
@@ -686,15 +1077,17 @@ template <size_t N> otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPref
 
     inet_ntop(req.msg.rtm_family, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+    if (error != OT_ERROR_NONE)
     {
-        LogInfo("Failed to send request#%u to add route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
-        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
-        DieNow(OT_EXIT_ERROR_ERRNO);
+        LogInfo("Failed to send request#%u to add route %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
+                otThreadErrorToString(error));
+        ExitNow();
     }
     else
     {
         LogInfo("Sent request#%u to add route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
+        RecordPendingNetlinkRequest(sNetlinkSequence, req.header.nlmsg_type, &req, req.header.nlmsg_len);
     }
 exit:
     return error;
@@ -740,22 +1133,156 @@ template <size_t N> otError DeleteRoute(const uint8_t (&aAddress)[N], uint8_t aP
 
     inet_ntop(req.msg.rtm_family, aAddress, addrStrBuf, sizeof(addrStrBuf));
 
-    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+    if (error != OT_ERROR_NONE)
     {
-        LogInfo("Failed to send request#%u to delete route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
-        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
-        DieNow(OT_EXIT_ERROR_ERRNO);
+        LogInfo("Failed to send request#%u to delete route %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
+                otThreadErrorToString(error));
+        ExitNow();
     }
     else
     {
         LogInfo("Sent request#%u to delete route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
+        RecordPendingNetlinkRequest(sNetlinkSequence, req.header.nlmsg_type, &req, req.header.nlmsg_len);
     }
 
 exit:
     return error;
 }
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#ifdef __linux__
+static void AddAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen, uint32_t aLabel)
+{
+    constexpr unsigned int kBufSize = 128;
+    struct
+    {
+        struct nlmsghdr     header;
+        struct ifaddrlblmsg msg;
+        char                buf[kBufSize];
+    } req{};
+    unsigned int netifIdx = otSysGetThreadNetifIndex();
+    char         addrStrBuf[INET6_ADDRSTRLEN];
+    otError      error;
+
+    VerifyOrExit(netifIdx > 0);
+    VerifyOrExit(sNetlinkFd >= 0);
+
+    req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
+
+    req.header.nlmsg_len  = NLMSG_LENGTH(sizeof(ifaddrlblmsg));
+    req.header.nlmsg_type = RTM_NEWADDRLABEL;
+    req.header.nlmsg_pid  = 0;
+    req.header.nlmsg_seq  = ++sNetlinkSequence;
+
+    req.msg.ifal_family    = AF_INET6;
+    req.msg.ifal_prefixlen = aPrefixLen;
+    req.msg.ifal_flags     = 0;
+    req.msg.ifal_index     = netifIdx;
+    req.msg.ifal_seq       = 0;
+
+    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), IFAL_ADDRESS, aAddress, 16);
+    AddRtAttrUint32(&req.header, sizeof(req), IFAL_LABEL, aLabel);
+
+    inet_ntop(AF_INET6, aAddress, addrStrBuf, sizeof(addrStrBuf));
+
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+
+    if (error != OT_ERROR_NONE)
+    {
+        LogWarn("Failed to send request#%u to add address label %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
+                otThreadErrorToString(error));
+    }
+    else
+    {
+        LogInfo("Sent request#%u to add address label %s/%u with label %u", sNetlinkSequence, addrStrBuf, aPrefixLen,
+                aLabel);
+        RecordPendingNetlinkRequest(sNetlinkSequence, req.header.nlmsg_type, &req, req.header.nlmsg_len);
+    }
+exit:
+    return;
+}
+
+static void DeleteAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen)
+{
+    constexpr unsigned int kBufSize = 128;
+    struct
+    {
+        struct nlmsghdr     header;
+        struct ifaddrlblmsg msg;
+        char                buf[kBufSize];
+    } req{};
+    unsigned int netifIdx = otSysGetThreadNetifIndex();
+    char         addrStrBuf[INET6_ADDRSTRLEN];
+    otError      error;
+
+    VerifyOrExit(netifIdx > 0);
+    VerifyOrExit(sNetlinkFd >= 0);
+
+    req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
+
+    req.header.nlmsg_len  = NLMSG_LENGTH(sizeof(ifaddrlblmsg));
+    req.header.nlmsg_type = RTM_DELADDRLABEL;
+    req.header.nlmsg_pid  = 0;
+    req.header.nlmsg_seq  = ++sNetlinkSequence;
+
+    req.msg.ifal_family    = AF_INET6;
+    req.msg.ifal_prefixlen = aPrefixLen;
+    req.msg.ifal_flags     = 0;
+    req.msg.ifal_index     = netifIdx;
+    req.msg.ifal_seq       = 0;
+
+    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), IFAL_ADDRESS, aAddress, 16);
+
+    inet_ntop(AF_INET6, aAddress, addrStrBuf, sizeof(addrStrBuf));
+
+    error = SendNetlinkMessage(&req, req.header.nlmsg_len);
+
+    if (error != OT_ERROR_NONE)
+    {
+        LogWarn("Failed to send request#%u to delete address label %s/%u: %s", sNetlinkSequence, addrStrBuf, aPrefixLen,
+                otThreadErrorToString(error));
+    }
+    else
+    {
+        LogInfo("Sent request#%u to delete address label %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
+        RecordPendingNetlinkRequest(sNetlinkSequence, req.header.nlmsg_type, &req, req.header.nlmsg_len);
+    }
+exit:
+    return;
+}
+
+static void UpdateMeshLocalPrefixLabel(otInstance *aInstance)
+{
+    const otMeshLocalPrefix *prefix = otIp6IsEnabled(aInstance) ? otThreadGetMeshLocalPrefix(aInstance) : nullptr;
+    otIp6Address             address;
+
+    VerifyOrExit(prefix == nullptr || !sIsMeshLocalPrefixLabeled ||
+                 memcmp(&sLabeledMeshLocalPrefix, prefix, sizeof(otMeshLocalPrefix)) != 0);
+
+    if (sIsMeshLocalPrefixLabeled)
+    {
+        memset(&address, 0, sizeof(address));
+        memcpy(address.mFields.m8, sLabeledMeshLocalPrefix.m8, sizeof(sLabeledMeshLocalPrefix));
+        DeleteAddressLabel(address.mFields.m8, 64);
+        sIsMeshLocalPrefixLabeled = false;
+    }
+
+    if (prefix != nullptr)
+    {
+        memset(&address, 0, sizeof(address));
+        memcpy(address.mFields.m8, prefix->m8, sizeof(*prefix));
+        AddAddressLabel(address.mFields.m8, 64, kMeshLocalAddrLabel);
+        sLabeledMeshLocalPrefix   = *prefix;
+        sIsMeshLocalPrefixLabeled = true;
+    }
+
+exit:
+    return;
+}
+#endif // __linux__
+
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE || \
+    OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
 {
     return AddRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength, aPriority);
@@ -765,7 +1292,7 @@ static otError DeleteRoute(const otIp6Prefix &aPrefix)
 {
     return DeleteRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength);
 }
-#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#endif
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
 static bool HasAddedOmrRoute(const otIp6Prefix &aOmrPrefix)
@@ -943,7 +1470,7 @@ exit:
 }
 #endif // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static otError AddIp4Route(const otIp4Cidr &aIp4Cidr, uint32_t aPriority)
 {
     return AddRoute(aIp4Cidr.mAddress.mFields.m8, aIp4Cidr.mLength, aPriority);
@@ -970,7 +1497,10 @@ static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsA
 
 #if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
-static otIp4Cidr sActiveNat64Cidr;
+static otIp4Cidr   sActiveNat64Cidr;
+static otIp6Prefix sActiveNat64Ip6Prefix;
+static bool        sIsNat64Ip4RouteAdded = false;
+static bool        sIsNat64Ip6RouteAdded = false;
 
 static constexpr uint32_t kNat64RoutePriority = 100; // Priority for route to NAT64 CIDR, 100 means a high priority.
 
@@ -979,6 +1509,7 @@ static bool isSameIp4Cidr(const otIp4Cidr &aCidr1, const otIp4Cidr &aCidr2)
     bool res = true;
 
     VerifyOrExit(aCidr1.mLength == aCidr2.mLength, res = false);
+    VerifyOrExit(aCidr1.mLength > 0);
 
     // The higher (32 - length) bits must be the same, host bits are ignored.
     VerifyOrExit(((ntohl(aCidr1.mAddress.mFields.m32) ^ ntohl(aCidr2.mAddress.mFields.m32)) >> (32 - aCidr1.mLength)) ==
@@ -989,50 +1520,127 @@ exit:
     return res;
 }
 
+static void addNat64Routes(void)
+{
+    otError error;
+
+    if (!sIsNat64Ip4RouteAdded && sActiveNat64Cidr.mLength > 0)
+    {
+        if ((error = AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority)) != OT_ERROR_NONE)
+        {
+            LogWarn("failed to add route for NAT64 CIDR: %s", otThreadErrorToString(error));
+        }
+        else
+        {
+            sIsNat64Ip4RouteAdded = true;
+            LogInfo("Added route for NAT64 CIDR");
+        }
+    }
+
+    // Route the NAT64 prefix into the Thread network interface, so that traffic
+    // originated by the host to NAT64-synthesized addresses reaches the translator.
+    if (!sIsNat64Ip6RouteAdded && sActiveNat64Ip6Prefix.mLength > 0)
+    {
+        if ((error = AddRoute(sActiveNat64Ip6Prefix, kNat64RoutePriority)) != OT_ERROR_NONE)
+        {
+            LogWarn("failed to add route for NAT64 prefix: %s", otThreadErrorToString(error));
+        }
+        else
+        {
+            sIsNat64Ip6RouteAdded = true;
+            LogInfo("Added route for NAT64 prefix");
+        }
+    }
+}
+
+static void deleteNat64Ip4Route(void)
+{
+    otError error;
+
+    VerifyOrExit(sIsNat64Ip4RouteAdded);
+
+    if ((error = DeleteIp4Route(sActiveNat64Cidr)) != OT_ERROR_NONE)
+    {
+        LogWarn("failed to delete route for NAT64 CIDR: %s", otThreadErrorToString(error));
+    }
+    else
+    {
+        LogInfo("Deleted route for NAT64 CIDR");
+    }
+
+    sIsNat64Ip4RouteAdded = false;
+
+exit:
+    return;
+}
+
+static void deleteNat64Ip6Route(void)
+{
+    otError error;
+
+    VerifyOrExit(sIsNat64Ip6RouteAdded);
+
+    if ((error = DeleteRoute(sActiveNat64Ip6Prefix)) != OT_ERROR_NONE)
+    {
+        LogWarn("failed to delete route for NAT64 prefix: %s", otThreadErrorToString(error));
+    }
+    else
+    {
+        LogInfo("Deleted route for NAT64 prefix");
+    }
+
+    sIsNat64Ip6RouteAdded = false;
+
+exit:
+    return;
+}
+
 static void processNat64StateChange(void)
 {
-    otIp4Cidr translatorCidr;
-    otError   error = OT_ERROR_NONE;
+    otIp4Cidr   translatorCidr;
+    otIp6Prefix translatorIp6Prefix;
 
-    // Skip if NAT64 translator has not been configured with a CIDR.
-    SuccessOrExit(otNat64GetCidr(gInstance, &translatorCidr));
+    if (otNat64GetCidr(gInstance, &translatorCidr) != OT_ERROR_NONE)
+    {
+        memset(&translatorCidr, 0, sizeof(translatorCidr));
+    }
 
     if (!isSameIp4Cidr(translatorCidr, sActiveNat64Cidr)) // Someone sets a new CIDR for NAT64.
     {
         char cidrString[OT_IP4_CIDR_STRING_SIZE];
 
-        if (sActiveNat64Cidr.mLength != 0)
-        {
-            if ((error = DeleteIp4Route(sActiveNat64Cidr)) != OT_ERROR_NONE)
-            {
-                LogWarn("failed to delete route for NAT64: %s", otThreadErrorToString(error));
-            }
-        }
+        deleteNat64Ip4Route(); // Delete the route of the previous CIDR, if any.
         sActiveNat64Cidr = translatorCidr;
 
-        otIp4CidrToString(&translatorCidr, cidrString, sizeof(cidrString));
+        otIp4CidrToString(&sActiveNat64Cidr, cidrString, sizeof(cidrString));
         LogInfo("NAT64 CIDR updated to %s.", cidrString);
+    }
+
+    if (otNat64GetIp6Prefix(gInstance, &translatorIp6Prefix) != OT_ERROR_NONE)
+    {
+        memset(&translatorIp6Prefix, 0, sizeof(translatorIp6Prefix));
+    }
+
+    if (!otIp6ArePrefixesEqual(&translatorIp6Prefix, &sActiveNat64Ip6Prefix)) // The NAT64 prefix changed.
+    {
+        char prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+        deleteNat64Ip6Route(); // Delete the route of the previous prefix, if any.
+        sActiveNat64Ip6Prefix = translatorIp6Prefix;
+
+        otIp6PrefixToString(&sActiveNat64Ip6Prefix, prefixString, sizeof(prefixString));
+        LogInfo("NAT64 prefix updated to %s.", prefixString);
     }
 
     if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
     {
-        if ((error = AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority)) != OT_ERROR_NONE)
-        {
-            LogWarn("failed to add route for NAT64: %s", otThreadErrorToString(error));
-        }
-        LogInfo("Adding route for NAT64");
+        addNat64Routes();
     }
-    else if (sActiveNat64Cidr.mLength > 0) // Translator is not active.
+    else // Translator is not active.
     {
-        if ((error = DeleteIp4Route(sActiveNat64Cidr)) != OT_ERROR_NONE)
-        {
-            LogWarn("failed to delete route for NAT64: %s", otThreadErrorToString(error));
-        }
-        LogInfo("Deleting route for NAT64");
+        deleteNat64Ip4Route();
+        deleteNat64Ip6Route();
     }
-
-exit:
-    return;
 }
 #endif // defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
@@ -1042,6 +1650,12 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
     {
         UpdateLink(aInstance);
     }
+#ifdef __linux__
+    if ((OT_CHANGED_THREAD_NETIF_STATE | OT_CHANGED_THREAD_ML_ADDR) & aFlags)
+    {
+        UpdateMeshLocalPrefixLabel(aInstance);
+    }
+#endif
     if (OT_CHANGED_THREAD_NETDATA & aFlags)
     {
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && defined(__linux__)
@@ -1165,7 +1779,7 @@ static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *da
     otDumpInfoPlat("", data, static_cast<size_t>(length));
 #endif
 
-    raLength = length + (ra - data);
+    raLength = length - (ra - data);
     otPlatBorderRoutingProcessIcmp6Ra(aInstance, ra, raLength);
 
 exit:
@@ -1216,10 +1830,14 @@ static void processTransmit(otInstance *aInstance)
 {
     otMessage *message = nullptr;
     ssize_t    rval;
-    char       packet[kMaxIp6Size];
-    otError    error  = OT_ERROR_NONE;
-    size_t     offset = 0;
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    char packet[kMaxIp6Size + 4]; // the tunnel header (below) is not part of the datagram
+#else
+    char packet[kMaxIp6Size];
+#endif
+    otError error  = OT_ERROR_NONE;
+    size_t  offset = 0;
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     bool isIp4 = false;
 #endif
 
@@ -1452,14 +2070,22 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         LogInfo("Succeeded to sync netif state with host");
     }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (isUp && otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    if (isUp)
     {
-        // Recover NAT64 route.
-        if ((error = AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority)) != OT_ERROR_NONE)
+        if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
         {
-            LogWarn("failed to add route for NAT64: %s", otThreadErrorToString(error));
+            // Recover the NAT64 routes. This is a no-op for routes that are
+            // already installed.
+            addNat64Routes();
         }
+    }
+    else
+    {
+        // The kernel removes the routes of an interface that goes down, so
+        // track them as no longer installed without issuing netlink requests.
+        sIsNat64Ip4RouteAdded = false;
+        sIsNat64Ip6RouteAdded = false;
     }
 #endif
 
@@ -1727,13 +2353,17 @@ exit:
 // | ** optionally (2) extended ACK attrs       |
 // ----------------------------------------------
 //
-static void HandleNetlinkResponse(struct nlmsghdr *msg)
+static void HandleNetlinkResponse(otInstance *aInstance, struct nlmsghdr *msg)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     const struct nlmsgerr *err;
     const char            *errorMsg;
     size_t                 rtaLength;
     size_t                 requestPayloadLength = 0;
-    uint32_t               requestSeq           = 0;
+    uint32_t               requestSeq           = msg->nlmsg_seq;
+    PendingNetlinkRequest *pending              = nullptr;
+    int                    errCode              = 0;
 
     if (msg->nlmsg_len < NLMSG_LENGTH(sizeof(struct nlmsgerr)))
     {
@@ -1741,8 +2371,8 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
         ExitNow();
     }
 
-    err        = reinterpret_cast<const nlmsgerr *>(NLMSG_DATA(msg));
-    requestSeq = err->msg.nlmsg_seq;
+    err     = reinterpret_cast<const nlmsgerr *>(NLMSG_DATA(msg));
+    pending = RemovePendingNetlinkRequest(requestSeq);
 
     if (err->error == 0)
     {
@@ -1752,7 +2382,8 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
 
     // For rtnetlink, `abs(err->error)` maps to values of `errno`.
     // But this is not a requirement in RFC 3549.
-    errorMsg = strerror(abs(err->error));
+    errCode  = abs(err->error);
+    errorMsg = strerror(errCode);
 
     // The payload of the request is omitted if NLM_F_CAPPED is set
     if (!(msg->nlmsg_flags & NLM_F_CAPPED))
@@ -1780,7 +2411,91 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
         }
     }
 
-    LogWarn("Failed to process request#%u: %s", requestSeq, errorMsg);
+    if (pending != nullptr)
+    {
+        bool isIdempotent = false;
+
+        switch (pending->mType)
+        {
+        case RTM_NEWADDR:
+            isIdempotent = (errCode == EEXIST);
+            break;
+
+        case RTM_DELADDR:
+            isIdempotent = (errCode == EADDRNOTAVAIL || errCode == ENOENT);
+            break;
+
+        case RTM_NEWROUTE:
+            isIdempotent = (errCode == EEXIST);
+            break;
+
+        case RTM_DELROUTE:
+            isIdempotent = (errCode == ESRCH || errCode == ENOENT);
+            break;
+
+        case RTM_NEWADDRLABEL:
+            isIdempotent = (errCode == EEXIST);
+            break;
+
+        case RTM_DELADDRLABEL:
+            isIdempotent = (errCode == ENOENT || errCode == ESRCH);
+            break;
+
+        default:
+            break;
+        }
+
+        if (isIdempotent)
+        {
+            LogInfo("Netlink request#%u (type %u) completed with idempotent code %d (%s), treating as success",
+                    requestSeq, pending->mType, errCode, errorMsg);
+            ExitNow();
+        }
+
+        if ((errCode == EBUSY || errCode == EAGAIN) && pending->mRetryCount < kMaxNetlinkRequestRetries &&
+            pending->mPayloadLen >= sizeof(struct nlmsghdr))
+        {
+            uint32_t         oldSeq = pending->mSeq;
+            struct nlmsghdr *reqHdr = reinterpret_cast<struct nlmsghdr *>(pending->mPayload);
+            otError          error;
+
+            pending->mRetryCount++;
+            pending->mSeq     = ++sNetlinkSequence;
+            reqHdr->nlmsg_seq = pending->mSeq;
+
+            LogInfo("Retrying netlink request#%u as #%u (attempt %u/%u) after transient error %d: %s", oldSeq,
+                    pending->mSeq, pending->mRetryCount, kMaxNetlinkRequestRetries, errCode, errorMsg);
+
+            error = SendNetlinkMessage(pending->mPayload, pending->mPayloadLen);
+
+            if (error == OT_ERROR_NONE)
+            {
+                PushPendingNetlinkRequest(*pending);
+            }
+            else
+            {
+                LogWarn("Failed to re-send netlink request#%u: %s", pending->mSeq, otThreadErrorToString(error));
+            }
+            ExitNow();
+        }
+
+        LogWarn("Failed to process request#%u (type %u): %s (errno %d)", requestSeq, pending->mType, errorMsg, errCode);
+
+        if (pending->mType == RTM_NEWADDR)
+        {
+            LogWarn("Host netif failed to configure IPv6 address %s/%u",
+                    Ip6AddressString(&pending->mAddress).AsCString(), pending->mPrefixLength);
+        }
+        else if (pending->mType == RTM_DELADDR)
+        {
+            LogWarn("Host netif failed to remove IPv6 address %s/%u", Ip6AddressString(&pending->mAddress).AsCString(),
+                    pending->mPrefixLength);
+        }
+    }
+    else
+    {
+        LogWarn("Failed to process request#%u: %s", requestSeq, errorMsg);
+    }
 
 exit:
     return;
@@ -1866,7 +2581,7 @@ static void processNetlinkEvent(otInstance *aInstance)
 
 #else
         case NLMSG_ERROR:
-            HandleNetlinkResponse(msg);
+            HandleNetlinkResponse(aInstance, msg);
             break;
 #endif
 
@@ -2017,7 +2732,7 @@ static void SetAddrGenModeToNone(void)
         afSpec->rta_len += afInet6->rta_len;
     }
 
-    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
+    if (SendNetlinkMessage(&req, req.nh.nlmsg_len) == OT_ERROR_NONE)
     {
         LogInfo("Sent request#%u to set addr_gen_mode to %d", sNetlinkSequence, mode);
     }
@@ -2033,7 +2748,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     struct ifreq ifr;
     const char  *interfaceName;
 
-    sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+    sTunFd = open(aPlatformConfig->mTunDevice, O_RDWR | O_CLOEXEC | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifr, 0, sizeof(ifr));
@@ -2134,9 +2849,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     const char *last_slash;
     const char *path;
 
-    (void)aPlatformConfig;
-
-    path = OPENTHREAD_POSIX_TUN_DEVICE;
+    path = aPlatformConfig->mTunDevice;
 
     sTunFd = open(path, O_RDWR | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -2150,7 +2863,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     err   = ioctl(sTunFd, TUNSIFHEAD, &flags);
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
-    last_slash = strrchr(OPENTHREAD_POSIX_TUN_DEVICE, '/');
+    last_slash = strrchr(path, '/');
     VerifyOrDie(last_slash != nullptr, OT_EXIT_ERROR_ERRNO);
     last_slash++;
 
@@ -2234,6 +2947,15 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     (void)LogNote;
     (void)LogDebg;
 
+#if defined(__linux__) || defined(__NetBSD__) ||                                                       \
+    (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
+    defined(__FreeBSD__)
+    if (aPlatformConfig->mTunDevice == nullptr)
+    {
+        aPlatformConfig->mTunDevice = OPENTHREAD_POSIX_TUN_DEVICE;
+    }
+#endif
+
     sIpFd = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
@@ -2300,6 +3022,10 @@ void platformNetifTearDown(void) {}
 
 void platformNetifDeinit(void)
 {
+#ifdef __linux__
+    FlushPendingRemoveAddresses();
+#endif
+
     if (sTunFd != -1)
     {
         close(sTunFd);
@@ -2322,6 +3048,12 @@ void platformNetifDeinit(void)
         sNetlinkFd = -1;
     }
 
+#ifdef __linux__
+    sPendingNetlinkTxQueue.Clear();
+    ClearPendingNetlinkRequests();
+    sPendingRemoveAddrsCount = 0;
+#endif
+
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     if (sMLDMonitorFd != -1)
     {
@@ -2337,6 +3069,10 @@ void platformNetifUpdateFdSet(ot::Posix::Mainloop::Context *aContext)
 {
     VerifyOrExit(gNetifIndex > 0);
 
+#ifdef __linux__
+    FlushPendingRemoveAddresses();
+#endif
+
     assert(aContext != nullptr);
     assert(sTunFd >= 0);
     assert(sNetlinkFd >= 0);
@@ -2346,6 +3082,12 @@ void platformNetifUpdateFdSet(ot::Posix::Mainloop::Context *aContext)
     ot::Posix::Mainloop::AddToErrorFdSet(sTunFd, *aContext);
     ot::Posix::Mainloop::AddToReadFdSet(sNetlinkFd, *aContext);
     ot::Posix::Mainloop::AddToErrorFdSet(sNetlinkFd, *aContext);
+#ifdef __linux__
+    if (!sPendingNetlinkTxQueue.IsEmpty())
+    {
+        ot::Posix::Mainloop::AddToWriteFdSet(sNetlinkFd, *aContext);
+    }
+#endif
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     ot::Posix::Mainloop::AddToReadFdSet(sMLDMonitorFd, *aContext);
     ot::Posix::Mainloop::AddToErrorFdSet(sMLDMonitorFd, *aContext);
@@ -2389,6 +3131,19 @@ void platformNetifProcess(const ot::Posix::Mainloop::Context *aContext)
     {
         processNetlinkEvent(gInstance);
     }
+
+#ifdef __linux__
+    if (ot::Posix::Mainloop::IsFdWritable(sNetlinkFd, *aContext))
+    {
+        // Flush after `ProcessPendingNetlinkTx()` so any queue space it just freed up is used
+        // immediately, rather than flushing first and failing on a queue that's still full from
+        // before `select()` was called. Both calls are gated on the fd actually being writable so
+        // a wakeup for an unrelated fd doesn't uselessly retry (and fail) against a socket that
+        // select() already told us isn't ready.
+        ProcessPendingNetlinkTx();
+        FlushPendingRemoveAddresses();
+    }
+#endif
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     if (ot::Posix::Mainloop::IsFdReadable(sMLDMonitorFd, *aContext))
