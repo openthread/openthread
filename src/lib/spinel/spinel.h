@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 11
+#define SPINEL_RCP_API_VERSION 13
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -3463,7 +3463,17 @@ enum
      * The frame meta data for the `CMD_PROP_VALUE_SET` contains the following
      * fields.  Default values are used for all unspecified fields.
      *
-     *  `C` : Channel (for frame tx) - MUST be included.
+     *  `C` : Channel (for frame tx) - MUST be included. When burst is enabled
+     *        (`BurstCount > 0`) with a non-zero `BurstChannelMask`, frames
+     *        are transmitted on the channels in `BurstChannelMask` instead,
+     *        and this field specifies the channel the node stays on after
+     *        each burst tick: if `RxChannelAfterTxDone` is omitted, it
+     *        defaults to this field; if `RxChannelAfterTxDone` is present,
+     *        it MUST be equal to this field, otherwise the request is
+     *        rejected with `SPINEL_STATUS_INVALID_ARGUMENT`. Keeping the two
+     *        equal lets the host track the channel the RCP is actually on, so
+     *        the host does not issue a channel change (which cancels the
+     *        burst).
      *  `C` : Maximum number of backoffs attempts before declaring CCA failure
      *        (use Thread stack default if not specified)
      *  `C` : Maximum number of retries allowed after a transmission failure
@@ -3482,6 +3492,53 @@ enum
      *        in `otRadioFrame` (default zero).
      *  `C` : RX channel after TX done (default assumed to be same as
      *        channel in metadata)
+     *  `c` : TX power in dBm (default `OT_RADIO_POWER_INVALID`).
+     *  `t(SSL)` : Optional burst configuration struct (if omitted or empty,
+     *             no burst occurs):
+     *    `S` : Total number of scheduled burst ticks/periods (`BurstCount`,
+     *          default zero; if omitted or zero, no burst occurs and remaining
+     *          fields in the struct are ignored).
+     *    `S` : Burst repeat period in 625 us slot units (`BurstPeriod`,
+     *          default zero for continuous back-to-back burst ticks). When
+     *          `BurstPeriod > 0`, ticks are anchored on the RCP radio clock to
+     *          periodic slots spaced by `BurstPeriod * 625` us, starting from
+     *          the target TX time (if specified) or from the time the RCP
+     *          receives the request. A slot whose start time is not in the
+     *          future when the tick would start (e.g., the previous tick's
+     *          multi-channel sweep and/or CSMA-CA backoffs overran it) is
+     *          skipped rather than transmitted late.
+     *    `L` : 2.4 GHz IEEE 802.15.4 channel bitmask for multi-channel burst
+     *          transmission (`BurstChannelMask`, `Bits 11..26` = Channels
+     *          `11..26`). If omitted or zero, transmits on the top-level
+     *          `Channel` field. If non-zero, supersedes the top-level
+     *          `Channel` field for TX: within each tick, the first channel
+     *          uses the scheduled target TX time (if specified), and remaining
+     *          channels clear target TX time (`mTxDelay` and
+     *          `mTxDelayBaseTime` set to `0`) so each channel transmits
+     *          immediately with normal CSMA-CA behavior.
+     *
+     * Burst behavior with a target TX time (`mTxDelay` or `mTxDelayBaseTime`
+     * non-zero):
+     *  - The first slot is the target TX time. If it is already in the past,
+     *    it is treated as missed and the burst starts from the next slot in
+     *    the future (for `BurstPeriod == 0`, the remaining ticks are sent
+     *    back-to-back). If no slot remains, the request fails immediately
+     *    with `SPINEL_STATUS_INVALID_ARGUMENT`.
+     *  - A timed transmission must start at its target TX time, so it
+     *    ignores the maximum backoffs and retries fields (CCA, if CSMA-CA
+     *    is enabled, is performed once right before the target TX time).
+     *
+     * An ongoing burst is canceled when the RCP receives a new frame to
+     * transmit, a request to receive (e.g., `SPINEL_PROP_PHY_CHAN` change
+     * or `SPINEL_PROP_MAC_RAW_STREAM_ENABLED` set to true), a request to sleep
+     * (`SPINEL_PROP_MAC_RAW_STREAM_ENABLED` set to false), or an energy scan.
+     *
+     * A burst request completes with a single `SPINEL_PROP_LAST_STATUS`
+     * (with the TID of the request) when the burst ends, i.e., after its last
+     * tick or when it is canceled. The status is `SPINEL_STATUS_OK` if any
+     * transmission of the burst succeeded; otherwise it reflects the error of
+     * the last transmission, or an abort error if the burst is canceled or no
+     * transmission took place.
      */
     SPINEL_PROP_STREAM_RAW = SPINEL_PROP_STREAM__BEGIN + 1,
 

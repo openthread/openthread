@@ -605,9 +605,14 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 
     SignalFrameCounterUsedOnTxDone(frameInfo);
 
-    // Determine whether a CSMA retry is required.
+    // Determine whether a CSMA retry is required. A timed transmission
+    // (target TX time specified) must start at its target TX time, so
+    // it ignores `mMaxCsmaBackoffs` and `mMaxFrameRetries`: any CSMA
+    // backoff or retransmission would happen after the target TX time
+    // has passed.
 
-    if (!ccaSuccess && ShouldHandleCsmaBackoff() && mCsmaBackoffs < aFrame.GetMaxCsmaBackoffs())
+    if (!ccaSuccess && ShouldHandleCsmaBackoff() && mCsmaBackoffs < aFrame.GetMaxCsmaBackoffs() &&
+        !aFrame.IsTargetTxTimeSpecified())
     {
         mCsmaBackoffs++;
         StartCsmaBackoff();
@@ -619,7 +624,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     // Determine whether to re-transmit the frame.
 
     shouldRetx = ((aError != kErrorNone) && ShouldHandle(kCapTransmitRetries) &&
-                  (mTransmitRetries < aFrame.GetMaxFrameRetries()));
+                  (mTransmitRetries < aFrame.GetMaxFrameRetries()) && !aFrame.IsTargetTxTimeSpecified());
 
     mCallbacks.RecordFrameTransmitStatus(frameInfo, aError, mTransmitRetries, shouldRetx);
 

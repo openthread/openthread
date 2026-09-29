@@ -72,6 +72,21 @@ public:
 
     virtual uint64_t GetNow() const { return mNow; }
 
+    /**
+     * Returns the radio clock time (`otPlatRadioGetNow()`).
+     *
+     * The radio clock is a separate time base from the alarm clock (`otPlatAlarmMicroGetNow()`, i.e., `GetNow()`)
+     * on the same chip. They differ by `mRadioClockOffset`.
+     */
+    virtual uint64_t GetRadioNow() const { return mNow + mRadioClockOffset; }
+
+    /**
+     * Sets the offset of the radio clock (`otPlatRadioGetNow()`) from the alarm clock (`otPlatAlarmMicroGetNow()`).
+     *
+     * @param[in] aOffset  The offset in microseconds.
+     */
+    void SetRadioClockOffset(uint64_t aOffset) { mRadioClockOffset = aOffset; }
+
     virtual void StartMilliAlarm(uint32_t aT0, uint32_t aDt);
     virtual void StopMilliAlarm();
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
@@ -167,6 +182,8 @@ protected:
     otInstance *mInstance = nullptr;
 
     uint64_t mNow = 0;
+
+    uint64_t mRadioClockOffset = 0; // Offset of the radio clock from the alarm clock.
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     uint64_t mMicroAlarmStart = kAlarmStop;
 #endif

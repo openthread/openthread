@@ -365,6 +365,8 @@ uint16_t otPlatTimeGetXtalAccuracy(void) { return 0; }
 
 uint32_t otPlatAlarmMicroGetNow(void) { return otPlatTimeGet(); }
 
+otRadioTime64 otPlatRadioGetNow(otInstance *) { return FakePlatform::CurrentPlatform().GetRadioNow(); }
+
 void otPlatRadioGetIeeeEui64(otInstance *, uint8_t *aIeeeEui64)
 {
     uint64_t eui64 = FakePlatform::CurrentPlatform().GetEui64();

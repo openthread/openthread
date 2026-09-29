@@ -16,6 +16,7 @@
         "OT_DNS_CLIENT_OVER_TCP": "ON",
         "OT_DNS_DSO": "ON",
         "OT_LINK_RAW": "ON",
+        "OT_LINK_RAW_BURST": "ON",
         "OT_PLATFORM": "simulation",
         "OT_UDP_FORWARD": "ON"
       }
