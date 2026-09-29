@@ -496,6 +496,13 @@ protected:
                                     otError       aError);
     void        LinkRawTransmitDone(uint8_t aIid, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    static void LinkExtBurstDone(otInstance *aInstance);
+    void        LinkExtBurstDone(uint8_t aIid);
+    bool        IsLinkExtBurstOngoing(void);
+    otError     EncodeLinkExtBurstConfig(otInstance *aInstance);
+#endif
+
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void        LinkRawEnergyScanDone(uint8_t aIid, int8_t aEnergyScanMaxRssi);
 

@@ -66,6 +66,7 @@
 #include "common/uptime.hpp"
 #include "diags/factory_diags.hpp"
 #include "instance/extension.hpp"
+#include "mac/link_ext.hpp"
 #include "mac/link_raw.hpp"
 #include "radio/radio.hpp"
 #include "utils/otns.hpp"
@@ -881,6 +882,10 @@ private:
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    Mac::LinkExt mLinkExt; // Constructed before `mLinkRaw` which uses it.
+#endif
+
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     Mac::LinkRaw mLinkRaw;
 #endif
@@ -1300,6 +1305,10 @@ template <> inline MeshCoP::TcatAgent &Instance::Get(void) { return mTcatAgent; 
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 template <> inline Mac::LinkRaw &Instance::Get(void) { return mLinkRaw; }
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+template <> inline Mac::LinkExt &Instance::Get(void) { return mLinkExt; }
+#endif
 
 #if OPENTHREAD_RADIO
 template <> inline Mac::SubMac &Instance::Get(void) { return mLinkRaw.mSubMac; }
