@@ -568,6 +568,14 @@ static bool IsOmrAddress(otInstance *aInstance, const otIp6AddressInfo &aAddress
 }
 #endif
 
+static bool IsMeshLocalLocator(const otIp6AddressInfo &aAddressInfo)
+{
+    static const uint8_t kLocatorIid[] = {0x00, 0x00, 0x00, 0xff, 0xfe, 0x00};
+
+    return aAddressInfo.mMeshLocal &&
+           (memcmp(&aAddressInfo.mAddress->mFields.m8[8], kLocatorIid, sizeof(kLocatorIid)) == 0);
+}
+
 struct PendingRemoveAddress
 {
     bool Matches(const otIp6AddressInfo &aAddressInfo) const
@@ -708,8 +716,11 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
         struct ifa_cacheinfo cacheinfo;
 
         memset(&cacheinfo, 0, sizeof(cacheinfo));
-        cacheinfo.ifa_valid    = UINT32_MAX;
-        cacheinfo.ifa_prefered = (aAddressInfo.mPreferred && aAddressInfo.mScope != kLinkLocalScope) ? UINT32_MAX : 0;
+        cacheinfo.ifa_valid = UINT32_MAX;
+        cacheinfo.ifa_prefered =
+            (aAddressInfo.mPreferred && aAddressInfo.mScope != kLinkLocalScope && !IsMeshLocalLocator(aAddressInfo))
+                ? UINT32_MAX
+                : 0;
 
         AddRtAttr(&req.nh, sizeof(req), IFA_CACHEINFO, &cacheinfo, sizeof(cacheinfo));
     }
