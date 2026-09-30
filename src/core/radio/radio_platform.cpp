@@ -130,6 +130,17 @@ exit:
     return;
 }
 
+extern "C" void otPlatRadioAvailabilityUpdated(otInstance *aInstance)
+{
+    Instance &instance = AsCoreType(aInstance);
+
+    VerifyOrExit(instance.IsInitialized());
+    instance.Get<Radio::Callbacks>().HandleRadioAvailabilityUpdated();
+
+exit:
+    return;
+}
+
 extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
     Instance &instance = AsCoreType(aInstance);
@@ -186,7 +197,7 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
     AsCoreType(aInstance).Get<Radio::Callbacks>().HandleDiagsTransmitDone(txFrame, aError);
 }
 #endif
-#else // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+#else  // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *, otError) {}
 
@@ -198,6 +209,7 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t) {}
 
 extern "C" void otPlatRadioBusLatencyChanged(otInstance *) {}
 
+extern "C" void otPlatRadioAvailabilityUpdated(otInstance *) {}
 #endif // // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -386,3 +398,11 @@ extern "C" OT_TOOL_WEAK void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, b
 }
 
 OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t, int16_t) { return kErrorNotImplemented; }
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioGetAvailability(otInstance *aInstance, otRadioAvailability *aAvailability)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAvailability);
+
+    return kErrorNotImplemented;
+}
