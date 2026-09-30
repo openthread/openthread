@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 11
+#define SPINEL_RCP_API_VERSION 12
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -4751,6 +4751,22 @@ enum
      * The current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
      */
     SPINEL_PROP_RCP_CSL_UNCERTAINTY = SPINEL_PROP_RCP_EXT__BEGIN + 5,
+
+    /// Radio Availability
+    /** Format: `XCd[d]`
+     * Type: Read-Only (also sent as unsolicited notifications)
+     *
+     * `X`: The time of the local radio clock in microseconds when the radio availability schedule starts.
+     * `C`: The number of slots in the radio availability schedule. Value 0 indicates that the radio is always
+     *      available for Thread.
+     * `d`: The available radio slots LSB-first bitmap (`ceil(num_slots / 8)` bytes, 1 = available, 0 = unavailable).
+     * `d`: The optional preferred radio slots LSB-first bitmap (`ceil(num_slots / 8)` bytes, 1 = preferred,
+     *      0 = not preferred, or empty if not provided).
+     *
+     * The host can read the current radio availability schedule. The RCP also sends this property as an unsolicited
+     * notification whenever the radio availability is updated.
+     */
+    SPINEL_PROP_RCP_RADIO_AVAILABILITY = SPINEL_PROP_RCP_EXT__BEGIN + 6,
 
     SPINEL_PROP_RCP_EXT__END = 0x900,
 

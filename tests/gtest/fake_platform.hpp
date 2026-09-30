@@ -70,6 +70,13 @@ public:
 
     void GoInMs(uint32_t aTimeoutInMs = 0) { GoInUs(aTimeoutInMs * OT_US_PER_MS); }
 
+    void UpdateRadioAvailability(uint64_t       aTimestamp,
+                                 const uint8_t *aAvailableSlots,
+                                 const uint8_t *aPreferredSlots,
+                                 uint8_t        aNumSlots);
+
+    virtual otError GetRadioAvailability(otRadioAvailability &aAvailability) const;
+
     virtual uint64_t GetNow() const { return mNow; }
 
     virtual void StartMilliAlarm(uint32_t aT0, uint32_t aDt);
@@ -191,6 +198,13 @@ protected:
     std::set<otExtAddress>    mSrcMatchExtAddrs;
     std::map<uint8_t, int8_t> mChannelMaxTxPower;
     otError                   mChannelMaxTxPowerError = OT_ERROR_NONE;
+
+    bool                 mHasRadioAvailability   = false;
+    uint64_t             mRadioAvailTimestamp    = 0;
+    uint8_t              mRadioAvailNumSlots     = 0;
+    bool                 mRadioAvailHasPreferred = false;
+    std::vector<uint8_t> mRadioAvailAvailableSlots;
+    std::vector<uint8_t> mRadioAvailPreferredSlots;
 };
 
 template <> inline void FakePlatform::HandleSchedule<&FakePlatform::mMilliAlarmStart>()

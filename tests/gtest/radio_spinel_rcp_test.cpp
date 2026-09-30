@@ -608,3 +608,131 @@ TEST(RadioSpinelSrcMatch, shouldNotDuplicateSrcMatchEntriesOnRestoreProperties)
     ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 1);
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+TEST(RadioSpinelRadioAvailability, shouldSendRadioAvailabilityPropertyWhenUpdated)
+{
+    struct FrameCapture
+    {
+        bool                 mReceived       = false;
+        uint64_t             mTimestamp      = 0;
+        uint8_t              mNumSlots       = 0;
+        std::vector<uint8_t> mAvailableSlots = {};
+        std::vector<uint8_t> mPreferredSlots = {};
+    };
+
+    FakeCoprocessorPlatform platform;
+    FrameCapture            capture;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    platform.mSpinelDriver.SetFrameHandler(
+        [](const uint8_t *aFrame, uint16_t aLength, uint8_t aHeader, bool &aSave, void *aContext) {
+            OT_UNUSED_VARIABLE(aHeader);
+
+            FrameCapture     *ctx          = static_cast<FrameCapture *>(aContext);
+            uint8_t           header       = 0;
+            unsigned int      cmd          = 0;
+            spinel_prop_key_t key          = 0;
+            const uint8_t    *valuePtr     = nullptr;
+            spinel_size_t     valueLen     = 0;
+            const uint8_t    *availPtr     = nullptr;
+            spinel_size_t     availLen     = 0;
+            const uint8_t    *preferredPtr = nullptr;
+            spinel_size_t     preferredLen = 0;
+
+            aSave = false;
+
+            ASSERT_GT(spinel_datatype_unpack(aFrame, aLength, "CiiD", &header, &cmd, &key, &valuePtr, &valueLen), 0);
+
+            if ((cmd == SPINEL_CMD_PROP_VALUE_IS) && (key == SPINEL_PROP_RCP_RADIO_AVAILABILITY))
+            {
+                ctx->mReceived = true;
+                ASSERT_GT(spinel_datatype_unpack(valuePtr, valueLen, "XCdD", &ctx->mTimestamp, &ctx->mNumSlots,
+                                                 &availPtr, &availLen, &preferredPtr, &preferredLen),
+                          0);
+                ctx->mAvailableSlots.assign(availPtr, availPtr + availLen);
+
+                if (preferredLen >= sizeof(uint16_t))
+                {
+                    const uint8_t *prefDataPtr = nullptr;
+                    spinel_size_t  prefDataLen = 0;
+
+                    ASSERT_GT(spinel_datatype_unpack(preferredPtr, preferredLen, "d", &prefDataPtr, &prefDataLen), 0);
+                    ctx->mPreferredSlots.assign(prefDataPtr, prefDataPtr + prefDataLen);
+                }
+                else
+                {
+                    ctx->mPreferredSlots.clear();
+                }
+            }
+        },
+        nullptr, &capture);
+
+    // 1. Update with both available slots and preferred slots (12 slots -> 2 bytes)
+    {
+        const uint8_t kAvailSlots[]     = {0xa5, 0x0f};
+        const uint8_t kPreferredSlots[] = {0x05, 0x03};
+
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(123456789ULL, kAvailSlots, kPreferredSlots, 12);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mTimestamp, 123456789ULL);
+        EXPECT_EQ(capture.mNumSlots, 12);
+        EXPECT_EQ(capture.mAvailableSlots, std::vector<uint8_t>({0xa5, 0x0f}));
+        EXPECT_EQ(capture.mPreferredSlots, std::vector<uint8_t>({0x05, 0x03}));
+    }
+
+    // 2. Update without preferred slots (nullptr) (8 slots -> 1 byte)
+    {
+        const uint8_t kAvailSlots[] = {0x5a};
+
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(987654321ULL, kAvailSlots, nullptr, 8);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mTimestamp, 987654321ULL);
+        EXPECT_EQ(capture.mNumSlots, 8);
+        EXPECT_EQ(capture.mAvailableSlots, std::vector<uint8_t>({0x5a}));
+        EXPECT_TRUE(capture.mPreferredSlots.empty());
+    }
+
+    // 3. Update with 0 slots (radio always available)
+    {
+        const uint8_t kPreferredSlots[] = {0x05};
+
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(555666777ULL, nullptr, kPreferredSlots, 0);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mTimestamp, 555666777ULL);
+        EXPECT_EQ(capture.mNumSlots, 0);
+        EXPECT_TRUE(capture.mAvailableSlots.empty());
+        EXPECT_TRUE(capture.mPreferredSlots.empty());
+    }
+
+    // 4. Multiple updates before the tasklet runs are coalesced and the latest schedule is sent.
+    {
+        const uint8_t kOldAvailSlots[] = {0x11};
+        const uint8_t kNewAvailSlots[] = {0x22};
+
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(1000ULL, kOldAvailSlots, nullptr, 8);
+        platform.UpdateRadioAvailability(2000ULL, kNewAvailSlots, nullptr, 8);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mTimestamp, 2000ULL);
+        EXPECT_EQ(capture.mNumSlots, 8);
+        EXPECT_EQ(capture.mAvailableSlots, std::vector<uint8_t>({0x22}));
+        EXPECT_TRUE(capture.mPreferredSlots.empty());
+
+        capture = FrameCapture{};
+        platform.GoInMs(1);
+
+        EXPECT_FALSE(capture.mReceived);
+    }
+}

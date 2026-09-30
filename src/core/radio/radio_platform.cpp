@@ -386,3 +386,13 @@ extern "C" OT_TOOL_WEAK void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, b
 }
 
 OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t, int16_t) { return kErrorNotImplemented; }
+
+extern "C" OT_TOOL_WEAK void otPlatRadioAvailabilityUpdated(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstance); }
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioGetAvailability(otInstance *aInstance, otRadioAvailability *aAvailability)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAvailability);
+
+    return kErrorNotImplemented;
+}
