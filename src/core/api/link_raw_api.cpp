@@ -231,6 +231,18 @@ uint64_t otLinkRawGetRadioTime(otInstance *aInstance)
     return otPlatTimeGet();
 }
 
+void otLinkRawSetRadioAvailabilityUpdated(otInstance *aInstance, otLinkRawRadioAvailabilityUpdated aCallback)
+{
+    AsCoreType(aInstance).Get<Mac::LinkRaw>().SetRadioAvailabilityUpdated(aCallback);
+}
+
+otError otLinkRawGetRadioAvailability(otInstance *aInstance, otRadioAvailability *aAvailability)
+{
+    AssertPointerIsNotNull(aAvailability);
+
+    return AsCoreType(aInstance).Get<Mac::LinkRaw>().GetRadioAvailability(*aAvailability);
+}
+
 #if OPENTHREAD_RADIO
 
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)

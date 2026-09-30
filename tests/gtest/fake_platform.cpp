@@ -28,6 +28,8 @@
 
 #include "fake_platform.hpp"
 
+#include <algorithm>
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -337,6 +339,48 @@ void FakePlatform::FlashWrite(uint8_t aSwapIndex, uint32_t aOffset, const void *
     }
 }
 
+void FakePlatform::UpdateRadioAvailability(otRadioTime64                   aStartTime,
+                                           otRadioAvailabilitySlotDuration aSlotDuration,
+                                           const uint8_t                  *aAvailableSlots,
+                                           const uint8_t                  *aPreferredSlots,
+                                           uint8_t                         aNumSlots)
+{
+    size_t numBytes = std::min<size_t>((aNumSlots + 7) / 8, OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE);
+
+    mHasRadioAvailability   = true;
+    mRadioAvailStartTime    = aStartTime;
+    mRadioAvailSlotDuration = aSlotDuration;
+    mRadioAvailNumSlots     = aNumSlots;
+    mRadioAvailAvailableSlots.assign(aAvailableSlots, aAvailableSlots + (aAvailableSlots ? numBytes : 0));
+
+    // Without a preference, all available slots are preferred.
+    if (aPreferredSlots == nullptr)
+    {
+        aPreferredSlots = aAvailableSlots;
+    }
+
+    mRadioAvailPreferredSlots.assign(aPreferredSlots, aPreferredSlots + (aPreferredSlots ? numBytes : 0));
+
+    otPlatRadioAvailabilityUpdated(mInstance);
+}
+
+otError FakePlatform::GetRadioAvailability(otRadioAvailability &aAvailability) const
+{
+    if (!mHasRadioAvailability)
+    {
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
+
+    memset(&aAvailability, 0, sizeof(aAvailability));
+    aAvailability.mStartTime    = mRadioAvailStartTime;
+    aAvailability.mSlotDuration = mRadioAvailSlotDuration;
+    aAvailability.mNumSlots     = mRadioAvailNumSlots;
+    std::copy(mRadioAvailAvailableSlots.begin(), mRadioAvailAvailableSlots.end(), aAvailability.mAvailableSlots);
+    std::copy(mRadioAvailPreferredSlots.begin(), mRadioAvailPreferredSlots.end(), aAvailability.mPreferredSlots);
+
+    return OT_ERROR_NONE;
+}
+
 } // namespace ot
 
 extern "C" {
@@ -471,6 +515,11 @@ otError otPlatRadioSetCoexEnabled(otInstance *, bool) { return OT_ERROR_NOT_IMPL
 otError otPlatRadioConfigureEnhAckProbing(otInstance *, otLinkMetrics, otShortAddress, const otExtAddress *)
 {
     return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioGetAvailability(otInstance *, otRadioAvailability *aAvailability)
+{
+    return FakePlatform::CurrentPlatform().GetRadioAvailability(*aAvailability);
 }
 
 // Add WEAK here because in some unit test there is an implementation for `otPlatRadioSetChannelTargetPower`

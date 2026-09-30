@@ -42,6 +42,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/num_utils.hpp"
 #include "instance/instance.hpp"
 #include "mac/mac_frame.hpp"
 
@@ -140,6 +141,86 @@ void NcpBase::NotifySwitchoverDone(bool aSuccess)
     IgnoreError(WriteLastStatusFrame(header, result));
 }
 #endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+
+void NcpBase::LinkRawRadioAvailabilityUpdated(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    if (sNcpInstance != nullptr)
+    {
+        sNcpInstance->NotifyRadioAvailabilityUpdated();
+    }
+}
+
+void NcpBase::NotifyRadioAvailabilityUpdated(void)
+{
+    // Defer encoding to the tasklet so that the radio driver never re-enters `mEncoder`.
+    mChangedPropsSet.AddProperty(SPINEL_PROP_RCP_RADIO_AVAILABILITY);
+    mUpdateChangedPropsTask.Post();
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_RADIO_AVAILABILITY>(void)
+{
+    otError             error;
+    otRadioAvailability availability;
+    uint16_t            slotDurationUs;
+    uint8_t             numBytes;
+
+    memset(&availability, 0, sizeof(availability));
+
+    error = otLinkRawGetRadioAvailability(mInstance, &availability);
+
+    if (error != OT_ERROR_NONE)
+    {
+        ExitNow(error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error)));
+    }
+
+    switch (availability.mSlotDuration)
+    {
+    case OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US:
+        slotDurationUs = 625;
+        break;
+    case OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US:
+        slotDurationUs = 1250;
+        break;
+    default:
+        slotDurationUs = 0;
+        break;
+    }
+
+    // Report an invalid schedule as an error instead of sending it. This also ensures that the bitmaps fit into the
+    // arrays, since the shortest slot duration determines `OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE`.
+    if ((slotDurationUs == 0) ||
+        (static_cast<uint32_t>(availability.mNumSlots) * slotDurationUs > OT_RADIO_AVAILABILITY_MAX_DURATION_US))
+    {
+        ExitNow(error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_INTERNAL_ERROR));
+    }
+
+    numBytes = DivideAndRoundUp<uint8_t>(availability.mNumSlots, kBitsPerByte);
+
+    if ((availability.mNumSlots % kBitsPerByte) != 0)
+    {
+        // Clear the unused bits in the last byte, which are ignored, before comparing and encoding the bitmaps.
+        uint8_t mask = static_cast<uint8_t>(0xff << (kBitsPerByte - (availability.mNumSlots % kBitsPerByte)));
+
+        availability.mAvailableSlots[numBytes - 1] &= mask;
+        availability.mPreferredSlots[numBytes - 1] &= mask;
+    }
+
+    SuccessOrExit(error = mEncoder.WriteUint64(availability.mStartTime));
+    SuccessOrExit(error = mEncoder.WriteUint8(static_cast<uint8_t>(availability.mSlotDuration)));
+    SuccessOrExit(error = mEncoder.WriteUint8(availability.mNumSlots));
+    SuccessOrExit(error = mEncoder.WriteDataWithLen(availability.mAvailableSlots, numBytes));
+
+    // The preferred slots bitmap is omitted if all available slots are preferred.
+    if (memcmp(availability.mPreferredSlots, availability.mAvailableSlots, numBytes) != 0)
+    {
+        SuccessOrExit(error = mEncoder.WriteDataWithLen(availability.mPreferredSlots, numBytes));
+    }
+
+exit:
+    return error;
+}
 
 void NcpBase::LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {

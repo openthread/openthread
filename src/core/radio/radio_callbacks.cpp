@@ -65,6 +65,13 @@ void Callbacks::HandleBusLatencyChanged(void)
 #endif
 }
 
+void Callbacks::HandleRadioAvailabilityUpdated(void)
+{
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    Get<Mac::LinkRaw>().HandleRadioAvailabilityUpdated();
+#endif
+}
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError)
 {

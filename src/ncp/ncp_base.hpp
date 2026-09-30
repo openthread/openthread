@@ -151,6 +151,13 @@ public:
     void NotifySwitchoverDone(otInstance *aInstance, bool aSuccess);
 #endif
 
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    /**
+     * Called to schedule a notification to host about radio availability update.
+     */
+    void NotifyRadioAvailabilityUpdated(void);
+#endif
+
     /**
      * This method returns the IID of the current spinel command.
      *
@@ -488,6 +495,7 @@ protected:
 #endif
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+    static void LinkRawRadioAvailabilityUpdated(otInstance *aInstance);
     void        LinkRawReceiveDone(uint8_t aIid, otRadioFrame *aFrame, otError aError);
 
     static void LinkRawTransmitDone(otInstance   *aInstance,

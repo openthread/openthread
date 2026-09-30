@@ -241,6 +241,13 @@ public:
      */
     void HandleBusLatencyChanged(void);
 
+    /**
+     * This callback method handles a "Radio Availability Updated" event from radio platform.
+     *
+     * It is called from `otPlatRadioAvailabilityUpdated()`.
+     */
+    void HandleRadioAvailabilityUpdated(void);
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     /**
      * This callback method handles a "Receive Done" event from radio platform when diagnostics mode is enabled.
@@ -378,6 +385,16 @@ public:
      * @returns The radio capability bit vector (see `Capability` definitions).
      */
     Capabilities GetCaps(void);
+
+    /**
+     * Gets the current radio availability schedule.
+     *
+     * @param[out] aAvailability  A reference to an `otRadioAvailability` to populate.
+     *
+     * @retval kErrorNone            Successfully retrieved the radio availability schedule.
+     * @retval kErrorNotImplemented  The radio platform does not support reporting radio availability.
+     */
+    Error GetAvailability(otRadioAvailability &aAvailability);
 
     /**
      * Gets the radio receive sensitivity value.
@@ -898,6 +915,11 @@ inline uint32_t Radio::GetPreferredChannelMask(void) { return otPlatRadioGetPref
 
 inline Capabilities Radio::GetCaps(void) { return otPlatRadioGetCaps(GetInstancePtr()); }
 
+inline Error Radio::GetAvailability(otRadioAvailability &aAvailability)
+{
+    return otPlatRadioGetAvailability(GetInstancePtr(), &aAvailability);
+}
+
 inline int8_t Radio::GetReceiveSensitivity(void) const { return otPlatRadioGetReceiveSensitivity(GetInstancePtr()); }
 
 inline void Radio::SetPanId(Mac::PanId aPanId) { otPlatRadioSetPanId(GetInstancePtr(), aPanId); }
@@ -1051,6 +1073,8 @@ inline bool Radio::GetDiagMode(void) { return otPlatDiagModeGet(); }
 #else //----------------------------------------------------------------------------------------------------------------
 
 inline Capabilities Radio::GetCaps(void) { return kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries; }
+
+inline Error Radio::GetAvailability(otRadioAvailability &) { return kErrorNotImplemented; }
 
 inline int8_t Radio::GetReceiveSensitivity(void) const { return kDefaultReceiveSensitivity; }
 
