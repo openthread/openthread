@@ -555,13 +555,24 @@ void Leader::GetCommissioningDataset(MeshCoP::CommissioningDataset &aDataset) co
     aDataset.mIsJoinerUdpPortSet = (FindJoinerUdpPort(aDataset.mJoinerUdpPort) == kErrorNone);
     aDataset.mIsSteeringDataSet  = (FindSteeringData(AsCoreType(&aDataset.mSteeringData)) == kErrorNone);
 
-    // Determine if the Commissioning data has any extra unknown TLVs
+    // Determine if the Commissioning data has any extra unknown TLVs.
+    // The walk stops at a sub-TLV that runs past the end of the value
+    // (malformed content), which is not reported as an extra TLV.
 
     subTlv = reinterpret_cast<const MeshCoP::Tlv *>(dataTlv->GetValue());
     endTlv = reinterpret_cast<const MeshCoP::Tlv *>(dataTlv->GetValue() + dataTlv->GetLength());
 
     for (; subTlv < endTlv; subTlv = subTlv->GetNext())
     {
+        VerifyOrExit((subTlv + 1) <= endTlv);
+
+        if (subTlv->IsExtended())
+        {
+            VerifyOrExit((As<ExtendedTlv>(subTlv) + 1) <= As<ExtendedTlv>(endTlv));
+        }
+
+        VerifyOrExit(subTlv->GetNext() <= endTlv);
+
         switch (subTlv->GetType())
         {
         case MeshCoP::Tlv::kBorderAgentLocator:
