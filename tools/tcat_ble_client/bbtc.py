@@ -122,6 +122,12 @@ async def receive_loop(cli_context: dict):
                 await connection_closed_helper(cli_context)
                 continue
 
+            if data:
+                logger.info('Received event data from TCAT Device:\n' + hexdump_ot("Event", data))
+                tlv = TLV.from_bytes(data)
+                validate_unsolicited_tlv(tlv)
+                continue
+
             # The connection can also end without BleConnectionClosed being raised: either the peer
             # closed TLS gracefully (close-notify), or the BLE link itself dropped.
             if not bless.is_connected:
@@ -131,11 +137,6 @@ async def receive_loop(cli_context: dict):
                     await connection_closed_helper(cli_context)
                 continue
 
-            if data:
-                logger.info('Received event data from TCAT Device:\n' + hexdump_ot("Event", data))
-                tlv = TLV.from_bytes(data)
-                validate_unsolicited_tlv(tlv)
-                continue
         await asyncio.sleep(0.100)
 
 
