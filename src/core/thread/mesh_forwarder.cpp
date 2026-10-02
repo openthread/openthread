@@ -186,6 +186,86 @@ void MeshForwarder::HandleTxDelayTimer(void)
 }
 #endif
 
+Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvictReason)
+{
+    Error    error = kErrorNotFound;
+    Message *evict;
+
+    error = RemoveUnsecureReassemblyMessage(aEvictReason);
+    VerifyOrExit(error == kErrorNotFound);
+
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    error = RemoveAgedMessages();
+    VerifyOrExit(error == kErrorNotFound);
+#endif
+
+    evict = FindMessageToEvict(kLowerPriorityThan, aPriority,
+                               (aEvictReason == kEvictReasonDirectTxQueueAtLimit) ? Message::AcceptDirectTx
+                                                                                  : Message::AcceptAny);
+
+#if OPENTHREAD_FTD
+    if ((evict == nullptr) && (aEvictReason == kEvictReasonNoMessageBuffer))
+    {
+        evict = FindMessageToEvict(kEqualOrHigherPriorityThan, aPriority, Message::AcceptIndirectTx);
+    }
+#endif
+
+    VerifyOrExit(evict != nullptr);
+    error = kErrorNone;
+
+    switch (aEvictReason)
+    {
+    case kEvictReasonDirectTxQueueAtLimit:
+        FinalizeAndRemoveMessage(*evict, kErrorDrop, kMessageFullQueueEvict);
+        break;
+
+    case kEvictReasonNoMessageBuffer:
+        FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
+        break;
+    }
+
+exit:
+    return error;
+}
+
+Message *MeshForwarder::FindMessageToEvict(PriorityGuard aGuard, Message::Priority aPriority, Message::Checker aChecker)
+{
+    Message *evict            = nullptr;
+    uint8_t  startPriority    = Message::kPriorityLow;
+    uint8_t  afterEndPriority = Message::kNumPriorities;
+
+    switch (aGuard)
+    {
+    case kLowerPriorityThan:
+        afterEndPriority = aPriority;
+        break;
+    case kEqualOrHigherPriorityThan:
+        startPriority = aPriority;
+        break;
+    }
+
+    for (uint8_t priority = startPriority; priority < afterEndPriority; priority++)
+    {
+        for (Message *message            = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority));
+             message != nullptr; message = message->GetNext())
+        {
+            if (message->GetPriority() != priority)
+            {
+                break;
+            }
+
+            if (!message->GetDoNotEvict() && aChecker(*message))
+            {
+                evict = message;
+                ExitNow();
+            }
+        }
+    }
+
+exit:
+    return evict;
+}
+
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
 
 Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
