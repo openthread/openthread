@@ -239,6 +239,58 @@ void TestPendingReceiveAtReplaced(void)
     testFreeInstance(instance);
 }
 
+void TestDuplicateReceiveAt(void)
+{
+    Instance     *instance;
+    Mac::SubMac  *subMac;
+    Radio::Time64 startTime;
+    uint32_t      duration;
+    uint8_t       channel;
+    uint32_t      rxCallCount;
+
+    printf("TestDuplicateReceiveAt()\n");
+    ResetPlatformState();
+
+    instance = testInitInstance();
+    subMac   = &instance->Get<Mac::SubMac>();
+
+    SuccessOrQuit(subMac->Enable());
+    SuccessOrQuit(subMac->Sleep());
+
+    startTime = otPlatRadioGetNow(instance) + 1000;
+    duration  = 500;
+    channel   = 11;
+
+    // Schedule timed RX.
+    subMac->ReceiveAt(startTime, duration, channel);
+
+    // Call `ReceiveAt` again with identical parameters before it starts.
+    subMac->ReceiveAt(startTime, duration, channel);
+
+    // Advance to window start.
+    AdvanceTime(*instance, 1000);
+    VerifyOrQuit(sRadioState == kRadioStateReceive);
+    VerifyOrQuit(sReceiveChannel == channel);
+    VerifyOrQuit(sReceiveCallCount == 1);
+
+    // Advance halfway through the window.
+    AdvanceTime(*instance, 250);
+    rxCallCount = sReceiveCallCount;
+
+    // Call `ReceiveAt` again with the exact same parameters while active.
+    // Verify it is ignored and does not re-trigger radio receive.
+    subMac->ReceiveAt(startTime, duration, channel);
+    VerifyOrQuit(sRadioState == kRadioStateReceive);
+    VerifyOrQuit(sReceiveChannel == channel);
+    VerifyOrQuit(sReceiveCallCount == rxCallCount);
+
+    // Window ends normally.
+    AdvanceTime(*instance, 250);
+    VerifyOrQuit(sRadioState == kRadioStateSleep);
+
+    testFreeInstance(instance);
+}
+
 void TestReceiveAtAlreadyStarted(void)
 {
     Instance     *instance;
@@ -962,6 +1014,7 @@ int main(void)
 
         ot::TestSimpleReceiveAt();
         ot::TestPendingReceiveAtReplaced();
+        ot::TestDuplicateReceiveAt();
         ot::TestReceiveAtAlreadyStarted();
         ot::TestReceiveAtAlreadyExpired();
         ot::TestReceiveAtWhileActive();

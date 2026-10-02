@@ -604,6 +604,7 @@ private:
 
         void          Init(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel);
         bool          IsSpecified(void) const { return mIsSpecified; }
+        bool          Matches(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel) const;
         Radio::Time64 GetStartTime(void) const { return mStartTime; }
         Radio::Time64 GetEndTime(void) const { return mStartTime + mDuration; }
         uint8_t       GetChannel(void) const { return mChannel; }

@@ -860,6 +860,8 @@ void SubMac::ReceiveAt(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aCh
     }
 #endif
 
+    VerifyOrExit(!mPendingTimedRx.Matches(aStartTime, aDuration, aChannel));
+
     timedRx.Init(aStartTime, aDuration, aChannel);
 
     now.SetToNow(Get<Radio::Radio>());
@@ -868,6 +870,7 @@ void SubMac::ReceiveAt(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aCh
 
     if (!ShouldHandle(kCapReceiveTiming))
     {
+        mPendingTimedRx = timedRx;
         timedRx.ScheduleOnRadio(Get<Radio::Radio>());
         ExitNow();
     }
@@ -909,6 +912,8 @@ exit:
 
 void SubMac::CancelPendingReceiveAt(void)
 {
+    VerifyOrExit(ShouldHandle(kCapReceiveTiming));
+
     VerifyOrExit(mPendingTimedRx.IsSpecified());
     mPendingTimedRx.Clear();
 
@@ -1029,6 +1034,11 @@ void SubMac::TimedRx::Init(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t
     mDuration    = aDuration;
     mChannel     = aChannel;
     mIsSpecified = true;
+}
+
+bool SubMac::TimedRx::Matches(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel) const
+{
+    return mIsSpecified && (mStartTime == aStartTime) && (mDuration == aDuration) && (mChannel == aChannel);
 }
 
 void SubMac::TimedRx::ScheduleOnRadio(Radio::Radio &aRadio) const
