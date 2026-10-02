@@ -298,7 +298,6 @@ static void TestAddressTransitionAccepted(void)
 
     InitializeNodes(nexus, receiver, relay, originA, originB);
     OT_UNUSED_VARIABLE(relay);
-    OT_UNUSED_VARIABLE(originB);
 
     OwnedPtr<Coap::Message> payload(BuildDiagnosticGetPayload(*originA));
     const Ip6::Address     &source = originA->Get<Mle::Mle>().GetMeshLocalRloc();
@@ -307,14 +306,18 @@ static void TestAddressTransitionAccepted(void)
     OwnedPtr<Message>       nextMessage(BuildIpMessage(*originA, source, dest, *payload));
     Mac::Addresses          extendedAddresses;
     Mac::Addresses          shortAddresses;
-    uint16_t                originAShort = originA->Get<Mac::Mac>().GetShortAddress();
-    uint16_t                receiverShort = receiver->Get<Mac::Mac>().GetShortAddress();
-    uint32_t                rxBefore = receiver->Get<MeshForwarder>().GetCounters().mRxSuccess;
+    Mac::Addresses          wrongShortAddresses;
+    uint16_t                originAShort   = originA->Get<Mac::Mac>().GetShortAddress();
+    uint16_t                originBShort   = originB->Get<Mac::Mac>().GetShortAddress();
+    uint16_t                receiverShort  = receiver->Get<Mac::Mac>().GetShortAddress();
+    uint32_t                rxBefore       = receiver->Get<MeshForwarder>().GetCounters().mRxSuccess;
 
     extendedAddresses.mSource.SetExtended(originA->Get<Mac::Mac>().GetExtAddress());
     extendedAddresses.mDestination.SetShort(receiverShort);
     shortAddresses.mSource.SetShort(originAShort);
     shortAddresses.mDestination.SetShort(receiverShort);
+    wrongShortAddresses.mSource.SetShort(originBShort);
+    wrongShortAddresses.mDestination.SetShort(receiverShort);
 
     uint16_t nextOffset = PrepareAndDeliverDirect(*originA, *receiver, *firstMessage, extendedAddresses);
 
@@ -323,6 +326,10 @@ static void TestAddressTransitionAccepted(void)
 
     nextMessage->SetDatagramTag(firstMessage->GetDatagramTag());
     nextMessage->SetOffset(nextOffset);
+
+    PrepareAndDeliverDirect(*originB, *receiver, *nextMessage, wrongShortAddresses);
+    nexus.AdvanceTime(50);
+    VerifyOrQuit(receiver->Get<MeshForwarder>().GetCounters().mRxSuccess == rxBefore);
 
     while (nextMessage->GetOffset() < nextMessage->GetLength())
     {

@@ -346,11 +346,11 @@ private:
     struct ReassemblyMetadata : public Message::FooterData<ReassemblyMetadata>
     {
         uint16_t     mDatagramSize;
-        uint16_t     mDatagramTag;
         Mac::Address mSource;
     };
 
     bool MatchesReassemblySource(const Mac::Address &aFirstSource, const Mac::Address &aSource);
+    void RemoveReassemblyMetadata(Message &aMessage);
 
 #if OPENTHREAD_FTD
 

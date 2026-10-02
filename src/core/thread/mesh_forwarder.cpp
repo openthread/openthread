@@ -1096,23 +1096,33 @@ exit:
 
 bool MeshForwarder::MatchesReassemblySource(const Mac::Address &aFirstSource, const Mac::Address &aSource)
 {
-    bool      matches       = (aFirstSource == aSource);
-    Neighbor *firstNeighbor = nullptr;
-    Neighbor *neighbor      = nullptr;
+    bool                matches = (aFirstSource == aSource);
+    const Mac::Address *shortSource;
+    const Mac::Address *extendedSource;
+    Neighbor           *neighbor = nullptr;
 
     VerifyOrExit(!matches);
     VerifyOrExit((aFirstSource.IsShort() || aFirstSource.IsExtended()) &&
                  (aSource.IsShort() || aSource.IsExtended()));
+    VerifyOrExit(aFirstSource.GetType() != aSource.GetType());
 
     // A direct neighbor can legitimately switch between extended and short source addressing during attach.
-    // Treat the two forms as the same identity only when both resolve to the same Neighbor entry.
-    firstNeighbor = Get<NeighborTable>().FindNeighbor(aFirstSource, Neighbor::kInStateAnyExceptInvalid);
-    neighbor      = Get<NeighborTable>().FindNeighbor(aSource, Neighbor::kInStateAnyExceptInvalid);
+    // Treat the two forms as the same identity only when the short address resolves to the extended address.
+    shortSource    = aFirstSource.IsShort() ? &aFirstSource : &aSource;
+    extendedSource = aFirstSource.IsExtended() ? &aFirstSource : &aSource;
+    neighbor = Get<NeighborTable>().FindNeighbor(shortSource->GetShort(), Neighbor::kInStateAnyExceptInvalid);
 
-    matches = (firstNeighbor != nullptr) && (firstNeighbor == neighbor);
+    matches = (neighbor != nullptr) && (neighbor->GetExtAddress() == extendedSource->GetExtended());
 
 exit:
     return matches;
+}
+
+void MeshForwarder::RemoveReassemblyMetadata(Message &aMessage)
+{
+    ReassemblyMetadata metadata;
+
+    metadata.RemoveFrom(aMessage);
 }
 
 void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
@@ -1169,6 +1179,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         VerifyOrExit(datagramSize >= message->GetLength(), error = kErrorParse);
         SuccessOrExit(error = message->SetLength(datagramSize));
 
+        message->SetDatagramTag(fragmentHeader.GetDatagramTag());
         message->SetTimestampToNow();
         message->UpdateLinkInfoFrom(aRxInfo.mLinkInfo);
 
@@ -1188,7 +1199,6 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         }
 
         metadata.mDatagramSize = datagramSize;
-        metadata.mDatagramTag  = fragmentHeader.GetDatagramTag();
         metadata.mSource       = aRxInfo.GetSrcAddr();
 
         SuccessOrExit(error = metadata.AppendTo(*message));
@@ -1205,7 +1215,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
 
             // Security Check: only consider reassembly buffers that had the same Security Enabled setting.
             if (metadata.mDatagramSize == fragmentHeader.GetDatagramSize() &&
-                metadata.mDatagramTag == fragmentHeader.GetDatagramTag() &&
+                msg.GetDatagramTag() == fragmentHeader.GetDatagramTag() &&
                 MatchesReassemblySource(metadata.mSource, aRxInfo.GetSrcAddr()) &&
                 msg.GetOffset() == fragmentHeader.GetDatagramOffset() &&
                 msg.GetOffset() + aRxInfo.mFrameData.GetLength() <= metadata.mDatagramSize &&
@@ -1240,11 +1250,9 @@ exit:
 
     if (error == kErrorNone)
     {
-        metadata.ReadFrom(*message);
-
         if (message->GetOffset() == metadata.mDatagramSize)
         {
-            metadata.RemoveFrom(*message);
+            RemoveReassemblyMetadata(*message);
             mReassemblyList.Dequeue(*message);
             IgnoreError(HandleDatagram(*message, aRxInfo.GetSrcAddr()));
         }
@@ -1260,6 +1268,7 @@ void MeshForwarder::ClearReassemblyList(void)
 {
     for (Message &message : mReassemblyList)
     {
+        RemoveReassemblyMetadata(message);
         LogMessage(kMessageReassemblyDrop, message, kErrorNoFrameReceived);
         mCounters.UpdateOnDrop(message);
         mReassemblyList.DequeueAndFree(message);
@@ -1276,6 +1285,7 @@ Error MeshForwarder::RemoveUnsecureReassemblyMessage(EvictReason aEvictReason)
     {
         if (!message.IsLinkSecurityEnabled())
         {
+            RemoveReassemblyMetadata(message);
             LogMessage(kMessageReassemblyDrop, message, kErrorNoBufs);
             mCounters.UpdateOnDrop(message);
             mReassemblyList.DequeueAndFree(message);
@@ -1311,6 +1321,7 @@ bool MeshForwarder::UpdateReassemblyList(void)
     {
         if (now - message.GetTimestamp() >= TimeMilli::SecToMsec(kReassemblyTimeout))
         {
+            RemoveReassemblyMetadata(message);
             LogMessage(kMessageReassemblyDrop, message, kErrorReassemblyTimeout);
             mCounters.UpdateOnDrop(message);
             mReassemblyList.DequeueAndFree(message);
