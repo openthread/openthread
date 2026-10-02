@@ -142,13 +142,13 @@ void Manager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent aEv
     switch (aEvent)
     {
     case BackboneRouter::kPrimaryAdded:
-    case BackboneRouter::kPrimaryRemoved:
-        break;
-
     case BackboneRouter::kPrimaryUpdatedReregister:
         VerifyOrExit(IsRunning());
         EnterState(kStateToRegisterAll);
         ScheduleTimerForReregistrationDelay();
+        break;
+
+    case BackboneRouter::kPrimaryRemoved:
         break;
 
     case BackboneRouter::kPrimaryConfigParameterChanged:
