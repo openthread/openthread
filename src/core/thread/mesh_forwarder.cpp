@@ -1094,16 +1094,20 @@ exit:
     }
 }
 
-bool MeshForwarder::MatchesReassemblySource(const Mac::Address &aFirstSource, const Mac::Address &aSource)
+bool MeshForwarder::ReassemblySourcesMatch(const Mac::Address &aFirstSource, const Mac::Address &aSource) const
 {
-    bool                matches = (aFirstSource == aSource);
+    bool                matches = false;
     const Mac::Address *shortSource;
     const Mac::Address *extendedSource;
-    Neighbor           *neighbor = nullptr;
+    const Neighbor     *neighbor = nullptr;
 
-    VerifyOrExit(!matches);
-    VerifyOrExit((aFirstSource.IsShort() || aFirstSource.IsExtended()) &&
-                 (aSource.IsShort() || aSource.IsExtended()));
+    VerifyOrExit(!aFirstSource.IsNone() && !aSource.IsNone());
+
+    if (aFirstSource == aSource)
+    {
+        ExitNow(matches = true);
+    }
+
     VerifyOrExit(aFirstSource.GetType() != aSource.GetType());
 
     // A direct neighbor can legitimately switch between extended and short source addressing during attach.
@@ -1112,7 +1116,8 @@ bool MeshForwarder::MatchesReassemblySource(const Mac::Address &aFirstSource, co
     extendedSource = aFirstSource.IsExtended() ? &aFirstSource : &aSource;
     neighbor = Get<NeighborTable>().FindNeighbor(shortSource->GetShort(), Neighbor::kInStateAnyExceptInvalid);
 
-    matches = (neighbor != nullptr) && (neighbor->GetExtAddress() == extendedSource->GetExtended());
+    VerifyOrExit(neighbor != nullptr);
+    matches = neighbor->Matches(Neighbor::AddressMatcher(*extendedSource, Neighbor::kInStateAnyExceptInvalid));
 
 exit:
     return matches;
@@ -1216,7 +1221,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
             // Security Check: only consider reassembly buffers that had the same Security Enabled setting.
             if (metadata.mDatagramSize == fragmentHeader.GetDatagramSize() &&
                 msg.GetDatagramTag() == fragmentHeader.GetDatagramTag() &&
-                MatchesReassemblySource(metadata.mSource, aRxInfo.GetSrcAddr()) &&
+                ReassemblySourcesMatch(metadata.mSource, aRxInfo.GetSrcAddr()) &&
                 msg.GetOffset() == fragmentHeader.GetDatagramOffset() &&
                 msg.GetOffset() + aRxInfo.mFrameData.GetLength() <= metadata.mDatagramSize &&
                 msg.IsLinkSecurityEnabled() == aRxInfo.IsLinkSecurityEnabled())

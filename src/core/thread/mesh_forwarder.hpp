@@ -349,7 +349,7 @@ private:
         Mac::Address mSource;
     };
 
-    bool MatchesReassemblySource(const Mac::Address &aFirstSource, const Mac::Address &aSource);
+    bool ReassemblySourcesMatch(const Mac::Address &aFirstSource, const Mac::Address &aSource) const;
     void RemoveReassemblyMetadata(Message &aMessage);
 
 #if OPENTHREAD_FTD
