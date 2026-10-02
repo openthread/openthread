@@ -42,6 +42,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/num_utils.hpp"
 #include "instance/instance.hpp"
 #include "mac/mac_frame.hpp"
 
@@ -140,6 +141,36 @@ void NcpBase::NotifySwitchoverDone(bool aSuccess)
     IgnoreError(WriteLastStatusFrame(header, result));
 }
 #endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+
+void NcpBase::NotifyRadioAvailabilityUpdated(void)
+{
+    // Defer encoding to the tasklet so that the radio driver never re-enters `mEncoder`.
+    mChangedPropsSet.AddProperty(SPINEL_PROP_RCP_RADIO_AVAILABILITY);
+    mUpdateChangedPropsTask.Post();
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_RADIO_AVAILABILITY>(void)
+{
+    otError             error;
+    otRadioAvailability availability;
+    uint8_t             numBytes;
+
+    SuccessOrExit(error = otPlatRadioGetAvailability(mInstance, &availability));
+
+    numBytes = DivideAndRoundUp<uint8_t>(availability.mNumSlots, kBitsPerByte);
+
+    SuccessOrExit(error = mEncoder.WriteUint64(availability.mTimestamp));
+    SuccessOrExit(error = mEncoder.WriteUint8(availability.mNumSlots));
+    SuccessOrExit(error = mEncoder.WriteDataWithLen(availability.mAvailableSlots, numBytes));
+
+    if ((numBytes > 0) && (availability.mPreferredSlots != nullptr))
+    {
+        SuccessOrExit(error = mEncoder.WriteDataWithLen(availability.mPreferredSlots, numBytes));
+    }
+
+exit:
+    return error;
+}
 
 void NcpBase::LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
@@ -648,5 +679,17 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_LOG_CRASH_DUMP>(v
 
 } // namespace Ncp
 } // namespace ot
+
+extern "C" void otPlatRadioAvailabilityUpdated(otInstance *aInstance)
+{
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    OT_UNUSED_VARIABLE(aInstance);
+
+    if (ncp != nullptr)
+    {
+        ncp->NotifyRadioAvailabilityUpdated();
+    }
+}
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

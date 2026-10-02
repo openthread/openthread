@@ -80,6 +80,7 @@ enum
     OT_RADIO_SYMBOL_RATE = 62500, ///< The O-QPSK PHY symbol rate when operating in the 780MHz, 915MHz, 2380MHz, 2450MHz
     OT_RADIO_SYMBOL_TIME = 1000000 * 1 / OT_RADIO_SYMBOL_RATE, ///< Symbol duration time in unit of microseconds
     OT_RADIO_TEN_SYMBOLS_TIME = 10 * OT_RADIO_SYMBOL_TIME,     ///< Time for 10 symbols in unit of microseconds
+    OT_RADIO_SLOT_TIME_US     = 625,                           ///< Radio slot duration time in unit of microseconds.
 
     OT_RADIO_LQI_NONE      = 0,   ///< LQI measurement not supported
     OT_RADIO_RSSI_INVALID  = 127, ///< Invalid or unknown RSSI value
@@ -1556,6 +1557,60 @@ extern otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
                                              uint8_t     aChannel,
                                              uint8_t    *aRawPowerSetting,
                                              uint16_t   *aRawPowerSettingLength);
+
+/**
+ * Represents the radio availability schedule.
+ *
+ * The radio availability schedule is a periodic map of @p mNumSlots slots, each lasting `OT_RADIO_SLOT_TIME_US`
+ * microseconds, starting at @p mTimestamp.
+ *
+ * The bitmaps are LSB-first: slot `i` corresponds to bit `i % 8` of byte `i / 8`, i.e.,
+ * `(bitmap[i / 8] >> (i % 8)) & 1`. Each bitmap is `ceil(mNumSlots / 8)` bytes long. A bit value of 1 indicates that
+ * the slot is available (in @p mAvailableSlots) or preferred (in @p mPreferredSlots), and 0 indicates that it is
+ * unavailable or not preferred.
+ */
+typedef struct otRadioAvailability
+{
+    uint64_t       mTimestamp;      ///< Local radio clock time in microseconds when the schedule starts.
+    const uint8_t *mAvailableSlots; ///< The available radio slots bitmap.
+    const uint8_t *mPreferredSlots; ///< The preferred radio slots bitmap, or NULL if not provided.
+    uint8_t        mNumSlots;       ///< The number of slots. Value 0 indicates the radio is always available.
+} otRadioAvailability;
+
+/**
+ * The radio driver calls this function to notify OpenThread that the radio availability has changed.
+ *
+ * When Thread uses the same radio chip with BT or 2.4GHz WiFi, the radio driver has the ability to know when BT or
+ * WiFi will occupy the radio. To reduce the interference between Thread and BT or WiFi, the radio driver calls this
+ * function to notify OpenThread, which then retrieves the current schedule via `otPlatRadioGetAvailability()`.
+ * OpenThread will try its best to avoid using the unavailable radio slots and prioritize the preferred radio slots.
+ *
+ * The radio driver should call this function once the radio is enabled (see `otPlatRadioEnable()`) to report the
+ * initial radio availability schedule, and whenever the radio availability schedule changes thereafter.
+ *
+ * A radio driver that calls this function MUST implement `otPlatRadioGetAvailability()`.
+ *
+ * @note This function should be called by the same thread that executes all of the other OpenThread code. It should
+ *       not be called by ISR or any other task.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ */
+extern void otPlatRadioAvailabilityUpdated(otInstance *aInstance);
+
+/**
+ * Gets the current radio availability schedule.
+ *
+ * The bitmaps referenced by @p aAvailability are owned by the radio driver. OpenThread only reads them before
+ * returning control to the caller of the OpenThread function in which it called `otPlatRadioGetAvailability()`, and
+ * never retains the pointers.
+ *
+ * @param[in]   aInstance      The OpenThread instance structure.
+ * @param[out]  aAvailability  A pointer to output the radio availability schedule.
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the radio availability schedule.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  The radio driver does not support reporting radio availability.
+ */
+otError otPlatRadioGetAvailability(otInstance *aInstance, otRadioAvailability *aAvailability);
 
 /**
  * @}

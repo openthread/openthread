@@ -337,6 +337,38 @@ void FakePlatform::FlashWrite(uint8_t aSwapIndex, uint32_t aOffset, const void *
     }
 }
 
+void FakePlatform::UpdateRadioAvailability(uint64_t       aTimestamp,
+                                           const uint8_t *aAvailableSlots,
+                                           const uint8_t *aPreferredSlots,
+                                           uint8_t        aNumSlots)
+{
+    size_t numBytes = (aNumSlots + 7) / 8;
+
+    mHasRadioAvailability   = true;
+    mRadioAvailTimestamp    = aTimestamp;
+    mRadioAvailNumSlots     = aNumSlots;
+    mRadioAvailHasPreferred = (aPreferredSlots != nullptr);
+    mRadioAvailAvailableSlots.assign(aAvailableSlots, aAvailableSlots + (aAvailableSlots ? numBytes : 0));
+    mRadioAvailPreferredSlots.assign(aPreferredSlots, aPreferredSlots + (aPreferredSlots ? numBytes : 0));
+
+    otPlatRadioAvailabilityUpdated(mInstance);
+}
+
+otError FakePlatform::GetRadioAvailability(otRadioAvailability &aAvailability) const
+{
+    if (!mHasRadioAvailability)
+    {
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
+
+    aAvailability.mTimestamp      = mRadioAvailTimestamp;
+    aAvailability.mNumSlots       = mRadioAvailNumSlots;
+    aAvailability.mAvailableSlots = mRadioAvailAvailableSlots.data();
+    aAvailability.mPreferredSlots = mRadioAvailHasPreferred ? mRadioAvailPreferredSlots.data() : nullptr;
+
+    return OT_ERROR_NONE;
+}
+
 } // namespace ot
 
 extern "C" {
@@ -471,6 +503,11 @@ otError otPlatRadioSetCoexEnabled(otInstance *, bool) { return OT_ERROR_NOT_IMPL
 otError otPlatRadioConfigureEnhAckProbing(otInstance *, otLinkMetrics, otShortAddress, const otExtAddress *)
 {
     return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioGetAvailability(otInstance *, otRadioAvailability *aAvailability)
+{
+    return FakePlatform::CurrentPlatform().GetRadioAvailability(*aAvailability);
 }
 
 // Add WEAK here because in some unit test there is an implementation for `otPlatRadioSetChannelTargetPower`

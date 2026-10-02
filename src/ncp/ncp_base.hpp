@@ -151,6 +151,13 @@ public:
     void NotifySwitchoverDone(otInstance *aInstance, bool aSuccess);
 #endif
 
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    /**
+     * Called to schedule a notification to host about radio availability update.
+     */
+    void NotifyRadioAvailabilityUpdated(void);
+#endif
+
     /**
      * This method returns the IID of the current spinel command.
      *
