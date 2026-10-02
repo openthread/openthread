@@ -51,6 +51,9 @@ SubMac::SubMac(Instance &aInstance)
     , mRadioCaps(Get<Radio::Radio>().GetCaps())
     , mTransmitFrame(Get<Radio::Radio>().GetTransmitBuffer())
     , mCallbacks(aInstance)
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    , mListenScheduler(aInstance)
+#endif
     , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslReceiver(aInstance)
@@ -89,6 +92,7 @@ void SubMac::Init(void)
 #if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
     mActiveTimedRx.Clear();
     mPendingTimedRx.Clear();
+    mListenScheduler.Stop();
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -212,6 +216,10 @@ Error SubMac::Enable(void)
 
     SetState(kStateSleep);
 
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    mListenScheduler.Start();
+#endif
+
 exit:
     SuccessOrAssert(error);
     return error;
@@ -224,10 +232,7 @@ Error SubMac::Disable(void)
 #if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
     mActiveTimedRx.Clear();
     mPendingTimedRx.Clear();
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mCslReceiver.Stop();
+    mListenScheduler.Stop();
 #endif
 
     mTimer.Stop();
@@ -848,8 +853,15 @@ void SubMac::HandleEnergyScanDone(int8_t aMaxRssi)
 
 void SubMac::ReceiveAt(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel)
 {
+    TimedRx timedRx;
+
+    timedRx.Init(aStartTime, aDuration, aChannel);
+    ReceiveAt(timedRx);
+}
+
+void SubMac::ReceiveAt(const TimedRx &aTimedRx)
+{
     Radio::SyncedTime now;
-    TimedRx           timedRx;
 
     VerifyOrExit(mState != kStateDisabled);
 
@@ -860,16 +872,27 @@ void SubMac::ReceiveAt(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aCh
     }
 #endif
 
-    timedRx.Init(aStartTime, aDuration, aChannel);
+    if (!aTimedRx.IsSpecified())
+    {
+        CancelPendingReceiveAt();
+        ExitNow();
+    }
 
     now.SetToNow(Get<Radio::Radio>());
 
-    VerifyOrExit(!timedRx.HasEnded(now));
+    VerifyOrExit(!aTimedRx.HasEnded(now));
 
     if (!ShouldHandle(kCapReceiveTiming))
     {
-        timedRx.ScheduleOnRadio(Get<Radio::Radio>());
+        aTimedRx.ScheduleOnRadio(Get<Radio::Radio>());
         ExitNow();
+    }
+
+    VerifyOrExit(mPendingTimedRx != aTimedRx);
+
+    if (!mPendingTimedRx.IsSpecified())
+    {
+        VerifyOrExit(aTimedRx != mActiveTimedRx);
     }
 
     if (mPendingTimedRx.IsSpecified() && mPendingTimedRx.HasStarted(now) && !mPendingTimedRx.HasEnded(now))
@@ -891,7 +914,7 @@ void SubMac::ReceiveAt(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aCh
         }
     }
 
-    mPendingTimedRx = timedRx;
+    mPendingTimedRx = aTimedRx;
 
     switch (mState)
     {
@@ -948,20 +971,15 @@ void SubMac::ProcessTimedRx(void)
     // timed RX, scheduling the timer for upcoming windows, or putting
     // the radio to sleep when active reception window ends.
 
-    Radio::Time64     fireTime = Radio::kMaxTime64;
-    Radio::SyncedTime now;
-
-    mTimer.Stop();
-
-    now.SetToNow(Get<Radio::Radio>());
+    NextRadioFireTime nextFireTime(GetInstance());
 
     // Start pending `TimedRx` if due, or clear it if missed.
 
     if (mPendingTimedRx.IsSpecified())
     {
-        if (mPendingTimedRx.HasStarted(now))
+        if (mPendingTimedRx.HasStarted(nextFireTime.GetNow()))
         {
-            if (!mPendingTimedRx.HasEnded(now))
+            if (!mPendingTimedRx.HasEnded(nextFireTime.GetNow()))
             {
                 StartPendingTimedRx();
             }
@@ -970,13 +988,13 @@ void SubMac::ProcessTimedRx(void)
         }
         else
         {
-            fireTime = mPendingTimedRx.GetStartTime();
+            nextFireTime.UpdateIfEarlier(mPendingTimedRx.GetStartTime());
         }
     }
 
     VerifyOrExit(mActiveTimedRx.IsSpecified());
 
-    if (!mActiveTimedRx.HasEnded(now))
+    if (!mActiveTimedRx.HasEnded(nextFireTime.GetNow()))
     {
         if (mState != kStateTimedReceive)
         {
@@ -984,7 +1002,7 @@ void SubMac::ProcessTimedRx(void)
             SetState(kStateTimedReceive);
         }
 
-        fireTime = Min(fireTime, mActiveTimedRx.GetEndTime());
+        nextFireTime.UpdateIfEarlier(mActiveTimedRx.GetEndTime());
         ExitNow();
     }
 
@@ -1005,22 +1023,7 @@ void SubMac::ProcessTimedRx(void)
     }
 
 exit:
-
-    if (fireTime != Radio::kMaxTime64)
-    {
-        // Schedule the timer to fire at a target radio time `fireTime`,
-        // using the synced reference `now` to translate radio time to
-        // local time.
-
-        uint32_t delay = 0;
-
-        if (fireTime > now.GetAsTime64())
-        {
-            delay = ClampToUint32(fireTime - now.GetAsTime64());
-        }
-
-        StartTimerAt(now.GetAsLocalTimeMicro(), delay);
-    }
+    nextFireTime.ScheduleTimer(mTimer);
 }
 
 void SubMac::TimedRx::Init(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel)
@@ -1036,6 +1039,17 @@ void SubMac::TimedRx::ScheduleOnRadio(Radio::Radio &aRadio) const
     Error error = aRadio.ReceiveAt(mChannel, Radio::ConvertTime64To32(mStartTime), mDuration);
 
     LogWarnOnError(error, "Radio::ReceiveAt()");
+}
+
+bool SubMac::TimedRx::operator==(const TimedRx &aOther) const
+{
+    bool matches = false;
+
+    VerifyOrExit(mIsSpecified && aOther.mIsSpecified);
+    matches = (mStartTime == aOther.mStartTime) && (mDuration == aOther.mDuration) && (mChannel == aOther.mChannel);
+
+exit:
+    return matches;
 }
 
 #endif // OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
@@ -1258,6 +1272,127 @@ const char *SubMac::StateToString(State aState)
 }
 
 // LCOV_EXCL_STOP
+
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// NextRadioFireTime
+
+SubMac::NextRadioFireTime::NextRadioFireTime(Instance &aInstance)
+    : mFireTime(Radio::kMaxTime64)
+{
+    mNow.SetToNow(aInstance.Get<Radio::Radio>());
+}
+
+void SubMac::NextRadioFireTime::ScheduleTimer(TimerMicro &aTimer) const
+{
+    // Schedule `aTimer` to fire at the radio time `mFireTime`
+    // using the synced reference `mNow` to translate radio time to
+    // local time.
+
+    uint32_t delay;
+
+    if (mFireTime == Radio::kMaxTime64)
+    {
+        aTimer.Stop();
+        ExitNow();
+    }
+
+    delay = (mFireTime <= mNow.GetAsTime64()) ? 0 : ClampToUint32(mFireTime - mNow.GetAsTime64());
+
+    aTimer.StartAt(mNow.GetAsLocalTimeMicro(), delay);
+
+exit:
+    return;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// ListenScheduler
+
+SubMac::ListenScheduler::ListenScheduler(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTimer(aInstance)
+{
+}
+
+void SubMac::ListenScheduler::Stop(void) { mTimer.Stop(); }
+
+void SubMac::ListenScheduler::Schedule(void)
+{
+    SchedInfo info(GetInstance());
+
+    VerifyOrExit(Get<SubMac>().IsEnabled());
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    ScheduleCsl(info);
+#endif
+
+    Get<SubMac>().ReceiveAt(info.GetTimedRx());
+
+    info.ScheduleNextFireTimeOn(mTimer);
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+void SubMac::ListenScheduler::ScheduleCsl(SchedInfo &aInfo)
+{
+    CslReceiver &cslReceiver = Get<SubMac>().mCslReceiver;
+
+    VerifyOrExit(cslReceiver.IsEnabled());
+
+    // Advance the CSL window once within `kCslTransitionToNextAheadTime`
+    // of the next window's start time, and set the next timer fire time
+    // to that transition point. Both current and next windows are then
+    // considered for timed RX (selecting the earliest one that has not
+    // yet ended).
+
+    while (cslReceiver.GetNextWindow().GetStartTime() <= aInfo.GetNow().GetAsTime64() + kCslTransitionToNextAheadTime)
+    {
+        cslReceiver.AdvanceToNextWindow();
+    }
+
+    aInfo.UpdateNextFireTime(cslReceiver.GetNextWindow().GetStartTime() - kCslTransitionToNextAheadTime);
+
+    aInfo.UpdateTimedRxIfEarlier(cslReceiver.GetNextWindow());
+    aInfo.UpdateTimedRxIfEarlier(cslReceiver.GetCurWindow());
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// ListenScheduler::SchedInfo
+
+SubMac::ListenScheduler::SchedInfo::SchedInfo(Instance &aInstance)
+    : mNextFireTime(aInstance)
+{
+}
+
+void SubMac::ListenScheduler::SchedInfo::UpdateTimedRxIfEarlier(const TimedRx &aTimedRx)
+{
+    // Updates `mTimedRx` to `aTimedRx` if `aTimedRx` is specified, has
+    // not yet ended, and starts earlier than the current `mTimedRx`.
+
+    VerifyOrExit(aTimedRx.IsSpecified());
+    VerifyOrExit(!aTimedRx.HasEnded(GetNow()));
+
+    if (mTimedRx.IsSpecified())
+    {
+        VerifyOrExit(aTimedRx.GetStartTime() < mTimedRx.GetStartTime());
+    }
+
+    mTimedRx = aTimedRx;
+
+exit:
+    return;
+}
+
+#endif // OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
 
 } // namespace Mac
 } // namespace ot
