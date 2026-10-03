@@ -73,8 +73,12 @@ Utils::Heap *Instance::sHeap{nullptr};
 #endif
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 LogLevel Instance::sGlobalLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
+#else
+LogLevel Instance::sLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
+#endif
 #endif
 
 Instance::Instance(void)
@@ -318,15 +322,14 @@ Instance::Instance(void)
     , mPowerCalibration(*this)
 #endif
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     , mLogLevel(static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT))
+    , mIsLogLevelSet(false)
+#endif
 #if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
     , mOriginalLogLevel(kLogLevelNone)
     , mOverrideLogLevel(kLogLevelNone)
     , mIsLogLevelOverridden(false)
-#endif
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    , mIsLogLevelSet(false)
-#else
 #endif
 #endif
     , mIsInitialized(false)
@@ -601,36 +604,60 @@ Error Instance::SetLogLevel(LogLevel aLogLevel)
     ExitNow(error = kErrorNotCapable);
 #else
 #if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
-    if (mIsLogLevelOverridden)
+    if (IsInitialized() && mIsLogLevelOverridden)
     {
         mOriginalLogLevel = aLogLevel;
         aLogLevel         = Max(aLogLevel, mOverrideLogLevel);
     }
 #endif
-    VerifyOrExit(mLogLevel != aLogLevel);
-    mLogLevel = aLogLevel;
-    SignalLogLevelChange();
+    UpdateLogLevel(aLogLevel, /* aOverride */ false);
 #endif
 
 exit:
     return error;
 }
 
-void Instance::SignalLogLevelChange(void)
+void Instance::UpdateLogLevel(LogLevel aLogLevel, bool aOverride)
 {
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    mIsLogLevelSet = true;
-#else
-    otPlatLogHandleLevelChanged(mLogLevel);
-#endif
+    if (mIsLogLevelSet || aOverride)
+    {
+        VerifyOrExit(mLogLevel != aLogLevel);
+    }
+
+    mLogLevel = aLogLevel;
+
+    if (!aOverride)
+    {
+        // An explicit (non-override) log level assignment decouples
+        // this instance from the global log level. Temporary overrides
+        // do not mark the level as set, allowing the instance to
+        // resume tracking the global level upon restore.
+
+        mIsLogLevelSet = true;
+    }
 
     otPlatLogHandleLogLevelChanged(this, mLogLevel);
+#else
+    VerifyOrExit(sLogLevel != aLogLevel);
+    sLogLevel = aLogLevel;
+    otPlatLogHandleLevelChanged(sLogLevel);
+    VerifyOrExit(IsInitialized());
+    otPlatLogHandleLogLevelChanged(this, sLogLevel);
+
+    OT_UNUSED_VARIABLE(aOverride);
+#endif
+
+exit:
+    return;
 }
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
 void Instance::OverrideLogLevel(LogLevel aLogLevel)
 {
     LogLevel logLevel;
+
+    VerifyOrExit(IsInitialized());
 
     if (!mIsLogLevelOverridden)
     {
@@ -642,9 +669,7 @@ void Instance::OverrideLogLevel(LogLevel aLogLevel)
 
     logLevel = Max(mOverrideLogLevel, mOriginalLogLevel);
 
-    VerifyOrExit(mLogLevel != logLevel);
-    mLogLevel = logLevel;
-    SignalLogLevelChange();
+    UpdateLogLevel(logLevel, /* aOverride */ true);
 
 exit:
     return;
@@ -654,7 +679,11 @@ void Instance::RestoreLogLevel(void)
 {
     VerifyOrExit(mIsLogLevelOverridden);
     mIsLogLevelOverridden = false;
-    IgnoreError(SetLogLevel(mOriginalLogLevel));
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    UpdateLogLevel(mIsLogLevelSet ? mOriginalLogLevel : sGlobalLogLevel, /* aOverride */ true);
+#else
+    UpdateLogLevel(mOriginalLogLevel, /* aOverride */ true);
+#endif
 
 exit:
     return;
