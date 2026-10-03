@@ -964,18 +964,20 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     err = setsockopt(sIpFd, IPPROTO_IPV6, (aIsAdded ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP), &mreq, sizeof(mreq));
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    if ((err != 0) && (errno == EINVAL) && (IN6_IS_ADDR_MC_LINKLOCAL(&mreq.ipv6mr_multiaddr)))
+    if ((err != 0) && (IN6_IS_ADDR_MC_LINKLOCAL(&mreq.ipv6mr_multiaddr)) &&
+        ((errno == EINVAL) || (!aIsAdded && (errno == EADDRNOTAVAIL))))
     {
         // FIX ME
         // on mac OS (and FreeBSD), the first time we run (but not subsequently), we get a failure on this
         // particular join. do we need to bring up the interface at least once prior to joining? we need to figure
-        // out why so we can get rid of this workaround
-        char addressString[INET6_ADDRSTRLEN + 1];
+        // out why so we can get rid of this workaround.
+        // The leave of a group whose join was tolerated this way fails with EADDRNOTAVAIL, as the group was never
+        // joined. Tolerate it too, so that the interface can go down (and the process exit) cleanly.
+        const char *errnoName = (errno == EINVAL) ? "EINVAL" : "EADDRNOTAVAIL";
 
-        inet_ntop(AF_INET6, mreq.ipv6mr_multiaddr.s6_addr, addressString, sizeof(addressString));
-        LogWarn("Ignoring %s failure (EINVAL) for MC LINKLOCAL address (%s)",
-                aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP", addressString);
-        err = 0;
+        LogWarn("Ignoring %s failure (%s) for MC LINKLOCAL address (%s)",
+                aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP", errnoName, Ip6AddressString(&aAddress).AsCString());
+        ExitNow();
     }
 #endif
 
