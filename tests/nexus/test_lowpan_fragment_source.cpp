@@ -327,14 +327,19 @@ static void TestAddressTransitionAccepted(void)
     nextMessage->SetDatagramTag(firstMessage->GetDatagramTag());
     nextMessage->SetOffset(nextOffset);
 
-    PrepareAndDeliverDirect(*originB, *receiver, *nextMessage, wrongShortAddresses);
+    while (nextMessage->GetOffset() < nextMessage->GetLength())
+    {
+        nextOffset = PrepareAndDeliverDirect(*originB, *receiver, *nextMessage, wrongShortAddresses);
+        nextMessage->SetOffset(nextOffset);
+    }
+
     nexus.AdvanceTime(50);
     VerifyOrQuit(receiver->Get<MeshForwarder>().GetCounters().mRxSuccess == rxBefore);
 
-    while (nextMessage->GetOffset() < nextMessage->GetLength())
+    while (firstMessage->GetOffset() < firstMessage->GetLength())
     {
-        nextOffset = PrepareAndDeliverDirect(*originA, *receiver, *nextMessage, shortAddresses);
-        nextMessage->SetOffset(nextOffset);
+        nextOffset = PrepareAndDeliverDirect(*originA, *receiver, *firstMessage, shortAddresses);
+        firstMessage->SetOffset(nextOffset);
     }
 
     nexus.AdvanceTime(50);
