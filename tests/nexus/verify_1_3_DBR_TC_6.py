@@ -106,23 +106,18 @@ def verify(pv):
         if not (hasattr(p, 'mle') and p.mle.cmd == consts.MLE_DATA_RESPONSE):
             return False
 
-        prefixes = verify_utils.as_list(p.thread_nwd.tlv.prefix)
         # Check for ::/0
-        if Ipv6Addr('::') not in prefixes:
+        if not verify_utils.check_nwd_has_route(p, '::', pref=(0, 3)):
+            return False
+
+        # Check that BR2's OMR prefix exists
+        if not verify_utils.check_nwd_prefix_flags(p, OMR_PREFIX, o=1, s=1):
             return False
 
         # Check that ONLY ONE OMR prefix exists (the one from BR2)
-        omr_prefixes = [pref for pref in prefixes if pref != Ipv6Addr('::')]
-        if len(omr_prefixes) != 1:
-            return False
-
-        # Check Preference of ::/0 (Has Route TLV)
         try:
-            # Find the index of :: prefix
-            idx = prefixes.index(Ipv6Addr('::'))
-            # Preference should be Medium (0) or Low (3 in some dissectors, or 11 binary)
-            pref = verify_utils.as_list(p.thread_nwd.tlv.has_route.pref)[idx]
-            if pref not in (0, 3):
+            on_mesh_count = sum(1 for o in verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.o) if o == 1)
+            if on_mesh_count != 1:
                 return False
         except (AttributeError, IndexError):
             pass
