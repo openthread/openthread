@@ -52,6 +52,11 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mReceiveDoneCallback(nullptr)
     , mTransmitDoneCallback(nullptr)
     , mEnergyScanDoneCallback(nullptr)
+    , mBurstTimer(aInstance)
+    , mBurstStartTime(0)
+    , mBurstChannelMask(0)
+    , mBurstPeriod(0)
+    , mBurstCount(0)
 #if OPENTHREAD_RADIO
     , mSubMac(aInstance)
 #elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
@@ -63,6 +68,8 @@ LinkRaw::LinkRaw(Instance &aInstance)
 
 void LinkRaw::Init(void)
 {
+    CancelBurst();
+
     mEnergyScanDoneCallback = nullptr;
     mTransmitDoneCallback   = nullptr;
     mReceiveDoneCallback    = nullptr;
@@ -81,6 +88,8 @@ Error LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
     bool  enable = aCallback != nullptr;
 
     LogDebg("Enabled(%s)", (enable ? "true" : "false"));
+
+    CancelBurst();
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
@@ -194,16 +203,119 @@ void LinkRaw::InvokeReceiveDone(RxFrame *aFrame, Error aError)
     }
 }
 
-Error LinkRaw::Transmit(otLinkRawTransmitDone aCallback)
+void LinkRaw::CancelBurst(void)
 {
-    Error error = kErrorNone;
+    mBurstTimer.Stop();
+    mBurstChannelMask = 0;
+    mBurstPeriod      = 0;
+    mBurstCount       = 0;
+}
+
+bool LinkRaw::GetNextBurstChannel(uint8_t &aChannel) const
+{
+    bool found = false;
+
+    for (aChannel++; aChannel <= Radio::kChannelMax; aChannel++)
+    {
+        if (GetBit(mBurstChannelMask, aChannel))
+        {
+            ExitNow(found = true);
+        }
+    }
+
+exit:
+    return found;
+}
+
+void LinkRaw::HandleBurstTimer(void)
+{
+    Error    error;
+    TxFrame &frame    = mSubMac.GetTransmitFrame();
+    uint32_t periodUs = static_cast<uint32_t>(mBurstPeriod) * kBurstSlotTimeUs;
+
+    VerifyOrExit((mBurstCount > 0) && IsEnabled(), CancelBurst());
+
+    if (periodUs > 0)
+    {
+        mBurstStartTime += periodUs;
+
+        if (frame.IsTargetTxTimeSpecified())
+        {
+            frame.mInfo.mTxInfo.mTxDelay += periodUs;
+        }
+    }
+    else
+    {
+        mBurstStartTime = TimerMicro::GetNow();
+        frame.ClearTargetTxTime();
+    }
+
+    if (mBurstChannelMask != 0)
+    {
+        uint8_t firstChannel = Radio::kChannelMin - 1;
+
+        IgnoreReturnValue(GetNextBurstChannel(firstChannel));
+        frame.mChannel = firstChannel;
+    }
+
+    error = mSubMac.Send();
+
+    if (error != kErrorNone)
+    {
+        LogWarnOnError(error, "send burst frame");
+        ProcessTransmitDone(frame, nullptr, error);
+    }
+
+exit:
+    return;
+}
+
+Error LinkRaw::Transmit(otLinkRawTransmitDone aCallback,
+                        uint16_t              aBurstCount,
+                        uint16_t              aBurstPeriod,
+                        uint32_t              aBurstChannelMask)
+{
+    Error    error = kErrorNone;
+    TxFrame &frame = mSubMac.GetTransmitFrame();
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+
+    CancelBurst();
+
+    if (aBurstCount > 0)
+    {
+        TxFrame::ParseInfo frameInfo;
+
+        VerifyOrExit(frameInfo.ParseFrom(frame, Frame::kParseAddrFields) == kErrorNone, error = kErrorInvalidArgs);
+        VerifyOrExit(!frameInfo.mIsAckRequest, error = kErrorInvalidArgs);
+        VerifyOrExit(!frameInfo.mIsSecurityEnabled || frame.IsSecurityProcessed(), error = kErrorInvalidArgs);
+
+        if (aBurstChannelMask != 0)
+        {
+            uint8_t channel = Radio::kChannelMin - 1;
+
+            mBurstChannelMask = aBurstChannelMask & Radio::kSupportedChannels;
+            VerifyOrExit(GetNextBurstChannel(channel), error = kErrorInvalidArgs);
+            frame.mChannel = channel;
+        }
+
+        if (aBurstCount > 1)
+        {
+            mBurstCount     = aBurstCount;
+            mBurstPeriod    = aBurstPeriod;
+            mBurstStartTime = frame.IsTargetTxTimeSpecified() ? Time(frame.GetTargetTxTime()) : TimerMicro::GetNow();
+        }
+    }
 
     SuccessOrExit(error = mSubMac.Send());
     mTransmitDoneCallback = aCallback;
 
 exit:
+    if (error != kErrorNone)
+    {
+        CancelBurst();
+    }
+
     return error;
 }
 
@@ -211,11 +323,59 @@ void LinkRaw::InvokeTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFr
 {
     LogDebg("TransmitDone(%u bytes), error:%s", aFrameInfo.GetTxFrame()->GetLength(), ErrorToString(aError));
 
-    if (mTransmitDoneCallback)
+    ProcessTransmitDone(*aFrameInfo.GetTxFrame(), aAckFrame, aError);
+}
+
+void LinkRaw::ProcessTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
+{
+    if (mBurstChannelMask != 0)
     {
-        mTransmitDoneCallback(&GetInstance(), aFrameInfo.GetTxFrame(), aAckFrame, aError);
-        mTransmitDoneCallback = nullptr;
+        uint8_t nextChannel = aFrame.GetChannel();
+
+        while (GetNextBurstChannel(nextChannel))
+        {
+            Error error;
+
+            aFrame.mChannel = nextChannel;
+            error           = mSubMac.Send();
+
+            if (error == kErrorNone)
+            {
+                ExitNow();
+            }
+
+            LogWarnOnError(error, "send burst frame");
+        }
     }
+
+    if (mBurstCount > 1)
+    {
+        uint32_t periodUs = static_cast<uint32_t>(mBurstPeriod) * kBurstSlotTimeUs;
+        uint32_t delayUs  = periodUs;
+
+        if (aFrame.IsTargetTxTimeSpecified())
+        {
+            delayUs = (periodUs > kBurstTxAheadUs) ? (periodUs - kBurstTxAheadUs) : 0;
+        }
+
+        mBurstCount--;
+        mBurstTimer.StartAt(mBurstStartTime, delayUs);
+    }
+    else
+    {
+        CancelBurst();
+    }
+
+    if (mTransmitDoneCallback != nullptr)
+    {
+        otLinkRawTransmitDone callback = mTransmitDoneCallback;
+
+        mTransmitDoneCallback = nullptr;
+        callback(&GetInstance(), &aFrame, aAckFrame, aError);
+    }
+
+exit:
+    return;
 }
 
 Error LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback)

@@ -452,7 +452,10 @@ exit:
 }
 #endif /* OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE */
 
-otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
+otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame,
+                                          uint16_t     &aBurstCount,
+                                          uint16_t     &aBurstPeriod,
+                                          uint32_t     &aBurstChannelMask)
 {
     otError        error;
     const uint8_t *payloadPtr;
@@ -484,6 +487,9 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mTxDelay              = 0;
     aFrame.mInfo.mTxInfo.mTxDelayBaseTime      = 0;
     aFrame.mInfo.mTxInfo.mTxPower              = OT_RADIO_POWER_INVALID;
+    aBurstCount                                = 0;
+    aBurstPeriod                               = 0;
+    aBurstChannelMask                          = 0;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -509,6 +515,10 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelayBaseTime));
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mRxChannelAfterTxDone));
     SuccessOrExit(mDecoder.ReadInt8(aFrame.mInfo.mTxInfo.mTxPower));
+    SuccessOrExit(mDecoder.ReadUint16(aBurstCount));
+    VerifyOrExit(aBurstCount > 0);
+    SuccessOrExit(mDecoder.ReadUint16(aBurstPeriod));
+    SuccessOrExit(mDecoder.ReadUint32(aBurstChannelMask));
 
 exit:
     return error;
@@ -516,8 +526,11 @@ exit:
 
 otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
 {
-    otError       error = OT_ERROR_NONE;
-    uint8_t       iid   = SPINEL_HEADER_GET_IID(aHeader);
+    otError       error            = OT_ERROR_NONE;
+    uint8_t       iid              = SPINEL_HEADER_GET_IID(aHeader);
+    uint16_t      burstCount       = 0;
+    uint16_t      burstPeriod      = 0;
+    uint32_t      burstChannelMask = 0;
     otRadioFrame *frame;
 
     OT_ASSERT(iid < kSpinelInterfaceCount);
@@ -527,11 +540,12 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
     frame = otLinkRawGetTransmitBuffer(mInstance);
     VerifyOrExit(frame != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = DecodeStreamRawTxRequest(*frame));
+    SuccessOrExit(error = DecodeStreamRawTxRequest(*frame, burstCount, burstPeriod, burstChannelMask));
 
     // Pass frame to the radio layer. Note, this fails if we
     // haven't enabled raw stream or are already transmitting.
-    SuccessOrExit(error = otLinkRawTransmit(mInstance, &NcpBase::LinkRawTransmitDone));
+    SuccessOrExit(error = mInstance->Get<Mac::LinkRaw>().Transmit(&NcpBase::LinkRawTransmitDone, burstCount,
+                                                                  burstPeriod, burstChannelMask));
 
     // Cache the transaction ID for async response
     mCurTransmitTID[iid] = SPINEL_HEADER_GET_TID(aHeader);

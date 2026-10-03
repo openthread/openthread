@@ -40,9 +40,11 @@
 
 #include <openthread/link_raw.h>
 
+#include "common/bit_utils.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
+#include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/sub_mac.hpp"
 
@@ -113,16 +115,27 @@ public:
     TxFrame &GetTransmitFrame(void) { return mSubMac.GetTransmitFrame(); }
 
     /**
-     * Starts a (single) Transmit on the link-layer.
+     * Starts a Transmit (single, multi-channel, or periodic burst) on the link-layer.
      *
      * @note The callback @p aCallback will not be called if this call does not return kErrorNone.
      *
-     * @param[in]  aCallback            A pointer to a function called on completion of the transmission.
+     * @param[in]  aCallback          A pointer to a function called on completion of the transmission.
+     * @param[in]  aBurstCount        The total number of scheduled burst ticks/periods (0 for single tx; when 0,
+     *                                @p aBurstPeriod and @p aBurstChannelMask are ignored).
+     * @param[in]  aBurstPeriod       The repeat period in 625 us slot units for burst transmission (0 for back-to-back
+     *                                burst ticks).
+     * @param[in]  aBurstChannelMask  The channel bitmask for multi-channel transmission per burst tick (0 for primary
+     *                                channel only).
      *
      * @retval kErrorNone           Successfully transitioned to Transmit.
+     * @retval kErrorInvalidArgs    Burst is requested (@p aBurstCount > 0), and the frame requests an ACK, requires
+     *                              security processing, or @p aBurstChannelMask is non-zero with no supported channels.
      * @retval kErrorInvalidState   The radio was not in the Receive state.
      */
-    Error Transmit(otLinkRawTransmitDone aCallback);
+    Error Transmit(otLinkRawTransmitDone aCallback,
+                   uint16_t              aBurstCount       = 0,
+                   uint16_t              aBurstPeriod      = 0,
+                   uint32_t              aBurstChannelMask = 0);
 
     /**
      * Starts a (single) Energy Scan on the link-layer.
@@ -239,6 +252,16 @@ public:
     Error SetMacFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger);
 
 private:
+    static constexpr uint32_t kBurstSlotTimeUs = 625;
+    static constexpr uint32_t kBurstTxAheadUs  = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US;
+
+    void CancelBurst(void);
+    bool GetNextBurstChannel(uint8_t &aChannel) const;
+    void HandleBurstTimer(void);
+    void ProcessTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+
+    using BurstTimer = TimerMicroIn<LinkRaw, &LinkRaw::HandleBurstTimer>;
+
     // Callbacks from `SubMac`
     void InvokeReceiveDone(RxFrame *aFrame, Error aError);
     void InvokeTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError);
@@ -257,6 +280,11 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+    BurstTimer              mBurstTimer;
+    TimeMicro               mBurstStartTime;
+    uint32_t                mBurstChannelMask;
+    uint16_t                mBurstPeriod;
+    uint16_t                mBurstCount;
 
 #if OPENTHREAD_RADIO
     SubMac mSubMac;
