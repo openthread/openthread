@@ -627,7 +627,7 @@ public:
     /**
      * The size of the Router ID mask in bytes.
      */
-    static constexpr uint8_t kMaskSize = BytesForBitSize(kMaxRouterId + 1);
+    static constexpr uint8_t kMaskSize = BytesForBitSize<uint8_t>(kMaxRouterId + 1);
 
     /**
      * Indicates whether or not the mask is valid (count of allocated Router IDs is within the limit).
