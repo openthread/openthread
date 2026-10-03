@@ -247,7 +247,7 @@ public:
     }
 
 private:
-    static constexpr uint16_t kMaskSize = BytesForBitSize(kNumBits);
+    static constexpr uint16_t kMaskSize = BytesForBitSize<uint16_t>(kNumBits);
 
     uint8_t mMask[kMaskSize];
 };

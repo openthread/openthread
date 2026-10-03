@@ -54,11 +54,18 @@ static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
 /**
  * Determines number of bytes to represent a given number of bits.
  *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
  * @param[in] aBitSize    The bit-size (number of bits).
  *
  * @returns Number of bytes to represent @p aBitSize.
  */
-#define BytesForBitSize(aBitSize) static_cast<uint8_t>(((aBitSize) + (kBitsPerByte - 1)) / kBitsPerByte)
+template <typename UintType> constexpr UintType BytesForBitSize(UintType aBitSize)
+{
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
+
+    return ((aBitSize + (kBitsPerByte - 1)) / kBitsPerByte);
+}
 
 /**
  * Counts the number of `1` bits in the binary representation of a given `uint32_t` bit-mask value.
