@@ -97,6 +97,7 @@ enum Code : uint8_t
     kCodePost   = OT_COAP_CODE_POST,   ///< Post
     kCodePut    = OT_COAP_CODE_PUT,    ///< Put
     kCodeDelete = OT_COAP_CODE_DELETE, ///< Delete
+    kCodeFetch  = OT_COAP_CODE_FETCH,  ///< Fetch (RFC 8132)
 
     // Response Codes:
 
@@ -144,6 +145,7 @@ enum OptionNumber : uint16_t
     kOptionObserve       = OT_COAP_OPTION_OBSERVE,        ///< Observe [RFC7641]
     kOptionUriPort       = OT_COAP_OPTION_URI_PORT,       ///< Uri-Port
     kOptionLocationPath  = OT_COAP_OPTION_LOCATION_PATH,  ///< Location-Path
+    kOptionOscore        = OT_COAP_OPTION_OSCORE,         ///< OSCORE (RFC 8613)
     kOptionUriPath       = OT_COAP_OPTION_URI_PATH,       ///< Uri-Path
     kOptionContentFormat = OT_COAP_OPTION_CONTENT_FORMAT, ///< Content-Format
     kOptionMaxAge        = OT_COAP_OPTION_MAX_AGE,        ///< Max-Age
@@ -349,6 +351,14 @@ public:
      * @retval FALSE  Message is not a Delete request.
      */
     bool IsDeleteRequest(void) const { return (mCode == kCodeDelete); }
+
+    /**
+     * Indicates whether or not the CoAP code in header is "Fetch" request.
+     *
+     * @retval TRUE   Message is a Fetch request.
+     * @retval FALSE  Message is not a Fetch request.
+     */
+    bool IsFetchRequest(void) const { return (mCode == kCodeFetch); }
 
     /**
      * Checks if a header is a response header.
@@ -697,6 +707,17 @@ public:
      * @retval  kErrorParse  CoAP Option header not well-formed.
      */
     Error ReadUriPathOptions(UriPathStringBuffer &aUriPath) const;
+
+    /**
+     * Reads FETCH request options to detect presence of OSCORE and Content-Format options.
+     *
+     * @param[out]  aHasOscoreOption     Set to `true` if OSCORE option is present.
+     * @param[out]  aHasContentFmtOption Set to `true` if Content-Format option is present.
+     *
+     * @retval  kErrorNone   Successfully read options.
+     * @retval  kErrorParse  CoAP Option header not well-formed.
+     */
+    Error ReadFetchRequestOptions(bool &aHasOscoreOption, bool &aHasContentFmtOption) const;
 
     /**
      * Appends a Uri-Query option.
