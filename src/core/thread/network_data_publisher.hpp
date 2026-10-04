@@ -337,8 +337,12 @@ public:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 private:
+    class UpdateTimeCoalescer;
+
     class Entry : public InstanceLocatorInit
     {
+        friend class UpdateTimeCoalescer;
+
     protected:
         enum State : uint8_t
         {
@@ -379,6 +383,7 @@ private:
     private:
         void               Add(void);
         void               Remove(State aNextState);
+        void               SelectUpdateTime(TimeMilli aNow, uint32_t aMinDelay, uint32_t aMaxDelay);
         void               LogUpdateTime(TimeMilli aNow) const;
         static const char *StateToString(State aState);
 
@@ -541,6 +546,25 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE
+    class UpdateTimeCoalescer
+    {
+    public:
+        UpdateTimeCoalescer(TimeMilli aMinTime, TimeMilli aMaxTime, TimeMilli aUpdateTime);
+        void      Evaluate(const Entry &aEntry);
+        TimeMilli GetCoalescedTime(void) const { return mCoalescedTime; }
+
+    private:
+        static constexpr uint32_t kMaxThresholdToCoalesce = Entry::kMaxDelayToAdd;
+
+        TimeMilli mMinTime;
+        TimeMilli mMaxTime;
+        TimeMilli mUpdateTime;
+        TimeMilli mCoalescedTime;
+        uint32_t  mMinDiff;
+    };
+#endif
+
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     bool IsADnsSrpServiceEntry(const Entry &aEntry) const { return (&aEntry == &mDnsSrpServiceEntry); }
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
@@ -559,6 +583,9 @@ private:
     TimerMilli &GetTimer(void) { return mTimer; }
     void        HandleNotifierEvents(Events aEvents);
     void        HandleTimer(void);
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE
+    void CoalesceUpdateTime(UpdateTimeCoalescer &aCoalescer) const;
+#endif
 
     using PublisherTimer = TimerMilliIn<Publisher, &Publisher::HandleTimer>;
 

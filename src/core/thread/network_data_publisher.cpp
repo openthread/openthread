@@ -253,6 +253,26 @@ void Publisher::HandleTimer(void)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE
+
+void Publisher::CoalesceUpdateTime(UpdateTimeCoalescer &aCoalescer) const
+{
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    aCoalescer.Evaluate(mDnsSrpServiceEntry);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    aCoalescer.Evaluate(mBorderAdmitterEntry);
+#endif
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    for (const PrefixEntry &entry : mPrefixEntries)
+    {
+        aCoalescer.Evaluate(entry);
+    }
+#endif
+}
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE
+
 //---------------------------------------------------------------------------------------------------------------------
 // Publisher::Entry
 
@@ -305,7 +325,7 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
 
         if (aNumEntries < aDesiredNumEntries)
         {
-            mUpdateTime = now + Random::NonCrypto::GenerateInClosedRange<uint32_t>(1, kMaxDelayToAdd);
+            SelectUpdateTime(now, 1, kMaxDelayToAdd);
             SetState(kAdding);
             Get<Publisher>().GetTimer().FireAtIfEarlier(mUpdateTime);
             LogUpdateTime(now);
@@ -341,16 +361,15 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
 
         if (aNumEntries > aDesiredNumEntries)
         {
-            mUpdateTime = now;
-
-            if (aDesiredNumEntries > 0)
+            if (aDesiredNumEntries == 0)
             {
-                mUpdateTime += Random::NonCrypto::GenerateInClosedRange<uint32_t>(1, kMaxDelayToRemove);
+                mUpdateTime = now;
+            }
+            else
+            {
+                uint32_t extraDelay = (aNumPreferredEntries < aDesiredNumEntries) ? kExtraDelayToRemovePreferred : 0;
 
-                if (aNumPreferredEntries < aDesiredNumEntries)
-                {
-                    mUpdateTime += kExtraDelayToRemovePreferred;
-                }
+                SelectUpdateTime(now, 1 + extraDelay, kMaxDelayToRemove + extraDelay);
             }
 
             SetState(kRemoving);
@@ -378,6 +397,20 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
         }
         break;
     }
+}
+
+void Publisher::Entry::SelectUpdateTime(TimeMilli aNow, uint32_t aMinDelay, uint32_t aMaxDelay)
+{
+    mUpdateTime = aNow + Random::NonCrypto::GenerateInClosedRange<uint32_t>(aMinDelay, aMaxDelay);
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE
+    {
+        UpdateTimeCoalescer coalescer(aNow + aMinDelay, aNow + aMaxDelay, mUpdateTime);
+
+        Get<Publisher>().CoalesceUpdateTime(coalescer);
+        mUpdateTime = coalescer.GetCoalescedTime();
+    }
+#endif
 }
 
 void Publisher::Entry::HandleTimer(void)
@@ -1197,6 +1230,66 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// Publisher::UpdateTimeCoalescer
+
+Publisher::UpdateTimeCoalescer::UpdateTimeCoalescer(TimeMilli aMinTime, TimeMilli aMaxTime, TimeMilli aUpdateTime)
+    : mMinTime(aMinTime)
+    , mMaxTime(aMaxTime)
+    , mUpdateTime(aUpdateTime)
+    , mCoalescedTime(aUpdateTime)
+    , mMinDiff(kMaxThresholdToCoalesce)
+{
+}
+
+void Publisher::UpdateTimeCoalescer::Evaluate(const Entry &aEntry)
+{
+    // Checks whether `aEntry` is already scheduled to be updated
+    // within `[mMinTime, mMaxTime]` and is within
+    // `kMaxThresholdToCoalesce` of the randomly selected `mUpdateTime`.
+    // If so, `mCoalescedTime` is updated to align with the closest
+    // such entry so that multiple updates can be sent together to the
+    // Leader.
+    //
+    // For `kAdding`, the `[mMinTime, mMaxTime]` range width is
+    // smaller than `kMaxThresholdToCoalesce` (`kMaxDelayToAdd`), so
+    // any scheduled entry within that range is always matched. For
+    // `kRemoving`, restricting to `[mMinTime, mMaxTime]` ensures that
+    // preferred and non-preferred removal time windows never cross
+    // into each other.
+
+    uint32_t diff;
+
+    VerifyOrExit((aEntry.GetState() == Entry::kAdding) || (aEntry.GetState() == Entry::kRemoving));
+
+    VerifyOrExit(IsValueInRange(aEntry.GetUpdateTime(), mMinTime, mMaxTime));
+
+    if (aEntry.GetUpdateTime() > mUpdateTime)
+    {
+        diff = aEntry.GetUpdateTime() - mUpdateTime;
+        VerifyOrExit(diff < mMinDiff);
+    }
+    else
+    {
+        // Use `<=` here (versus `<` above) so that if two entries are
+        // equidistant from `mUpdateTime`, we prefer the earlier update
+        // time over delaying further.
+
+        diff = mUpdateTime - aEntry.GetUpdateTime();
+        VerifyOrExit(diff <= mMinDiff);
+    }
+
+    mMinDiff       = diff;
+    mCoalescedTime = aEntry.GetUpdateTime();
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_COALESCE_UPDATES_ENABLE
 
 } // namespace NetworkData
 } // namespace ot
