@@ -1091,6 +1091,7 @@ private:
         void     UpdateFireTimeOn(FireTime &aFireTime);
         void     DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
         uint32_t GetDurationSinceLastMulticast(TimeMilli aTime) const;
+        uint32_t GetDurationSinceLastUnicast(TimeMilli aTime) const;
         Error    GetLastMulticastTime(TimeMilli &aLastMulticastTime) const;
 
         // `AppendState` methods: Used to track whether the record
@@ -1116,7 +1117,9 @@ private:
         TimeMilli GetAnswerTime(void) const { return mQueryRxTime + mAnswerDelay; }
 
         static constexpr uint32_t kMinIntervalBetweenMulticast = 1000; // msec
+        static constexpr uint32_t kMinIntervalBetweenUnicast   = 1000; // msec
         static constexpr uint32_t kLastMulticastTimeAge        = 10 * Time::kOneHourInMsec;
+        static constexpr uint32_t kLastUnicastTimeAge          = 10 * Time::kOneHourInMsec;
 
         static_assert(kNotAppended == 0, "kNotAppended MUST be zero, so `Clear()` works correctly");
 
@@ -1124,6 +1127,7 @@ private:
         bool        mMulticastAnswerPending : 1;
         bool        mUnicastAnswerPending : 1;
         bool        mIsLastMulticastValid : 1;
+        bool        mIsLastUnicastValid : 1;
         bool        mCanExtendAnswerDelay : 1;
         uint8_t     mAnnounceCounter;
         AppendState mAppendState;
@@ -1133,6 +1137,7 @@ private:
         TimeMilli   mAnnounceTime;
         TimeMilli   mQueryRxTime;
         TimeMilli   mLastMulticastTime;
+        TimeMilli   mLastUnicastTime;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

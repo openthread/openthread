@@ -4351,6 +4351,15 @@ void TestQuery(void)
     dnsMsg->Validate(host2, kInAdditionalSection);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Resend the same unicast-response (QU) query and validate that response is not emitted (rate limit)");
+
+    sDnsMessages.Clear();
+    SendQuery("_srv._udp.local.", ResourceRecord::kTypePtr, ResourceRecord::kClassInternet | kClassQueryUnicastFlag);
+
+    AdvanceTime(200);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Resend the same multicast query and validate that response is not emitted (rate limit)");
 
     sDnsMessages.Clear();
@@ -4363,6 +4372,51 @@ void TestQuery(void)
     Log("Wait for > 1 second and resend the query and validate that now a response is emitted");
 
     SendQuery("_srv._udp.local.", ResourceRecord::kTypePtr);
+
+    AdvanceTime(200);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 9);
+
+    dnsMsg->Validate(service1, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(service3, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(service1, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(service3, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(host1, kInAdditionalSection);
+    dnsMsg->Validate(host2, kInAdditionalSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Resend the unicast-response (QU) query after > 1 second and validate the response");
+
+    sDnsMessages.Clear();
+    SendQuery("_srv._udp.local.", ResourceRecord::kTypePtr, ResourceRecord::kClassInternet | kClassQueryUnicastFlag);
+
+    AdvanceTime(200);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    dnsMsg->ValidateHeader(kUnicastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 9);
+
+    dnsMsg->Validate(service1, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(service3, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(service1, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(service3, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(host1, kInAdditionalSection);
+    dnsMsg->Validate(host2, kInAdditionalSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Resend the QU query before 1s unicast interval (when > 1s since last multicast) and validate multicast "
+        "response");
+
+    AdvanceTime(750);
+
+    sDnsMessages.Clear();
+    SendQuery("_srv._udp.local.", ResourceRecord::kTypePtr, ResourceRecord::kClassInternet | kClassQueryUnicastFlag);
 
     AdvanceTime(200);
 
