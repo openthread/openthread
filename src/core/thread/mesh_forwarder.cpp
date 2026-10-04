@@ -428,6 +428,7 @@ Error MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
 {
     Error error = kErrorNone;
     bool  originalEvictFlag;
+    bool  shouldRestoreSendMsgEvictFlag = false;
 
     VerifyOrExit(aMessage.IsDirectTransmission());
 
@@ -443,19 +444,39 @@ Error MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
     originalEvictFlag = aMessage.GetDoNotEvict();
     aMessage.SetDoNotEvict(true);
 
+    // Exclude `mSendMessage` when evicting due to the direct TX
+    // queue limit, as `IsDirectTxQueueOverMaxFrameThreshold()`
+    // does not count `mSendMessage` toward the frame threshold,
+    // and evicting it would abort an in-flight transmission
+    // without reducing the counted frames in the queue.
+
+    if ((mSendMessage != nullptr) && !mSendMessage->GetDoNotEvict())
+    {
+        mSendMessage->SetDoNotEvict(true);
+        shouldRestoreSendMsgEvictFlag = true;
+    }
+
     while (IsDirectTxQueueOverMaxFrameThreshold())
     {
         if (EvictMessage(aMessage.GetPriority(), kEvictReasonDirectTxQueueAtLimit) != kErrorNone)
         {
-            aMessage.SetDoNotEvict(originalEvictFlag);
             error = kErrorDrop;
-            LogMessage(kMessageFullQueueDrop, aMessage);
-            FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, error);
-            ExitNow();
+            break;
         }
     }
 
+    if (shouldRestoreSendMsgEvictFlag)
+    {
+        mSendMessage->SetDoNotEvict(false);
+    }
+
     aMessage.SetDoNotEvict(originalEvictFlag);
+
+    if (error != kErrorNone)
+    {
+        LogMessage(kMessageFullQueueDrop, aMessage);
+        FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, error);
+    }
 
 exit:
     return error;
