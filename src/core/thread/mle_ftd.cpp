@@ -3649,7 +3649,14 @@ template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Msg &aMsg)
 
     VerifyOrExit((router != nullptr) && (router->GetExtAddress() == extAddress));
 
-    IgnoreError(mRouterTable.Release(routerId));
+    // The TLVs above can be forged by any commissioned node, so release the Router ID only when
+    // the Leader already has no route to it -- the same condition `HandleTimeTick()` uses for the
+    // no-route timeout. A router that has actually left becomes unreachable and is released then.
+    if ((mRouterTable.FindNextHopTowards(*router) == nullptr) &&
+        (mRouterTable.GetLinkCost(*router) >= kMaxRouteCost))
+    {
+        IgnoreError(mRouterTable.Release(routerId));
+    }
 
     SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
