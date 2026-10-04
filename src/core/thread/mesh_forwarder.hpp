@@ -445,8 +445,8 @@ private:
     Error RemoveAgedMessages(void);
 #endif
 #if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    bool IsDirectTxQueueOverMaxFrameThreshold(void) const;
-    void ApplyDirectTxQueueLimit(Message &aMessage);
+    bool  IsDirectTxQueueOverMaxFrameThreshold(void) const;
+    Error ApplyDirectTxQueueLimit(Message &aMessage);
 #endif
     void  SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Headers &aIp6Headers);
     Error UpdateIp6Route(Message &aMessage);
@@ -471,9 +471,9 @@ private:
     void UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError, bool aAllowNeighborRemove, uint8_t aFailLimit);
     void HandleFrameTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
     void UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
-    void FinalizeMessageDirectTx(Message &aMessage, Error aError);
+    void FinalizeDirectTxAndRemoveMessageIfNoPendingTx(Message &aMessage, Error aError);
     void FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction);
-    bool RemoveMessageIfNoPendingTx(Message &aMessage);
+    void RemoveMessageIfNoPendingTx(Message &aMessage);
 
     void HandleTimeTick(void);
     void ScheduleTransmissionTask(void);

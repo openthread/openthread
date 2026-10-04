@@ -137,8 +137,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
         if (aError != kErrorNone)
         {
             LogMessage(kMessageDrop, message, kErrorAddressQuery);
-            FinalizeMessageDirectTx(message, kErrorAddressQuery);
-            RemoveMessageIfNoPendingTx(message);
+            FinalizeDirectTxAndRemoveMessageIfNoPendingTx(message, kErrorAddressQuery);
             continue;
         }
 
@@ -181,8 +180,7 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvic
     {
     case kEvictReasonDirectTxQueueAtLimit:
         LogMessage(kMessageFullQueueEvict, *evict, kErrorDrop);
-        FinalizeMessageDirectTx(*evict, kErrorDrop);
-        RemoveMessageIfNoPendingTx(*evict);
+        FinalizeDirectTxAndRemoveMessageIfNoPendingTx(*evict, kErrorDrop);
         break;
 
     case kEvictReasonNoMessageBuffer:
@@ -270,8 +268,7 @@ void MeshForwarder::RemoveMessagesForChild(Child &aChild, Message::Checker aChec
 
             if (matches)
             {
-                FinalizeMessageDirectTx(message, kErrorDrop);
-                RemoveMessageIfNoPendingTx(message);
+                FinalizeDirectTxAndRemoveMessageIfNoPendingTx(message, kErrorDrop);
             }
         }
     }
