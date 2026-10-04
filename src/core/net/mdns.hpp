@@ -1198,7 +1198,7 @@ private:
                                 Section          aSection,
                                 const TypeArray &aTypes,
                                 NameAppender     aNameAppender);
-        bool ShouldAnswerNsec(TimeMilli aNow) const;
+        bool ShouldAnswerNsec(const EntryContext &aContext) const;
         void DetermineNextFireTime(void);
         void DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
         void ScheduleTimer(void);
