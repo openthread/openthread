@@ -836,35 +836,38 @@ exit:
 
 Error Lowpan::Decompressor::DecompressExtensionHeader(void)
 {
-    Error          error = kErrorParse;
-    uint8_t        hdr[2];
-    uint8_t        len;
-    uint8_t        ctl;
-    Ip6::PadOption padOption;
+    Error                error = kErrorParse;
+    uint8_t              ctl;
+    uint8_t              len;
+    uint8_t              nextHeader;
+    uint16_t             headerSize;
+    Ip6::ExtensionHeader extHeader;
+    Ip6::PadOption       padOption;
 
     SuccessOrExit(mFrameData.ReadUint8(ctl));
 
-    // next header
     if (ctl & kExtHdrNextHeader)
     {
         SuccessOrExit(mFrameData.ReadUint8(len));
 
-        VerifyOrExit(mFrameData.CanRead(len + 1));
-        SuccessOrExit(DispatchToNextHeader(mFrameData.GetBytes()[len], hdr[0]));
+        VerifyOrExit(mFrameData.CanRead(len + sizeof(uint8_t)));
+        SuccessOrExit(DispatchToNextHeader(mFrameData.GetBytes()[len], nextHeader));
     }
     else
     {
-        SuccessOrExit(mFrameData.ReadUint8(hdr[0]));
+        SuccessOrExit(mFrameData.ReadUint8(nextHeader));
         SuccessOrExit(mFrameData.ReadUint8(len));
 
         VerifyOrExit(mFrameData.CanRead(len));
     }
 
-    // length
-    hdr[1] = BytesForBitSize<uint8_t>(sizeof(hdr) + len) - 1;
+    extHeader.SetNextHeader(nextHeader);
 
-    SuccessOrExit(mMessage.AppendBytes(hdr, sizeof(hdr)));
-    mMessage.MoveOffset(sizeof(hdr));
+    headerSize = sizeof(extHeader) + len;
+    SuccessOrExit(extHeader.SetLengthFromSize(headerSize));
+
+    SuccessOrExit(mMessage.Append(extHeader));
+    mMessage.MoveOffset(sizeof(extHeader));
 
     // payload
     SuccessOrExit(mMessage.AppendBytes(mFrameData.GetBytes(), len));
@@ -875,7 +878,7 @@ Error Lowpan::Decompressor::DecompressExtensionHeader(void)
     // A decompressor MUST ensure that the containing header is padded out to a multiple of 8 octets
     // in length, using a Pad1 or PadN option if necessary."
 
-    if (padOption.InitToPadHeaderWithSize(len + sizeof(hdr)) == kErrorNone)
+    if (padOption.InitToPadHeaderWithSize(headerSize) == kErrorNone)
     {
         SuccessOrExit(mMessage.AppendBytes(&padOption, padOption.GetSize()));
         mMessage.MoveOffset(padOption.GetSize());

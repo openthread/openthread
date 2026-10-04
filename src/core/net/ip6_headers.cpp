@@ -33,6 +33,7 @@
 
 #include "ip6_headers.hpp"
 
+#include "common/num_utils.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -64,6 +65,20 @@ bool Header::IsValid(void) const
 #endif
 
     return IsVersion6() && ((sizeof(Header) + GetPayloadLength()) <= kMaxLength);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// ExtensionHeader
+
+Error ExtensionHeader::SetLengthFromSize(uint16_t aSize)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsValueInRange<uint16_t>(aSize, sizeof(ExtensionHeader), kMaxSize), error = kErrorInvalidArgs);
+    SetLength(static_cast<uint8_t>(DivideAndRoundUp(aSize, kLengthUnitSize) - 1));
+
+exit:
+    return error;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

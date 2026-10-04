@@ -45,6 +45,7 @@
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "common/numeric_limits.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_types.hpp"
 #include "net/netif.hpp"
@@ -353,6 +354,11 @@ public:
     static constexpr uint16_t kLengthUnitSize = 8;
 
     /**
+     * Defines the maximum size (number of bytes) of an `ExtensionHeader`.
+     */
+    static constexpr uint16_t kMaxSize = kLengthUnitSize * (NumericLimits<uint8_t>::kMax + 1);
+
+    /**
      * Returns the IPv6 Next Header value.
      *
      * @returns The IPv6 Next Header value.
@@ -383,6 +389,19 @@ public:
      * @param[in]  aLength  The IPv6 Header Extension Length value.
      */
     void SetLength(uint8_t aLength) { mLength = aLength; }
+
+    /**
+     * Sets the IPv6 Header Extension Length value from a given header size in bytes.
+     *
+     * The Length is in 8-byte units (`kLengthUnitSize`) rounded up, and does not include the first 8 bytes.
+     *
+     * @param[in] aSize  The size (number of bytes) of the Extension Header (before padding).
+     *
+     * @retval kErrorNone         Successfully set the Length value.
+     * @retval kErrorInvalidArgs  @p aSize is invalid (smaller than `sizeof(ExtensionHeader)` or larger than
+     *                            `kMaxSize`).
+     */
+    Error SetLengthFromSize(uint16_t aSize);
 
     /**
      * Returns the size (number of bytes) of the Extension Header including Next Header and Length fields.
