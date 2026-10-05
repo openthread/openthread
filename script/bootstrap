@@ -96,9 +96,29 @@ install_packages_apt()
         sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
     elif [ "$PLATFORM" = "Ubuntu" ]; then
         sudo apt-get --no-install-recommends install -y bzip2 ca-certificates wget
-        (wget --tries 4 --no-verbose -O - https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 \
-            | sudo tar xj -C /opt) \
-            && sudo ln -s -f /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.
+        local toolchain_url="https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-${ARCH}-linux.tar.bz2"
+        local toolchain_sha256
+        case "${ARCH}" in
+            x86_64) toolchain_sha256="5adc2ee03904571c2de79d5cfc0f7fe2a5c5f54f44da5b645c17ee57b217f11f" ;;
+            aarch64) toolchain_sha256="1f4165c25e2cff80e29870f409862487ba470afd436e245ba3c743108e17b8ac" ;;
+            *)
+                echo "Unsupported architecture for GNU Arm Embedded Toolchain: ${ARCH}" >&2
+                exit 1
+                ;;
+        esac
+        local stage
+        stage="$(mktemp -d /var/tmp/.ot-arm-toolchain.XXXXXX)"
+        trap 'rm -rf "${stage:-}"' EXIT
+        if wget --tries 4 --no-verbose -O "${stage}/toolchain.tar.bz2" "${toolchain_url}" \
+            && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c - \
+            && sudo tar xj -C /opt -f "${stage}/toolchain.tar.bz2"; then
+            rm -rf "${stage}"
+            trap - EXIT
+            sudo ln -s -f /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.
+        else
+            echo "ERROR: failed to download or verify the GNU Arm Embedded Toolchain" >&2
+            exit 1
+        fi
     fi
 
     if [ "$PLATFORM" != "Raspbian" ] && [ "${INSTALL_FORMAT_TOOLS}" = "1" ]; then

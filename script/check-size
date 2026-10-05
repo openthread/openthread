@@ -48,14 +48,26 @@ PR_NUMBER="${PR_NUMBER:-}"
 
 setup_arm_gcc_7()
 {
+    export PATH=/var/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
+
     if arm-none-eabi-gcc --version | grep -q 'Arm Embedded Processors 7'; then
         return 0
     fi
 
-    (cd /tmp/ \
-        && wget --tries 4 --no-verbose https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 \
-        && tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2)
-    export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
+    local toolchain_url="https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2"
+    local toolchain_sha256="bb17109f0ee697254a5d4ae6e5e01440e3ea8f0277f2e8169bf95d07c7d5fe69"
+    local stage
+    stage="$(mktemp -d /var/tmp/.ot-arm-gcc7.XXXXXX)"
+    trap 'rm -rf "${stage:-}"' EXIT
+    if wget --tries 4 --no-verbose -O "${stage}/toolchain.tar.bz2" "${toolchain_url}" \
+        && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c - \
+        && tar xj -C /var/tmp -f "${stage}/toolchain.tar.bz2"; then
+        rm -rf "${stage}"
+        trap - EXIT
+    else
+        echo "ERROR: failed to download or verify the Arm GCC 7 toolchain" >&2
+        exit 1
+    fi
 
     arm-none-eabi-gcc --version
 }
