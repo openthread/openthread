@@ -292,7 +292,7 @@ jobs:
         cd /tmp
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-        wget --timeout=30 --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm
+        wget --timeout=30 --tries 4 --no-verbose ${{ matrix.gcc_download_url }} -O gcc-arm
         tar xf gcc-arm
     - name: Build
       env:
