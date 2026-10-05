@@ -861,7 +861,7 @@ Error Lowpan::Decompressor::DecompressExtensionHeader(void)
     }
 
     // length
-    hdr[1] = BytesForBitSize(sizeof(hdr) + len) - 1;
+    hdr[1] = BytesForBitSize<uint8_t>(sizeof(hdr) + len) - 1;
 
     SuccessOrExit(mMessage.AppendBytes(hdr, sizeof(hdr)));
     mMessage.MoveOffset(sizeof(hdr));
