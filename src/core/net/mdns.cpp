@@ -2885,12 +2885,21 @@ void Core::ServiceEntry::PrepareResponse(EntryContext &aContext)
 
 void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
 {
-    bool       appendNsec                    = false;
+    bool       appendPtr  = mPtrRecord.ShouldAppendTo(aContext);
+    bool       appendSrv  = mSrvRecord.ShouldAppendTo(aContext);
+    bool       appendTxt  = mTxtRecord.ShouldAppendTo(aContext);
+    bool       appendKey  = mKeyRecord.ShouldAppendTo(aContext);
+    bool       appendNsec = appendSrv || appendTxt || appendKey || ShouldAnswerNsec(aContext.GetNow());
     bool       appendAdditionalRecordsForPtr = false;
+    bool       discoveredOffsetsAndHost      = false;
     HostEntry *hostEntry                     = nullptr;
     TxMessage &response                      = aContext.mResponseMessage;
 
-    DiscoverOffsetsAndHost(hostEntry);
+    if (appendPtr || appendNsec)
+    {
+        DiscoverOffsetsAndHost(hostEntry);
+        discoveredOffsetsAndHost = true;
+    }
 
     // We determine records to include in Additional Data section
     // per RFC 6763 section 12:
@@ -2907,7 +2916,7 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
     // Additional Data inclusion, but this is skipped if the record
     // is already appended in the Answer section.
 
-    if (mPtrRecord.ShouldAppendTo(aContext))
+    if (appendPtr)
     {
         AppendPtrRecordTo(response, kAnswerSection);
 
@@ -2921,6 +2930,12 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
     {
         if (subType.mPtrRecord.ShouldAppendTo(aContext))
         {
+            if (!discoveredOffsetsAndHost)
+            {
+                DiscoverOffsetsAndHost(hostEntry);
+                discoveredOffsetsAndHost = true;
+            }
+
             AppendPtrRecordTo(response, kAnswerSection, &subType);
 
             if (subType.mPtrRecord.GetTtl() > 0)
@@ -2941,10 +2956,9 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
         }
     }
 
-    if (mSrvRecord.ShouldAppendTo(aContext))
+    if (appendSrv)
     {
         AppendSrvRecordTo(response, kAnswerSection);
-        appendNsec = true;
 
         if ((mSrvRecord.GetTtl() > 0) && (hostEntry != nullptr))
         {
@@ -2952,16 +2966,14 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
         }
     }
 
-    if (mTxtRecord.ShouldAppendTo(aContext))
+    if (appendTxt)
     {
         AppendTxtRecordTo(response, kAnswerSection);
-        appendNsec = true;
     }
 
-    if (mKeyRecord.ShouldAppendTo(aContext))
+    if (appendKey)
     {
         AppendKeyRecordTo(response, kAnswerSection);
-        appendNsec = true;
     }
 
     // Append records in Additional Data section
@@ -2989,7 +3001,7 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
         }
     }
 
-    if (appendNsec || ShouldAnswerNsec(aContext.GetNow()))
+    if (appendNsec)
     {
         AppendNsecRecordTo(response, kAdditionalDataSection);
     }
@@ -3094,19 +3106,21 @@ void Core::ServiceEntry::DiscoverOffsetsAndHost(HostEntry *&aHostEntry)
             continue;
         }
 
-        if (NameMatch(mHostName, other.mHostName))
+        if ((mHostNameOffset == kUnspecifiedOffset) && (other.mHostNameOffset != kUnspecifiedOffset) &&
+            NameMatch(mHostName, other.mHostName))
         {
-            UpdateCompressOffset(mHostNameOffset, other.mHostNameOffset);
+            mHostNameOffset = other.mHostNameOffset;
         }
 
-        if (NameMatch(mServiceType, other.mServiceType))
+        if ((other.mServiceTypeOffset != kUnspecifiedOffset) && NameMatch(mServiceType, other.mServiceType))
         {
             UpdateCompressOffset(mServiceTypeOffset, other.mServiceTypeOffset);
 
-            if (GetState() == kProbing)
+            if ((GetState() == kProbing) || (other.mSubServiceTypeOffset == kUnspecifiedOffset))
             {
                 // No need to search for sub-type service offsets when
-                // we are still probing.
+                // we are still probing or if `other` has not appended
+                // any sub-type records.
 
                 continue;
             }
@@ -3115,7 +3129,14 @@ void Core::ServiceEntry::DiscoverOffsetsAndHost(HostEntry *&aHostEntry)
 
             for (SubType &subType : mSubTypes)
             {
-                const SubType *otherSubType = other.mSubTypes.FindMatching(subType.mLabel.AsCString());
+                const SubType *otherSubType;
+
+                if (subType.mSubServiceNameOffset != kUnspecifiedOffset)
+                {
+                    continue;
+                }
+
+                otherSubType = other.mSubTypes.FindMatching(subType.mLabel.AsCString());
 
                 if (otherSubType != nullptr)
                 {
@@ -3565,14 +3586,11 @@ void Core::ServiceType::PrepareResponseRecords(EntryContext &aContext)
             continue;
         }
 
-        if (NameMatch(mServiceType, serviceEntry.mServiceType))
+        if ((serviceEntry.mServiceTypeOffset != kUnspecifiedOffset) &&
+            NameMatch(mServiceType, serviceEntry.mServiceType))
         {
-            UpdateCompressOffset(serviceTypeOffset, serviceEntry.mServiceTypeOffset);
-
-            if (serviceTypeOffset != kUnspecifiedOffset)
-            {
-                break;
-            }
+            serviceTypeOffset = serviceEntry.mServiceTypeOffset;
+            break;
         }
     }
 
