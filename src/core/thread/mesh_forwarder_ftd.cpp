@@ -180,7 +180,9 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvic
     switch (aEvictReason)
     {
     case kEvictReasonDirectTxQueueAtLimit:
-        FinalizeAndRemoveMessage(*evict, kErrorDrop, kMessageFullQueueEvict);
+        LogMessage(kMessageFullQueueEvict, *evict, kErrorDrop);
+        FinalizeMessageDirectTx(*evict, kErrorDrop);
+        RemoveMessageIfNoPendingTx(*evict);
         break;
 
     case kEvictReasonNoMessageBuffer:
