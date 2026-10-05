@@ -1093,13 +1093,20 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * 1. Transitioning the radio to Transmit from one of the following states:
  *    - Receive if RX is on when the device is idle or OT_RADIO_CAPS_SLEEP_TO_TX is not supported
  *    - Sleep if RX is off when the device is idle and OT_RADIO_CAPS_SLEEP_TO_TX is supported.
- * 2. Transmits the psdu on the given channel and at the given transmit power.
+ * 2. Transmits the frame (PSDU) on the given channel and at the given transmit power.
  *
- * If the radio is actively receiving a frame or transmitting an ACK when this call is made, `OT_ERROR_NONE` is
- * returned and subsequently `otPlatRadioTxDone()` SHOULD be called as soon as possible with `aError` value
- * `OT_ERROR_CHANNEL_ACCESS_FAILURE` to indicate that there is activity on the channel. This requirement
- * holds even when the requested transmit channel differs from the channel on which the radio is currently
- * doing its receive operation.
+ * If the radio is actively receiving a frame or transmitting an ACK at the time it would perform CCA for
+ * the frame (PSDU), or would start its transmission, the channel MUST be considered busy and the ongoing
+ * receive operation is not aborted. This requirement holds even when the requested transmit channel
+ * differs from the channel on which the radio is currently doing its receive operation.
+ * In this case, `OT_ERROR_NONE` is returned, and:
+ *  - If `mCsmaCaEnabled` is `true` and the radio provides `OT_RADIO_CAPS_CSMA_BACKOFF` and/or
+ *    `OT_RADIO_CAPS_TRANSMIT_RETRIES`, it handles the busy channel like a failed CCA within its own CSMA-CA
+ *    procedure: it continues with a new backoff.
+ *    `otPlatRadioTxDone()` is called with `OT_ERROR_CHANNEL_ACCESS_FAILURE` only after all attempts were
+ *    completed unsuccessfully.
+ *  - Otherwise, `otPlatRadioTxDone()` SHOULD be called as soon as possible with `aError` value
+ *    `OT_ERROR_CHANNEL_ACCESS_FAILURE`.
  *
  * An exception to the above requirement is time-scheduled transmissions (see `mTxDelayBaseTime`).
  * In that case, the timed frame transmission has priority over ongoing reception and the ongoing frame
