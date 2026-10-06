@@ -2024,7 +2024,25 @@ void TestHostReg(void)
 
     dnsMsg = sDnsMessages.GetHead();
     VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
     dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 1);
+    VerifyOrQuit(dnsMsg->mAdditionalRecords.ContainsNsec(hostFullName, ResourceRecord::kTypeAaaa));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a QU query for non-existing record and validate the unicast response with NSEC");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(hostFullName.AsCString(), ResourceRecord::kTypeA,
+              ResourceRecord::kClassInternet | kClassQueryUnicastFlag);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    dnsMsg->ValidateHeader(kUnicastResponse, /* Q */ 0, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 1);
     VerifyOrQuit(dnsMsg->mAdditionalRecords.ContainsNsec(hostFullName, ResourceRecord::kTypeAaaa));
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
@@ -9107,6 +9125,7 @@ void TestLegacyUnicastResponse(void)
 
     dnsMsg = sDnsMessages.GetHead();
     VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
     dnsMsg->ValidateHeader(kLegacyUnicastResponse, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 1);
     VerifyOrQuit(dnsMsg->mAdditionalRecords.ContainsNsec(hostFullName, ResourceRecord::kTypeAaaa));
 

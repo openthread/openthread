@@ -1397,6 +1397,7 @@ void Core::Entry::UpdateRecordsState(const TxMessage &aResponse)
             mMulticastNsecPending = false;
             break;
         case TxMessage::kUnicastResponse:
+        case TxMessage::kLegacyUnicastResponse:
             mUnicastNsecPending = false;
             break;
         default:
@@ -1412,7 +1413,7 @@ void Core::Entry::ScheduleNsecAnswer(const AnswerInfo &aInfo)
 
     VerifyOrExit(GetState() == kRegistered);
 
-    if (aInfo.mUnicastResponse)
+    if (aInfo.mUnicastResponse || aInfo.mLegacyUnicastResponse)
     {
         mUnicastNsecPending = true;
     }
@@ -1437,9 +1438,24 @@ exit:
     return;
 }
 
-bool Core::Entry::ShouldAnswerNsec(TimeMilli aNow) const
+bool Core::Entry::ShouldAnswerNsec(const EntryContext &aContext) const
 {
-    return mMulticastNsecPending && (GetNsecAnswerTime() <= aNow);
+    bool shouldAnswer = false;
+
+    switch (aContext.mResponseMessage.GetType())
+    {
+    case TxMessage::kMulticastResponse:
+        shouldAnswer = mMulticastNsecPending && (GetNsecAnswerTime() <= aContext.GetNow());
+        break;
+    case TxMessage::kUnicastResponse:
+    case TxMessage::kLegacyUnicastResponse:
+        shouldAnswer = mUnicastNsecPending;
+        break;
+    default:
+        break;
+    }
+
+    return shouldAnswer;
 }
 
 void Core::Entry::AnswerNonProbe(const AnswerInfo &aInfo, RecordAndTypeArray &aRecordAndTypes)
@@ -2248,7 +2264,7 @@ void Core::HostEntry::PrepareResponseRecords(EntryContext &aContext)
         appendNsec = true;
     }
 
-    if (appendNsec || ShouldAnswerNsec(aContext.GetNow()))
+    if (appendNsec || ShouldAnswerNsec(aContext))
     {
         AppendNsecRecordTo(response, kAdditionalDataSection);
     }
@@ -2989,7 +3005,7 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
         }
     }
 
-    if (appendNsec || ShouldAnswerNsec(aContext.GetNow()))
+    if (appendNsec || ShouldAnswerNsec(aContext))
     {
         AppendNsecRecordTo(response, kAdditionalDataSection);
     }
