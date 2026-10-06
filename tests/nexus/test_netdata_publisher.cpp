@@ -40,9 +40,10 @@
 namespace ot {
 namespace Nexus {
 
-static constexpr uint32_t kFormNetworkTime   = 20 * 1000;
-static constexpr uint32_t kJoinNetworkTime   = 10 * 1000;
-static constexpr uint32_t kNetDataUpdateTime = 55 * 1000;
+static constexpr uint32_t kFormNetworkTime    = 20 * 1000;
+static constexpr uint32_t kJoinNetworkTime    = 10 * 1000;
+static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
+static constexpr uint32_t kNetDataUpdateTime  = 55 * 1000;
 
 static constexpr char kOnMeshPrefix[]  = "fd00:1234::/64";
 static constexpr char kExternalRoute[] = "fd00:abce::/64";
@@ -947,11 +948,11 @@ void Test_NetDataPublisherCoalesceUpdates(void)
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
 
     router.Join(leader);
-
-    // Wait for all nodes and network data to stabilize.
-    nexus.AdvanceTime(kNetDataUpdateTime);
+    nexus.AdvanceTime(kAttachToRouterTime);
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
 
     Log("Simultaneous added entries on `router` coalesce into a single update");
 
