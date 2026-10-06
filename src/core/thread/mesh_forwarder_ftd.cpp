@@ -239,32 +239,39 @@ void MeshForwarder::RemoveMessagesForChild(Child &aChild, Message::Checker aChec
             continue;
         }
 
-        if (mIndirectSender.RemoveMessageFromSleepyChild(message, aChild) != kErrorNone)
+        if (mIndirectSender.RemoveMessageFromSleepyChild(message, aChild) == kErrorNone)
         {
-            const Neighbor *neighbor = nullptr;
+            RemoveMessageIfNoPendingTx(message);
+            continue;
+        }
+
+        if (message.IsDirectTransmission())
+        {
+            bool matches = false;
 
             if (message.GetType() == Message::kTypeIp6)
             {
                 Ip6::Header ip6header;
 
                 IgnoreError(message.Read(0, ip6header));
-                neighbor = Get<NeighborTable>().FindNeighbor(ip6header.GetDestination());
+
+                matches = (&aChild == Get<NeighborTable>().FindNeighbor(ip6header.GetDestination(),
+                                                                        Neighbor::kInStateAnyExceptInvalid));
             }
             else if (message.GetType() == Message::kType6lowpan)
             {
                 Lowpan::MeshHeader meshHeader;
 
                 IgnoreError(meshHeader.ParseFrom(message));
-                neighbor = Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination());
+                matches = (meshHeader.GetDestination() == aChild.GetRloc16());
             }
 
-            if (&aChild == neighbor)
+            if (matches)
             {
-                message.ClearDirectTransmission();
+                FinalizeMessageDirectTx(message, kErrorDrop);
+                RemoveMessageIfNoPendingTx(message);
             }
         }
-
-        RemoveMessageIfNoPendingTx(message);
     }
 }
 
