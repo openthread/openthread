@@ -472,15 +472,17 @@ async def connect_helper(device: BLEDevice | UdpStream,
     else:
         ble_stream = device
     ble_sstream = BleStreamSecure(ble_stream)
-    context['ble_sstream'] = ble_sstream
-    context['ble_stream'] = ble_stream
 
     cert_path = context['cmd_args'].cert_path if context['cmd_args'] else 'auth'
-    ble_sstream.load_cert(
-        certfile=path.join(cert_path, 'commissioner_cert.pem'),
-        keyfile=path.join(cert_path, 'commissioner_key.pem'),
-        cafile=path.join(cert_path, 'ca_cert.pem'),
-    )
+    try:
+        ble_sstream.load_cert(
+            certfile=path.join(cert_path, 'commissioner_cert.pem'),
+            keyfile=path.join(cert_path, 'commissioner_key.pem'),
+            cafile=path.join(cert_path, 'ca_cert.pem'),
+        )
+    except Exception:
+        await ble_stream.disconnect()
+        raise
     logger.info(f"Certificates and key loaded from '{cert_path}'")
 
     print('Setting up secure channel...')
@@ -495,6 +497,10 @@ async def connect_helper(device: BLEDevice | UdpStream,
         logger.error(e)
 
     if ok:
+        # Store the connection only once established: the background receive loop treats a
+        # non-connected stream in the context as a closed link, so it must not see it during the handshake.
+        context['ble_sstream'] = ble_sstream
+        context['ble_stream'] = ble_stream
         print('Done')
         return True
     else:
@@ -519,7 +525,6 @@ async def disconnect_helper(context: dict) -> None:
     bles = context['ble_stream']
     if bles is not None:
         logger.debug('Closing BLE connection.')
-        doing_disconn = True
         await bles.disconnect()
     context['ble_stream'] = None
     if doing_disconn:
