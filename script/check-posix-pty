@@ -47,6 +47,11 @@ at_exit()
     sudo killall ot-rcp || true
     sudo killall socat || true
 
+    # The daemon's output no longer streams through tee; show it when the check failed.
+    if [[ ${EXIT_CODE} != 0 && -f ${OT_DAEMON_OUTPUT:-} ]]; then
+        cat "${OT_DAEMON_OUTPUT}"
+    fi
+
     exit $EXIT_CODE
 }
 
@@ -81,6 +86,27 @@ do_build()
     ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
 }
 
+# Taking the Thread interface down makes OpenThread leave its multicast groups, which
+# ot-daemon treats as fatal when it fails. Verify that ot-daemon survives it.
+check_daemon_netif_down()
+{
+    local status
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig down || true
+    sleep 1
+
+    # OT_DAEMON_JOB is sudo (or the sudo function of script/_maybe_isolate), which
+    # lives as long as ot-daemon and exits with its status.
+    if ! ps -p "${OT_DAEMON_JOB}" >/dev/null; then
+        wait "${OT_DAEMON_JOB}" && status=0 || status=$?
+        die "ot-daemon exited with status ${status} on ifconfig down"
+    fi
+
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig | grep 'down' || die 'ot-daemon does not respond after ifconfig down'
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -90,6 +116,7 @@ do_check()
 
     SOCAT_PTY="$PWD/tmp/ot-rcp-pty"
     OT_OUTPUT="$PWD/tmp/ot-output"
+    OT_DAEMON_OUTPUT="$PWD/tmp/ot-daemon-output"
     RADIO_NCP_PATH="$PWD/build/simulation/examples/apps/ncp/ot-rcp"
 
     socat pty,raw,echo=0,link="${SOCAT_PTY}" exec:"${RADIO_NCP_PATH} 1" &
@@ -103,10 +130,13 @@ do_check()
     RADIO_URL="spinel+hdlc+uart://${SOCAT_PTY}?region=US&max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
 
     if [[ ${OT_DAEMON} == 'on' ]]; then
-        sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" 2>&1 | tee "${OT_OUTPUT}" &
+        # The log file is in our own tmp directory, so the redirect does not need sudo.
+        # shellcheck disable=SC2024
+        sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" >"${OT_DAEMON_OUTPUT}" 2>&1 &
+        OT_DAEMON_JOB=$!
         sleep 3
         # macOS cannot explicitly set network interface name
-        NETIF_NAME=$(grep -o 'Thread interface: .\+' "${OT_OUTPUT}" | cut -d: -f2 | tr -d ' \r\n')
+        NETIF_NAME=$(grep -o 'Thread interface: .\+' "${OT_DAEMON_OUTPUT}" | cut -d: -f2 | tr -d ' \r\n')
         OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
         if [[ ${OT_DAEMON_ALLOW_ALL} == 1 ]] || [[ -n ${OT_ISOLATED_REEXEC:-} ]]; then
             OT_CTL=("${OT_CTL_PATH}")
@@ -210,12 +240,20 @@ EOF
     prefix=$(grep -ao 'Mesh Local Prefix: [0-9a-f:]\+' "$OT_OUTPUT" | cut -d: -f2- | tr -d ' \r\n')
     LEADER_ALOC="${prefix}ff:fe00:fc00"
 
-    # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
-    [[ $OSTYPE == "linux-gnu"* ]] || return 0
-
     if [[ ${OT_DAEMON} == 'on' ]]; then
+        # ot-daemon serves one session at a time and the interactive ot-ctl of the expect
+        # session reconnects whenever it is displaced, so end it before using ot-ctl below.
         sudo killall -9 expect || true
         sudo killall -9 ot-ctl || true
+    fi
+
+    # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
+    if [[ $OSTYPE != "linux-gnu"* ]]; then
+        check_daemon_netif_down
+        return 0
+    fi
+
+    if [[ ${OT_DAEMON} == 'on' ]]; then
         NETIF_INDEX=$(ip link show "${NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
         sudo env PATH="$(dirname "${OT_CTL_PATH}"):${PATH}" \
             python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" "${NETIF_NAME}" \
@@ -240,6 +278,8 @@ EOF
     if [[ -z ${coap_response} ]]; then
         die 'Tmf is not blocked'
     fi
+
+    check_daemon_netif_down
 }
 
 main()
