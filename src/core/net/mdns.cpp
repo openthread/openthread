@@ -851,8 +851,19 @@ void Core::RecordInfo::ScheduleAnswer(const AnswerInfo &aInfo)
 
     if (aInfo.mUnicastResponse || aInfo.mLegacyUnicastResponse)
     {
-        mUnicastAnswerPending = true;
-        ExitNow();
+        VerifyOrExit(!mUnicastAnswerPending);
+
+        if (aInfo.mIsProbe || aInfo.mLegacyUnicastResponse ||
+            (GetDurationSinceLastUnicast(aInfo.mQueryRxTime) >= kMinIntervalBetweenUnicast))
+        {
+            mUnicastAnswerPending = true;
+            ExitNow();
+        }
+
+        // If the unicast rate limit (`kMinIntervalBetweenUnicast`) is
+        // reached on a `QU` query, fall through to schedule a multicast
+        // response instead (which has its own rate-limiting logic) so
+        // other queriers on the network can still receive the answer.
     }
 
     if (!aInfo.mIsProbe)
@@ -1052,6 +1063,20 @@ void Core::RecordInfo::UpdateFireTimeOn(FireTime &aFireTime)
         }
     }
 
+    if (mIsLastUnicastValid)
+    {
+        TimeMilli lastUnicastAgeTime = mLastUnicastTime + kLastUnicastTimeAge;
+
+        if (lastUnicastAgeTime <= TimerMilli::GetNow())
+        {
+            mIsLastUnicastValid = false;
+        }
+        else
+        {
+            aFireTime.SetFireTime(lastUnicastAgeTime);
+        }
+    }
+
 exit:
     return;
 }
@@ -1094,6 +1119,11 @@ void Core::RecordInfo::MarkAsAppended(TxMessage &aTxMessage, Section aSection)
         break;
 
     case TxMessage::kUnicastResponse:
+        mAppendState        = kAppendedInUnicastMsg;
+        mLastUnicastTime    = TimerMilli::GetNow();
+        mIsLastUnicastValid = true;
+        break;
+
     case TxMessage::kLegacyUnicastResponse:
         mAppendState = kAppendedInUnicastMsg;
         break;
@@ -1151,6 +1181,20 @@ uint32_t Core::RecordInfo::GetDurationSinceLastMulticast(TimeMilli aTime) const
     VerifyOrExit(mIsPresent && mIsLastMulticastValid);
     VerifyOrExit(aTime > mLastMulticastTime, duration = 0);
     duration = aTime - mLastMulticastTime;
+
+exit:
+    return duration;
+}
+
+uint32_t Core::RecordInfo::GetDurationSinceLastUnicast(TimeMilli aTime) const
+{
+    uint32_t duration;
+
+    SetToUintMax(duration);
+
+    VerifyOrExit(mIsPresent && mIsLastUnicastValid);
+    VerifyOrExit(aTime > mLastUnicastTime, duration = 0);
+    duration = aTime - mLastUnicastTime;
 
 exit:
     return duration;
