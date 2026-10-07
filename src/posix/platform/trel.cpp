@@ -199,7 +199,7 @@ static void PrepareSocket(uint16_t &aUdpPort)
     memset(&sockAddr, 0, sizeof(sockAddr));
     sockAddr.sin6_family = AF_INET6;
     sockAddr.sin6_addr   = in6addr_any;
-    sockAddr.sin6_port   = OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT;
+    sockAddr.sin6_port   = htons(OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT);
 
     if (bind(sSocket, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) == -1)
     {
