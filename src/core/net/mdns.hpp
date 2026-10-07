@@ -1523,7 +1523,9 @@ private:
         TxMessage(Instance &aInstance, Type aType, const AddressInfo &aUnicastDest, uint16_t aQueryId);
         Type          GetType(void) const { return mType; }
         Message      &SelectMessageFor(Section aSection);
+        void          AppendLabel(Section aSection, const char *aLabel);
         AppendOutcome AppendLabel(Section aSection, const char *aLabel, CompressOffset &aCompressOffset);
+        void          AppendMultipleLabels(Section aSection, const char *aLabels);
         AppendOutcome AppendMultipleLabels(Section aSection, const char *aLabels, CompressOffset &aCompressOffset);
         void          AppendServiceType(Section aSection, const char *aServiceType, CompressOffset &aCompressOffset);
         void          AppendDomainName(Section aSection);

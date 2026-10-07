@@ -3392,18 +3392,14 @@ void Core::ServiceEntry::AppendEntryName(Entry &aEntry, TxMessage &aTxMessage, S
 
 void Core::ServiceEntry::AppendServiceNameTo(TxMessage &aTxMessage, Section aSection, bool aPerformNameCompression)
 {
-    AppendOutcome outcome;
-
     if (!aPerformNameCompression)
     {
-        CompressOffset compressOffset;
-
-        outcome = aTxMessage.AppendLabel(aSection, mServiceInstance.AsCString(), compressOffset);
-        VerifyOrExit(outcome == kAppendedLabels);
+        aTxMessage.AppendLabel(aSection, mServiceInstance.AsCString());
     }
     else
     {
-        outcome = aTxMessage.AppendLabel(aSection, mServiceInstance.AsCString(), mServiceNameOffset);
+        AppendOutcome outcome = aTxMessage.AppendLabel(aSection, mServiceInstance.AsCString(), mServiceNameOffset);
+
         VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
     }
 
@@ -3795,9 +3791,19 @@ Message &Core::TxMessage::SelectMessageFor(Section aSection)
     return *message;
 }
 
+void Core::TxMessage::AppendLabel(Section aSection, const char *aLabel)
+{
+    SuccessOrAssert(Name::AppendLabel(aLabel, SelectMessageFor(aSection)));
+}
+
 Core::AppendOutcome Core::TxMessage::AppendLabel(Section aSection, const char *aLabel, CompressOffset &aCompressOffset)
 {
     return AppendLabels(aSection, aLabel, kIsSingleLabel, aCompressOffset);
+}
+
+void Core::TxMessage::AppendMultipleLabels(Section aSection, const char *aLabels)
+{
+    SuccessOrAssert(Name::AppendMultipleLabels(aLabels, SelectMessageFor(aSection)));
 }
 
 Core::AppendOutcome Core::TxMessage::AppendMultipleLabels(Section         aSection,
@@ -6314,7 +6320,7 @@ void Core::BrowseCache::AppendKnownAnswer(TxMessage &aTxMessage, const PtrEntry 
     offset = message.GetLength();
     SuccessOrAssert(message.Append(ptr));
 
-    SuccessOrAssert(Name::AppendLabel(aPtrEntry.mServiceInstance.AsCString(), message));
+    aTxMessage.AppendLabel(kAnswerSection, aPtrEntry.mServiceInstance.AsCString());
     aTxMessage.AppendServiceType(kAnswerSection, mServiceType.AsCString(), mServiceTypeOffset);
 
     ResourceRecord::UpdateRecordLengthInMessage(message, offset);
@@ -6924,16 +6930,8 @@ void Core::AddrCache::PrepareQueryQuestion(TxMessage &aQuery, uint16_t aRrType)
 
 void Core::AddrCache::AppendNameTo(TxMessage &aTxMessage, Section aSection)
 {
-    CompressOffset compressOffset;
-    AppendOutcome  outcome;
-
-    outcome = aTxMessage.AppendMultipleLabels(aSection, mName.AsCString(), compressOffset);
-    VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
-
+    aTxMessage.AppendMultipleLabels(aSection, mName.AsCString());
     aTxMessage.AppendDomainName(aSection);
-
-exit:
-    return;
 }
 
 void Core::AddrCache::UpdateRecordStateAfterQuery(TimeMilli aNow)
@@ -7370,23 +7368,14 @@ void Core::RecordCache::PrepareQueryQuestion(TxMessage &aQuery)
 
 void Core::RecordCache::AppendNameTo(TxMessage &aTxMessage, Section aSection)
 {
-    CompressOffset compressOffset;
-    AppendOutcome  outcome;
-
-    outcome = aTxMessage.AppendLabel(aSection, mFirstLabel.AsCString(), compressOffset);
-    VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
+    aTxMessage.AppendLabel(aSection, mFirstLabel.AsCString());
 
     if (!mNextLabels.IsNull())
     {
-        compressOffset.Clear();
-        outcome = aTxMessage.AppendMultipleLabels(aSection, mNextLabels.AsCString(), compressOffset);
-        VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
+        aTxMessage.AppendMultipleLabels(aSection, mNextLabels.AsCString());
     }
 
     aTxMessage.AppendDomainName(aSection);
-
-exit:
-    return;
 }
 
 void Core::RecordCache::UpdateRecordStateAfterQuery(TimeMilli aNow)
