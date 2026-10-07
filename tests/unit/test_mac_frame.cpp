@@ -909,6 +909,51 @@ void TestMacFrameAckGeneration(void)
     VerifyOrQuit(csl != nullptr);
     VerifyOrQuit(csl->GetPeriod() == 123 && csl->GetPhase() == 456);
 #endif
+
+#if OPENTHREAD_CONFIG_MAC_ALLOW_INCOMPLETE_RX_FRAME_WHEN_GEN_ENH_ACK
+    // Received Frame 3
+    // Same header layout as Received Frame 2 but with Information Elements
+    // Present set to True in the FCF (byte 1: 0xa8 -> 0xaa) and the bytes
+    // past the Auxiliary Security Header filled with garbage, simulating a
+    // mid-RX Enh-ACK build where the Header IEs and encrypted payload are
+    // not yet in RAM. `mLength` still reflects the full PSDU length.
+    uint8_t data_psdu3[] = {0x69, 0xaa, 0x8e, 0xce, 0xfa, 0x02, 0x24, 0x00, 0x24, 0x0d, 0x02,
+                            0x00, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+    receivedFrame.mPsdu   = data_psdu3;
+    receivedFrame.mLength = sizeof(data_psdu3);
+
+    // `kParseFully` would fail on the garbage Header IE bytes; `GenerateEnhAck()`
+    // uses `kParseSecurityHeader` under this config and must still succeed.
+    VerifyOrQuit(ackInfo.ParseFrom(receivedFrame, Mac::Frame::kParseFully) != kErrorNone);
+    SuccessOrQuit(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
+
+    SuccessOrQuit(ackInfo.ParseFrom(ackFrame, Mac::Frame::kParseFully));
+    VerifyOrQuit(ackInfo.mType == Mac::Frame::kTypeAck);
+    VerifyOrQuit(ackInfo.mIsSecurityEnabled);
+    VerifyOrQuit(ackInfo.mIsIePresent);
+    VerifyOrQuit(ackInfo.mPanIds.IsDestinationPresent());
+    VerifyOrQuit(ackInfo.mPanIds.GetDestination() == 0xface);
+    VerifyOrQuit(ackInfo.mVersion == Mac::Frame::kVersion2015);
+    VerifyOrQuit(ackInfo.mSequenceNum == 142);
+
+    // Clear the Security Enabled bit in the FCF to verify Enh-ACK
+    // generation on a received frame without security.
+    data_psdu3[0] &= ~0x08;
+
+    VerifyOrQuit(ackInfo.ParseFrom(receivedFrame, Mac::Frame::kParseFully) != kErrorNone);
+    SuccessOrQuit(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
+
+    SuccessOrQuit(ackInfo.ParseFrom(ackFrame, Mac::Frame::kParseFully));
+    VerifyOrQuit(ackInfo.mType == Mac::Frame::kTypeAck);
+    VerifyOrQuit(!ackInfo.mIsSecurityEnabled);
+    VerifyOrQuit(ackInfo.mIsIePresent);
+    VerifyOrQuit(ackInfo.mPanIds.IsDestinationPresent());
+    VerifyOrQuit(ackInfo.mPanIds.GetDestination() == 0xface);
+    VerifyOrQuit(ackInfo.mVersion == Mac::Frame::kVersion2015);
+    VerifyOrQuit(ackInfo.mSequenceNum == 142);
+#endif // OPENTHREAD_CONFIG_MAC_ALLOW_INCOMPLETE_RX_FRAME_WHEN_GEN_ENH_ACK
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 }
 

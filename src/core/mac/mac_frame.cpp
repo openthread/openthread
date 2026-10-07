@@ -977,7 +977,18 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
 
     // Validate the received frame.
 
+#if OPENTHREAD_CONFIG_MAC_ALLOW_INCOMPLETE_RX_FRAME_WHEN_GEN_ENH_ACK
+    switch (rxInfo.ParseFrom(aRxFrame, kParseSecurityHeader))
+    {
+    case kErrorNone:
+    case kErrorNotFound:
+        break;
+    default:
+        ExitNow();
+    }
+#else
     SuccessOrExit(rxInfo.ParseFrom(aRxFrame, kParseFully));
+#endif
 
     VerifyOrExit(rxInfo.mVersion == kVersion2015);
     VerifyOrExit(rxInfo.mIsAckRequest);
