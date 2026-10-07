@@ -514,19 +514,20 @@ async def connect_helper(device: BLEDevice | UdpStream,
 async def disconnect_helper(context: dict) -> None:
     """Helper function for CLI and commands to disconnect from a TCAT device."""
     bless: BleStreamSecure = context['ble_sstream']
+    bles = context['ble_stream']
+    context['ble_sstream'] = None
+    context['ble_stream'] = None
+
     doing_disconn = False
     if bless is not None and bless.is_connected:
         print('Disconnecting...')
         doing_disconn = True
         logger.debug('Closing TLS connection.')
         await bless.close(timeout=5.0)
-    context['ble_sstream'] = None
 
-    bles = context['ble_stream']
     if bles is not None:
         logger.debug('Closing BLE connection.')
         await bles.disconnect()
-    context['ble_stream'] = None
     if doing_disconn:
         print('Done')
 
