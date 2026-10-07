@@ -3911,20 +3911,7 @@ exit:
 
 void Core::TxMessage::AppendServicesDnssdName(Section aSection)
 {
-    Message &message = SelectMessageFor(aSection);
-
-    if (mServicesDnssdOffset.IsKnown())
-    {
-        SuccessOrAssert(Name::AppendPointerLabel(mServicesDnssdOffset.GetOffset(), message));
-        ExitNow();
-    }
-
-    mServicesDnssdOffset.Save(message, aSection);
-    SuccessOrAssert(Name::AppendMultipleLabels(kServicesDnssdLabels, message));
-    AppendDomainName(aSection);
-
-exit:
-    return;
+    AppendServiceType(aSection, kServicesDnssdLabels, mServicesDnssdOffset);
 }
 
 void Core::TxMessage::AddQuestionFrom(const Message &aMessage)
