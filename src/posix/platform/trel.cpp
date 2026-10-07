@@ -194,6 +194,15 @@ static void PrepareSocket(uint16_t &aUdpPort)
     setsockopt(sSocket, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &val, sizeof(val));
 #endif
 
+#ifdef __linux__
+    // Bind to the TREL interface.
+    if (setsockopt(sSocket, SOL_SOCKET, SO_BINDTODEVICE, sInterfaceName, strlen(sInterfaceName)) < 0)
+    {
+        LogCrit("Failed to bind socket to the interface %s: %s", sInterfaceName, strerror(errno));
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
+#endif
+
     // Bind the socket.
 
     memset(&sockAddr, 0, sizeof(sockAddr));
@@ -203,24 +212,15 @@ static void PrepareSocket(uint16_t &aUdpPort)
 
     if (bind(sSocket, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) == -1)
     {
-        LogCrit("Failed to bind socket");
+        LogCrit("Failed to bind socket to port %u: %s", OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT, strerror(errno));
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
-
-#ifdef __linux__
-    // Bind to the TREL interface
-    if (setsockopt(sSocket, SOL_SOCKET, SO_BINDTODEVICE, sInterfaceName, strlen(sInterfaceName)) < 0)
-    {
-        LogCrit("Failed to bind socket to the interface %s", sInterfaceName);
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
-#endif
 
     sockLen = sizeof(sockAddr);
 
     if (getsockname(sSocket, (struct sockaddr *)&sockAddr, &sockLen) == -1)
     {
-        LogCrit("Failed to get the socket name");
+        LogCrit("Failed to get the socket name: %s", strerror(errno));
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
@@ -645,7 +645,7 @@ void otSysTrelInit(const char *aInterfaceName)
 
     LogDebg("otSysTrelInit(aInterfaceName:\"%s\")", aInterfaceName != nullptr ? aInterfaceName : "");
 
-    VerifyOrExit(!sInitialized && !sEnabled && aInterfaceName != nullptr);
+    VerifyOrExit(!sInitialized && !sEnabled && aInterfaceName != nullptr && aInterfaceName[0] != '\0');
 
     strncpy(sInterfaceName, aInterfaceName, sizeof(sInterfaceName) - 1);
     sInterfaceName[sizeof(sInterfaceName) - 1] = '\0';
