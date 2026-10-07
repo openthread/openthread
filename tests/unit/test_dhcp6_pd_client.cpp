@@ -549,7 +549,7 @@ void Dhcp6Msg::PrepareMessage(Message &aMessage)
 
         length = sizeof(Dhcp6::IaPdOption) - sizeof(Dhcp6::Option);
 
-        if (mHasStatus)
+        if (iaPd.mHasStatus)
         {
             length += sizeof(Dhcp6::StatusCodeOption);
         }
@@ -563,7 +563,7 @@ void Dhcp6Msg::PrepareMessage(Message &aMessage)
         iaPdOption.SetT2(iaPd.mT2);
         SuccessOrQuit(aMessage.Append(iaPdOption));
 
-        if (mHasStatus)
+        if (iaPd.mHasStatus)
         {
             statusOption.Init();
             statusOption.SetStatusCode(static_cast<Dhcp6::StatusCodeOption::Status>(iaPd.mStatusCode));
@@ -2024,6 +2024,20 @@ void TestDhcp6PdLifetimeT1AndT2Adjustments(void)
         // Only T2 is zero, but default T2 (0.8 times the preferred lifetime, 5760) would be smaller than given T1.
         // Given T1 is used as is and client picks T2 equal to T1.
         {6000, 0, 7200, 6000, 6000, 7200},
+
+        // Only T2 is zero, and given T1 is larger than preferred lifetime minus 15 minutes (6300), so client clamps
+        // T1 to 6300. Client picks T2 not smaller than the given T1 (6400), so T2 stays larger than the clamped T1.
+        {6400, 0, 7200, 6300, 6400, 7200},
+
+        // Only T2 is zero, and given T1 is larger than both preferred lifetime minus 15 minutes (2700) and default
+        // T2 (0.8 times the preferred lifetime, 2880). Client clamps T1 to 2700 and picks T2 not smaller than the
+        // given T1 (3000), so T2 is not reduced to the default T2.
+        {3000, 0, 3600, 2700, 3000, 3600},
+
+        // Only T2 is zero, and given T1 is larger than preferred lifetime minus 6 minutes (6840). Client clamps T1
+        // to preferred lifetime minus 15 minutes (6300). T2 is picked not smaller than the given T1, but is then
+        // clamped to preferred lifetime minus 6 minutes (6840).
+        {7000, 0, 7200, 6300, 6840, 7200},
 
         // T1 and T2 are given but way too short. Client enforces min T1 of 60s (`kMinT1`). T2 is raised to T1.
         {1, 5, 1800, 60, 60, 1800},
