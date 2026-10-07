@@ -595,44 +595,37 @@ void Dhcp6PdClient::HandleReply(const Message &aMessage)
             leaseDiscarded  = true;
         }
 
-        if (status == StatusCodeOption::kNoPrefixAvail)
+        // Prefixes in an IA_PD with `NoPrefixAvail` status are not used; RFC 8415 Section 18.2.10.1 bullet 6.
+        if (status != StatusCodeOption::kNoPrefixAvail)
         {
-            // Prefixes in an IA_PD with `NoPrefixAvail` status are not used; RFC 8415 Section 18.2.10.1 bullet 6.
-            // If the previously delegated prefix was not included it is left unchanged and we continue the
-            // Renew/Rebind exchange. If it was discarded, we have no usable prefix left and restart server discovery.
-            if (leaseDiscarded)
+            if (matchedPdPrefix != nullptr)
             {
-                EnterState(kStateToSolicit);
+                SaveServerDuid(aMessage);
+                CommitPdPrefix(*matchedPdPrefix);
+
+                if (mPdPrefix.mPreferredLifetime >= kMinPreferredLifetime)
+                {
+                    ExitNow();
+                }
             }
 
-            ExitNow();
-        }
+            // The previously delegated prefix does not appear in IA or
+            // it is included with a unacceptably short lifetime.
+            // Check if server provided any other prefixes which we
+            // can use instead.
 
-        if (matchedPdPrefix != nullptr)
-        {
-            SaveServerDuid(aMessage);
-            CommitPdPrefix(*matchedPdPrefix);
+            favoredPdPrefix = SelectFavoredPrefix(pdPrefixes);
 
-            if (mPdPrefix.mPreferredLifetime >= kMinPreferredLifetime)
+            if (favoredPdPrefix != nullptr)
             {
+                SaveServerDuid(aMessage);
+                CommitPdPrefix(*favoredPdPrefix);
                 ExitNow();
             }
         }
 
-        // The previously delegated prefix does not appear in IA or
-        // it is included with a unacceptably short lifetime.
-        // Check if server provided any other prefixes which we
-        // can use instead.
-
-        favoredPdPrefix = SelectFavoredPrefix(pdPrefixes);
-
-        if (favoredPdPrefix != nullptr)
-        {
-            SaveServerDuid(aMessage);
-            CommitPdPrefix(*favoredPdPrefix);
-            ExitNow();
-        }
-
+        // If the previously delegated prefix was not included it is left unchanged and we continue the
+        // Renew/Rebind exchange. If it was discarded, we have no usable prefix left and restart server discovery.
         if (leaseDiscarded)
         {
             EnterState(kStateToSolicit);
