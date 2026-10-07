@@ -52,9 +52,9 @@ Error ScanResult::PopulateFromBeacon(const Mac::RxFrame::ParseInfo &aFrameInfo)
     mPanId =
         aFrameInfo.mPanIds.IsSourcePresent() ? aFrameInfo.mPanIds.GetSource() : aFrameInfo.mPanIds.GetDestination();
 
-    mChannel = aFrameInfo.GetRxFrame()->GetChannel();
-    mRssi    = aFrameInfo.GetRxFrame()->GetRssi();
-    mLqi     = aFrameInfo.GetRxFrame()->GetLqi();
+    mChannel = aFrameInfo.GetChannel();
+    mRssi    = aFrameInfo.GetRssi();
+    mLqi     = aFrameInfo.GetLqi();
 
 #if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
     {

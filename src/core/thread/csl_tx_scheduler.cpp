@@ -319,7 +319,7 @@ void CslTxScheduler::HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo
         break;
 
     case kErrorNoAck:
-        OT_ASSERT(!aFrameInfo.mIsSecurityEnabled || aFrameInfo.GetTxFrame()->IsHeaderUpdated());
+        OT_ASSERT(!aFrameInfo.mIsSecurityEnabled || aFrameInfo.IsHeaderUpdated());
 
         mCslTxNeighbor->IncrementCslTxAttempts();
         LogInfo("CSL tx to %04x failed, attempt %d/%d", mCslTxNeighbor->GetRloc16(), mCslTxNeighbor->GetCslTxAttempts(),
@@ -341,11 +341,11 @@ void CslTxScheduler::HandleFrameTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo
         // dropped until indirect tx attempts count reaches max. So here it
         // would set sequence number and schedule next CSL tx.
 
-        if (!aFrameInfo.GetTxFrame()->IsEmpty())
+        if (!aFrameInfo.IsEmpty())
         {
             mCslTxNeighbor->SetIndirectDataSequenceNumber(aFrameInfo.mSequenceNum);
 
-            if (aFrameInfo.mIsSecurityEnabled && aFrameInfo.GetTxFrame()->IsHeaderUpdated())
+            if (aFrameInfo.mIsSecurityEnabled && aFrameInfo.IsHeaderUpdated())
             {
                 mCslTxNeighbor->SetIndirectFrameCounter(aFrameInfo.mFrameCounter);
                 mCslTxNeighbor->SetIndirectKeyIndex(aFrameInfo.mKeyIndex);

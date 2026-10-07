@@ -197,7 +197,7 @@ void DataPollSender::HandlePollTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error
 
     VerifyOrExit(mEnabled);
 
-    if (!aFrameInfo.GetTxFrame()->IsEmpty())
+    if (!aFrameInfo.IsEmpty())
     {
         Get<MeshForwarder>().UpdateNeighborOnFrameTxDone(aFrameInfo, aError, aFrameInfo.mAddrs.mDestination,
                                                          /* aIsDataPoll */ true);
@@ -330,7 +330,7 @@ void DataPollSender::ProcessTxDone(const Mac::TxFrame::ParseInfo &aFrameInfo,
     VerifyOrExit(aFrameInfo.mIsSecurityEnabled);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aFrameInfo.GetTxFrame()->IsARetransmission() && aFrameInfo.Has<Mac::CslIe>())
+    if (aFrameInfo.IsARetransmission() && aFrameInfo.Has<Mac::CslIe>())
     {
         // For retransmission frame, use a data poll to resync its parent with correct CSL phase
         sendDataPoll = true;

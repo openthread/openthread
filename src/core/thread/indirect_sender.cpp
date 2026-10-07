@@ -486,7 +486,7 @@ void IndirectSender::HandleFrameTxToChildDone(const Mac::TxFrame::ParseInfo &aFr
         }
 #endif
 
-        if (!aFrameInfo.GetTxFrame()->IsEmpty())
+        if (!aFrameInfo.IsEmpty())
         {
             macDest = aFrameInfo.mAddrs.mDestination;
             Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageTransmit, *message, txError, &macDest);
@@ -503,7 +503,7 @@ void IndirectSender::HandleFrameTxToChildDone(const Mac::TxFrame::ParseInfo &aFr
         message->InvokeTxCallback(txError);
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        if (aFrameInfo.GetTxFrame()->IsEmpty())
+        if (aFrameInfo.IsEmpty())
         {
             aChild.GetMacAddress(macDest);
         }

@@ -180,8 +180,10 @@ public:
     /**
      * Represents parsed information from a MAC frame header.
      */
-    class ParseInfo : public Clearable<ParseInfo>
+    class ParseInfo : public Clearable<ParseInfo>, public Radio::FrameProperties<ParseInfo>
     {
+        friend class Radio::FrameProperties<ParseInfo>;
+
     public:
         /**
          * Initializes the `ParseInfo` object.
@@ -313,6 +315,7 @@ public:
         };
 
         Error PerformAesCcm(AesCcmOperation aOperation, const ExtAddress &aExtAddress, const KeyMaterial &aMacKey);
+        const Frame &GetFrame(void) const { return *mFrame; }
 
         uint8_t *mKeyIndexByte;
         uint8_t *mFrameCounterBytes;
@@ -498,13 +501,16 @@ private:
 class RxFrame : public Frame, public Radio::RxFrameProperties<RxFrame>
 {
     friend class TxFrame;
+    friend class Radio::RxFrameProperties<RxFrame>;
 
 public:
     /**
      * Represents parsed information from a received MAC frame.
      */
-    class ParseInfo : public Frame::ParseInfo
+    class ParseInfo : public Frame::ParseInfo, public Radio::RxFrameProperties<ParseInfo>
     {
+        friend class Radio::RxFrameProperties<ParseInfo>;
+
     public:
         /**
          * Returns a pointer to the associated `RxFrame`.
@@ -541,12 +547,16 @@ public:
  */
 class TxFrame : public Frame, public Radio::TxFrameProperties<TxFrame>
 {
+    friend class Radio::TxFrameProperties<TxFrame>;
+
 public:
     /**
      * Represents parsed information from a transmitted MAC frame.
      */
-    class ParseInfo : public Frame::ParseInfo
+    class ParseInfo : public Frame::ParseInfo, public Radio::TxFrameProperties<ParseInfo>
     {
+        friend class Radio::TxFrameProperties<ParseInfo>;
+
     public:
         /**
          * Returns a pointer to the associated `TxFrame`.
