@@ -131,6 +131,9 @@ async def receive_loop(cli_context: dict):
             # The connection can also end without BleConnectionClosed being raised: either the peer
             # closed TLS gracefully (close-notify), or the BLE link itself dropped.
             if not bless.is_connected:
+                # Ignore a stream that was already torn down locally (e.g. by the 'disconnect' command)
+                if cli_context['ble_sstream'] is not bless:
+                    continue
                 if bless.close_notify_received:
                     print('TCAT Device disconnected: the TLS connection was closed by the device.')
                     await disconnect_helper(cli_context)

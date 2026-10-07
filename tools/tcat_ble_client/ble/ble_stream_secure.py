@@ -348,7 +348,7 @@ class BleStreamSecure:
 
     @property
     def close_notify_received(self):
-        """True if the TLS connection was closed by a close-notify alert received from the peer."""
+        """True once the peer's close-notify alert has been received, whichever side started the close."""
         return self._close_notify_received
 
     @property
