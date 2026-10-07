@@ -288,12 +288,6 @@ private:
     static constexpr uint32_t kTimeInQueueDropMsg = OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_DROP_MSG_INTERVAL;
 #endif
 
-    enum EvictReason : uint8_t // Used in EvictMessage()
-    {
-        kEvictReasonNoMessageBuffer,
-        kEvictReasonDirectTxQueueAtLimit,
-    };
-
 #if OPENTHREAD_FTD
     enum PriorityGuard : uint8_t // Used in FindMessageToEvict()
     {
@@ -459,7 +453,7 @@ private:
                                  Message::Priority       aPriority);
     Error HandleDatagram(Message &aMessage, const Mac::Address &aMacSource);
     void  ClearReassemblyList(void);
-    Error RemoveUnsecureReassemblyMessage(EvictReason aEvictReason);
+    Error RemoveUnsecureReassemblyMessage(void);
     void  HandleDiscoverComplete(void);
 
     void          HandleReceivedFrame(Mac::RxFrame::ParseInfo &aFrameInfo);
@@ -478,8 +472,12 @@ private:
     void HandleTimeTick(void);
     void ScheduleTransmissionTask(void);
 
-    Error EvictMessage(Message::Priority aPriority, EvictReason aEvictReason);
+    Error EvictMessage(Message::Priority aPriority);
     Error GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
+
+#if OPENTHREAD_MTD
+    Message *FindMessageToEvict(Message::Priority aPriority);
+#endif
 
 #if OPENTHREAD_FTD
     Message      *FindMessageToEvict(PriorityGuard aGuard, Message::Priority aPriority, Message::Checker aChecker);

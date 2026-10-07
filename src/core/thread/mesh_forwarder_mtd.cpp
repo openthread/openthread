@@ -37,12 +37,12 @@
 
 namespace ot {
 
-Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvictReason)
+Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 {
     Error    error = kErrorNotFound;
     Message *message;
 
-    error = RemoveUnsecureReassemblyMessage(aEvictReason);
+    error = RemoveUnsecureReassemblyMessage();
     VerifyOrExit(error == kErrorNotFound);
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
