@@ -1409,6 +1409,8 @@ private:
 #endif
 
     private:
+        typedef bool (ServiceEntry::*OffsetDiscoverer)(const ServiceEntry &aOther, void *aContext);
+
         class SubType : public LinkedListEntry<SubType>, public Heap::Allocatable<SubType>, private ot::NonCopyable
         {
         public:
@@ -1431,7 +1433,15 @@ private:
         void  PrepareResponseRecords(EntryContext &aContext);
         void  UpdateRecordsState(const TxMessage &aResponse);
         void  DetermineNextFireTime(void);
-        void  DiscoverOffsetsAndHost(HostEntry *&aHost);
+        void  MarkToAppendHostAddrRecordsInAdditionalData(void);
+        void  DiscoverHost(void);
+        void  DiscoverCompressOffset(OffsetDiscoverer aDiscoverer, void *aContext = nullptr);
+        void  DiscoverServiceTypeCompressOffset(void);
+        bool  DiscoverServiceTypeOffsetFrom(const ServiceEntry &aOther, void *aContext);
+        void  DiscoverHostNameCompressOffset(void);
+        bool  DiscoverHostNameOffsetFrom(const ServiceEntry &aOther, void *aContext);
+        void  DiscoverSubServiceNameCompressOffsetFor(SubType &aSubType);
+        bool  DiscoverSubServiceNameOffsetFrom(const ServiceEntry &aOther, void *aContext);
         void  UpdateServiceTypes(void);
         void  AppendSrvRecordTo(TxMessage &aTxMessage, Section aSection);
         void  AppendTxtRecordTo(TxMessage &aTxMessage, Section aSection);
@@ -1440,7 +1450,6 @@ private:
         void  AppendNsecRecordTo(TxMessage &aTxMessage, Section aSection);
         void  AppendServiceNameTo(TxMessage &TxMessage, Section aSection, bool aPerformNameCompression = true);
         void  AppendServiceTypeTo(TxMessage &aTxMessage, Section aSection);
-        void  AppendSubServiceTypeTo(TxMessage &aTxMessage, Section aSection);
         void  AppendSubServiceNameTo(TxMessage &aTxMessage, Section aSection, SubType &aSubType);
         void  AppendHostNameTo(TxMessage &aTxMessage, Section aSection);
 
@@ -1464,6 +1473,7 @@ private:
         CompressOffset      mServiceTypeOffset;
         CompressOffset      mSubServiceTypeOffset;
         CompressOffset      mHostNameOffset;
+        HostEntry          *mHostEntry;
         bool                mIsAddedInServiceTypes;
     };
 
