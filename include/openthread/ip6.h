@@ -491,6 +491,7 @@ typedef struct otIp6AddressInfo
     uint8_t             mScope : 4;     ///< The scope of this address.
     bool                mPreferred : 1; ///< Whether this is a preferred address.
     bool                mMeshLocal : 1; ///< Whether this is a mesh-local unicast/anycast address.
+    bool                mIsLocator : 1; ///< Whether this is a mesh-local RLOC or ALOC address.
 } otIp6AddressInfo;
 
 /**

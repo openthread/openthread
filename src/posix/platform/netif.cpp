@@ -845,8 +845,10 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
         struct ifa_cacheinfo cacheinfo;
 
         memset(&cacheinfo, 0, sizeof(cacheinfo));
-        cacheinfo.ifa_valid    = UINT32_MAX;
-        cacheinfo.ifa_prefered = (aAddressInfo.mPreferred && aAddressInfo.mScope != kLinkLocalScope) ? UINT32_MAX : 0;
+        cacheinfo.ifa_valid = UINT32_MAX;
+        cacheinfo.ifa_prefered =
+            (aAddressInfo.mPreferred && aAddressInfo.mScope != kLinkLocalScope && !aAddressInfo.mIsLocator) ? UINT32_MAX
+                                                                                                            : 0;
 
         AddRtAttr(&req.nh, sizeof(req), IFA_CACHEINFO, &cacheinfo, sizeof(cacheinfo));
     }
