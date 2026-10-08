@@ -713,6 +713,7 @@ private:
         void               Evaluate(void);
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
+        bool               ContainsOldLocalPrefix(const Ip6::Prefix &aPrefix) const;
         bool               AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const;
         bool               IsInitialEvaluationDone(void) const;
         void               HandleRxRaTrackerChanged(void);
