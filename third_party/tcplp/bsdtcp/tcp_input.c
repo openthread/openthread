@@ -317,8 +317,8 @@ cc_post_recovery(struct tcpcb *tp, struct tcphdr *th)
 #define DELAY_ACK(tp, tlen)						\
 	((!tcp_timer_active(tp, TT_DELACK) &&				\
 	    (tp->t_flags & TF_RXWIN0SENT) == 0) &&			\
-	    (tlen <= tp->t_maxopd) &&					\
-	    (V_tcp_delack_enabled || (tp->t_flags & TF_NEEDSYN)))
+	    (tlen <= tp->t_maxopd) &&					    \
+	    ((V_tcp_delack_enabled && !(tp->t_flags & TF_NODELAY)) || (tp->t_flags & TF_NEEDSYN)))
 
 static inline void
 cc_ecnpkt_handler(struct tcpcb *tp, struct tcphdr *th, uint8_t iptos)
