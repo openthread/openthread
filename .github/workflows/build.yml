@@ -113,7 +113,7 @@ jobs:
         cmake --build --preset simulation
         ctest --preset simulation
 
-  cmake-presets-ccm-one-shot:
+  cmake-presets-platform-options:
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
@@ -128,9 +128,9 @@ jobs:
       timeout-minutes: 10
       run: |
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
-    - name: Build and test with platform CCM one-shot enabled
+    - name: Build and test with platform-specific options enabled
       run: |
-        cmake --preset simulation -DOT_CRYPTO_CCM_ONE_SHOT=ON
+        cmake --preset simulation -DOT_CRYPTO_CCM_ONE_SHOT=ON -DOT_MAC_ALLOW_INCOMPLETE_RX_ENH_ACK=ON
         cmake --build --preset simulation
         ctest --preset simulation
 

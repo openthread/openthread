@@ -203,9 +203,9 @@ build_all_features()
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_BLE_TCAT=ON
 
-    # Build with platform CCM one-shot enabled
+    # Build with platform-specific options enabled
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_CRYPTO_CCM_ONE_SHOT=ON
+    "$(dirname "$0")"/cmake-build simulation -DOT_CRYPTO_CCM_ONE_SHOT=ON -DOT_MAC_ALLOW_INCOMPLETE_RX_ENH_ACK=ON
 }
 
 build_nest_common()
