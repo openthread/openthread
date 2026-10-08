@@ -44,6 +44,7 @@
 #include "common/error.hpp"
 #include "common/heap.hpp"
 #include "common/new.hpp"
+#include "common/num_utils.hpp"
 
 namespace ot {
 namespace Heap {
@@ -58,6 +59,8 @@ namespace Heap {
  * The `Type` class MUST provide a move constructor `Type(Type &&aOther)` (or a copy constructor if no move constructor
  * is provided). This constructor is used to move existing elements when array buffer is grown (new buffer is
  * allocated) to make room for new elements.
+ *
+ * The array length and capacity are represented by `uint16_t` and cannot exceed `UINT16_MAX` (2^16 - 1).
  *
  * @tparam  Type                  The array element type.
  * @tparam  kCapacityIncrements   Number of elements to allocate at a time when updating the array buffer.
@@ -283,7 +286,7 @@ public:
 
         if (mLength == mCapacity)
         {
-            SuccessOrExit(error = Allocate(mCapacity + kCapacityIncrements));
+            SuccessOrExit(error = Grow());
         }
 
         new (&mArray[mLength++]) Type(aEntry);
@@ -309,7 +312,7 @@ public:
 
         if (mLength == mCapacity)
         {
-            SuccessOrExit(error = Allocate(mCapacity + kCapacityIncrements));
+            SuccessOrExit(error = Grow());
         }
 
         new (&mArray[mLength++]) Type(static_cast<Type &&>(aEntry));
@@ -335,7 +338,7 @@ public:
 
         if (mLength == mCapacity)
         {
-            SuccessOrExit(Allocate(mCapacity + kCapacityIncrements));
+            SuccessOrExit(Grow());
         }
 
         newEntry = new (&mArray[mLength++]) Type();
@@ -502,6 +505,19 @@ public:
     Array &operator=(const Array &) = delete;
 
 private:
+    Error Grow(void)
+    {
+        Error error = kErrorNone;
+
+        static_assert(kCapacityIncrements > 0, "kCapacityIncrements must be greater than zero");
+
+        VerifyOrExit(CanAddSafely<IndexType>(mCapacity, kCapacityIncrements), error = kErrorNoBufs);
+        error = Allocate(static_cast<IndexType>(mCapacity + kCapacityIncrements));
+
+    exit:
+        return error;
+    }
+
     Error Allocate(IndexType aCapacity)
     {
         Error error = kErrorNone;
