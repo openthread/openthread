@@ -478,11 +478,14 @@ bool Tcp::Endpoint::FirePendingCallbacks(void)
 
     if ((mPendingCallbacks & kForwardProgressCallbackFlag) != 0 && mForwardProgressCallback != nullptr)
     {
-        mForwardProgressCallback(this, GetSendBufferBytes(), GetBacklogBytes());
+        otTcpForwardProgress callback        = mForwardProgressCallback;
+        size_t               sendBufferBytes = GetSendBufferBytes();
+        size_t               backlogBytes    = GetBacklogBytes();
+
+        mPendingCallbacks &= ~kForwardProgressCallbackFlag;
+        callback(this, sendBufferBytes, backlogBytes);
         calledUserCallback = true;
     }
-
-    mPendingCallbacks = 0;
 
     return calledUserCallback;
 }
@@ -734,11 +737,27 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
     if (aEndpoint.mForwardProgressCallback != nullptr)
     {
         size_t backlogBytes = aEndpoint.GetBacklogBytes();
+        bool   hasReceiveCallback =
+            (aSignals.recvbuf_added || aSignals.rcvd_fin) && aEndpoint.mReceiveAvailableCallback != nullptr;
+        bool hasDisconnectedCallback =
+            aEndpoint.GetTcb().t_state == TCP6S_TIME_WAIT && aEndpoint.mDisconnectedCallback != nullptr;
 
         if (aSignals.bytes_acked > 0 || backlogBytes < aPriorBacklog)
         {
-            aEndpoint.mForwardProgressCallback(&aEndpoint, aEndpoint.GetSendBufferBytes(), backlogBytes);
-            aEndpoint.mPendingCallbacks &= ~kForwardProgressCallbackFlag;
+            if (hasReceiveCallback || hasDisconnectedCallback)
+            {
+                aEndpoint.mPendingCallbacks |= kForwardProgressCallbackFlag;
+                aEndpoint.Get<Tcp>().mTasklet.Post();
+            }
+            else
+            {
+                otTcpForwardProgress callback        = aEndpoint.mForwardProgressCallback;
+                size_t               sendBufferBytes = aEndpoint.GetSendBufferBytes();
+
+                aEndpoint.mPendingCallbacks &= ~kForwardProgressCallbackFlag;
+                callback(&aEndpoint, sendBufferBytes, backlogBytes);
+                ExitNow();
+            }
         }
     }
 
