@@ -114,92 +114,108 @@ otError otLinkRawEnergyScan(otInstance             *aInstance,
 
 otError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable)
 {
-    Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
 
-    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
+#if OPENTHREAD_RADIO
+    instance.Get<Radio::Radio>().EnableSrcMatch(aEnable);
+    return kErrorNone;
+#else
+    Error error = kErrorNone;
 
+    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
     instance.Get<Radio::Radio>().EnableSrcMatch(aEnable);
 
 exit:
     return error;
+#endif
 }
 
 otError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
-    Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
 
-    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
-
-    error = instance.Get<Radio::Radio>().AddSrcMatchShortEntry(aShortAddress);
-
-exit:
-    return error;
+#if OPENTHREAD_RADIO
+    return instance.Get<Radio::Radio>().AddSrcMatchShortEntry(aShortAddress);
+#else
+    return instance.Get<Mac::LinkRaw>().IsEnabled()
+               ? instance.Get<Radio::Radio>().AddSrcMatchShortEntry(aShortAddress)
+               : kErrorInvalidState;
+#endif
 }
 
 otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
 
-    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
-
-    error = instance.Get<Radio::Radio>().AddSrcMatchExtEntry(AsCoreType(aExtAddress));
-
-exit:
-    return error;
+#if OPENTHREAD_RADIO
+    return instance.Get<Radio::Radio>().AddSrcMatchExtEntry(AsCoreType(aExtAddress));
+#else
+    return instance.Get<Mac::LinkRaw>().IsEnabled()
+               ? instance.Get<Radio::Radio>().AddSrcMatchExtEntry(AsCoreType(aExtAddress))
+               : kErrorInvalidState;
+#endif
 }
 
 otError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
-    Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
 
-    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
-    error = instance.Get<Radio::Radio>().ClearSrcMatchShortEntry(aShortAddress);
-
-exit:
-    return error;
+#if OPENTHREAD_RADIO
+    return instance.Get<Radio::Radio>().ClearSrcMatchShortEntry(aShortAddress);
+#else
+    return instance.Get<Mac::LinkRaw>().IsEnabled()
+               ? instance.Get<Radio::Radio>().ClearSrcMatchShortEntry(aShortAddress)
+               : kErrorInvalidState;
+#endif
 }
 
 otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
 
-    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
-
-    error = instance.Get<Radio::Radio>().ClearSrcMatchExtEntry(AsCoreType(aExtAddress));
-
-exit:
-    return error;
+#if OPENTHREAD_RADIO
+    return instance.Get<Radio::Radio>().ClearSrcMatchExtEntry(AsCoreType(aExtAddress));
+#else
+    return instance.Get<Mac::LinkRaw>().IsEnabled()
+               ? instance.Get<Radio::Radio>().ClearSrcMatchExtEntry(AsCoreType(aExtAddress))
+               : kErrorInvalidState;
+#endif
 }
 
 otError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance)
 {
-    Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
 
-    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
+#if OPENTHREAD_RADIO
+    instance.Get<Radio::Radio>().ClearSrcMatchShortEntries();
+    return kErrorNone;
+#else
+    Error error = kErrorNone;
 
+    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
     instance.Get<Radio::Radio>().ClearSrcMatchShortEntries();
 
 exit:
     return error;
+#endif
 }
 
 otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
 {
-    Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
 
-    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
+#if OPENTHREAD_RADIO
+    instance.Get<Radio::Radio>().ClearSrcMatchExtEntries();
+    return kErrorNone;
+#else
+    Error error = kErrorNone;
 
+    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
     instance.Get<Radio::Radio>().ClearSrcMatchExtEntries();
 
 exit:
     return error;
+#endif
 }
 
 otError otLinkRawSetMacKey(otInstance     *aInstance,
