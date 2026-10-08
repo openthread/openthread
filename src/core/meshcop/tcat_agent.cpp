@@ -49,7 +49,27 @@ RegisterLogModule("TcatAgent");
 bool TcatAgent::VendorInfo::IsValid(void) const
 {
     // Note: mProvisioningUrl can be nullptr, if not present
-    return mPskdString != nullptr && Tlv::ValidateStringValue<ProvisioningUrlTlv>(mProvisioningUrl) == kErrorNone;
+    bool valid = (mPskdString != nullptr) &&
+                 (Tlv::ValidateStringValue<ProvisioningUrlTlv>(mProvisioningUrl) == kErrorNone);
+
+    VerifyOrExit(valid);
+
+    if (mGeneralDeviceId != nullptr)
+    {
+        VerifyOrExit(mGeneralDeviceId->mDeviceIdLen <= OT_TCAT_MAX_DEVICEID_SIZE, valid = false);
+    }
+
+    if (mAdvertisedDeviceIds != nullptr)
+    {
+        for (uint8_t i = 0; mAdvertisedDeviceIds[i].mDeviceIdType != OT_TCAT_DEVICE_ID_EMPTY; i++)
+        {
+            VerifyOrExit(mAdvertisedDeviceIds[i].mDeviceIdLen <= OT_TCAT_MAX_ADVERTISED_DEVICEID_SIZE,
+                         valid = false);
+        }
+    }
+
+exit:
+    return valid;
 }
 
 TcatAgent::TcatAgent(Instance &aInstance)
