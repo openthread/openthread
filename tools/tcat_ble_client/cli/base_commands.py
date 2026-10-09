@@ -472,15 +472,17 @@ async def connect_helper(device: BLEDevice | UdpStream,
     else:
         ble_stream = device
     ble_sstream = BleStreamSecure(ble_stream)
-    context['ble_sstream'] = ble_sstream
-    context['ble_stream'] = ble_stream
 
     cert_path = context['cmd_args'].cert_path if context['cmd_args'] else 'auth'
-    ble_sstream.load_cert(
-        certfile=path.join(cert_path, 'commissioner_cert.pem'),
-        keyfile=path.join(cert_path, 'commissioner_key.pem'),
-        cafile=path.join(cert_path, 'ca_cert.pem'),
-    )
+    try:
+        ble_sstream.load_cert(
+            certfile=path.join(cert_path, 'commissioner_cert.pem'),
+            keyfile=path.join(cert_path, 'commissioner_key.pem'),
+            cafile=path.join(cert_path, 'ca_cert.pem'),
+        )
+    except Exception:
+        await ble_stream.disconnect()
+        raise
     logger.info(f"Certificates and key loaded from '{cert_path}'")
 
     print('Setting up secure channel...')
@@ -495,6 +497,10 @@ async def connect_helper(device: BLEDevice | UdpStream,
         logger.error(e)
 
     if ok:
+        # Store the connection only once established: the background receive loop treats a
+        # non-connected stream in the context as a closed link, so it must not see it during the handshake.
+        context['ble_sstream'] = ble_sstream
+        context['ble_stream'] = ble_stream
         print('Done')
         return True
     else:
@@ -508,21 +514,45 @@ async def connect_helper(device: BLEDevice | UdpStream,
 async def disconnect_helper(context: dict) -> None:
     """Helper function for CLI and commands to disconnect from a TCAT device."""
     bless: BleStreamSecure = context['ble_sstream']
+    bles = context['ble_stream']
+    context['ble_sstream'] = None
+    context['ble_stream'] = None
+
     doing_disconn = False
     if bless is not None and bless.is_connected:
         print('Disconnecting...')
         doing_disconn = True
         logger.debug('Closing TLS connection.')
         await bless.close(timeout=5.0)
-    context['ble_sstream'] = None
 
-    bles = context['ble_stream']
     if bles is not None:
         logger.debug('Closing BLE connection.')
         await bles.disconnect()
-    context['ble_stream'] = None
     if doing_disconn:
         print('Done')
+
+
+async def connection_closed_helper(context: dict) -> bool:
+    """Formally tear down a TCAT link that was lost unexpectedly (e.g. the peer dropped BLE).
+
+    Unlike `disconnect_helper`, this sends no Disconnect TLV and performs no TLS close-notify,
+    because the link is already gone. Returns True if a connection was actually torn down.
+    """
+    if context['ble_sstream'] is None and context['ble_stream'] is None:
+        return False  # nothing to tear down (already disconnected)
+
+    print('TCAT Device disconnected: the BLE connection was closed unexpectedly.')
+
+    # Clear references first so this stays correct if both the receive loop and a command
+    # detect the closed link concurrently, then drop the (already dead) link without any
+    # over-the-link traffic.
+    bles = context['ble_stream']
+    context['ble_sstream'] = None
+    context['ble_stream'] = None
+    if bles is not None:
+        logger.debug('Closing BLE connection.')
+        await bles.disconnect()
+    return True
 
 
 class ScanCommand(Command):
