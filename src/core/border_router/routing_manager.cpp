@@ -1076,6 +1076,7 @@ void RoutingManager::OmrPrefixManager::AddLocalToNetData(void)
     mTimer.Stop();
 
     SetFavoredPrefix(mLocalPrefix);
+    Get<RoutingManager>().mRoutePublisher.Evaluate();
 
 exit:
     return;
