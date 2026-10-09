@@ -151,12 +151,12 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
     }
 }
 
-Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvictReason)
+Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 {
     Error    error = kErrorNotFound;
     Message *evict;
 
-    error = RemoveUnsecureReassemblyMessage(aEvictReason);
+    error = RemoveUnsecureReassemblyMessage();
     VerifyOrExit(error == kErrorNotFound);
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
@@ -164,70 +164,20 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvic
     VerifyOrExit(error == kErrorNotFound);
 #endif
 
-    evict = FindMessageToEvict(kLowerPriorityThan, aPriority,
-                               (aEvictReason == kEvictReasonDirectTxQueueAtLimit) ? Message::AcceptDirectTx
-                                                                                  : Message::AcceptAny);
+    evict = FindMessageToEvict(kLowerPriorityThan, aPriority, Message::AcceptAny);
 
-    if ((evict == nullptr) && (aEvictReason == kEvictReasonNoMessageBuffer))
+    if (evict == nullptr)
     {
         evict = FindMessageToEvict(kEqualOrHigherPriorityThan, aPriority, Message::AcceptIndirectTx);
     }
 
     VerifyOrExit(evict != nullptr);
+
+    FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
     error = kErrorNone;
-
-    switch (aEvictReason)
-    {
-    case kEvictReasonDirectTxQueueAtLimit:
-        LogMessage(kMessageFullQueueEvict, *evict, kErrorDrop);
-        FinalizeDirectTxAndRemoveMessageIfNoPendingTx(*evict, kErrorDrop);
-        break;
-
-    case kEvictReasonNoMessageBuffer:
-        FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
-        break;
-    }
 
 exit:
     return error;
-}
-
-Message *MeshForwarder::FindMessageToEvict(PriorityGuard aGuard, Message::Priority aPriority, Message::Checker aChecker)
-{
-    Message *evict            = nullptr;
-    uint8_t  startPriority    = Message::kPriorityLow;
-    uint8_t  afterEndPriority = Message::kNumPriorities;
-
-    switch (aGuard)
-    {
-    case kLowerPriorityThan:
-        afterEndPriority = aPriority;
-        break;
-    case kEqualOrHigherPriorityThan:
-        startPriority = aPriority;
-        break;
-    }
-
-    for (uint8_t priority = startPriority; priority < afterEndPriority; priority++)
-    {
-        for (Message *message            = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority));
-             message != nullptr; message = message->GetNext())
-        {
-            if (message->GetPriority() != priority)
-            {
-                break;
-            }
-
-            if (!message->GetDoNotEvict() && aChecker(*message))
-            {
-                evict = message;
-                ExitNow();
-            }
-        }
-    }
-
-exit:
-    return evict;
 }
 
 void MeshForwarder::RemoveMessagesForChild(Child &aChild, Message::Checker aChecker)

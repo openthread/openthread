@@ -186,6 +186,58 @@ void MeshForwarder::HandleTxDelayTimer(void)
 }
 #endif
 
+#if OPENTHREAD_MTD
+Message *MeshForwarder::FindMessageToEvict(Message::Priority aPriority)
+#elif OPENTHREAD_FTD
+Message *MeshForwarder::FindMessageToEvict(PriorityGuard aGuard, Message::Priority aPriority, Message::Checker aChecker)
+#endif
+{
+    Message *evict            = nullptr;
+    uint8_t  startPriority    = Message::kPriorityLow;
+    uint8_t  afterEndPriority = aPriority;
+
+#if OPENTHREAD_FTD
+    switch (aGuard)
+    {
+    case kLowerPriorityThan:
+        break;
+    case kEqualOrHigherPriorityThan:
+        startPriority    = aPriority;
+        afterEndPriority = Message::kNumPriorities;
+        break;
+    }
+#endif
+
+    for (uint8_t priority = startPriority; priority < afterEndPriority; priority++)
+    {
+        for (Message *message            = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority));
+             message != nullptr; message = message->GetNext())
+        {
+            if (message->GetPriority() != priority)
+            {
+                break;
+            }
+
+            if (message->GetDoNotEvict())
+            {
+                continue;
+            }
+
+#if OPENTHREAD_FTD
+            if (!aChecker(*message))
+            {
+                continue;
+            }
+#endif
+            evict = message;
+            ExitNow();
+        }
+    }
+
+exit:
+    return evict;
+}
+
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
 
 Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
@@ -427,35 +479,77 @@ bool MeshForwarder::IsDirectTxQueueOverMaxFrameThreshold(void) const
 Error MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
 {
     Error error = kErrorNone;
-    bool  originalEvictFlag;
+    bool  shouldUpdateSendMsgEvictFlag;
 
     VerifyOrExit(aMessage.IsDirectTransmission());
+    VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
 
-    // We mark the "do not evict" flag on the new `aMessage` so
-    // that it will not be removed in `EvictMessage()` call.
-    // This protects against the unlikely case where the newly
-    // queued `aMessage` may already be aged due to execution
-    // being interrupted for a long time between the queuing of
-    // the message and the `ApplyDirectTxQueueLimit()` call. We
-    // do not want the message to be potentially removed and
-    // freed twice.
-
-    originalEvictFlag = aMessage.GetDoNotEvict();
-    aMessage.SetDoNotEvict(true);
-
-    while (IsDirectTxQueueOverMaxFrameThreshold())
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     {
-        if (EvictMessage(aMessage.GetPriority(), kEvictReasonDirectTxQueueAtLimit) != kErrorNone)
+        // We mark the "do not evict" flag on the new `aMessage` so
+        // that it will not be removed in `RemoveAgedMessages()` call.
+        // This protects against the unlikely case where the newly
+        // queued `aMessage` may already be aged due to execution
+        // being interrupted for a long time between the queuing of
+        // the message and the `ApplyDirectTxQueueLimit()` call. We
+        // do not want the message to be potentially removed and
+        // freed twice.
+
+        bool originalEvictFlag = aMessage.GetDoNotEvict();
+        bool didRemove;
+
+        aMessage.SetDoNotEvict(true);
+        didRemove = (RemoveAgedMessages() == kErrorNone);
+        aMessage.SetDoNotEvict(originalEvictFlag);
+
+        if (didRemove)
         {
-            aMessage.SetDoNotEvict(originalEvictFlag);
-            error = kErrorDrop;
-            LogMessage(kMessageFullQueueDrop, aMessage);
-            FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, error);
-            ExitNow();
+            VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
         }
     }
+#endif
 
-    aMessage.SetDoNotEvict(originalEvictFlag);
+    // Exclude `mSendMessage` when evicting due to the direct TX
+    // queue limit, as `IsDirectTxQueueOverMaxFrameThreshold()`
+    // does not count `mSendMessage` toward the frame threshold,
+    // and evicting it would abort an in-flight transmission
+    // without reducing the counted frames in the queue.
+
+    shouldUpdateSendMsgEvictFlag = ((mSendMessage != nullptr) && !mSendMessage->GetDoNotEvict());
+
+    if (shouldUpdateSendMsgEvictFlag)
+    {
+        mSendMessage->SetDoNotEvict(true);
+    }
+
+    do
+    {
+        Message *evict;
+
+#if OPENTHREAD_MTD
+        evict = FindMessageToEvict(aMessage.GetPriority());
+#elif OPENTHREAD_FTD
+        evict = FindMessageToEvict(kLowerPriorityThan, aMessage.GetPriority(), Message::AcceptDirectTx);
+#endif
+
+        if (evict == nullptr)
+        {
+            // If no lower-priority message can be evicted, drop the
+            // newly queued `aMessage` itself.
+
+            evict = &aMessage;
+            error = kErrorDrop;
+        }
+
+        LogMessage((error == kErrorDrop) ? kMessageFullQueueDrop : kMessageFullQueueEvict, *evict, kErrorDrop);
+        FinalizeDirectTxAndRemoveMessageIfNoPendingTx(*evict, kErrorDrop);
+
+    } while ((error == kErrorNone) && IsDirectTxQueueOverMaxFrameThreshold());
+
+    if (shouldUpdateSendMsgEvictFlag)
+    {
+        mSendMessage->SetDoNotEvict(false);
+    }
 
 exit:
     return error;
@@ -1224,11 +1318,9 @@ void MeshForwarder::ClearReassemblyList(void)
     }
 }
 
-Error MeshForwarder::RemoveUnsecureReassemblyMessage(EvictReason aEvictReason)
+Error MeshForwarder::RemoveUnsecureReassemblyMessage(void)
 {
     Error error = kErrorNotFound;
-
-    VerifyOrExit(aEvictReason == kEvictReasonNoMessageBuffer);
 
     for (Message &message : mReassemblyList)
     {
