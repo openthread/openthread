@@ -108,12 +108,14 @@ bool otMacFrameDoesAddrMatchAny(const otRadioFrame *aFrame,
     switch (frameInfo.mAddrs.mDestination.GetType())
     {
     case Mac::Address::kTypeShort:
-        VerifyOrExit(frameInfo.mAddrs.mDestination.GetShort() == Mac::kShortAddrBroadcast ||
-                         frameInfo.mAddrs.mDestination.GetShort() == aShortAddress ||
-                         (aAltShortAddress != Mac::kShortAddrInvalid &&
-                          frameInfo.mAddrs.mDestination.GetShort() == aAltShortAddress),
+    {
+        Mac::ShortAddress dstAddr = frameInfo.mAddrs.mDestination.GetShort();
+
+        VerifyOrExit(dstAddr != Mac::kShortAddrInvalid, rval = false);
+        VerifyOrExit(dstAddr == Mac::kShortAddrBroadcast || dstAddr == aShortAddress || dstAddr == aAltShortAddress,
                      rval = false);
         break;
+    }
 
     case Mac::Address::kTypeExtended:
         VerifyOrExit(frameInfo.mAddrs.mDestination.GetExtended() == *static_cast<const Mac::ExtAddress *>(aExtAddress),

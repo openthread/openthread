@@ -144,9 +144,9 @@ static bool sRadioCoexEnabled = true;
 
 otRadioCaps gRadioCaps =
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    OT_RADIO_CAPS_TRANSMIT_SEC;
+    OT_RADIO_CAPS_ALT_SHORT_ADDR | OT_RADIO_CAPS_TRANSMIT_SEC;
 #else
-    OT_RADIO_CAPS_NONE;
+    OT_RADIO_CAPS_ALT_SHORT_ADDR;
 #endif
 
 static otRadioContext sRadioContext;
@@ -416,6 +416,10 @@ void platformRadioInit(void)
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
     sAckFrame.mPsdu      = sAckMessage.mPsdu;
+
+    sRadioContext.mCslShortAddress       = OT_RADIO_INVALID_SHORT_ADDR;
+    sRadioContext.mShortAddress          = OT_RADIO_INVALID_SHORT_ADDR;
+    sRadioContext.mAlternateShortAddress = OT_RADIO_INVALID_SHORT_ADDR;
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = &sTransmitIeInfo;

@@ -96,8 +96,6 @@ struct Radio
     bool                                    mMacFrameCounterReset : 1;
     uint8_t                                 mChannel;
     Mac::PanId                              mPanId;
-    Mac::ShortAddress                       mShortAddress;
-    Mac::ExtAddress                         mExtAddress;
     Frame                                   mTxFrame;
     otRadioIeInfo                           mTxIeInfo;
     otRadioContext                          mRadioContext;
