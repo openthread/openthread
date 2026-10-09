@@ -151,35 +151,6 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
     }
 }
 
-Error MeshForwarder::EvictMessage(Message::Priority aPriority)
-{
-    Error    error = kErrorNotFound;
-    Message *evict;
-
-    error = RemoveUnsecureReassemblyMessage();
-    VerifyOrExit(error == kErrorNotFound);
-
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    error = RemoveAgedMessages();
-    VerifyOrExit(error == kErrorNotFound);
-#endif
-
-    evict = FindMessageToEvict(kLowerPriorityThan, aPriority, Message::AcceptAny);
-
-    if (evict == nullptr)
-    {
-        evict = FindMessageToEvict(kEqualOrHigherPriorityThan, aPriority, Message::AcceptIndirectTx);
-    }
-
-    VerifyOrExit(evict != nullptr);
-
-    FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
-    error = kErrorNone;
-
-exit:
-    return error;
-}
-
 void MeshForwarder::RemoveMessagesForChild(Child &aChild, Message::Checker aChecker)
 {
     for (Message &message : mSendQueue)

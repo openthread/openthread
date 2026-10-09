@@ -186,6 +186,39 @@ void MeshForwarder::HandleTxDelayTimer(void)
 }
 #endif
 
+Error MeshForwarder::EvictMessage(Message::Priority aPriority)
+{
+    Message *evict = nullptr
+    Error    error;
+
+    error = RemoveUnsecureReassemblyMessage();
+    VerifyOrExit(error == kErrorNotFound);
+
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    error = RemoveAgedMessages();
+    VerifyOrExit(error == kErrorNotFound);
+#endif
+
+#if OPENTHREAD_MTD
+    evict = FindMessageToEvict(aPriority);
+#elif OPENTHREAD_FTD
+    evict = FindMessageToEvict(kLowerPriorityThan, aPriority, Message::AcceptAny);
+
+    if (evict == nullptr)
+    {
+        evict = FindMessageToEvict(kEqualOrHigherPriorityThan, aPriority, Message::AcceptIndirectTx);
+    }
+#endif
+
+    VerifyOrExit(evict != nullptr);
+
+    FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_MTD
 Message *MeshForwarder::FindMessageToEvict(Message::Priority aPriority)
 #elif OPENTHREAD_FTD
