@@ -38,12 +38,15 @@ class Node;
 
 class InfraIf : public InstanceLocator
 {
+    friend class Core;
+
 public:
     using LinkLayerAddress = BorderRouter::InfraIf::LinkLayerAddress;
 
     explicit InfraIf(Instance &aInstance);
 
     void AfterInit(void);
+    void Reset(void);
 
     bool IsInitialized(void) const { return mIfIndex != 0; }
 
@@ -93,9 +96,8 @@ public:
     typedef bool (*UdpHook)(Instance &aInstance, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SetUdpHook(UdpHook aHook) { mUdpHook = aHook; }
 
-    MessageQueue mPendingTxQueue;
-
 private:
+    void EnqueueTxPacket(Message &aMessage);
     void ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void SendPeriodicRouterAdvertisement(void);
     void HandlePrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio);
@@ -104,6 +106,8 @@ private:
     void HandleEchoReply(const Ip6::Header &aHeader, Message &aMessage);
 
     void HandleRaTimer(void);
+
+    MessageQueue mPendingTxQueue;
 
     uint32_t                   mIfIndex;
     Heap::Array<Ip6::Address>  mAddresses;

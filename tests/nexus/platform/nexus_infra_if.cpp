@@ -30,6 +30,7 @@
 
 #include <openthread/platform/infra_if.h>
 
+#include "nexus_core.hpp"
 #include "nexus_node.hpp"
 
 namespace ot {
@@ -61,6 +62,8 @@ void InfraIf::AfterInit(void)
 
     AddAddress(address);
 }
+
+void InfraIf::Reset(void) { mPendingTxQueue.DequeueAndFreeAll(); }
 
 bool InfraIf::HasAddress(const Ip6::Address &aAddress) const { return mAddresses.Contains(aAddress); }
 
@@ -177,7 +180,13 @@ void InfraIf::SendIcmp6Nd(const Ip6::Address &aDestAddress, const uint8_t *aBuff
     message->SetOffset(sizeof(Ip6::Header));
     Checksum::UpdateMessageChecksum(*message, ip6Header.GetSource(), ip6Header.GetDestination(), Ip6::kProtoIcmp6);
 
-    mPendingTxQueue.Enqueue(*message);
+    EnqueueTxPacket(*message);
+}
+
+void InfraIf::EnqueueTxPacket(Message &aMessage)
+{
+    mPendingTxQueue.Enqueue(aMessage);
+    Core::Get().MarkPendingAction();
 }
 
 void InfraIf::SendRouterAdvertisement(const Ip6::Address &aDestination,
@@ -341,7 +350,7 @@ void InfraIf::SendIp6(const Ip6::Header &aHeader, OwnedPtr<Message> aMessagePtr)
     Log("InfraIf::SendIp6 from %s to %s (len:%u)", aHeader.GetSource().ToString().AsCString(),
         aHeader.GetDestination().ToString().AsCString(), aMessagePtr->GetLength());
 
-    mPendingTxQueue.Enqueue(*aMessagePtr.Release());
+    EnqueueTxPacket(*aMessagePtr.Release());
 }
 
 void InfraIf::SendEchoRequest(const Ip6::Address &aSrcAddress,
@@ -378,7 +387,7 @@ void InfraIf::SendEchoRequest(const Ip6::Address &aSrcAddress,
 
     SuccessOrQuit(message->Prepend(ip6Header));
 
-    mPendingTxQueue.Enqueue(*message);
+    EnqueueTxPacket(*message);
 }
 
 void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
@@ -418,7 +427,7 @@ void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
         loopbackMessage->Free();
     }
 
-    mPendingTxQueue.Enqueue(aPayload);
+    EnqueueTxPacket(aPayload);
 }
 
 void InfraIf::SetDhcp6ListeningEnabled(bool aEnable) { mDhcp6PdListening = aEnable; }
@@ -619,7 +628,7 @@ void InfraIf::HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage)
 
     SuccessOrQuit(replyMessage->Prepend(replyHeader));
 
-    mPendingTxQueue.Enqueue(*replyMessage);
+    EnqueueTxPacket(*replyMessage);
 }
 
 void InfraIf::HandleEchoReply(const Ip6::Header &aHeader, Message &aMessage)
