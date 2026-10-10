@@ -67,6 +67,7 @@ template <> void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Msg &aM
     SuccessOrExit(error = Tlv::Find<MeshCoP::PeriodTlv>(aMsg.mMessage, period));
 
     SendAnnounce(mask, count, period);
+    VerifyOrExit(IsRunning(), error = kErrorInvalidArgs);
 
 exit:
     IgnoreError(Get<Tmf::Agent>().SendAckResponseIfUnicastRequest(aMsg, error));
