@@ -40,11 +40,22 @@
 
 #include <openthread/link_raw.h>
 
+#include "common/bit_utils.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
+#include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/sub_mac.hpp"
+
+#if OPENTHREAD_CONFIG_LINK_RAW_BURST_ENABLE && !OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+#error "OPENTHREAD_CONFIG_LINK_RAW_BURST_ENABLE requires OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE."
+#endif
+
+#if OPENTHREAD_CONFIG_LINK_RAW_BURST_ENABLE && !OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+#error \
+    "OPENTHREAD_CONFIG_LINK_RAW_BURST_ENABLE requires target time TX support (e.g. CSL transmitter or software TX timing)."
+#endif
 
 namespace ot {
 namespace Mac {
@@ -100,10 +111,22 @@ public:
     /**
      * Starts a (recurring) Receive on the link-layer.
      *
+     * Cancels any ongoing burst transmission.
+     *
      * @retval kErrorNone            Successfully transitioned to Receive.
      * @retval kErrorInvalidState    The radio was disabled or transmitting.
      */
     Error Receive(void);
+
+    /**
+     * Transitions the radio to Sleep on the link-layer.
+     *
+     * Cancels any ongoing burst transmission.
+     *
+     * @retval kErrorNone            Successfully transitioned to Sleep.
+     * @retval kErrorInvalidState    The raw link-layer isn't enabled.
+     */
+    Error Sleep(void);
 
     /**
      * Gets the radio transmit frame.
@@ -113,16 +136,34 @@ public:
     TxFrame &GetTransmitFrame(void) { return mSubMac.GetTransmitFrame(); }
 
     /**
-     * Starts a (single) Transmit on the link-layer.
+     * Starts a Transmit (single, multi-channel, or periodic burst) on the link-layer.
      *
      * @note The callback @p aCallback will not be called if this call does not return kErrorNone.
      *
-     * @param[in]  aCallback            A pointer to a function called on completion of the transmission.
+     * For a burst (@p aBurstCount > 0), @p aCallback is called once when the burst ends (after its last tick or when
+     * it is canceled). It reports `kErrorNone` if any transmission of the burst succeeded; otherwise the error of the
+     * last transmission, or `kErrorAbort` if the burst is canceled or no transmission took place.
      *
-     * @retval kErrorNone           Successfully transitioned to Transmit.
-     * @retval kErrorInvalidState   The radio was not in the Receive state.
+     * @param[in]  aCallback          A pointer to a function called on completion of the transmission.
+     * @param[in]  aBurstCount        The total number of scheduled burst ticks/periods (0 for single tx; when 0,
+     *                                @p aBurstPeriod and @p aBurstChannelMask are ignored).
+     * @param[in]  aBurstPeriod       The repeat period in 625 us slot units for burst transmission (0 for back-to-back
+     *                                burst ticks).
+     * @param[in]  aBurstChannelMask  The channel bitmask for multi-channel transmission per burst tick (0 for
+     *                                `TxFrame::mChannel` only; if non-zero, supersedes `TxFrame::mChannel` while
+     *                                `mRxChannelAfterTxDone` governs post-TX receive).
+     *
+     * @retval kErrorNone            Successfully transitioned to Transmit.
+     * @retval kErrorInvalidArgs     Burst is requested (@p aBurstCount > 0), and the frame requests an ACK, requires
+     *                               security processing, or @p aBurstChannelMask is non-zero with no supported
+     *                               channels.
+     * @retval kErrorInvalidState    The radio was not in the Receive state.
+     * @retval kErrorNotImplemented  Burst is requested (@p aBurstCount > 0), and burst transmission is not enabled.
      */
-    Error Transmit(otLinkRawTransmitDone aCallback);
+    Error Transmit(otLinkRawTransmitDone aCallback,
+                   uint16_t              aBurstCount       = 0,
+                   uint16_t              aBurstPeriod      = 0,
+                   uint32_t              aBurstChannelMask = 0);
 
     /**
      * Starts a (single) Energy Scan on the link-layer.
@@ -239,9 +280,27 @@ public:
     Error SetMacFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger);
 
 private:
+#if OPENTHREAD_CONFIG_LINK_RAW_BURST_ENABLE
+    static constexpr uint32_t kBurstSlotTimeUs = 625;
+
+    void  CancelBurst(void);
+    void  FinishBurst(Error aError);
+    void  AbortBurst(void);
+    bool  IsBurstActive(void) const { return mBurstCount > 0; }
+    Error StartBurst(uint16_t aBurstCount, uint16_t aBurstPeriod, uint32_t aBurstChannelMask);
+    bool  GetNextBurstChannel(uint8_t &aChannel) const;
+    void  SkipMissedBurstSlots(Radio::Time32 aNow);
+    void  SendBurstFrame(void);
+    void  ScheduleNextBurstTick(void);
+    void  HandleBurstTimer(void);
+
+    using BurstTimer = TimerMicroIn<LinkRaw, &LinkRaw::HandleBurstTimer>;
+#endif
+
     // Callbacks from `SubMac`
     void InvokeReceiveDone(RxFrame *aFrame, Error aError);
-    void InvokeTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError);
+    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+    void InvokeTransmitDoneCallback(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
     void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     void RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
@@ -257,6 +316,15 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+#if OPENTHREAD_CONFIG_LINK_RAW_BURST_ENABLE
+    BurstTimer    mBurstTimer;
+    uint32_t      mBurstChannelMask;
+    Radio::Time32 mBurstTxTime; // Slot start time (radio clock) of the current tick.
+    uint16_t      mBurstPeriod;
+    uint16_t      mBurstCount; // Remaining ticks, including the current one.
+    Error         mBurstError; // Status to report when the burst request completes.
+    bool          mIsTimedBurst;
+#endif
 
 #if OPENTHREAD_RADIO
     SubMac mSubMac;

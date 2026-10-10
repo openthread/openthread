@@ -77,7 +77,7 @@ void SubMac::Callbacks::TransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aA
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     if (Get<LinkRaw>().IsEnabled())
     {
-        Get<LinkRaw>().InvokeTransmitDone(aFrameInfo, aAckFrame, aError);
+        Get<LinkRaw>().HandleTransmitDone(*aFrameInfo.GetTxFrame(), aAckFrame, aError);
     }
     else
 #endif
@@ -121,7 +121,7 @@ void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFra
 
 void SubMac::Callbacks::TransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError)
 {
-    Get<LinkRaw>().InvokeTransmitDone(aFrameInfo, aAckFrame, aError);
+    Get<LinkRaw>().HandleTransmitDone(*aFrameInfo.GetTxFrame(), aAckFrame, aError);
 }
 
 void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi) { Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi); }

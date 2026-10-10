@@ -75,18 +75,7 @@ exit:
     return error;
 }
 
-otError otLinkRawSleep(otInstance *aInstance)
-{
-    Error     error    = kErrorNone;
-    Instance &instance = AsCoreType(aInstance);
-
-    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
-
-    error = instance.Get<Radio::Radio>().Sleep();
-
-exit:
-    return error;
-}
+otError otLinkRawSleep(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::LinkRaw>().Sleep(); }
 
 otError otLinkRawReceive(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::LinkRaw>().Receive(); }
 

@@ -53,6 +53,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LINK_RAW_BURST_ENABLE
+ *
+ * Define to 1 to enable burst transmission in the Link Raw service.
+ */
+#ifndef OPENTHREAD_CONFIG_LINK_RAW_BURST_ENABLE
+#define OPENTHREAD_CONFIG_LINK_RAW_BURST_ENABLE 0
+#endif
+
+/**
  * @}
  */
 
