@@ -335,6 +335,7 @@ public:
 
     /**
      * Iterates through previously saved frames in the buffer, getting a next frame in the queue.
+     * If the buffer was cleared during iteration, aborts the iteration and preserves newly saved frames.
      *
      * @param[in,out] aFrame   On entry, should point to a previous saved frame or nullptr to get the first frame.
      *                         On exit, the pointer variable is updated to next frame or set to nullptr if there are
@@ -344,6 +345,7 @@ public:
      *
      * @retval OT_ERROR_NONE       Updated @aFrame and @aLength successfully with the next saved frame.
      * @retval OT_ERROR_NOT_FOUND  No more saved frame in the buffer.
+     * @retval OT_ERROR_ABORT      Buffer was cleared during iteration; restart with a nullptr frame.
      */
     otError GetNextSavedFrame(uint8_t *&aFrame, uint16_t &aLength)
     {
@@ -359,7 +361,7 @@ public:
         {
             aLength = 0;
             aFrame  = nullptr;
-            ExitNow(error = OT_ERROR_NOT_FOUND);
+            ExitNow(error = OT_ERROR_ABORT);
         }
 
         aFrame = (aFrame == nullptr) ? mBuffer : aFrame + aLength;

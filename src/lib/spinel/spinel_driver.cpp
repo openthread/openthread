@@ -505,15 +505,20 @@ void SpinelDriver::ProcessFrameQueue(void)
 {
     uint8_t *frame = nullptr;
     uint16_t length;
+    otError  error;
 
     assert(mSavedFrameHandler != nullptr && mFrameHandlerContext != nullptr);
 
-    while (mRxFrameBuffer.GetNextSavedFrame(frame, length) == OT_ERROR_NONE)
+    while ((error = mRxFrameBuffer.GetNextSavedFrame(frame, length)) == OT_ERROR_NONE)
     {
         mSavedFrameHandler(frame, length, mFrameHandlerContext);
     }
 
-    mRxFrameBuffer.ClearSavedFrames();
+    // Preserve frames saved after a buffer clear for the next queue processing pass.
+    if (error == OT_ERROR_NOT_FOUND)
+    {
+        mRxFrameBuffer.ClearSavedFrames();
+    }
 }
 
 } // namespace Spinel

@@ -1278,13 +1278,26 @@ otError RadioSpinel::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     mEnergyScanning = true;
 #endif
 
-    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, &aScanChannel, sizeof(uint8_t)));
-    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_PERIOD, SPINEL_DATATYPE_UINT16_S, aScanDuration));
-    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_STATE, SPINEL_DATATYPE_UINT8_S, SPINEL_SCAN_STATE_ENERGY));
+    // Let recovery restart the current channel scan without retrying its individual properties.
+    mExpectedCommand = SPINEL_CMD_PROP_VALUE_IS;
+    SuccessOrExit(error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S,
+                                  &aScanChannel, sizeof(uint8_t)));
+    SuccessOrExit(error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_MAC_SCAN_PERIOD, SPINEL_DATATYPE_UINT16_S,
+                                  aScanDuration));
+    SuccessOrExit(error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_MAC_SCAN_STATE, SPINEL_DATATYPE_UINT8_S,
+                                  SPINEL_SCAN_STATE_ENERGY));
 
     mChannel = aScanChannel;
 
 exit:
+    mExpectedCommand = SPINEL_CMD_NOOP;
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    if (mRcpFailure != kRcpFailureNone && mRcpRestorationEnabled)
+    {
+        RecoverFromRcpFailure();
+        error = OT_ERROR_NONE;
+    }
+#endif
     return error;
 }
 
