@@ -549,7 +549,7 @@ void Dhcp6Msg::PrepareMessage(Message &aMessage)
 
         length = sizeof(Dhcp6::IaPdOption) - sizeof(Dhcp6::Option);
 
-        if (mHasStatus)
+        if (iaPd.mHasStatus)
         {
             length += sizeof(Dhcp6::StatusCodeOption);
         }
@@ -563,7 +563,7 @@ void Dhcp6Msg::PrepareMessage(Message &aMessage)
         iaPdOption.SetT2(iaPd.mT2);
         SuccessOrQuit(aMessage.Append(iaPdOption));
 
-        if (mHasStatus)
+        if (iaPd.mHasStatus)
         {
             statusOption.Init();
             statusOption.SetStatusCode(static_cast<Dhcp6::StatusCodeOption::Status>(iaPd.mStatusCode));
@@ -2009,31 +2009,66 @@ void TestDhcp6PdLifetimeT1AndT2Adjustments(void)
         // Only T2 is zero.
         {800, 0, 1800, 800, 1440, 1800},
 
-        // T1 is zero, but default T1 (half of preferred lifetime) will be larger than given T2.
-        {0, 800, 1800, 900, 900, 1800},
+        // Only T1 is zero, but default T1 (half of preferred lifetime) will be larger than given T2.
+        // Client must honor the given T2 and pick T1 not larger than it.
+        {0, 800, 1800, 800, 800, 1800},
 
-        // T1 and T2 are given but way too short. Client enforces min of 300s (5 min).
-        {1, 5, 1800, 300, 300, 1800},
+        // Only T2 is zero, but T1 exceeds (Preferred Lifetime - 900 sec) so is reduced first to 900. Then T2 can be
+        // set as the default 0.8 times Preferred Lifetime.
+        {1300, 0, 1800, 900, 1440, 1800},
 
-        // T1 and T2 zero with preferred lifetime of 7200 (2 hours).
+        // Only T2 is zero. Given T1 is used as is. Client picks T2 as 0.8 times the preferred lifetime.
+        {1300, 0, 3600, 1300, 2880, 3600},
+        {3000, 0, 7200, 3000, 5760, 7200},
+
+        // Only T2 is zero, but default T2 (0.8 times the preferred lifetime, 5760) would be smaller than given T1.
+        // Given T1 is used as is and client picks T2 equal to T1.
+        {6000, 0, 7200, 6000, 6000, 7200},
+
+        // Only T2 is zero, and given T1 is larger than preferred lifetime minus 15 minutes (6300), so client clamps
+        // T1 to 6300. Client picks T2 not smaller than the given T1 (6400), so T2 stays larger than the clamped T1.
+        {6400, 0, 7200, 6300, 6400, 7200},
+
+        // Only T2 is zero, and given T1 is larger than both preferred lifetime minus 15 minutes (2700) and default
+        // T2 (0.8 times the preferred lifetime, 2880). Client clamps T1 to 2700 and picks T2 not smaller than the
+        // given T1 (3000), so T2 is not reduced to the default T2.
+        {3000, 0, 3600, 2700, 3000, 3600},
+
+        // Only T2 is zero, and given T1 is larger than preferred lifetime minus 6 minutes (6840). Client clamps T1
+        // to preferred lifetime minus 15 minutes (6300). T2 is picked not smaller than the given T1, but is then
+        // clamped to preferred lifetime minus 6 minutes (6840).
+        {7000, 0, 7200, 6300, 6840, 7200},
+
+        // T1 and T2 are given but way too short. Client enforces min T1 of 60s (`kMinT1`). T2 is raised to T1.
+        {1, 5, 1800, 60, 60, 1800},
+
+        // Short T1 (above the 60s minimum) and T2 given by server must be used as is.
+        {120, 1000, 1800, 120, 1000, 1800},
+
+        // T1 and T2 are zero, with preferred lifetime of 7200 (2 hours). Client picks the defaults.
         {0, 0, 7200, 3600, 5760, 7200},
 
-        // T1 and T2 longer than lifetime.
+        // T1 and T2 are longer than the preferred lifetime. Client clamps T1 to (preferred lifetime - 900 sec)
+        // and T2 to preferred lifetime minus 6 minutes.
         {2000, 2500, 1800, 900, 1440, 1800},
 
-        // Given T1 and T2 (shorter than 0.5 and 0.8) with preferred lifetime of 7200 (2 hours).
+        // Given T1 and T2 (shorter than 0.5 and 0.8 times the preferred lifetime of 7200) are used as is.
         {1000, 1200, 7200, 1000, 1200, 7200},
 
-        // Given T1 and T2 are too close to the preferred lifetime of 7200 (2 hours).
+        // Given T1 and T2 are too close to the preferred lifetime of 7200 (2 hours). Client clamps T1 to preferred
+        // lifetime minus 15 minutes and T2 to preferred lifetime minus 6 minutes.
         {7100, 7150, 7200, 6300, 6840, 7200},
 
-        // Very long preferred lifetime. Client limit it to 4 hours (14400)
+        // Very long preferred lifetime. Client limits it to 4 hours (14400). T1 and T2 are zero, so client picks
+        // 0.5 and 0.8 times the limited preferred lifetime.
         {0, 0, 14500, 7200, 11520, 14400},
 
-        // Very long preferred lifetime. Client limit it to 4 hours (14400)
+        // Very long preferred lifetime. Client limits it to 4 hours (14400). The given T1 and T2 fit within the
+        // limited preferred lifetime and are used as is.
         {2000, 2500, 14500, 2000, 2500, 14400},
 
-        // Infinite lifetime and T1 and T2. Client limit to 4 hours.
+        // Infinite preferred lifetime, T1 and T2. Client limits preferred lifetime to 4 hours (14400), and clamps
+        // T1 to preferred lifetime minus 15 minutes (13500) and T2 to preferred lifetime minus 6 minutes (14040).
         {0xffffffff, 0xffffffff, 0xffffffff, 13500, 14040, 14400}};
 
     uint16_t               heapAllocations;
@@ -2119,7 +2154,7 @@ void TestDhcp6PdLifetimeT1AndT2Adjustments(void)
     FinalizeTest();
 }
 
-void TestDhcp6PdServerVoidingLeaseDuringRenew(void)
+void TestDhcp6PdServerVoidingLeaseDuringRenew(bool aWithNoPrefixAvailStatus)
 {
     uint16_t               heapAllocations;
     Dhcp6TxMsg             txMsg;
@@ -2130,7 +2165,7 @@ void TestDhcp6PdServerVoidingLeaseDuringRenew(void)
     const DelegatedPrefix *delegatedPrefix;
 
     Log("--------------------------------------------------------------------------------------------");
-    Log("TestDhcp6PdServerVoidingLeaseDuringRenew()");
+    Log("TestDhcp6PdServerVoidingLeaseDuringRenew(aWithNoPrefixAvailStatus:%u)", aWithNoPrefixAvailStatus);
 
     InitTest();
 
@@ -2204,13 +2239,27 @@ void TestDhcp6PdServerVoidingLeaseDuringRenew(void)
     prefixInfo.mValidLifetime     = 0;
     prefixInfo.mPrefix            = prefix;
     txMsg.AddIaPrefix(prefixInfo);
+
+    if (aWithNoPrefixAvailStatus)
+    {
+        txMsg.mIaPds[0].mHasStatus  = true;
+        txMsg.mIaPds[0].mStatusCode = Dhcp6::StatusCodeOption::kNoPrefixAvail;
+    }
+
     sDhcp6RxMsgs.Clear();
     txMsg.Send();
 
-    AdvanceTime(1);
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Validate the prefix is discarded and client restarts with Solicit (not immediately)");
 
     delegatedPrefix = sInstance->Get<BorderRouter::Dhcp6PdClient>().GetDelegatedPrefix();
     VerifyOrQuit(delegatedPrefix == nullptr);
+    VerifyOrQuit(sDhcp6RxMsgs.IsEmpty());
+
+    AdvanceTime(1000);
+
+    VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
+    sDhcp6RxMsgs[0].ValidateAsSolicit();
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 
@@ -2714,7 +2763,8 @@ int main(void)
     ot::TestDhcp6PdServerOfferingMultiplePrefixes();
     ot::TestDhcp6PdInvalidOrUnusablePrefix();
     ot::TestDhcp6PdLifetimeT1AndT2Adjustments();
-    ot::TestDhcp6PdServerVoidingLeaseDuringRenew();
+    ot::TestDhcp6PdServerVoidingLeaseDuringRenew(/* aWithNoPrefixAvailStatus */ false);
+    ot::TestDhcp6PdServerVoidingLeaseDuringRenew(/* aWithNoPrefixAvailStatus */ true);
     ot::TestDhcp6PdServerNotExtendingLeaseDuringRenew();
     ot::TestDhcp6PdServerReplacingPrefix();
     ot::TestDhcp6PdServerReplyWithNoBindingToRelease();
