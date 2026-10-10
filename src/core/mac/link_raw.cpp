@@ -52,6 +52,7 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mReceiveDoneCallback(nullptr)
     , mTransmitDoneCallback(nullptr)
     , mEnergyScanDoneCallback(nullptr)
+    , mRadioAvailabilityUpdatedCallback(nullptr)
 #if OPENTHREAD_RADIO
     , mSubMac(aInstance)
 #elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
@@ -191,6 +192,14 @@ void LinkRaw::InvokeReceiveDone(RxFrame *aFrame, Error aError)
     if (mReceiveDoneCallback && (aError == kErrorNone))
     {
         mReceiveDoneCallback(&GetInstance(), aFrame, aError);
+    }
+}
+
+void LinkRaw::HandleRadioAvailabilityUpdated(void)
+{
+    if (mRadioAvailabilityUpdatedCallback != nullptr)
+    {
+        mRadioAvailabilityUpdatedCallback(&GetInstance());
     }
 }
 

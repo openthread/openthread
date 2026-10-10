@@ -495,6 +495,59 @@ typedef struct otLinkMetrics
 } otLinkMetrics;
 
 /**
+ * Defines the slot durations of the radio availability schedule.
+ */
+typedef enum otRadioAvailabilitySlotDuration
+{
+    OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US  = 0, ///< 625 microseconds.
+    OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US = 1, ///< 1.25 milliseconds.
+} otRadioAvailabilitySlotDuration;
+
+/**
+ * Defines constants for the radio availability schedule.
+ */
+enum
+{
+    OT_RADIO_AVAILABILITY_MAX_DURATION_US = 60000, ///< The maximum duration of a radio availability schedule (us).
+
+    /**
+     * The maximum size (in bytes) of a radio availability slots bitmap.
+     *
+     * Derived from `OT_RADIO_AVAILABILITY_MAX_DURATION_US` and the shortest slot duration (625 us), i.e., 96 slots.
+     */
+    OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE = (OT_RADIO_AVAILABILITY_MAX_DURATION_US / 625 + 7) / 8,
+};
+
+/**
+ * Represents the radio availability schedule.
+ *
+ * The radio availability schedule is a periodic map of @p mNumSlots slots, each lasting @p mSlotDuration. The schedule
+ * starts at @p mStartTime and repeats every @p mNumSlots slots. The schedule duration (@p mNumSlots multiplied by
+ * @p mSlotDuration) MUST NOT be longer than `OT_RADIO_AVAILABILITY_MAX_DURATION_US`.
+ *
+ * The bitmaps are MSB-first: slot `i` corresponds to bit `7 - (i % 8)` of byte `i / 8`, i.e.,
+ * `(bitmap[i / 8] >> (7 - (i % 8))) & 1`. Only the first @p mNumSlots bits of each bitmap are used. The remaining bits
+ * SHOULD be set to 0 and are ignored by OpenThread.
+ *
+ * In @p mAvailableSlots, a bit value of 1 indicates that the slot is available for Thread, and 0 indicates that it is
+ * unavailable (e.g., occupied by BT or 2.4GHz WiFi).
+ *
+ * In @p mPreferredSlots, a bit value of 1 indicates that the slot is preferred for Thread, and 0 indicates that it is
+ * not preferred. The preferred slots MUST be a subset of the available slots, i.e., a bit MUST be 0 in
+ * @p mPreferredSlots if the corresponding bit is 0 in @p mAvailableSlots. OpenThread treats a slot as preferred only
+ * if it is set in both bitmaps. If there is no preference among the available slots, @p mPreferredSlots MUST be set
+ * to the same value as @p mAvailableSlots.
+ */
+typedef struct otRadioAvailability
+{
+    otRadioTime64                   mStartTime;    ///< Local radio clock time in microseconds when the schedule starts.
+    otRadioAvailabilitySlotDuration mSlotDuration; ///< The duration of each slot.
+    uint8_t                         mNumSlots;     ///< The number of slots. Value 0 indicates always available.
+    uint8_t mAvailableSlots[OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE]; ///< The available radio slots bitmap.
+    uint8_t mPreferredSlots[OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE]; ///< The preferred radio slots bitmap.
+} otRadioAvailability;
+
+/**
  * @}
  */
 
@@ -1556,6 +1609,41 @@ extern otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
                                              uint8_t     aChannel,
                                              uint8_t    *aRawPowerSetting,
                                              uint16_t   *aRawPowerSettingLength);
+
+/**
+ * The radio driver calls this function to notify OpenThread that the radio availability has changed.
+ *
+ * When Thread shares the same radio chip with BT or 2.4GHz WiFi, the radio driver knows when BT or WiFi will occupy
+ * the radio. The radio driver calls this function to notify OpenThread, which then retrieves the current schedule via
+ * `otPlatRadioGetAvailability()`. The radio availability schedule is intended to be used for Thread Direct
+ * scheduling. OpenThread does not use it to perform general radio coexistence.
+ *
+ * The radio driver should call this function once the radio is enabled (see `otPlatRadioEnable()`) to report the
+ * initial radio availability schedule, and whenever the radio availability schedule changes thereafter.
+ *
+ * A radio driver that calls this function MUST implement `otPlatRadioGetAvailability()`.
+ *
+ * @note This function should be called by the same thread that executes all of the other OpenThread code. It should
+ *       not be called by ISR or any other task.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ */
+extern void otPlatRadioAvailabilityUpdated(otInstance *aInstance);
+
+/**
+ * Gets the current radio availability schedule.
+ *
+ * OpenThread (the caller) provides the `otRadioAvailability` structure pointed to by @p aAvailability, and the radio
+ * driver populates all of its fields, including copying the bitmaps into it. OpenThread owns the structure, so the
+ * radio driver does not need to keep any buffer valid after this function returns.
+ *
+ * @param[in]   aInstance      The OpenThread instance structure.
+ * @param[out]  aAvailability  A pointer to an `otRadioAvailability` structure to populate.
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the radio availability schedule.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  The radio driver does not support reporting radio availability.
+ */
+otError otPlatRadioGetAvailability(otInstance *aInstance, otRadioAvailability *aAvailability);
 
 /**
  * @}

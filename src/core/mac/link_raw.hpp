@@ -98,6 +98,36 @@ public:
     Radio::Capabilities GetCaps(void) const { return mSubMac.GetCaps(); }
 
     /**
+     * Sets the callback to be notified when the radio availability schedule is updated.
+     *
+     * The callback is not cleared by `Init()`.
+     *
+     * @param[in]  aCallback  A pointer to a function called when the radio availability is updated, or `nullptr`.
+     */
+    void SetRadioAvailabilityUpdated(otLinkRawRadioAvailabilityUpdated aCallback)
+    {
+        mRadioAvailabilityUpdatedCallback = aCallback;
+    }
+
+    /**
+     * Gets the current radio availability schedule.
+     *
+     * @param[out] aAvailability  A reference to an `otRadioAvailability` to populate.
+     *
+     * @retval kErrorNone            Successfully retrieved the radio availability schedule.
+     * @retval kErrorNotImplemented  The radio platform does not support reporting radio availability.
+     */
+    Error GetRadioAvailability(otRadioAvailability &aAvailability)
+    {
+        return Get<Radio::Radio>().GetAvailability(aAvailability);
+    }
+
+    /**
+     * Handles a radio availability update from the radio platform.
+     */
+    void HandleRadioAvailabilityUpdated(void);
+
+    /**
      * Starts a (recurring) Receive on the link-layer.
      *
      * @retval kErrorNone            Successfully transitioned to Receive.
@@ -257,6 +287,9 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+
+    // Kept across `Init()`, since `Init()` is also called by `Instance::ResetRadioStack()`.
+    otLinkRawRadioAvailabilityUpdated mRadioAvailabilityUpdatedCallback;
 
 #if OPENTHREAD_RADIO
     SubMac mSubMac;
