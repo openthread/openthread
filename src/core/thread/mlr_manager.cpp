@@ -93,9 +93,6 @@ exit:
 
 void Manager::UpdateState(void)
 {
-    // `UpdateState()` evaluates whether the MLR manager should be
-    // running or not. It handles starting or stopping the manager.
-
     bool canRun = false;
 
     if (Get<Mle::Mle>().IsAttached() && Get<BackboneRouter::Leader>().HasPrimary())
