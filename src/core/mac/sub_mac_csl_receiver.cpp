@@ -44,7 +44,6 @@ RegisterLogModule("SubMac");
 
 SubMac::CslReceiver::CslReceiver(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance)
 {
     Init();
 }
@@ -56,29 +55,13 @@ void SubMac::CslReceiver::Init(void)
     mPeerShort = 0;
     mParentAccuracy.Init();
     mSampleTime.Clear();
-    mTimer.Stop();
+    mCurWindow.Clear();
+    mNextWindow.Clear();
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
     mLastSync.SetValue(0);
 #else
     mLastSync = 0;
 #endif
-}
-
-void SubMac::CslReceiver::RestartTimerAfterSyncUpdate(void)
-{
-    if (mTimer.IsRunning())
-    {
-        uint32_t periodUs = CslPeriodToUsec(mPeriod);
-
-        mTimer.Stop();
-
-        // Rewind sample times by one period. `ScheduleSampleWindow()` will add
-        // this period back, effectively re-evaluating the current CSL period's
-        // schedule using the updated mLastSync.
-        mSampleTime -= periodUs;
-
-        ScheduleSampleWindow();
-    }
 }
 
 void SubMac::CslReceiver::ProcessTxDone(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame)
@@ -92,7 +75,7 @@ void SubMac::CslReceiver::ProcessTxDone(const TxFrame::ParseInfo &aFrameInfo, Rx
     VerifyOrExit(aFrameInfo.Has<CslIe>());
 
     SetLastSyncToNow();
-    RestartTimerAfterSyncUpdate();
+    Schedule();
 
 exit:
     return;
@@ -114,7 +97,7 @@ void SubMac::CslReceiver::ProcessRxFrame(const RxFrame &aFrame)
 #else
         mLastSync = aFrame.GetTimestamp();
 #endif
-        RestartTimerAfterSyncUpdate();
+        Schedule();
     }
 
 exit:
@@ -126,18 +109,23 @@ void SubMac::CslReceiver::SetParams(uint16_t          aPeriod,
                                     ShortAddress      aShortAddr,
                                     const ExtAddress &aExtAddr)
 {
-    mChannel = aChannel;
+    if ((aPeriod == mPeriod) && (aShortAddr == mPeerShort))
+    {
+        // Handle a CSL channel change only
+        VerifyOrExit(mChannel != aChannel);
+        mChannel = aChannel;
+        VerifyOrExit(IsEnabled());
+        Schedule();
+        ExitNow();
+    }
 
-    VerifyOrExit((aPeriod != mPeriod) || (aShortAddr != mPeerShort));
-
+    mPeriod    = aPeriod;
+    mChannel   = aChannel;
     mPeerShort = aShortAddr;
+
     IgnoreError(Get<Radio::Radio>().EnableCsl(aPeriod, aShortAddr, aExtAddr));
 
-    mPeriod = aPeriod;
-
-    mTimer.Stop();
-
-    if (mPeriod > 0)
+    if (IsEnabled())
     {
         mSampleTime.SetToNow(Get<Radio::Radio>());
 
@@ -146,37 +134,60 @@ void SubMac::CslReceiver::SetParams(uint16_t          aPeriod,
 #else
         mLastSync = mSampleTime.GetAsTime64();
 #endif
-        ScheduleSampleWindow();
     }
-    else
-    {
-        Get<SubMac>().CancelPendingReceiveAt();
-    }
+
+    Schedule();
 
 exit:
     return;
 }
 
-void SubMac::CslReceiver::ScheduleSampleWindow(void)
+void SubMac::CslReceiver::Schedule(void)
 {
-    Window window;
-
-    DetermineWindow(mSampleTime, window);
-    Get<SubMac>().ReceiveAt(window.mStartTime.GetAsTime64(), window.mDuration, mChannel);
-
-    LogDebg("CSL window start %lu, duration %lu", ToUlong(window.mStartTime.GetAsTime32()), ToUlong(window.mDuration));
-
-    // Advance sample time to the next CSL period, update the radio
-    // sample time on `Radio` and schedule the timer ahead of the
-    // next window's start time.
-
-    mSampleTime += CslPeriodToUsec(mPeriod);
-    Get<Radio::Radio>().UpdateCslSampleTime(mSampleTime.GetAsTime32());
-    DetermineWindow(mSampleTime, window);
-    mTimer.FireAt(window.mStartTime.GetAsLocalTimeMicro() - kReceiveTimeAhead);
+    UpdateCurAndNextWindows();
+    Get<SubMac>().mListenScheduler.UpdateOnCslChange();
 }
 
-void SubMac::CslReceiver::DetermineWindow(const Radio::SyncedTime &aSampleTime, Window &aWindow) const
+void SubMac::CslReceiver::AdvanceToNextWindow(void)
+{
+    VerifyOrExit(IsEnabled());
+
+    mSampleTime += CslPeriodToUsec(mPeriod);
+    UpdateCurAndNextWindows();
+
+exit:
+    return;
+}
+
+void SubMac::CslReceiver::UpdateCurAndNextWindows(void)
+{
+    Radio::SyncedTime nextSampleTime;
+
+    if (!IsEnabled())
+    {
+        mCurWindow.Clear();
+        mNextWindow.Clear();
+        ExitNow();
+    }
+
+    DetermineWindow(mSampleTime, mCurWindow);
+
+    nextSampleTime = mSampleTime;
+    nextSampleTime += CslPeriodToUsec(mPeriod);
+
+    Get<Radio::Radio>().UpdateCslSampleTime(nextSampleTime.GetAsTime32());
+
+    DetermineWindow(nextSampleTime, mNextWindow);
+
+    LogDebg("CSL windows (start, dur) - cur (%lu, %lu), next (%lu, %lu)",
+            ToUlong(Radio::ConvertTime64To32(mCurWindow.GetStartTime())), ToUlong(mCurWindow.GetDuration()),
+            ToUlong(Radio::ConvertTime64To32(mNextWindow.GetStartTime())), ToUlong(mNextWindow.GetDuration()));
+
+exit:
+    return;
+}
+
+void SubMac::CslReceiver::DetermineWindow(const Radio::SyncedTime &aSampleTime, TimedRx &aTimedRx) const
 {
     /*
      * CSL sample timing diagram:
@@ -215,10 +226,7 @@ void SubMac::CslReceiver::DetermineWindow(const Radio::SyncedTime &aSampleTime, 
     ahead = Min(guardInterval + kMinReceiveOnAhead, halfPeriod);
     after = Min(guardInterval + kMinReceiveOnAfter, halfPeriod);
 
-    aWindow.mStartTime = aSampleTime;
-    aWindow.mStartTime -= ahead;
-
-    aWindow.mDuration = ahead + after;
+    aTimedRx.Init(aSampleTime.GetAsTime64() - ahead, ahead + after, mChannel);
 }
 
 uint32_t SubMac::CslReceiver::DetermineClockDrift(uint32_t aIntervalUs) const
@@ -241,8 +249,6 @@ void SubMac::CslReceiver::SetLastSyncToNow(void)
 void SubMac::CslReceiver::LogReceived(const RxFrame &aFrame)
 {
     RxFrame::ParseInfo frameInfo;
-    Radio::SyncedTime  sampleTime;
-    Window             window;
     uint32_t           margin;
     Radio::Time64      timestamp;
     uint32_t           deviation;
@@ -258,28 +264,23 @@ void SubMac::CslReceiver::LogReceived(const RxFrame &aFrame)
 
     VerifyOrExit((Get<SubMac>().mState == kStateTimedReceive) || (Get<SubMac>().mState == kStateSleep));
 
-    sampleTime = mSampleTime;
-    sampleTime -= CslPeriodToUsec(mPeriod);
-
-    DetermineWindow(sampleTime, window);
-
     // The `kMinReceiveOnAhead` is not considered for the margin since
     // it has no impact on understanding possible deviation errors
     // between transmitter and receiver.
 
-    margin = sampleTime.GetAsTime32() - window.mStartTime.GetAsTime32();
+    margin = mSampleTime.GetAsTime32() - Radio::ConvertTime64To32(mCurWindow.GetStartTime());
     margin -= Min(margin, kMinReceiveOnAhead);
 
     timestamp = aFrame.GetTimestamp() + Radio::kHeaderPhrDuration;
 
-    if (timestamp >= sampleTime.GetAsTime64())
+    if (timestamp >= mSampleTime.GetAsTime64())
     {
-        deviation = ClampToUint32(timestamp - sampleTime.GetAsTime64());
+        deviation = ClampToUint32(timestamp - mSampleTime.GetAsTime64());
         signChar  = '+';
     }
     else
     {
-        deviation = ClampToUint32(sampleTime.GetAsTime64() - timestamp);
+        deviation = ClampToUint32(mSampleTime.GetAsTime64() - timestamp);
         signChar  = '-';
     }
 
@@ -296,7 +297,7 @@ void SubMac::CslReceiver::LogReceived(const RxFrame &aFrame)
     //   expected sample time. This can be due to clock drift and/or
     //   CSL Phase rounding error.
 
-    LogAt(logLevel, "Expected sample time %lu, margin ±%lu, deviation %c%lu", ToUlong(sampleTime.GetAsTime32()),
+    LogAt(logLevel, "Expected sample time %lu, margin ±%lu, deviation %c%lu", ToUlong(mSampleTime.GetAsTime32()),
           ToUlong(margin), signChar, ToUlong(deviation));
 
 exit:
