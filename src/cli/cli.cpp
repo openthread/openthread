@@ -1816,6 +1816,7 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
      * Ext Addr: e2b3540590b0fd87
      * Mode: rn
      * CSL Synchronized: 1
+     * CSL Period: 3125
      * Net Data: 184
      * Timeout: 100
      * Age: 0
@@ -1836,6 +1837,7 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
     linkMode.mNetworkData  = childInfo.mFullThreadDevice;
     OutputLine("Mode: %s", LinkModeToString(linkMode, linkModeString));
     OutputLine("CSL Synchronized: %d ", childInfo.mIsCslSynced);
+    OutputLine("CSL Period: %u", childInfo.mCslPeriod);
     OutputLine("Net Data: %u", childInfo.mNetworkDataVersion);
     OutputLine("Timeout: %lu", ToUlong(childInfo.mTimeout));
     OutputLine("Age: %lu", ToUlong(childInfo.mAge));
