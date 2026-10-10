@@ -42,7 +42,7 @@ extern "C" {
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_RADIO_CAPS_TRANSMIT_SEC;
+    return OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_ALT_SHORT_ADDR;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
@@ -65,18 +65,13 @@ void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanId) { AsNode(aInstan
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Radio &radio = AsNode(aInstance).mRadio;
-
-    radio.mExtAddress.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
-    AsCoreType(&radio.mRadioContext.mExtAddress).Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+    AsCoreType(&AsNode(aInstance).mRadio.mRadioContext.mExtAddress)
+        .Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
 {
-    Radio &radio = AsNode(aInstance).mRadio;
-
-    radio.mShortAddress               = aShortAddress;
-    radio.mRadioContext.mShortAddress = aShortAddress;
+    AsNode(aInstance).mRadio.mRadioContext.mShortAddress = aShortAddress;
 }
 
 void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
@@ -362,19 +357,7 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
 //---------------------------------------------------------------------------------------------------------------------
 // Radio
 
-Radio::Radio(void)
-    : mState(kStateDisabled)
-    , mPromiscuous(false)
-    , mSrcMatchEnabled(false)
-    , mMacFrameCounterReset(false)
-    , mChannel(0)
-    , mPanId(0)
-    , mShortAddress(Mac::kShortAddrInvalid)
-{
-    mExtAddress.Clear();
-    ClearAllBytes(mRadioContext);
-    mTxFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
-}
+Radio::Radio(void) { Reset(); }
 
 void Radio::Reset(void)
 {
@@ -384,13 +367,14 @@ void Radio::Reset(void)
     mMacFrameCounterReset = false;
     mChannel              = 0;
     mPanId                = 0;
-    mShortAddress         = Mac::kShortAddrInvalid;
-    mExtAddress.Clear();
     mSrcMatchShortEntries.Clear();
     mSrcMatchExtEntries.Clear();
     mLinkMetricsEntries.Clear();
     ClearAllBytes(mRadioContext);
-    mTxFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
+    mRadioContext.mCslShortAddress       = Mac::kShortAddrInvalid;
+    mRadioContext.mShortAddress          = Mac::kShortAddrInvalid;
+    mRadioContext.mAlternateShortAddress = Mac::kShortAddrInvalid;
+    mTxFrame.mInfo.mTxInfo.mIeInfo       = &mTxIeInfo;
 }
 
 Error Radio::ConfigureEnhAckProbing(Mac::ShortAddress      aShortAddress,
@@ -506,11 +490,15 @@ bool Radio::Matches(const Mac::Address &aAddress, Mac::PanId aPanId) const
 
     if (aAddress.IsShort())
     {
-        VerifyOrExit(aAddress.IsBroadcast() || aAddress.GetShort() == mShortAddress);
+        Mac::ShortAddress shortAddr = aAddress.GetShort();
+
+        VerifyOrExit(shortAddr != Mac::kShortAddrInvalid);
+        VerifyOrExit(aAddress.IsBroadcast() || (shortAddr == mRadioContext.mShortAddress) ||
+                     (shortAddr == mRadioContext.mAlternateShortAddress));
     }
     else if (aAddress.IsExtended())
     {
-        VerifyOrExit(aAddress.GetExtended() == mExtAddress);
+        VerifyOrExit(aAddress.GetExtended() == AsCoreType(&mRadioContext.mExtAddress));
     }
 
     if ((aPanId != Mac::kPanIdBroadcast) && (mPanId != Mac::kPanIdBroadcast))
