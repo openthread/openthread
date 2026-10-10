@@ -1139,6 +1139,11 @@ private:
                                        spinel_prop_key_t aKey,
                                        const char       *aFormat,
                                        va_list           aArgs);
+    otError RequestWithExpectedCommand(uint32_t          aExpectedCommand,
+                                       uint32_t          aCommand,
+                                       spinel_prop_key_t aKey,
+                                       const char       *aFormat,
+                                       ...);
     otError RequestWithExpectedCommandV(uint32_t          aExpectedCommand,
                                         uint32_t          aCommand,
                                         spinel_prop_key_t aKey,
