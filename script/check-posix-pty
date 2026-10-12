@@ -86,6 +86,24 @@ do_build()
     ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
 }
 
+# The netif joins ff02::1 on the Thread interface when it comes up and leaves it when it
+# goes down; both must reach the kernel. On macOS the join used to fail with EINVAL on a
+# never-used utun (IPv6 is attached to a tun by its first address, which the stack adds
+# after this join) and the failure was tolerated with a warning. The ot-daemon log is checked
+# rather than a kernel-side group listing, which could not tell the daemon's own socket
+# membership apart from one the kernel holds on its own.
+check_daemon_multicast_group()
+{
+    local action="$1"
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    grep -q -E "${action} multicast address ff02::1([^0-9a-f:]|$)" "${OT_DAEMON_OUTPUT}" || die "ff02::1 not ${action}"
+    if grep -q -E 'IPV6_(JOIN|LEAVE)_GROUP failure' "${OT_DAEMON_OUTPUT}"; then
+        die 'multicast group failure in the ot-daemon log'
+    fi
+}
+
 # Taking the Thread interface down makes OpenThread leave its multicast groups, which
 # ot-daemon treats as fatal when it fails. Verify that ot-daemon survives it.
 check_daemon_netif_down()
@@ -105,6 +123,8 @@ check_daemon_netif_down()
     fi
 
     "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig | grep 'down' || die 'ot-daemon does not respond after ifconfig down'
+
+    check_daemon_multicast_group Removed
 }
 
 do_check()
@@ -170,6 +190,10 @@ do_check()
         if "${OT_CTL[@]}" -I "${NETIF_NAME}" "$(printf '1%.0s' $(seq 1 "${len}"))"; then
             die
         fi
+
+        # check_daemon_multicast_group reads INFO lines of the netif; `-d7` does not take
+        # effect, as main.c sets the level before the instance exists.
+        "${OT_CTL[@]}" -I "${NETIF_NAME}" log level 4 | grep 'Done' || die 'failed to set log level'
         OT_CLI_CMD="${OT_CTL[*]} -I ${NETIF_NAME}"
     else
         OT_CLI="$PWD/build/posix/src/posix/ot-cli"
@@ -246,6 +270,8 @@ EOF
         sudo killall -9 expect || true
         sudo killall -9 ot-ctl || true
     fi
+
+    check_daemon_multicast_group Added
 
     # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
     if [[ $OSTYPE != "linux-gnu"* ]]; then
