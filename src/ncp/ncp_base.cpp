@@ -1177,9 +1177,8 @@ otError NcpBase::HandleCommandPropertyInsertRemove(uint8_t aHeader, spinel_prop_
     // in case of success), then reset the read position back so
     // that the `PropertyHandler` method can parse the content.
 
-    mDecoder.SavePosition();
-    IgnoreError(mDecoder.ReadData(valuePtr, valueLen));
-    IgnoreError(mDecoder.ResetToSaved());
+    valuePtr = mDecoder.GetFrame() + mDecoder.GetReadLength();
+    valueLen = mDecoder.GetRemainingLength();
 
     mDisableStreamWrite = false;
 
