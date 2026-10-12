@@ -27,6 +27,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include <initializer_list>
 
@@ -61,7 +62,14 @@ static constexpr uint32_t kPbbrTransitionTime = 300 * 1000;
  */
 static const char kMA1[] = "ff04::1234:777a:1";
 
-void TestMatnTc15(void)
+enum Topology
+{
+    kTopologyA, // FED
+    kTopologyB, // REED
+    kTopologyC, // Router
+};
+
+void TestMatnTc15(Topology aTopology, const char *aJsonFileName)
 {
     /**
      * 5.10.11 MATN-TC-15: Change of Primary BBR triggers a re-registration
@@ -130,6 +138,12 @@ void TestMatnTc15(void)
         br->Get<BackboneRouter::Local>().SetRegistrationJitter(1);
     }
 
+    // The certification harness configures `routerselectionjitter 1` for Router and REED
+    // roles, including the reference BR/Router devices, so that role transitions happen
+    // promptly instead of after the default jitter.
+    br2.Get<Mle::Mle>().SetRouterSelectionJitter(1);
+    router.Get<Mle::Mle>().SetRouterSelectionJitter(1);
+
     br2.Join(br1, Node::kAsFtd);
     router.Join(br1, Node::kAsFtd);
     nexus.AdvanceTime(kAttachToRouterTime);
@@ -137,9 +151,38 @@ void TestMatnTc15(void)
     VerifyOrQuit(br2.Get<Mle::Mle>().IsRouter());
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
 
-    dut.Join(router, Node::kAsFed);
+    // Prefer BR_2's partition after BR_1 powers down.
+    router.Get<Mle::Mle>().SetLeaderWeight(0);
+    br2.Get<Mle::Mle>().SetLeaderWeight(255);
+
+    switch (aTopology)
+    {
+    case kTopologyA:
+        Log("Topology A: DUT as FED");
+        dut.Join(router, Node::kAsFed);
+        break;
+    case kTopologyB:
+        Log("Topology B: DUT as REED");
+        dut.Get<Mle::Mle>().SetRouterSelectionJitter(1);
+        dut.Join(router, Node::kAsFtd);
+        break;
+    case kTopologyC:
+        Log("Topology C: DUT as Router");
+        dut.Get<Mle::Mle>().SetRouterSelectionJitter(1);
+        dut.Join(router, Node::kAsFtd);
+        break;
+    }
     nexus.AdvanceTime(kAttachToRouterTime);
+
+    // The harness waits for the DUT to report the Router state for a Router DUT, while a
+    // REED DUT only has to be attached. A REED may still upgrade later through the normal
+    // router selection process, so its role is not constrained here.
     VerifyOrQuit(dut.Get<Mle::Mle>().IsAttached());
+    if (aTopology == kTopologyC)
+    {
+        VerifyOrQuit(dut.Get<Mle::Mle>().IsRouter());
+    }
+    Log("DUT role before registration: %s", dut.GetExtendedRoleString());
 
     SuccessOrQuit(dut.Get<ThreadNetif>().SubscribeExternalMulticast(ma1));
     nexus.AdvanceTime(kStabilizationTime);
@@ -160,7 +203,16 @@ void TestMatnTc15(void)
      * - Pass Criteria:
      *   - N/A
      */
-    br1.Get<Mle::Mle>().Stop();
+    nexus.AddTestVar("BR_1_INITIAL_RLOC16", br1.Get<Mle::Mle>().GetRloc16());
+    br1.Reset();
+
+    // BR_2 takes over as the new Leader. Waiting for the partitions to merge on their own
+    // is not deterministic here: the ordinary Router and the DUT only reach the network
+    // through each other, so their Leader timeouts can expire at almost the same moment
+    // and each may form its own partition. A DUT that becomes Leader itself would stop its
+    // MLR manager and then restart it, masking the re-registration path under test.
+    SuccessOrQuit(br2.Get<Mle::Mle>().BecomeLeader(Mle::Mle::kCheckLeaderWeight));
+
     nexus.AdvanceTime(kPbbrTransitionTime);
 
     for (int i = 0; i < 10; i++)
@@ -171,6 +223,7 @@ void TestMatnTc15(void)
         }
         nexus.AdvanceTime(kStabilizationTime);
     }
+    VerifyOrQuit(br2.Get<Mle::Mle>().IsLeader());
     VerifyOrQuit(br2.Get<BackboneRouter::Local>().IsPrimary());
 
     Log("---------------------------------------------------------------------------------------");
@@ -236,15 +289,38 @@ void TestMatnTc15(void)
      */
     nexus.AdvanceTime(kStabilizationTime);
 
-    nexus.SaveTestInfo("test_1_2_MATN_TC_15.json");
+    nexus.SaveTestInfo(aJsonFileName);
 }
 
 } // namespace Nexus
 } // namespace ot
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    ot::Nexus::TestMatnTc15();
+    if (argc < 2)
+    {
+        ot::Nexus::TestMatnTc15(ot::Nexus::kTopologyA, "test_1_2_MATN_TC_15_A.json");
+        ot::Nexus::TestMatnTc15(ot::Nexus::kTopologyB, "test_1_2_MATN_TC_15_B.json");
+        ot::Nexus::TestMatnTc15(ot::Nexus::kTopologyC, "test_1_2_MATN_TC_15_C.json");
+    }
+    else if (strcmp(argv[1], "A") == 0)
+    {
+        ot::Nexus::TestMatnTc15(ot::Nexus::kTopologyA, (argc > 2) ? argv[2] : "test_1_2_MATN_TC_15_A.json");
+    }
+    else if (strcmp(argv[1], "B") == 0)
+    {
+        ot::Nexus::TestMatnTc15(ot::Nexus::kTopologyB, (argc > 2) ? argv[2] : "test_1_2_MATN_TC_15_B.json");
+    }
+    else if (strcmp(argv[1], "C") == 0)
+    {
+        ot::Nexus::TestMatnTc15(ot::Nexus::kTopologyC, (argc > 2) ? argv[2] : "test_1_2_MATN_TC_15_C.json");
+    }
+    else
+    {
+        fprintf(stderr, "Error: Invalid topology '%s'. Must be 'A', 'B', or 'C'.\n", argv[1]);
+        return 1;
+    }
+
     printf("All tests passed\n");
     return 0;
 }
