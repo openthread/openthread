@@ -1148,17 +1148,41 @@ exit:
 
 Error CoapBase::SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t aTotalLength, bool aBeginBlock1Transfer)
 {
-    Error         error   = kErrorNone;
-    Message      *request = nullptr;
-    uint8_t       buf[kMaxBlockSize];
-    OffsetRange   offsetRange;
-    BlockInfo     msgBlockInfo;
-    BlockInfo     requestBlockInfo;
-    SendCallbacks callbacks;
+    Error                error   = kErrorNone;
+    Message             *request = nullptr;
+    uint8_t              buf[kMaxBlockSize];
+    OffsetRange          offsetRange;
+    BlockInfo            msgBlockInfo;
+    BlockInfo            requestBlockInfo;
+    SendCallbacks        callbacks;
+    const SendCallbacks &oldCallbacks = aRequest.GetCallbacks();
+    uint8_t              etag[kMaxEtagLength];
+    uint8_t              etagLength = 0;
 
     SuccessOrExit(error = aRxMsg.mMessage.ReadBlockOptionValues(kOptionBlock2, msgBlockInfo));
 
     VerifyOrExit(msgBlockInfo.GetBlockSize() <= kMaxBlockSize, error = kErrorNoBufs);
+
+    {
+        Option::Iterator etagIterator;
+
+        SuccessOrExit(error = etagIterator.Init(aRxMsg.mMessage, kOptionETag));
+
+        if (!etagIterator.IsDone())
+        {
+            uint16_t length = etagIterator.GetOption()->GetLength();
+
+            VerifyOrExit((length > 0) && (length <= kMaxEtagLength), error = kErrorAbort);
+            etagLength = static_cast<uint8_t>(length);
+            SuccessOrExit(error = etagIterator.ReadOptionValue(etag));
+        }
+    }
+
+    if (oldCallbacks.mBlock2ResponseSeen)
+    {
+        VerifyOrExit(etagLength == oldCallbacks.mEtagLength, error = kErrorAbort);
+        VerifyOrExit((etagLength == 0) || (memcmp(etag, oldCallbacks.mEtag, etagLength) == 0), error = kErrorAbort);
+    }
 
     offsetRange.InitFromMessageOffsetToEnd(aRxMsg.mMessage);
     VerifyOrExit(offsetRange.GetLength() <= msgBlockInfo.GetBlockSize(), error = kErrorNoBufs);
@@ -1194,6 +1218,14 @@ Error CoapBase::SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t a
 
     callbacks                        = aRequest.GetCallbacks();
     callbacks.mBlockwiseTransmitHook = nullptr;
+    callbacks.mBlock2ResponseSeen    = true;
+    callbacks.mEtagLength            = etagLength;
+    ClearAllBytes(callbacks.mEtag);
+
+    if (etagLength != 0)
+    {
+        memcpy(callbacks.mEtag, etag, etagLength);
+    }
 
     SuccessOrExit(error = SendMessage(*request, aRxMsg.mMessageInfo, /* aTxParameters */ nullptr, callbacks));
 
@@ -1430,6 +1462,9 @@ void CoapBase::SendCallbacks::Clear(void)
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     mBlockwiseReceiveHook  = nullptr;
     mBlockwiseTransmitHook = nullptr;
+    ClearAllBytes(mEtag);
+    mEtagLength         = 0;
+    mBlock2ResponseSeen = false;
 #endif
 }
 
