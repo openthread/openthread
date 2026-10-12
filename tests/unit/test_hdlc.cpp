@@ -280,6 +280,36 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.CanWrite(kBufferSize - kFrameHeaderSize) == true, "after Clear()");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Verify iteration aborts after a buffer clear and can restart with newly saved frames.
+
+    SuccessOrQuit(WriteToBuffer(sMottoText, frameBuffer));
+    SuccessOrQuit(frameBuffer.SaveFrame());
+    SuccessOrQuit(WriteToBuffer(sOpenThreadText, frameBuffer));
+    SuccessOrQuit(frameBuffer.SaveFrame());
+
+    frame = nullptr;
+    SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length));
+    VerifyOrQuit(length == sizeof(sMottoText) - 1);
+    VerifyOrQuit(memcmp(frame, sMottoText, length) == 0);
+
+    frameBuffer.Clear();
+    SuccessOrQuit(WriteToBuffer(sHelloText, frameBuffer));
+    SuccessOrQuit(frameBuffer.SaveFrame());
+
+    VerifyOrQuit(frameBuffer.GetNextSavedFrame(frame, length) == OT_ERROR_ABORT, "after Clear() during iteration");
+    VerifyOrQuit(frame == nullptr, "frame must be reset after an aborted iteration");
+    VerifyOrQuit(length == 0, "length must be reset after an aborted iteration");
+    VerifyOrQuit(frameBuffer.HasSavedFrame(), "newly saved frame must survive an aborted iteration");
+
+    SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length));
+    VerifyOrQuit(length == sizeof(sHelloText) - 1, "newly saved frame length is incorrect");
+    VerifyOrQuit(memcmp(frame, sHelloText, length) == 0, "newly saved frame content is incorrect");
+    VerifyOrQuit(frameBuffer.GetNextSavedFrame(frame, length) == OT_ERROR_NOT_FOUND, "no more saved frames expected");
+    VerifyOrQuit(frame == nullptr && length == 0, "after reading the newly saved frame");
+
+    frameBuffer.Clear();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Verify behavior of `ClearSavedFrames()`
 
     SuccessOrQuit(WriteToBuffer(sHelloText, frameBuffer));
