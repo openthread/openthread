@@ -100,6 +100,20 @@ public:
          */
         uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
 
+        /**
+         * Indicates whether a given message is currently selected as the indirect message for the child and has been
+         * partially sent.
+         *
+         * @param[in] aMessage  The message to check.
+         *
+         * @retval TRUE   If @p aMessage is the current indirect message for the child and is partially sent.
+         * @retval FALSE  If @p aMessage is not the current indirect message for the child or no fragment has been sent.
+         */
+        bool IsSendingIndirectMsg(const Message &aMessage) const
+        {
+            return (mIndirectMessage == &aMessage) && (mIndirectFragmentOffset > 0);
+        }
+
     private:
         Message *GetIndirectMessage(void) { return mIndirectMessage; }
         void     SetIndirectMessage(Message *aMessage) { mIndirectMessage = aMessage; }
