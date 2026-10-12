@@ -32,6 +32,10 @@ on:
   pull_request:
     branches:
       - 'main'
+    paths:
+      - '.github/workflow/version.yml'
+      - 'include/**.h'
+      - 'script/check-api-version'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
