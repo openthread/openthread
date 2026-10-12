@@ -266,7 +266,7 @@ otError Encoder::WritePacked(const char *aPackFormat, ...)
     va_start(args, aPackFormat);
 
     packedLen = spinel_datatype_vpack(buf, sizeof(buf), aPackFormat, args);
-    VerifyOrExit((packedLen > 0) && (packedLen <= static_cast<spinel_ssize_t>(sizeof(buf))), error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((packedLen >= 0) && (packedLen <= static_cast<spinel_ssize_t>(sizeof(buf))), error = OT_ERROR_NO_BUFS);
 
     error = mNcpBuffer.InFrameFeedData(buf, static_cast<uint16_t>(packedLen));
 
@@ -283,7 +283,7 @@ otError Encoder::WriteVPacked(const char *aPackFormat, va_list aArgs)
     spinel_ssize_t packedLen;
 
     packedLen = spinel_datatype_vpack(buf, sizeof(buf), aPackFormat, aArgs);
-    VerifyOrExit((packedLen > 0) && (packedLen <= static_cast<spinel_ssize_t>(sizeof(buf))), error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((packedLen >= 0) && (packedLen <= static_cast<spinel_ssize_t>(sizeof(buf))), error = OT_ERROR_NO_BUFS);
 
     error = mNcpBuffer.InFrameFeedData(buf, static_cast<uint16_t>(packedLen));
 

@@ -407,7 +407,7 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
         spinel_size_t  maskLength  = sizeof(maskBuffer);
 
         unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, maskBuffer, &maskLength);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        VerifyOrExit(unpacked >= 0, error = OT_ERROR_PARSE);
 
         while (maskLength > 0)
         {
@@ -690,7 +690,7 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
         spinel_size_t  size;
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_DATA_S, &channels, &size);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        VerifyOrExit(unpacked >= 0, error = OT_ERROR_PARSE);
         start += Snprintf(start, static_cast<uint32_t>(end - start), ", channels:");
 
         for (spinel_size_t i = 0; i < size; i++)

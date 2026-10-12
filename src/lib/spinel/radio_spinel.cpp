@@ -467,10 +467,12 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
             }
             else
             {
+                // A value can be empty (e.g. an empty array), in which
+                // case zero bytes are unpacked.
                 spinel_ssize_t unpacked =
                     spinel_datatype_vunpack_in_place(aBuffer, aLength, mPropertyFormat, mPropertyArgs);
 
-                VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
+                VerifyOrExit(unpacked >= 0, mError = OT_ERROR_PARSE);
                 mError = OT_ERROR_NONE;
             }
         }
