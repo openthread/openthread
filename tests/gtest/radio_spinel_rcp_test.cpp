@@ -34,6 +34,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/error.hpp"
+#include "crypto/aes_ccm.hpp"
 #include "lib/spinel/openthread-spinel-config.h"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
@@ -107,7 +108,7 @@ TEST(RadioSpinelTransmit, shouldCauseSwitchingToRxChannelAfterTxDone)
     constexpr int8_t     kTxPower   = 100;
 
     uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
-    Mac::TxFrame txFrame;
+    Mac::TxFrame txFrame{};
 
     txFrame.mPsdu = frameBuffer;
 
@@ -2447,3 +2448,493 @@ TEST(RadioSpinelPeriodicRx, shouldReportNotImplementedByAnRcpWithoutPeriodicRx)
 }
 
 #endif // OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+
+#if OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+
+namespace {
+
+otRadioFrame sLastMacFilterRxFrame;
+bool         sMacFilterFrameReceived = false;
+
+void HandleMacFilterReceiveDone(otInstance *, otRadioFrame *aFrame, otError aError)
+{
+    if (aError == OT_ERROR_NONE && aFrame != nullptr)
+    {
+        sMacFilterFrameReceived = true;
+        sLastMacFilterRxFrame   = *aFrame;
+    }
+}
+
+void PrepareUnsecuredFrame(Mac::TxFrame       &aTxFrame,
+                           uint8_t            *aPsdu,
+                           uint8_t            &aLength,
+                           Mac::Frame::Version aVersion,
+                           const Mac::Address &aSrcAddr,
+                           const Mac::Address &aDstAddr,
+                           Mac::PanId          aSrcPanId,
+                           Mac::PanId          aDstPanId,
+                           const uint8_t      *aPayload,
+                           uint16_t            aPayloadLength)
+{
+    aTxFrame.mPsdu = aPsdu;
+
+    Mac::TxFrame::BuildInfo buildInfo;
+    buildInfo.mType               = Mac::Frame::kTypeData;
+    buildInfo.mVersion            = aVersion;
+    buildInfo.mAddrs.mSource      = aSrcAddr;
+    buildInfo.mAddrs.mDestination = aDstAddr;
+    buildInfo.mPanIds.SetSource(aSrcPanId);
+    buildInfo.mPanIds.SetDestination(aDstPanId);
+    buildInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+
+    Mac::TxFrame::PayloadBuilder builder;
+    aTxFrame.PrepareHeaders(buildInfo, builder);
+    if (aPayload != nullptr && aPayloadLength > 0)
+    {
+        EXPECT_EQ(builder.AppendBytes(aPayload, aPayloadLength), kErrorNone);
+    }
+    aTxFrame.FinishPayload(builder);
+    aLength = aTxFrame.GetLength();
+}
+
+void PrepareSecuredFrame(Mac::TxFrame          &aTxFrame,
+                         uint8_t               *aPsdu,
+                         uint8_t               &aLength,
+                         Mac::Frame::Version    aVersion,
+                         const Mac::Address    &aSrcAddr,
+                         const Mac::Address    &aDstAddr,
+                         Mac::PanId             aSrcPanId,
+                         Mac::PanId             aDstPanId,
+                         Mac::Frame::KeyIdMode  aKeyIdMode,
+                         const uint8_t         *aKeyId,
+                         uint32_t               aFrameCounter,
+                         const uint8_t         *aPayload,
+                         uint16_t               aPayloadLength,
+                         const otMacKey        *aKey,
+                         const Mac::ExtAddress *aNonceExtAddr)
+{
+    aTxFrame.mPsdu = aPsdu;
+
+    Mac::TxFrame::BuildInfo buildInfo;
+    buildInfo.mType               = Mac::Frame::kTypeData;
+    buildInfo.mVersion            = aVersion;
+    buildInfo.mAddrs.mSource      = aSrcAddr;
+    buildInfo.mAddrs.mDestination = aDstAddr;
+    buildInfo.mPanIds.SetSource(aSrcPanId);
+    buildInfo.mPanIds.SetDestination(aDstPanId);
+    buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+    buildInfo.mKeyIdMode     = aKeyIdMode;
+
+    Mac::TxFrame::PayloadBuilder builder;
+    aTxFrame.PrepareHeaders(buildInfo, builder);
+    if (aPayload != nullptr && aPayloadLength > 0)
+    {
+        EXPECT_EQ(builder.AppendBytes(aPayload, aPayloadLength), kErrorNone);
+    }
+    aTxFrame.FinishPayload(builder);
+
+    Mac::TxFrame::ParseInfo parseInfo;
+    EXPECT_EQ(parseInfo.ParseFrom(aTxFrame, Mac::Frame::kParseFully), kErrorNone);
+    parseInfo.WriteFrameCounter(aFrameCounter);
+
+    if (aKeyIdMode == Mac::Frame::kKeyIdMode1)
+    {
+        parseInfo.WriteKeyIndex(aKeyId[0]);
+    }
+    else if (aKeyIdMode == Mac::Frame::kKeyIdMode2)
+    {
+        parseInfo.WriteKeySource(aKeyId);
+        parseInfo.WriteKeyIndex(aKeyId[4]);
+    }
+
+    EXPECT_EQ(parseInfo.ParseFrom(aTxFrame, Mac::Frame::kParseFully), kErrorNone);
+
+    if (aKey != nullptr && aNonceExtAddr != nullptr)
+    {
+        Crypto::AesCcm        aesCcm;
+        Crypto::AesCcm::Nonce nonce;
+
+        nonce.InitFrom(*aNonceExtAddr, aFrameCounter, Mac::Frame::kSecurityEncMic32);
+        aesCcm.SetKey(aKey->m8, sizeof(otMacKey));
+        aesCcm.SetNonce(nonce);
+        aesCcm.SetAuthData(parseInfo.mHeader.GetBytes(), parseInfo.mHeader.GetLength());
+        aesCcm.SetTagLength(parseInfo.mMicSize);
+        EXPECT_EQ(aesCcm.Process(Crypto::AesCcm::kEncrypt, const_cast<uint8_t *>(parseInfo.mPayload.GetBytes()),
+                                 aPayloadLength),
+                  kErrorNone);
+    }
+
+    aLength = aTxFrame.GetLength();
+}
+
+} // namespace
+
+TEST(RadioSpinelMacFilter, PolicySetAndGet)
+{
+    FakeCoprocessorPlatform platform;
+    uint8_t                 policy = 0xff;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    // Initial default policy is 0 (permissive)
+    ASSERT_EQ(platform.mRadioSpinel.GetMacFilterPolicy(policy), kErrorNone);
+    EXPECT_EQ(policy, 0);
+
+    // Valid policy bit combinations
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.GetMacFilterPolicy(policy), kErrorNone);
+    EXPECT_EQ(policy, SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED);
+
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED |
+                                                       SPINEL_MAC_FILTER_POLICY_DROP_UNSECURED),
+              kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.GetMacFilterPolicy(policy), kErrorNone);
+    EXPECT_EQ(policy, SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED | SPINEL_MAC_FILTER_POLICY_DROP_UNSECURED);
+
+#if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED |
+                                                       SPINEL_MAC_FILTER_POLICY_DROP_UNSECURED |
+                                                       SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY),
+              kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.GetMacFilterPolicy(policy), kErrorNone);
+    EXPECT_EQ(policy, 0x07);
+#else
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY),
+              kErrorNotImplemented);
+#endif
+
+    // Reserved bits (bits 3-7) must be rejected
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(0x08), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(0x10), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(0x80), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(0xf8), kErrorInvalidArgs);
+
+    // Reset back to 0
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(0), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.GetMacFilterPolicy(policy), kErrorNone);
+    EXPECT_EQ(policy, 0);
+}
+
+TEST(RadioSpinelMacFilter, KeyTableSetAndGet)
+{
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+#if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
+    constexpr uint8_t                     kNumEntries = 3;
+    Spinel::RadioSpinel::MacKeyTableEntry entries[10];
+    Spinel::RadioSpinel::MacKeyTableEntry setEntries[kNumEntries];
+    uint8_t                               count = OT_ARRAY_LENGTH(entries);
+
+    // Initial table is empty
+    ASSERT_EQ(platform.mRadioSpinel.GetMacKeyTable(entries, count), kErrorNone);
+    EXPECT_EQ(count, 0);
+
+    for (Spinel::RadioSpinel::MacKeyTableEntry &entry : setEntries)
+    {
+        entry.Clear();
+        entry.mAllowedSecLevels = (1 << Mac::Frame::kSecurityEncMic32);
+    }
+
+    // Entry 0: Key ID Mode 2 (4-byte Key Source + 1-byte Key Index)
+    setEntries[0].mKeyIdLength = 5;
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        setEntries[0].mKeyId[i] = i + 0x01;
+    }
+
+    // Entry 1: Key ID Mode 1 (1-byte Key Index) with all security levels allowed
+    setEntries[1].mKeyIdLength      = 1;
+    setEntries[1].mKeyId[0]         = 0x81;
+    setEntries[1].mAllowedSecLevels = 0xfe;
+
+    // Entry 2: Key ID Mode 0 (no Key ID)
+    setEntries[2].mKeyIdLength = 0;
+
+    ASSERT_EQ(platform.mRadioSpinel.SetMacKeyTable(setEntries, kNumEntries), kErrorNone);
+
+    // Retrieve and verify
+    count = OT_ARRAY_LENGTH(entries);
+    ASSERT_EQ(platform.mRadioSpinel.GetMacKeyTable(entries, count), kErrorNone);
+    ASSERT_EQ(count, kNumEntries);
+
+    for (uint8_t i = 0; i < kNumEntries; i++)
+    {
+        EXPECT_EQ(entries[i].mKeyIdLength, setEntries[i].mKeyIdLength);
+        EXPECT_EQ(memcmp(entries[i].mKeyId, setEntries[i].mKeyId, setEntries[i].mKeyIdLength), 0);
+        EXPECT_FALSE(entries[i].mHasKey);
+        EXPECT_EQ(entries[i].mAllowedSecLevels, setEntries[i].mAllowedSecLevels);
+    }
+
+    // Clear key table
+    ASSERT_EQ(platform.mRadioSpinel.SetMacKeyTable(nullptr, 0), kErrorNone);
+    count = OT_ARRAY_LENGTH(entries);
+    ASSERT_EQ(platform.mRadioSpinel.GetMacKeyTable(entries, count), kErrorNone);
+    EXPECT_EQ(count, 0);
+
+    // Unsupported / invalid Key ID lengths (2, 4, 9) must be rejected
+    setEntries[0].mKeyIdLength = 2;
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(setEntries, 1), kErrorInvalidArgs);
+    setEntries[0].mKeyIdLength = 4;
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(setEntries, 1), kErrorInvalidArgs);
+    setEntries[0].mKeyIdLength = 9; // Mode 3
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(setEntries, 1), kErrorInvalidArgs);
+    setEntries[0].mKeyIdLength = Spinel::RadioSpinel::MacKeyTableEntry::kMaxKeyIdLength + 1; // Rejected by host
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(setEntries, 1), kErrorInvalidArgs);
+    setEntries[0].mKeyIdLength = 5;
+
+    // An entry with a key (MIC verification) is not supported
+    setEntries[0].mHasKey = true;
+    memset(setEntries[0].mKeyMaterial.m8, 0x11, sizeof(otMacKey));
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(setEntries, 1), kErrorNotCapable);
+    setEntries[0].mHasKey = false;
+
+    // Bit 0 (Security Level 0: None) or 0 must return kErrorInvalidArgs
+    setEntries[0].mAllowedSecLevels = (1 << Mac::Frame::kSecurityNone);
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(setEntries, 1), kErrorInvalidArgs);
+    setEntries[0].mAllowedSecLevels = (1 << Mac::Frame::kSecurityNone) | (1 << Mac::Frame::kSecurityEncMic32);
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(setEntries, 1), kErrorInvalidArgs);
+    setEntries[0].mAllowedSecLevels = 0;
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(setEntries, 1), kErrorInvalidArgs);
+    setEntries[0].mAllowedSecLevels = (1 << Mac::Frame::kSecurityEncMic32);
+
+    // More entries than supported must be rejected
+    Spinel::RadioSpinel::MacKeyTableEntry overflowEntries[OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES + 1];
+
+    for (Spinel::RadioSpinel::MacKeyTableEntry &entry : overflowEntries)
+    {
+        entry.Clear();
+        entry.mKeyIdLength      = 5;
+        entry.mAllowedSecLevels = (1 << Mac::Frame::kSecurityEncMic32);
+    }
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(overflowEntries, OT_ARRAY_LENGTH(overflowEntries)), kErrorNoBufs);
+#else
+    Spinel::RadioSpinel::MacKeyTableEntry entry;
+    uint8_t                               count = 1;
+
+    entry.Clear();
+    EXPECT_EQ(platform.mRadioSpinel.SetMacKeyTable(&entry, 1), kErrorNotImplemented);
+    EXPECT_EQ(platform.mRadioSpinel.GetMacKeyTable(&entry, count), kErrorNotImplemented);
+#endif
+}
+
+TEST(RadioSpinelMacFilter, FrameFilteringPolicy)
+{
+    FakeCoprocessorPlatform platform;
+
+    Spinel::RadioSpinelCallbacks callbacks{};
+    callbacks.mReceiveDone    = HandleMacFilterReceiveDone;
+    callbacks.mTransmitDone   = [](otInstance *, otRadioFrame *, otRadioFrame *, otError) {};
+    callbacks.mEnergyScanDone = [](otInstance *, int8_t) {};
+    callbacks.mTxStarted      = [](otInstance *, otRadioFrame *) {};
+    platform.mRadioSpinel.SetCallbacks(callbacks);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Receive(11), kErrorNone);
+
+    uint8_t sentFrame[OT_RADIO_FRAME_MAX_SIZE];
+    uint8_t sentFrameLength = 0;
+
+    auto deliverFrame = [&](const uint8_t *aPsdu, uint8_t aLength) {
+        sMacFilterFrameReceived = false;
+        memcpy(sentFrame, aPsdu, aLength);
+        sentFrameLength = aLength;
+        otRadioFrame rxFrame{};
+        rxFrame.mPsdu               = const_cast<uint8_t *>(aPsdu);
+        rxFrame.mLength             = aLength;
+        rxFrame.mChannel            = 11;
+        rxFrame.mInfo.mRxInfo.mRssi = -50;
+        rxFrame.mInfo.mRxInfo.mLqi  = 100;
+        otPlatRadioReceiveDone(FakePlatform::CurrentInstance(), &rxFrame, OT_ERROR_NONE);
+        platform.GoInMs(10);
+        platform.mSpinelDriver.Process(nullptr);
+    };
+
+    // A delivered frame must be passed to the host unmodified.
+    auto expectDeliveredUnmodified = [&]() {
+        EXPECT_TRUE(sMacFilterFrameReceived);
+        if (sMacFilterFrameReceived)
+        {
+            EXPECT_EQ(sLastMacFilterRxFrame.mLength, sentFrameLength);
+            EXPECT_EQ(memcmp(sLastMacFilterRxFrame.mPsdu, sentFrame, sentFrameLength), 0);
+        }
+    };
+
+    // 1. Malformed frame check
+    uint8_t malformedFrame[] = {0x01, 0x02}; // 2 bytes: invalid IEEE 802.15.4 frame
+
+    // Policy = 0 (permissive): malformed frame is passed through to host
+    ASSERT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(0), kErrorNone);
+    deliverFrame(malformedFrame, sizeof(malformedFrame));
+    expectDeliveredUnmodified();
+
+    // Policy = DROP_MALFORMED: malformed frame is dropped
+    ASSERT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED), kErrorNone);
+    deliverFrame(malformedFrame, sizeof(malformedFrame));
+    EXPECT_FALSE(sMacFilterFrameReceived);
+
+    // 2. Unsecured frame check
+    constexpr Mac::PanId   kPanId = 0x1234;
+    constexpr otExtAddress kSrcExtAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    constexpr otExtAddress kDstExtAddr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x11};
+    constexpr uint8_t      kPayload[] = "Hello OpenThread";
+    Mac::Address           srcAddr;
+    Mac::Address           dstAddr;
+    Mac::ExtAddress        srcExt;
+    Mac::ExtAddress        dstExt;
+
+    srcExt.Set(kSrcExtAddr.m8);
+    dstExt.Set(kDstExtAddr.m8);
+    srcAddr.SetExtended(srcExt);
+    dstAddr.SetExtended(dstExt);
+
+    uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    uint8_t      frameLength = 0;
+    Mac::TxFrame txFrame{};
+
+    PrepareUnsecuredFrame(txFrame, frameBuffer, frameLength, Mac::Frame::kVersion2006, srcAddr, dstAddr, kPanId, kPanId,
+                          kPayload, sizeof(kPayload));
+
+    // Policy = DROP_MALFORMED: valid unsecured frame is passed
+    deliverFrame(frameBuffer, frameLength);
+    expectDeliveredUnmodified();
+
+    // Policy = DROP_MALFORMED | DROP_UNSECURED: unsecured frame is dropped
+    ASSERT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED |
+                                                       SPINEL_MAC_FILTER_POLICY_DROP_UNSECURED),
+              kErrorNone);
+    deliverFrame(frameBuffer, frameLength);
+    EXPECT_FALSE(sMacFilterFrameReceived);
+
+    const uint8_t kKeyIdMode2[5] = {0x01, 0x02, 0x03, 0x04, 0x02};
+    otMacKey      testKey;
+
+    memset(testKey.m8, 0x55, sizeof(testKey.m8));
+
+    auto prepareSecuredFrame = [&](Mac::Frame::Version aVersion, const Mac::Address &aSrcAddr, Mac::PanId aSrcPanId,
+                                   Mac::PanId aDstPanId, Mac::Frame::KeyIdMode aKeyIdMode, const uint8_t *aKeyId) {
+        PrepareSecuredFrame(txFrame, frameBuffer, frameLength, aVersion, aSrcAddr, dstAddr, aSrcPanId, aDstPanId,
+                            aKeyIdMode, aKeyId, 100, kPayload, sizeof(kPayload), &testKey, &srcExt);
+    };
+
+#if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
+    const uint8_t kOtherKeyIdMode2[5] = {0x01, 0x02, 0x03, 0x04, 0x03};
+
+    // 3. Key ID matching
+    prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode2, kKeyIdMode2);
+
+    // Case 3a: Empty key table without DROP_UNKNOWN_KEY: secured frame is passed through
+    deliverFrame(frameBuffer, frameLength);
+    expectDeliveredUnmodified();
+
+    // Case 3b: Empty key table with DROP_UNKNOWN_KEY: secured frame is dropped
+    ASSERT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(SPINEL_MAC_FILTER_POLICY_DROP_UNSECURED |
+                                                       SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY),
+              kErrorNone);
+    deliverFrame(frameBuffer, frameLength);
+    EXPECT_FALSE(sMacFilterFrameReceived);
+
+    // Case 3c: Matching Key ID: secured frame is passed through unmodified
+    Spinel::RadioSpinel::MacKeyTableEntry keyEntry;
+    keyEntry.Clear();
+    keyEntry.mKeyIdLength = sizeof(kKeyIdMode2);
+    memcpy(keyEntry.mKeyId, kKeyIdMode2, sizeof(kKeyIdMode2));
+    keyEntry.mAllowedSecLevels = (1 << Mac::Frame::kSecurityEncMic32);
+    ASSERT_EQ(platform.mRadioSpinel.SetMacKeyTable(&keyEntry, 1), kErrorNone);
+
+    deliverFrame(frameBuffer, frameLength);
+    expectDeliveredUnmodified();
+
+    // Case 3d: Different Key Index: secured frame is dropped
+    prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode2, kOtherKeyIdMode2);
+    deliverFrame(frameBuffer, frameLength);
+    EXPECT_FALSE(sMacFilterFrameReceived);
+
+    // Case 3e: Security level not allowed by the entry: secured frame is dropped
+    keyEntry.mAllowedSecLevels = (1 << Mac::Frame::kSecurityEncMic64);
+    ASSERT_EQ(platform.mRadioSpinel.SetMacKeyTable(&keyEntry, 1), kErrorNone);
+    prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode2, kKeyIdMode2);
+    deliverFrame(frameBuffer, frameLength);
+    EXPECT_FALSE(sMacFilterFrameReceived);
+    keyEntry.mAllowedSecLevels = (1 << Mac::Frame::kSecurityEncMic32);
+
+    // 4. Key ID Modes 0 and 1
+    {
+        const uint8_t                         kKeyIndex[1]      = {0x81};
+        const uint8_t                         kOtherKeyIndex[1] = {0x82};
+        Spinel::RadioSpinel::MacKeyTableEntry modeEntry;
+
+        modeEntry.Clear();
+        modeEntry.mAllowedSecLevels = (1 << Mac::Frame::kSecurityEncMic32);
+
+        // Case 4a: Key ID Mode 1 entry matches frames with the same Key Index only
+        modeEntry.mKeyIdLength = 1;
+        modeEntry.mKeyId[0]    = kKeyIndex[0];
+        ASSERT_EQ(platform.mRadioSpinel.SetMacKeyTable(&modeEntry, 1), kErrorNone);
+
+        prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode1, kKeyIndex);
+        deliverFrame(frameBuffer, frameLength);
+        expectDeliveredUnmodified();
+
+        prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode1, kOtherKeyIndex);
+        deliverFrame(frameBuffer, frameLength);
+        EXPECT_FALSE(sMacFilterFrameReceived);
+
+        // Case 4b: A Key ID Mode 2 frame does not match a Key ID Mode 1 entry
+        prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode2, kKeyIdMode2);
+        deliverFrame(frameBuffer, frameLength);
+        EXPECT_FALSE(sMacFilterFrameReceived);
+
+        // Case 4c: Key ID Mode 0 entry matches Key ID Mode 0 frames
+        modeEntry.mKeyIdLength = 0;
+        ASSERT_EQ(platform.mRadioSpinel.SetMacKeyTable(&modeEntry, 1), kErrorNone);
+
+        prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode0, nullptr);
+        deliverFrame(frameBuffer, frameLength);
+        expectDeliveredUnmodified();
+
+        prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode1, kKeyIndex);
+        deliverFrame(frameBuffer, frameLength);
+        EXPECT_FALSE(sMacFilterFrameReceived);
+
+        // Case 4d: Key ID Mode 1 frames using the previous, current, or next key index set by
+        // `SPINEL_PROP_RCP_MAC_KEY` are known without a key table entry.
+        constexpr uint8_t kCurKeyIndex = 10;
+        otMacKeyMaterial  macKey;
+        uint8_t           keyIndex[1];
+
+        memset(&macKey, 0, sizeof(macKey));
+        memcpy(macKey.mKeyMaterial.mKey.m8, testKey.m8, sizeof(otMacKey));
+        ASSERT_EQ(platform.mRadioSpinel.SetMacKeyTable(nullptr, 0), kErrorNone);
+        ASSERT_EQ(platform.mRadioSpinel.SetMacKey(Mac::Frame::kKeyIdMode1, kCurKeyIndex, &macKey, &macKey, &macKey),
+                  kErrorNone);
+
+        for (uint8_t offset = 0; offset < 3; offset++)
+        {
+            keyIndex[0] = static_cast<uint8_t>(kCurKeyIndex - 1 + offset);
+            prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode1, keyIndex);
+            deliverFrame(frameBuffer, frameLength);
+            expectDeliveredUnmodified();
+        }
+
+        keyIndex[0] = kCurKeyIndex + 2;
+        prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode1, keyIndex);
+        deliverFrame(frameBuffer, frameLength);
+        EXPECT_FALSE(sMacFilterFrameReceived);
+    }
+#else
+    // When MAX_ENTRIES == 0, the key table is disabled.
+    // Setting policies requiring the key table must fail.
+    EXPECT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY),
+              kErrorNotImplemented);
+
+    // Secured frame is passed through unmodified
+    prepareSecuredFrame(Mac::Frame::kVersion2006, srcAddr, kPanId, kPanId, Mac::Frame::kKeyIdMode2, kKeyIdMode2);
+    ASSERT_EQ(platform.mRadioSpinel.SetMacFilterPolicy(SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED), kErrorNone);
+    deliverFrame(frameBuffer, frameLength);
+    expectDeliveredUnmodified();
+#endif
+}
+
+#endif // OPENTHREAD_CONFIG_LINK_EXT_ENABLE

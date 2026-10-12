@@ -787,6 +787,87 @@ exit:
 #endif // OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES
        // > 0)
 
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MAC_FILTER_POLICY>(void)
+{
+    return mEncoder.WriteUint8(otLinkExtGetMacFilterPolicy(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FILTER_POLICY>(void)
+{
+    otError error  = OT_ERROR_NONE;
+    uint8_t policy = 0;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(policy));
+    error = otLinkExtSetMacFilterPolicy(mInstance, policy);
+
+exit:
+    return error;
+}
+
+#if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MAC_KEY_TABLE>(void)
+{
+    otError                          error = OT_ERROR_NONE;
+    uint8_t                          numEntries;
+    const otLinkExtMacKeyTableEntry *entries = otLinkExtGetMacKeyTable(mInstance, &numEntries);
+
+    for (uint8_t i = 0; i < numEntries; i++)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteDataWithLen(entries[i].mKeyId, entries[i].mKeyIdLength));
+        SuccessOrExit(error = mEncoder.WriteDataWithLen(nullptr, 0)); // No key
+        SuccessOrExit(error = mEncoder.WriteUint8(entries[i].mAllowedSecurityLevels));
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY_TABLE>(void)
+{
+    otError                   error = OT_ERROR_NONE;
+    otLinkExtMacKeyTableEntry entries[OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES];
+    uint8_t                   numEntries = 0;
+
+    while (!mDecoder.IsAllRead())
+    {
+        const uint8_t *keyId;
+        uint16_t       keyIdLength;
+        const uint8_t *key;
+        uint16_t       keyLength;
+
+        VerifyOrExit(numEntries < GetArrayLength(entries), error = OT_ERROR_NO_BUFS);
+
+        otLinkExtMacKeyTableEntry &entry = entries[numEntries];
+
+        SuccessOrExit(error = mDecoder.OpenStruct());
+
+        SuccessOrExit(error = mDecoder.ReadDataWithLen(keyId, keyIdLength));
+        VerifyOrExit(keyIdLength <= sizeof(entry.mKeyId), error = OT_ERROR_INVALID_ARGS);
+        memcpy(entry.mKeyId, keyId, keyIdLength);
+        entry.mKeyIdLength = static_cast<uint8_t>(keyIdLength);
+
+        // Only filtering by Key ID is supported, so the key must be empty.
+        SuccessOrExit(error = mDecoder.ReadDataWithLen(key, keyLength));
+        VerifyOrExit(keyLength == 0 || keyLength == sizeof(otMacKey), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(keyLength == 0, error = OT_ERROR_NOT_CAPABLE);
+
+        SuccessOrExit(error = mDecoder.ReadUint8(entry.mAllowedSecurityLevels));
+
+        SuccessOrExit(error = mDecoder.CloseStruct());
+        numEntries++;
+    }
+
+    error = otLinkExtSetMacKeyTable(mInstance, entries, numEntries);
+
+exit:
+    return error;
+}
+#endif // (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
+#endif // OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+
 } // namespace Ncp
 } // namespace ot
 

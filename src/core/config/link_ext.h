@@ -92,6 +92,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES
+ *
+ * The maximum number of entries in the MAC key table of the MAC frame filter (see `otLinkExtSetMacKeyTable()`).
+ *
+ * Zero disables the key table. Applicable only when `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` is enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES
+#define OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES 8
+#endif
+
+/**
  * @}
  */
 

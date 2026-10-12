@@ -67,4 +67,26 @@ const otLinkExtPeriodicRxSchedule *otLinkExtGetPeriodicRxSchedules(otInstance *a
 }
 #endif
 
+otError otLinkExtSetMacFilterPolicy(otInstance *aInstance, uint8_t aPolicy)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkExt>().SetMacFilterPolicy(aPolicy);
+}
+
+uint8_t otLinkExtGetMacFilterPolicy(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkExt>().GetMacFilterPolicy();
+}
+
+#if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
+otError otLinkExtSetMacKeyTable(otInstance *aInstance, const otLinkExtMacKeyTableEntry *aEntries, uint8_t aNumEntries)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkExt>().SetMacKeyTable(aEntries, aNumEntries);
+}
+
+const otLinkExtMacKeyTableEntry *otLinkExtGetMacKeyTable(otInstance *aInstance, uint8_t *aNumEntries)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkExt>().GetMacKeyTable(*aNumEntries);
+}
+#endif
+
 #endif // OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE

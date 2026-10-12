@@ -492,6 +492,13 @@ public:
     void SetMode1MacKeys(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
 
     /**
+     * Gets the current MAC key index for Key ID Mode 1.
+     *
+     * @returns The current MAC key index, or zero if no keys are set.
+     */
+    uint8_t GetMode1KeyIndex(void) const { return mKeyTrio.GetKeyIndex(); }
+
+    /**
      * Clears the stored MAC keys.
      */
     void ClearMacKeys(void) { mKeyTrio.Clear(); }

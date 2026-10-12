@@ -193,6 +193,102 @@ otError otLinkExtSetPeriodicRxSchedules(otInstance                        *aInst
  */
 const otLinkExtPeriodicRxSchedule *otLinkExtGetPeriodicRxSchedules(otInstance *aInstance, uint8_t *aNumSchedules);
 
+/*
+ * MAC frame filter policy flags (see `otLinkExtSetMacFilterPolicy()`).
+ */
+#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_MALFORMED (1 << 0)   ///< Drop frames which cannot be parsed.
+#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNSECURED (1 << 1)   ///< Drop frames without security enabled.
+#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY (1 << 2) ///< Drop secured frames whose key is unknown.
+
+/**
+ * Sets the MAC frame filter policy.
+ *
+ * Requires `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` (RCP builds only).
+ *
+ * Received frames are checked in the following order, and each check drops the frame only if its flag is set in
+ * @p aPolicy. A frame passing all checks is delivered to the raw link-layer receive callback unmodified.
+ *
+ * 1. `OT_LINK_EXT_MAC_FILTER_POLICY_DROP_MALFORMED`: The frame cannot be parsed. A malformed frame which is not
+ *    dropped is delivered without further checks.
+ * 2. `OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNSECURED`: The frame does not have security enabled. An unsecured frame
+ *    which is not dropped is delivered without further checks.
+ * 3. `OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY`: The key of the secured frame is unknown. A key is known if
+ *    it matches an entry of the MAC key table (see `otLinkExtSetMacKeyTable()`), or if the frame uses Key ID Mode 1
+ *    with the key index of the previous, current, or next MAC key (see `otLinkRawSetMacKey()`).
+ *
+ * A policy of zero disables the filter.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aPolicy    The policy bitmask, a combination of `OT_LINK_EXT_MAC_FILTER_POLICY_*` flags.
+ *
+ * @retval OT_ERROR_NONE             Successfully set the policy.
+ * @retval OT_ERROR_INVALID_ARGS     @p aPolicy contains an unknown flag.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  @p aPolicy requires the MAC key table, which is disabled
+ *                                   (`OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES` is zero).
+ */
+otError otLinkExtSetMacFilterPolicy(otInstance *aInstance, uint8_t aPolicy);
+
+/**
+ * Gets the MAC frame filter policy.
+ *
+ * Requires `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` (RCP builds only).
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The policy bitmask, a combination of `OT_LINK_EXT_MAC_FILTER_POLICY_*` flags.
+ */
+uint8_t otLinkExtGetMacFilterPolicy(otInstance *aInstance);
+
+#define OT_LINK_EXT_MAC_KEY_ID_MAX_SIZE 5 ///< Max Key ID size (Key ID Mode 2: 4-byte Key Source and Key Index).
+
+/**
+ * Represents an entry of the MAC key table of the MAC frame filter.
+ *
+ * The Key ID Mode of the entry is determined by `mKeyIdLength`:
+ * - 0: Key ID Mode 0 (no Key ID).
+ * - 1: Key ID Mode 1 (`mKeyId` is the Key Index).
+ * - 5: Key ID Mode 2 (`mKeyId` is the 4-byte Key Source followed by the Key Index).
+ */
+typedef struct otLinkExtMacKeyTableEntry
+{
+    uint8_t mKeyId[OT_LINK_EXT_MAC_KEY_ID_MAX_SIZE]; ///< The Key ID (first `mKeyIdLength` bytes are used).
+    uint8_t mKeyIdLength;                            ///< The Key ID length, which determines the Key ID Mode.
+    uint8_t mAllowedSecurityLevels; ///< Allowed security levels (bit `i` allows level `i`), non-zero, bit 0 clear.
+} otLinkExtMacKeyTableEntry;
+
+/**
+ * Sets the MAC key table of the MAC frame filter.
+ *
+ * Requires `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` (RCP builds only) and a non-zero
+ * `OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES`.
+ *
+ * Atomically replaces all entries. A secured frame matches an entry if its Key ID Mode and Key ID equal those of the
+ * entry, and its security level is allowed by the entry (see `otLinkExtSetMacFilterPolicy()`).
+ *
+ * @param[in] aInstance    A pointer to an OpenThread instance.
+ * @param[in] aEntries     A pointer to an array of entries (can be NULL if @p aNumEntries is zero).
+ * @param[in] aNumEntries  The number of entries in @p aEntries.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the table.
+ * @retval OT_ERROR_NO_BUFS       More than `OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES` entries. The table
+ *                                is left unchanged.
+ * @retval OT_ERROR_INVALID_ARGS  An entry is invalid. The table is left unchanged.
+ */
+otError otLinkExtSetMacKeyTable(otInstance *aInstance, const otLinkExtMacKeyTableEntry *aEntries, uint8_t aNumEntries);
+
+/**
+ * Gets the MAC key table of the MAC frame filter.
+ *
+ * Requires `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` (RCP builds only) and a non-zero
+ * `OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES`.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[out] aNumEntries  A pointer to return the number of entries.
+ *
+ * @returns A pointer to the array of entries.
+ */
+const otLinkExtMacKeyTableEntry *otLinkExtGetMacKeyTable(otInstance *aInstance, uint8_t *aNumEntries);
+
 /**
  * @}
  */

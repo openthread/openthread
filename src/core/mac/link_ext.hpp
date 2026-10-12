@@ -187,6 +187,92 @@ public:
     bool DeterminePeriodicRxWindow(const Radio::SyncedTime &aNow, SubMac::TimedRx &aTimedRx);
 #endif
 
+    /**
+     * Sets the MAC frame filter policy.
+     *
+     * See `otLinkExtSetMacFilterPolicy()` for details.
+     *
+     * @param[in] aPolicy  The policy bitmask (`OT_LINK_EXT_MAC_FILTER_POLICY_*` flags).
+     *
+     * @retval kErrorNone            Successfully set the policy.
+     * @retval kErrorInvalidArgs     @p aPolicy contains an unknown flag.
+     * @retval kErrorNotImplemented  @p aPolicy requires the MAC key table, which is disabled.
+     */
+    Error SetMacFilterPolicy(uint8_t aPolicy);
+
+    /**
+     * Gets the MAC frame filter policy.
+     *
+     * @returns The policy bitmask (`OT_LINK_EXT_MAC_FILTER_POLICY_*` flags).
+     */
+    uint8_t GetMacFilterPolicy(void) const { return mMacFilterPolicy; }
+
+#if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
+    static constexpr uint8_t kMaxMacKeyTableEntries = OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES;
+
+    /**
+     * Represents an entry of the MAC key table (see `otLinkExtMacKeyTableEntry`).
+     */
+    class MacKeyTableEntry : public otLinkExtMacKeyTableEntry
+    {
+    public:
+        // Key ID lengths: Mode 0 has no Key ID, Mode 1 has a Key Index, and
+        // Mode 2 has a Key Source followed by a Key Index.
+        static constexpr uint8_t kKeyIndexSize     = sizeof(uint8_t);
+        static constexpr uint8_t kKeyIdLengthMode0 = Frame::kKeySourceSizeMode0;
+        static constexpr uint8_t kKeyIdLengthMode1 = Frame::kKeySourceSizeMode1 + kKeyIndexSize;
+        static constexpr uint8_t kKeyIdLengthMode2 = Frame::kKeySourceSizeMode2 + kKeyIndexSize;
+
+        /**
+         * Indicates whether the entry is valid.
+         *
+         * @retval TRUE   The entry is valid.
+         * @retval FALSE  The entry is invalid.
+         */
+        bool IsValid(void) const;
+
+        /**
+         * Indicates whether a secured frame matches the entry.
+         *
+         * @param[in] aParseInfo  The parse info of the frame.
+         *
+         * @retval TRUE   The frame matches the entry.
+         * @retval FALSE  The frame does not match the entry.
+         */
+        bool Matches(const RxFrame::ParseInfo &aParseInfo) const;
+
+    private:
+        Error GetKeyIdMode(uint8_t &aKeyIdMode) const;
+    };
+
+    /**
+     * Atomically replaces the MAC key table.
+     *
+     * See `otLinkExtSetMacKeyTable()` for details.
+     *
+     * @param[in] aEntries     A pointer to an array of entries (can be `nullptr` if @p aNumEntries is zero).
+     * @param[in] aNumEntries  The number of entries in @p aEntries.
+     *
+     * @retval kErrorNone         Successfully set the table.
+     * @retval kErrorNoBufs       More than `kMaxMacKeyTableEntries` entries. The table is left unchanged.
+     * @retval kErrorInvalidArgs  An entry is invalid. The table is left unchanged.
+     */
+    Error SetMacKeyTable(const otLinkExtMacKeyTableEntry *aEntries, uint8_t aNumEntries);
+
+    /**
+     * Gets the MAC key table.
+     *
+     * @param[out] aNumEntries  A reference to output the number of entries.
+     *
+     * @returns A pointer to the array of entries.
+     */
+    const MacKeyTableEntry *GetMacKeyTable(uint8_t &aNumEntries) const
+    {
+        aNumEntries = mNumMacKeyTableEntries;
+        return mMacKeyTable;
+    }
+#endif
+
 private:
     static constexpr uint32_t kBurstTxAheadUs = OPENTHREAD_CONFIG_LINK_EXT_BURST_TX_AHEAD_US;
 
@@ -194,6 +280,15 @@ private:
     void Reset(void);
     void HandleLinkRawEnableChange(void);
     void HandleTransmitDone(TxFrame &aFrame);
+    bool FilterReceivedFrame(RxFrame *aFrame, Error aError);
+
+    static constexpr uint8_t kMacFilterPolicyAll = OT_LINK_EXT_MAC_FILTER_POLICY_DROP_MALFORMED |
+                                                   OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNSECURED |
+                                                   OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY;
+
+#if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
+    bool IsMacKeyKnown(const RxFrame::ParseInfo &aParseInfo) const;
+#endif
 
     void  CancelBurst(void);
     void  FinishBurst(void);
@@ -300,6 +395,12 @@ private:
     uint8_t            mNumPeriodicRxSchedules;
     PeriodicRxSchedule mPeriodicRxSchedules[kMaxPeriodicRxSchedules];
     SubMac::TimedRx    mPeriodicRxWindow; // The last window provided to `SubMac::ListenScheduler`.
+#endif
+
+    uint8_t mMacFilterPolicy;
+#if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
+    uint8_t          mNumMacKeyTableEntries;
+    MacKeyTableEntry mMacKeyTable[kMaxMacKeyTableEntries];
 #endif
 };
 
