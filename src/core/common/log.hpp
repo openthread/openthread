@@ -43,6 +43,10 @@
 #include "common/as_core_type.hpp"
 #include "common/error.hpp"
 
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#include OPENTHREAD_CONFIG_LOG_OFFLOADING_HEADER_FILE
+#endif
+
 namespace ot {
 
 /**
@@ -87,6 +91,18 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  *
  * @param[in] aName  The log module name string (MUST be shorter than `kMaxLogModuleNameLength`).
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define RegisterLogModule(aName)                                     \
+    constexpr char kLogModuleName[] = aName;                         \
+    namespace {                                                      \
+    /* Defining this type to silence "unused constant" warning/error \
+     * for `kLogModuleName` under any log level config.              \
+     */                                                              \
+    using DummyType = char[sizeof(kLogModuleName)];                  \
+    }                                                                \
+    OT_LOG_PLATFORM_MODULE_REGISTER(kLogModuleName);                 \
+    static_assert(sizeof(kLogModuleName) <= kMaxLogModuleNameLength + 1, "Log module name is too long")
+#else
 #define RegisterLogModule(aName)                                     \
     constexpr char kLogModuleName[] = aName;                         \
     namespace {                                                      \
@@ -96,6 +112,7 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
     using DummyType = char[sizeof(kLogModuleName)];                  \
     }                                                                \
     static_assert(sizeof(kLogModuleName) <= kMaxLogModuleNameLength + 1, "Log module name is too long")
+#endif
 
 #else
 #define RegisterLogModule(aName) static_assert(true, "Consume the required semi-colon at the end of macro")
@@ -107,7 +124,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  *
  * @param[in]  ...   Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogCrit(...) OT_LOG_PLATFORM_CRIT(kLogModuleName, __VA_ARGS__)
+#else
 #define LogCrit(...) Logger::LogAtLevel<kLogLevelCrit>(kLogModuleName, __VA_ARGS__)
+#endif
 
 /**
  * Emits an error log message at critical log level if there is an error.
@@ -118,7 +139,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in] aError       The error to check and log.
  * @param[in] ...          Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogCritOnError(aError, ...) OT_LOG_PLATFORM_CRIT_ON_ERROR(kLogModuleName, aError, __VA_ARGS__)
+#else
 #define LogCritOnError(aError, ...) Logger::LogOnError<kLogLevelCrit>(kLogModuleName, aError, __VA_ARGS__)
+#endif
 #else
 #define LogCrit(...)
 #define LogCritOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
@@ -130,7 +155,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  *
  * @param[in]  ...   Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogWarn(...) OT_LOG_PLATFORM_WARN(kLogModuleName, __VA_ARGS__)
+#else
 #define LogWarn(...) Logger::LogAtLevel<kLogLevelWarn>(kLogModuleName, __VA_ARGS__)
+#endif
 
 /**
  * Emits an error log message at warning log level if there is an error.
@@ -141,8 +170,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in] aError       The error to check and log.
  * @param[in] ...          Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogWarnOnError(aError, ...) OT_LOG_PLATFORM_WARN_ON_ERROR(kLogModuleName, aError, __VA_ARGS__)
+#else
 #define LogWarnOnError(aError, ...) Logger::LogOnError<kLogLevelWarn>(kLogModuleName, aError, __VA_ARGS__)
-
+#endif
 #else
 #define LogWarn(...)
 #define LogWarnOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
@@ -154,7 +186,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  *
  * @param[in]  ...   Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogNote(...) OT_LOG_PLATFORM_NOTE(kLogModuleName, __VA_ARGS__)
+#else
 #define LogNote(...) Logger::LogAtLevel<kLogLevelNote>(kLogModuleName, __VA_ARGS__)
+#endif
 
 /**
  * Emits an error log message at note log level if there is an error.
@@ -165,8 +201,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in] aError       The error to check and log.
  * @param[in] ...          Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogNoteOnError(aError, ...) OT_LOG_PLATFORM_NOTE_ON_ERROR(kLogModuleName, aError, __VA_ARGS__)
+#else
 #define LogNoteOnError(aError, ...) Logger::LogOnError<kLogLevelNote>(kLogModuleName, aError, __VA_ARGS__)
-
+#endif
 #else
 #define LogNote(...)
 #define LogNoteOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
@@ -178,7 +217,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  *
  * @param[in]  ...   Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogInfo(...) OT_LOG_PLATFORM_INFO(kLogModuleName, __VA_ARGS__)
+#else
 #define LogInfo(...) Logger::LogAtLevel<kLogLevelInfo>(kLogModuleName, __VA_ARGS__)
+#endif
 
 /**
  * Emits an error log message at info log level if there is an error.
@@ -189,8 +232,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in] aError       The error to check and log.
  * @param[in] ...          Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogInfoOnError(aError, ...) OT_LOG_PLATFORM_INFO_ON_ERROR(kLogModuleName, aError, __VA_ARGS__)
+#else
 #define LogInfoOnError(aError, ...) Logger::LogOnError<kLogLevelInfo>(kLogModuleName, aError, __VA_ARGS__)
-
+#endif
 #else
 #define LogInfo(...)
 #define LogInfoOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
@@ -202,7 +248,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  *
  * @param[in]  ...   Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogDebg(...) OT_LOG_PLATFORM_DEBG(kLogModuleName, __VA_ARGS__)
+#else
 #define LogDebg(...) Logger::LogAtLevel<kLogLevelDebg>(kLogModuleName, __VA_ARGS__)
+#endif
 
 /**
  * Emits an error log message at debug log level if there is an error.
@@ -213,8 +263,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in] aError       The error to check and log.
  * @param[in] ...          Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogDebgOnError(aError, ...) OT_LOG_PLATFORM_DEBG_ON_ERROR(kLogModuleName, aError, __VA_ARGS__)
+#else
 #define LogDebgOnError(aError, ...) Logger::LogOnError<kLogLevelDebg>(kLogModuleName, aError, __VA_ARGS__)
-
+#endif
 #else
 #define LogDebg(...)
 #define LogDebgOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
@@ -227,7 +280,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in] aLogLevel  The log level to use.
  * @param[in] ...        Argument for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define LogAt(aLogLevel, ...) OT_LOG_PLATFORM_LOG_AT(kLogModuleName, aLogLevel, __VA_ARGS__)
+#else
 #define LogAt(aLogLevel, ...) Logger::LogInModule(kLogModuleName, aLogLevel, __VA_ARGS__)
+#endif
 #else
 #define LogAt(aLogLevel, ...)
 #endif
@@ -262,7 +319,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define DumpCrit(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_CRIT(kLogModuleName, aText, aData, aDataLength)
+#else
 #define DumpCrit(aText, aData, aDataLength) Logger::Dump<kLogLevelCrit, kLogModuleName>(aText, aData, aDataLength)
+#endif
 #else
 #define DumpCrit(aText, aData, aDataLength)
 #endif
@@ -275,7 +336,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define DumpWarn(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_WARN(kLogModuleName, aText, aData, aDataLength)
+#else
 #define DumpWarn(aText, aData, aDataLength) Logger::Dump<kLogLevelWarn, kLogModuleName>(aText, aData, aDataLength)
+#endif
 #else
 #define DumpWarn(aText, aData, aDataLength)
 #endif
@@ -288,7 +353,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define DumpNote(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_NOTE(kLogModuleName, aText, aData, aDataLength)
+#else
 #define DumpNote(aText, aData, aDataLength) Logger::Dump<kLogLevelNote, kLogModuleName>(aText, aData, aDataLength)
+#endif
 #else
 #define DumpNote(aText, aData, aDataLength)
 #endif
@@ -301,7 +370,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define DumpInfo(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_INFO(kLogModuleName, aText, aData, aDataLength)
+#else
 #define DumpInfo(aText, aData, aDataLength) Logger::Dump<kLogLevelInfo, kLogModuleName>(aText, aData, aDataLength)
+#endif
 #else
 #define DumpInfo(aText, aData, aDataLength)
 #endif
@@ -314,7 +387,11 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define DumpDebg(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_DEBG(kLogModuleName, aText, aData, aDataLength)
+#else
 #define DumpDebg(aText, aData, aDataLength) Logger::Dump<kLogLevelDebg, kLogModuleName>(aText, aData, aDataLength)
+#endif
 #else
 #define DumpDebg(aText, aData, aDataLength)
 #endif
@@ -358,6 +435,10 @@ public:
     static void LogInModule(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, ...)
         OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
+    // `LogAtLevel()` and `LogOnError()` back the `Log{Crit,Warn,Note,Info,Debg}()`/`Log{Level}OnError()` macros only
+    // when `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is not set. When it is set, those macros expand directly to
+    // platform-provided macros instead and never call these methods, so they are excluded to avoid dead code.
+#if !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
     template <LogLevel kLogLevel>
     static void LogAtLevel(const char *aModuleName, const char *aFormat, ...)
         OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
@@ -365,6 +446,7 @@ public:
     template <LogLevel kLogLevel>
     static void LogOnError(const char *aModuleName, Error aError, const char *aFormat, ...)
         OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
+#endif
 
     static void LogVarArgs(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, va_list aArgs)
         OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 0);
@@ -373,11 +455,15 @@ public:
     static constexpr uint8_t kStringLineLength = 80;
     static constexpr uint8_t kDumpBytesPerLine = 16;
 
+    // `Dump()` and `DumpAtLevel()` back the `Dump{Crit,Warn,Note,Info,Debg}()` macros only when
+    // `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is not set (see the note on `LogAtLevel()` above).
+#if !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
     template <LogLevel kLogLevel, const char *kModuleName>
     static void Dump(const char *aText, const void *aData, uint16_t aDataLength)
     {
         DumpAtLevel<kLogLevel>(kModuleName, aText, aData, aDataLength);
     }
+#endif
 
     static void DumpInModule(const char *aModuleName,
                              LogLevel    aLogLevel,
@@ -385,8 +471,10 @@ public:
                              const void *aData,
                              uint16_t    aDataLength);
 
+#if !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
     template <LogLevel kLogLevel>
     static void DumpAtLevel(const char *aModuleName, const char *aText, const void *aData, uint16_t aDataLength);
+#endif
 #endif
 
 private:
@@ -394,6 +482,7 @@ private:
         OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(4, 0);
 };
 
+#if !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
 extern template void Logger::LogAtLevel<kLogLevelNone>(const char *aModuleName, const char *aFormat, ...);
 extern template void Logger::LogAtLevel<kLogLevelCrit>(const char *aModuleName, const char *aFormat, ...);
 extern template void Logger::LogAtLevel<kLogLevelWarn>(const char *aModuleName, const char *aFormat, ...);
@@ -407,8 +496,9 @@ extern template void Logger::LogOnError<kLogLevelWarn>(const char *aModuleName, 
 extern template void Logger::LogOnError<kLogLevelNote>(const char *aModuleName, Error aError, const char *aFormat, ...);
 extern template void Logger::LogOnError<kLogLevelInfo>(const char *aModuleName, Error aError, const char *aFormat, ...);
 extern template void Logger::LogOnError<kLogLevelDebg>(const char *aModuleName, Error aError, const char *aFormat, ...);
+#endif // !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
 
-#if OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OPENTHREAD_CONFIG_LOG_PKT_DUMP && !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
 extern template void Logger::DumpAtLevel<kLogLevelNone>(const char *aModuleName,
                                                         const char *aText,
                                                         const void *aData,
@@ -433,7 +523,7 @@ extern template void Logger::DumpAtLevel<kLogLevelDebg>(const char *aModuleName,
                                                         const char *aText,
                                                         const void *aData,
                                                         uint16_t    aDataLength);
-#endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP && !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
 #endif // OT_SHOULD_LOG
 
 typedef otLogHexDumpInfo HexDumpInfo; ///< Represents the hex dump info.

@@ -198,6 +198,54 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+ *
+ * Define to 1 to have the `LogCrit()`/`LogWarn()`/`LogNote()`/`LogInfo()`/`LogDebg()`/`LogAt()` logging macros
+ * (and the `Log{Level}OnError()` family) expand directly to platform-provided logging macros, instead of going
+ * through `Logger::LogAtLevel()` / `Logger::LogInModule()` / `Logger::LogOnError()`.
+ *
+ * This allows the platform to package a log message (format string and arguments, including the module name)
+ * directly at the original call site, e.g. to avoid an extra text-rendering step and to let read-only/rodata
+ * string arguments be handled as pointers instead of being copied.
+ *
+ * This also applies to the `DumpCrit()`/`DumpWarn()`/`DumpNote()`/`DumpInfo()`/`DumpDebg()` macros, which are
+ * likewise expanded to platform-provided macros instead of going through `Logger::Dump()`.
+ *
+ * `RegisterLogModule()` is also affected: in addition to defining `kLogModuleName`, it invokes
+ * `OT_LOG_PLATFORM_MODULE_REGISTER(aName)`, so the platform can register its own equivalent of a "log
+ * module" for the calling file (e.g. to get native, per-module log filtering).
+ *
+ * The public `otLog{Level}Plat()` / `otDump{Level}Plat()` API (declared in `<openthread/logging.h>` and used by
+ * platform code, e.g. `otLogCritPlat()`, to route its own logs through OpenThread's formatting) is likewise
+ * affected: it expands to the same `OT_LOG_PLATFORM_{LEVEL}()` / `OT_LOG_PLATFORM_DUMP_{LEVEL}()` macros, using
+ * `"Platform"` as the module name, instead of calling into `Logger`. `otLogPlat()`/`otLogPlatArgs()`/`otLogCli()`
+ * are NOT affected and always go through `Logger`, since they carry a runtime module name/log level that isn't a
+ * fixed part of the macro name.
+ *
+ * When enabled, the platform MUST provide the header file named by
+ * `OPENTHREAD_CONFIG_LOG_OFFLOADING_HEADER_FILE` (including quotes or angle brackets, since no default is
+ * provided by OpenThread core), defining the following macros for each log level (`CRIT`, `WARN`, `NOTE`,
+ * `INFO`, `DEBG`):
+ *
+ *   - `OT_LOG_PLATFORM_MODULE_REGISTER(aName)`
+ *   - `OT_LOG_PLATFORM_{LEVEL}(aModuleName, aFormat, ...)`
+ *   - `OT_LOG_PLATFORM_{LEVEL}_ON_ERROR(aModuleName, aError, aFormat, ...)`
+ *   - `OT_LOG_PLATFORM_LOG_AT(aModuleName, aLogLevel, aFormat, ...)`
+ *   - `OT_LOG_PLATFORM_DUMP_{LEVEL}(aModuleName, aText, aData, aDataLength)`
+ *
+ * `LogAt()` uses `OT_LOG_PLATFORM_LOG_AT()`, which is passed the (only known at run time) `ot::LogLevel`
+ * value as an argument rather than having a level baked into its name, since the platform then has to
+ * dispatch to the right underlying macro itself (e.g. via a runtime `switch`).
+ *
+ * @note `LogAlways()`, `LogCert()`, and `DumpAlways()`/`DumpCert()` are unaffected and continue to go
+ * through `Logger`, since they are not tied to any of the levels above (they always log, regardless of
+ * the configured log level).
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
  *
  * Define to 1 to enable the log level override feature and its associated APIs.
@@ -209,6 +257,26 @@
  */
 #ifndef OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
 #define OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE 0
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE && !OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+#error "OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE is required for OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE"
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_INIT > OPENTHREAD_CONFIG_LOG_LEVEL
+#error "OPENTHREAD_CONFIG_LOG_LEVEL_INIT must not be more verbose than OPENTHREAD_CONFIG_LOG_LEVEL"
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE && !defined(OPENTHREAD_CONFIG_LOG_OFFLOADING_HEADER_FILE)
+#error \
+    "OPENTHREAD_CONFIG_LOG_OFFLOADING_HEADER_FILE must be defined when OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE is set"
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE && OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+#error "OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE has no effect on the `Log{Level}()`/`LogAt()`/`Dump{Level}()` " \
+       "macros (i.e. on the vast majority of OpenThread's internal log statements) when " \
+       "OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE is set, since those macros then bypass `Logger` (and its runtime " \
+       "log-level check) entirely and expand directly to platform-provided macros. Disable one of the two options."
 #endif
 
 /**
