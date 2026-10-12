@@ -30,3 +30,7 @@ name: openthread
 build:
   cmake-ext: True
   kconfig-ext: True
+security:
+  external-references:
+    - cpe:2.3:o:google:openthread:2023-07-06:*:*:*:*:*:*:*
+    - pkg:github/openthread/openthread@thread-reference-20230706
