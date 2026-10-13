@@ -316,6 +316,23 @@ public:
     void ResetRadioStack(void);
 #endif
 
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    /**
+     * Returns the active log level.
+     *
+     * @returns The log level.
+     */
+    static LogLevel GetLogLevel(void)
+    {
+#if !OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+        return static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
+#else
+        return sLogLevel;
+#endif
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /**
      * Returns the active log level.
      *
@@ -325,14 +342,13 @@ public:
     {
 #if !OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
         return static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
-#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-        return mLogLevel;
+#elif OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+        return (mIsLogLevelSet || mIsLogLevelOverridden) ? mLogLevel : sGlobalLogLevel;
 #else
-        return (mIsLogLevelSet) ? mLogLevel : sGlobalLogLevel;
+        return mIsLogLevelSet ? mLogLevel : sGlobalLogLevel;
 #endif
     }
 
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /**
      * Returns the global log level.
      *
@@ -346,7 +362,18 @@ public:
         return sGlobalLogLevel;
 #endif
     }
-#endif
+
+#endif // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+
+    /**
+     * Indicates whether or not the instance should log at a given log level.
+     *
+     * @param[in] aLogLevel  The log level to check.
+     *
+     * @retval TRUE   The active log level is greater than or equal to @p aLogLevel.
+     * @retval FALSE  The active log level is less than @p aLogLevel.
+     */
+    bool ShouldLogAt(LogLevel aLogLevel) const { return GetLogLevel() >= aLogLevel; }
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     /**
@@ -553,14 +580,20 @@ private:
     void AfterInit(void);
 #endif
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    void SignalLogLevelChange(void);
+    void UpdateLogLevel(LogLevel aLogLevel, bool aOverride);
 #endif
 
     //-----------------------------------------------------------------------------------------------------------------
     // `static` variables
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     static LogLevel sGlobalLogLevel;
+#else
+    static LogLevel sLogLevel;
+#endif
+
 #endif
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
@@ -897,14 +930,14 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     LogLevel mLogLevel;
+    bool     mIsLogLevelSet;
+#endif
 #if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
     LogLevel mOriginalLogLevel;
     LogLevel mOverrideLogLevel;
     bool     mIsLogLevelOverridden;
-#endif
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    bool mIsLogLevelSet;
 #endif
 #endif
 
