@@ -136,8 +136,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
 
         if (aError != kErrorNone)
         {
-            LogMessage(kMessageDrop, message, kErrorAddressQuery);
-            FinalizeDirectTxAndRemoveMessageIfNoPendingTx(message, kErrorAddressQuery);
+            FinalizeDirectTxAndRemoveMessageIfNoPendingTx(message, kErrorAddressQuery, kMessageDrop);
             continue;
         }
 
@@ -218,7 +217,7 @@ void MeshForwarder::RemoveMessagesForChild(Child &aChild, Message::Checker aChec
 
             if (matches)
             {
-                FinalizeDirectTxAndRemoveMessageIfNoPendingTx(message, kErrorDrop);
+                FinalizeDirectTxAndRemoveMessageIfNoPendingTx(message, kErrorDrop, kMessageDrop);
             }
         }
     }
