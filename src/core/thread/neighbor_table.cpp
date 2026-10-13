@@ -262,29 +262,25 @@ exit:
 
 Error NeighborTable::GetNeighborInfo(uint16_t aRloc16, Neighbor::Info &aNeighInfo)
 {
-    Error     error    = kErrorNone;
-    Neighbor *neighbor = nullptr;
+    Error     error = kErrorNone;
+    Neighbor *neighbor;
 
 #if OPENTHREAD_FTD
-    // Router RLOC16s map directly to a router table entry, so avoid the
-    // linear child/router scan performed by `FindNeighbor()`.
+    // On a router or leader, a router RLOC16 can only match an
+    // entry in the router table, which is indexed by Router ID.
     if (Get<Mle::Mle>().IsRouterOrLeader() && Mle::IsRouterRloc16(aRloc16))
     {
         Router *router = Get<RouterTable>().FindRouterByRloc16(aRloc16);
 
-        if ((router != nullptr) && router->IsStateValid())
-        {
-            neighbor = router;
-        }
+        VerifyOrExit((router != nullptr) && router->IsStateValid(), error = kErrorNotFound);
+        neighbor = router;
     }
+    else
 #endif
-
-    if (neighbor == nullptr)
     {
         neighbor = FindNeighbor(aRloc16, Neighbor::kInStateValid);
+        VerifyOrExit(neighbor != nullptr, error = kErrorNotFound);
     }
-
-    VerifyOrExit(neighbor != nullptr, error = kErrorNotFound);
 
     aNeighInfo.SetFrom(*neighbor);
     aNeighInfo.mIsChild = Mle::IsChildRloc16(aRloc16);
