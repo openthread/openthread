@@ -65,8 +65,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mSupervisionInterval = aChild.GetSupervisionInterval();
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();
-#else
-    mIsCslSynced = false;
+    mCslPeriod   = aChild.GetCslPeriod();
 #endif
     mConnectionTime = aChild.GetConnectionTime();
 }
