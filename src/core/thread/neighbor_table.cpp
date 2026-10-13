@@ -260,6 +260,39 @@ exit:
 
 #endif
 
+Error NeighborTable::GetNeighborInfo(uint16_t aRloc16, Neighbor::Info &aNeighInfo)
+{
+    Error     error    = kErrorNone;
+    Neighbor *neighbor = nullptr;
+
+#if OPENTHREAD_FTD
+    // Router RLOC16s map directly to a router table entry, so avoid the
+    // linear child/router scan performed by `FindNeighbor()`.
+    if (Get<Mle::Mle>().IsRouterOrLeader() && Mle::IsRouterRloc16(aRloc16))
+    {
+        Router *router = Get<RouterTable>().FindRouterByRloc16(aRloc16);
+
+        if ((router != nullptr) && router->IsStateValid())
+        {
+            neighbor = router;
+        }
+    }
+#endif
+
+    if (neighbor == nullptr)
+    {
+        neighbor = FindNeighbor(aRloc16, Neighbor::kInStateValid);
+    }
+
+    VerifyOrExit(neighbor != nullptr, error = kErrorNotFound);
+
+    aNeighInfo.SetFrom(*neighbor);
+    aNeighInfo.mIsChild = Mle::IsChildRloc16(aRloc16);
+
+exit:
+    return error;
+}
+
 void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 {
 #if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE

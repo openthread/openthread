@@ -272,6 +272,11 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
     return AsCoreType(aInstance).Get<NeighborTable>().GetNextNeighborInfo(*aIterator, AsCoreType(aInfo));
 }
 
+otError otThreadGetNeighborInfoByRloc16(otInstance *aInstance, uint16_t aRloc16, otNeighborInfo *aInfo)
+{
+    return AsCoreType(aInstance).Get<NeighborTable>().GetNeighborInfo(aRloc16, AsCoreType(aInfo));
+}
+
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
 {
     return MapEnum(AsCoreType(aInstance).Get<Mle::Mle>().GetRole());

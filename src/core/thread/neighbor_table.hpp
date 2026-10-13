@@ -211,6 +211,17 @@ public:
     Error GetNextNeighborInfo(Iterator &aIterator, Neighbor::Info &aNeighInfo);
 
     /**
+     * Gets the neighbor information for a valid neighbor with a given RLOC16.
+     *
+     * @param[in]  aRloc16     The RLOC16 of the neighbor.
+     * @param[out] aNeighInfo  The neighbor information.
+     *
+     * @retval kErrorNone         Successfully found the neighbor and retrieved its information.
+     * @retval kErrorNotFound     No valid neighbor with @p aRloc16 exists in the table.
+     */
+    Error GetNeighborInfo(uint16_t aRloc16, Neighbor::Info &aNeighInfo);
+
+    /**
      * Registers the "neighbor table changed" callback function.
      *
      * The provided callback (if non-`nullptr`) will be invoked when a child/router entry is being added/remove to/from
