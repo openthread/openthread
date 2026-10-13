@@ -2146,6 +2146,9 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     child->ClearLastRxFragmentTag();
 #endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    child->ClearCsl();
+#endif
 
     child->SetNetworkDataVersion(mLeaderData.GetDataVersion(mode.GetNetworkDataType()));
 
@@ -2377,8 +2380,7 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         if (child->IsRxOnWhenIdle())
         {
-            // Clear CSL synchronization state
-            child->SetCslSynchronized(false);
+            child->ClearCsl();
         }
 #endif
 
