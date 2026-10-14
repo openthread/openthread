@@ -565,6 +565,8 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mTxDelay              = 0;
     aFrame.mInfo.mTxInfo.mTxDelayBaseTime      = 0;
     aFrame.mInfo.mTxInfo.mTxPower              = OT_RADIO_POWER_INVALID;
+    aFrame.mInfo.mTxInfo.mPsduUpdater          = nullptr;
+    aFrame.mInfo.mTxInfo.mPsduUpdaterContext   = nullptr;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to

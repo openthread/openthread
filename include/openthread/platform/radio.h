@@ -138,6 +138,7 @@ enum
     OT_RADIO_CAPS_TRANSMIT_FRAME_POWER = 1 << 9,  ///< Radio supports setting per-frame transmit power.
     OT_RADIO_CAPS_ALT_SHORT_ADDR       = 1 << 10, ///< Radio supports setting alternate short address.
     OT_RADIO_CAPS_SCHEDULED_TX         = 1 << 11, ///< Radio supports scheduling frame TX (`otPlatRadioScheduleTx()`).
+    OT_RADIO_CAPS_TX_PSDU_UPDATER      = 1 << 12, ///< Radio supports TX PSDU updater callback (`otRadioPsduUpdater`).
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -261,6 +262,69 @@ typedef struct otRadioIeInfo
     uint8_t mTimeIeOffset;      ///< The Time IE offset from the start of PSDU (`0` indicates no Time IE).
     uint8_t mTimeSyncSeq;       ///< The Time sync sequence.
 } otRadioIeInfo;
+
+/**
+ * Callback function pointer invoked by the radio platform right before frame transmission so OpenThread can dynamically
+ * update the PSDU (aPsdu) using the exact transmission timestamp (@p aTxTimestamp).
+ *
+ * This callback is used when the radio platform supports the `OT_RADIO_CAPS_TX_PSDU_UPDATER` capability. A radio
+ * platform supporting this capability is generally expected to also support TX security processing
+ * (`OT_RADIO_CAPS_TRANSMIT_SEC`).
+ *
+ * It is used to update time-sensitive fields in a frame right before transmission (such as the time offset to a slot
+ * boundary, rendezvous time in Thread Direct and/or CSL phase). Delegating this update to a callback implemented
+ * by the OpenThread stack keeps the radio platform driver generic and removes the need for the radio driver to parse
+ * or construct protocol-specific header/IE or payload fields.
+ *
+ * @note Unlike other OpenThread APIs and platform callbacks, which MUST be invoked from the same OS context executing
+ *       the OpenThread stack (see note in `ot_api_doc.h`), this callback is an explicit exception and MAY be invoked
+ *       from any OS context, including directly from a radio Interrupt Service Routine (ISR) or another high-priority
+ *       task. The callback implementation provided by the OpenThread stack is self-contained and only accesses
+ *       @p aPsdu and the data pointed to by @p aContext (without accessing general OpenThread stack state). The radio
+ *       platform MAY invoke this callback only while it owns the `otRadioFrame` buffer (i.e., before
+ *       `otPlatRadioTxDone()` / `otPlatRadioScheduledTxDone()` is invoked, or before a successful
+ *       `otPlatRadioCancelScheduledTx()` (returning `OT_ERROR_NONE`) or `otPlatRadioDisable()` returns).
+ *
+ * Operational flow and requirements:
+ * - A frame transmission is requested via `otPlatRadioTransmit()` or scheduled via `otPlatRadioScheduleTx()` with a
+ *   non-NULL `mPsduUpdater` function pointer (and an associated `mPsduUpdaterContext`) in `mInfo.mTxInfo` of the
+ *   `otRadioFrame`.
+ * - Right before the frame is transmitted over the air, when the exact transmission timestamp @p aTxTimestamp is
+ *   known, the radio platform MUST invoke the `mPsduUpdater` callback, passing the frame's `mPsdu` buffer as
+ *   @p aPsdu, the transmission timestamp as @p aTxTimestamp, and the frame's `mPsduUpdaterContext` as @p aContext.
+ * - @p aTxTimestamp MUST specify the local radio clock time in microseconds (see `otPlatRadioGetNow()`) when the end
+ *   of the Start of Frame Delimiter (SFD) will be present at the local antenna (matching the definition of
+ *   `mTimestamp` in `otRadioFrame`).
+ * - This callback MUST be invoked before the radio platform performs TX security processing (AES-CCM encryption
+ *   and authentication) on the frame.
+ * - If a frame is transmitted multiple times by the radio platform (e.g., CSMA-CA retries when
+ *   `OT_RADIO_CAPS_TRANSMIT_RETRIES` is supported), the radio platform MUST invoke this callback before each transmit
+ *   attempt with that attempt's @p aTxTimestamp prior to encrypting the frame for that attempt.
+ * - Within this callback, the OpenThread stack may update the contents of @p aPsdu in place. This callback will not
+ *   modify any fields in the MAC header addressing or security sections (i.e., Frame Control, Sequence Number,
+ *   Addressing fields, or Auxiliary Security Header), and may only update subsequent bytes, such as Header IEs or the
+ *   MAC payload. Note that the callback intentionally receives only the @p aPsdu buffer pointer rather than
+ *   `otRadioFrame *`, as its sole purpose is to update the PSDU bytes in place while the frame's length (`mLength`)
+ *   and other metadata (`mTxInfo`) in `otRadioFrame` remain unchanged.
+ * - If this callback returns `OT_ERROR_NONE`, the radio platform MUST proceed with TX security processing (according
+ *   to `mIsSecurityProcessed` and `mIsHeaderUpdated` flags) and transmit the updated frame over the air.
+ * - If this callback returns any error other than `OT_ERROR_NONE`, the radio platform MUST abort the transmission
+ *   immediately (MUST NOT send the frame over the air, MUST NOT invoke `otPlatRadioTxStarted()` for that attempt, and
+ *   MUST skip any remaining transmit retries) and report the failure by invoking the corresponding completion callback
+ *   (`otPlatRadioTxDone()` or `otPlatRadioScheduledTxDone()`) with `OT_ERROR_ABORT` from the OpenThread stack
+ *   execution context (not directly from an ISR).
+ *
+ * @param[in,out] aPsdu         A pointer to the frame's PSDU buffer (`mPsdu` in `otRadioFrame`) to be updated in place.
+ * @param[in]     aTxTimestamp  The local radio clock time in microseconds when the end of the SFD will be present at
+ *                              the local antenna.
+ * @param[in]     aContext      The opaque context pointer from `mPsduUpdaterContext` in `otRadioFrame`.
+ *
+ * @retval OT_ERROR_NONE  Successfully updated @p aPsdu. The radio platform should proceed with security processing and
+ *                        transmission.
+ * @retval ...            Any other error status indicates that the radio platform MUST abort the transmission and
+ *                        report `OT_ERROR_ABORT` via `otPlatRadioTxDone()` or `otPlatRadioScheduledTxDone()`.
+ */
+typedef otError (*otRadioPsduUpdater)(uint8_t *aPsdu, otRadioTime64 aTxTimestamp, void *aContext);
 
 /**
  * Represents an IEEE 802.15.4 radio frame.
@@ -438,6 +502,27 @@ typedef struct otRadioFrame
              * or before `otPlatRadioScheduledTxDone()` is invoked for a scheduled transmission.
              */
             otRadioTime64 mTimestamp;
+
+            /**
+             * Optional callback function pointer invoked by the radio platform right before frame transmission so
+             * OpenThread can dynamically update the PSDU (aPsdu) using the exact transmission timestamp
+             * (`aTxTimestamp`).
+             *
+             * This field is only applicable when the radio platform supports the `OT_RADIO_CAPS_TX_PSDU_UPDATER`
+             * capability. Otherwise it can be ignored by the radio platform.
+             *
+             * Set to `NULL` when no pre-transmission PSDU update is needed. When non-NULL, the radio platform MUST
+             * invoke this callback (passing the frame's `mPsdu`, the transmission timestamp, and
+             * `mPsduUpdaterContext`) right before transmitting the frame and prior to performing TX security
+             * processing. See `otRadioPsduUpdater` for full details and requirements.
+             */
+            otRadioPsduUpdater mPsduUpdater;
+
+            /**
+             * Arbitrary context pointer passed to `mPsduUpdater` when invoked by the radio platform.
+             */
+            void *mPsduUpdaterContext;
+
         } mTxInfo;
 
         /**
@@ -1340,10 +1425,12 @@ otRadioFrame *otPlatRadioGetScheduledTxFrame(otInstance *aInstance);
  *     canceled or completed via `otPlatRadioScheduledTxDone()`.
  *   - Upon a successful `otPlatRadioScheduleTx()` call, the radio platform takes ownership of the frame buffer from
  *     `otPlatRadioGetScheduledTxFrame()`. The OpenThread stack guarantees that it will not touch or modify the frame
- *     buffer or its contents while owned by the radio platform.
+ *     buffer or its contents while owned by the radio platform (except via the `mPsduUpdater` callback when invoked
+ *     by the radio platform).
  *   - Invoking the `otPlatRadioScheduledTxDone()` callback, a successful `otPlatRadioCancelScheduledTx()` call
  *     (returning `OT_ERROR_NONE`), or `otPlatRadioDisable()` releases ownership of the frame buffer back to the
- *     OpenThread stack, allowing the stack to modify the frame again.
+ *     OpenThread stack, allowing the stack to modify the frame again (after which the radio platform MUST NOT access
+ *     the frame buffer or invoke `mPsduUpdater`).
  *
  * - Handling of `otRadioFrame` (`mTxInfo`) fields:
  *   - `mTxDelayBaseTime` and `mTxDelay`: MUST be ignored. The target transmission time is specified solely by the
@@ -1371,8 +1458,8 @@ otRadioFrame *otPlatRadioGetScheduledTxFrame(otInstance *aInstance);
  *     are used in order on the air if other transmissions or enhanced acknowledgments occur before @p aTxTime and that
  *     no frame counter is wasted if the scheduled transmission is canceled or aborted before the frame is prepared at
  *     @p aTxTime.
- *   - All other fields (`mChannel`, `mAesKey`, `mIeInfo`, `mTxPower`) MUST follow their existing behavior as defined
- *     for `otPlatRadioTransmit()`.
+ *   - All other fields (`mChannel`, `mAesKey`, `mIeInfo`, `mTxPower`, `mPsduUpdater`, `mPsduUpdaterContext`) MUST
+ *     follow their existing behavior as defined for `otPlatRadioTransmit()`.
  *
  * - Completion and Callbacks:
  *   - The radio platform MUST report the outcome of the scheduled transmission using the `otPlatRadioScheduledTxDone()`

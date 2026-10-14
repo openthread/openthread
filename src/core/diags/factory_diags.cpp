@@ -243,6 +243,8 @@ void Diags::ResetTxPacket(void)
     mTxPacket->mInfo.mTxInfo.mIsARetx              = false;
     mTxPacket->mInfo.mTxInfo.mCsmaCaEnabled        = false;
     mTxPacket->mInfo.mTxInfo.mCslPresent           = false;
+    mTxPacket->mInfo.mTxInfo.mPsduUpdater          = nullptr;
+    mTxPacket->mInfo.mTxInfo.mPsduUpdaterContext   = nullptr;
 }
 
 Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
