@@ -138,6 +138,7 @@ enum Capability : uint16_t
     kCapRxOnWhenIdle       = OT_RADIO_CAPS_RX_ON_WHEN_IDLE,      ///< Supports RxOnWhenIdle handling.
     kCapTransmitFramePower = OT_RADIO_CAPS_TRANSMIT_FRAME_POWER, ///< Supports setting per-frame transmit power.
     kCapAltShortAddr       = OT_RADIO_CAPS_ALT_SHORT_ADDR,       ///< Supports setting alternate short address.
+    kCapCslDynamicAccuracy = OT_RADIO_CAPS_CSL_DYNAMIC_ACCURACY, ///< CSL accuracy/uncertainty may change over time.
 };
 
 /**
@@ -355,6 +356,11 @@ public:
     explicit Radio(Instance &aInstance)
         : InstanceLocator(aInstance)
         , mCallbacks(aInstance)
+#if OT_CONFIG_RADIO_TIME_ENABLE
+        , mCachedCslAccuracy(0)
+        , mCachedCslUncertainty(0)
+        , mCslClockParametersCached(false)
+#endif
     {
     }
 
@@ -640,6 +646,20 @@ public:
      * @returns The CSL Uncertainty in units of 10 microseconds (`kUncertaintyUnit`).
      */
     uint8_t GetCslUncertainty(void);
+
+    /**
+     * Updates the cached CSL clock accuracy and uncertainty from the radio platform.
+     *
+     * When the radio does not provide the `kCapCslDynamicAccuracy` capability, this method reads
+     * the values from the platform at most once. When the capability is provided, this method
+     * always reads the latest values from the platform.
+     */
+    void UpdateCslClockParameters(void);
+
+    /**
+     * Clears cached CSL clock accuracy and uncertainty.
+     */
+    void InvalidateCslClockParameters(void);
 #endif // OT_CONFIG_RADIO_TIME_ENABLE
 
     /**
@@ -874,6 +894,11 @@ private:
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
     Statistics mStatistics;
 #endif
+#if OT_CONFIG_RADIO_TIME_ENABLE
+    uint8_t mCachedCslAccuracy;
+    uint8_t mCachedCslUncertainty;
+    bool    mCslClockParametersCached;
+#endif
 };
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -957,6 +982,9 @@ inline Error Radio::Disable(void)
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
     mStatistics.RecordStateChange(Statistics::kDisabled);
 #endif
+#if OT_CONFIG_RADIO_TIME_ENABLE
+    InvalidateCslClockParameters();
+#endif
     return otPlatRadioDisable(GetInstancePtr());
 }
 
@@ -1006,10 +1034,6 @@ inline Error Radio::ResetCsl(void) { return otPlatRadioResetCsl(GetInstancePtr()
 
 #if OT_CONFIG_RADIO_TIME_ENABLE
 inline Time64 Radio::GetNow(void) { return otPlatRadioGetNow(GetInstancePtr()); }
-
-inline uint8_t Radio::GetCslAccuracy(void) { return otPlatRadioGetCslAccuracy(GetInstancePtr()); }
-
-inline uint8_t Radio::GetCslUncertainty(void) { return otPlatRadioGetCslUncertainty(GetInstancePtr()); }
 #endif
 
 inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
@@ -1106,6 +1130,10 @@ inline Time64 Radio::GetNow(void) { return NumericLimits<uint64_t>::kMax; }
 inline uint8_t Radio::GetCslAccuracy(void) { return NumericLimits<uint8_t>::kMax; }
 
 inline uint8_t Radio::GetCslUncertainty(void) { return NumericLimits<uint8_t>::kMax; }
+
+inline void Radio::UpdateCslClockParameters(void) {}
+
+inline void Radio::InvalidateCslClockParameters(void) {}
 #endif
 
 inline Mac::TxFrame &Radio::GetTransmitBuffer(void)

@@ -158,6 +158,44 @@ Error Radio::Transmit(Mac::TxFrame &aFrame)
     return otPlatRadioTransmit(GetInstancePtr(), &aFrame);
 }
 
+#if OT_CONFIG_RADIO_TIME_ENABLE
+
+void Radio::UpdateCslClockParameters(void)
+{
+    if (mCslClockParametersCached && ((GetCaps() & kCapCslDynamicAccuracy) == 0))
+    {
+        return;
+    }
+
+    mCachedCslAccuracy        = otPlatRadioGetCslAccuracy(GetInstancePtr());
+    mCachedCslUncertainty     = otPlatRadioGetCslUncertainty(GetInstancePtr());
+    mCslClockParametersCached = true;
+}
+
+void Radio::InvalidateCslClockParameters(void) { mCslClockParametersCached = false; }
+
+uint8_t Radio::GetCslAccuracy(void)
+{
+    if (!mCslClockParametersCached)
+    {
+        UpdateCslClockParameters();
+    }
+
+    return mCachedCslAccuracy;
+}
+
+uint8_t Radio::GetCslUncertainty(void)
+{
+    if (!mCslClockParametersCached)
+    {
+        UpdateCslClockParameters();
+    }
+
+    return mCachedCslUncertainty;
+}
+
+#endif // OT_CONFIG_RADIO_TIME_ENABLE
+
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 uint32_t Radio::CalculateBusTransferTime(uint16_t aFrameSize) const
