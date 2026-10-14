@@ -131,6 +131,7 @@
  * @defgroup api-seeker                  Seeker
  * @defgroup api-server                  Server
  * @defgroup api-steering-data           Steering Data
+ * @defgroup api-thread-direct           Thread Direct
  *
  * @}
  *

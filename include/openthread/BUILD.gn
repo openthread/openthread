@@ -132,6 +132,7 @@ source_set("openthread") {
     "tcp.h",
     "tcp_ext.h",
     "thread.h",
+    "thread_direct.h",
     "thread_ftd.h",
     "trel.h",
     "udp.h",
