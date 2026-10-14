@@ -61,6 +61,12 @@ class InterfaceIdentifier;
 }
 #endif
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+namespace ThreadDirect {
+class Key;
+}
+#endif
+
 namespace Mac {
 
 /**
@@ -544,6 +550,10 @@ typedef otMacKeyRef KeyRef;
  */
 class KeyMaterial : public otMacKeyMaterial, public Unequatable<KeyMaterial>
 {
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    friend class ot::ThreadDirect::Key;
+#endif
+
 public:
     /**
      * Initializes a `KeyMaterial`.
@@ -552,7 +562,7 @@ public:
     {
         GetKey().Clear();
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-        SetKeyRef(kInvalidKeyRef);
+        SetKeyRefToInvalid();
 #endif
     }
 
@@ -639,6 +649,7 @@ private:
 
     void DestroyKey(void);
     void SetKeyRef(KeyRef aKeyRef) { mKeyMaterial.mKeyRef = aKeyRef; }
+    void SetKeyRefToInvalid(void) { SetKeyRef(kInvalidKeyRef); }
 #endif
     Key &GetKey(void) { return static_cast<Key &>(mKeyMaterial.mKey); }
     void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }

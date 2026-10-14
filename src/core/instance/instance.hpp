@@ -147,6 +147,7 @@
 #include "thread/time_sync_service.hpp"
 #include "thread/tmf.hpp"
 #include "thread/vendor_info.hpp"
+#include "thread_direct/td_key_manager.hpp"
 #include "utils/channel_manager.hpp"
 #include "utils/channel_monitor.hpp"
 #include "utils/heap.hpp"
@@ -728,6 +729,10 @@ private:
     NetDiag::Client mNetDiagClient;
 #endif
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    ThreadDirect::KeyManager mThreadDirectKeyManager;
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     MeshCoP::BorderAgent::TxtData mBorderAgentTxtData;
     MeshCoP::BorderAgent::Manager mBorderAgentManager;
@@ -1134,6 +1139,10 @@ template <> inline NetDiag::Server &Instance::Get(void) { return mNetDiagServer;
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 template <> inline NetDiag::Client &Instance::Get(void) { return mNetDiagClient; }
+#endif
+
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+template <> inline ThreadDirect::KeyManager &Instance::Get(void) { return mThreadDirectKeyManager; }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE

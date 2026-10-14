@@ -178,6 +178,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     , mNetDiagClient(*this)
 #endif
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    , mThreadDirectKeyManager(*this)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     , mBorderAgentTxtData(*this)
     , mBorderAgentManager(*this)
@@ -464,6 +467,10 @@ void Instance::AfterInit(void)
     Get<Settings>().Init();
     Get<Mle::Mle>().Restore();
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    Get<ThreadDirect::KeyManager>().RestoreKeys();
+#endif
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Get<Trel::Link>().AfterInit();
 #endif
@@ -508,6 +515,9 @@ void Instance::FactoryReset(void)
     Get<KeyManager>().DestroyTemporaryKeys();
     Get<KeyManager>().DestroyPersistentKeys();
 #endif
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    Get<ThreadDirect::KeyManager>().UnregisterAllKeys();
+#endif
     otPlatReset(this);
 }
 
@@ -520,6 +530,9 @@ Error Instance::ErasePersistentInfo(void)
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Get<KeyManager>().DestroyTemporaryKeys();
     Get<KeyManager>().DestroyPersistentKeys();
+#endif
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    Get<ThreadDirect::KeyManager>().UnregisterAllKeys();
 #endif
 
 exit:
