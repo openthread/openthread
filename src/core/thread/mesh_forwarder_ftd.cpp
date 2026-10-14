@@ -208,6 +208,17 @@ exit:
     return;
 }
 
+void MeshForwarder::FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction)
+{
+    if (!aMessage.IsDirectTransmission())
+    {
+        LogMessage(aAction, aMessage, aError);
+    }
+
+    FinalizeMessageIndirectTxs(aMessage);
+    FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, aError, aAction);
+}
+
 void MeshForwarder::RemoveDataResponseMessages(void)
 {
     for (Message &message : mSendQueue)
