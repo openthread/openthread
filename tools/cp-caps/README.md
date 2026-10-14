@@ -256,6 +256,8 @@ tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 
 21 RX ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie[csl],plen:0 -------- OK
 22 TX ver:2015,Data,noseq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0 -------- OK
 22 RX ver:2015,Data,noseq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0 -------- OK
+23 TX ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,keyid:2,ie:no,plen:0 ---- OK
+23 RX ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,keyid:2,ie:no,plen:0 ---- OK
 ```
 
 ### Test mTxInfo field of the radio frame.

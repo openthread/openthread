@@ -3030,8 +3030,8 @@ class OTCI(object):
         """Transmit a fixed number of packets."""
         command = 'diag send '
         command += 'async ' if is_async else ''
-        command += f'{packets} '
-        command += f'{length}' if length is not None else ''
+        command += f'{packets}'
+        command += f' {length}' if length is not None else ''
 
         self.execute_command(command)
 
