@@ -229,6 +229,14 @@ Radio::Time64 CslTxScheduler::NeighborInfo::DetermineNextCslWindow(Radio::Time64
         nextTxWindow += periodInUs;
     }
 
+    LogDebg(
+        "CslWindow: now=%luus period=%luus firstWin=%luus nextWin=%luus (in %lums) lead=%luus lastRx=%luus (age %lums)",
+        ToUlong(Radio::ConvertTime64To32(aRadioNow)), ToUlong(periodInUs),
+        ToUlong(Radio::ConvertTime64To32(firstTxWindow)), ToUlong(Radio::ConvertTime64To32(nextTxWindow)),
+        ToUlong(static_cast<uint32_t>((nextTxWindow - aRadioNow) / 1000)), ToUlong(aLeadTime),
+        ToUlong(Radio::ConvertTime64To32(GetLastRxTimestamp())),
+        ToUlong(static_cast<uint32_t>((aRadioNow - GetLastRxTimestamp()) / 1000)));
+
     return nextTxWindow;
 }
 
