@@ -245,6 +245,8 @@ Done
 
 Enable the diag filter module to only receive frames with a specified destination address.
 
+Note: This is a software filter within the diagnostics module applied after frames are received by the radio driver. To configure lower-layer radio hardware / RCP address filtering directly, see `diag radio promiscuous`, `diag radio panid`, `diag radio shortaddr`, and `diag radio extaddr`.
+
 ```bash
 > diag radio receive filter enable
 Done
@@ -299,6 +301,74 @@ Disable radio interface.
 
 ```bash
 > diag radio disable
+Done
+```
+
+### diag radio promiscuous
+
+Get or set the lower-layer radio promiscuous mode. Promiscuous mode is enabled when entering diagnostics mode and disabled when exiting diagnostics mode.
+
+Note: Unlike `diag radio receive filter` (which operates as a software filter in the diagnostics module after frames have already been received by the radio driver), `diag radio promiscuous` directly configures promiscuous mode in the lower-layer radio driver / RCP hardware. When disabled, the lower-layer radio performs hardware-level address filtering based on `diag radio panid`, `diag radio shortaddr`, and `diag radio extaddr`.
+
+```bash
+> diag radio promiscuous
+enabled
+Done
+> diag radio promiscuous disable
+Done
+> diag radio promiscuous
+disabled
+Done
+```
+
+### diag radio panid
+
+Get or set the IEEE 802.15.4 PAN ID in the lower-layer radio. When exiting diagnostics mode, the original value is restored.
+
+Note: This sets the PAN ID in the lower-layer radio driver / RCP hardware filter, distinct from the higher-layer software filter `diag radio receive filter`.
+
+```bash
+> diag radio panid
+0xface
+Done
+> diag radio panid 0x1234
+Done
+> diag radio panid
+0x1234
+Done
+```
+
+### diag radio shortaddr
+
+Get or set the IEEE 802.15.4 Short Address in the lower-layer radio. When exiting diagnostics mode, the original value is restored.
+
+Note: This sets the short address in the lower-layer radio driver / RCP hardware filter and ACK generator, distinct from the higher-layer software filter `diag radio receive filter`.
+
+```bash
+> diag radio shortaddr
+0xfffe
+Done
+> diag radio shortaddr 0xaaaa
+Done
+> diag radio shortaddr
+0xaaaa
+Done
+```
+
+### diag radio extaddr
+
+Get or set the IEEE 802.15.4 Extended Address in the lower-layer radio. When exiting diagnostics mode, the original value is restored.
+
+Note: This sets the extended MAC address in the lower-layer radio driver / RCP hardware filter and ACK generator, distinct from the higher-layer software filter `diag radio receive filter`.
+
+```bash
+> diag radio extaddr
+dead00beef00cafe
+Done
+> diag radio extaddr 8070605040302010
+Done
+> diag radio extaddr
+8070605040302010
 Done
 ```
 
