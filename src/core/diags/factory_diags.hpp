@@ -272,6 +272,13 @@ private:
     bool          mDiagSendOn : 1;
     bool          mIsSleepOn : 1;
     bool          mIsAsyncSweep : 1;
+
+    Mac::PanId        mPanId;
+    Mac::PanId        mOriginalPanId;
+    Mac::ShortAddress mShortAddress;
+    Mac::ShortAddress mOriginalShortAddress;
+    Mac::ExtAddress   mExtAddress;
+    Mac::ExtAddress   mOriginalExtAddress;
 #endif
 
     ReceiveConfig        mReceiveConfig;
