@@ -137,6 +137,7 @@ enum
     OT_RADIO_CAPS_RX_ON_WHEN_IDLE      = 1 << 8,  ///< Radio supports RxOnWhenIdle handling.
     OT_RADIO_CAPS_TRANSMIT_FRAME_POWER = 1 << 9,  ///< Radio supports setting per-frame transmit power.
     OT_RADIO_CAPS_ALT_SHORT_ADDR       = 1 << 10, ///< Radio supports setting alternate short address.
+    OT_RADIO_CAPS_CSL_DYNAMIC_ACCURACY = 1 << 11, ///< Radio may update CSL accuracy/uncertainty over time.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -1352,7 +1353,10 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, otRadioTime32 aCslSam
  * clock used to schedule CSL operations.
  *
  * @note Implementations MAY estimate this value based on current operating
- * conditions (e.g. temperature).
+ * conditions (e.g. temperature). Platforms that update this value over time
+ * MUST declare the `OT_RADIO_CAPS_CSL_DYNAMIC_ACCURACY` capability in
+ * `otPlatRadioGetCaps()`. When that capability is not declared, OpenThread
+ * may cache the value after the first read.
  *
  * In case the implementation does not estimate the current value but returns a
  * fixed value, this value MUST be the worst-case accuracy over all possible
@@ -1376,6 +1380,11 @@ uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance);
  * ("RX window") must be extended by twice this deviation such that an actual
  * transmission is guaranteed to be detected by the local receiver in the
  * presence of random arrival time jitter.
+ *
+ * Platforms that update this value over time MUST declare the
+ * `OT_RADIO_CAPS_CSL_DYNAMIC_ACCURACY` capability in `otPlatRadioGetCaps()`.
+ * When that capability is not declared, OpenThread may cache the value after
+ * the first read.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  *

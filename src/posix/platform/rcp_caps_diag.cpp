@@ -860,6 +860,7 @@ const char *RcpCapsDiag::RadioCapbilityToString(uint32_t aCapability)
     static_assert(OT_RADIO_CAPS_TRANSMIT_TIMING == 1 << 6, "OT_RADIO_CAPS_TRANSMIT_TIMING value is incorrect");
     static_assert(OT_RADIO_CAPS_RECEIVE_TIMING == 1 << 7, "OT_RADIO_CAPS_RECEIVE_TIMING value is incorrect");
     static_assert(OT_RADIO_CAPS_RX_ON_WHEN_IDLE == 1 << 8, "OT_RADIO_CAPS_RX_ON_WHEN_IDLE value is incorrect");
+    static_assert(OT_RADIO_CAPS_CSL_DYNAMIC_ACCURACY == 1 << 11, "OT_RADIO_CAPS_CSL_DYNAMIC_ACCURACY value is incorrect");
 
     for (; !(aCapability & 0x1); (aCapability >>= 1), index++)
     {

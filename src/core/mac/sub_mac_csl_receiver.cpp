@@ -163,6 +163,13 @@ void SubMac::CslReceiver::UpdateCurAndNextWindows(void)
 {
     Radio::SyncedTime nextSampleTime;
 
+#if OT_CONFIG_RADIO_TIME_ENABLE
+    if ((Get<Radio::Radio>().GetCaps() & Radio::kCapCslDynamicAccuracy) != 0)
+    {
+        Get<Radio::Radio>().UpdateCslClockParameters();
+    }
+#endif
+
     if (!IsEnabled())
     {
         mCurWindow.Clear();
