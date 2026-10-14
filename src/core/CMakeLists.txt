@@ -248,7 +248,6 @@ set(COMMON_SOURCES
     thread/lowpan.cpp
     thread/mesh_forwarder.cpp
     thread/mesh_forwarder_ftd.cpp
-    thread/mesh_forwarder_mtd.cpp
     thread/message_framer.cpp
     thread/mle.cpp
     thread/mle_ftd.cpp
