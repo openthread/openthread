@@ -409,8 +409,7 @@ exit:
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
         mTxQueueStats.UpdateFor(aMessage);
 #endif
-        LogMessage(kMessageQueueMgmtDrop, aMessage);
-        FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, kErrorDrop);
+        FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, kErrorDrop, kMessageQueueMgmtDrop);
     }
 
     return error;
@@ -574,8 +573,8 @@ Error MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
             error = kErrorDrop;
         }
 
-        LogMessage((error == kErrorDrop) ? kMessageFullQueueDrop : kMessageFullQueueEvict, *evict, kErrorDrop);
-        FinalizeDirectTxAndRemoveMessageIfNoPendingTx(*evict, kErrorDrop);
+        FinalizeDirectTxAndRemoveMessageIfNoPendingTx(
+            *evict, kErrorDrop, (error == kErrorDrop) ? kMessageFullQueueDrop : kMessageFullQueueEvict);
 
     } while ((error == kErrorNone) && IsDirectTxQueueOverMaxFrameThreshold());
 
@@ -713,8 +712,7 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
             mTxQueueStats.UpdateFor(*curMessage);
 #endif
-            LogMessage(kMessageDrop, *curMessage, error);
-            FinalizeDirectTxAndRemoveMessageIfNoPendingTx(*curMessage, error);
+            FinalizeDirectTxAndRemoveMessageIfNoPendingTx(*curMessage, error, kMessageDrop);
             continue;
         }
     }
@@ -1093,14 +1091,23 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
     Get<HistoryTracker::Local>().RecordTxMessage(*mSendMessage, aMacDest, mSendMessage->GetTxSuccess());
 #endif
 
-    LogMessage(kMessageTransmit, *mSendMessage, txError, &aMacDest);
-    FinalizeDirectTxAndRemoveMessageIfNoPendingTx(*mSendMessage, txError);
+    FinalizeDirectTxAndRemoveMessageIfNoPendingTx(*mSendMessage, txError, kMessageTransmit, &aMacDest);
 
 exit:
     mScheduleTransmissionTask.Post();
 }
 
-void MeshForwarder::FinalizeDirectTxAndRemoveMessageIfNoPendingTx(Message &aMessage, Error aError)
+void MeshForwarder::FinalizeDirectTxAndRemoveMessageIfNoPendingTx(Message      &aMessage,
+                                                                  Error         aError,
+                                                                  MessageAction aAction)
+{
+    FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, aError, aAction, nullptr);
+}
+
+void MeshForwarder::FinalizeDirectTxAndRemoveMessageIfNoPendingTx(Message            &aMessage,
+                                                                  Error               aError,
+                                                                  MessageAction       aAction,
+                                                                  const Mac::Address *aMacDest)
 {
     // Finalizes the direct transmission of `aMessage` and removes it
     // from the send queue if it has no remaining pending transmissions
@@ -1127,6 +1134,8 @@ void MeshForwarder::FinalizeDirectTxAndRemoveMessageIfNoPendingTx(Message &aMess
         mMessageNextOffset = 0;
     }
 
+    LogMessage(aAction, aMessage, aError, aMacDest);
+
     aMessage.InvokeTxCallback(aError);
 
 exit:
@@ -1135,13 +1144,16 @@ exit:
 
 void MeshForwarder::FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction)
 {
-    LogMessage(aAction, aMessage, aError);
-
 #if OPENTHREAD_FTD
+    if (!aMessage.IsDirectTransmission())
+    {
+        LogMessage(aAction, aMessage, aError);
+    }
+
     FinalizeMessageIndirectTxs(aMessage);
 #endif
 
-    FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, aError);
+    FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, aError, aAction);
 }
 
 void MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)

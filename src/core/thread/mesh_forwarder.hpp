@@ -465,7 +465,11 @@ private:
     void UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError, bool aAllowNeighborRemove, uint8_t aFailLimit);
     void HandleFrameTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error aError);
     void UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
-    void FinalizeDirectTxAndRemoveMessageIfNoPendingTx(Message &aMessage, Error aError);
+    void FinalizeDirectTxAndRemoveMessageIfNoPendingTx(Message &aMessage, Error aError, MessageAction aAction);
+    void FinalizeDirectTxAndRemoveMessageIfNoPendingTx(Message            &aMessage,
+                                                       Error               aError,
+                                                       MessageAction       aAction,
+                                                       const Mac::Address *aMacDest);
     void FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction);
     void RemoveMessageIfNoPendingTx(Message &aMessage);
 
