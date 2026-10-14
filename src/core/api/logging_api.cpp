@@ -43,7 +43,9 @@ otLogLevel otLoggingGetLevel(void)
 {
     LogLevel level;
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if !OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    level = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     level = Instance::Get().GetLogLevel();
 #else
     level = Instance::GetGlobalLogLevel();
