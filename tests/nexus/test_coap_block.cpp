@@ -37,12 +37,41 @@ namespace ot {
 namespace Nexus {
 
 static otError TransmitHook(void *aContext, uint8_t *aBlock, uint32_t aPosition, uint16_t *aBlockLength, bool *aMore);
+static otError PublicTransmitHook(void     *aContext,
+                                  uint8_t  *aBlock,
+                                  uint32_t  aPosition,
+                                  uint16_t *aBlockLength,
+                                  bool     *aMore);
+static otError PrivateTransmitHook(void     *aContext,
+                                   uint8_t  *aBlock,
+                                   uint32_t  aPosition,
+                                   uint16_t *aBlockLength,
+                                   bool     *aMore);
 
 static bool       sRequestHandlerCalled         = false;
 static bool       sReceiveHookCalled            = false;
 static bool       sTransmitHookCalled           = false;
 static bool       sReproductionResponseReceived = false;
 static otCoapCode sReproductionResponseCode     = OT_COAP_CODE_EMPTY;
+
+static constexpr uint16_t kBypassBlockSize = 16;
+
+static const uint8_t kPublicBlock0[kBypassBlockSize]  = {'p', 'u', 'b', 'l', 'i', 'c', '-', 'b',
+                                                         'l', 'o', 'c', 'k', '-', '0', '0', '0'};
+static const uint8_t kPrivateBlock0[kBypassBlockSize] = {'p', 'r', 'i', 'v', 'a', 't', 'e', '-',
+                                                         'b', 'l', 'o', 'c', 'k', '-', '0', '0'};
+static const uint8_t kPrivateBlock1[kBypassBlockSize] = {'s', 'e', 'c', 'r', 'e', 't', '-', 'b',
+                                                         'l', 'o', 'c', 'k', '-', '0', '0', '1'};
+
+static bool       sPublicRequestHandlerCalled  = false;
+static bool       sPublicTransmitHookCalled    = false;
+static bool       sPrivateRequestHandlerCalled = false;
+static bool       sPrivateTransmitHookCalled   = false;
+static bool       sBypassResponseReceived      = false;
+static otCoapCode sBypassResponseCode          = OT_COAP_CODE_EMPTY;
+static uint8_t    sBypassResponsePayload[64];
+static uint16_t   sBypassResponsePayloadLength = 0;
+static uint32_t   sLastTransmitPosition        = 0;
 
 static void HandleReproductionResponse(void                *aContext,
                                        otMessage           *aMessage,
@@ -57,6 +86,38 @@ static void HandleReproductionResponse(void                *aContext,
     if (aMessage != nullptr)
     {
         sReproductionResponseCode = otCoapMessageGetCode(aMessage);
+    }
+}
+
+static void ResetBypassResponseState(void)
+{
+    sBypassResponseReceived      = false;
+    sBypassResponseCode          = OT_COAP_CODE_EMPTY;
+    sBypassResponsePayloadLength = 0;
+    memset(sBypassResponsePayload, 0, sizeof(sBypassResponsePayload));
+}
+
+static void HandleBypassResponse(void                *aContext,
+                                 otMessage           *aMessage,
+                                 const otMessageInfo *aMessageInfo,
+                                 otError              aResult)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    VerifyOrQuit(aResult == OT_ERROR_NONE);
+
+    sBypassResponseReceived = true;
+
+    if (aMessage != nullptr)
+    {
+        uint16_t offset = otMessageGetOffset(aMessage);
+        uint16_t length = otMessageGetLength(aMessage) - offset;
+
+        sBypassResponseCode = otCoapMessageGetCode(aMessage);
+        VerifyOrQuit(length <= sizeof(sBypassResponsePayload));
+        sBypassResponsePayloadLength = length;
+        otMessageRead(aMessage, offset, sBypassResponsePayload, length);
     }
 }
 
@@ -144,6 +205,118 @@ static otError TransmitHook(void *aContext, uint8_t *aBlock, uint32_t aPosition,
 
     sTransmitHookCalled = true;
     return OT_ERROR_NONE;
+}
+
+static void HandlePublicRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    Instance       &instance = *static_cast<Instance *>(aContext);
+    Coap::Message  &message  = AsCoapMessage(aMessage);
+    Coap::Message  *response = nullptr;
+    Coap::BlockInfo blockInfo;
+
+    sPublicRequestHandlerCalled = true;
+
+    response = instance.Get<Coap::ApplicationCoap>().NewMessage();
+    VerifyOrQuit(response != nullptr);
+    SuccessOrQuit(response->InitAsResponse(Coap::kTypeAck, Coap::kCodeContent, message));
+
+    blockInfo.mBlockNumber = 0;
+    blockInfo.mBlockSzx    = Coap::kBlockSzx16;
+    blockInfo.mMoreBlocks  = true;
+    SuccessOrQuit(response->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
+
+    SuccessOrQuit(instance.Get<Coap::ApplicationCoap>().SendMessageWithResponseHandlerSeparateParams(
+        *response, AsCoreType(aMessageInfo), nullptr, nullptr, &PublicTransmitHook, nullptr, nullptr));
+}
+
+static void HandlePrivateRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    Instance      &instance = *static_cast<Instance *>(aContext);
+    Coap::Message &message  = AsCoapMessage(aMessage);
+    Coap::Message *response = nullptr;
+
+    sPrivateRequestHandlerCalled = true;
+
+    response = instance.Get<Coap::ApplicationCoap>().NewMessage();
+    VerifyOrQuit(response != nullptr);
+    SuccessOrQuit(response->InitAsResponse(Coap::kTypeAck, Coap::kCodeForbidden, message));
+    SuccessOrQuit(instance.Get<Coap::ApplicationCoap>().SendMessage(*response, AsCoreType(aMessageInfo)));
+}
+
+static otError PublicTransmitHook(void     *aContext,
+                                  uint8_t  *aBlock,
+                                  uint32_t  aPosition,
+                                  uint16_t *aBlockLength,
+                                  bool     *aMore)
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    VerifyOrQuit(aPosition == 0);
+    VerifyOrQuit(*aBlockLength >= sizeof(kPublicBlock0));
+
+    memcpy(aBlock, kPublicBlock0, sizeof(kPublicBlock0));
+    *aBlockLength             = sizeof(kPublicBlock0);
+    *aMore                    = true;
+    sPublicTransmitHookCalled = true;
+    sLastTransmitPosition     = aPosition;
+
+    return OT_ERROR_NONE;
+}
+
+static otError PrivateTransmitHook(void     *aContext,
+                                   uint8_t  *aBlock,
+                                   uint32_t  aPosition,
+                                   uint16_t *aBlockLength,
+                                   bool     *aMore)
+{
+    const uint8_t *payload = nullptr;
+
+    OT_UNUSED_VARIABLE(aContext);
+
+    switch (aPosition)
+    {
+    case 0:
+        payload = kPrivateBlock0;
+        *aMore  = true;
+        break;
+    case kBypassBlockSize:
+        payload = kPrivateBlock1;
+        *aMore  = false;
+        break;
+    default:
+        return OT_ERROR_INVALID_ARGS;
+    }
+
+    VerifyOrQuit(*aBlockLength >= kBypassBlockSize);
+
+    memcpy(aBlock, payload, kBypassBlockSize);
+    *aBlockLength              = kBypassBlockSize;
+    sPrivateTransmitHookCalled = true;
+    sLastTransmitPosition      = aPosition;
+
+    return OT_ERROR_NONE;
+}
+
+static void SendBlock2Get(Node &aClient, const Ip6::Address &aPeer, const char *aUriPath, uint32_t aBlockNumber)
+{
+    Coap::Message   *message = aClient.Get<Coap::ApplicationCoap>().NewMessage();
+    Ip6::MessageInfo messageInfo;
+    Coap::BlockInfo  blockInfo;
+
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(message->Init(Coap::kTypeConfirmable, Coap::kCodeGet));
+    SuccessOrQuit(message->AppendUriPathOptions(aUriPath));
+
+    blockInfo.mBlockNumber = aBlockNumber;
+    blockInfo.mBlockSzx    = Coap::kBlockSzx16;
+    blockInfo.mMoreBlocks  = false;
+    SuccessOrQuit(message->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
+
+    messageInfo.SetPeerAddr(aPeer);
+    messageInfo.SetPeerPort(OT_DEFAULT_COAP_PORT);
+
+    SuccessOrQuit(aClient.Get<Coap::ApplicationCoap>().SendMessageWithResponseHandlerSeparateParams(
+        *message, messageInfo, nullptr, &HandleBypassResponse, nullptr, nullptr, nullptr));
 }
 
 void TestCoapBlock(void)
@@ -258,12 +431,102 @@ void TestCoapBlock(void)
     IgnoreError(router.Get<Coap::ApplicationCoap>().Stop());
 }
 
+void TestCoapBlockCrossResourceIsolation(void)
+{
+    Core nexus;
+
+    Node &leader   = nexus.CreateNode();
+    Node &attacker = nexus.CreateNode();
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("Form network for cross-resource blockwise test");
+    leader.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    attacker.Join(leader);
+    nexus.AdvanceTime(10 * 1000);
+    VerifyOrQuit(attacker.Get<Mle::Mle>().IsChild() || attacker.Get<Mle::Mle>().IsRouter());
+
+    SuccessOrQuit(leader.Get<Coap::ApplicationCoap>().Start(OT_DEFAULT_COAP_PORT));
+
+    Coap::ResourceBlockWise publicResource("public", &HandlePublicRequest, &leader.GetInstance(), &ReceiveHook,
+                                           &PublicTransmitHook);
+    Coap::ResourceBlockWise privateResource("private", &HandlePrivateRequest, &leader.GetInstance(), &ReceiveHook,
+                                            &PrivateTransmitHook);
+
+    leader.Get<Coap::ApplicationCoap>().AddBlockWiseResource(publicResource);
+    leader.Get<Coap::ApplicationCoap>().AddBlockWiseResource(privateResource);
+
+    SuccessOrQuit(attacker.Get<Coap::ApplicationCoap>().Start(OT_DEFAULT_COAP_PORT));
+
+    const Ip6::Address &leaderAddress = leader.Get<Mle::Mle>().GetMeshLocalEid();
+
+    // Step 1: attacker primes global blockwise state through a public resource.
+    sPublicRequestHandlerCalled = false;
+    sPublicTransmitHookCalled   = false;
+    sLastTransmitPosition       = 0;
+    ResetBypassResponseState();
+
+    SendBlock2Get(attacker, leaderAddress, "public", 0);
+    nexus.AdvanceTime(5 * 1000);
+
+    VerifyOrQuit(sBypassResponseReceived);
+    VerifyOrQuit(sBypassResponseCode == OT_COAP_CODE_CONTENT);
+    VerifyOrQuit(sPublicRequestHandlerCalled);
+    VerifyOrQuit(sPublicTransmitHookCalled);
+    VerifyOrQuit(sLastTransmitPosition == 0);
+    VerifyOrQuit(sBypassResponsePayloadLength == sizeof(kPublicBlock0));
+    VerifyOrQuit(memcmp(sBypassResponsePayload, kPublicBlock0, sizeof(kPublicBlock0)) == 0);
+
+    // Step 2: normal access to the protected resource is rejected.
+    sPrivateRequestHandlerCalled = false;
+    sPrivateTransmitHookCalled   = false;
+    sLastTransmitPosition        = 0;
+    ResetBypassResponseState();
+
+    SendBlock2Get(attacker, leaderAddress, "private", 0);
+    nexus.AdvanceTime(5 * 1000);
+
+    VerifyOrQuit(sBypassResponseReceived);
+    VerifyOrQuit(sBypassResponseCode == OT_COAP_CODE_FORBIDDEN);
+    VerifyOrQuit(sPrivateRequestHandlerCalled);
+    VerifyOrQuit(!sPrivateTransmitHookCalled);
+
+    // Step 3: the same attacker requests Block2 NUM=1 on the protected resource.
+    // The continuation must be rejected because the cached public transfer state
+    // does not match the protected resource request.
+    sPrivateRequestHandlerCalled = false;
+    sPrivateTransmitHookCalled   = false;
+    sLastTransmitPosition        = 0;
+    ResetBypassResponseState();
+
+    SendBlock2Get(attacker, leaderAddress, "private", 1);
+    nexus.AdvanceTime(5 * 1000);
+
+    VerifyOrQuit(sBypassResponseReceived);
+    VerifyOrQuit(sBypassResponseCode == OT_COAP_CODE_REQUEST_INCOMPLETE);
+    VerifyOrQuit(!sPrivateRequestHandlerCalled);
+    VerifyOrQuit(!sPrivateTransmitHookCalled);
+    VerifyOrQuit(sLastTransmitPosition == 0);
+    VerifyOrQuit(sBypassResponsePayloadLength == 0);
+
+    leader.Get<Coap::ApplicationCoap>().RemoveBlockWiseResource(publicResource);
+    leader.Get<Coap::ApplicationCoap>().RemoveBlockWiseResource(privateResource);
+    IgnoreError(leader.Get<Coap::ApplicationCoap>().Stop());
+    IgnoreError(attacker.Get<Coap::ApplicationCoap>().Stop());
+}
+
 } // namespace Nexus
 } // namespace ot
 
 int main(void)
 {
     ot::Nexus::TestCoapBlock();
+    ot::Nexus::TestCoapBlockCrossResourceIsolation();
     printf("All tests passed\n");
     return 0;
 }
