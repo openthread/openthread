@@ -212,7 +212,12 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 
     VerifyOrExit(evict != nullptr);
 
+#if OPENTHREAD_MTD
+    FinalizeDirectTxAndRemoveMessageIfNoPendingTx(*evict, kErrorNoBufs, kMessageEvict);
+#elif OPENTHREAD_FTD
     FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
+#endif
+
     error = kErrorNone;
 
 exit:
@@ -1140,20 +1145,6 @@ void MeshForwarder::FinalizeDirectTxAndRemoveMessageIfNoPendingTx(Message       
 
 exit:
     RemoveMessageIfNoPendingTx(aMessage);
-}
-
-void MeshForwarder::FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction)
-{
-#if OPENTHREAD_FTD
-    if (!aMessage.IsDirectTransmission())
-    {
-        LogMessage(aAction, aMessage, aError);
-    }
-
-    FinalizeMessageIndirectTxs(aMessage);
-#endif
-
-    FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, aError, aAction);
 }
 
 void MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)

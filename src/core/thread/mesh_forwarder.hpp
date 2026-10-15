@@ -470,7 +470,6 @@ private:
                                                        Error               aError,
                                                        MessageAction       aAction,
                                                        const Mac::Address *aMacDest);
-    void FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction);
     void RemoveMessageIfNoPendingTx(Message &aMessage);
 
     void HandleTimeTick(void);
@@ -484,6 +483,7 @@ private:
 #endif
 
 #if OPENTHREAD_FTD
+    void          FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction);
     Message      *FindMessageToEvict(PriorityGuard aGuard, Message::Priority aPriority, Message::Checker aChecker);
     void          DetermineDirectOrIndirectTx(Message &aMessage);
     void          FinalizeMessageIndirectTxs(Message &aMessage);
