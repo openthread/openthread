@@ -608,3 +608,40 @@ TEST(RadioSpinelSrcMatch, shouldNotDuplicateSrcMatchEntriesOnRestoreProperties)
     ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 1);
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+TEST(RadioSpinelProperty, shouldSetEmptyPropertyValue)
+{
+    constexpr uint16_t      kTestShortAddr = 0x1234;
+    const uint8_t          *empty          = nullptr;
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(true);
+    platform.SrcMatchAddShortEntry(kTestShortAddr);
+    ASSERT_EQ(platform.SrcMatchCountShortEntries(), 1);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    EXPECT_EQ(platform.mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_DATA_S, empty, 0),
+              kErrorNone);
+    EXPECT_EQ(platform.SrcMatchCountShortEntries(), 0);
+}
+
+TEST(RadioSpinelProperty, shouldGetEmptyPropertyValue)
+{
+    FakeCoprocessorPlatform platform;
+    uint8_t                 buffer[32];
+    spinel_size_t           length = sizeof(buffer);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    ASSERT_EQ(platform.mRadioSpinel.Get(SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, buffer, &length),
+              kErrorNone);
+    ASSERT_GT(length, 0u);
+
+    ASSERT_EQ(platform.mRadioSpinel.Set(SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, nullptr, 0), kErrorNone);
+
+    length = sizeof(buffer);
+    EXPECT_EQ(platform.mRadioSpinel.Get(SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, buffer, &length),
+              kErrorNone);
+    EXPECT_EQ(length, 0u);
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mSpinelParseErrorCount, 0u);
+}

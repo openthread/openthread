@@ -530,12 +530,12 @@ static spinel_ssize_t spinel_datatype_vunpack_(bool           in_place,
             unsigned int  *arg_ptr = va_arg(args->obj, unsigned int *);
             spinel_ssize_t pui_len = spinel_packed_uint_decode(data_in, data_len, arg_ptr);
 
+            require_action(pui_len > 0, bail, (ret = -1, errno = EOVERFLOW));
+
             // Range check
             require_action(NULL == arg_ptr || (*arg_ptr < SPINEL_MAX_UINT_PACKED), bail, (ret = -1, errno = ERANGE));
 
-            require(pui_len > 0, bail);
-
-            require(pui_len <= (spinel_ssize_t)data_len, bail);
+            require_action(pui_len <= (spinel_ssize_t)data_len, bail, (ret = -1, errno = EOVERFLOW));
 
             ret += pui_len;
             data_in += pui_len;
@@ -601,8 +601,8 @@ static spinel_ssize_t spinel_datatype_vunpack_(bool           in_place,
                 pui_len = spinel_datatype_unpack(data_in, data_len, SPINEL_DATATYPE_UINT16_S, &block_len);
                 block_ptr += pui_len;
 
-                require(pui_len > 0, bail);
-                require(block_len < SPINEL_FRAME_MAX_SIZE, bail);
+                require_action(pui_len > 0, bail, (ret = -1, errno = EOVERFLOW));
+                require_action(block_len < SPINEL_FRAME_MAX_SIZE, bail, (ret = -1, errno = EINVAL));
             }
             else
             {
@@ -615,7 +615,10 @@ static spinel_ssize_t spinel_datatype_vunpack_(bool           in_place,
             if (in_place)
             {
                 require_action(NULL != block_len_ptr && *block_len_ptr >= block_len, bail, (ret = -1, errno = EINVAL));
-                memcpy(arg_ptr, block_ptr, block_len);
+                if ((NULL != arg_ptr) && (block_len > 0))
+                {
+                    memcpy(arg_ptr, block_ptr, block_len);
+                }
             }
             else
             {
@@ -652,8 +655,8 @@ static spinel_ssize_t spinel_datatype_vunpack_(bool           in_place,
                 pui_len = spinel_datatype_unpack(data_in, data_len, SPINEL_DATATYPE_UINT16_S, &block_len);
                 block_ptr += pui_len;
 
-                require(pui_len > 0, bail);
-                require(block_len < SPINEL_FRAME_MAX_SIZE, bail);
+                require_action(pui_len > 0, bail, (ret = -1, errno = EOVERFLOW));
+                require_action(block_len < SPINEL_FRAME_MAX_SIZE, bail, (ret = -1, errno = EINVAL));
             }
             else
             {
@@ -2008,6 +2011,71 @@ int main(void)
                 printf("error: spinel_validate_utf8() did not correctly detect an invalid UTF8 sequence\n");
                 goto bail;
             }
+        }
+    }
+
+    {
+        // A malformed first field must fail with -1 rather than report
+        // zero bytes unpacked (which is valid for an empty value).
+        const uint8_t  truncated_uint_packed[] = {0x80};
+        const uint8_t  truncated_length[]      = {0x01};
+        unsigned int   value                   = SPINEL_MAX_UINT_PACKED;
+        const uint8_t *data_ptr                = NULL;
+        unsigned int   data_len                = 0;
+
+        // `value` is not written on failure, so it must not be range checked.
+        errno = 0;
+        len   = spinel_datatype_unpack(truncated_uint_packed, sizeof(truncated_uint_packed), "i", &value);
+
+        if (len != -1 || errno != EOVERFLOW)
+        {
+            printf("error:%d: len != -1 || errno != EOVERFLOW; (%d, %d)\n", __LINE__, (int)len, errno);
+            goto bail;
+        }
+
+        len = spinel_datatype_unpack(truncated_length, sizeof(truncated_length), "d", &data_ptr, &data_len);
+
+        if (len != -1)
+        {
+            printf("error:%d: len != -1; (%d)\n", __LINE__, (int)len);
+            goto bail;
+        }
+
+        len = spinel_datatype_unpack(truncated_length, sizeof(truncated_length), "t(C)", NULL);
+
+        if (len != -1)
+        {
+            printf("error:%d: len != -1; (%d)\n", __LINE__, (int)len);
+            goto bail;
+        }
+
+        // An empty value unpacks zero bytes.
+        len = spinel_datatype_unpack(truncated_length, 0, "D", &data_ptr, &data_len);
+
+        if (len != 0 || data_len != 0)
+        {
+            printf("error:%d: len != 0 || data_len != 0; (%d, %u)\n", __LINE__, (int)len, data_len);
+            goto bail;
+        }
+
+        // In place with a NULL buffer only reports the length.
+        data_len = 0;
+        len      = spinel_datatype_unpack_in_place(truncated_length, 0, "D", NULL, &data_len);
+
+        if (len != 0 || data_len != 0)
+        {
+            printf("error:%d: len != 0 || data_len != 0; (%d, %u)\n", __LINE__, (int)len, data_len);
+            goto bail;
+        }
+
+        // In place from an empty NULL input copies nothing.
+        data_len = sizeof(buffer);
+        len      = spinel_datatype_unpack_in_place(NULL, 0, "D", buffer, &data_len);
+
+        if (len != 0 || data_len != 0)
+        {
+            printf("error:%d: len != 0 || data_len != 0; (%d, %u)\n", __LINE__, (int)len, data_len);
+            goto bail;
         }
     }
 
