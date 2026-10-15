@@ -105,6 +105,37 @@ check_daemon_netif_down()
     fi
 
     "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig | grep 'down' || die 'ot-daemon does not respond after ifconfig down'
+
+    # Up again, so that the host check below starts from an interface OpenThread has up.
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig up || die 'ifconfig up failed after ifconfig down'
+}
+
+set_host_link_state()
+{
+    if [[ ${OSTYPE} == "linux-gnu"* ]]; then
+        sudo ip link set dev "${NETIF_NAME}" "$1"
+    else
+        sudo ifconfig "${NETIF_NAME}" "$1"
+    fi
+}
+
+check_host_link_state()
+{
+    local status
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # The host's link state is passed to OpenThread on every platform.
+    set_host_link_state down
+    sleep 1
+    if ! ps -p "${OT_DAEMON_JOB}" >/dev/null; then
+        wait "${OT_DAEMON_JOB}" && status=0 || status=$?
+        die "ot-daemon exited with status ${status} on the host setting the interface down"
+    fi
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig | grep 'down' || die 'OpenThread did not follow the host setting the interface down'
+    set_host_link_state up
+    sleep 1
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig | grep 'up' || die 'OpenThread did not follow the host setting the interface up'
 }
 
 do_check()
@@ -250,6 +281,7 @@ EOF
     # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
     if [[ $OSTYPE != "linux-gnu"* ]]; then
         check_daemon_netif_down
+        check_host_link_state
         return 0
     fi
 
@@ -280,6 +312,7 @@ EOF
     fi
 
     check_daemon_netif_down
+    check_host_link_state
 }
 
 main()
