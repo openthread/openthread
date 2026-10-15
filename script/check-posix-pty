@@ -107,6 +107,21 @@ check_daemon_netif_down()
     "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig | grep 'down' || die 'ot-daemon does not respond after ifconfig down'
 }
 
+check_daemon_backtrace()
+{
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # A fatal signal leaves a stack trace in the log on every platform. This ends ot-daemon, so
+    # it is the last check.
+    sudo pkill -SEGV -n -x ot-daemon
+    wait "${OT_DAEMON_JOB}" 2>/dev/null || true
+
+    grep -A20 'BEGINNING OF CRASH' "${OT_DAEMON_OUTPUT}" || die 'no stack trace after SIGSEGV'
+    grep -q 'END OF CRASH' "${OT_DAEMON_OUTPUT}" || die 'the stack trace is incomplete'
+    # A parsed frame ends in "+0x<offset> [0x<address>]"; the unparsed fallback prints the raw symbol line.
+    grep -qE '# *[0-9]+: [^ ]+ .+\+0x[0-9a-f]+ \[0x[0-9a-f]+\]' "${OT_DAEMON_OUTPUT}" || die 'the stack trace has no parsed frame'
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -250,6 +265,7 @@ EOF
     # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
     if [[ $OSTYPE != "linux-gnu"* ]]; then
         check_daemon_netif_down
+        check_daemon_backtrace
         return 0
     fi
 
@@ -280,6 +296,7 @@ EOF
     fi
 
     check_daemon_netif_down
+    check_daemon_backtrace
 }
 
 main()
