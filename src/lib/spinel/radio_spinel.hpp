@@ -580,6 +580,48 @@ public:
     otError ReceiveAt(uint64_t aWhen, uint32_t aDuration, uint8_t aChannel);
 
     /**
+     * Represents a periodic receive schedule offloaded to the RCP.
+     *
+     * A receive window starts at every RCP radio time `T` which satisfies `T % mPeriodUs == mPhaseUs` and lasts
+     * `mDurationUs` microseconds.
+     */
+    struct PeriodicRxSchedule
+    {
+        uint32_t mPhaseUs;    ///< Phase of the window start within the period (in usec), less than `mPeriodUs`.
+        uint32_t mPeriodUs;   ///< Period (in usec).
+        uint16_t mDurationUs; ///< Window duration (in usec), non-zero and not more than `mPeriodUs`.
+        uint8_t  mChannel;    ///< Channel to listen on.
+    };
+
+    /**
+     * Atomically replaces the periodic RX schedules on the RCP.
+     *
+     * Array order defines priority (index 0 has highest priority). Passing zero schedules disables periodic RX.
+     *
+     * @param[in] aSchedules     A pointer to an array of schedules (can be `nullptr` if @p aNumSchedules is zero).
+     * @param[in] aNumSchedules  The number of schedules in @p aSchedules.
+     *
+     * @retval OT_ERROR_NONE             Successfully updated the schedules.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support periodic RX.
+     * @retval OT_ERROR_NO_BUFS          More schedules than the RCP supports, or than fit in a Spinel frame.
+     * @retval OT_ERROR_INVALID_ARGS     The RCP rejected an invalid schedule.
+     */
+    otError SetPeriodicRxSchedules(const PeriodicRxSchedule *aSchedules, uint8_t aNumSchedules);
+
+    /**
+     * Gets the periodic RX schedules from the RCP.
+     *
+     * @param[out]    aSchedules     A pointer to an array to output the schedules.
+     * @param[in,out] aNumSchedules  On input, the capacity of @p aSchedules. On output, the number of schedules.
+     *
+     * @retval OT_ERROR_NONE             Successfully retrieved the schedules.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support periodic RX.
+     * @retval OT_ERROR_NO_BUFS          @p aSchedules is too small.
+     * @retval OT_ERROR_PARSE            Failed to parse the response from the RCP.
+     */
+    otError GetPeriodicRxSchedules(PeriodicRxSchedule *aSchedules, uint8_t &aNumSchedules);
+
+    /**
      * Switches the radio state from Receive to Sleep.
      *
      * @retval OT_ERROR_NONE          Successfully transitioned to Sleep.

@@ -53,4 +53,18 @@ void otLinkExtGetBurstConfig(otInstance *aInstance, otLinkExtBurstConfig *aConfi
     AsCoreType(aInstance).Get<Mac::LinkExt>().GetBurstConfig(*aConfig);
 }
 
+#if (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+otError otLinkExtSetPeriodicRxSchedules(otInstance                        *aInstance,
+                                        const otLinkExtPeriodicRxSchedule *aSchedules,
+                                        uint8_t                            aNumSchedules)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkExt>().SetPeriodicRxSchedules(aSchedules, aNumSchedules);
+}
+
+const otLinkExtPeriodicRxSchedule *otLinkExtGetPeriodicRxSchedules(otInstance *aInstance, uint8_t *aNumSchedules)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkExt>().GetPeriodicRxSchedules(*aNumSchedules);
+}
+#endif
+
 #endif // OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE

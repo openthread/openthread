@@ -77,9 +77,11 @@ namespace Mac {
 #error "OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE MUST NOT be defined directly. It is derived from other configs"
 #endif
 
-#define OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE                                                    \
-    (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE || \
-     ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE))
+#define OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE                                                                          \
+    (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE ||                       \
+     ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE) || \
+     (OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE &&                                                       \
+      (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)))
 
 //----------------------------------------------------------------------------------------------------------------------
 // Config validity checks
@@ -123,6 +125,7 @@ class SubMac : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
     friend class LinkRaw;
+    friend class LinkExt;
 
 public:
     using Capability   = Radio::Capability;   ///< A radio capability.
@@ -377,6 +380,13 @@ public:
      * window is already active (radio is currently receiving), this method does not interrupt the ongoing reception.
      */
     void CancelPendingReceiveAt(void);
+#endif
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+    /**
+     * Notifies that the `LinkExt` periodic RX schedules have changed.
+     */
+    void UpdateOnPeriodicRxChange(void) { mListenScheduler.UpdateOnPeriodicRxChange(); }
 #endif
 
     /**
@@ -655,6 +665,9 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         void UpdateOnCslChange(void) { Schedule(); }
 #endif
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+        void UpdateOnPeriodicRxChange(void) { Schedule(); }
+#endif
 
     private:
         static constexpr uint32_t kCslTransitionToNextAheadTime = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
@@ -679,6 +692,9 @@ private:
         void Schedule(void);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         void ScheduleCsl(SchedInfo &aInfo);
+#endif
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+        void SchedulePeriodicRx(SchedInfo &aInfo);
 #endif
 
         using ListenTimer = TimerMicroIn<SubMac, &SubMac::HandleListenSchedulerTimer>;

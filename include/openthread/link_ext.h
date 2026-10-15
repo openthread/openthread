@@ -142,6 +142,58 @@ otError otLinkExtStopBurst(otInstance *aInstance);
 void otLinkExtGetBurstConfig(otInstance *aInstance, otLinkExtBurstConfig *aConfig);
 
 /**
+ * Represents a periodic receive schedule.
+ *
+ * A receive window starts at every radio time `T` (see `otPlatRadioGetNow()`) that satisfies
+ * `T % mPeriodUs == mPhaseUs` and lasts `mDurationUs` microseconds.
+ */
+typedef struct otLinkExtPeriodicRxSchedule
+{
+    uint32_t mPhaseUs;    ///< Phase of the window start within the period (in usec), less than `mPeriodUs`.
+    uint32_t mPeriodUs;   ///< Period (in usec), non-zero.
+    uint16_t mDurationUs; ///< Window duration (in usec), non-zero and not more than `mPeriodUs`.
+    uint8_t  mChannel;    ///< Channel to listen on, in the radio's supported channel mask.
+} otLinkExtPeriodicRxSchedule;
+
+/**
+ * Sets the periodic receive schedules.
+ *
+ * Requires `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` (RCP builds only) and a non-zero
+ * `OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES`.
+ *
+ * Atomically replaces all schedules. While the radio is in the Sleep state, receive windows are opened according to
+ * the schedules using `otPlatRadioReceiveAt()`. Receive, transmit and energy scan take precedence, and periodic RX
+ * resumes when the radio returns to Sleep. Array order defines priority (index 0 has the highest priority) between
+ * overlapping windows. Passing zero schedules disables periodic RX. A window already scheduled on the radio may still
+ * occur once after the schedules are changed.
+ *
+ * @param[in] aInstance      A pointer to an OpenThread instance.
+ * @param[in] aSchedules     A pointer to an array of schedules (can be NULL if @p aNumSchedules is zero).
+ * @param[in] aNumSchedules  The number of schedules in @p aSchedules.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the schedules.
+ * @retval OT_ERROR_NO_BUFS       More than `OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES` schedules. The
+ *                                schedules are left unchanged.
+ * @retval OT_ERROR_INVALID_ARGS  A schedule is invalid. The schedules are left unchanged.
+ */
+otError otLinkExtSetPeriodicRxSchedules(otInstance                        *aInstance,
+                                        const otLinkExtPeriodicRxSchedule *aSchedules,
+                                        uint8_t                            aNumSchedules);
+
+/**
+ * Gets the periodic receive schedules.
+ *
+ * Requires `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` (RCP builds only) and a non-zero
+ * `OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES`.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[out] aNumSchedules  A pointer to return the number of schedules.
+ *
+ * @returns A pointer to the array of schedules.
+ */
+const otLinkExtPeriodicRxSchedule *otLinkExtGetPeriodicRxSchedules(otInstance *aInstance, uint8_t *aNumSchedules);
+
+/**
  * @}
  */
 

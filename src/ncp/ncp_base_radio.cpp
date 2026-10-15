@@ -738,6 +738,55 @@ exit:
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_LOG_CRASH_DUMP>(void) { return otPlatLogCrashDump(); }
 #endif
 
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_PERIODIC_RX_SCHEDULES>(void)
+{
+    otError                            error = OT_ERROR_NONE;
+    uint8_t                            numSchedules;
+    const otLinkExtPeriodicRxSchedule *schedules = otLinkExtGetPeriodicRxSchedules(mInstance, &numSchedules);
+
+    for (uint8_t i = 0; i < numSchedules; i++)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUint32(schedules[i].mPhaseUs));
+        SuccessOrExit(error = mEncoder.WriteUint32(schedules[i].mPeriodUs));
+        SuccessOrExit(error = mEncoder.WriteUint16(schedules[i].mDurationUs));
+        SuccessOrExit(error = mEncoder.WriteUint8(schedules[i].mChannel));
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_PERIODIC_RX_SCHEDULES>(void)
+{
+    otError                     error        = OT_ERROR_NONE;
+    uint8_t                     numSchedules = 0;
+    otLinkExtPeriodicRxSchedule schedules[OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES];
+
+    while (!mDecoder.IsAllReadInStruct())
+    {
+        VerifyOrExit(numSchedules < OT_ARRAY_LENGTH(schedules), error = OT_ERROR_NO_BUFS);
+
+        SuccessOrExit(error = mDecoder.OpenStruct());
+        SuccessOrExit(error = mDecoder.ReadUint32(schedules[numSchedules].mPhaseUs));
+        SuccessOrExit(error = mDecoder.ReadUint32(schedules[numSchedules].mPeriodUs));
+        SuccessOrExit(error = mDecoder.ReadUint16(schedules[numSchedules].mDurationUs));
+        SuccessOrExit(error = mDecoder.ReadUint8(schedules[numSchedules].mChannel));
+        SuccessOrExit(error = mDecoder.CloseStruct());
+
+        numSchedules++;
+    }
+
+    error = otLinkExtSetPeriodicRxSchedules(mInstance, schedules, numSchedules);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES
+       // > 0)
+
 } // namespace Ncp
 } // namespace ot
 

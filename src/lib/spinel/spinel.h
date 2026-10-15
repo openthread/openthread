@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 13
+#define SPINEL_RCP_API_VERSION 14
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -4835,6 +4835,64 @@ enum
      * burst.
      */
     SPINEL_PROP_RCP_TX_BURST = SPINEL_PROP_RCP_EXT__BEGIN + 7,
+
+    /// RCP Periodic RX Schedules
+    /** Format: `A(t(LLSC))`
+     *
+     * The table of periodic receive schedules used by the RCP to autonomously sample the channel while the radio is in
+     * Sleep state. Setting this property atomically replaces the whole table. An empty table disables periodic RX. A
+     * window already scheduled before the table is set may still occur once.
+     *
+     * Each schedule entry is encoded as:
+     *
+     *  `L`: Phase (in microseconds), MUST be less than the period.
+     *  `L`: Period (in microseconds), MUST be non-zero.
+     *  `S`: Duration (in microseconds), MUST be non-zero and not more than the period.
+     *  `C`: Channel, MUST be in the RCP's supported channel mask (`SPINEL_PROP_PHY_CHAN_SUPPORTED`).
+     *
+     * A receive window starts at every radio time `T` (in microseconds, see `otPlatRadioGetNow()`) which satisfies
+     * `T % Period == Phase`, i.e. the phase is relative to radio time zero.
+     *
+     * To align windows with a repeating activity (e.g. a coexistence activity), let:
+     *
+     *  - `A`: The radio time (in microseconds) at which one occurrence of the activity starts.
+     *  - `P`: The repetition period of the activity (in microseconds).
+     *  - `D`: The desired delay (in microseconds) from the start of an activity occurrence to the start of the receive
+     *         window (e.g. to place the window in a gap between occurrences), `0 <= D < P`.
+     *  - `M`: The number of activity periods between two receive windows, `M >= 1` (`M = 1` samples after every
+     *         occurrence).
+     *
+     * Then use `Period = M * P` and `Phase = (A + D) % Period`, so windows start at `A + D + k * Period` for every
+     * integer `k`. If the activity's clock drifts relative to the radio clock, the host is expected to keep the
+     * schedules aligned by setting an updated table.
+     *
+     * Arbitration between overlapping windows:
+     *
+     *  - Array order defines priority (the first entry has highest priority). At any instant, the radio listens on
+     *    the channel of the highest-priority schedule whose window covers that instant.
+     *  - When windows of different schedules overlap on different channels, the lower-priority window is truncated
+     *    (not skipped) to the parts not covered by the higher-priority window, before and/or after it.
+     *  - Overlapping windows on the same channel are merged into one continuous window.
+     *  - When a higher-priority window preempts an ongoing lower-priority window on a different channel, the RCP may
+     *    switch channel slightly before the higher-priority window starts (an implementation-defined channel switch
+     *    guard time), taking that time from the lower-priority window.
+     *  - The RCP may drop a truncated window that is too short to be useful (implementation-defined minimum).
+     *  - If a frame passing the address filter is being received when a window ends (e.g. its SHR was detected), the
+     *    RCP completes the frame reception and any ACK transmission before switching to the channel of the next
+     *    window (even a higher-priority one) or returning to Sleep. A frame failing the address filter is aborted as
+     *    soon as the mismatch is determined.
+     *
+     * Periodic RX runs only while the radio is in Sleep state. Receive, Transmit and Energy Scan pause it, and it
+     * resumes when the radio returns to Sleep.
+     *
+     * An RCP supporting this property SHOULD support at least 3 entries. Setting a table with more entries than the
+     * RCP supports returns `SPINEL_STATUS_NOMEM`, and setting a table with an invalid entry returns
+     * `SPINEL_STATUS_INVALID_ARGUMENT`. In both cases the previous table is left unchanged.
+     *
+     * Only `CMD_PROP_VALUE_SET` and `CMD_PROP_VALUE_GET` are supported. An RCP not supporting periodic RX responds to
+     * `CMD_PROP_VALUE_GET` with `SPINEL_STATUS_PROP_NOT_FOUND`, which the host reports as `OT_ERROR_NOT_IMPLEMENTED`.
+     */
+    SPINEL_PROP_RCP_PERIODIC_RX_SCHEDULES = SPINEL_PROP_RCP_EXT__BEGIN + 8,
 
     SPINEL_PROP_RCP_EXT__END = 0x900,
 

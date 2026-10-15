@@ -62,7 +62,8 @@ namespace Mac {
 class LinkRaw;
 
 /**
- * Implements link-layer extensions built on top of the raw link-layer (`LinkRaw`), such as burst transmission.
+ * Implements link-layer extensions built on top of the raw link-layer (`LinkRaw`), such as burst transmission and
+ * periodic receive schedules.
  */
 class LinkExt : public InstanceLocator, private NonCopyable
 {
@@ -132,6 +133,60 @@ public:
      */
     bool ShouldDeferIdleState(bool aIsReceiving);
 
+#if (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+    static constexpr uint8_t kMaxPeriodicRxSchedules =
+        OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES; ///< Max number of periodic RX schedules.
+
+    /**
+     * Represents a periodic receive schedule (see `otLinkExtPeriodicRxSchedule`).
+     */
+    typedef otLinkExtPeriodicRxSchedule PeriodicRxSchedule;
+
+    /**
+     * Atomically replaces the periodic RX schedules.
+     *
+     * Array order defines priority (index 0 has highest priority). Overlapping windows are arbitrated as described
+     * in "Periodic RX arbitration" below. Passing zero schedules disables periodic RX.
+     *
+     * @param[in] aSchedules     A pointer to an array of schedules (can be `nullptr` if @p aNumSchedules is zero).
+     * @param[in] aNumSchedules  The number of schedules in @p aSchedules.
+     *
+     * See `otLinkExtSetPeriodicRxSchedules()` for details.
+     *
+     * @retval kErrorNone         Successfully updated the schedules.
+     * @retval kErrorNoBufs       More than `kMaxPeriodicRxSchedules` schedules. The previous schedules are unchanged.
+     * @retval kErrorInvalidArgs  A schedule is invalid. The previous schedules are left unchanged.
+     */
+    Error SetPeriodicRxSchedules(const PeriodicRxSchedule *aSchedules, uint8_t aNumSchedules);
+
+    /**
+     * Gets the current periodic RX schedules.
+     *
+     * @param[out] aNumSchedules  A reference to output the number of schedules.
+     *
+     * @returns A pointer to the array of current schedules.
+     */
+    const PeriodicRxSchedule *GetPeriodicRxSchedules(uint8_t &aNumSchedules) const
+    {
+        aNumSchedules = mNumPeriodicRxSchedules;
+        return mPeriodicRxSchedules;
+    }
+
+    /**
+     * Determines the periodic RX window to schedule now.
+     *
+     * Called by `SubMac::ListenScheduler` whenever it evaluates its listen sources. The returned window is passed
+     * to `SubMac::ReceiveAt()`, and the scheduler evaluates again at the window start time.
+     *
+     * @param[in]  aNow      The current radio time.
+     * @param[out] aTimedRx  A reference to output the window.
+     *
+     * @retval TRUE   A window is provided in @p aTimedRx.
+     * @retval FALSE  There is no window to schedule.
+     */
+    bool DeterminePeriodicRxWindow(const Radio::SyncedTime &aNow, SubMac::TimedRx &aTimedRx);
+#endif
+
 private:
     static constexpr uint32_t kBurstTxAheadUs = OPENTHREAD_CONFIG_LINK_EXT_BURST_TX_AHEAD_US;
 
@@ -150,6 +205,84 @@ private:
     void  HandleBurstTimer(void);
     void  SendBurstFrame(void);
 
+#if (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+    /*
+     * Periodic RX arbitration
+     *
+     * The periodic RX schedules are arbitrated here, and the resulting windows are passed one at a time to
+     * `SubMac::ListenScheduler` as a listen source (see `DeterminePeriodicRxWindow()`). Against other listen sources
+     * of `SubMac` (e.g. CSL receiver, which is not expected to be enabled on an RCP), the listen scheduler's own rule
+     * applies (the earliest window that has not ended is scheduled).
+     *
+     * Rules among the periodic RX schedules (array order defines priority, index 0 has highest priority):
+     *
+     * 1. Owner: At any instant, the radio is owned by the highest-priority schedule whose window covers that instant.
+     *    If no window covers the instant, there is no periodic RX window.
+     *
+     * 2. Truncation, not skipping: A lower-priority window overlapping a higher-priority window on a different
+     *    channel is not dropped as a whole. It keeps the parts not covered by the higher-priority window, which can
+     *    be a part before and/or a part after it.
+     *
+     * 3. Merging: Windows are formed from the owner channel, not the owner. A maximal interval during which the owner
+     *    channel stays the same is one window, so overlapping or back-to-back windows on the same channel are merged
+     *    regardless of their priorities. A merged window is capped at the largest schedule period. To bound the
+     *    computation, a window is also ended after evaluating `kPeriodicRxMaxMergeEvents` events, so a longer
+     *    continuous interval on the same channel is split into back-to-back windows.
+     *
+     * 4. Channel switch guard: When a higher-priority window preempts an ongoing lower-priority window on a different
+     *    channel, the higher-priority schedule also owns the `kPeriodicRxGuard` interval right before its window
+     *    start, so that the radio is listening on the new channel no later than the window start. The guard time is
+     *    taken from the lower-priority window. No guard is added when the higher-priority window starts while no
+     *    other window is active, or when the radio returns to a lower-priority window after a higher-priority window
+     *    ends.
+     *
+     * 5. Minimum fragment: A truncated window (shorter than the full window duration of its owner) which is shorter
+     *    than `kPeriodicRxMinFragment` (guard time plus the SHR duration, i.e. the time needed to detect a frame) is
+     *    dropped.
+     *
+     * Example: schedule A (higher priority, channel 11) window [5000, 6600), schedule B (lower priority, channel 12)
+     * window [4000, 8000), guard `G`:
+     *
+     *          4000          5000-G 5000          6600          8000
+     *   A:                          |=============|
+     *   B:       |========================================================|
+     *   Result:  |== ch 12 ===|== ch 11 ==========|== ch 12 =====|
+     *
+     * Scheduling: since a subsequent `ReceiveAt()` replaces a window which has not started yet, the window following
+     * the active one is provided only once the active one has started. If the active window changes (e.g. it is
+     * truncated after the schedules are updated), it is provided again keeping its start time.
+     *
+     * 6. Frame in progress: The rules above define when windows start and end. If the radio has started receiving a
+     *    frame (e.g. SHR detected) in a window, it completes the frame reception and any ACK transmission before
+     *    switching to the channel of the next window or returning to Sleep, even if the frame extends into a
+     *    higher-priority window. This is required of the radio platform by `otPlatRadioReceiveAt()`, so it needs no
+     *    handling here. A frame failing the address filter is expected to be aborted as soon as the mismatch is
+     *    determined, so that it does not delay the next window.
+     *
+     * Timed RX windows only take effect while the radio is in Sleep state. Other operations (receive, transmit,
+     * energy scan) take precedence, see `otPlatRadioReceiveAt()`.
+     *
+     * Limitation: when the schedules are updated, a window already scheduled on the radio is not cancelled, since
+     * `SubMac::ListenScheduler` does not cancel a window scheduled on the radio. Hence the previously scheduled
+     * window may still occur once after the schedules are cleared or changed.
+     */
+
+    static constexpr uint32_t kPeriodicRxGuard       = OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_CHANNEL_SWITCH_GUARD_US;
+    static constexpr uint32_t kPeriodicRxMinFragment = kPeriodicRxGuard + Radio::kHeaderShrDuration;
+    static constexpr uint16_t kPeriodicRxMaxMergeEvents = 64;
+    static constexpr uint8_t  kPeriodicRxNoOwner        = 0xff;
+
+    bool                 IsValid(const PeriodicRxSchedule &aSchedule);
+    static Radio::Time64 GetNextStart(const PeriodicRxSchedule &aSchedule, Radio::Time64 aTime);
+    static bool          IsCovering(const PeriodicRxSchedule &aSchedule, Radio::Time64 aTime, Radio::Time64 &aEnd);
+    static bool          IsInGuard(const PeriodicRxSchedule &aSchedule, Radio::Time64 aTime);
+    static Radio::Time64 GetNextEvent(const PeriodicRxSchedule &aSchedule, Radio::Time64 aTime);
+
+    uint8_t       GetPeriodicRxOwner(Radio::Time64 aTime) const;
+    Radio::Time64 GetNextPeriodicRxEvent(Radio::Time64 aTime) const;
+    bool          FindNextPeriodicRxWindow(Radio::Time64 aFrom, SubMac::TimedRx &aWindow) const;
+#endif
+
     using BurstTimer = TimerMicroIn<LinkExt, &LinkExt::HandleBurstTimer>;
 
     otLinkExtBurstDone mBurstDoneCallback;
@@ -162,6 +295,12 @@ private:
     bool               mIsBurstTxPending;     // A burst frame is with `SubMac`.
     bool               mIsBurstStopRequested; // Stop is requested while a burst frame is with the radio.
     bool               mIsReceiving;          // Idle state between burst ticks: receive (true) or sleep (false).
+
+#if (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+    uint8_t            mNumPeriodicRxSchedules;
+    PeriodicRxSchedule mPeriodicRxSchedules[kMaxPeriodicRxSchedules];
+    SubMac::TimedRx    mPeriodicRxWindow; // The last window provided to `SubMac::ListenScheduler`.
+#endif
 };
 
 } // namespace Mac

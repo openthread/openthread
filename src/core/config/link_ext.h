@@ -46,7 +46,7 @@
 /**
  * @def OPENTHREAD_CONFIG_LINK_EXT_ENABLE
  *
- * Define to 1 to enable the Link Extension service (e.g., burst transmission).
+ * Define to 1 to enable the Link Extension service (e.g., burst transmission and periodic receive schedules).
  *
  * Only supported in RCP builds (`OPENTHREAD_RADIO`). Requires `OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE` and
  * target time TX support (e.g. CSL transmitter or software TX timing).
@@ -62,6 +62,33 @@
  */
 #ifndef OPENTHREAD_CONFIG_LINK_EXT_BURST_TX_AHEAD_US
 #define OPENTHREAD_CONFIG_LINK_EXT_BURST_TX_AHEAD_US 1000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES
+ *
+ * The maximum number of periodic receive schedules (see `otLinkExtSetPeriodicRxSchedules()`).
+ *
+ * Zero disables periodic receive schedules. Applicable only when `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` is enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES
+#define OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES 3
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_CHANNEL_SWITCH_GUARD_US
+ *
+ * The channel switch guard time (in microseconds) used when arbitrating periodic receive schedules.
+ *
+ * When a higher-priority receive window preempts an ongoing lower-priority window on a different channel, the
+ * higher-priority window is started this much earlier so that the radio is listening on the new channel no later
+ * than the window start. The guard time is taken from the lower-priority window. A truncated window shorter than this
+ * guard time plus the SHR duration (160 microseconds, the time needed to detect a frame) is dropped.
+ *
+ * Applicable only when `OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES` is non-zero.
+ */
+#ifndef OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_CHANNEL_SWITCH_GUARD_US
+#define OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_CHANNEL_SWITCH_GUARD_US 40
 #endif
 
 /**
