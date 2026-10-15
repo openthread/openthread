@@ -205,6 +205,10 @@ Diags::Diags(Instance &aInstance)
     , mDiagSendOn(false)
     , mIsSleepOn(false)
     , mIsAsyncSweep(false)
+    , mPanId(Mac::kPanIdBroadcast)
+    , mOriginalPanId(Mac::kPanIdBroadcast)
+    , mShortAddress(Mac::kShortAddrInvalid)
+    , mOriginalShortAddress(Mac::kShortAddrInvalid)
     , mOutputCallback(nullptr)
     , mOutputContext(nullptr)
 {
@@ -497,6 +501,17 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    mOriginalPanId = Get<Mac::Mac>().GetPanId();
+#else
+    mOriginalPanId = Mac::kPanIdBroadcast;
+#endif
+    mOriginalShortAddress = Get<Mac::SubMac>().GetShortAddress();
+    mOriginalExtAddress   = Get<Mac::SubMac>().GetExtAddress();
+    mPanId                = mOriginalPanId;
+    mShortAddress         = mOriginalShortAddress;
+    mExtAddress           = mOriginalExtAddress;
+
     Get<Radio::Radio>().SetPromiscuous(true);
     Get<Mac::SubMac>().SetRxOnWhenIdle(true);
     otPlatAlarmMilliStop(&GetInstance());
@@ -506,7 +521,14 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 exit:
     if (error != kErrorNone)
     {
-        Get<Radio::Radio>().SetDiagMode(false);
+        if (Get<Radio::Radio>().GetDiagMode())
+        {
+            Get<Radio::Radio>().SetDiagMode(false);
+            Get<Radio::Radio>().SetPromiscuous(false);
+            Get<Radio::Radio>().SetPanId(mOriginalPanId);
+            Get<Radio::Radio>().SetShortAddress(mOriginalShortAddress);
+            Get<Radio::Radio>().SetExtendedAddress(mOriginalExtAddress);
+        }
     }
 
     return error;
@@ -555,6 +577,9 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     Get<Radio::Radio>().SetDiagMode(false);
     Get<Radio::Radio>().SetPromiscuous(false);
     Get<Mac::SubMac>().SetRxOnWhenIdle(false);
+    Get<Radio::Radio>().SetPanId(mOriginalPanId);
+    Get<Radio::Radio>().SetShortAddress(mOriginalShortAddress);
+    Get<Radio::Radio>().SetExtendedAddress(mOriginalExtAddress);
 
     return kErrorNone;
 }
@@ -818,6 +843,100 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
     else if (StringMatch(aArgs[0], "disable"))
     {
         SuccessOrExit(error = Get<Radio::Radio>().Disable());
+    }
+    else if (StringMatch(aArgs[0], "promiscuous"))
+    {
+        aArgs++;
+        aArgsLength--;
+
+        if (aArgsLength == 0)
+        {
+            Output("%s\r\n", Get<Radio::Radio>().GetPromiscuous() ? "enabled" : "disabled");
+            error = kErrorNone;
+        }
+        else if (StringMatch(aArgs[0], "enable"))
+        {
+            Get<Radio::Radio>().SetPromiscuous(true);
+            error = kErrorNone;
+        }
+        else if (StringMatch(aArgs[0], "disable"))
+        {
+            Get<Radio::Radio>().SetPromiscuous(false);
+            error = kErrorNone;
+        }
+        else
+        {
+            error = kErrorInvalidArgs;
+        }
+    }
+    else if (StringMatch(aArgs[0], "panid"))
+    {
+        aArgs++;
+        aArgsLength--;
+
+        if (aArgsLength == 0)
+        {
+            Output("0x%04x\r\n", mPanId);
+            error = kErrorNone;
+        }
+        else if (aArgsLength == 1)
+        {
+            Mac::PanId panId;
+
+            SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[0], panId));
+            mPanId = panId;
+            Get<Radio::Radio>().SetPanId(mPanId);
+        }
+        else
+        {
+            error = kErrorInvalidArgs;
+        }
+    }
+    else if (StringMatch(aArgs[0], "shortaddr"))
+    {
+        aArgs++;
+        aArgsLength--;
+
+        if (aArgsLength == 0)
+        {
+            Output("0x%04x\r\n", mShortAddress);
+            error = kErrorNone;
+        }
+        else if (aArgsLength == 1)
+        {
+            Mac::ShortAddress shortAddress;
+
+            SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[0], shortAddress));
+            mShortAddress = shortAddress;
+            Get<Radio::Radio>().SetShortAddress(mShortAddress);
+        }
+        else
+        {
+            error = kErrorInvalidArgs;
+        }
+    }
+    else if (StringMatch(aArgs[0], "extaddr"))
+    {
+        aArgs++;
+        aArgsLength--;
+
+        if (aArgsLength == 0)
+        {
+            Output("%s\r\n", mExtAddress.ToString().AsCString());
+            error = kErrorNone;
+        }
+        else if (aArgsLength == 1)
+        {
+            Mac::ExtAddress extAddress;
+
+            SuccessOrExit(error = extAddress.FromString(aArgs[0]));
+            mExtAddress = extAddress;
+            Get<Radio::Radio>().SetExtendedAddress(mExtAddress);
+        }
+        else
+        {
+            error = kErrorInvalidArgs;
+        }
     }
 
 exit:
