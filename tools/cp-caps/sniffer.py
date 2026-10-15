@@ -38,7 +38,7 @@ import tempfile
 import time
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import IO, List, Optional
 
 
 @dataclass
@@ -71,6 +71,7 @@ class Sniffer(object):
         self.__radio_url = radio_url
         self.__start_delay = start_delay
         self.__proc: Optional[subprocess.Popen] = None
+        self.__log: Optional[IO[bytes]] = None
         self.__pcapng_path: Optional[str] = None
 
     def start(self, channel: int):
@@ -87,7 +88,17 @@ class Sniffer(object):
             str(channel), '--fifo', self.__pcapng_path
         ]
         logging.debug('Sniffer: %s', ' '.join(args))
-        self.__proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8')
+
+        # The output of `ot-extcap` goes to a file rather than a pipe, which is not read while capturing and could
+        # block `ot-extcap` once full. It is only read if `ot-extcap` stops unexpectedly.
+        self.__log = tempfile.TemporaryFile(prefix='cp-caps-sniffer-', suffix='.log')
+        try:
+            self.__proc = subprocess.Popen(args, stdout=self.__log, stderr=subprocess.STDOUT)
+        except Exception:
+            self.__log.close()
+            self.__log = None
+            self.__remove_pcapng()
+            raise
 
         # Stops `ot-extcap` (which holds the sniffer RCP) even if the caller exits without stopping the sniffer.
         atexit.register(self.close)
@@ -137,7 +148,8 @@ class Sniffer(object):
             self.__remove_pcapng()
 
     def __raise_stopped_unexpectedly(self):
-        output = self.__proc.stdout.read() if self.__proc.stdout else ''
+        self.__log.seek(0)
+        output = self.__log.read().decode('utf-8', errors='replace').strip()
         returncode = self.__proc.returncode
 
         self.__release_proc()
@@ -148,9 +160,8 @@ class Sniffer(object):
             f' {output}')
 
     def __release_proc(self):
-        if self.__proc.stdout is not None:
-            self.__proc.stdout.close()
-
+        self.__log.close()
+        self.__log = None
         self.__proc = None
         atexit.unregister(self.close)
 
@@ -164,40 +175,70 @@ class Sniffer(object):
         """Parses the frames of a little-endian PCAPNG capture written by `ot-extcap`.
 
         The frames are Enhanced Packet Blocks of the `IEEE802_15_4_TAP` link type, with timestamps in microseconds.
+        Malformed blocks are skipped, and the parsing stops at a truncated block (e.g. the capture was stopped while
+        writing it).
         """
+        BLOCK_HEADER_FORMAT = '<II'  # Type, total length
+        BLOCK_TRAILER_LENGTH = 4  # Total length
         PCAPNG_EPB_TYPE = 6
-        EPB_HEADER_FORMAT = '<IIIIIII'  # Type, total length, interface, timestamp high/low, captured/original length
-        TAP_HEADER_FORMAT = '<HH'  # Version, length (including the TLVs)
-        TAP_TLV_HEADER_FORMAT = '<HH'  # Type, length
-        TAP_CHANNEL_TYPE = 3
 
         frames = []
         offset = 0
 
-        while offset + 8 <= len(data):
-            block_type, block_length = struct.unpack_from('<II', data, offset)
+        while offset + struct.calcsize(BLOCK_HEADER_FORMAT) <= len(data):
+            block_type, block_length = struct.unpack_from(BLOCK_HEADER_FORMAT, data, offset)
 
-            if block_length < 12 or offset + block_length > len(data):
-                break  # A truncated block, e.g. the capture was stopped while writing it.
+            if block_length < struct.calcsize(BLOCK_HEADER_FORMAT) + BLOCK_TRAILER_LENGTH or \
+                    offset + block_length > len(data):
+                break
 
             if block_type == PCAPNG_EPB_TYPE:
-                _, _, _, ts_high, ts_low, captured_length, _ = struct.unpack_from(EPB_HEADER_FORMAT, data, offset)
-                packet = data[offset + struct.calcsize(EPB_HEADER_FORMAT):][:captured_length]
-                _, tap_length = struct.unpack_from(TAP_HEADER_FORMAT, packet, 0)
-                channel = 0
-                tlv_offset = struct.calcsize(TAP_HEADER_FORMAT)
-
-                while tlv_offset + 4 <= tap_length:
-                    tlv_type, tlv_length = struct.unpack_from(TAP_TLV_HEADER_FORMAT, packet, tlv_offset)
-                    if tlv_type == TAP_CHANNEL_TYPE:
-                        channel = struct.unpack_from('<H', packet, tlv_offset + 4)[0]
-                    tlv_offset += 4 + ((tlv_length + 3) & ~3)
-
-                frames.append(
-                    SniffedFrame(timestamp_us=(ts_high << 32) | ts_low,
-                                 channel=channel,
-                                 psdu=packet[tap_length:].hex()))
+                frame = Sniffer.__parse_epb(data[offset:offset + block_length - BLOCK_TRAILER_LENGTH])
+                if frame is not None:
+                    frames.append(frame)
 
             offset += block_length
 
         return frames
+
+    @staticmethod
+    def __parse_epb(block: bytes) -> Optional[SniffedFrame]:
+        """Parses an Enhanced Packet Block (without its trailer), or returns None if it is malformed."""
+        EPB_HEADER_FORMAT = '<IIIIIII'  # Type, total length, interface, timestamp high/low, captured/original length
+        TAP_HEADER_FORMAT = '<HH'  # Version, length (including the TLVs)
+        TAP_TLV_HEADER_FORMAT = '<HH'  # Type, length
+        TAP_CHANNEL_TYPE = 3
+        TAP_CHANNEL_FORMAT = '<H'  # Channel (followed by the channel page)
+
+        if len(block) < struct.calcsize(EPB_HEADER_FORMAT):
+            return None
+
+        _, _, _, ts_high, ts_low, captured_length, _ = struct.unpack_from(EPB_HEADER_FORMAT, block, 0)
+        packet = block[struct.calcsize(EPB_HEADER_FORMAT):]
+
+        if captured_length > len(packet) or captured_length < struct.calcsize(TAP_HEADER_FORMAT):
+            return None
+
+        packet = packet[:captured_length]
+        _, tap_length = struct.unpack_from(TAP_HEADER_FORMAT, packet, 0)
+
+        if tap_length < struct.calcsize(TAP_HEADER_FORMAT) or tap_length > len(packet):
+            return None
+
+        channel = 0
+        tlv_offset = struct.calcsize(TAP_HEADER_FORMAT)
+
+        while tlv_offset + struct.calcsize(TAP_TLV_HEADER_FORMAT) <= tap_length:
+            tlv_type, tlv_length = struct.unpack_from(TAP_TLV_HEADER_FORMAT, packet, tlv_offset)
+            value_offset = tlv_offset + struct.calcsize(TAP_TLV_HEADER_FORMAT)
+
+            if value_offset + tlv_length > tap_length:
+                return None
+
+            if tlv_type == TAP_CHANNEL_TYPE and tlv_length >= struct.calcsize(TAP_CHANNEL_FORMAT):
+                channel = struct.unpack_from(TAP_CHANNEL_FORMAT, packet, value_offset)[0]
+
+            # TLV values are padded to 4-byte boundaries.
+            tlv_offset = value_offset + ((tlv_length + 3) & ~3)
+
+        return SniffedFrame(timestamp_us=(ts_high << 32) | ts_low, channel=channel, psdu=packet[tap_length:].hex())
