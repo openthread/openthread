@@ -3471,9 +3471,6 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     }
 
     VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_NONE) == 0, OT_EXIT_ERROR_ERRNO);
-
-    ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
-    VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
 }
 #endif
 
@@ -3661,6 +3658,8 @@ static void platformConfigureNetLink(void)
 
 void platformNetifInit(otPlatformConfig *aPlatformConfig)
 {
+    struct ifreq ifr;
+
     // To silence "unused function" warning.
     (void)LogCrit;
     (void)LogWarn;
@@ -3681,6 +3680,13 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     platformConfigureTunDevice(aPlatformConfig);
+
+    // The interface carries IPv6 datagrams of at most OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH bytes
+    // on every platform; a larger packet from the host would be cut by the tunnel read.
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, gNetifName, sizeof(ifr.ifr_name));
+    ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
+    VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, &ifr) == 0, OT_EXIT_ERROR_ERRNO);
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     // A macOS utun is created up (a BSD tun is not). Start down, as a Linux tun does: OpenThread
