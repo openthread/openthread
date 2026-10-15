@@ -293,6 +293,51 @@ check_daemon_socket_path()
     sudo test -f "${basename}.lock" || die "ot-daemon lock file ${basename}.lock does not exist"
 }
 
+set_host_link_state()
+{
+    if [[ ${OSTYPE} == "linux-gnu"* ]]; then
+        sudo ip link set dev "${NETIF_NAME}" "$1"
+    else
+        sudo ifconfig "${NETIF_NAME}" "$1"
+    fi
+}
+
+# OpenThread's interface is in the given state (up or down), as ot-ctl reports it.
+ot_ifconfig_is()
+{
+    local output
+
+    output=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig) || return 1
+    grep -q "$1" <<<"${output}"
+}
+
+# Dies with the given message, or with ot-daemon's exit status when it is the daemon that is gone.
+die_on_host_link_state()
+{
+    local status
+
+    # OT_DAEMON_JOB is sudo (or the sudo function of script/_maybe_isolate), which
+    # lives as long as ot-daemon and exits with its status.
+    if ! ps -p "${OT_DAEMON_JOB}" >/dev/null; then
+        wait "${OT_DAEMON_JOB}" && status=0 || status=$?
+        die "ot-daemon exited with status ${status} on the host setting the interface $1"
+    fi
+    die "OpenThread did not follow the host setting the interface $1"
+}
+
+check_host_link_state()
+{
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # The host's link state is passed to OpenThread on every platform. Thread is running here: the
+    # host's down stops it, and the host's up brings OpenThread's interface back (not Thread), so the
+    # ifconfig-down check that follows starts from an interface that is up.
+    set_host_link_state down
+    timeout_run 10 ot_ifconfig_is down || die_on_host_link_state down
+    set_host_link_state up
+    timeout_run 10 ot_ifconfig_is up || die_on_host_link_state up
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -467,6 +512,7 @@ EOF
     # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
     if [[ $OSTYPE != "linux-gnu"* ]]; then
         check_daemon_omr_route
+        check_host_link_state
         check_daemon_netif_down
         return 0
     fi
@@ -491,6 +537,7 @@ EOF
     fi
 
     check_daemon_omr_route
+    check_host_link_state
     check_daemon_netif_down
 }
 
