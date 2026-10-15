@@ -136,6 +136,12 @@ void Daemon::InitializeSessionSocket(void)
 
     VerifyOrExit((rval = fcntl(newSessionSocket, F_SETFD, rval)) != -1);
 
+    // BSD sockets inherit the file status flags of the listening socket on accept(), Linux sockets do not, and
+    // accept(2) asks portable programs to set the flags of the new socket explicitly. Serve the session blocking
+    // on every platform, as on Linux.
+    VerifyOrExit((rval = fcntl(newSessionSocket, F_GETFL, 0)) != -1);
+    VerifyOrExit((rval = fcntl(newSessionSocket, F_SETFL, rval & ~O_NONBLOCK)) != -1);
+
 #ifndef MSG_NOSIGNAL
     // some platforms (macOS, Solaris) don't have MSG_NOSIGNAL
     // SOME of those (macOS, but NOT Solaris) support SO_NOSIGPIPE
