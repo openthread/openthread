@@ -33,6 +33,7 @@
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -195,6 +196,11 @@ public:
          * @param[in] aLastRxTimestamp  The last RX timestamp.
          */
         void SetLastRxTimestamp(Radio::Time64 aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
+
+        /**
+         * Clears all CSL parameters and synchronization state.
+         */
+        void ClearCsl(void) { ClearAllBytes(*this); }
 
     private:
         Radio::Time64 DetermineNextCslWindow(Radio::Time64 aRadioNow, uint32_t aLeadTime) const;

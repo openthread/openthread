@@ -107,13 +107,7 @@ void CslTxScheduler::Clear(void)
 #if OPENTHREAD_FTD
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        child.ResetCslTxAttempts();
-        child.SetCslSynchronized(false);
-        child.SetCslChannel(0);
-        child.SetCslTimeout(0);
-        child.SetCslPeriod(0);
-        child.SetCslPhase(0);
-        child.SetCslLastHeard(TimeMilli(0));
+        child.ClearCsl();
     }
 #endif
 
