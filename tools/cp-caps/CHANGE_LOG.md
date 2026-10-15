@@ -1,4 +1,4 @@
-# Co-processor capability test change logs (Sorted per date)
+# Co-Processor Capability Test Suite Change Log (Sorted by date)
 
 ## Version 0.1.0 released 2024-09-19
 
