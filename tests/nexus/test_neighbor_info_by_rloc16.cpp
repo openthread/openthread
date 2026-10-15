@@ -167,7 +167,7 @@ void TestNeighborInfoByRloc16(void)
                  OT_ERROR_NOT_FOUND);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("FED: parent is found, and so is a non-parent router it has a link with");
+    Log("FED: the parent and any non-parent router with an established link are found");
 
     SuccessOrQuit(otThreadGetNeighborInfoByRloc16(&fed.GetInstance(), leader.Get<Mle::Mle>().GetRloc16(), &info));
     VerifyOrQuit(AsCoreType(&info.mExtAddress) == leader.Get<Mac::Mac>().GetExtAddress());
