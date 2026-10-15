@@ -49,6 +49,7 @@ send "neighbor 0x$rloc\n"
 expect "Role: C"
 expect "Rloc16: 0x$rloc"
 expect "Ext Addr: $extaddr"
+expect -re "Connection Time: \\d+"
 expect_line "Mode: r"
 expect_line "Done"
 send "neighbor 0xfffe\n"
@@ -56,7 +57,7 @@ expect "Error 23: NotFound"
 set leader_rloc [get_rloc16]
 switch_node 2
 send "neighbor 0x$leader_rloc\n"
-expect "Role: L"
+expect "Role: R"
 expect "Rloc16: 0x$leader_rloc"
 expect_line "Done"
 switch_node 1

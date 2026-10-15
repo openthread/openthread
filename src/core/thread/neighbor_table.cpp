@@ -262,25 +262,38 @@ exit:
 
 Error NeighborTable::GetNeighborInfo(uint16_t aRloc16, Neighbor::Info &aNeighInfo)
 {
-    Error     error = kErrorNone;
-    Neighbor *neighbor;
+    Error     error    = kErrorNone;
+    Neighbor *neighbor = nullptr;
 
-#if OPENTHREAD_FTD
-    // On a router or leader, a router RLOC16 can only match an
-    // entry in the router table, which is indexed by Router ID.
-    if (Get<Mle::Mle>().IsRouterOrLeader() && Mle::IsRouterRloc16(aRloc16))
+    // `kShortAddrInvalid` acts as a wildcard in `AddressMatcher`, so it
+    // must be rejected before the child table lookup.
+    VerifyOrExit((aRloc16 != Mac::kShortAddrBroadcast) && (aRloc16 != Mac::kShortAddrInvalid), error = kErrorNotFound);
+
+    if (Get<Mle::Mle>().IsChild() && Get<Mle::Mle>().GetParent().IsStateValid() &&
+        (Get<Mle::Mle>().GetParent().GetRloc16() == aRloc16))
     {
+        neighbor = &Get<Mle::Mle>().GetParent();
+    }
+#if OPENTHREAD_FTD
+    else if (Get<Mle::Mle>().IsRouterOrLeader() && Mle::IsChildRloc16(aRloc16))
+    {
+        neighbor = Get<ChildTable>().FindChild(aRloc16, Child::kInStateValid);
+    }
+    else if (Get<Mle::Mle>().IsAttached() && Mle::IsRouterRloc16(aRloc16))
+    {
+        // Neighboring routers on a router or leader, or router links
+        // on an FTD child. The router table is indexed by Router ID
+        // only, so the full RLOC16 is also checked.
         Router *router = Get<RouterTable>().FindRouterByRloc16(aRloc16);
 
-        VerifyOrExit((router != nullptr) && router->IsStateValid(), error = kErrorNotFound);
-        neighbor = router;
+        if ((router != nullptr) && router->IsStateValid() && (router->GetRloc16() == aRloc16))
+        {
+            neighbor = router;
+        }
     }
-    else
 #endif
-    {
-        neighbor = FindNeighbor(aRloc16, Neighbor::kInStateValid);
-        VerifyOrExit(neighbor != nullptr, error = kErrorNotFound);
-    }
+
+    VerifyOrExit(neighbor != nullptr, error = kErrorNotFound);
 
     aNeighInfo.SetFrom(*neighbor);
     aNeighInfo.mIsChild = Mle::IsChildRloc16(aRloc16);

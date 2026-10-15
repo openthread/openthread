@@ -4684,6 +4684,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
      * Rloc16: 0xc800
      * Ext Addr: 9a91556102c39ddb
      * Age: 2
+     * Connection Time: 644
      * Avg RSSI: -29
      * Last RSSI: -29
      * Link Quality In: 3
@@ -4699,14 +4700,11 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
      * @par
      * Prints information about the neighbor with the given RLOC16.
      * @par
-     * For `Role`, the possible values are `C` (Child), `R` (Router), or `L` (Leader).
+     * For `Role`, the possible values are `C` (Child) or `R` (Router). `Age` and `Connection Time` are in seconds.
      */
     else
     {
-        constexpr uint8_t kRouterIdOffset = 10; // Bit offset of Router ID in RLOC16
-
         uint16_t               rloc16;
-        char                   role;
         PercentageStringBuffer stringBuffer;
         otLinkModeConfig       linkMode;
         char                   linkModeString[kLinkModeStringSize];
@@ -4715,24 +4713,12 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
         VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = otThreadGetNeighborInfoByRloc16(GetInstancePtr(), rloc16, &neighborInfo));
 
-        if (neighborInfo.mIsChild)
-        {
-            role = 'C';
-        }
-        else if ((neighborInfo.mRloc16 >> kRouterIdOffset) == otThreadGetLeaderRouterId(GetInstancePtr()))
-        {
-            role = 'L';
-        }
-        else
-        {
-            role = 'R';
-        }
-
-        OutputLine("Role: %c", role);
+        OutputLine("Role: %c", neighborInfo.mIsChild ? 'C' : 'R');
         OutputLine("Rloc16: 0x%04x", neighborInfo.mRloc16);
         OutputFormat("Ext Addr: ");
         OutputExtAddressLine(neighborInfo.mExtAddress);
         OutputLine("Age: %lu", ToUlong(neighborInfo.mAge));
+        OutputLine("Connection Time: %lu", ToUlong(neighborInfo.mConnectionTime));
         OutputLine("Avg RSSI: %d", neighborInfo.mAverageRssi);
         OutputLine("Last RSSI: %d", neighborInfo.mLastRssi);
         OutputLine("Link Quality In: %u", neighborInfo.mLinkQualityIn);

@@ -721,7 +721,8 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
  * when the RLOC16 of the neighbor is already known (e.g., from the router table).
  *
  * Only neighbors in valid state are considered. On a router or leader, the lookup covers children and neighboring
- * routers. On a child, it covers the parent.
+ * routers. On a child, it covers the parent. On an FTD child, it also covers neighboring routers with which the child
+ * has established a link.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aRloc16    The RLOC16 of the neighbor.
