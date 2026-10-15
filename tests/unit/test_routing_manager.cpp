@@ -1837,6 +1837,11 @@ void TestOmrConfig(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Update OMR config to disable it
 
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
     preference = NetworkData::kRoutePreferenceMedium;
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigDisabled, nullptr, preference));
 
@@ -1847,11 +1852,6 @@ void TestOmrConfig(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Make sure BR emits RA with the new OMR prefix now, and deprecates the old OMR prefix.
-
-    sRaValidated = false;
-    sExpectedPio = kPioAdvertisingLocalOnLink;
-    sExpectedRios.Clear();
-    sExpectedRios.Add(localOmr);
 
     AdvanceTime(20 * 1000);
 
@@ -1871,6 +1871,11 @@ void TestOmrConfig(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Update OMR config back `kOmrConfigAuto` mode.
 
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
     preference = NetworkData::kRoutePreferenceMedium;
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigAuto, nullptr, preference));
 
@@ -1878,11 +1883,6 @@ void TestOmrConfig(void)
     VerifyOrQuit(omrConfig == kOmrConfigAuto);
 
     AdvanceTime(100);
-
-    sRaValidated = false;
-    sExpectedPio = kPioAdvertisingLocalOnLink;
-    sExpectedRios.Clear();
-    sExpectedRios.Add(localOmr);
 
     AdvanceTime(30 * 1000);
 
@@ -1897,6 +1897,12 @@ void TestOmrConfig(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Update OMR config to `kOmrConfigCustom` mode to use a custom prefix
 
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(customPrefix);
+    sExpectedRios.Add(localOmr);
+
     preference = NetworkData::kRoutePreferenceMedium;
     SuccessOrQuit(
         sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigCustom, &customPrefix, preference));
@@ -1907,12 +1913,6 @@ void TestOmrConfig(void)
     VerifyOrQuit(preference == NetworkData::kRoutePreferenceMedium);
 
     AdvanceTime(100);
-
-    sRaValidated = false;
-    sExpectedPio = kPioAdvertisingLocalOnLink;
-    sExpectedRios.Clear();
-    sExpectedRios.Add(customPrefix);
-    sExpectedRios.Add(localOmr);
 
     AdvanceTime(60 * 1000);
 
@@ -1929,6 +1929,12 @@ void TestOmrConfig(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Update the custom prefix preference value to high.
 
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(customPrefix);
+    sExpectedRios.Add(localOmr);
+
     preference = NetworkData::kRoutePreferenceHigh;
     SuccessOrQuit(
         sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigCustom, &customPrefix, preference));
@@ -1939,12 +1945,6 @@ void TestOmrConfig(void)
     VerifyOrQuit(preference == NetworkData::kRoutePreferenceHigh);
 
     AdvanceTime(100);
-
-    sRaValidated = false;
-    sExpectedPio = kPioAdvertisingLocalOnLink;
-    sExpectedRios.Clear();
-    sExpectedRios.Add(customPrefix);
-    sExpectedRios.Add(localOmr);
 
     AdvanceTime(60 * 1000);
 
@@ -1983,17 +1983,17 @@ void TestOmrConfig(void)
     // Switch back to `kOmrConfigDiable` mode. Check that custom prefix is
     // removed from Network Data and we see it deprecating in emitted RAs.
 
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(customPrefix);
+
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigDisabled, nullptr, preference));
 
     omrConfig = sInstance->Get<BorderRouter::RoutingManager>().GetOmrConfig(nullptr, nullptr);
     VerifyOrQuit(omrConfig == kOmrConfigDisabled);
 
     AdvanceTime(100);
-
-    sRaValidated = false;
-    sExpectedPio = kPioAdvertisingLocalOnLink;
-    sExpectedRios.Clear();
-    sExpectedRios.Add(customPrefix);
 
     AdvanceTime(60 * 1000);
 
@@ -2011,18 +2011,18 @@ void TestOmrConfig(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Switch back to `kOmrConfigAuto` mode.
 
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+    sExpectedRios.Add(customPrefix);
+
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigAuto, nullptr, preference));
 
     omrConfig = sInstance->Get<BorderRouter::RoutingManager>().GetOmrConfig(nullptr, nullptr);
     VerifyOrQuit(omrConfig == kOmrConfigAuto);
 
     AdvanceTime(100);
-
-    sRaValidated = false;
-    sExpectedPio = kPioAdvertisingLocalOnLink;
-    sExpectedRios.Clear();
-    sExpectedRios.Add(localOmr);
-    sExpectedRios.Add(customPrefix);
 
     AdvanceTime(60 * 1000);
 
@@ -4019,13 +4019,13 @@ void TestLearningAndCopyingOfFlags(void)
     raFlags.Clear();
     raFlags.mManagedAddressConfigFlag = true;
 
+    sRaValidated           = false;
+    sExpectedRaHeaderFlags = kRaHeaderFlagsOnlyM;
+
     SendRouterAdvert(routerAddressA, raFlags);
 
     AdvanceTime(1);
     VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* S */ false)});
-
-    sRaValidated           = false;
-    sExpectedRaHeaderFlags = kRaHeaderFlagsOnlyM;
 
     AdvanceTime(310 * 1000);
     VerifyOrQuit(sRaValidated);
@@ -4056,13 +4056,13 @@ void TestLearningAndCopyingOfFlags(void)
     raFlags.mManagedAddressConfigFlag = true;
     raFlags.mSnacRouterFlag           = true;
 
+    sRaValidated           = false;
+    sExpectedRaHeaderFlags = kRaHeaderFlagsNone;
+
     SendRouterAdvert(routerAddressA, raFlags);
 
     AdvanceTime(1);
     VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* S */ true)});
-
-    sRaValidated           = false;
-    sExpectedRaHeaderFlags = kRaHeaderFlagsNone;
 
     AdvanceTime(310 * 1000);
     VerifyOrQuit(sRaValidated);
@@ -4074,14 +4074,14 @@ void TestLearningAndCopyingOfFlags(void)
     raFlags.Clear();
     raFlags.mOtherConfigFlag = true;
 
+    sRaValidated           = false;
+    sExpectedRaHeaderFlags = kRaHeaderFlagsOnlyO;
+
     SendRouterAdvert(routerAddressB, raFlags);
 
     AdvanceTime(1);
     VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* S */ true),
                              InfraRouter(routerAddressB, /* M */ false, /* O */ true, /* S */ false)});
-
-    sRaValidated           = false;
-    sExpectedRaHeaderFlags = kRaHeaderFlagsOnlyO;
 
     AdvanceTime(310 * 1000);
     VerifyOrQuit(sRaValidated);
@@ -4093,6 +4093,10 @@ void TestLearningAndCopyingOfFlags(void)
     raFlags.Clear();
     raFlags.mManagedAddressConfigFlag = true;
 
+    sRaValidated           = false;
+    sExpectedPio           = kPioDeprecatingLocalOnLink;
+    sExpectedRaHeaderFlags = kRaHeaderFlagsBothMAndO;
+
     SendRouterAdvert(routerAddressC, {Pio(onLinkPrefix, kValidLitime, kPreferredLifetime)},
                      DefaultRoute(0, NetworkData::kRoutePreferenceMedium), raFlags);
 
@@ -4100,10 +4104,6 @@ void TestLearningAndCopyingOfFlags(void)
     VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* S */ true),
                              InfraRouter(routerAddressB, /* M */ false, /* O */ true, /* S */ false),
                              InfraRouter(routerAddressC, /* M */ true, /* O */ false, /* S */ false)});
-
-    sRaValidated           = false;
-    sExpectedPio           = kPioDeprecatingLocalOnLink;
-    sExpectedRaHeaderFlags = kRaHeaderFlagsBothMAndO;
 
     AdvanceTime(310 * 1000);
     VerifyOrQuit(sRaValidated);
@@ -4185,6 +4185,10 @@ void TestLearnRaHeader(void)
     // Send an RA from the same address (another entity on the device)
     // advertising a default route.
 
+    sRaValidated              = false;
+    sCheckRaHeaderLifetime    = true;
+    sExpectedRaHeaderLifetime = 1000;
+
     SendRouterAdvert(sInfraIfAddress, DefaultRoute(1000, NetworkData::kRoutePreferenceLow));
 
     AdvanceTime(1);
@@ -4195,10 +4199,6 @@ void TestLearnRaHeader(void)
     // RoutingManager should learn the header from the
     // received RA (from same address) and start advertising
     // the same default route lifetime in the emitted RAs.
-
-    sRaValidated              = false;
-    sCheckRaHeaderLifetime    = true;
-    sExpectedRaHeaderLifetime = 1000;
 
     AdvanceTime(30 * 1000);
     VerifyOrQuit(sRaValidated);
