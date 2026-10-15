@@ -165,6 +165,11 @@ void Test1_2_LP_5_3_6(void)
     SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeoutSec));
     nexus.AdvanceTime(kStabilizationTime);
 
+    Child *child = router1.Get<ChildTable>().FindChild(ssed1.Get<Mac::Mac>().GetExtAddress(), Child::kInStateValid);
+    VerifyOrQuit(child != nullptr);
+    VerifyOrQuit(ssed1.Get<Mac::Mac>().IsCslEnabled());
+    VerifyOrQuit(child->IsCslSynchronized());
+
     /**
      * Step 3: Leader
      * - Description: Harness verifies connectivity by instructing the device to send an ICMPv6 Echo Request to the
@@ -198,6 +203,7 @@ void Test1_2_LP_5_3_6(void)
         mode.Set(Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullNetworkData);
         SuccessOrQuit(ssed1.Get<Mle::Mle>().SetDeviceMode(mode));
     }
+    VerifyOrQuit(!ssed1.Get<Mac::Mac>().IsCslEnabled());
 
     /**
      * Step 6: Router_1 (DUT)
@@ -211,6 +217,7 @@ void Test1_2_LP_5_3_6(void)
     Log("Step 6: Router_1 (DUT)");
 
     nexus.AdvanceTime(kTransitionTime);
+    VerifyOrQuit(!child->IsCslSynchronized());
 
     /**
      * Step 7: Leader
@@ -224,6 +231,7 @@ void Test1_2_LP_5_3_6(void)
     leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdAsMed, kEchoPayloadSize,
                            Ip6::kDefaultHopLimit);
     nexus.AdvanceTime(kStabilizationTime);
+    VerifyOrQuit(!child->IsCslSynchronized());
 
     /**
      * Step 8: MED_1 (SSED_1)
@@ -238,6 +246,7 @@ void Test1_2_LP_5_3_6(void)
         mode.Set(Mle::DeviceMode::kModeFullNetworkData);
         SuccessOrQuit(ssed1.Get<Mle::Mle>().SetDeviceMode(mode));
     }
+    VerifyOrQuit(ssed1.Get<Mac::Mac>().IsCslEnabled());
 
     /**
      * Step 9: Router_1 (DUT)
@@ -251,6 +260,7 @@ void Test1_2_LP_5_3_6(void)
     Log("Step 9: Router_1 (DUT)");
 
     nexus.AdvanceTime(kTransitionTime);
+    VerifyOrQuit(child->IsCslSynchronized());
 
     /**
      * Step 10: SSED_1
