@@ -103,6 +103,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES
+ *
+ * The maximum number of entries in the MAC neighbor table of the MAC frame filter (see
+ * `otLinkExtSetMacNeighborTable()`).
+ *
+ * Applicable only when `OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES` is non-zero, in which case it MUST be
+ * non-zero.
+ */
+#ifndef OPENTHREAD_CONFIG_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES
+#define OPENTHREAD_CONFIG_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES 8
+#endif
+
+/**
  * @}
  */
 

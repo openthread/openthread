@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 15
+#define SPINEL_RCP_API_VERSION 16
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -759,6 +759,22 @@ typedef enum
      * with the Key Index of the previous, current, or next key set by `SPINEL_PROP_RCP_MAC_KEY`.
      */
     SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY = 0x04,
+
+    /**
+     * Drop frames from unknown neighbors.
+     *
+     * Discards any secured frame matching a key table entry with a key whose sender is not in the
+     * RCP MAC neighbor table (`SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE`) for that entry.
+     */
+    SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR = 0x08,
+
+    /**
+     * Drop replayed frames.
+     *
+     * Discards any secured frame whose frame counter is lower than the next expected frame counter
+     * of the neighbor whose key and address verified the frame's MIC.
+     */
+    SPINEL_MAC_FILTER_POLICY_DROP_REPLAYED = 0x10,
 } spinel_mac_filter_policy_t;
 
 enum
@@ -4957,11 +4973,33 @@ enum
      *   unknown: the frame matches no entry in `SPINEL_PROP_RCP_MAC_KEY_TABLE`, and it does not use
      *   Key ID Mode 1 with the Key Index of the previous, current, or next key set by
      *   `SPINEL_PROP_RCP_MAC_KEY`.
+     * - `SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR` (0x08): Discard secured frames matching a key
+     *   table entry with a key whose sender is not in `SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE` for that
+     *   entry.
+     * - `SPINEL_MAC_FILTER_POLICY_DROP_REPLAYED` (0x10): Discard secured frames whose frame counter is
+     *   lower than the next expected frame counter of the neighbor that verified the MIC.
      *
-     * Bits 3..7 are reserved and MUST be set to 0; writing non-zero reserved bits will be rejected
+     * Bits 5..7 are reserved and MUST be set to 0; writing non-zero reserved bits will be rejected
      * with `SPINEL_STATUS_INVALID_ARGUMENT`.
      *
-     * Frames are delivered to the host unmodified.
+     * When the policy is non-zero, a received secured frame that matches a key table entry without a
+     * key is accepted. For a matching entry with a key, the AES-CCM* MIC is verified using the
+     * extended address of each neighbor of that entry that matches the frame's source address (any
+     * neighbor of that entry if the frame has no source address) for the nonce. When a neighbor
+     * verifies the MIC, the frame is checked for replay against, and then updates, that neighbor's
+     * next expected frame counter. If no neighbor matches, a frame with an extended source address is
+     * verified using that address, and `SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR` applies;
+     * a frame with a short source address or no source address cannot be verified, and
+     * `SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR` applies. Entries may share a Key Identifier,
+     * so all matching entries are checked; the frame is accepted as soon as one verifies it, and is
+     * dropped if the MIC verification fails for all of them. This drops frames that use a Key
+     * Identifier of an entry but are secured with a different key.
+     *
+     * Each MIC verification costs one AES-CCM* operation, so entries sharing a Key Identifier or
+     * neighbors sharing a key increase the processing cost per received frame.
+     *
+     * The RCP only verifies the MIC; it does not decrypt frames, and frames are delivered to the
+     * host unmodified.
      */
     SPINEL_PROP_RCP_MAC_FILTER_POLICY = SPINEL_PROP_RCP_EXT__BEGIN + 9,
 
@@ -4991,6 +5029,42 @@ enum
      * example, OpenThread RCP implementations support Key ID Modes 0, 1, and 2.
      */
     SPINEL_PROP_RCP_MAC_KEY_TABLE = SPINEL_PROP_RCP_EXT__BEGIN + 10,
+
+    /// MAC Neighbor Table
+    /** Format: `A(t(ECL[S[S]]))`
+     *
+     * Sets or gets the MAC neighbor table on the RCP, which is used by
+     * `SPINEL_PROP_RCP_MAC_FILTER_POLICY` to verify the MIC and frame counter of received secured
+     * frames.
+     *
+     * Each entry is a struct containing:
+     * - `E`: Neighbor extended address, which is used for the AES-CCM* nonce.
+     * - `C`: Index of the entry in `SPINEL_PROP_RCP_MAC_KEY_TABLE` whose key the neighbor uses. The
+     *   entry MUST have a key.
+     * - `L`: Next expected frame counter of the neighbor.
+     * - `S`: Optional neighbor PAN ID (`0xffff` if not set).
+     * - `S`: Optional neighbor short address (`0xffff` if not set), used to find the neighbor of a frame
+     *   with a short source address.
+     *
+     * A frame matches a neighbor when its source address is the neighbor's extended address, or the
+     * neighbor's short address if set, or when it has no source address. If the neighbor's PAN ID is
+     * set and the frame's source PAN ID is known, the source PAN ID must also be equal to it. The source
+     * PAN ID is known when the Source PAN ID field is present, or when the Source PAN ID is elided with
+     * PAN ID Compression set and both the Destination PAN ID field and a source address are present (in
+     * which case it equals the Destination PAN ID). Otherwise, the PAN ID is not checked.
+     *
+     * The PAN ID scopes the neighbor's short address, which is only unique within a PAN. Extended
+     * addresses are assumed to be unique, so the PAN ID is not a security check.
+     *
+     * An entry with an invalid key table index, or with the same extended address and key table index
+     * as another entry, MUST be rejected with `SPINEL_STATUS_INVALID_ARGUMENT`.
+     *
+     * The RCP updates the next expected frame counter of a neighbor when the neighbor verifies a
+     * frame. When the table is set, the frame counter of an entry with the same extended address and
+     * key table index as a current entry is set to the larger of the two, so that it never moves
+     * backwards. Setting `SPINEL_PROP_RCP_MAC_KEY_TABLE` clears the neighbor table.
+     */
+    SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE = SPINEL_PROP_RCP_EXT__BEGIN + 11,
 
     SPINEL_PROP_RCP_EXT__END = 0x900,
 

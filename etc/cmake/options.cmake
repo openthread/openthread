@@ -359,6 +359,7 @@ ot_multi_option(OT_POWER_SUPPLY OT_POWER_SUPPLY_VALUES OPENTHREAD_CONFIG_DEVICE_
 ot_int_option(OT_BORDER_ROUTING_DHCP6_PD_MIN_LIFETIME OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MIN_LIFETIME "set minimum lifetime for dhcp6 pd in seconds")
 ot_int_option(OT_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES "set max periodic rx schedules of link ext (0 to disable)")
 ot_int_option(OT_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES "set max MAC key table entries of link ext (0 to disable)")
+ot_int_option(OT_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES OPENTHREAD_CONFIG_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES "set max MAC neighbor table entries of link ext")
 ot_int_option(OT_LOG_MAX_SIZE OPENTHREAD_CONFIG_LOG_MAX_SIZE "set maximum log string size")
 ot_int_option(OT_MAC_CSL_REQUEST_AHEAD_US OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US "set time ahead to deliver CSL frame from MAC to SubMac in microseconds")
 ot_int_option(OT_MLE_MAX_CHILDREN OPENTHREAD_CONFIG_MLE_MAX_CHILDREN "set maximum number of children")

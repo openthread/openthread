@@ -1917,6 +1917,108 @@ exit:
     return error;
 }
 
+otError RadioSpinel::SetMacNeighborTable(const MacNeighborTableEntry *aTable, uint8_t aEntryCount)
+{
+    otError        error = OT_ERROR_NONE;
+    uint8_t        buffer[SPINEL_FRAME_MAX_SIZE];
+    spinel_ssize_t length = 0;
+
+    for (uint8_t i = 0; i < aEntryCount; i++)
+    {
+        const MacNeighborTableEntry &entry = aTable[i];
+        spinel_ssize_t               packed;
+
+        if (entry.HasShortAddress())
+        {
+            packed = spinel_datatype_pack(
+                buffer + length, sizeof(buffer) - static_cast<spinel_size_t>(length),
+                SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S
+                                             SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT16_S),
+                entry.mExtAddress.m8, entry.mKeyIndex, entry.mFrameCounter, entry.mPanId, entry.mShortAddress);
+        }
+        else if (entry.HasPanId())
+        {
+            packed = spinel_datatype_pack(
+                buffer + length, sizeof(buffer) - static_cast<spinel_size_t>(length),
+                SPINEL_DATATYPE_STRUCT_S(
+                    SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_UINT16_S),
+                entry.mExtAddress.m8, entry.mKeyIndex, entry.mFrameCounter, entry.mPanId);
+        }
+        else
+        {
+            packed = spinel_datatype_pack(
+                buffer + length, sizeof(buffer) - static_cast<spinel_size_t>(length),
+                SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S),
+                entry.mExtAddress.m8, entry.mKeyIndex, entry.mFrameCounter);
+        }
+
+        VerifyOrExit(packed > 0 && packed <= static_cast<spinel_ssize_t>(sizeof(buffer)) - length,
+                     error = OT_ERROR_NO_BUFS);
+        length += packed;
+    }
+
+    if (length == 0)
+    {
+        error = Set(SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE, nullptr);
+    }
+    else
+    {
+        error =
+            Set(SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE, SPINEL_DATATYPE_DATA_S, buffer, static_cast<spinel_size_t>(length));
+    }
+
+exit:
+    return error;
+}
+
+otError RadioSpinel::GetMacNeighborTable(MacNeighborTableEntry *aTable, uint8_t &aEntryCount)
+{
+    otError         error;
+    uint8_t         buffer[SPINEL_FRAME_MAX_SIZE];
+    spinel_size_t   bufferLength = sizeof(buffer);
+    Spinel::Decoder decoder;
+    uint8_t         count = 0;
+
+    VerifyOrExit(aTable != nullptr || aEntryCount == 0, error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = Get(SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE, SPINEL_DATATYPE_DATA_S, buffer, &bufferLength));
+
+    decoder.Init(buffer, static_cast<uint16_t>(bufferLength));
+
+    while (!decoder.IsAllRead())
+    {
+        MacNeighborTableEntry entry;
+        const otExtAddress   *extAddr;
+
+        VerifyOrExit(count < aEntryCount, error = OT_ERROR_NO_BUFS);
+
+        entry.Clear();
+
+        SuccessOrExit(error = decoder.OpenStruct());
+        SuccessOrExit(error = decoder.ReadEui64(extAddr));
+        entry.mExtAddress = *extAddr;
+        SuccessOrExit(error = decoder.ReadUint8(entry.mKeyIndex));
+        SuccessOrExit(error = decoder.ReadUint32(entry.mFrameCounter));
+
+        if (decoder.GetRemainingLengthInStruct() > 0)
+        {
+            SuccessOrExit(error = decoder.ReadUint16(entry.mPanId));
+        }
+
+        if (decoder.GetRemainingLengthInStruct() > 0)
+        {
+            SuccessOrExit(error = decoder.ReadUint16(entry.mShortAddress));
+        }
+
+        SuccessOrExit(error = decoder.CloseStruct());
+        aTable[count++] = entry;
+    }
+
+exit:
+    aEntryCount = (error == OT_ERROR_NONE) ? count : 0;
+    return error;
+}
+
 otError RadioSpinel::Sleep(void)
 {
     otError error = OT_ERROR_NONE;

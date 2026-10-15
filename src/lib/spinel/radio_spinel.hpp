@@ -689,6 +689,53 @@ public:
     otError GetMacKeyTable(MacKeyTableEntry *aTable, uint8_t &aEntryCount);
 
     /**
+     * Represents an entry in the MAC Neighbor Table offloaded to the RCP.
+     */
+    struct MacNeighborTableEntry
+    {
+        otExtAddress mExtAddress;   ///< Neighbor extended address.
+        uint8_t      mKeyIndex;     ///< Index of the key table entry used by the neighbor.
+        uint32_t     mFrameCounter; ///< Next expected frame counter.
+        uint16_t     mPanId;        ///< Neighbor PAN ID (`OT_PANID_BROADCAST` if none).
+        uint16_t     mShortAddress; ///< Neighbor short address (`OT_RADIO_BROADCAST_SHORT_ADDR` if none).
+
+        void Clear(void)
+        {
+            memset(this, 0, sizeof(*this));
+            mPanId        = OT_PANID_BROADCAST;
+            mShortAddress = OT_RADIO_BROADCAST_SHORT_ADDR;
+        }
+        bool HasPanId(void) const { return mPanId != OT_PANID_BROADCAST; }
+        bool HasShortAddress(void) const { return mShortAddress != OT_RADIO_BROADCAST_SHORT_ADDR; }
+    };
+
+    /**
+     * Sets the MAC neighbor table on the RCP.
+     *
+     * @param[in] aTable       A pointer to an array of neighbor table entries.
+     * @param[in] aEntryCount  The number of entries in @p aTable.
+     *
+     * @retval OT_ERROR_NONE             Successfully updated the neighbor table.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support the property.
+     * @retval OT_ERROR_NO_BUFS          More entries than the RCP supports.
+     * @retval OT_ERROR_INVALID_ARGS     The RCP rejected an invalid neighbor entry.
+     */
+    otError SetMacNeighborTable(const MacNeighborTableEntry *aTable, uint8_t aEntryCount);
+
+    /**
+     * Gets the MAC neighbor table from the RCP.
+     *
+     * @param[out]    aTable       A pointer to an array to output the neighbor table entries.
+     * @param[in,out] aEntryCount  On input, capacity of @p aTable. On output, number of entries.
+     *
+     * @retval OT_ERROR_NONE             Successfully retrieved the neighbor table.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support the property.
+     * @retval OT_ERROR_NO_BUFS          @p aTable capacity is too small.
+     * @retval OT_ERROR_PARSE            Failed to parse the response.
+     */
+    otError GetMacNeighborTable(MacNeighborTableEntry *aTable, uint8_t &aEntryCount);
+
+    /**
      * Switches the radio state from Receive to Sleep.
      *
      * @retval OT_ERROR_NONE          Successfully transitioned to Sleep.

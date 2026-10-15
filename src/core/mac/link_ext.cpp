@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
 
+#include "crypto/aes_ccm.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -59,6 +60,7 @@ LinkExt::LinkExt(Instance &aInstance)
     , mMacFilterPolicy(0)
 #if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
     , mNumMacKeyTableEntries(0)
+    , mNumMacNeighborTableEntries(0)
 #endif
 {
 }
@@ -76,7 +78,8 @@ void LinkExt::Reset(void)
 
     mMacFilterPolicy = 0;
 #if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
-    mNumMacKeyTableEntries = 0;
+    mNumMacKeyTableEntries      = 0;
+    mNumMacNeighborTableEntries = 0;
 #endif
 }
 
@@ -719,7 +722,7 @@ Error LinkExt::SetMacFilterPolicy(uint8_t aPolicy)
     VerifyOrExit((aPolicy & ~kMacFilterPolicyAll) == 0, error = kErrorInvalidArgs);
 
 #if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES == 0)
-    VerifyOrExit((aPolicy & OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY) == 0, error = kErrorNotImplemented);
+    VerifyOrExit((aPolicy & kMacFilterPolicyKeyTable) == 0, error = kErrorNotImplemented);
 #endif
 
     mMacFilterPolicy = aPolicy;
@@ -749,10 +752,21 @@ bool LinkExt::FilterReceivedFrame(RxFrame *aFrame, Error aError)
     }
 
 #if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
-    // 3. Check if the key is known
-    if (!IsMacKeyKnown(parseInfo))
+    // 3. Check against the key and neighbor tables
+    switch (CheckMacKeyTable(parseInfo))
     {
+    case kMacKeyTableNoMatch:
         ExitNow(accept = !(mMacFilterPolicy & OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY));
+
+    case kMacKeyTableUnknownNeighbor:
+        ExitNow(accept = !(mMacFilterPolicy & OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR));
+
+    case kMacKeyTableMicFailed:
+    case kMacKeyTableReplayed:
+        ExitNow(accept = false);
+
+    case kMacKeyTableAccepted:
+        break;
     }
 #endif
 
@@ -783,40 +797,165 @@ Error LinkExt::SetMacKeyTable(const otLinkExtMacKeyTableEntry *aEntries, uint8_t
 
     mNumMacKeyTableEntries = aNumEntries;
 
+    // Neighbor entries refer to key table entries by index.
+    mNumMacNeighborTableEntries = 0;
+
 exit:
     return error;
 }
 
-bool LinkExt::IsMacKeyKnown(const RxFrame::ParseInfo &aParseInfo) const
+Error LinkExt::SetMacNeighborTable(const otLinkExtMacNeighborTableEntry *aEntries, uint8_t aNumEntries)
 {
-    bool    known = false;
-    uint8_t keyIndex;
+    Error                 error = kErrorNone;
+    MacNeighborTableEntry table[kMaxMacNeighborTableEntries];
 
-    // A Key ID Mode 1 frame using the key index of the previous,
-    // current, or next MAC key (`SetMode1MacKeys()`) is known.
+    VerifyOrExit(aNumEntries <= kMaxMacNeighborTableEntries, error = kErrorNoBufs);
 
-    if (aParseInfo.mKeyIdMode == Frame::kKeyIdMode1)
+    for (uint8_t i = 0; i < aNumEntries; i++)
     {
-        keyIndex = Get<SubMac>().GetMode1KeyIndex();
+        MacNeighborTableEntry &entry = table[i];
 
-        if (IsValueInRange(keyIndex, kMinKeyIndex, kMaxKeyIndex) &&
-            ((aParseInfo.mKeyIndex == keyIndex) || (aParseInfo.mKeyIndex == DeterminePrevKeyIndex(keyIndex)) ||
-             (aParseInfo.mKeyIndex == DetermineNextKeyIndex(keyIndex))))
+        static_cast<otLinkExtMacNeighborTableEntry &>(entry) = aEntries[i];
+
+        VerifyOrExit(entry.mKeyTableIndex < mNumMacKeyTableEntries && mMacKeyTable[entry.mKeyTableIndex].mHasKey,
+                     error = kErrorInvalidArgs);
+
+        // The extended address and key table index identify a neighbor.
+        for (uint8_t j = 0; j < i; j++)
         {
-            ExitNow(known = true);
+            VerifyOrExit(!entry.IsSameNeighbor(table[j]), error = kErrorInvalidArgs);
         }
+
+        // Never move the frame counter of an existing neighbor backwards.
+        for (uint8_t j = 0; j < mNumMacNeighborTableEntries; j++)
+        {
+            const MacNeighborTableEntry &current = mMacNeighborTable[j];
+
+            if (entry.IsSameNeighbor(current))
+            {
+                entry.mFrameCounter = Max(entry.mFrameCounter, current.mFrameCounter);
+                break;
+            }
+        }
+    }
+
+    for (uint8_t i = 0; i < aNumEntries; i++)
+    {
+        mMacNeighborTable[i] = table[i];
+    }
+
+    mNumMacNeighborTableEntries = aNumEntries;
+
+exit:
+    return error;
+}
+
+bool LinkExt::IsMode1MacKeyIndex(uint8_t aKeyIndex) const
+{
+    // Indicates whether `aKeyIndex` is the key index of the previous,
+    // current, or next MAC key (`SetMode1MacKeys()`).
+
+    uint8_t keyIndex = Get<SubMac>().GetMode1KeyIndex();
+
+    return IsValueInRange(keyIndex, kMinKeyIndex, kMaxKeyIndex) &&
+           ((aKeyIndex == keyIndex) || (aKeyIndex == DeterminePrevKeyIndex(keyIndex)) ||
+            (aKeyIndex == DetermineNextKeyIndex(keyIndex)));
+}
+
+LinkExt::MacKeyTableResult LinkExt::CheckMacKeyTable(const RxFrame::ParseInfo &aParseInfo)
+{
+    // A frame matching a key table entry without a key is accepted.
+    // For a matching entry with a key, the MIC is verified using the
+    // extended address of each matching neighbor for the nonce, and
+    // the frame counter is checked against the neighbor that verified
+    // it. Entries may share a Key ID, so all matching entries are
+    // checked.
+
+    MacKeyTableResult result = kMacKeyTableNoMatch;
+    const Address    &src    = aParseInfo.mAddrs.mSource;
+
+    if ((aParseInfo.mKeyIdMode == Frame::kKeyIdMode1) && IsMode1MacKeyIndex(aParseInfo.mKeyIndex))
+    {
+        ExitNow(result = kMacKeyTableAccepted);
     }
 
     for (uint8_t i = 0; i < mNumMacKeyTableEntries; i++)
     {
-        if (mMacKeyTable[i].Matches(aParseInfo))
+        const MacKeyTableEntry &entry         = mMacKeyTable[i];
+        bool                    foundNeighbor = false;
+
+        if (!entry.Matches(aParseInfo))
         {
-            ExitNow(known = true);
+            continue;
+        }
+
+        if (!entry.mHasKey)
+        {
+            ExitNow(result = kMacKeyTableAccepted);
+        }
+
+        for (uint8_t j = 0; j < mNumMacNeighborTableEntries; j++)
+        {
+            MacNeighborTableEntry &neighbor = mMacNeighborTable[j];
+
+            if (!neighbor.Matches(aParseInfo, i))
+            {
+                continue;
+            }
+
+            foundNeighbor = true;
+
+            if (!entry.VerifyMic(aParseInfo, neighbor.GetExtAddress()))
+            {
+                if (result == kMacKeyTableNoMatch)
+                {
+                    result = kMacKeyTableMicFailed;
+                }
+
+                continue;
+            }
+
+            if (aParseInfo.mFrameCounter < neighbor.mFrameCounter)
+            {
+                VerifyOrExit(!(mMacFilterPolicy & OT_LINK_EXT_MAC_FILTER_POLICY_DROP_REPLAYED),
+                             result = kMacKeyTableReplayed);
+            }
+            else
+            {
+                neighbor.mFrameCounter = (aParseInfo.mFrameCounter == NumericLimits<uint32_t>::kMax)
+                                             ? aParseInfo.mFrameCounter
+                                             : aParseInfo.mFrameCounter + 1;
+            }
+
+            ExitNow(result = kMacKeyTableAccepted);
+        }
+
+        if (foundNeighbor)
+        {
+            continue;
+        }
+
+        // The sender is not in the neighbor table. A frame from an
+        // extended source address can still be verified.
+
+        if (src.IsExtended() && entry.VerifyMic(aParseInfo, src.GetExtended()))
+        {
+            VerifyOrExit(mMacFilterPolicy & OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR,
+                         result = kMacKeyTableAccepted);
+            result = kMacKeyTableUnknownNeighbor;
+        }
+        else if (!src.IsExtended())
+        {
+            result = kMacKeyTableUnknownNeighbor;
+        }
+        else if (result == kMacKeyTableNoMatch)
+        {
+            result = kMacKeyTableMicFailed;
         }
     }
 
 exit:
-    return known;
+    return result;
 }
 
 Error LinkExt::MacKeyTableEntry::GetKeyIdMode(uint8_t &aKeyIdMode) const
@@ -882,6 +1021,83 @@ bool LinkExt::MacKeyTableEntry::Matches(const RxFrame::ParseInfo &aParseInfo) co
     VerifyOrExit((mAllowedSecurityLevels & (1 << aParseInfo.mSecurityLevel)) != 0);
 
     matches = true;
+
+exit:
+    return matches;
+}
+
+bool LinkExt::MacKeyTableEntry::VerifyMic(const RxFrame::ParseInfo &aParseInfo, const ExtAddress &aNonceExtAddr) const
+{
+    bool                  verified = false;
+    Crypto::AesCcm        aesCcm;
+    Crypto::AesCcm::Nonce nonce;
+    uint8_t               payload[OT_RADIO_FRAME_MAX_SIZE];
+    uint16_t              payloadLength = aParseInfo.mPayload.GetLength();
+
+    VerifyOrExit(aParseInfo.mMicSize > 0);
+
+    // Verify the MIC on a copy of the payload and the MIC (which
+    // immediately follows the payload) so that the frame is delivered
+    // to the host unmodified.
+    VerifyOrExit(payloadLength + aParseInfo.mMicSize <= sizeof(payload));
+    memcpy(payload, aParseInfo.mPayload.GetBytes(), payloadLength + aParseInfo.mMicSize);
+
+    nonce.InitFrom(aNonceExtAddr, aParseInfo.mFrameCounter, aParseInfo.mSecurityLevel);
+
+    aesCcm.SetKey(mKey.m8, sizeof(mKey));
+    aesCcm.SetNonce(nonce);
+    aesCcm.SetAuthData(aParseInfo.mHeader.GetBytes(), aParseInfo.mHeader.GetLength());
+    aesCcm.SetTagLength(aParseInfo.mMicSize);
+
+    verified = (aesCcm.Process(Crypto::AesCcm::kDecrypt, payload, payloadLength) == kErrorNone);
+
+exit:
+    return verified;
+}
+
+bool LinkExt::MacNeighborTableEntry::IsSameNeighbor(const otLinkExtMacNeighborTableEntry &aOther) const
+{
+    return (mKeyTableIndex == aOther.mKeyTableIndex) && (GetExtAddress() == AsCoreType(&aOther.mExtAddress));
+}
+
+bool LinkExt::MacNeighborTableEntry::Matches(const RxFrame::ParseInfo &aParseInfo, uint8_t aKeyTableIndex) const
+{
+    bool           matches = false;
+    const Address &src     = aParseInfo.mAddrs.mSource;
+
+    VerifyOrExit(mKeyTableIndex == aKeyTableIndex);
+
+    if (HasPanId())
+    {
+        const PanIds &panIds = aParseInfo.mPanIds;
+
+        // The PAN ID is checked only when the frame's source PAN ID is
+        // known: the Source PAN ID field, or the Destination PAN ID when
+        // the Source PAN ID is elided with PAN ID Compression set and a
+        // source address is present.
+        if (panIds.IsSourcePresent())
+        {
+            VerifyOrExit(panIds.GetSource() == mPanId);
+        }
+        else if (aParseInfo.mIsPanIdCompressed && panIds.IsDestinationPresent() && !src.IsNone())
+        {
+            VerifyOrExit(panIds.GetDestination() == mPanId);
+        }
+    }
+
+    if (src.IsExtended())
+    {
+        matches = (src.GetExtended() == GetExtAddress());
+    }
+    else if (src.IsShort())
+    {
+        matches = HasShortAddress() && (src.GetShort() == mShortAddress);
+    }
+    else
+    {
+        // A frame without a source address may be from any neighbor.
+        matches = true;
+    }
 
 exit:
     return matches;

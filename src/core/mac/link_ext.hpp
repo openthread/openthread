@@ -56,6 +56,11 @@
 #error "OPENTHREAD_CONFIG_LINK_EXT_ENABLE requires target time TX support (e.g. CSL transmitter or software TX timing)"
 #endif
 
+#if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0) && \
+    (OPENTHREAD_CONFIG_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES == 0)
+#error "OPENTHREAD_CONFIG_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES must be non-zero when the key table is enabled"
+#endif
+
 namespace ot {
 namespace Mac {
 
@@ -208,7 +213,8 @@ public:
     uint8_t GetMacFilterPolicy(void) const { return mMacFilterPolicy; }
 
 #if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
-    static constexpr uint8_t kMaxMacKeyTableEntries = OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES;
+    static constexpr uint8_t kMaxMacKeyTableEntries      = OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES;
+    static constexpr uint8_t kMaxMacNeighborTableEntries = OPENTHREAD_CONFIG_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES;
 
     /**
      * Represents an entry of the MAC key table (see `otLinkExtMacKeyTableEntry`).
@@ -241,8 +247,72 @@ public:
          */
         bool Matches(const RxFrame::ParseInfo &aParseInfo) const;
 
+        /**
+         * Verifies the MIC of a secured frame using the key of the entry.
+         *
+         * The MIC is verified on a copy of the frame, which is left unmodified.
+         *
+         * @param[in] aParseInfo     The parse info of the frame.
+         * @param[in] aNonceExtAddr  The extended address used for the AES-CCM* nonce.
+         *
+         * @retval TRUE   The MIC is verified.
+         * @retval FALSE  The MIC verification failed.
+         */
+        bool VerifyMic(const RxFrame::ParseInfo &aParseInfo, const ExtAddress &aNonceExtAddr) const;
+
     private:
         Error GetKeyIdMode(uint8_t &aKeyIdMode) const;
+    };
+
+    /**
+     * Represents an entry of the MAC neighbor table (see `otLinkExtMacNeighborTableEntry`).
+     */
+    class MacNeighborTableEntry : public otLinkExtMacNeighborTableEntry
+    {
+    public:
+        /**
+         * Gets the extended address.
+         *
+         * @returns The extended address.
+         */
+        const ExtAddress &GetExtAddress(void) const { return AsCoreType(&mExtAddress); }
+
+        /**
+         * Indicates whether the PAN ID is set.
+         *
+         * @retval TRUE   The PAN ID is set.
+         * @retval FALSE  The PAN ID is not set.
+         */
+        bool HasPanId(void) const { return mPanId != kPanIdBroadcast; }
+
+        /**
+         * Indicates whether the short address is set.
+         *
+         * @retval TRUE   The short address is set.
+         * @retval FALSE  The short address is not set.
+         */
+        bool HasShortAddress(void) const { return mShortAddress != kShortAddrBroadcast; }
+
+        /**
+         * Indicates whether the entry identifies the same neighbor as another entry.
+         *
+         * @param[in] aOther  The other entry.
+         *
+         * @retval TRUE   The extended address and key table index are equal.
+         * @retval FALSE  The extended address or key table index differs.
+         */
+        bool IsSameNeighbor(const otLinkExtMacNeighborTableEntry &aOther) const;
+
+        /**
+         * Indicates whether a secured frame matching a key table entry matches the neighbor.
+         *
+         * @param[in] aParseInfo      The parse info of the frame.
+         * @param[in] aKeyTableIndex  The index of the key table entry which the frame matches.
+         *
+         * @retval TRUE   The frame matches the neighbor.
+         * @retval FALSE  The frame does not match the neighbor.
+         */
+        bool Matches(const RxFrame::ParseInfo &aParseInfo, uint8_t aKeyTableIndex) const;
     };
 
     /**
@@ -258,6 +328,34 @@ public:
      * @retval kErrorInvalidArgs  An entry is invalid. The table is left unchanged.
      */
     Error SetMacKeyTable(const otLinkExtMacKeyTableEntry *aEntries, uint8_t aNumEntries);
+
+    /**
+     * Atomically replaces the MAC neighbor table.
+     *
+     * See `otLinkExtSetMacNeighborTable()` for details.
+     *
+     * @param[in] aEntries     A pointer to an array of entries (can be `nullptr` if @p aNumEntries is zero).
+     * @param[in] aNumEntries  The number of entries in @p aEntries.
+     *
+     * @retval kErrorNone         Successfully set the table.
+     * @retval kErrorNoBufs       More than `kMaxMacNeighborTableEntries` entries. The table is left unchanged.
+     * @retval kErrorInvalidArgs  An entry is invalid, or two entries have the same extended address and key table
+     *                            index. The table is left unchanged.
+     */
+    Error SetMacNeighborTable(const otLinkExtMacNeighborTableEntry *aEntries, uint8_t aNumEntries);
+
+    /**
+     * Gets the MAC neighbor table.
+     *
+     * @param[out] aNumEntries  A reference to output the number of entries.
+     *
+     * @returns A pointer to the array of entries.
+     */
+    const MacNeighborTableEntry *GetMacNeighborTable(uint8_t &aNumEntries) const
+    {
+        aNumEntries = mNumMacNeighborTableEntries;
+        return mMacNeighborTable;
+    }
 
     /**
      * Gets the MAC key table.
@@ -282,12 +380,25 @@ private:
     void HandleTransmitDone(TxFrame &aFrame);
     bool FilterReceivedFrame(RxFrame *aFrame, Error aError);
 
+    static constexpr uint8_t kMacFilterPolicyKeyTable = OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY |
+                                                        OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR |
+                                                        OT_LINK_EXT_MAC_FILTER_POLICY_DROP_REPLAYED;
     static constexpr uint8_t kMacFilterPolicyAll = OT_LINK_EXT_MAC_FILTER_POLICY_DROP_MALFORMED |
                                                    OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNSECURED |
-                                                   OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY;
+                                                   kMacFilterPolicyKeyTable;
 
 #if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
-    bool IsMacKeyKnown(const RxFrame::ParseInfo &aParseInfo) const;
+    enum MacKeyTableResult : uint8_t
+    {
+        kMacKeyTableNoMatch,         // The key is unknown.
+        kMacKeyTableAccepted,        // The frame is accepted.
+        kMacKeyTableUnknownNeighbor, // The sender is not in the neighbor table.
+        kMacKeyTableMicFailed,       // The MIC verification failed.
+        kMacKeyTableReplayed,        // The frame counter is lower than the neighbor's next expected one.
+    };
+
+    bool              IsMode1MacKeyIndex(uint8_t aKeyIndex) const;
+    MacKeyTableResult CheckMacKeyTable(const RxFrame::ParseInfo &aParseInfo);
 #endif
 
     void  CancelBurst(void);
@@ -399,8 +510,10 @@ private:
 
     uint8_t mMacFilterPolicy;
 #if (OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES > 0)
-    uint8_t          mNumMacKeyTableEntries;
-    MacKeyTableEntry mMacKeyTable[kMaxMacKeyTableEntries];
+    uint8_t               mNumMacKeyTableEntries;
+    uint8_t               mNumMacNeighborTableEntries;
+    MacKeyTableEntry      mMacKeyTable[kMaxMacKeyTableEntries];
+    MacNeighborTableEntry mMacNeighborTable[kMaxMacNeighborTableEntries];
 #endif
 };
 

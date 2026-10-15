@@ -816,7 +816,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MAC_KEY_TABLE>(vo
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteDataWithLen(entries[i].mKeyId, entries[i].mKeyIdLength));
-        SuccessOrExit(error = mEncoder.WriteDataWithLen(nullptr, 0)); // No key
+        SuccessOrExit(
+            error = mEncoder.WriteDataWithLen(entries[i].mKey.m8, entries[i].mHasKey ? sizeof(entries[i].mKey) : 0));
         SuccessOrExit(error = mEncoder.WriteUint8(entries[i].mAllowedSecurityLevels));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
@@ -849,10 +850,11 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY_TABLE>(vo
         memcpy(entry.mKeyId, keyId, keyIdLength);
         entry.mKeyIdLength = static_cast<uint8_t>(keyIdLength);
 
-        // Only filtering by Key ID is supported, so the key must be empty.
+        // An empty key filters by Key ID only.
         SuccessOrExit(error = mDecoder.ReadDataWithLen(key, keyLength));
-        VerifyOrExit(keyLength == 0 || keyLength == sizeof(otMacKey), error = OT_ERROR_INVALID_ARGS);
-        VerifyOrExit(keyLength == 0, error = OT_ERROR_NOT_CAPABLE);
+        VerifyOrExit(keyLength == 0 || keyLength == sizeof(entry.mKey), error = OT_ERROR_INVALID_ARGS);
+        entry.mHasKey = (keyLength != 0);
+        memcpy(entry.mKey.m8, key, keyLength);
 
         SuccessOrExit(error = mDecoder.ReadUint8(entry.mAllowedSecurityLevels));
 
@@ -861,6 +863,84 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY_TABLE>(vo
     }
 
     error = otLinkExtSetMacKeyTable(mInstance, entries, numEntries);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE>(void)
+{
+    otError                               error = OT_ERROR_NONE;
+    uint8_t                               numEntries;
+    const otLinkExtMacNeighborTableEntry *entries = otLinkExtGetMacNeighborTable(mInstance, &numEntries);
+
+    for (uint8_t i = 0; i < numEntries; i++)
+    {
+        const otLinkExtMacNeighborTableEntry &entry           = entries[i];
+        bool                                  hasShortAddress = (entry.mShortAddress != OT_RADIO_BROADCAST_SHORT_ADDR);
+
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteEui64(entry.mExtAddress));
+        SuccessOrExit(error = mEncoder.WriteUint8(entry.mKeyTableIndex));
+        SuccessOrExit(error = mEncoder.WriteUint32(entry.mFrameCounter));
+
+        // The PAN ID precedes the short address, so it is written when
+        // either is set.
+        if ((entry.mPanId != OT_PANID_BROADCAST) || hasShortAddress)
+        {
+            SuccessOrExit(error = mEncoder.WriteUint16(entry.mPanId));
+        }
+
+        if (hasShortAddress)
+        {
+            SuccessOrExit(error = mEncoder.WriteUint16(entry.mShortAddress));
+        }
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE>(void)
+{
+    otError                        error = OT_ERROR_NONE;
+    otLinkExtMacNeighborTableEntry entries[OPENTHREAD_CONFIG_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES];
+    uint8_t                        numEntries = 0;
+
+    while (!mDecoder.IsAllRead())
+    {
+        const otExtAddress *extAddress;
+
+        VerifyOrExit(numEntries < GetArrayLength(entries), error = OT_ERROR_NO_BUFS);
+
+        otLinkExtMacNeighborTableEntry &entry = entries[numEntries];
+
+        SuccessOrExit(error = mDecoder.OpenStruct());
+        SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
+        entry.mExtAddress = *extAddress;
+        SuccessOrExit(error = mDecoder.ReadUint8(entry.mKeyTableIndex));
+        SuccessOrExit(error = mDecoder.ReadUint32(entry.mFrameCounter));
+
+        entry.mPanId        = OT_PANID_BROADCAST;
+        entry.mShortAddress = OT_RADIO_BROADCAST_SHORT_ADDR;
+
+        if (mDecoder.GetRemainingLengthInStruct() > 0)
+        {
+            SuccessOrExit(error = mDecoder.ReadUint16(entry.mPanId));
+        }
+
+        if (mDecoder.GetRemainingLengthInStruct() > 0)
+        {
+            SuccessOrExit(error = mDecoder.ReadUint16(entry.mShortAddress));
+        }
+
+        SuccessOrExit(error = mDecoder.CloseStruct());
+        numEntries++;
+    }
+
+    error = otLinkExtSetMacNeighborTable(mInstance, entries, numEntries);
 
 exit:
     return error;

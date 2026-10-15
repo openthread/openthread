@@ -87,6 +87,18 @@ const otLinkExtMacKeyTableEntry *otLinkExtGetMacKeyTable(otInstance *aInstance, 
 {
     return AsCoreType(aInstance).Get<Mac::LinkExt>().GetMacKeyTable(*aNumEntries);
 }
+
+otError otLinkExtSetMacNeighborTable(otInstance                           *aInstance,
+                                     const otLinkExtMacNeighborTableEntry *aEntries,
+                                     uint8_t                               aNumEntries)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkExt>().SetMacNeighborTable(aEntries, aNumEntries);
+}
+
+const otLinkExtMacNeighborTableEntry *otLinkExtGetMacNeighborTable(otInstance *aInstance, uint8_t *aNumEntries)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkExt>().GetMacNeighborTable(*aNumEntries);
+}
 #endif
 
 #endif // OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE

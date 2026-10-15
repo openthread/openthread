@@ -40,6 +40,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -196,9 +197,11 @@ const otLinkExtPeriodicRxSchedule *otLinkExtGetPeriodicRxSchedules(otInstance *a
 /*
  * MAC frame filter policy flags (see `otLinkExtSetMacFilterPolicy()`).
  */
-#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_MALFORMED (1 << 0)   ///< Drop frames which cannot be parsed.
-#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNSECURED (1 << 1)   ///< Drop frames without security enabled.
-#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY (1 << 2) ///< Drop secured frames whose key is unknown.
+#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_MALFORMED (1 << 0)        ///< Drop frames which cannot be parsed.
+#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNSECURED (1 << 1)        ///< Drop frames without security enabled.
+#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY (1 << 2)      ///< Drop secured frames whose key is unknown.
+#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR (1 << 3) ///< Drop secured frames from unknown neighbors.
+#define OT_LINK_EXT_MAC_FILTER_POLICY_DROP_REPLAYED (1 << 4)         ///< Drop replayed secured frames.
 
 /**
  * Sets the MAC frame filter policy.
@@ -215,8 +218,17 @@ const otLinkExtPeriodicRxSchedule *otLinkExtGetPeriodicRxSchedules(otInstance *a
  * 3. `OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY`: The key of the secured frame is unknown. A key is known if
  *    it matches an entry of the MAC key table (see `otLinkExtSetMacKeyTable()`), or if the frame uses Key ID Mode 1
  *    with the key index of the previous, current, or next MAC key (see `otLinkRawSetMacKey()`).
+ * 4. A frame matching an entry without a key is delivered. For a matching entry with a key, the AES-CCM* MIC is
+ *    verified using the extended address of each neighbor of that entry matching the frame (see
+ *    `otLinkExtSetMacNeighborTable()`) for the nonce. When a neighbor verifies the MIC, the frame is checked for
+ *    replay against, and then updates, the neighbor's next expected frame counter. If no neighbor matches, a frame
+ *    with an extended source address is verified using that address. Entries may share a Key ID, so all matching
+ *    entries are checked. A frame whose MIC verification fails is dropped.
+ *    - `OT_LINK_EXT_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR`: No neighbor matches the frame.
+ *    - `OT_LINK_EXT_MAC_FILTER_POLICY_DROP_REPLAYED`: The frame counter is lower than the next expected frame counter
+ *      of the neighbor which verified the MIC.
  *
- * A policy of zero disables the filter.
+ * The MIC is verified on a copy of the frame. Frames are not decrypted. A policy of zero disables the filter.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aPolicy    The policy bitmask, a combination of `OT_LINK_EXT_MAC_FILTER_POLICY_*` flags.
@@ -251,9 +263,11 @@ uint8_t otLinkExtGetMacFilterPolicy(otInstance *aInstance);
  */
 typedef struct otLinkExtMacKeyTableEntry
 {
-    uint8_t mKeyId[OT_LINK_EXT_MAC_KEY_ID_MAX_SIZE]; ///< The Key ID (first `mKeyIdLength` bytes are used).
-    uint8_t mKeyIdLength;                            ///< The Key ID length, which determines the Key ID Mode.
-    uint8_t mAllowedSecurityLevels; ///< Allowed security levels (bit `i` allows level `i`), non-zero, bit 0 clear.
+    uint8_t  mKeyId[OT_LINK_EXT_MAC_KEY_ID_MAX_SIZE]; ///< The Key ID (first `mKeyIdLength` bytes are used).
+    uint8_t  mKeyIdLength;                            ///< The Key ID length, which determines the Key ID Mode.
+    uint8_t  mAllowedSecurityLevels; ///< Allowed security levels (bit `i` allows level `i`), non-zero, bit 0 clear.
+    bool     mHasKey;                ///< Whether `mKey` is set, in which case the MIC is verified.
+    otMacKey mKey;                   ///< The key (applicable if `mHasKey`).
 } otLinkExtMacKeyTableEntry;
 
 /**
@@ -263,7 +277,8 @@ typedef struct otLinkExtMacKeyTableEntry
  * `OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES`.
  *
  * Atomically replaces all entries. A secured frame matches an entry if its Key ID Mode and Key ID equal those of the
- * entry, and its security level is allowed by the entry (see `otLinkExtSetMacFilterPolicy()`).
+ * entry, and its security level is allowed by the entry (see `otLinkExtSetMacFilterPolicy()`). Setting the key table
+ * clears the neighbor table (see `otLinkExtSetMacNeighborTable()`).
  *
  * @param[in] aInstance    A pointer to an OpenThread instance.
  * @param[in] aEntries     A pointer to an array of entries (can be NULL if @p aNumEntries is zero).
@@ -288,6 +303,61 @@ otError otLinkExtSetMacKeyTable(otInstance *aInstance, const otLinkExtMacKeyTabl
  * @returns A pointer to the array of entries.
  */
 const otLinkExtMacKeyTableEntry *otLinkExtGetMacKeyTable(otInstance *aInstance, uint8_t *aNumEntries);
+
+/**
+ * Represents an entry of the MAC neighbor table of the MAC frame filter.
+ *
+ * A frame matches a neighbor when its source address is the neighbor's extended address, or the neighbor's short
+ * address if set, or when it has no source address. If the neighbor's PAN ID is set and the frame's source PAN ID is
+ * known, the source PAN ID must also be equal to it. The PAN ID scopes the short address, which is only unique within
+ * a PAN. Extended addresses are assumed to be unique, so the PAN ID is not a security check.
+ */
+typedef struct otLinkExtMacNeighborTableEntry
+{
+    otExtAddress   mExtAddress;    ///< The extended address, which is used for the AES-CCM* nonce.
+    uint32_t       mFrameCounter;  ///< The next expected frame counter.
+    otPanId        mPanId;         ///< The PAN ID (`OT_PANID_BROADCAST` if not set).
+    otShortAddress mShortAddress;  ///< The short address (`OT_RADIO_BROADCAST_SHORT_ADDR` if not set).
+    uint8_t        mKeyTableIndex; ///< The index of the MAC key table entry, which MUST have a key.
+} otLinkExtMacNeighborTableEntry;
+
+/**
+ * Sets the MAC neighbor table of the MAC frame filter.
+ *
+ * Requires `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` (RCP builds only) and a non-zero
+ * `OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES`.
+ *
+ * Atomically replaces all entries. Each extended address and key table index pair MUST be unique. The next expected
+ * frame counter of a neighbor is updated when the neighbor verifies a frame. For an entry with the same extended
+ * address and key table index as a current entry, the frame counter is set to the larger of the two, so that it never
+ * moves backwards.
+ *
+ * @param[in] aInstance    A pointer to an OpenThread instance.
+ * @param[in] aEntries     A pointer to an array of entries (can be NULL if @p aNumEntries is zero).
+ * @param[in] aNumEntries  The number of entries in @p aEntries.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the table.
+ * @retval OT_ERROR_NO_BUFS       More than `OPENTHREAD_CONFIG_LINK_EXT_MAC_NEIGHBOR_TABLE_MAX_ENTRIES` entries. The
+ *                                table is left unchanged.
+ * @retval OT_ERROR_INVALID_ARGS  An entry is invalid, or two entries have the same extended address and key table
+ *                                index. The table is left unchanged.
+ */
+otError otLinkExtSetMacNeighborTable(otInstance                           *aInstance,
+                                     const otLinkExtMacNeighborTableEntry *aEntries,
+                                     uint8_t                               aNumEntries);
+
+/**
+ * Gets the MAC neighbor table of the MAC frame filter.
+ *
+ * Requires `OPENTHREAD_CONFIG_LINK_EXT_ENABLE` (RCP builds only) and a non-zero
+ * `OPENTHREAD_CONFIG_LINK_EXT_MAC_KEY_TABLE_MAX_ENTRIES`.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[out] aNumEntries  A pointer to return the number of entries.
+ *
+ * @returns A pointer to the array of entries.
+ */
+const otLinkExtMacNeighborTableEntry *otLinkExtGetMacNeighborTable(otInstance *aInstance, uint8_t *aNumEntries);
 
 /**
  * @}
