@@ -2917,28 +2917,22 @@ static void platformConfigureNetLink(void)
 #endif
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    // Where the platform can filter, avoid waking up for every routing table event on the host.
+#if defined(ROUTE_FILTER)
     {
-        int status;
-#ifdef ROUTE_FILTER
-        unsigned int msgfilter = ROUTE_FILTER(RTM_IFINFO) | ROUTE_FILTER(RTM_NEWADDR) | ROUTE_FILTER(RTM_DELADDR) |
-                                 ROUTE_FILTER(RTM_NEWMADDR) | ROUTE_FILTER(RTM_DELMADDR);
-#define FILTER_CMD ROUTE_MSGFILTER
-#define FILTER_ARG msgfilter
-#define FILTER_ARG_SZ sizeof(msgfilter)
-#endif
-#ifdef RO_MSGFILTER
-        uint8_t msgfilter[] = {RTM_IFINFO, RTM_NEWADDR, RTM_DELADDR};
-#define FILTER_CMD RO_MSGFILTER
-#define FILTER_ARG msgfilter
-#define FILTER_ARG_SZ sizeof(msgfilter)
-#endif
-#if defined(ROUTE_FILTER) || defined(RO_MSGFILTER)
-        status = setsockopt(sNetlinkFd, AF_ROUTE, FILTER_CMD, FILTER_ARG, FILTER_ARG_SZ);
-        VerifyOrDie(status == 0, OT_EXIT_ERROR_ERRNO);
-#endif
-        status = fcntl(sNetlinkFd, F_SETFL, O_NONBLOCK);
-        VerifyOrDie(status == 0, OT_EXIT_ERROR_ERRNO);
+        unsigned int filter = ROUTE_FILTER(RTM_IFINFO) | ROUTE_FILTER(RTM_NEWADDR) | ROUTE_FILTER(RTM_DELADDR) |
+                              ROUTE_FILTER(RTM_NEWMADDR) | ROUTE_FILTER(RTM_DELMADDR);
+
+        VerifyOrDie(setsockopt(sNetlinkFd, AF_ROUTE, ROUTE_MSGFILTER, &filter, sizeof(filter)) == 0,
+                    OT_EXIT_ERROR_ERRNO);
     }
+#elif defined(RO_MSGFILTER)
+    {
+        uint8_t filter[] = {RTM_IFINFO, RTM_NEWADDR, RTM_DELADDR};
+
+        VerifyOrDie(setsockopt(sNetlinkFd, AF_ROUTE, RO_MSGFILTER, filter, sizeof(filter)) == 0, OT_EXIT_ERROR_ERRNO);
+    }
+#endif
 #endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 }
 

@@ -174,24 +174,21 @@ exit:
 
 static void PrepareSocket(uint16_t &aUdpPort)
 {
-    int                 val;
     struct sockaddr_in6 sockAddr;
     socklen_t           sockLen;
 
     LogDebg("PrepareSocket()");
 
+    // Non-blocking, to allow an immediate tx attempt.
     sSocket = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_DGRAM, 0, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sSocket >= 0, OT_EXIT_ERROR_ERRNO);
 
-    // Make the socket non-blocking to allow immediate tx attempt.
-    val = fcntl(sSocket, F_GETFL, 0);
-    VerifyOrDie(val != -1, OT_EXIT_ERROR_ERRNO);
-    val = val | O_NONBLOCK;
-    VerifyOrDie(fcntl(sSocket, F_SETFL, val) == 0, OT_EXIT_ERROR_ERRNO);
-
 #if defined(IPV6_ADDR_PREFERENCES) && defined(IPV6_PREFER_SRC_PUBLIC)
-    val = IPV6_PREFER_SRC_PUBLIC;
-    setsockopt(sSocket, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &val, sizeof(val));
+    {
+        int val = IPV6_PREFER_SRC_PUBLIC;
+
+        setsockopt(sSocket, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &val, sizeof(val));
+    }
 #endif
 
 #ifdef __linux__
