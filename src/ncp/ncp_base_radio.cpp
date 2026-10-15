@@ -33,6 +33,7 @@
 #include "ncp_base.hpp"
 
 #include <openthread/link.h>
+#include <openthread/link_ext.h>
 #include <openthread/link_raw.h>
 #include <openthread/ncp.h>
 #include <openthread/platform/misc.h>
@@ -524,6 +525,12 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
 
     VerifyOrExit(otLinkRawIsEnabled(mInstance), error = OT_ERROR_INVALID_STATE);
 
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    // Decoding the request would overwrite the transmit buffer in use by the
+    // ongoing burst.
+    VerifyOrExit(!IsLinkExtBurstOngoing(), error = OT_ERROR_INVALID_STATE);
+#endif
+
     frame = otLinkRawGetTransmitBuffer(mInstance);
     VerifyOrExit(frame != nullptr, error = OT_ERROR_NO_BUFS);
 
@@ -549,6 +556,91 @@ exit:
 
     return error;
 }
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+bool NcpBase::IsLinkExtBurstOngoing(void)
+{
+    otLinkExtBurstConfig config;
+
+    otLinkExtGetBurstConfig(mInstance, &config);
+
+    return config.mCount > 0;
+}
+
+otError NcpBase::EncodeLinkExtBurstConfig(otInstance *aInstance)
+{
+    otError              error;
+    otLinkExtBurstConfig config;
+
+    otLinkExtGetBurstConfig(aInstance, &config);
+
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUint16(config.mCount));
+    SuccessOrExit(error = mEncoder.WriteUint32(config.mPeriodUs));
+    SuccessOrExit(error = mEncoder.WriteUint32(config.mChannelMask));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+exit:
+    return error;
+}
+
+void NcpBase::LinkExtBurstDone(otInstance *aInstance) { sNcpInstance->LinkExtBurstDone(GetNcpBaseIid(aInstance)); }
+
+void NcpBase::LinkExtBurstDone(uint8_t aIid)
+{
+    OT_ASSERT(aIid < kSpinelInterfaceCount);
+
+    // Sent with the priority of responses, so that it keeps its order
+    // relative to them (e.g., it precedes the response to a write to stop
+    // a burst that has already ended).
+    SuccessOrExit(mEncoder.BeginFrame(Spinel::Buffer::kPriorityHigh));
+    SuccessOrExit(mEncoder.WriteUint8(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(aIid)));
+    SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_CMD_PROP_VALUE_IS));
+    SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_RCP_TX_BURST));
+    SuccessOrExit(EncodeLinkExtBurstConfig(IidToInstance(aIid)));
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_TX_BURST>(void)
+{
+    return EncodeLinkExtBurstConfig(mInstance);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_TX_BURST>(void)
+{
+    otError              error = OT_ERROR_NONE;
+    otLinkExtBurstConfig config;
+    otRadioFrame        *frame;
+
+    VerifyOrExit(otLinkRawIsEnabled(mInstance), error = OT_ERROR_INVALID_STATE);
+
+    SuccessOrExit(error = mDecoder.OpenStruct());
+    SuccessOrExit(error = mDecoder.ReadUint16(config.mCount));
+    // The response reads the remaining ticks: zero if the burst is stopped
+    // right away, otherwise the burst end is notified later.
+    VerifyOrExit(config.mCount > 0, error = otLinkExtStopBurst(mInstance));
+
+    SuccessOrExit(error = mDecoder.ReadUint32(config.mPeriodUs));
+    SuccessOrExit(error = mDecoder.ReadUint32(config.mChannelMask));
+    SuccessOrExit(error = mDecoder.CloseStruct());
+
+    // Decoding the frame would overwrite the transmit buffer in use by an
+    // ongoing transmission.
+    VerifyOrExit(!IsLinkExtBurstOngoing() && (mCurTransmitTID[mCurCommandIid] == 0), error = OT_ERROR_BUSY);
+
+    frame = otLinkRawGetTransmitBuffer(mInstance);
+    VerifyOrExit(frame != nullptr, error = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(error = DecodeStreamRawTxRequest(*frame));
+    error = otLinkExtTransmitBurst(mInstance, &config, &NcpBase::LinkExtBurstDone);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
 {
@@ -645,6 +737,55 @@ exit:
 #if OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_LOG_CRASH_DUMP>(void) { return otPlatLogCrashDump(); }
 #endif
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_PERIODIC_RX_SCHEDULES>(void)
+{
+    otError                            error = OT_ERROR_NONE;
+    uint8_t                            numSchedules;
+    const otLinkExtPeriodicRxSchedule *schedules = otLinkExtGetPeriodicRxSchedules(mInstance, &numSchedules);
+
+    for (uint8_t i = 0; i < numSchedules; i++)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUint32(schedules[i].mPhaseUs));
+        SuccessOrExit(error = mEncoder.WriteUint32(schedules[i].mPeriodUs));
+        SuccessOrExit(error = mEncoder.WriteUint16(schedules[i].mDurationUs));
+        SuccessOrExit(error = mEncoder.WriteUint8(schedules[i].mChannel));
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_PERIODIC_RX_SCHEDULES>(void)
+{
+    otError                     error        = OT_ERROR_NONE;
+    uint8_t                     numSchedules = 0;
+    otLinkExtPeriodicRxSchedule schedules[OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES];
+
+    while (!mDecoder.IsAllReadInStruct())
+    {
+        VerifyOrExit(numSchedules < OT_ARRAY_LENGTH(schedules), error = OT_ERROR_NO_BUFS);
+
+        SuccessOrExit(error = mDecoder.OpenStruct());
+        SuccessOrExit(error = mDecoder.ReadUint32(schedules[numSchedules].mPhaseUs));
+        SuccessOrExit(error = mDecoder.ReadUint32(schedules[numSchedules].mPeriodUs));
+        SuccessOrExit(error = mDecoder.ReadUint16(schedules[numSchedules].mDurationUs));
+        SuccessOrExit(error = mDecoder.ReadUint8(schedules[numSchedules].mChannel));
+        SuccessOrExit(error = mDecoder.CloseStruct());
+
+        numSchedules++;
+    }
+
+    error = otLinkExtSetPeriodicRxSchedules(mInstance, schedules, numSchedules);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES
+       // > 0)
 
 } // namespace Ncp
 } // namespace ot
