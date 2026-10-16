@@ -138,7 +138,13 @@ typedef struct otPskc otPskc;
 typedef otCryptoKeyRef otPskcRef; ///< Reference to Key
 
 /**
- * Represent Security Policy.
+ * Represents Security Policy.
+ *
+ * The `mReservedBit*Cleared` fields intentionally use inverted logic (`false`/`0` means the bit is set to `1`
+ * in the Security Policy TLV, and `true`/`1` means the bit is cleared to `0` in the TLV). Per the Thread
+ * specification, reserved bits in the Security Policy TLV default to `1`. Using inverted logic ensures
+ * backward compatibility when callers zero-initialize `otSecurityPolicy` (or `otOperationalDataset`), so that
+ * unset reserved fields automatically encode to their specification-mandated default value of `1` in the TLV.
  */
 typedef struct otSecurityPolicy
 {
@@ -154,6 +160,9 @@ typedef struct otSecurityPolicy
     bool    mTobleLinkEnabled : 1;               ///< ToBLE link is enabled
     bool    mNonCcmRoutersEnabled : 1;           ///< Non-CCM Routers enabled
     uint8_t mVersionThresholdForRouting : 3;     ///< Version-threshold for Routing
+    bool    mReservedBit10Cleared : 1;           ///< Reserved bit 10 (1 indicates bit is 0 in TLV)
+    bool    mReservedBit11Cleared : 1;           ///< Reserved bit 11 (1 indicates bit is 0 in TLV)
+    bool    mReservedBit12Cleared : 1;           ///< Reserved bit 12 (1 indicates bit is 0 in TLV)
 } otSecurityPolicy;
 
 /**
