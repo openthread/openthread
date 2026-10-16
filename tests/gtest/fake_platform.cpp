@@ -156,6 +156,17 @@ void FakePlatform::ProcessSchedules(uint64_t &aTimeout)
     {
         alarm = &mReceiveAtEnd;
     }
+    if (mTxStartAt < *alarm)
+    {
+        alarm = &mTxStartAt;
+    }
+    if (mTxDoneAt < *alarm)
+    {
+        alarm = &mTxDoneAt;
+    }
+
+    // A transmit event must never be due in the past.
+    assert(((alarm != &mTxStartAt) && (alarm != &mTxDoneAt)) || (mNow <= *alarm));
 
     if (mNow < *alarm)
     {
@@ -167,6 +178,17 @@ void FakePlatform::ProcessSchedules(uint64_t &aTimeout)
     if (alarm == &guard)
     {
         // nothing scheduled within this period.
+    }
+    else if (alarm == &mTxStartAt)
+    {
+        otPlatRadioTxStarted(mInstance, mTxFrame);
+    }
+    else if (alarm == &mTxDoneAt)
+    {
+        otRadioFrame *frame = mTxFrame;
+
+        mTxFrame = nullptr;
+        otPlatRadioTxDone(mInstance, frame, nullptr, mTxDoneError);
     }
     else if (alarm == &mReceiveAtEnd)
     {
@@ -212,7 +234,73 @@ void FakePlatform::GoInUs(uint64_t aTimeoutInUs)
 
 otError FakePlatform::Transmit(otRadioFrame *aFrame)
 {
-    otPlatRadioTxStarted(mInstance, aFrame);
+    TxRecord record;
+
+    if (!mTxTiming.mEnabled)
+    {
+        otPlatRadioTxStarted(mInstance, aFrame);
+        return OT_ERROR_NONE;
+    }
+
+    // A new transmission must not start before the previous one is done.
+    assert(mTxFrame == nullptr);
+
+    record.mCalledAt      = GetRadioNow();
+    record.mLength        = aFrame->mLength;
+    record.mChannel       = aFrame->mChannel;
+    record.mIsTimed       = (aFrame->mInfo.mTxInfo.mTxDelay != 0) || (aFrame->mInfo.mTxInfo.mTxDelayBaseTime != 0);
+    record.mCsmaCaEnabled = aFrame->mInfo.mTxInfo.mCsmaCaEnabled;
+    record.mAborted       = false;
+    record.mTargetTime    = 0;
+
+    if (record.mIsTimed)
+    {
+        // Expand the 32-bit target TX time to the absolute radio time nearest to now.
+        uint32_t target = aFrame->mInfo.mTxInfo.mTxDelayBaseTime + aFrame->mInfo.mTxInfo.mTxDelay;
+
+        record.mTargetTime = record.mCalledAt + static_cast<int32_t>(target - static_cast<uint32_t>(record.mCalledAt));
+    }
+
+    mTxFrame     = aFrame;
+    mTxDoneError = mTxTiming.mTxError;
+
+    record.mCcaEnd = record.mCalledAt + (record.mCsmaCaEnabled ? mTxTiming.mCcaUs : 0);
+
+    if (record.mCsmaCaEnabled && (mTxTiming.mTxError == OT_ERROR_CHANNEL_ACCESS_FAILURE))
+    {
+        // Nothing is sent when CCA fails.
+        record.mSfdEnd = record.mCcaEnd;
+        record.mEnd    = record.mCcaEnd;
+        mTxDoneAt      = ToAlarmTime(record.mCcaEnd);
+        mTxRecords.push_back(record);
+        return OT_ERROR_NONE;
+    }
+
+    record.mSfdEnd = record.mCcaEnd + mTxTiming.mRampUpUs + kShrUs;
+    record.mEnd    = record.mSfdEnd + GetAirtimeUs(aFrame->mLength) - kShrUs;
+
+    if (record.mIsTimed && (record.mSfdEnd > record.mTargetTime))
+    {
+        // The frame cannot be sent on time, so it is not sent at all.
+        record.mAborted = true;
+        record.mCcaEnd  = record.mCalledAt;
+        record.mSfdEnd  = record.mCalledAt;
+        record.mEnd     = record.mCalledAt;
+        mTxDoneError    = OT_ERROR_ABORT;
+        mTxDoneAt       = mNow;
+        mTxRecords.push_back(record);
+        return OT_ERROR_NONE;
+    }
+
+    // Transmit events are scheduled on the alarm clock.
+    mTxStartAt = ToAlarmTime(record.mSfdEnd - kShrUs);
+    mTxDoneAt  = ToAlarmTime(record.mEnd);
+
+    // All the events of the transmission are in the future.
+    assert((mNow < mTxStartAt) && (mTxStartAt < mTxDoneAt));
+
+    mTxRecords.push_back(record);
+
     return OT_ERROR_NONE;
 }
 
@@ -365,6 +453,8 @@ uint16_t otPlatTimeGetXtalAccuracy(void) { return 0; }
 
 uint32_t otPlatAlarmMicroGetNow(void) { return otPlatTimeGet(); }
 
+otRadioTime64 otPlatRadioGetNow(otInstance *) { return FakePlatform::CurrentPlatform().GetRadioNow(); }
+
 void otPlatRadioGetIeeeEui64(otInstance *, uint8_t *aIeeeEui64)
 {
     uint64_t eui64 = FakePlatform::CurrentPlatform().GetEui64();
@@ -387,7 +477,7 @@ otError otPlatRadioEnable(otInstance *) { return OT_ERROR_NONE; }
 
 otError otPlatRadioDisable(otInstance *) { return OT_ERROR_NONE; }
 
-otError otPlatRadioSleep(otInstance *) { return OT_ERROR_NONE; }
+otError otPlatRadioSleep(otInstance *) { return FakePlatform::CurrentPlatform().Sleep(); }
 
 otError otPlatRadioReceive(otInstance *, uint8_t aChannel) { return FakePlatform::CurrentPlatform().Receive(aChannel); }
 

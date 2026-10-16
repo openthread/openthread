@@ -72,6 +72,96 @@ public:
 
     virtual uint64_t GetNow() const { return mNow; }
 
+    /**
+     * Returns the radio clock time (`otPlatRadioGetNow()`).
+     *
+     * The radio clock is a separate time base from the alarm clock (`otPlatAlarmMicroGetNow()`, i.e., `GetNow()`)
+     * on the same chip. They differ by `mRadioClockOffset`.
+     */
+    virtual otRadioTime64 GetRadioNow() const { return mNow + mRadioClockOffset; }
+
+    /**
+     * Sets the offset of the radio clock (`otPlatRadioGetNow()`) from the alarm clock (`otPlatAlarmMicroGetNow()`).
+     *
+     * @param[in] aOffset  The offset in microseconds.
+     */
+    void SetRadioClockOffset(uint64_t aOffset) { mRadioClockOffset = aOffset; }
+
+    /**
+     * Configures the simulated transmit timing used by `Transmit()` (see `TxRecord` for the timeline).
+     *
+     * When disabled (default), `Transmit()` only signals `otPlatRadioTxStarted()`.
+     *
+     * The simulated radio does not support `OT_RADIO_CAPS_TRANSMIT_TIMING`, so a timed frame is sent right away. If
+     * the end of its SFD would be later than its target TX time, nothing is sent and `otPlatRadioTxDone()` reports
+     * `OT_ERROR_ABORT`.
+     *
+     * TODO: `otPlatRadioReceive()` is assumed to put the radio on the target channel and make it ready to receive
+     * immediately. RX ramp-up from sleep and channel retuning, which also take `mRampUpUs` on real radios, are not
+     * modeled yet: `SubMac::kTimedTxLeadTime` does not budget for them, so a timed transmission with CCA would always
+     * be late when the radio is not already receiving on its channel.
+     */
+    struct TxTiming
+    {
+        bool     mEnabled  = false;         ///< Whether to simulate transmit timing.
+        uint32_t mCcaUs    = 128;           ///< CCA duration (in usec), 8 symbols.
+        uint32_t mRampUpUs = 40;            ///< RX-to-TX ramp-up time before the SHR (in usec).
+        otError  mTxError  = OT_ERROR_NONE; ///< Result reported for every transmission.
+    };
+
+    /**
+     * Represents a transmission simulated with `TxTiming`.
+     *
+     * All times are absolute radio clock times (see `otPlatRadioGetNow()` and `GetRadioNow()`). The timeline of a
+     * transmission of a frame with PSDU length `L` (in bytes) is:
+     *
+     *     mCalledAt     mCcaEnd                                 mSfdEnd                         mEnd
+     *         |---------|-------------|---------------------------|-----------------------------|
+     *            CCA       ramp-up        SHR (preamble + SFD)            PHR + PSDU
+     *          mCcaUs     mRampUpUs          kShrUs (160)             kUsPerByte * (L + 1)
+     *
+     * - Without CSMA-CA, there is no CCA and `mCcaEnd == mCalledAt`.
+     * - `otPlatRadioTxStarted()` is signaled when the SHR starts and `otPlatRadioTxDone()` at `mEnd`.
+     * - If CCA fails (`mTxError` is `OT_ERROR_CHANNEL_ACCESS_FAILURE`), nothing is sent: `otPlatRadioTxDone()` is
+     *   signaled at `mCcaEnd`, and `mSfdEnd` and `mEnd` equal `mCcaEnd`.
+     * - If a timed frame cannot be sent on time (`mAborted`), nothing is sent: `otPlatRadioTxDone()` is signaled at
+     *   `mCalledAt`, and all times equal `mCalledAt`.
+     */
+    struct TxRecord
+    {
+        otRadioTime64 mCalledAt;      ///< Time `Transmit()` was called.
+        otRadioTime64 mCcaEnd;        ///< Time CCA ends (`mCalledAt` without CCA).
+        otRadioTime64 mSfdEnd;        ///< Time the end of SFD is on the air.
+        otRadioTime64 mEnd;           ///< Time the transmission ends.
+        otRadioTime64 mTargetTime;    ///< Target TX time (valid when `mIsTimed`).
+        uint16_t      mLength;        ///< PSDU length (in bytes).
+        uint8_t       mChannel;       ///< Channel.
+        bool          mIsTimed;       ///< Whether a target TX time was specified.
+        bool          mCsmaCaEnabled; ///< Whether CSMA-CA (CCA) was enabled.
+        bool          mAborted;       ///< Whether the timed transmission was aborted since it was too late.
+    };
+
+    static constexpr uint32_t kUsPerByte = 32;  ///< 2.4 GHz O-QPSK: 2 symbols of 16 usec per byte.
+    static constexpr uint32_t kShrUs     = 160; ///< SHR: 4 preamble bytes and 1 SFD byte.
+
+    /**
+     * Returns the airtime of a frame: SHR, PHR, and PSDU, i.e. `16 * (2 * aPsduLength + 12)` usec.
+     */
+    static uint32_t GetAirtimeUs(uint16_t aPsduLength) { return kUsPerByte * (aPsduLength + 6); }
+
+    /**
+     * Converts an alarm clock time (see `GetNow()`) to the radio clock time.
+     */
+    otRadioTime64 ToRadioTime(uint64_t aTime) const { return aTime + mRadioClockOffset; }
+
+    /**
+     * Converts a radio clock time to the alarm clock time (see `GetNow()`).
+     */
+    uint64_t ToAlarmTime(otRadioTime64 aTime) const { return aTime - mRadioClockOffset; }
+
+    TxTiming              mTxTiming;
+    std::vector<TxRecord> mTxRecords;
+
     virtual void StartMilliAlarm(uint32_t aT0, uint32_t aDt);
     virtual void StopMilliAlarm();
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
@@ -93,9 +183,18 @@ public:
 
     virtual otError Receive(uint8_t aChannel)
     {
-        mChannel = aChannel;
+        mChannel    = aChannel;
+        mIsSleeping = false;
         return OT_ERROR_NONE;
     }
+
+    virtual otError Sleep(void)
+    {
+        mIsSleeping = true;
+        return OT_ERROR_NONE;
+    }
+
+    bool IsSleeping(void) const { return mIsSleeping; }
 
     virtual otError SettingsGet(uint16_t aKey, uint16_t aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
     virtual otError SettingsSet(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
@@ -167,6 +266,8 @@ protected:
     otInstance *mInstance = nullptr;
 
     uint64_t mNow = 0;
+
+    uint64_t mRadioClockOffset = 0; // Offset of the radio clock from the alarm clock.
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     uint64_t mMicroAlarmStart = kAlarmStop;
 #endif
@@ -175,11 +276,17 @@ protected:
     uint64_t mReceiveAtStart = kAlarmStop;
     uint64_t mReceiveAtEnd   = kAlarmStop;
 
+    uint64_t      mTxStartAt   = kAlarmStop;
+    uint64_t      mTxDoneAt    = kAlarmStop;
+    otRadioFrame *mTxFrame     = nullptr;
+    otError       mTxDoneError = OT_ERROR_NONE;
+
     template <uint64_t FakePlatform::*T> void HandleSchedule();
 
     otRadioFrame mTransmitFrame{};
     uint8_t      mTransmitBuffer[OT_RADIO_FRAME_MAX_SIZE]{};
     uint8_t      mChannel          = 0;
+    bool         mIsSleeping       = true;
     uint8_t      mReceiveAtChannel = 0;
 
     uint8_t mFlash[kFlashSwapSize * kFlashSwapNum];

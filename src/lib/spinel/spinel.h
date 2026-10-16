@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 11
+#define SPINEL_RCP_API_VERSION 13
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -3482,6 +3482,9 @@ enum
      *        in `otRadioFrame` (default zero).
      *  `C` : RX channel after TX done (default assumed to be same as
      *        channel in metadata)
+     *
+     * A request while a burst transmission (`SPINEL_PROP_RCP_TX_BURST`) is
+     * ongoing is rejected with `SPINEL_STATUS_INVALID_STATE`.
      */
     SPINEL_PROP_STREAM_RAW = SPINEL_PROP_STREAM__BEGIN + 1,
 
@@ -4751,6 +4754,87 @@ enum
      * The current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
      */
     SPINEL_PROP_RCP_CSL_UNCERTAINTY = SPINEL_PROP_RCP_EXT__BEGIN + 5,
+
+    /// Burst transmission
+    /** Format: `t(SLL)dC...` - Write: start or stop a burst
+     *  Format: `t(SLL)` - Read, and asynchronous notification of the end of a burst
+     *
+     * Not supported if the RCP answers `SPINEL_STATUS_PROP_NOT_FOUND`.
+     *
+     * Transmits the same frame repeatedly in a number of ticks, without host
+     * involvement in each tick (e.g., wake frames of a Wake Initiator).
+     *
+     * The value written to start a burst is the burst configuration, followed
+     * by the frame and its meta data in the same format as the
+     * `CMD_PROP_VALUE_SET` of `SPINEL_PROP_STREAM_RAW`:
+     *
+     *  `t(SLL)` : Burst configuration:
+     *    `S` : Number of ticks (`Count`). Zero stops the ongoing burst, and all
+     *          other fields can be omitted.
+     *    `L` : Tick period in microseconds (`PeriodUs`). Zero for back-to-back
+     *          ticks. Otherwise, ticks are anchored on the RCP radio clock to
+     *          periodic slots spaced by `PeriodUs`, starting from the target
+     *          TX time (if specified) or from the time the RCP receives the
+     *          request. A slot whose start time is not in the future when the
+     *          tick would start (e.g., the previous tick overran it) is
+     *          skipped rather than transmitted late.
+     *    `L` : Channel mask (`ChannelMask`, `Bits 11..26` = Channels
+     *          `11..26`). Zero to transmit on `Channel`. Otherwise, the frame
+     *          is transmitted on each channel of the mask in ascending order in
+     *          each tick: the first channel at the target TX time of the tick
+     *          (if timed), and the other channels right after it.
+     *  `d` : Frame, which MUST NOT request an ACK and MUST NOT require security
+     *        processing by the RCP.
+     *  `C` : Channel - MUST be included.
+     *  ... : Optional meta data as in `SPINEL_PROP_STREAM_RAW`. The RX channel
+     *        after TX done is ignored (see below). The maximum backoffs and
+     *        maximum retries fields SHOULD be zero for a timed burst, since
+     *        any CSMA-CA backoff or retransmission would be late.
+     *
+     * A target TX time (`TxDelay` or `TxDelayBaseTime` non-zero) is the first
+     * slot. If it is already in the past, it is missed and the burst starts
+     * from the next slot in the future (for `PeriodUs == 0`, the remaining
+     * ticks are sent back-to-back). If no slot remains, the request fails with
+     * `SPINEL_STATUS_INVALID_ARGUMENT`.
+     *
+     * The value read is the configuration of the ongoing burst, where `Count`
+     * is the number of remaining ticks, including the one in progress. All
+     * fields are zero if no burst is ongoing.
+     *
+     * A successful write is answered with `CMD_PROP_VALUE_IS` with the value
+     * read after the write. A write to start a burst fails with:
+     *  - `SPINEL_STATUS_BUSY`: a burst or a `SPINEL_PROP_STREAM_RAW`
+     *    transmission is ongoing.
+     *  - `SPINEL_STATUS_INVALID_ARGUMENT`: the configuration or the frame is
+     *    invalid for a burst, or no slot remains.
+     *  - `SPINEL_STATUS_INVALID_STATE`: the raw link-layer is not enabled.
+     *
+     * A write to stop a burst succeeds even if no burst is ongoing. If no
+     * burst frame is being transmitted, the burst ends right away: the
+     * response reads `Count` as zero, and no notification is sent for this
+     * burst. Otherwise, the response reads `Count` as one (the tick in
+     * progress), and the burst ends when the frame being transmitted is done.
+     *
+     * When a burst ends other than right away by a write to stop it, i.e.,
+     * after its last tick, when stopped while a burst frame is being
+     * transmitted, or when the raw link-layer is disabled
+     * (`SPINEL_PROP_PHY_ENABLED` set to false), the RCP sends an unsolicited
+     * `CMD_PROP_VALUE_IS` (TID 0) with the value read (all fields zero). The
+     * notification keeps its order relative to responses: if a burst ends
+     * before a write to stop it is handled, the notification precedes the
+     * response, which reads `Count` as zero. The host MUST NOT start another
+     * transmission until the burst ends.
+     *
+     * Between ticks, the radio is in the state last requested by the host:
+     * receive on the channel of `SPINEL_PROP_PHY_CHAN` if
+     * `SPINEL_PROP_MAC_RAW_STREAM_ENABLED` is true, or sleep otherwise. These
+     * requests do not end the burst; if a tick is in progress, they take
+     * effect once the tick is done. Frames received between ticks are
+     * reported as usual and do not end the burst. `SPINEL_PROP_STREAM_RAW`
+     * and energy scans are rejected with `SPINEL_STATUS_INVALID_STATE` during a
+     * burst.
+     */
+    SPINEL_PROP_RCP_TX_BURST = SPINEL_PROP_RCP_EXT__BEGIN + 7,
 
     SPINEL_PROP_RCP_EXT__END = 0x900,
 
