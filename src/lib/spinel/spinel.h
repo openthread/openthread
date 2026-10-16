@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 11
+#define SPINEL_RCP_API_VERSION 16
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -716,6 +716,66 @@ enum
     SPINEL_MAC_PROMISCUOUS_MODE_NETWORK = 1, ///< All MAC packets matching network are passed up the stack.
     SPINEL_MAC_PROMISCUOUS_MODE_FULL    = 2, ///< All decoded MAC packets are passed up the stack.
 };
+
+/**
+ * MAC Filter Policy Bitmask.
+ *
+ * Bitmask flags used with `SPINEL_PROP_RCP_MAC_FILTER_POLICY` to configure
+ * hardware/software frame filtering on the RCP.
+ */
+typedef enum
+{
+    /**
+     * No filtering policy (permissive mode).
+     *
+     * In this mode, no extra filter checks are performed by the MAC filter;
+     * frames are passed up to the host according to the standard promiscuous/receive settings.
+     */
+    SPINEL_MAC_FILTER_POLICY_NONE = 0x00,
+
+    /**
+     * Drop malformed IEEE 802.15.4 frames.
+     *
+     * Frames that fail basic IEEE 802.15.4 header/length validation (e.g., truncated
+     * headers, invalid addressing mode combinations, or illegal frame versions) are
+     * discarded immediately by the RCP rather than delivered to the host.
+     */
+    SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED = 0x01,
+
+    /**
+     * Drop unsecured IEEE 802.15.4 frames.
+     *
+     * Discards any received frame that does not have the Security Enabled bit set in its
+     * Frame Control Field (FCF). Requires `SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED` behavior
+     * for header parsing.
+     */
+    SPINEL_MAC_FILTER_POLICY_DROP_UNSECURED = 0x02,
+
+    /**
+     * Drop frames with unknown keys.
+     *
+     * Discards any secured frame whose key is unknown. A key is known if the frame matches an entry
+     * in the RCP MAC key table (`SPINEL_PROP_RCP_MAC_KEY_TABLE`), or if the frame uses Key ID Mode 1
+     * with the Key Index of the previous, current, or next key set by `SPINEL_PROP_RCP_MAC_KEY`.
+     */
+    SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY = 0x04,
+
+    /**
+     * Drop frames from unknown neighbors.
+     *
+     * Discards any secured frame matching a key table entry with a key whose sender is not in the
+     * RCP MAC neighbor table (`SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE`) for that entry.
+     */
+    SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR = 0x08,
+
+    /**
+     * Drop replayed frames.
+     *
+     * Discards any secured frame whose frame counter is lower than the next expected frame counter
+     * of the neighbor whose key and address verified the frame's MIC.
+     */
+    SPINEL_MAC_FILTER_POLICY_DROP_REPLAYED = 0x10,
+} spinel_mac_filter_policy_t;
 
 enum
 {
@@ -3482,6 +3542,9 @@ enum
      *        in `otRadioFrame` (default zero).
      *  `C` : RX channel after TX done (default assumed to be same as
      *        channel in metadata)
+     *
+     * A request while a burst transmission (`SPINEL_PROP_RCP_TX_BURST`) is
+     * ongoing is rejected with `SPINEL_STATUS_INVALID_STATE`.
      */
     SPINEL_PROP_STREAM_RAW = SPINEL_PROP_STREAM__BEGIN + 1,
 
@@ -4751,6 +4814,257 @@ enum
      * The current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
      */
     SPINEL_PROP_RCP_CSL_UNCERTAINTY = SPINEL_PROP_RCP_EXT__BEGIN + 5,
+
+    /// Burst transmission
+    /** Format: `t(SLL)dC...` - Write: start or stop a burst
+     *  Format: `t(SLL)` - Read, and asynchronous notification of the end of a burst
+     *
+     * Not supported if the RCP answers `SPINEL_STATUS_PROP_NOT_FOUND`.
+     *
+     * Transmits the same frame repeatedly in a number of ticks, without host
+     * involvement in each tick (e.g., wake frames of a Wake Initiator).
+     *
+     * The value written to start a burst is the burst configuration, followed
+     * by the frame and its meta data in the same format as the
+     * `CMD_PROP_VALUE_SET` of `SPINEL_PROP_STREAM_RAW`:
+     *
+     *  `t(SLL)` : Burst configuration:
+     *    `S` : Number of ticks (`Count`). Zero stops the ongoing burst, and all
+     *          other fields can be omitted.
+     *    `L` : Tick period in microseconds (`PeriodUs`). Zero for back-to-back
+     *          ticks. Otherwise, ticks are anchored on the RCP radio clock to
+     *          periodic slots spaced by `PeriodUs`, starting from the target
+     *          TX time (if specified) or from the time the RCP receives the
+     *          request. A slot whose start time is not in the future when the
+     *          tick would start (e.g., the previous tick overran it) is
+     *          skipped rather than transmitted late.
+     *    `L` : Channel mask (`ChannelMask`, `Bits 11..26` = Channels
+     *          `11..26`). Zero to transmit on `Channel`. Otherwise, the frame
+     *          is transmitted on each channel of the mask in ascending order in
+     *          each tick: the first channel at the target TX time of the tick
+     *          (if timed), and the other channels right after it.
+     *  `d` : Frame, which MUST NOT request an ACK and MUST NOT require security
+     *        processing by the RCP.
+     *  `C` : Channel - MUST be included.
+     *  ... : Optional meta data as in `SPINEL_PROP_STREAM_RAW`. The RX channel
+     *        after TX done is ignored (see below). The maximum backoffs and
+     *        maximum retries fields SHOULD be zero for a timed burst, since
+     *        any CSMA-CA backoff or retransmission would be late.
+     *
+     * A target TX time (`TxDelay` or `TxDelayBaseTime` non-zero) is the first
+     * slot. If it is already in the past, it is missed and the burst starts
+     * from the next slot in the future (for `PeriodUs == 0`, the remaining
+     * ticks are sent back-to-back). If no slot remains, the request fails with
+     * `SPINEL_STATUS_INVALID_ARGUMENT`.
+     *
+     * The value read is the configuration of the ongoing burst, where `Count`
+     * is the number of remaining ticks, including the one in progress. All
+     * fields are zero if no burst is ongoing.
+     *
+     * A successful write is answered with `CMD_PROP_VALUE_IS` with the value
+     * read after the write. A write to start a burst fails with:
+     *  - `SPINEL_STATUS_BUSY`: a burst or a `SPINEL_PROP_STREAM_RAW`
+     *    transmission is ongoing.
+     *  - `SPINEL_STATUS_INVALID_ARGUMENT`: the configuration or the frame is
+     *    invalid for a burst, or no slot remains.
+     *  - `SPINEL_STATUS_INVALID_STATE`: the raw link-layer is not enabled.
+     *
+     * A write to stop a burst succeeds even if no burst is ongoing. If no
+     * burst frame is being transmitted, the burst ends right away: the
+     * response reads `Count` as zero, and no notification is sent for this
+     * burst. Otherwise, the response reads `Count` as one (the tick in
+     * progress), and the burst ends when the frame being transmitted is done.
+     *
+     * When a burst ends other than right away by a write to stop it, i.e.,
+     * after its last tick, when stopped while a burst frame is being
+     * transmitted, or when the raw link-layer is disabled
+     * (`SPINEL_PROP_PHY_ENABLED` set to false), the RCP sends an unsolicited
+     * `CMD_PROP_VALUE_IS` (TID 0) with the value read (all fields zero). The
+     * notification keeps its order relative to responses: if a burst ends
+     * before a write to stop it is handled, the notification precedes the
+     * response, which reads `Count` as zero. The host MUST NOT start another
+     * transmission until the burst ends.
+     *
+     * Between ticks, the radio is in the state last requested by the host:
+     * receive on the channel of `SPINEL_PROP_PHY_CHAN` if
+     * `SPINEL_PROP_MAC_RAW_STREAM_ENABLED` is true, or sleep otherwise. These
+     * requests do not end the burst; if a tick is in progress, they take
+     * effect once the tick is done. Frames received between ticks are
+     * reported as usual and do not end the burst. `SPINEL_PROP_STREAM_RAW`
+     * and energy scans are rejected with `SPINEL_STATUS_INVALID_STATE` during a
+     * burst.
+     */
+    SPINEL_PROP_RCP_TX_BURST = SPINEL_PROP_RCP_EXT__BEGIN + 7,
+
+    /// RCP Periodic RX Schedules
+    /** Format: `A(t(LLSC))`
+     *
+     * The table of periodic receive schedules used by the RCP to autonomously sample the channel while the radio is in
+     * Sleep state. Setting this property atomically replaces the whole table. An empty table disables periodic RX. A
+     * window already scheduled before the table is set may still occur once.
+     *
+     * Each schedule entry is encoded as:
+     *
+     *  `L`: Phase (in microseconds), MUST be less than the period.
+     *  `L`: Period (in microseconds), MUST be non-zero.
+     *  `S`: Duration (in microseconds), MUST be non-zero and not more than the period.
+     *  `C`: Channel, MUST be in the RCP's supported channel mask (`SPINEL_PROP_PHY_CHAN_SUPPORTED`).
+     *
+     * A receive window starts at every radio time `T` (in microseconds, see `otPlatRadioGetNow()`) which satisfies
+     * `T % Period == Phase`, i.e. the phase is relative to radio time zero.
+     *
+     * To align windows with a repeating activity (e.g. a coexistence activity), let:
+     *
+     *  - `A`: The radio time (in microseconds) at which one occurrence of the activity starts.
+     *  - `P`: The repetition period of the activity (in microseconds).
+     *  - `D`: The desired delay (in microseconds) from the start of an activity occurrence to the start of the receive
+     *         window (e.g. to place the window in a gap between occurrences), `0 <= D < P`.
+     *  - `M`: The number of activity periods between two receive windows, `M >= 1` (`M = 1` samples after every
+     *         occurrence).
+     *
+     * Then use `Period = M * P` and `Phase = (A + D) % Period`, so windows start at `A + D + k * Period` for every
+     * integer `k`. If the activity's clock drifts relative to the radio clock, the host is expected to keep the
+     * schedules aligned by setting an updated table.
+     *
+     * Arbitration between overlapping windows:
+     *
+     *  - Array order defines priority (the first entry has highest priority). At any instant, the radio listens on
+     *    the channel of the highest-priority schedule whose window covers that instant.
+     *  - When windows of different schedules overlap on different channels, the lower-priority window is truncated
+     *    (not skipped) to the parts not covered by the higher-priority window, before and/or after it.
+     *  - Overlapping windows on the same channel are merged into one continuous window.
+     *  - When a higher-priority window preempts an ongoing lower-priority window on a different channel, the RCP may
+     *    switch channel slightly before the higher-priority window starts (an implementation-defined channel switch
+     *    guard time), taking that time from the lower-priority window.
+     *  - The RCP may drop a truncated window that is too short to be useful (implementation-defined minimum).
+     *  - If a frame passing the address filter is being received when a window ends (e.g. its SHR was detected), the
+     *    RCP completes the frame reception and any ACK transmission before switching to the channel of the next
+     *    window (even a higher-priority one) or returning to Sleep. A frame failing the address filter is aborted as
+     *    soon as the mismatch is determined.
+     *
+     * Periodic RX runs only while the radio is in Sleep state. Receive, Transmit and Energy Scan pause it, and it
+     * resumes when the radio returns to Sleep.
+     *
+     * An RCP supporting this property SHOULD support at least 3 entries. Setting a table with more entries than the
+     * RCP supports returns `SPINEL_STATUS_NOMEM`, and setting a table with an invalid entry returns
+     * `SPINEL_STATUS_INVALID_ARGUMENT`. In both cases the previous table is left unchanged.
+     *
+     * Only `CMD_PROP_VALUE_SET` and `CMD_PROP_VALUE_GET` are supported. An RCP not supporting periodic RX responds to
+     * `CMD_PROP_VALUE_GET` with `SPINEL_STATUS_PROP_NOT_FOUND`, which the host reports as `OT_ERROR_NOT_IMPLEMENTED`.
+     */
+    SPINEL_PROP_RCP_PERIODIC_RX_SCHEDULES = SPINEL_PROP_RCP_EXT__BEGIN + 8,
+
+    /// MAC Filter Policy
+    /** Format: `C`
+     *
+     * Configures the MAC receive filter policy bitmask on the RCP.
+     *
+     * Default value: `SPINEL_MAC_FILTER_POLICY_NONE` (`0x00`, permissive mode).
+     *
+     * Values are bitwise combinations of `spinel_mac_filter_policy_t`:
+     * - `SPINEL_MAC_FILTER_POLICY_NONE` (0x00): Permissive mode. No filter checks are
+     *   performed by the policy; received frames pass through to the host subject to standard
+     *   promiscuous and receive configurations.
+     * - `SPINEL_MAC_FILTER_POLICY_DROP_MALFORMED` (0x01): Discard frames that fail basic
+     *   IEEE 802.15.4 frame header or length parsing.
+     * - `SPINEL_MAC_FILTER_POLICY_DROP_UNSECURED` (0x02): Discard frames that do not have
+     *   the Security Enabled bit set in the Frame Control Field (FCF).
+     * - `SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_KEY` (0x04): Discard secured frames whose key is
+     *   unknown: the frame matches no entry in `SPINEL_PROP_RCP_MAC_KEY_TABLE`, and it does not use
+     *   Key ID Mode 1 with the Key Index of the previous, current, or next key set by
+     *   `SPINEL_PROP_RCP_MAC_KEY`.
+     * - `SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR` (0x08): Discard secured frames matching a key
+     *   table entry with a key whose sender is not in `SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE` for that
+     *   entry.
+     * - `SPINEL_MAC_FILTER_POLICY_DROP_REPLAYED` (0x10): Discard secured frames whose frame counter is
+     *   lower than the next expected frame counter of the neighbor that verified the MIC.
+     *
+     * Bits 5..7 are reserved and MUST be set to 0; writing non-zero reserved bits will be rejected
+     * with `SPINEL_STATUS_INVALID_ARGUMENT`.
+     *
+     * When the policy is non-zero, a received secured frame that matches a key table entry without a
+     * key is accepted. For a matching entry with a key, the AES-CCM* MIC is verified using the
+     * extended address of each neighbor of that entry that matches the frame's source address (any
+     * neighbor of that entry if the frame has no source address) for the nonce. When a neighbor
+     * verifies the MIC, the frame is checked for replay against, and then updates, that neighbor's
+     * next expected frame counter. If no neighbor matches, a frame with an extended source address is
+     * verified using that address, and `SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR` applies;
+     * a frame with a short source address or no source address cannot be verified, and
+     * `SPINEL_MAC_FILTER_POLICY_DROP_UNKNOWN_NEIGHBOR` applies. Entries may share a Key Identifier,
+     * so all matching entries are checked; the frame is accepted as soon as one verifies it, and is
+     * dropped if the MIC verification fails for all of them. This drops frames that use a Key
+     * Identifier of an entry but are secured with a different key.
+     *
+     * Each MIC verification costs one AES-CCM* operation, so entries sharing a Key Identifier or
+     * neighbors sharing a key increase the processing cost per received frame.
+     *
+     * The RCP only verifies the MIC; it does not decrypt frames, and frames are delivered to the
+     * host unmodified.
+     */
+    SPINEL_PROP_RCP_MAC_FILTER_POLICY = SPINEL_PROP_RCP_EXT__BEGIN + 9,
+
+    /// MAC Key Table
+    /** Format: `A(t(ddC))`
+     *
+     * Sets or gets the MAC security key table on the RCP, which is used by
+     * `SPINEL_PROP_RCP_MAC_FILTER_POLICY` to filter received secured frames.
+     *
+     * Each entry is a struct containing:
+     * - `d`: Key ID, whose length determines the Key ID Mode: `0` bytes for Mode 0, `1` byte (Key
+     *   Index) for Mode 1, `5` bytes (Key Source followed by Key Index) for Mode 2, or `9` bytes for
+     *   Mode 3.
+     * - `d`: Key (empty, or a 16-byte AES-128 key). An empty key means the entry filters frames by
+     *   Key ID only. A 16-byte key requests MIC verification; an RCP that does not support it MUST
+     *   reject the entry by returning `SPINEL_STATUS_NOT_CAPABLE`.
+     * - `C`: Allowed security levels bitmask (`1 << SecLevel`, where bit `i` represents
+     *   IEEE 802.15.4 Security Level `i`, for `i` in 0..7).
+     *   Bit 0 (`1 << 0`, Security Level 0: None) MUST NOT be set; attempting to set bit 0
+     *   MUST return `SPINEL_STATUS_INVALID_ARGUMENT`.
+     *
+     * A received secured frame matches an entry when it uses the entry's Key ID Mode and Key ID, and
+     * its security level is allowed by the entry.
+     *
+     * If an RCP does not support a certain Key ID mode, it MUST reject entries with
+     * unsupported Key ID lengths by returning `SPINEL_STATUS_INVALID_ARGUMENT`. For
+     * example, OpenThread RCP implementations support Key ID Modes 0, 1, and 2.
+     */
+    SPINEL_PROP_RCP_MAC_KEY_TABLE = SPINEL_PROP_RCP_EXT__BEGIN + 10,
+
+    /// MAC Neighbor Table
+    /** Format: `A(t(ECL[S[S]]))`
+     *
+     * Sets or gets the MAC neighbor table on the RCP, which is used by
+     * `SPINEL_PROP_RCP_MAC_FILTER_POLICY` to verify the MIC and frame counter of received secured
+     * frames.
+     *
+     * Each entry is a struct containing:
+     * - `E`: Neighbor extended address, which is used for the AES-CCM* nonce.
+     * - `C`: Index of the entry in `SPINEL_PROP_RCP_MAC_KEY_TABLE` whose key the neighbor uses. The
+     *   entry MUST have a key.
+     * - `L`: Next expected frame counter of the neighbor.
+     * - `S`: Optional neighbor PAN ID (`0xffff` if not set).
+     * - `S`: Optional neighbor short address (`0xffff` if not set), used to find the neighbor of a frame
+     *   with a short source address.
+     *
+     * A frame matches a neighbor when its source address is the neighbor's extended address, or the
+     * neighbor's short address if set, or when it has no source address. If the neighbor's PAN ID is
+     * set and the frame's source PAN ID is known, the source PAN ID must also be equal to it. The source
+     * PAN ID is known when the Source PAN ID field is present, or when the Source PAN ID is elided with
+     * PAN ID Compression set and both the Destination PAN ID field and a source address are present (in
+     * which case it equals the Destination PAN ID). Otherwise, the PAN ID is not checked.
+     *
+     * The PAN ID scopes the neighbor's short address, which is only unique within a PAN. Extended
+     * addresses are assumed to be unique, so the PAN ID is not a security check.
+     *
+     * An entry with an invalid key table index, or with the same extended address and key table index
+     * as another entry, MUST be rejected with `SPINEL_STATUS_INVALID_ARGUMENT`.
+     *
+     * The RCP updates the next expected frame counter of a neighbor when the neighbor verifies a
+     * frame. When the table is set, the frame counter of an entry with the same extended address and
+     * key table index as a current entry is set to the larger of the two, so that it never moves
+     * backwards. Setting `SPINEL_PROP_RCP_MAC_KEY_TABLE` clears the neighbor table.
+     */
+    SPINEL_PROP_RCP_MAC_NEIGHBOR_TABLE = SPINEL_PROP_RCP_EXT__BEGIN + 11,
 
     SPINEL_PROP_RCP_EXT__END = 0x900,
 

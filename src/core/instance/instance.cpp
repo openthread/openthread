@@ -305,6 +305,9 @@ Instance::Instance(void)
     , mDnsNameCompressionEnabled(true)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    , mLinkExt(*this)
+#endif
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mLinkRaw(*this)
 #endif

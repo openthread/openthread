@@ -309,6 +309,7 @@ Error Frame::ParseInfo::ParseFrom(const Frame &aFrame, ParseMode aMode)
     mIsAckRequest      = IsAckRequest(fcf);
     mIsSeqNumPresent   = IsSeqPresent(fcf);
     mIsIePresent       = IsIePresent(fcf);
+    mIsPanIdCompressed = (fcf & kFcfPanidCompression) != 0;
 
     if (mIsSeqNumPresent)
     {

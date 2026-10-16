@@ -74,6 +74,7 @@ source_set("openthread") {
     "jam_detection.h",
     "joiner.h",
     "link.h",
+    "link_ext.h",
     "link_metrics.h",
     "link_raw.h",
     "logging.h",

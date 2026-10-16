@@ -269,6 +269,7 @@ public:
         bool      mIsAckRequest : 1;      ///< TRUE if ACK request bit is set, FALSE otherwise.
         bool      mIsSeqNumPresent : 1;   ///< TRUE if sequence number is present, FALSE otherwise.
         bool      mIsIePresent : 1;       ///< TRUE if IE present bit is set, FALSE otherwise.
+        bool      mIsPanIdCompressed : 1; ///< TRUE if PAN ID Compression bit is set, FALSE otherwise.
         Type      mType;                  ///< The frame type.
         Version   mVersion;               ///< The frame version.
         uint8_t   mSequenceNum;           ///< The sequence number (valid if `mIsSeqNumPresent`).

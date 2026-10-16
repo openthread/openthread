@@ -77,6 +77,10 @@ otError SpinelStatusToOtError(spinel_status_t aStatus)
         ret = OT_ERROR_INVALID_STATE;
         break;
 
+    case SPINEL_STATUS_NOT_CAPABLE:
+        ret = OT_ERROR_NOT_CAPABLE;
+        break;
+
     case SPINEL_STATUS_NO_ACK:
         ret = OT_ERROR_NO_ACK;
         break;

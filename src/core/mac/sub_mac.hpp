@@ -77,9 +77,11 @@ namespace Mac {
 #error "OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE MUST NOT be defined directly. It is derived from other configs"
 #endif
 
-#define OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE                                                    \
-    (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE || \
-     ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE))
+#define OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE                                                                          \
+    (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE ||                       \
+     ((OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE) && OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE) || \
+     (OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE &&                                                       \
+      (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)))
 
 //----------------------------------------------------------------------------------------------------------------------
 // Config validity checks
@@ -123,6 +125,7 @@ class SubMac : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
     friend class LinkRaw;
+    friend class LinkExt;
 
 public:
     using Capability   = Radio::Capability;   ///< A radio capability.
@@ -379,6 +382,13 @@ public:
     void CancelPendingReceiveAt(void);
 #endif
 
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+    /**
+     * Notifies that the `LinkExt` periodic RX schedules have changed.
+     */
+    void UpdateOnPeriodicRxChange(void) { mListenScheduler.UpdateOnPeriodicRxChange(); }
+#endif
+
     /**
      * Gets the radio transmit frame.
      *
@@ -480,6 +490,13 @@ public:
      * @param[in] aNextKey    The next MAC key.
      */
     void SetMode1MacKeys(uint8_t aKeyIndex, const Key &aPrevKey, const Key &aCurKey, const Key &aNextKey);
+
+    /**
+     * Gets the current MAC key index for Key ID Mode 1.
+     *
+     * @returns The current MAC key index, or zero if no keys are set.
+     */
+    uint8_t GetMode1KeyIndex(void) const { return mKeyTrio.GetKeyIndex(); }
 
     /**
      * Clears the stored MAC keys.
@@ -655,6 +672,9 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         void UpdateOnCslChange(void) { Schedule(); }
 #endif
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+        void UpdateOnPeriodicRxChange(void) { Schedule(); }
+#endif
 
     private:
         static constexpr uint32_t kCslTransitionToNextAheadTime = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
@@ -679,6 +699,9 @@ private:
         void Schedule(void);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         void ScheduleCsl(SchedInfo &aInfo);
+#endif
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+        void SchedulePeriodicRx(SchedInfo &aInfo);
 #endif
 
         using ListenTimer = TimerMicroIn<SubMac, &SubMac::HandleListenSchedulerTimer>;
