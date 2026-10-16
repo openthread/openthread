@@ -154,6 +154,7 @@ typedef struct otSecurityPolicy
     bool    mTobleLinkEnabled : 1;               ///< ToBLE link is enabled
     bool    mNonCcmRoutersEnabled : 1;           ///< Non-CCM Routers enabled
     uint8_t mVersionThresholdForRouting : 3;     ///< Version-threshold for Routing
+    uint8_t mClearedReservedBits : 3;            ///< Cleared reserved bits 10-12 (1 indicates bit is 0 in TLV)
 } otSecurityPolicy;
 
 /**

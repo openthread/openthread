@@ -127,6 +127,7 @@ private:
     static constexpr uint8_t kNonCcmRoutersMask              = 1 << 6;
     static constexpr uint8_t kReservedMask                   = 0x38;
     static constexpr uint8_t kVersionThresholdForRoutingMask = 0x07;
+    static constexpr uint8_t kReservedOffset                 = 3;
 
     void SetToDefaultFlags(void);
 };
