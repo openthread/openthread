@@ -166,23 +166,16 @@ public:
     void Clear(void)
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mTxFrame802154.ClearTxProperties();
         mTxFrame802154.SetLength(0);
-        mTxFrame802154.SetIsARetransmission(false);
-        mTxFrame802154.SetIsSecurityProcessed(false);
         mTxFrame802154.SetCsmaCaEnabled(true); // Set to true by default, only set to `false` for CSL transmission
-        mTxFrame802154.SetIsHeaderUpdated(false);
-        mTxFrame802154.ClearTargetTxTime();
         mTxFrame802154.SetTxPower(Radio::kInvalidPower);
-        mTxFrame802154.SetCslIePresent(false);
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        mTxFrameTrel.ClearTxProperties();
         mTxFrameTrel.SetLength(0);
-        mTxFrameTrel.SetIsARetransmission(false);
-        mTxFrameTrel.SetIsSecurityProcessed(false);
         mTxFrameTrel.SetCsmaCaEnabled(true);
-        mTxFrameTrel.SetIsHeaderUpdated(false);
 #endif
-
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         mSelectedRadioTypes.Clear();
         mRequiredRadioTypes.Clear();

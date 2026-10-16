@@ -951,7 +951,7 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
     fcf = ConstructFrameControlField(kTypeAck, rxInfo.mVersion);
 
     mChannel = aFrame.GetChannel();
-    ClearAllBytes(mInfo.mTxInfo);
+    ClearTxProperties();
 
     if (aIsFramePending)
     {
@@ -1029,7 +1029,7 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
     // Prepare the ack frame
 
     mChannel = aRxFrame.mChannel;
-    ClearAllBytes(mInfo.mTxInfo);
+    ClearTxProperties();
 
     PrepareHeadersWithEmptyPayload(buildInfo);
 
