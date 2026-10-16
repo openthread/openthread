@@ -542,6 +542,7 @@ void Dhcp6PdClient::HandleReply(const Message &aMessage)
     PdPrefix                *favoredPdPrefix;
     PdPrefix                *matchedPdPrefix;
     StatusCodeOption::Status status;
+    bool                     leaseDiscarded = false;
 
     status = StatusCodeOption::ReadStatusFrom(aMessage);
 
@@ -583,32 +584,51 @@ void Dhcp6PdClient::HandleReply(const Message &aMessage)
 
     if ((mState == kStateRenewing) || (mState == kStateRebinding))
     {
-        VerifyOrExit(status != StatusCodeOption::kNoPrefixAvail);
-
         matchedPdPrefix = pdPrefixes.FindMatching(mPdPrefix);
 
-        if (matchedPdPrefix != nullptr)
+        // RFC 8415 Section 18.2.10.1 bullet 4: discard any leases that have a valid lifetime of 0 in the IA Prefix
+        // option. This applies regardless of the status code in the IA_PD.
+        if ((matchedPdPrefix != nullptr) && (matchedPdPrefix->mValidLifetime == 0))
         {
-            SaveServerDuid(aMessage);
-            CommitPdPrefix(*matchedPdPrefix);
+            ClearPdPrefix();
+            matchedPdPrefix = nullptr;
+            leaseDiscarded  = true;
+        }
 
-            if (mPdPrefix.mPreferredLifetime >= kMinPreferredLifetime)
+        // Prefixes in an IA_PD with `NoPrefixAvail` status are not used; RFC 8415 Section 18.2.10.1 bullet 6.
+        if (status != StatusCodeOption::kNoPrefixAvail)
+        {
+            if (matchedPdPrefix != nullptr)
             {
+                SaveServerDuid(aMessage);
+                CommitPdPrefix(*matchedPdPrefix);
+
+                if (mPdPrefix.mPreferredLifetime >= kMinPreferredLifetime)
+                {
+                    ExitNow();
+                }
+            }
+
+            // The previously delegated prefix does not appear in IA or
+            // it is included with a unacceptably short lifetime.
+            // Check if server provided any other prefixes which we
+            // can use instead.
+
+            favoredPdPrefix = SelectFavoredPrefix(pdPrefixes);
+
+            if (favoredPdPrefix != nullptr)
+            {
+                SaveServerDuid(aMessage);
+                CommitPdPrefix(*favoredPdPrefix);
                 ExitNow();
             }
         }
 
-        // The previously delegated prefix does not appear in IA or
-        // it is included with a unacceptably short lifetime.
-        // Check if server provided any other prefixes which we
-        // can use instead.
-
-        favoredPdPrefix = SelectFavoredPrefix(pdPrefixes);
-
-        if (favoredPdPrefix != nullptr)
+        // If the previously delegated prefix was not included it is left unchanged and we continue the
+        // Renew/Rebind exchange. If it was discarded, we have no usable prefix left and restart server discovery.
+        if (leaseDiscarded)
         {
-            SaveServerDuid(aMessage);
-            CommitPdPrefix(*favoredPdPrefix);
+            EnterState(kStateToSolicit);
             ExitNow();
         }
 
@@ -834,7 +854,7 @@ bool Dhcp6PdClient::ShouldSkipPdOption(const IaPdOption &aIaPdOption) const
     VerifyOrExit(aIaPdOption.GetIaid() == kIaid);
 
     // RFC 8415 Section 21.21: If T1 is greater than T2 and both T1 and
-    // T2 are non-zero, we discard the `IaPdOption` and processes the
+    // T2 are non-zero, we discard the `IaPdOption` and process the
     // remainder of the message as though this option had not been
     // included.
 
@@ -1032,17 +1052,24 @@ void Dhcp6PdClient::PdPrefix::AdjustLifetimesT1AndT2(void)
     mPreferredLifetime = Min(mPreferredLifetime, kMaxPreferredLifetime);
     mValidLifetime     = Min(mValidLifetime, mPreferredLifetime + kMaxValidMarginAfterPreferredLifetime);
 
-    // If T1 or T2 not specified, use 0.5 and 0.8 times of the
-    // preferred lifetime.
-
+    // If T1 and/or T2 are not specified (zero), they are left to the client's discretion (RFC 8415 Section 14.2).
+    // We use 0.5 and 0.8 times of the preferred lifetime (recommended in RFC 8415 Section 21.21). If only one value
+    // is specified, the server-provided value is honored and the other is chosen so that T1 <= T2 holds without
+    // altering the server-provided value.
     if (mT1 == 0)
     {
         mT1 = mPreferredLifetime * kDefaultT1FactorNumerator / kDefaultT1FactorDenominator;
+
+        if (mT2 != 0)
+        {
+            mT1 = Min(mT1, mT2);
+        }
     }
 
     if (mT2 == 0)
     {
         mT2 = mPreferredLifetime * kDefaultT2FactorNumerator / kDefaultT2FactorDenominator;
+        mT2 = Max(mT2, mT1);
     }
 
     if (mPreferredLifetime >= kMinPreferredLifetime)
@@ -1055,10 +1082,12 @@ void Dhcp6PdClient::PdPrefix::AdjustLifetimesT1AndT2(void)
         // specific case is handled in the `else if` and `else` blocks
         // below.
 
-        // We ensure T1 (renewal time) is at least `kMinT1` (5 minutes)
-        // to prevent frequent renewals. T1 is clamped between `kMinT1`
-        // and `mPreferredLifetime - kMinT1MarginBeforePreferredLifetime`
-        // (15 minutes). This margin ensures sufficient time for lease
+        // We ensure T1 (renewal time) is at least `kMinT1` (1 minute)
+        // to prevent too frequent renewals (rate limiting per RFC 8415
+        // Section 14.1) while still honoring short T1 values commonly
+        // used by servers. T1 is clamped between `kMinT1`
+        // and `mPreferredLifetime - kMinT1MarginBeforePreferredLifetime`.
+        // This margin ensures sufficient time (15 minutes) for lease
         // renewal before expiration. Similarly, T2 (rebind time) is
         // clamped between T1 and `mPreferredLifetime` minus a margin
         // of `kMinT2MarginBeforePreferredLifetime`(6 minutes).
@@ -1066,7 +1095,7 @@ void Dhcp6PdClient::PdPrefix::AdjustLifetimesT1AndT2(void)
         // Since `mPreferredLifetime` is at least 30 minutes, we know
         // that `mPreferredLifetime - 15 min` will be at least 15
         // minutes, guaranteeing it is always greater than `kMinT1`
-        // (5 minutes). Additionally, `mT1` will be at most
+        // (1 minute). Additionally, `mT1` will be at most
         // `mPreferredLifetime - 15 min`, ensuring `mT1` is less than
         // `mPreferredLifetime - 6 min`. In both `Clamp` function
         // calls, the minimum value is thus guaranteed to be less than
@@ -1075,7 +1104,7 @@ void Dhcp6PdClient::PdPrefix::AdjustLifetimesT1AndT2(void)
         mT1 = Clamp(mT1, kMinT1, mPreferredLifetime - kMinT1MarginBeforePreferredLifetime);
         mT2 = Clamp(mT2, mT1, mPreferredLifetime - kMinT2MarginBeforePreferredLifetime);
     }
-    else if (mPreferredLifetime >= kMinT1)
+    else if (mPreferredLifetime >= kMinRenewablePreferredLifetime)
     {
         // This block handles cases where the server cannot extend the
         // lease during renewal or rebind. In such scenarios, the
@@ -1090,7 +1119,8 @@ void Dhcp6PdClient::PdPrefix::AdjustLifetimesT1AndT2(void)
     }
     else
     {
-        // If the preferred lifetime is very short (less than kMinT1),
+        // If the preferred lifetime is very short (less than
+        // `kMinRenewablePreferredLifetime` (5 minutes)),
         // set T1 and T2 directly to the remaining preferred
         // lifetime. This indicates that the lease is expiring soon
         // and no further renewal or rebind attempts are productive.
