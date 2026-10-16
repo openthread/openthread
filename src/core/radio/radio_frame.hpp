@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/as_core_type.hpp"
+#include "common/clearable.hpp"
 #include "common/const_cast.hpp"
 #include "mac/mac_types.hpp"
 #include "radio/radio_types.hpp"
@@ -321,6 +322,18 @@ template <typename TxType> class TxFrameProperties
     friend TxType;
 
 public:
+    /**
+     * Clears all transmit info (`mInfo.mTxInfo`) properties on the frame (sets them to zero/false), while preserving
+     * the `mIeInfo` pointer.
+     */
+    void ClearTxProperties(void)
+    {
+        otRadioIeInfo *ieInfo = AsFrame().mInfo.mTxInfo.mIeInfo;
+
+        ClearAllBytes(AsFrame().mInfo.mTxInfo);
+        AsFrame().mInfo.mTxInfo.mIeInfo = ieInfo;
+    }
+
     /**
      * Sets the channel on which to send the frame.
      *
