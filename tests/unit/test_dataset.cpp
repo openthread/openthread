@@ -384,12 +384,84 @@ void TestDataset(void)
     }
 }
 
+void TestSecurityPolicy(void)
+{
+    // Default Security Policy
+    // Reserved bits set to 1 by default
+    static const uint8_t kDefaultFlags[] = {0xf7, 0xf8};
+
+    // Default Security Policy with reserved bits cleared
+    static const uint8_t kAllRsvClearedFlags[] = {0xf7, 0xc0};
+
+    // Individual reserved bits with cleared values
+    static const uint8_t kRsvBit10ClearedFlags[] = {0xf7, 0xd8};
+    static const uint8_t kRsvBit11ClearedFlags[] = {0xf7, 0xe8};
+    static const uint8_t kRsvBit12ClearedFlags[] = {0xf7, 0xf0};
+
+    SecurityPolicy policy;
+    uint8_t        flags[2];
+
+    // A default policy encodes with all reserved bits set to `1`.
+
+    policy.SetToDefault();
+    policy.GetFlags(flags, sizeof(flags));
+    VerifyOrQuit(memcmp(flags, kDefaultFlags, sizeof(flags)) == 0);
+
+    // Reserved bits that are cleared in the decoded flags must be preserved
+    // when the flags are re-encoded.
+
+    static const uint8_t *const kClearedRsvTestCases[] = {kAllRsvClearedFlags, kRsvBit10ClearedFlags,
+                                                          kRsvBit11ClearedFlags, kRsvBit12ClearedFlags};
+
+    for (const uint8_t *testFlags : kClearedRsvTestCases)
+    {
+        policy.SetFlags(testFlags, 2);
+        memset(flags, 0, sizeof(flags));
+        policy.GetFlags(flags, sizeof(flags));
+        VerifyOrQuit(memcmp(flags, testFlags, 2) == 0);
+    }
+
+    // Thread 1.1 style single-byte flags: the second byte encodes with
+    // default values (reserved bits set to `1`).
+
+    policy.SetFlags(kAllRsvClearedFlags, 1);
+    policy.GetFlags(flags, sizeof(flags));
+    VerifyOrQuit(memcmp(flags, kDefaultFlags, sizeof(flags)) == 0);
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    // Reserved bits must survive a full round-trip through
+    // `Dataset::Info` (used by `otOperationalDataset`).
+
+    {
+        static const uint8_t kSecurityPolicyTlv[] = {0x0c, 0x04, 0x02, 0xa0, 0xf7, 0xc8};
+
+        Dataset                  dataset;
+        Dataset                  dataset2;
+        Dataset::Info            datasetInfo;
+        const SecurityPolicyTlv *tlv;
+
+        SuccessOrQuit(dataset.SetFrom(kSecurityPolicyTlv, sizeof(kSecurityPolicyTlv)));
+        SuccessOrQuit(dataset.ValidateTlvs());
+
+        dataset.ConvertTo(datasetInfo);
+        VerifyOrQuit(datasetInfo.mComponents.mIsSecurityPolicyPresent);
+
+        dataset2.SetFrom(datasetInfo);
+
+        tlv = As<SecurityPolicyTlv>(dataset2.FindTlv(Tlv::kSecurityPolicy));
+        VerifyOrQuit(tlv != nullptr);
+        VerifyOrQuit(memcmp(tlv, kSecurityPolicyTlv, sizeof(kSecurityPolicyTlv)) == 0);
+    }
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+}
+
 } // namespace MeshCoP
 } // namespace ot
 
 int main(void)
 {
     ot::MeshCoP::TestDataset();
+    ot::MeshCoP::TestSecurityPolicy();
 
     printf("All tests passed\n");
     return 0;
