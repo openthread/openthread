@@ -905,6 +905,8 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
     memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
 #endif
 
+    SetPsduUpdater(aFromFrame.mInfo.mTxInfo.mPsduUpdater, aFromFrame.mInfo.mTxInfo.mPsduUpdaterContext);
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (mRadioType != aFromFrame.GetRadioType())
     {
