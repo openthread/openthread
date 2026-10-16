@@ -66,6 +66,8 @@ public:
      */
     void SendAnnounce(uint32_t aChannelMask, uint8_t aCount = kDefaultCount, uint16_t aPeriod = kDefaultPeriod);
 
+    using AnnounceSenderBase::IsRunning;
+
 private:
     static constexpr uint8_t  kDefaultCount  = 3;
     static constexpr uint16_t kDefaultPeriod = 1000;

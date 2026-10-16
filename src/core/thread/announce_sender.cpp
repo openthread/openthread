@@ -61,7 +61,7 @@ void AnnounceSenderBase::SendAnnounce(uint8_t aCount)
         ExitNow();
     }
 
-    VerifyOrExit((mPeriod != 0) && !mChannelMask.IsEmpty());
+    VerifyOrExit((aCount != 0) && (mPeriod != 0) && !mChannelMask.IsEmpty());
 
     SelectStartingChannel();
 
@@ -128,7 +128,7 @@ void AnnounceSenderBase::HandleTimer(void)
         mChannel = kChannelIteratorFirst;
     }
 
-    if ((mChannel == mStartingChannel) && (mCount != 0))
+    if (mChannel == mStartingChannel)
     {
         mCount--;
         VerifyOrExit(mCount != 0);
