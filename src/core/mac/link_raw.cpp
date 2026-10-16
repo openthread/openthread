@@ -63,6 +63,10 @@ LinkRaw::LinkRaw(Instance &aInstance)
 
 void LinkRaw::Init(void)
 {
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    Get<LinkExt>().Reset();
+#endif
+
     mEnergyScanDoneCallback = nullptr;
     mTransmitDoneCallback   = nullptr;
     mReceiveDoneCallback    = nullptr;
@@ -81,6 +85,10 @@ Error LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
     bool  enable = aCallback != nullptr;
 
     LogDebg("Enabled(%s)", (enable ? "true" : "false"));
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    Get<LinkExt>().HandleLinkRawEnableChange();
+#endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
@@ -178,6 +186,10 @@ Error LinkRaw::Receive(void)
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
 
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    VerifyOrExit(!Get<LinkExt>().ShouldDeferIdleState(/* aIsReceiving */ true));
+#endif
+
     SuccessOrExit(error = mSubMac.Receive(mReceiveChannel));
 
 exit:
@@ -188,10 +200,19 @@ void LinkRaw::InvokeReceiveDone(RxFrame *aFrame, Error aError)
 {
     LogDebg("ReceiveDone(%d bytes), error:%s", (aFrame != nullptr) ? aFrame->mLength : 0, ErrorToString(aError));
 
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    VerifyOrExit(Get<LinkExt>().FilterReceivedFrame(aFrame, aError));
+#endif
+
     if (mReceiveDoneCallback && (aError == kErrorNone))
     {
         mReceiveDoneCallback(&GetInstance(), aFrame, aError);
     }
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+exit:
+    return;
+#endif
 }
 
 Error LinkRaw::Transmit(otLinkRawTransmitDone aCallback)
@@ -199,6 +220,10 @@ Error LinkRaw::Transmit(otLinkRawTransmitDone aCallback)
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    VerifyOrExit(!Get<LinkExt>().IsBurstActive(), error = kErrorInvalidState);
+#endif
 
     SuccessOrExit(error = mSubMac.Send());
     mTransmitDoneCallback = aCallback;
@@ -211,11 +236,24 @@ void LinkRaw::InvokeTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFr
 {
     LogDebg("TransmitDone(%u bytes), error:%s", aFrameInfo.GetLength(), ErrorToString(aError));
 
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    if (Get<LinkExt>().IsBurstActive())
+    {
+        Get<LinkExt>().HandleTransmitDone(*aFrameInfo.GetTxFrame());
+        ExitNow();
+    }
+#endif
+
     if (mTransmitDoneCallback)
     {
         mTransmitDoneCallback(&GetInstance(), aFrameInfo.GetTxFrame(), aAckFrame, aError);
         mTransmitDoneCallback = nullptr;
     }
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+exit:
+    return;
+#endif
 }
 
 Error LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback)
@@ -223,6 +261,10 @@ Error LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRa
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE
+    VerifyOrExit(!Get<LinkExt>().IsBurstActive(), error = kErrorInvalidState);
+#endif
 
     SuccessOrExit(error = mSubMac.EnergyScan(aScanChannel, aScanDuration));
     mEnergyScanDoneCallback = aCallback;

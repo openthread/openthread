@@ -1326,6 +1326,9 @@ void SubMac::ListenScheduler::Schedule(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     ScheduleCsl(info);
 #endif
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+    SchedulePeriodicRx(info);
+#endif
 
     Get<SubMac>().ReceiveAt(info.GetTimedRx());
 
@@ -1364,6 +1367,27 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_RADIO && OPENTHREAD_CONFIG_LINK_EXT_ENABLE && (OPENTHREAD_CONFIG_LINK_EXT_PERIODIC_RX_MAX_SCHEDULES > 0)
+
+void SubMac::ListenScheduler::SchedulePeriodicRx(SchedInfo &aInfo)
+{
+    // `LinkExt` arbitrates between its periodic RX schedules and
+    // provides the window to schedule now. The timer fires again at the
+    // window start, so that `LinkExt` can provide the following window.
+
+    TimedRx timedRx;
+
+    VerifyOrExit(Get<LinkExt>().DeterminePeriodicRxWindow(aInfo.GetNow(), timedRx));
+
+    aInfo.UpdateTimedRxIfEarlier(timedRx);
+    aInfo.UpdateNextFireTime(timedRx.GetStartTime());
+
+exit:
+    return;
+}
+
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // ListenScheduler::SchedInfo

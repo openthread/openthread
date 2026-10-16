@@ -46,6 +46,7 @@
 #include "common/new.hpp"
 #include "lib/platform/exit_code.h"
 #include "lib/spinel/logger.hpp"
+#include "lib/spinel/spinel_decoder.hpp"
 #include "lib/spinel/spinel_driver.hpp"
 #include "lib/spinel/spinel_helper.hpp"
 
@@ -457,24 +458,13 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
     {
         if (mPropertyFormat)
         {
-            if (static_cast<spinel_datatype_t>(mPropertyFormat[0]) == SPINEL_DATATYPE_VOID_C)
-            {
-                // reserved SPINEL_DATATYPE_VOID_C indicate caller want to parse the spinel response itself
-                ResponseHandler handler = va_arg(mPropertyArgs, ResponseHandler);
+            // A value can be empty (e.g. an empty array), in which
+            // case zero bytes are unpacked.
+            spinel_ssize_t unpacked =
+                spinel_datatype_vunpack_in_place(aBuffer, aLength, mPropertyFormat, mPropertyArgs);
 
-                assert(handler != nullptr);
-                mError = (this->*handler)(aBuffer, aLength);
-            }
-            else
-            {
-                // A value can be empty (e.g. an empty array), in which
-                // case zero bytes are unpacked.
-                spinel_ssize_t unpacked =
-                    spinel_datatype_vunpack_in_place(aBuffer, aLength, mPropertyFormat, mPropertyArgs);
-
-                VerifyOrExit(unpacked >= 0, mError = OT_ERROR_PARSE);
-                mError = OT_ERROR_NONE;
-            }
+            VerifyOrExit(unpacked >= 0, mError = OT_ERROR_PARSE);
+            mError = OT_ERROR_NONE;
         }
         else
         {
@@ -1767,6 +1757,163 @@ otError RadioSpinel::ReceiveAt(uint64_t aWhen, uint32_t aDuration, uint8_t aChan
     SuccessOrExit(error);
 
 exit:
+    return error;
+}
+
+otError RadioSpinel::SetPeriodicRxSchedules(const PeriodicRxSchedule *aSchedules, uint8_t aNumSchedules)
+{
+    otError        error = OT_ERROR_NONE;
+    uint8_t        buffer[SPINEL_FRAME_MAX_SIZE];
+    spinel_ssize_t length = 0;
+
+    // The number of schedules is only limited by the RCP (and the Spinel
+    // frame size). The RCP rejects a table larger than it supports.
+
+    for (uint8_t i = 0; i < aNumSchedules; i++)
+    {
+        spinel_ssize_t packed = spinel_datatype_pack(
+            buffer + length, sizeof(buffer) - static_cast<spinel_size_t>(length),
+            SPINEL_DATATYPE_STRUCT_S(
+                SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT8_S),
+            aSchedules[i].mPhaseUs, aSchedules[i].mPeriodUs, aSchedules[i].mDurationUs, aSchedules[i].mChannel);
+
+        VerifyOrExit(packed > 0 && packed <= static_cast<spinel_ssize_t>(sizeof(buffer)) - length,
+                     error = OT_ERROR_NO_BUFS);
+        length += packed;
+    }
+
+    error =
+        Set(SPINEL_PROP_RCP_PERIODIC_RX_SCHEDULES, SPINEL_DATATYPE_DATA_S, buffer, static_cast<spinel_size_t>(length));
+
+exit:
+    return error;
+}
+
+otError RadioSpinel::GetPeriodicRxSchedules(PeriodicRxSchedule *aSchedules, uint8_t &aNumSchedules)
+{
+    otError        error;
+    uint8_t        buffer[SPINEL_FRAME_MAX_SIZE];
+    const uint8_t *cur    = buffer;
+    spinel_size_t  length = sizeof(buffer);
+    uint8_t        count  = 0;
+
+    SuccessOrExit(error = Get(SPINEL_PROP_RCP_PERIODIC_RX_SCHEDULES, SPINEL_DATATYPE_DATA_S, buffer, &length));
+
+    while (length > 0)
+    {
+        spinel_ssize_t unpacked;
+
+        VerifyOrExit(count < aNumSchedules, error = OT_ERROR_NO_BUFS);
+
+        unpacked = spinel_datatype_unpack(
+            cur, length,
+            SPINEL_DATATYPE_STRUCT_S(
+                SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT8_S),
+            &aSchedules[count].mPhaseUs, &aSchedules[count].mPeriodUs, &aSchedules[count].mDurationUs,
+            &aSchedules[count].mChannel);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        count++;
+        cur += unpacked;
+        length -= static_cast<spinel_size_t>(unpacked);
+    }
+
+exit:
+    aNumSchedules = (error == OT_ERROR_NONE) ? count : 0;
+    return error;
+}
+
+otError RadioSpinel::SetMacFilterPolicy(uint8_t aPolicy)
+{
+    return Set(SPINEL_PROP_RCP_MAC_FILTER_POLICY, SPINEL_DATATYPE_UINT8_S, aPolicy);
+}
+
+otError RadioSpinel::GetMacFilterPolicy(uint8_t &aPolicy)
+{
+    return Get(SPINEL_PROP_RCP_MAC_FILTER_POLICY, SPINEL_DATATYPE_UINT8_S, &aPolicy);
+}
+
+otError RadioSpinel::SetMacKeyTable(const MacKeyTableEntry *aTable, uint8_t aEntryCount)
+{
+    otError        error = OT_ERROR_NONE;
+    uint8_t        buffer[SPINEL_FRAME_MAX_SIZE];
+    spinel_ssize_t length = 0;
+
+    for (uint8_t i = 0; i < aEntryCount; i++)
+    {
+        const MacKeyTableEntry &entry = aTable[i];
+        spinel_ssize_t          packed;
+
+        VerifyOrExit(entry.mKeyIdLength <= MacKeyTableEntry::kMaxKeyIdLength, error = OT_ERROR_INVALID_ARGS);
+
+        packed = spinel_datatype_pack(
+            buffer + length, sizeof(buffer) - static_cast<spinel_size_t>(length),
+            SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT8_S),
+            entry.mKeyId, entry.mKeyIdLength, entry.mKeyMaterial.m8, entry.GetKeyLength(), entry.mAllowedSecLevels);
+
+        VerifyOrExit(packed > 0 && packed <= static_cast<spinel_ssize_t>(sizeof(buffer)) - length,
+                     error = OT_ERROR_NO_BUFS);
+        length += packed;
+    }
+
+    if (length == 0)
+    {
+        error = Set(SPINEL_PROP_RCP_MAC_KEY_TABLE, nullptr);
+    }
+    else
+    {
+        error = Set(SPINEL_PROP_RCP_MAC_KEY_TABLE, SPINEL_DATATYPE_DATA_S, buffer, static_cast<spinel_size_t>(length));
+    }
+
+exit:
+    return error;
+}
+
+otError RadioSpinel::GetMacKeyTable(MacKeyTableEntry *aTable, uint8_t &aEntryCount)
+{
+    otError         error;
+    uint8_t         buffer[SPINEL_FRAME_MAX_SIZE];
+    spinel_size_t   bufferLength = sizeof(buffer);
+    Spinel::Decoder decoder;
+    uint8_t         count = 0;
+
+    VerifyOrExit(aTable != nullptr || aEntryCount == 0, error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = Get(SPINEL_PROP_RCP_MAC_KEY_TABLE, SPINEL_DATATYPE_DATA_S, buffer, &bufferLength));
+
+    decoder.Init(buffer, static_cast<uint16_t>(bufferLength));
+
+    while (!decoder.IsAllRead())
+    {
+        MacKeyTableEntry entry;
+        const uint8_t   *keyId;
+        uint16_t         keyIdLen;
+        const uint8_t   *keyMaterial;
+        uint16_t         keyMaterialLen;
+
+        VerifyOrExit(count < aEntryCount, error = OT_ERROR_NO_BUFS);
+
+        entry.Clear();
+
+        SuccessOrExit(error = decoder.OpenStruct());
+        SuccessOrExit(error = decoder.ReadDataWithLen(keyId, keyIdLen));
+        VerifyOrExit(keyIdLen <= sizeof(entry.mKeyId), error = OT_ERROR_PARSE);
+        entry.mKeyIdLength = static_cast<uint8_t>(keyIdLen);
+        memcpy(entry.mKeyId, keyId, keyIdLen);
+
+        SuccessOrExit(error = decoder.ReadDataWithLen(keyMaterial, keyMaterialLen));
+        VerifyOrExit(keyMaterialLen == 0 || keyMaterialLen == sizeof(otMacKey), error = OT_ERROR_PARSE);
+        entry.mHasKey = (keyMaterialLen != 0);
+        memcpy(entry.mKeyMaterial.m8, keyMaterial, keyMaterialLen);
+
+        SuccessOrExit(error = decoder.ReadUint8(entry.mAllowedSecLevels));
+
+        SuccessOrExit(error = decoder.CloseStruct());
+        aTable[count++] = entry;
+    }
+
+exit:
+    aEntryCount = (error == OT_ERROR_NONE) ? count : 0;
     return error;
 }
 

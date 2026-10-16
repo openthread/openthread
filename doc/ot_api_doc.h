@@ -98,6 +98,7 @@
  *
  * @{
  *
+ * @defgroup api-link-ext                Link Extension
  * @defgroup api-link-link               Link
  * @defgroup api-link-metrics            Link Metrics
  * @defgroup api-link-raw                Raw Link

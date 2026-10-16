@@ -60,6 +60,7 @@
  * @defgroup config-history-tracker          History Tracker
  * @defgroup config-ip6                      IP6 Service
  * @defgroup config-joiner                   Joiner
+ * @defgroup config-link-ext                 Link Extension Service
  * @defgroup config-link-metrics-manager     Link Metrics Manager
  * @defgroup config-link-quality             Link Quality
  * @defgroup config-link-raw                 Link Raw Service

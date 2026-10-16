@@ -580,6 +580,115 @@ public:
     otError ReceiveAt(uint64_t aWhen, uint32_t aDuration, uint8_t aChannel);
 
     /**
+     * Represents a periodic receive schedule offloaded to the RCP.
+     *
+     * A receive window starts at every RCP radio time `T` which satisfies `T % mPeriodUs == mPhaseUs` and lasts
+     * `mDurationUs` microseconds.
+     */
+    struct PeriodicRxSchedule
+    {
+        uint32_t mPhaseUs;    ///< Phase of the window start within the period (in usec), less than `mPeriodUs`.
+        uint32_t mPeriodUs;   ///< Period (in usec).
+        uint16_t mDurationUs; ///< Window duration (in usec), non-zero and not more than `mPeriodUs`.
+        uint8_t  mChannel;    ///< Channel to listen on.
+    };
+
+    /**
+     * Atomically replaces the periodic RX schedules on the RCP.
+     *
+     * Array order defines priority (index 0 has highest priority). Passing zero schedules disables periodic RX.
+     *
+     * @param[in] aSchedules     A pointer to an array of schedules (can be `nullptr` if @p aNumSchedules is zero).
+     * @param[in] aNumSchedules  The number of schedules in @p aSchedules.
+     *
+     * @retval OT_ERROR_NONE             Successfully updated the schedules.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support periodic RX.
+     * @retval OT_ERROR_NO_BUFS          More schedules than the RCP supports, or than fit in a Spinel frame.
+     * @retval OT_ERROR_INVALID_ARGS     The RCP rejected an invalid schedule.
+     */
+    otError SetPeriodicRxSchedules(const PeriodicRxSchedule *aSchedules, uint8_t aNumSchedules);
+
+    /**
+     * Gets the periodic RX schedules from the RCP.
+     *
+     * @param[out]    aSchedules     A pointer to an array to output the schedules.
+     * @param[in,out] aNumSchedules  On input, the capacity of @p aSchedules. On output, the number of schedules.
+     *
+     * @retval OT_ERROR_NONE             Successfully retrieved the schedules.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support periodic RX.
+     * @retval OT_ERROR_NO_BUFS          @p aSchedules is too small.
+     * @retval OT_ERROR_PARSE            Failed to parse the response from the RCP.
+     */
+    otError GetPeriodicRxSchedules(PeriodicRxSchedule *aSchedules, uint8_t &aNumSchedules);
+
+    /**
+     * Sets the MAC filter policy on the RCP.
+     *
+     * @param[in] aPolicy  The policy bitmask (see `spinel_mac_filter_policy_t`).
+     *
+     * @retval OT_ERROR_NONE             Successfully set the policy.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support the property.
+     * @retval OT_ERROR_INVALID_ARGS     The RCP rejected an invalid policy bitmask.
+     */
+    otError SetMacFilterPolicy(uint8_t aPolicy);
+
+    /**
+     * Gets the MAC filter policy from the RCP.
+     *
+     * @param[out] aPolicy  A reference to output the policy bitmask.
+     *
+     * @retval OT_ERROR_NONE             Successfully retrieved the policy.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support the property.
+     */
+    otError GetMacFilterPolicy(uint8_t &aPolicy);
+
+    /**
+     * Represents an entry in the MAC Key Table offloaded to the RCP.
+     */
+    struct MacKeyTableEntry
+    {
+        // Max Key ID length: Key ID Mode 3 has an 8-byte Key Source followed
+        // by a 1-byte Key Index.
+        static constexpr uint8_t kMaxKeyIdLength = 9;
+
+        uint8_t  mKeyId[kMaxKeyIdLength]; ///< Key ID buffer (length: 0, 1, 5, or 9 bytes).
+        uint8_t  mKeyIdLength;            ///< Key ID length in bytes.
+        otMacKey mKeyMaterial;            ///< 16-byte AES-128 key (valid if `mHasKey`).
+        bool     mHasKey;                 ///< Whether `mKeyMaterial` is present (empty key filters by Key ID only).
+        uint8_t  mAllowedSecLevels;       ///< Allowed security levels bitmask (bit i allows sec level i).
+
+        void    Clear(void) { memset(this, 0, sizeof(*this)); }
+        uint8_t GetKeyLength(void) const { return mHasKey ? sizeof(otMacKey) : 0; }
+    };
+
+    /**
+     * Sets the MAC key table on the RCP.
+     *
+     * @param[in] aTable       A pointer to an array of key table entries.
+     * @param[in] aEntryCount  The number of entries in @p aTable.
+     *
+     * @retval OT_ERROR_NONE             Successfully updated the key table.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support the property.
+     * @retval OT_ERROR_NO_BUFS          More entries than the RCP supports.
+     * @retval OT_ERROR_INVALID_ARGS     An entry's Key ID is longer than `kMaxKeyIdLength`, or the RCP rejected an
+     *                                   invalid key entry.
+     */
+    otError SetMacKeyTable(const MacKeyTableEntry *aTable, uint8_t aEntryCount);
+
+    /**
+     * Gets the MAC key table from the RCP.
+     *
+     * @param[out]    aTable       A pointer to an array to output the key table entries.
+     * @param[in,out] aEntryCount  On input, capacity of @p aTable. On output, number of entries.
+     *
+     * @retval OT_ERROR_NONE             Successfully retrieved the key table.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The RCP doesn't support the property.
+     * @retval OT_ERROR_NO_BUFS          @p aTable capacity is too small.
+     * @retval OT_ERROR_PARSE            Failed to parse the response.
+     */
+    otError GetMacKeyTable(MacKeyTableEntry *aTable, uint8_t &aEntryCount);
+
+    /**
      * Switches the radio state from Receive to Sleep.
      *
      * @retval OT_ERROR_NONE          Successfully transitioned to Sleep.
@@ -1104,8 +1213,6 @@ private:
     static constexpr uint64_t kTxWaitUs =
         OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS *
         kUsPerSec; ///< Maximum time of waiting for `TransmitDone` event, in microseconds.
-
-    typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
     SpinelDriver &GetSpinelDriver(void) const;
 
