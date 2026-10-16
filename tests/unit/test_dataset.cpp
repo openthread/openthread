@@ -384,12 +384,197 @@ void TestDataset(void)
     }
 }
 
+void TestSecurityPolicy(void)
+{
+    // Default Security Policy flags. All reserved bits are 1.
+    static const uint8_t kDefaultFlags[] = {0xf7, 0xf8};
+
+    // Default flags. All reserved bits are 0.
+    static const uint8_t kAllReservedClearedFlags[] = {0xf7, 0xc0};
+
+    // Default flags. One reserved bit is 0 in each array.
+    static const uint8_t kReservedBit10ClearedFlags[] = {0xf7, 0xd8};
+    static const uint8_t kReservedBit11ClearedFlags[] = {0xf7, 0xe8};
+    static const uint8_t kReservedBit12ClearedFlags[] = {0xf7, 0xf0};
+
+    // Default flags with reserved bit 11 cleared and a non-zero
+    // Version Threshold (0x05) in the low bits. Decode and encode these
+    // flags. The reserved bits and the Version Threshold field must not
+    // change each other.
+    static const uint8_t kReservedAndVersionFlags[] = {0xf7, 0xed};
+
+    // Default flags with all reserved bits cleared and the maximum
+    // Version Threshold in the low bits. The field is 3 bits wide, so
+    // `0x07` is its maximum value.
+    static const uint8_t kVersionThresholdMaxFlags[] = {0xf7, 0xc7};
+
+    // Default flags with all reserved bits cleared, and one extra byte.
+    static const uint8_t kExtraByteFlags[] = {0xf7, 0xc0, 0xff};
+
+    // Test flags, and the expected value of each `mReservedBit*Cleared`
+    // field and of `mVersionThresholdForRouting` after `SetFlags()`
+    // decodes the flags.
+    struct ClearedReservedTestCase
+    {
+        const uint8_t *mFlags;
+        bool           mBit10Cleared;
+        bool           mBit11Cleared;
+        bool           mBit12Cleared;
+        uint8_t        mVersionThreshold;
+    };
+
+    static const ClearedReservedTestCase kClearedReservedTestCases[] = {
+        {kDefaultFlags, false, false, false, 0},
+        {kAllReservedClearedFlags, true, true, true, 0},
+        {kReservedBit10ClearedFlags, true, false, false, 0},
+        {kReservedBit11ClearedFlags, false, true, false, 0},
+        {kReservedBit12ClearedFlags, false, false, true, 0},
+        {kReservedAndVersionFlags, false, true, false, 5},
+        {kVersionThresholdMaxFlags, true, true, true, 7},
+    };
+
+    // Mask of reserved bits 10-12 in the second flags byte. These are
+    // the bits of `kReservedBit10Mask`, `kReservedBit11Mask`, and
+    // `kReservedBit12Mask` in `SecurityPolicy`.
+    static constexpr uint8_t kReservedBitsMask = (1 << 5) | (1 << 4) | (1 << 3);
+
+    SecurityPolicy policy;
+    uint8_t        flags[2];
+
+    // A default policy must encode all reserved bits as `1`.
+
+    policy.SetToDefault();
+    policy.GetFlags(flags, sizeof(flags));
+    VerifyOrQuit(memcmp(flags, kDefaultFlags, sizeof(flags)) == 0);
+
+    // Decode the flags of each test case. Each reserved bit must map to
+    // its `mReservedBit*Cleared` field. The Version Threshold must map
+    // to `mVersionThresholdForRouting`. Encode the policy again. The
+    // output must equal the input.
+
+    for (const ClearedReservedTestCase &testCase : kClearedReservedTestCases)
+    {
+        policy.SetFlags(testCase.mFlags, sizeof(flags));
+        VerifyOrQuit(policy.mReservedBit10Cleared == testCase.mBit10Cleared);
+        VerifyOrQuit(policy.mReservedBit11Cleared == testCase.mBit11Cleared);
+        VerifyOrQuit(policy.mReservedBit12Cleared == testCase.mBit12Cleared);
+        VerifyOrQuit(policy.mVersionThresholdForRouting == testCase.mVersionThreshold);
+
+        memset(flags, 0, sizeof(flags));
+        policy.GetFlags(flags, sizeof(flags));
+        VerifyOrQuit(memcmp(flags, testCase.mFlags, sizeof(flags)) == 0);
+    }
+
+    // Decode a Thread 1.1 single-byte flags value. The reserved bits
+    // are absent, so no `mReservedBit*Cleared` field may be set. The
+    // encode must output the default second byte, with all reserved
+    // bits `1`.
+
+    policy.SetFlags(kAllReservedClearedFlags, 1);
+    VerifyOrQuit(!policy.mReservedBit10Cleared);
+    VerifyOrQuit(!policy.mReservedBit11Cleared);
+    VerifyOrQuit(!policy.mReservedBit12Cleared);
+
+    policy.GetFlags(flags, sizeof(flags));
+    VerifyOrQuit(memcmp(flags, kDefaultFlags, sizeof(flags)) == 0);
+
+    // Encode into one byte. `GetFlags()` must write the first byte only.
+    // A cleared reserved bit must not change the second byte.
+
+    policy.SetFlags(kAllReservedClearedFlags, sizeof(kAllReservedClearedFlags));
+    memset(flags, 0xaa, sizeof(flags));
+    policy.GetFlags(flags, 1);
+    VerifyOrQuit(flags[0] == kAllReservedClearedFlags[0]);
+    VerifyOrQuit(flags[1] == 0xaa, "GetFlags() with length 1 must not write the second byte");
+
+    // Decode flags that are longer than two bytes. `SetFlags()` must
+    // read the first two bytes and ignore the rest.
+
+    policy.SetFlags(kExtraByteFlags, sizeof(kExtraByteFlags));
+    VerifyOrQuit(policy.mReservedBit10Cleared);
+    VerifyOrQuit(policy.mReservedBit11Cleared);
+    VerifyOrQuit(policy.mReservedBit12Cleared);
+
+    policy.GetFlags(flags, sizeof(flags));
+    VerifyOrQuit(memcmp(flags, kExtraByteFlags, sizeof(flags)) == 0);
+
+    // A zero-initialized `SecurityPolicy` must encode all reserved bits
+    // as `1`, their default in the specification. `otSecurityPolicy` is
+    // a public C struct with no constructor. Applications zero-initialize
+    // it and set only the fields that they know. Thus the zero value of
+    // each `mReservedBit*Cleared` field must give the default encoding.
+
+    memset(&policy, 0, sizeof(policy));
+    policy.GetFlags(flags, sizeof(flags));
+    VerifyOrQuit((flags[1] & kReservedBitsMask) == kReservedBitsMask,
+                 "zero-initialized policy must encode reserved bits as 1");
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    // Convert a dataset to `Dataset::Info` and back. The reserved bits
+    // must not change. `otOperationalDataset` uses `Dataset::Info`.
+
+    {
+        static const uint8_t kSecurityPolicyTlv[] = {0x0c, 0x04, 0x02, 0xa0, 0xf7, 0xc8};
+
+        Dataset                  dataset;
+        Dataset                  dataset2;
+        Dataset::Info            datasetInfo;
+        const SecurityPolicyTlv *tlv;
+
+        SuccessOrQuit(dataset.SetFrom(kSecurityPolicyTlv, sizeof(kSecurityPolicyTlv)));
+        SuccessOrQuit(dataset.ValidateTlvs());
+
+        dataset.ConvertTo(datasetInfo);
+        VerifyOrQuit(datasetInfo.mComponents.mIsSecurityPolicyPresent);
+
+        // The flags in the TLV are `0xf7 0xc8`. Reserved bits 10 and 11
+        // are 0. Reserved bit 12 is 1.
+
+        VerifyOrQuit(datasetInfo.mSecurityPolicy.mReservedBit10Cleared);
+        VerifyOrQuit(datasetInfo.mSecurityPolicy.mReservedBit11Cleared);
+        VerifyOrQuit(!datasetInfo.mSecurityPolicy.mReservedBit12Cleared);
+
+        dataset2.SetFrom(datasetInfo);
+
+        tlv = As<SecurityPolicyTlv>(dataset2.FindTlv(Tlv::kSecurityPolicy));
+        VerifyOrQuit(tlv != nullptr);
+        VerifyOrQuit(memcmp(tlv, kSecurityPolicyTlv, sizeof(kSecurityPolicyTlv)) == 0);
+    }
+
+    // Create a dataset from a zero-initialized `otOperationalDataset`
+    // that has the Security Policy marked present. The Security Policy
+    // TLV must encode all reserved bits as `1`. Applications build
+    // datasets this way, field by field.
+
+    {
+        Dataset                  dataset;
+        Dataset::Info            datasetInfo;
+        const SecurityPolicyTlv *tlv;
+        const uint8_t           *tlvFlags;
+
+        memset(&datasetInfo, 0, sizeof(datasetInfo));
+        datasetInfo.mSecurityPolicy.mRotationTime        = 672;
+        datasetInfo.mComponents.mIsSecurityPolicyPresent = true;
+
+        dataset.SetFrom(datasetInfo);
+
+        tlv = As<SecurityPolicyTlv>(dataset.FindTlv(Tlv::kSecurityPolicy));
+        VerifyOrQuit(tlv != nullptr);
+
+        tlvFlags = tlv->GetValue() + sizeof(uint16_t); // Skip the Rotation Time field
+        VerifyOrQuit((tlvFlags[1] & kReservedBitsMask) == kReservedBitsMask,
+                     "dataset from zero-initialized struct must encode reserved bits as 1");
+    }
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+}
+
 } // namespace MeshCoP
 } // namespace ot
 
 int main(void)
 {
     ot::MeshCoP::TestDataset();
+    ot::MeshCoP::TestSecurityPolicy();
 
     printf("All tests passed\n");
     return 0;
