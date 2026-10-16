@@ -230,6 +230,14 @@ Message *MeshForwarder::FindMessageToEvict(Message::Priority aPriority)
 Message *MeshForwarder::FindMessageToEvict(PriorityGuard aGuard, Message::Priority aPriority, Message::Checker aChecker)
 #endif
 {
+    enum MsgSelectionPolicy : uint8_t
+    {
+        kDisregardPartiallySentMsgs,
+        kAllowAllMsgs,
+    };
+
+    static constexpr MsgSelectionPolicy kMsgSelectionPolicies[] = {kDisregardPartiallySentMsgs, kAllowAllMsgs};
+
     Message *evict            = nullptr;
     uint8_t  startPriority    = Message::kPriorityLow;
     uint8_t  afterEndPriority = aPriority;
@@ -248,32 +256,68 @@ Message *MeshForwarder::FindMessageToEvict(PriorityGuard aGuard, Message::Priori
 
     for (uint8_t priority = startPriority; priority < afterEndPriority; priority++)
     {
-        for (Message *message            = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority));
-             message != nullptr; message = message->GetNext())
+        for (MsgSelectionPolicy selectionPolicy : kMsgSelectionPolicies)
         {
-            if (message->GetPriority() != priority)
+            for (Message *message            = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority));
+                 message != nullptr; message = message->GetNext())
             {
-                break;
-            }
+                if (message->GetPriority() != priority)
+                {
+                    break;
+                }
 
-            if (message->GetDoNotEvict())
-            {
-                continue;
-            }
+                if (message->GetDoNotEvict())
+                {
+                    continue;
+                }
 
 #if OPENTHREAD_FTD
-            if (!aChecker(*message))
-            {
-                continue;
-            }
+                if (!aChecker(*message))
+                {
+                    continue;
+                }
 #endif
-            evict = message;
-            ExitNow();
+
+                if ((selectionPolicy == kDisregardPartiallySentMsgs) && IsPartiallySent(*message))
+                {
+                    continue;
+                }
+
+                evict = message;
+                ExitNow();
+            }
         }
     }
 
 exit:
     return evict;
+}
+
+bool MeshForwarder::IsPartiallySent(const Message &aMessage) const
+{
+    bool isPartiallySent = true;
+
+    VerifyOrExit(&aMessage != mSendMessage);
+
+    if (aMessage.IsDirectTransmission())
+    {
+        VerifyOrExit(aMessage.GetOffset() == 0);
+    }
+
+#if OPENTHREAD_FTD
+    if (aMessage.IsIndirectTransmission())
+    {
+        for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
+        {
+            VerifyOrExit(!child.IsSendingIndirectMsg(aMessage));
+        }
+    }
+#endif
+
+    isPartiallySent = false;
+
+exit:
+    return isPartiallySent;
 }
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
@@ -583,7 +627,7 @@ Error MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
 
     } while ((error == kErrorNone) && IsDirectTxQueueOverMaxFrameThreshold());
 
-    if (shouldUpdateSendMsgEvictFlag)
+    if (shouldUpdateSendMsgEvictFlag && (mSendMessage != nullptr))
     {
         mSendMessage->SetDoNotEvict(false);
     }

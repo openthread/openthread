@@ -477,6 +477,7 @@ private:
 
     Error EvictMessage(Message::Priority aPriority);
     Error GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
+    bool  IsPartiallySent(const Message &aMessage) const;
 
 #if OPENTHREAD_MTD
     Message *FindMessageToEvict(Message::Priority aPriority);
