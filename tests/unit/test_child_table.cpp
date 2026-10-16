@@ -391,6 +391,44 @@ void TestChildTable(void)
 
     printf(" -- PASS\n");
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    printf("Test Child::Info");
+
+    table->Clear();
+    {
+        Child      *child = table->GetNewChild();
+        Child::Info info;
+
+        VerifyOrQuit(child != nullptr, "GetNewChild() failed");
+        child->SetState(Child::kStateValid);
+        child->SetRloc16(0x8001);
+
+        info.SetFrom(*child);
+        VerifyOrQuit(info.mCslPeriod == 0, "info.mCslPeriod should be zero");
+        VerifyOrQuit(!info.mIsCslSynced, "info.mIsCslSynced should be false");
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        child->SetCslPeriod(3125);
+        child->SetCslSynchronized(true);
+#endif
+        info.SetFrom(*child);
+        VerifyOrQuit(info.mRloc16 == 0x8001, "info.mRloc16 mismatch");
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        VerifyOrQuit(info.mCslPeriod == 3125, "info.mCslPeriod mismatch");
+        VerifyOrQuit(info.mIsCslSynced, "info.mIsCslSynced mismatch");
+
+        child->ClearCsl();
+        info.SetFrom(*child);
+        VerifyOrQuit(info.mCslPeriod == 0, "info.mCslPeriod should be zero after ClearCsl");
+        VerifyOrQuit(!info.mIsCslSynced, "info.mIsCslSynced should be false after ClearCsl");
+#else
+        VerifyOrQuit(info.mCslPeriod == 0, "info.mCslPeriod should be zero");
+        VerifyOrQuit(!info.mIsCslSynced, "info.mIsCslSynced should be false");
+#endif
+    }
+
+    printf(" -- PASS\n");
+
     testFreeInstance(sInstance);
 }
 
