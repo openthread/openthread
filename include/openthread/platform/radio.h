@@ -250,12 +250,15 @@ typedef enum
 } otRadioKeyType;
 
 /**
- * Represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
+ * Represents the Time IE (Information Element) related information of a radio frame.
+ *
+ * This structure is only used by the experimental Time Synchronization service feature (enabled via
+ * `OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`).
  */
 typedef struct otRadioIeInfo
 {
-    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time.
-    uint8_t mTimeIeOffset;      ///< The Time IE offset from the start of PSDU.
+    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+    uint8_t mTimeIeOffset;      ///< The Time IE offset from the start of PSDU (`0` indicates no Time IE).
     uint8_t mTimeSyncSeq;       ///< The Time sync sequence.
 } otRadioIeInfo;
 
@@ -282,7 +285,22 @@ typedef struct otRadioFrame
         struct
         {
             const otMacKeyMaterial *mAesKey; ///< The key material used for AES-CCM frame security.
-            otRadioIeInfo          *mIeInfo; ///< The pointer to the Header IE(s) related information.
+
+            /**
+             * The pointer to the Time IE related information.
+             *
+             * This field is only used when the experimental Time Synchronization feature is enabled via
+             * `OPENTHREAD_CONFIG_TIME_SYNC_ENABLE` and is ignored otherwise.
+             *
+             * When `OPENTHREAD_CONFIG_TIME_SYNC_ENABLE` is enabled, the radio platform MUST provide an
+             * `otRadioIeInfo` structure and set this pointer on the transmit `otRadioFrame` buffer returned to the
+             * OpenThread stack (e.g., via `otPlatRadioGetTransmitBuffer()`). The OpenThread stack populates `*mIeInfo`
+             * when preparing a transmit frame, and the radio platform uses it (when `mTimeIeOffset != 0`) to update
+             * the Time IE in `mPsdu` before transmission.
+             *
+             * When this feature is disabled, this pointer will not be used and may be set to `NULL`.
+             */
+            otRadioIeInfo *mIeInfo;
 
             /**
              * The base time in microseconds for timed transmissions relative to the local radio clock (see
