@@ -3049,6 +3049,29 @@ Get the NAT64 translator packet and error counters.
 Done
 ```
 
+### neighbor \<rloc16\>
+
+Print information about the neighbor with the given RLOC16.
+
+For `Role`, the possible values are `C` (Child) or `R` (Router). `Age` and `Connection Time` are in seconds.
+
+```bash
+> neighbor 0xc800
+Role: R
+Rloc16: 0xc800
+Ext Addr: 9a91556102c39ddb
+Age: 2
+Connection Time: 644
+Avg RSSI: -29
+Last RSSI: -29
+Link Quality In: 3
+Frame Error: 0.00 %
+Msg Error: 0.00 %
+Mode: rdn
+Version: 5
+Done
+```
+
 ### neighbor linkquality
 
 Print link quality info for all neighbors.

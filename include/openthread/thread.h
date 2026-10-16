@@ -715,6 +715,25 @@ otError otThreadBecomeChild(otInstance *aInstance);
 otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo);
 
 /**
+ * Gets the neighbor information for a neighbor with a given RLOC16.
+ *
+ * This is a direct lookup alternative to iterating the whole neighbor table with `otThreadGetNextNeighborInfo()`
+ * when the RLOC16 of the neighbor is already known (e.g., from the router table).
+ *
+ * Only neighbors in valid state are considered. On a router or leader, the lookup covers children and neighboring
+ * routers. On a child, it covers the parent. On an FTD child, it also covers neighboring routers with which the child
+ * has established a link.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aRloc16    The RLOC16 of the neighbor.
+ * @param[out] aInfo      A pointer to output the neighbor information.
+ *
+ * @retval OT_ERROR_NONE        Successfully found the neighbor and retrieved its information in @p aInfo.
+ * @retval OT_ERROR_NOT_FOUND   No valid neighbor with @p aRloc16 exists in the neighbor table.
+ */
+otError otThreadGetNeighborInfoByRloc16(otInstance *aInstance, uint16_t aRloc16, otNeighborInfo *aInfo);
+
+/**
  * Get the device role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
