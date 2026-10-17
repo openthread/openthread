@@ -392,6 +392,38 @@ otError otLinkRawSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMac
 uint64_t otLinkRawGetRadioTime(otInstance *aInstance);
 
 /**
+ * Pointer is called when the radio availability schedule is updated.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ */
+typedef void (*otLinkRawRadioAvailabilityUpdated)(otInstance *aInstance);
+
+/**
+ * Sets the callback to be notified when the radio availability schedule is updated.
+ *
+ * The callback is invoked when the radio platform calls `otPlatRadioAvailabilityUpdated()`. The current schedule can
+ * then be retrieved by `otLinkRawGetRadioAvailability()`.
+ *
+ * The callback is independent of whether the raw link-layer is enabled. It is not cleared when the raw link-layer is
+ * disabled or when the radio stack is reset (see `otInstanceResetRadioStack()`).
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCallback  A pointer to a function called when the radio availability is updated, or NULL to unregister.
+ */
+void otLinkRawSetRadioAvailabilityUpdated(otInstance *aInstance, otLinkRawRadioAvailabilityUpdated aCallback);
+
+/**
+ * Gets the current radio availability schedule.
+ *
+ * @param[in]   aInstance      A pointer to an OpenThread instance.
+ * @param[out]  aAvailability  A pointer to an `otRadioAvailability` structure to populate.
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the radio availability schedule.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  The radio platform does not support reporting radio availability.
+ */
+otError otLinkRawGetRadioAvailability(otInstance *aInstance, otRadioAvailability *aAvailability);
+
+/**
  * @}
  */
 

@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 11
+#define SPINEL_RCP_API_VERSION 12
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -4751,6 +4751,36 @@ enum
      * The current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
      */
     SPINEL_PROP_RCP_CSL_UNCERTAINTY = SPINEL_PROP_RCP_EXT__BEGIN + 5,
+
+    /// Radio Availability
+    /** Format: `XCCd[d]`
+     * Type: Read-Only (also sent as unsolicited notifications)
+     *
+     * `X`: The start time of the radio availability schedule, in microseconds of the local radio clock.
+     * `C`: The duration of each slot: 0 = 625 microseconds, 1 = 1.25 milliseconds.
+     * `C`: The number of slots (`num_slots`) in the radio availability schedule. Value 0 indicates that the radio is
+     *      always available for Thread. The schedule duration (`num_slots` multiplied by the slot duration) MUST NOT
+     *      be longer than 60000 microseconds.
+     * `d`: The available radio slots MSB-first bitmap (`ceil(num_slots / 8)` bytes, 1 = available, 0 = unavailable).
+     * `d`: The optional preferred radio slots MSB-first bitmap (`ceil(num_slots / 8)` bytes, 1 = preferred,
+     *      0 = not preferred). It is empty if all available slots are preferred. The preferred slots MUST be a subset
+     *      of the available slots.
+     *
+     * The host can read the current radio availability schedule. The RCP also sends this property as an unsolicited
+     * notification whenever the radio availability is updated. If the radio driver reports an invalid schedule (an
+     * unknown slot duration, or a schedule duration longer than 60000 microseconds), the RCP sends `LAST_STATUS` with
+     * `SPINEL_STATUS_INTERNAL_ERROR` instead.
+     *
+     * On reception:
+     *  - If the slot duration is unknown, the property is invalid.
+     *  - If the schedule duration is longer than 60000 microseconds, the property is invalid.
+     *  - If a bitmap is longer than `ceil(num_slots / 8)` bytes, the extra bytes are ignored.
+     *  - If the available slots bitmap is shorter than `ceil(num_slots / 8)` bytes, the property is invalid.
+     *  - If the preferred slots bitmap is empty or omitted, all available slots are preferred. If it is non-empty but
+     *    shorter than `ceil(num_slots / 8)` bytes, the property is invalid.
+     *  - A slot is preferred only if it is set in both bitmaps.
+     */
+    SPINEL_PROP_RCP_RADIO_AVAILABILITY = SPINEL_PROP_RCP_EXT__BEGIN + 6,
 
     SPINEL_PROP_RCP_EXT__END = 0x900,
 
