@@ -142,6 +142,9 @@ public:
 
     /**
      * Starts the supervision listener operation.
+     *
+     * If the listener was temporarily stopped while the device remains a sleepy child, the previously running check
+     * timeout is resumed instead of restarted.
      */
     void Start(void);
 
@@ -218,6 +221,8 @@ private:
     uint16_t      mTimeout;
     uint16_t      mInterval;
     uint16_t      mCounter;
+    bool          mResumeOnStart;
+    TimeMilli     mResumeFireTime;
     ListenerTimer mTimer;
 };
 

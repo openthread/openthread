@@ -141,14 +141,42 @@ SupervisionListener::SupervisionListener(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimeout(0)
     , mInterval(kDefaultInterval)
+    , mResumeOnStart(false)
     , mTimer(aInstance)
 {
     SetTimeout(kDefaultTimeout);
 }
 
-void SupervisionListener::Start(void) { RestartTimer(); }
+void SupervisionListener::Start(void)
+{
+    bool resume = mResumeOnStart;
 
-void SupervisionListener::Stop(void) { mTimer.Stop(); }
+    RestartTimer();
+
+    // A fire time already in the past makes the timer fire right away.
+    if (resume && mTimer.IsRunning())
+    {
+        mTimer.FireAtIfEarlier(mResumeFireTime);
+    }
+}
+
+void SupervisionListener::Stop(void)
+{
+    // A sleepy child temporarily enables rx-on-when-idle without changing its device mode (e.g. during an MLE
+    // Discovery scan). Keep the pending check so it does not postpone the detection of a lost parent. Otherwise, a
+    // child that does this more often than the check timeout would never detect it.
+    if (!Get<Mle::Mle>().IsChild() || Get<Mle::Mle>().IsRxOnWhenIdle())
+    {
+        mResumeOnStart = false;
+    }
+    else if (mTimer.IsRunning())
+    {
+        mResumeOnStart  = true;
+        mResumeFireTime = mTimer.GetFireTime();
+    }
+
+    mTimer.Stop();
+}
 
 void SupervisionListener::SetInterval(uint16_t aInterval)
 {
@@ -193,6 +221,8 @@ exit:
 
 void SupervisionListener::RestartTimer(void)
 {
+    mResumeOnStart = false;
+
     if ((mTimeout != 0) && !Get<Mle::Mle>().IsDisabled() && !Get<MeshForwarder>().GetRxOnWhenIdle())
     {
         mTimer.Start(Time::SecToMsec(mTimeout));
