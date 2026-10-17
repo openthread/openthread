@@ -107,6 +107,36 @@ check_daemon_netif_down()
     "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig | grep 'down' || die 'ot-daemon does not respond after ifconfig down'
 }
 
+check_daemon_socket_flags()
+{
+    local fifo="$PWD/tmp/ot-ctl-input"
+    local sockets
+
+    # ot-ctl connects before it reads its input; the session stays open until it reads "exit".
+    mkfifo "${fifo}"
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" <"${fifo}" &
+    exec 3>"${fifo}"
+
+    # lsof prints the file status flags of each descriptor with +fg: NB for O_NONBLOCK, or ND
+    # where that is the same flag as O_NDELAY (Linux). Two descriptors of ot-daemon carry the
+    # socket path: the listening socket, which is non-blocking, and the session it accepted,
+    # which is served blocking on every platform. On BSD the session inherits the flag from the
+    # listening socket, so only one of the two carries it when the daemon clears it.
+    for _ in $(seq 1 10); do
+        sockets=$(sudo lsof +fg -U -a -c ot-daemon | grep "openthread-${NETIF_NAME}.sock" || true)
+        [[ $(echo "${sockets}" | grep -c .) == 2 ]] && break
+        sleep 1
+    done
+    echo "${sockets}"
+
+    echo exit >&3
+    exec 3>&-
+    wait $! || die 'ot-ctl did not exit cleanly'
+
+    [[ $(echo "${sockets}" | grep -c .) == 2 ]] || die 'ot-daemon does not hold a listening and a session socket'
+    [[ $(echo "${sockets}" | grep -cwE 'NB|ND') == 1 ]] || die 'the listening socket must be non-blocking and the session socket blocking'
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -170,6 +200,8 @@ do_check()
         if "${OT_CTL[@]}" -I "${NETIF_NAME}" "$(printf '1%.0s' $(seq 1 "${len}"))"; then
             die
         fi
+
+        check_daemon_socket_flags
         OT_CLI_CMD="${OT_CTL[*]} -I ${NETIF_NAME}"
     else
         OT_CLI="$PWD/build/posix/src/posix/ot-cli"

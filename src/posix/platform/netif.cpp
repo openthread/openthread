@@ -2918,7 +2918,6 @@ static void platformConfigureNetLink(void)
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     {
-        int status;
 #ifdef ROUTE_FILTER
         unsigned int msgfilter = ROUTE_FILTER(RTM_IFINFO) | ROUTE_FILTER(RTM_NEWADDR) | ROUTE_FILTER(RTM_DELADDR) |
                                  ROUTE_FILTER(RTM_NEWMADDR) | ROUTE_FILTER(RTM_DELMADDR);
@@ -2933,11 +2932,9 @@ static void platformConfigureNetLink(void)
 #define FILTER_ARG_SZ sizeof(msgfilter)
 #endif
 #if defined(ROUTE_FILTER) || defined(RO_MSGFILTER)
-        status = setsockopt(sNetlinkFd, AF_ROUTE, FILTER_CMD, FILTER_ARG, FILTER_ARG_SZ);
+        int status = setsockopt(sNetlinkFd, AF_ROUTE, FILTER_CMD, FILTER_ARG, FILTER_ARG_SZ);
         VerifyOrDie(status == 0, OT_EXIT_ERROR_ERRNO);
 #endif
-        status = fcntl(sNetlinkFd, F_SETFL, O_NONBLOCK);
-        VerifyOrDie(status == 0, OT_EXIT_ERROR_ERRNO);
     }
 #endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 }
