@@ -39,6 +39,7 @@ from typing import Optional
 import otci
 from otci import OTCI
 from otci.errors import ExpectLineTimeoutError, InvalidArgumentsError
+from sniffer import Sniffer
 
 CP_CAPABILITY_VERSION = "0.1.1-dev"
 
@@ -79,6 +80,7 @@ class DeviceManager(object):
     def __init__(self):
         self.__dut = self.__connect_dut()
         self.__ref = self.__connect_reference_device()
+        self.__sniffer = self.__create_sniffer()
 
         if self.__get_debug_enabled():
             logger = logging.getLogger()
@@ -91,6 +93,11 @@ class DeviceManager(object):
     @property
     def ref(self) -> OTCI:
         return self.__ref
+
+    @property
+    def sniffer(self) -> Optional[Sniffer]:
+        """The sniffer, or None if no sniffer is configured (`SNIFFER_SERIAL` or `SNIFFER_RADIO_URL`)."""
+        return self.__sniffer
 
     def output_test_result_string(self, name: str, value: str, align_length: int = DEFAULT_FORMAT_ALIGN_LENGTH):
         prefix = (name + ' ').ljust(align_length, '-')
@@ -118,6 +125,16 @@ class DeviceManager(object):
 
     def __get_adb_key(self) -> Optional[str]:
         return os.getenv('ADB_KEY', None)
+
+    def __create_sniffer(self) -> Optional[Sniffer]:
+        if os.getenv('SNIFFER_RADIO_URL'):
+            radio_url = os.getenv('SNIFFER_RADIO_URL')
+        elif os.getenv('SNIFFER_SERIAL'):
+            radio_url = f'spinel+hdlc+uart://{os.getenv("SNIFFER_SERIAL")}?uart-baudrate=115200'
+        else:
+            return None
+
+        return Sniffer(os.getenv('OT_EXTCAP', 'ot-extcap'), radio_url)
 
     def __connect_dut(self) -> OTCI:
         if os.getenv('DUT_ADB_TCP'):

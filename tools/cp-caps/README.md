@@ -8,23 +8,43 @@ This test is used for testing RCP capabilities.
                     +-------+
     +---------------|  PC   |----------------+
     |               +-------+                |
-    | ADB/SSH                                | ADB/SSH/SERIAL
-    |                                        |
-+-------+                           +------------------+
+    | ADB/SSH           |                    | ADB/SSH/SERIAL
+    |                   | SERIAL             |
++-------+               |           +------------------+
 |  DUT  |<-----------Thread-------->| Reference Device |
-+-------+                           +------------------+
-
++-------+               |           +------------------+
+                  +-----------+
+                  |  Sniffer  | (optional)
+                  +-----------+
 ```
 
 - PC : The computer to run the test script.
 - DUT : The device under test.
 - Reference Device : The device that supports all tested features.
+- Sniffer : An RCP that captures frames with timestamps (e.g. to check the timing of frames). It is optional and only used by some test cases.
 
 ### Reference Device
 
 The [nRF52840DK][ot-nrf528xx-nrf52840] is set as the reference device by default. Testers can also select the other Thread device as the reference device.
 
 [ot-nrf528xx-nrf52840]: https://github.com/openthread/ot-nrf528xx/blob/main/src/nrf52840/README.md
+
+### Sniffer
+
+The sniffer is an RCP (e.g. an nRF52840 dongle running `ot-rcp`) driven by [ot-extcap][ot-extcap] from ot-br-posix. The test cases capture frames by running `ot-extcap` on the channel of interest, and read each frame with its timestamp in microseconds taken by the sniffer radio.
+
+[ot-extcap]: https://github.com/openthread/ot-br-posix/tree/main/tools/extcap
+
+Quick guide to building `ot-extcap`:
+
+```bash
+$ git clone git@github.com:openthread/ot-br-posix.git
+$ cd ot-br-posix/
+$ git submodule update --init
+$ ./script/cmake-build extcap
+```
+
+The executable is at `build/extcap/ot-extcap`. Set `OT_EXTCAP` to its full path (unless it is in the `PATH`), and `SNIFFER_SERIAL` (or `SNIFFER_RADIO_URL`) to the sniffer RCP.
 
 Quick guide to setting up the nRF52840DK:
 
@@ -97,6 +117,9 @@ Device configurations:
   REF_ADB_USB=<serial_number>    Connect to the reference device via adb usb
   REF_CLI_SERIAL=<serial_device> Connect to the reference device via cli serial port
   REF_SSH=<device_ip>            Connect to the reference device via ssh
+  SNIFFER_SERIAL=<serial_device> Use the RCP at the serial port as the sniffer (optional)
+  SNIFFER_RADIO_URL=<radio_url>  Use the RCP at the radio URL as the sniffer (optional)
+  OT_EXTCAP=<ot_extcap_path>     Full path to the ot-extcap executable used by the sniffer (default: ot-extcap)
 
 Test cases:
   test_csl                 test whether the RCP supports CSL transmitter
