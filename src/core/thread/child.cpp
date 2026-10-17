@@ -96,6 +96,13 @@ void Child::SetDeviceMode(Mle::DeviceMode aMode)
 
     Neighbor::SetDeviceMode(aMode);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    if (IsRxOnWhenIdle())
+    {
+        ClearCsl();
+    }
+#endif
+
     VerifyOrExit(IsStateValid());
     Get<NeighborTable>().Signal(NeighborTable::kChildModeChanged, *this);
 

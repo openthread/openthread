@@ -2328,6 +2328,10 @@ private:
     void HandleTimeSync(RxInfo &aRxInfo);
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    void UpdateCslState(void);
+#endif
+
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     void  HandleLinkMetricsManagementRequest(RxInfo &aRxInfo);
     void  HandleLinkProbe(RxInfo &aRxInfo);
