@@ -272,6 +272,58 @@ void TestChildSupervisionDisabledWithDiscoveryScan(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
 }
 
+void TestChildSupervisionWithBetterParentSearches(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
+    static constexpr uint32_t kSearchPeriod = 10 * 1000; // (msec)
+    static constexpr uint32_t kMaxWaitTime  = 60 * 1000; // (msec)
+
+    Core     nexus;
+    uint32_t elapsed = 0;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Block traffic from child on parent while child runs periodic better parent searches");
+
+    // Searches more frequent than the check timeout must not postpone the detection of the lost parent.
+
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+
+    while (sed.Get<Mle::Mle>().IsChild() && (elapsed < kMaxWaitTime))
+    {
+        SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+
+        nexus.AdvanceTime(kSearchPeriod);
+        elapsed += kSearchPeriod;
+    }
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -280,6 +332,7 @@ int main(void)
     ot::Nexus::TestChildSupervision();
     ot::Nexus::TestChildSupervisionWithDiscoveryScans();
     ot::Nexus::TestChildSupervisionDisabledWithDiscoveryScan();
+    ot::Nexus::TestChildSupervisionWithBetterParentSearches();
     printf("All tests passed\n");
     return 0;
 }
