@@ -123,8 +123,12 @@ do_check()
     timeout_run 10 test -c "${SOCAT_PTY}"
     echo 'SOCAT_PTY' "${SOCAT_PTY}"
 
-    # Cover setting a valid network interface name.
-    VALID_NETIF_NAME="wan$(date +%H%M%S)"
+    # Cover setting a valid network interface name. On macOS only a utun number can be chosen.
+    if [[ ${OSTYPE} == darwin* ]]; then
+        VALID_NETIF_NAME="utun$((200 + 10#$(date +%S)))"
+    else
+        VALID_NETIF_NAME="wan$(date +%H%M%S)"
+    fi
     readonly VALID_NETIF_NAME
 
     RADIO_URL="spinel+hdlc+uart://${SOCAT_PTY}?region=US&max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
@@ -135,8 +139,8 @@ do_check()
         sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" >"${OT_DAEMON_OUTPUT}" 2>&1 &
         OT_DAEMON_JOB=$!
         sleep 3
-        # macOS cannot explicitly set network interface name
         NETIF_NAME=$(grep -o 'Thread interface: .\+' "${OT_DAEMON_OUTPUT}" | cut -d: -f2 | tr -d ' \r\n')
+        [[ ${NETIF_NAME} == "${VALID_NETIF_NAME}" ]] || die "ot-daemon created ${NETIF_NAME}, not the requested ${VALID_NETIF_NAME}"
         OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
         if [[ ${OT_DAEMON_ALLOW_ALL} == 1 ]] || [[ -n ${OT_ISOLATED_REEXEC:-} ]]; then
             OT_CTL=("${OT_CTL_PATH}")
