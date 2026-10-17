@@ -49,14 +49,10 @@ build()
 
     options+=(
         "-DOT_TREL=ON"
+        "-DOT_BORDER_ROUTING=ON"
+        "-DOT_SRP_SERVER=ON"
+        "-DOT_DNS_UPSTREAM_QUERY=ON"
     )
-
-    if [[ $OSTYPE != "darwin"* ]]; then
-        options+=(
-            "-DOT_BORDER_ROUTING=ON"
-            "-DOT_SRP_SERVER=ON"
-        )
-    fi
 
     reset_source
     "$(dirname "$0")"/cmake-build posix "${options[@]}"
