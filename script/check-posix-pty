@@ -85,7 +85,10 @@ do_build()
     ./script/cmake-build simulation
     # OMR prefixes are installed as kernel routes (which needs border routing for otNetDataContainsOmrPrefix), so that
     # the daemon's route handling is exercised.
-    ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_POSIX_INSTALL_OMR_ROUTES=ON -DOT_BORDER_ROUTING=ON -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
+    # The mDNS CLI (`mdns enable`, `mdns localhostaddrs`) needs the public mDNS API, which has no cmake option.
+    CFLAGS="-DOPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE=1 ${CFLAGS:-}" \
+        CXXFLAGS="-DOPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE=1 ${CXXFLAGS:-}" \
+        ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_POSIX_INSTALL_OMR_ROUTES=ON -DOT_BORDER_ROUTING=ON -DOT_MDNS=ON -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
 }
 
 # The netif joins ff02::1 on the Thread interface when it comes up and leaves it when it
@@ -184,6 +187,43 @@ check_daemon_omr_route()
         || die 'the daemon did not report the removal of the route of the OMR prefix'
     grep -qF "Successfully deleted an OMR route ${logged_prefix} in kernel" "${OT_DAEMON_OUTPUT}" \
         || die 'the daemon failed to delete the route of the OMR prefix'
+}
+
+check_daemon_mdns_address_monitor()
+{
+    local address='fd00:5678::1'
+    # ot-ctl prints every address as eight groups, without "::".
+    local listed='fd00:5678:0:0:0:0:0:1'
+    local index
+    local addresses
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # OpenThread's mDNS learns the addresses of the interface it serves from the routing socket
+    # (netlink on Linux) and lists them as its local host addresses.
+    index=$(python3 -c "import socket; print(socket.if_nametoindex('${NETIF_NAME}'))")
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" mdns enable "${index}" | grep 'Done' || die 'failed to enable mDNS'
+
+    if [[ ${OSTYPE} == darwin* ]]; then
+        sudo ifconfig "${NETIF_NAME}" inet6 "${address}" prefixlen 64 alias
+    else
+        sudo ip -6 addr add "${address}/64" dev "${NETIF_NAME}"
+    fi
+    sleep 1
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" mdns localhostaddrs | grep "${listed}" || die 'an address added on the host did not reach mDNS'
+
+    if [[ ${OSTYPE} == darwin* ]]; then
+        sudo ifconfig "${NETIF_NAME}" inet6 "${address}" prefixlen 64 -alias
+    else
+        sudo ip -6 addr del "${address}/64" dev "${NETIF_NAME}"
+    fi
+    sleep 1
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" mdns localhostaddrs) || die 'failed to list the mDNS local host addresses'
+    if grep "${listed}" <<<"${addresses}"; then
+        die 'an address removed on the host is still an mDNS local host address'
+    fi
+
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" mdns disable | grep 'Done' || die 'failed to disable mDNS'
 }
 
 do_check()
@@ -334,6 +374,7 @@ EOF
     fi
 
     check_daemon_multicast_group Added
+    check_daemon_mdns_address_monitor
 
     # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
     if [[ $OSTYPE != "linux-gnu"* ]]; then
