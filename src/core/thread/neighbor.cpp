@@ -47,6 +47,13 @@ void Neighbor::SetState(State aState)
         mConnectionStart = Get<UptimeTracker>().GetUptimeInSeconds();
     }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    if (mState == kStateInvalid)
+    {
+        RemoveAllForwardTrackingSeriesInfo();
+    }
+#endif
+
 exit:
     return;
 }
@@ -190,6 +197,21 @@ bool Neighbor::IsLastRxFragmentTagSet(void) const
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+Neighbor::SeriesInfoList &Neighbor::SeriesInfoList::operator=(SeriesInfoList &aOther)
+{
+    // Move the list to this entry so that the `SeriesInfo` entries
+    // stay owned by a single `Neighbor` entry.
+
+    if (this != &aOther)
+    {
+        OT_ASSERT(IsEmpty());
+        SetHead(aOther.GetHead());
+        aOther.Clear();
+    }
+
+    return *this;
+}
+
 void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
 {
     for (LinkMetrics::SeriesInfo &entry : mLinkMetricsSeriesInfoList)
