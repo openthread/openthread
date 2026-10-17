@@ -114,6 +114,10 @@ void RouterTable::RemoveRouter(Router &aRouter)
         Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, aRouter);
     }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    aRouter.RemoveAllForwardTrackingSeriesInfo();
+#endif
+
     mRouterIdMap.Release(aRouter.GetRouterId());
     mRouters.Remove(aRouter);
 

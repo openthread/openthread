@@ -66,19 +66,27 @@ void Router::Clear(void)
 {
     Instance &instance = GetInstance();
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    RemoveAllForwardTrackingSeriesInfo();
+#endif
+
     ClearAllBytes(*this);
     Init(instance);
 }
 
 LinkQuality Router::GetTwoWayLinkQuality(void) const { return Min(GetLinkQualityIn(), GetLinkQualityOut()); }
 
-void Router::SetFrom(const Parent &aParent)
+void Router::SetFrom(Parent &aParent)
 {
     // We use an intermediate pointer to copy `aParent` to silence
     // code checkers warning about object slicing (assigning a
     // sub-class to base class instance).
 
-    const Router *parentAsRouter = &aParent;
+    Router *parentAsRouter = &aParent;
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    RemoveAllForwardTrackingSeriesInfo();
+#endif
 
     *this = *parentAsRouter;
 }
@@ -86,6 +94,10 @@ void Router::SetFrom(const Parent &aParent)
 void Parent::Clear(void)
 {
     Instance &instance = GetInstance();
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    RemoveAllForwardTrackingSeriesInfo();
+#endif
 
     ClearAllBytes(*this);
     Init(instance);

@@ -609,7 +609,7 @@ public:
     void SetTimeSyncEnabled(bool aEnabled) { mTimeSyncEnabled = aEnabled; }
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
      * Aggregates the Link Metrics data into all the series that is running for this neighbor.
      *
@@ -652,7 +652,9 @@ public:
      * Removes all the Series and return the data structures to the Pool.
      */
     void RemoveAllForwardTrackingSeriesInfo(void);
+#endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
      * Gets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
      *
@@ -728,12 +730,29 @@ private:
 #endif
     uint16_t        mVersion;
     LinkQualityInfo mLinkInfo;
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     // A list of Link Metrics Forward Tracking Series that is being
     // tracked for this neighbor. Note that this device is the
     // Subject and this neighbor is the Initiator.
-    LinkedList<LinkMetrics::SeriesInfo> mLinkMetricsSeriesInfoList;
+    //
+    // The `SeriesInfo` entries are allocated from the `Subject` pool
+    // and are owned by exactly one `Neighbor` entry. Copying a
+    // `Neighbor` entry (e.g., when a former child is moved into a
+    // router entry, or when an entry is moved within an array) moves
+    // the list to the copy and leaves the source with an empty list.
+    // The entries are freed when the neighbor state becomes
+    // `kStateInvalid` or its entry is cleared.
+    class SeriesInfoList : public LinkedList<LinkMetrics::SeriesInfo>
+    {
+    public:
+        SeriesInfoList(void) = default;
+        SeriesInfoList(SeriesInfoList &aOther) { *this = aOther; }
+        SeriesInfoList &operator=(SeriesInfoList &aOther);
+    };
 
+    SeriesInfoList mLinkMetricsSeriesInfoList;
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     // Metrics configured for Enh-ACK Based Probing at the Probing
     // Subject (this neighbor). Note that this device is the Initiator
     // and this neighbor is the Subject.

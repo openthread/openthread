@@ -3217,9 +3217,6 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
 
     aNeighbor.GetLinkInfo().Clear();
     aNeighbor.SetState(Neighbor::kStateInvalid);
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    aNeighbor.RemoveAllForwardTrackingSeriesInfo();
-#endif
 
 exit:
     return;
@@ -3350,8 +3347,6 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
 
     SetRouterId(routerId);
 
-    SetStateRouter(Rloc16FromRouterId(mRouterId));
-
     // We keep the router table next hop and cost as what we had as a
     // REED, i.e., our parent was the next hop towards all other
     // routers and we tracked its cost towards them. As an FTD child,
@@ -3361,6 +3356,21 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
 
     mRouterTable.ClearNeighbors();
 
+    // Copy the `mParent` entry to its router entry before
+    // `SetStateRouter()` invalidates `mParent`, so that the router
+    // entry keeps the Link Metrics series tracked for the parent.
+    // This is done when the parent's Router ID is already in the
+    // router table and stays allocated in the new Router ID mask.
+
+    router = mRouterTable.FindRouterById(mParent.GetRouterId());
+
+    if ((router != nullptr) && routerIdMask.IsAllocated(mParent.GetRouterId()))
+    {
+        router->SetFrom(mParent);
+    }
+
+    SetStateRouter(Rloc16FromRouterId(mRouterId));
+
     mRouterTable.UpdateRouterIdMask(routerIdMask);
 
     router = mRouterTable.FindRouterById(routerId);
@@ -3369,11 +3379,16 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     router->SetNextHopToInvalid();
 
     // Ensure we have our parent as a neighboring router, copying the
-    // `mParent` entry.
+    // `mParent` entry if this was not done above.
 
     router = mRouterTable.FindRouterById(mParent.GetRouterId());
     VerifyOrExit(router != nullptr);
-    router->SetFrom(mParent);
+
+    if (!router->IsStateValid())
+    {
+        router->SetFrom(mParent);
+    }
+
     router->SetState(Neighbor::kStateValid);
     router->SetNextHopToInvalid();
 
