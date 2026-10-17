@@ -55,14 +55,27 @@ namespace Posix {
  */
 #define OT_POSIX_MDNS_ADDR_MONITOR_NETLINK 2
 
+/**
+ * Use the routing socket (`PF_ROUTE`) to monitor IPv4 and IPv6 address changes and report to the OpenThread mDNS
+ * module (macOS by default; the BSDs can select it).
+ */
+#define OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET 3
+
 #if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR != OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC) && \
-    (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR != OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
+    (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR != OT_POSIX_MDNS_ADDR_MONITOR_NETLINK) &&  \
+    (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR != OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET)
 #error "The `OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR` is not valid. MUST be one of `OT_POSIX_MDNS_ADDR_MONITOR_*`"
 #endif
 
 #if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
 #ifndef __linux__
 #error "The `OT_POSIX_MDNS_ADDR_MONITOR_NETLINK` requires linux platform"
+#endif
+#endif
+
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET)
+#if !(defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__))
+#error "The `OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET` requires a BSD platform"
 #endif
 #endif
 
@@ -164,6 +177,10 @@ private:
     void UpdateNetlink(Mainloop::Context &aContext) const;
     void ProcessNetlink(const Mainloop::Context &aContext) const;
     void ProcessNetlinkAddrEvent(void *aNetlinkMsg) const;
+#elif (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET)
+    void UpdateRouteSocket(Mainloop::Context &aContext) const;
+    void ProcessRouteSocket(const Mainloop::Context &aContext);
+    void ProcessRouteAddrEvent(const uint8_t *aMessage, size_t aLength) const;
 #endif
 
     otError OpenIp4Socket(uint32_t aInfraIfIndex);
@@ -203,6 +220,9 @@ private:
 #endif
 #if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
     int mNetlinkFd;
+#endif
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET)
+    int mRouteFd;
 #endif
 };
 
