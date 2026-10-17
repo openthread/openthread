@@ -53,8 +53,9 @@ namespace ot {
     printf("%02u:%02u:%02u.%03u " OT_FIRST_ARG(__VA_ARGS__) "\n", (sNow / 3600000), (sNow / 60000) % 60, \
            (sNow / 1000) % 60, sNow % 1000 OT_REST_ARGS(__VA_ARGS__))
 
-static constexpr uint32_t kInfraIfIndex     = 1;
-static const char         kInfraIfAddress[] = "fe80::1";
+static constexpr uint32_t kInfraIfIndex              = 1;
+static const char         kInfraIfAddress[]          = "fe80::1";
+static const uint8_t      kInfraIfLinkLayerAddress[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
 
 static constexpr uint32_t kValidLitime       = 2000;
 static constexpr uint32_t kPreferredLifetime = 1800;
@@ -233,6 +234,7 @@ ExpectedRios sExpectedRios; // Expected RIO prefixes in emitted RAs.
 void        ProcessRadioTxAndTasklets(void);
 void        AdvanceTime(uint32_t aDuration);
 void        LogRouterAdvert(const Icmp6Packet &aPacket);
+void        ValidateLinkLayerAddrOption(const Ip6::Nd::Option &aOption);
 void        ValidateRouterAdvert(const Icmp6Packet &aPacket);
 const char *PreferenceToString(int8_t aPreference);
 void        SendRouterAdvert(const Ip6::Address &aAddress, const Icmp6Packet &aPacket);
@@ -296,6 +298,19 @@ bool otPlatInfraIfHasAddress(otInstance *aInstance, uint32_t aInfraIfIndex, cons
     return AsCoreType(aAddress) == sInfraIfAddress;
 }
 
+otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstance,
+                                         uint32_t                       aIfIndex,
+                                         otPlatInfraIfLinkLayerAddress *aInfraIfLinkLayerAddress)
+{
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aIfIndex == kInfraIfIndex);
+
+    aInfraIfLinkLayerAddress->mLength = sizeof(kInfraIfLinkLayerAddress);
+    memcpy(aInfraIfLinkLayerAddress->mAddress, kInfraIfLinkLayerAddress, sizeof(kInfraIfLinkLayerAddress));
+
+    return OT_ERROR_NONE;
+}
+
 otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
                                  uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
@@ -321,6 +336,10 @@ otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
     {
     case Ip6::Icmp6Header::kTypeRouterSolicit:
         Log("  Router Solicit message");
+        VerifyOrQuit(aBufferLength ==
+                     sizeof(Ip6::Nd::RouterSolicitHeader) + sizeof(Ip6::Nd::Option) + sizeof(kInfraIfLinkLayerAddress));
+        ValidateLinkLayerAddrOption(
+            *reinterpret_cast<const Ip6::Nd::Option *>(aBuffer + sizeof(Ip6::Nd::RouterSolicitHeader)));
         sRsEmitted = true;
         otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &sInfraIfAddress, aBuffer, aBufferLength);
         break;
@@ -342,8 +361,11 @@ otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
 
         Log("  Neighbor Solicit message");
 
-        VerifyOrQuit(packet.GetLength() >= sizeof(Ip6::Nd::NeighborSolicitHeader));
+        VerifyOrQuit(packet.GetLength() == sizeof(Ip6::Nd::NeighborSolicitHeader) + sizeof(Ip6::Nd::Option) +
+                                               sizeof(kInfraIfLinkLayerAddress));
         VerifyOrQuit(nsMsg->IsValid());
+        ValidateLinkLayerAddrOption(
+            *reinterpret_cast<const Ip6::Nd::Option *>(aBuffer + sizeof(Ip6::Nd::NeighborSolicitHeader)));
         sNsEmitted = true;
 
         if (sRespondToNs)
@@ -432,12 +454,22 @@ void AdvanceTime(uint32_t aDuration)
     sNow = time;
 }
 
+void ValidateLinkLayerAddrOption(const Ip6::Nd::Option &aOption)
+{
+    const uint8_t *addrBytes = reinterpret_cast<const uint8_t *>(&aOption) + sizeof(Ip6::Nd::Option);
+
+    VerifyOrQuit(aOption.GetType() == Ip6::Nd::Option::kSourceLinkLayerAddr);
+    VerifyOrQuit(aOption.GetSize() == sizeof(Ip6::Nd::Option) + sizeof(kInfraIfLinkLayerAddress));
+    VerifyOrQuit(memcmp(addrBytes, kInfraIfLinkLayerAddress, sizeof(kInfraIfLinkLayerAddress)) == 0);
+}
+
 void ValidateRouterAdvert(const Icmp6Packet &aPacket)
 {
     constexpr uint8_t kMaxPrefixes = 16;
 
     Ip6::Nd::RouterAdvert::RxMessage raMsg(aPacket);
     bool                             sawExpectedPio = false;
+    bool                             sawSllao       = false;
     Array<Ip6::Prefix, kMaxPrefixes> pioPrefixes;
     Array<Ip6::Prefix, kMaxPrefixes> rioPrefixes;
 
@@ -548,10 +580,19 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
             break;
         }
 
+        case Ip6::Nd::Option::kSourceLinkLayerAddr:
+            VerifyOrQuit(!sawSllao, "Duplicate SLLAO in RA");
+            ValidateLinkLayerAddrOption(option);
+            sawSllao = true;
+            break;
+
         default:
             VerifyOrQuit(false, "Unexpected option type in RA msg");
         }
     }
+
+    VerifyOrQuit(sawSllao, "Missing SLLAO in RA");
+    VerifyOrQuit(!pioPrefixes.IsEmpty() || !rioPrefixes.IsEmpty(), "RA contains only SLLAO");
 
     if (!sRaValidated)
     {
@@ -642,6 +683,19 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
                     rdnss.GetLifetime());
             }
 
+            break;
+        }
+
+        case Ip6::Nd::Option::kSourceLinkLayerAddr:
+        {
+            BorderRouter::InfraIf::LinkLayerAddress linkAddr;
+
+            VerifyOrQuit(option.GetSize() >= sizeof(Ip6::Nd::Option));
+            VerifyOrQuit(option.GetSize() - sizeof(Ip6::Nd::Option) <= sizeof(linkAddr.mAddress));
+            linkAddr.mLength = static_cast<uint8_t>(option.GetSize() - sizeof(Ip6::Nd::Option));
+            memcpy(linkAddr.mAddress, reinterpret_cast<const uint8_t *>(&option) + sizeof(Ip6::Nd::Option),
+                   linkAddr.mLength);
+            Log("     SLLAO - %s", linkAddr.ToString().AsCString());
             break;
         }
 
