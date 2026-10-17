@@ -637,6 +637,19 @@ exit:
     return;
 }
 
+void RoutingManager::HandleFavoredOmrPrefixChanged(void)
+{
+    // This is a callback from `OmrPrefixManager` indicating that
+    // the favored OMR prefix has changed.
+
+    VerifyOrExit(mIsRunning);
+
+    mRoutePublisher.Evaluate();
+
+exit:
+    return;
+}
+
 bool RoutingManager::NetworkDataContainsUlaRoute(void) const
 {
     // Determine whether leader Network Data contains a route
@@ -756,9 +769,10 @@ void RoutingManager::OmrPrefixManager::Stop(void)
     VerifyOrExit(mIsRunning);
 
     RemoveLocalFromNetData();
-    ClearFavoredPrefix();
 
-    mIsRunning = false;
+    mIsRunning    = false;
+    mDefaultRoute = false;
+    ClearFavoredPrefix();
 
 exit:
     return;
@@ -854,6 +868,7 @@ void RoutingManager::OmrPrefixManager::SetFavoredPrefix(const OmrPrefix &aOmrPre
         Get<HistoryTracker::Local>().RecordFavoredOmrPrefix(mFavoredPrefix.GetPrefix(), mFavoredPrefix.GetPreference(),
                                                             mFavoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix());
 #endif
+        Get<RoutingManager>().HandleFavoredOmrPrefixChanged();
     }
 }
 
@@ -971,6 +986,11 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
 
     if (favoredPrefix.IsEmpty())
     {
+        if (mLocalInNetDataState != kAdded)
+        {
+            ClearFavoredPrefix();
+        }
+
         if (mLocalPrefixOrigin != kSelfGenerated)
         {
             AddLocalToNetData();

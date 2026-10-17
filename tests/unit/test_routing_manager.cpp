@@ -5087,12 +5087,13 @@ void TestDhcp6Pd(void)
         {kInvalidDhcp6Ra3, sizeof(kInvalidDhcp6Ra3)},
     };
 
-    Ip6::Prefix localOmr;
-    Ip6::Prefix prefix;
-    Ip6::Prefix ulaPrefix;
-    Ip6::Prefix newPrefix;
-    Ip6::Prefix shortPrefix;
-    uint16_t    heapAllocations;
+    Ip6::Prefix  localOmr;
+    Ip6::Prefix  prefix;
+    Ip6::Prefix  ulaPrefix;
+    Ip6::Prefix  newPrefix;
+    Ip6::Prefix  shortPrefix;
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    uint16_t     heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestDhcp6Pd");
@@ -5132,6 +5133,46 @@ void TestDhcp6Pd(void)
 
     VerifyPdOmrPrefix(prefix);
     VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOmrPrefixInNetData(prefix, /* aDefaultRoute */ false);
+
+    AdvanceTime(1500000);
+    sExpectedRios.Clear();
+    VerifyPdOmrPrefix(prefix);
+    VerifyOmrPrefixInNetData(prefix, /* aDefaultRoute */ false);
+
+    AdvanceTime(400000);
+    // Deprecated prefixes will be removed.
+    VerifyNoPdOmrPrefix();
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // AIL router advertises a default route, then a DHCPv6-PD prefix is delegated.
+
+    Log("DHCPv6-PD prefix with AIL default route");
+
+    SendRouterAdvert(routerAddressA, DefaultRoute(kValidLitime, NetworkData::kRoutePreferenceMedium));
+    AdvanceTime(10000);
+    VerifyNoPdOmrPrefix();
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+
+    prefix = PrefixFromString("2001:db8:5:6::", 64);
+    ReportPdPrefixesAsRa({Pio(prefix, kValidLitime, kPreferredLifetime)});
+    sExpectedRios.Add(prefix);
+
+    // Check before the delayed routing policy evaluation can run.
+    AdvanceTime(100);
+    VerifyPdOmrPrefix(prefix);
+    VerifyOmrPrefixInNetData(prefix, /* aDefaultRoute */ true);
+
+    AdvanceTime(10000);
+    VerifyPdOmrPrefix(prefix);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOmrPrefixInNetData(prefix, /* aDefaultRoute */ true);
+
+    // Router A removes the default route.
+    SendRouterAdvert(routerAddressA, DefaultRoute(0, NetworkData::kRoutePreferenceMedium));
+    AdvanceTime(10000);
+    VerifyPdOmrPrefix(prefix);
     VerifyOmrPrefixInNetData(prefix, /* aDefaultRoute */ false);
 
     AdvanceTime(1500000);
