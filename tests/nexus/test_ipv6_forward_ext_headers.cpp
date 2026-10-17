@@ -27,10 +27,10 @@
  */
 
 /*
- * Verifies that the forward-path protocol checks in `Ip6::HandleDatagram()` (the
- * forwarded-ICMPv6 type allowlist and the untrusted-origin TMF port filter) are applied
- * to the final upper-layer protocol after resolving any IPv6 extension headers, rather
- * than to the first Next Header value of the IPv6 header.
+ * Verifies that the protocol checks in `Ip6::HandleDatagram()` (the forwarded-ICMPv6 type
+ * allowlist and the untrusted-origin TMF port filter) are applied to the final upper-layer
+ * protocol after resolving any IPv6 extension headers, rather than to the first Next
+ * Header value of the IPv6 header.
  *
  * Each case constructs a raw IPv6 datagram with a host-untrusted origin and a link-local
  * destination that is not on this node, so that `Ip6::SendRaw()` routes it through the

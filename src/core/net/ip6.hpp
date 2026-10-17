@@ -155,6 +155,7 @@ public:
      *
      * @retval kErrorNone     Successfully enqueued the message into an output interface.
      * @retval kErrorNoBufs   Insufficient available buffer to add the IPv6 headers.
+     * @retval kErrorDrop     The message is a TMF message from an untrusted origin and was not sent.
      */
     Error SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
 
@@ -356,6 +357,7 @@ private:
                                  bool              &aReceive);
     Error ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHeader, OffsetRange &aOffsetRange) const;
     bool  HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const;
+    Error ApplyTmfOriginFilter(const Message &aMessage, uint8_t aNextHeader) const;
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
     Error HandleFragment(Message &aMessage);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
