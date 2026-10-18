@@ -107,6 +107,54 @@ check_daemon_netif_down()
     "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig | grep 'down' || die 'ot-daemon does not respond after ifconfig down'
 }
 
+set_host_address()
+{
+    if [[ ${OSTYPE} == darwin* ]]; then
+        sudo ifconfig "${NETIF_NAME}" inet6 "$2" prefixlen 64 "$([[ $1 == add ]] && echo alias || echo -alias)"
+    else
+        sudo ip -6 addr "$1" "$2/64" dev "${NETIF_NAME}"
+    fi
+}
+
+check_daemon_address_events()
+{
+    local address='fd00:1234:5678::1'
+    # ot-ctl prints every address as eight groups, without "::".
+    local listed='fd00:1234:5678:0:0:0:0:1'
+    local addresses
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # The routing socket (netlink on Linux) reports every address and multicast membership of the
+    # interface to the daemon, its own included, and the daemon logs each report at info level.
+    grep -q 'ADD \[U\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of OpenThread's own addresses did not reach ot-daemon"
+    grep -q 'ADD \[M\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of the interface's multicast memberships did not reach ot-daemon"
+
+    # An address the host adds becomes an address of OpenThread and goes with its removal.
+    set_host_address add "${address}"
+    timeout_run 10 host_address_known "${listed}" || die 'an address added on the host did not reach OpenThread'
+
+    set_host_address del "${address}"
+    timeout_run 10 host_address_gone "${listed}" || die 'an address removed on the host is still known to OpenThread'
+}
+
+# The CLI ends its lines with CR LF; the CR goes before the whole-line match.
+host_address_known()
+{
+    local addresses
+
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ipaddr) || return 1
+    grep -Fx "$1" <<<"${addresses//$'\r'/}" >/dev/null
+}
+
+host_address_gone()
+{
+    local addresses
+
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ipaddr) || return 1
+    ! grep -Fx "$1" <<<"${addresses//$'\r'/}" >/dev/null
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -170,6 +218,10 @@ do_check()
         if "${OT_CTL[@]}" -I "${NETIF_NAME}" "$(printf '1%.0s' $(seq 1 "${len}"))"; then
             die
         fi
+
+        # The daemon runs at its initial log level (its -d7 is above the highest level, 5, and is
+        # rejected); check_daemon_address_events reads the info log of what follows.
+        "${OT_CTL[@]}" -I "${NETIF_NAME}" log level 4 | grep 'Done' || die 'failed to set the log level'
         OT_CLI_CMD="${OT_CTL[*]} -I ${NETIF_NAME}"
     else
         OT_CLI="$PWD/build/posix/src/posix/ot-cli"
@@ -246,6 +298,8 @@ EOF
         sudo killall -9 expect || true
         sudo killall -9 ot-ctl || true
     fi
+
+    check_daemon_address_events
 
     # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
     if [[ $OSTYPE != "linux-gnu"* ]]; then
