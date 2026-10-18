@@ -53,7 +53,9 @@
 #include <unistd.h>
 #ifdef __linux__
 #include <linux/rtnetlink.h>
+#include <netpacket/packet.h>
 #else
+#include <net/if_dl.h>
 #include <net/route.h>
 #endif
 
@@ -96,6 +98,61 @@ bool otPlatInfraIfHasAddress(otInstance *aInstance, uint32_t aInfraIfIndex, cons
 exit:
     freeifaddrs(ifAddrs);
     return ret;
+}
+
+otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstance,
+                                         uint32_t                       aIfIndex,
+                                         otPlatInfraIfLinkLayerAddress *aInfraIfLinkLayerAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    char            ifName[IF_NAMESIZE];
+    otError         error   = OT_ERROR_FAILED;
+    struct ifaddrs *ifAddrs = nullptr;
+
+    VerifyOrExit(if_indextoname(aIfIndex, ifName) != nullptr);
+    VerifyOrExit(getifaddrs(&ifAddrs) != -1);
+
+    for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
+    {
+        if (addr->ifa_addr == nullptr || strcmp(addr->ifa_name, ifName) != 0)
+        {
+            continue;
+        }
+
+#ifdef __linux__
+        if (addr->ifa_addr->sa_family == AF_PACKET)
+        {
+            const struct sockaddr_ll *sll = reinterpret_cast<const struct sockaddr_ll *>(addr->ifa_addr);
+
+            if (sll->sll_halen > 0 && sll->sll_halen <= sizeof(sll->sll_addr))
+            {
+                aInfraIfLinkLayerAddress->mLength = sll->sll_halen;
+                memcpy(aInfraIfLinkLayerAddress->mAddress, sll->sll_addr, sll->sll_halen);
+                ExitNow(error = OT_ERROR_NONE);
+            }
+        }
+#else
+        if (addr->ifa_addr->sa_family == AF_LINK)
+        {
+            const struct sockaddr_dl *sdl = reinterpret_cast<const struct sockaddr_dl *>(addr->ifa_addr);
+
+            if (sdl->sdl_alen > 0 && sdl->sdl_alen <= sizeof(aInfraIfLinkLayerAddress->mAddress))
+            {
+                aInfraIfLinkLayerAddress->mLength = sdl->sdl_alen;
+                memcpy(aInfraIfLinkLayerAddress->mAddress, LLADDR(sdl), sdl->sdl_alen);
+                ExitNow(error = OT_ERROR_NONE);
+            }
+        }
+#endif
+    }
+
+exit:
+    if (ifAddrs != nullptr)
+    {
+        freeifaddrs(ifAddrs);
+    }
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
