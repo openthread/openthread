@@ -111,6 +111,15 @@ Error LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
     }
 #endif
 
+    if (!enable)
+    {
+        // An ongoing transmission or energy scan is dropped without
+        // completing it, so make sure its done callback is not invoked
+        // later.
+        mTransmitDoneCallback   = nullptr;
+        mEnergyScanDoneCallback = nullptr;
+    }
+
     mReceiveDoneCallback = aCallback;
 
 exit:

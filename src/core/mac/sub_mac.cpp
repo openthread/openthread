@@ -285,9 +285,41 @@ exit:
     return error;
 }
 
+bool SubMac::IsTransmittingOrScanning(void) const
+{
+    bool isBusy = false;
+
+    switch (mState)
+    {
+    case kStateCsmaBackoff:
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    case kStateTimedTransmit:
+#endif
+    case kStateTransmit:
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+    case kStateDelayBeforeRetx:
+#endif
+    case kStateEnergyScan:
+        isBusy = true;
+        break;
+
+    case kStateDisabled:
+    case kStateSleep:
+    case kStateReceive:
+#if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
+    case kStateTimedReceive:
+#endif
+        break;
+    }
+
+    return isBusy;
+}
+
 Error SubMac::Receive(uint8_t aChannel)
 {
     Error error;
+
+    VerifyOrExit(!IsTransmittingOrScanning(), error = kErrorInvalidState);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     if (mRadioFilterEnabled)

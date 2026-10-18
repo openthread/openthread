@@ -342,18 +342,23 @@ public:
     /**
      * Indicates whether the sub-mac is busy transmitting or scanning.
      *
+     * A transmission is considered ongoing from `Send()` until its done callback, including while it waits in CSMA
+     * backoff, for its target TX time, or before a retransmission.
+     *
      * @retval TRUE if the sub-mac is busy transmitting or scanning.
      * @retval FALSE if the sub-mac is not busy transmitting or scanning.
      */
-    bool IsTransmittingOrScanning(void) const { return (mState == kStateTransmit) || (mState == kStateEnergyScan); }
+    bool IsTransmittingOrScanning(void) const;
 
     /**
      * Transitions the radio to Receive.
      *
+     * The request is rejected while a transmission or energy scan is ongoing (see `IsTransmittingOrScanning()`).
+     *
      * @param[in]  aChannel   The channel to use for receiving.
      *
      * @retval kErrorNone          Successfully transitioned to Receive.
-     * @retval kErrorInvalidState  The radio was disabled or transmitting.
+     * @retval kErrorInvalidState  The radio was disabled, or a transmission or energy scan is ongoing.
      */
     Error Receive(uint8_t aChannel);
 

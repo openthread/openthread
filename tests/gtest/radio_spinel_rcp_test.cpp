@@ -29,6 +29,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <map>
+#include <vector>
+
 #include <openthread/platform/radio.h>
 
 #include "common/error.hpp"
@@ -913,4 +916,115 @@ TEST(RadioSpinelRadioAvailability, shouldSendRadioAvailabilityPropertyAfterRadio
     }
 
     EXPECT_TRUE(received);
+}
+
+namespace {
+
+otError SendCommand(FakeCoprocessorPlatform &aPlatform,
+                    uint32_t                 aCommand,
+                    spinel_prop_key_t        aKey,
+                    spinel_tid_t             aTid,
+                    const char              *aFormat,
+                    ...)
+{
+    va_list args;
+    otError error;
+
+    va_start(args, aFormat);
+    error = aPlatform.mSpinelDriver.SendCommand(aCommand, aKey, aTid, aFormat, args);
+    va_end(args);
+
+    return error;
+}
+
+} // namespace
+
+TEST(RadioSpinelTransmit, shouldRejectReceiveDuringPendingTransmit)
+{
+    class TxDonePlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        otError Transmit(otRadioFrame *aFrame) override
+        {
+            mTransmitCount++;
+            otPlatRadioTxStarted(FakePlatform::CurrentInstance(), aFrame);
+            otPlatRadioTxDone(FakePlatform::CurrentInstance(), aFrame, nullptr, OT_ERROR_NONE);
+            return OT_ERROR_NONE;
+        }
+
+        uint32_t mTransmitCount = 0;
+    };
+
+    TxDonePlatform                                    platform;
+    uint8_t                                           frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame                                      txFrame{};
+    std::map<spinel_tid_t, std::vector<unsigned int>> lastStatuses;
+
+    constexpr spinel_tid_t kTxTid      = 13;
+    constexpr spinel_tid_t kReceiveTid = 14;
+    constexpr uint8_t      kChannel    = 11;
+
+    txFrame.mPsdu = frameBuffer;
+
+    {
+        Mac::TxFrame::BuildInfo buildInfo;
+        constexpr uint8_t       kDstAddr[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(0xac00);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(0x1234);
+        buildInfo.mPanIds.SetDestination(0x4321);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
+    }
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    platform.mSpinelInterface.mFrameObserver = [&lastStatuses](const uint8_t *aFrame, uint16_t aLength) {
+        uint8_t      header;
+        unsigned int command;
+        unsigned int key;
+        unsigned int status;
+
+        if ((spinel_datatype_unpack(aFrame, aLength,
+                                    SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S
+                                        SPINEL_DATATYPE_UINT_PACKED_S,
+                                    &header, &command, &key, &status) > 0) &&
+            (key == SPINEL_PROP_LAST_STATUS))
+        {
+            lastStatuses[SPINEL_HEADER_GET_TID(header)].push_back(status);
+        }
+    };
+
+    // A frame waiting in `SubMac` for its target TX time, 5 ms from now.
+    ASSERT_EQ(
+        SendCommand(platform, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW, kTxTid,
+                    SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S
+                        SPINEL_DATATYPE_BOOL_S SPINEL_DATATYPE_BOOL_S SPINEL_DATATYPE_BOOL_S SPINEL_DATATYPE_BOOL_S
+                            SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_UINT32_S,
+                    txFrame.mPsdu, txFrame.mLength, kChannel, /* aMaxCsmaBackoffs */ 0,
+                    /* aMaxFrameRetries */ 0, /* aCsmaCaEnabled */ false, /* aIsHeaderUpdated */ false,
+                    /* aIsARetx */ false, /* aIsSecurityProcessed */ false, /* aTxDelay */ 5000,
+                    static_cast<uint32_t>(platform.GetNow())),
+        kErrorNone);
+    platform.GoInUs(1000);
+    EXPECT_EQ(platform.mTransmitCount, 0u);
+    EXPECT_EQ(lastStatuses.count(kTxTid), 0u);
+
+    // A receive request is rejected, and the frame is not dropped.
+    ASSERT_EQ(SendCommand(platform, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_MAC_RAW_STREAM_ENABLED, kReceiveTid,
+                          SPINEL_DATATYPE_BOOL_S, true),
+              kErrorNone);
+    platform.GoInUs(1);
+    EXPECT_EQ(lastStatuses[kReceiveTid], std::vector<unsigned int>{SPINEL_STATUS_INVALID_STATE});
+    EXPECT_EQ(lastStatuses.count(kTxTid), 0u);
+    EXPECT_EQ(platform.mTransmitCount, 0u);
+
+    // The frame is transmitted at its target time and completed exactly once.
+    platform.GoInMs(10);
+    EXPECT_EQ(platform.mTransmitCount, 1u);
+    EXPECT_EQ(lastStatuses[kTxTid], std::vector<unsigned int>{SPINEL_STATUS_OK});
 }
