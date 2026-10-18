@@ -194,6 +194,7 @@
  * Defines the priority of OMR routes added to kernel. The larger the number, the lower the priority. We
  * need to assign a high priority to such routes so that kernel prefers the Thread link rather than infrastructure.
  * Otherwise we may unnecessarily transmit packets via infrastructure, which potentially causes looping issue.
+ * Routes have no priority on the BSDs, where the value is ignored.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY
 #define OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY 1
@@ -224,6 +225,7 @@
  * need to assign a low priority to such routes so that kernel prefers the infra link rather than thread. Otherwise we
  * may unnecessarily transmit packets via thread, which potentially causes performance issue. In linux, normally infra
  * link routes' metric value is not greater than 1024, hence 65535 should be big enough.
+ * Routes have no priority on the BSDs, where the value is ignored.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY
 #define OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY 65535
