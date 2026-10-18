@@ -32,6 +32,7 @@
 #include "platform/nexus_node.hpp"
 #include "thread/child_supervision.hpp"
 #include "thread/child_table.hpp"
+#include "thread/discover_scanner.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -158,12 +159,68 @@ void TestChildSupervision(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
+void TestChildSupervisionWithDiscoveryScans(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
+    static constexpr uint32_t kScanPeriod   = 10 * 1000; // (msec)
+    static constexpr uint32_t kMaxWaitTime  = 60 * 1000; // (msec)
+
+    Core     nexus;
+    uint32_t elapsed = 0;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Block traffic from child on parent while child runs periodic discovery scans");
+
+    // Data polls from the child are still acked by the radio, so only the supervision check can detect the lost
+    // parent. Scans more frequent than the check timeout must not postpone the detection.
+
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+
+    while (sed.Get<Mle::Mle>().IsChild() && (elapsed < kMaxWaitTime))
+    {
+        SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(
+            Mac::ChannelMask(1u << leader.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
+            /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+
+        nexus.AdvanceTime(kScanPeriod);
+        elapsed += kScanPeriod;
+    }
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
 } // namespace Nexus
 } // namespace ot
 
 int main(void)
 {
     ot::Nexus::TestChildSupervision();
+    ot::Nexus::TestChildSupervisionWithDiscoveryScans();
     printf("All tests passed\n");
     return 0;
 }

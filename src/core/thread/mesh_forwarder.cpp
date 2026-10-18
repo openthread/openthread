@@ -858,6 +858,20 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     }
 }
 
+void MeshForwarder::SuspendSleepyOperation(void)
+{
+    Get<Mac::Mac>().SetRxOnWhenIdle(true);
+    mDataPollSender.StopPolling();
+    Get<SupervisionListener>().Pause();
+}
+
+void MeshForwarder::ResumeSleepyOperation(void)
+{
+    Get<Mac::Mac>().SetRxOnWhenIdle(false);
+    mDataPollSender.StartPolling();
+    Get<SupervisionListener>().Resume();
+}
+
 Mac::TxFrame *MeshForwarder::PrepareFrame(Mac::TxFrames &aTxFrames)
 {
     Mac::TxFrame *frame         = nullptr;

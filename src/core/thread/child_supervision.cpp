@@ -141,14 +141,56 @@ SupervisionListener::SupervisionListener(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimeout(0)
     , mInterval(kDefaultInterval)
+    , mState(kStopped)
     , mTimer(aInstance)
 {
     SetTimeout(kDefaultTimeout);
 }
 
-void SupervisionListener::Start(void) { RestartTimer(); }
+void SupervisionListener::Start(void)
+{
+    mState = kRunning;
+    RestartTimer();
+}
 
-void SupervisionListener::Stop(void) { mTimer.Stop(); }
+void SupervisionListener::Stop(void)
+{
+    mState = kStopped;
+    mTimer.Stop();
+}
+
+void SupervisionListener::Pause(void)
+{
+    VerifyOrExit((mState == kRunning) && mTimer.IsRunning());
+
+    // `mTimer` keeps its fire time while stopped, so time spent paused still counts toward the check timeout.
+    // Otherwise, pausing more often than the check timeout would prevent the detection of a lost parent.
+    mState = kPaused;
+    mTimer.Stop();
+
+exit:
+    return;
+}
+
+void SupervisionListener::Resume(void)
+{
+    State     prevState = mState;
+    TimeMilli fireTime  = mTimer.GetFireTime();
+
+    VerifyOrExit(prevState != kStopped);
+
+    mState = kRunning;
+    RestartTimer();
+
+    // A fire time already in the past makes the timer fire right away.
+    if ((prevState == kPaused) && mTimer.IsRunning())
+    {
+        mTimer.FireAtIfEarlier(fireTime);
+    }
+
+exit:
+    return;
+}
 
 void SupervisionListener::SetInterval(uint16_t aInterval)
 {
@@ -174,7 +216,11 @@ void SupervisionListener::SetTimeout(uint16_t aTimeout)
         LogInfo("Timeout: %u -> %u", mTimeout, aTimeout);
 
         mTimeout = aTimeout;
-        RestartTimer();
+
+        if (mState == kRunning)
+        {
+            RestartTimer();
+        }
     }
 }
 
