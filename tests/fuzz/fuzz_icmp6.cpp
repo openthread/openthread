@@ -54,12 +54,33 @@ public:
         mSize -= aLength;
     }
 
-    uint8_t *ConsumeRemainingBytes(void)
+    uint8_t *ConsumeBytes(size_t aLength)
     {
-        uint8_t *buf = static_cast<uint8_t *>(malloc(mSize));
-        memcpy(buf, mData, mSize);
-        mSize = 0;
+        assert(aLength <= mSize);
+
+        uint8_t *buf = nullptr;
+
+        if (aLength > 0)
+        {
+            buf = static_cast<uint8_t *>(malloc(aLength));
+            memcpy(buf, mData, aLength);
+            mData += aLength;
+            mSize -= aLength;
+        }
+
         return buf;
+    }
+
+    template <typename IntType> IntType ConsumeIntegralInRange(IntType aMin, IntType aMax)
+    {
+        assert(aMin <= aMax);
+
+        uint64_t range = static_cast<uint64_t>(aMax) - aMin;
+        IntType  result;
+
+        ConsumeData(&result, sizeof(result));
+
+        return (range == 0) ? aMin : static_cast<IntType>(aMin + (result % (range + 1)));
     }
 
     size_t RemainingBytes(void) { return mSize; }
@@ -71,7 +92,9 @@ private:
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    const uint16_t kMaxIterations  = 8;
     const uint16_t kMaxMessageSize = 2048;
+    const uint32_t kMaxAdvanceTime = 10000;
 
     FuzzDataProvider fdp(data, size);
 
@@ -80,13 +103,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     otIp6Address srcAddress;
     uint8_t     *buffer;
     uint16_t     bufferLength;
+    uint32_t     advanceTime;
 
-    if (size < sizeof(seed) + sizeof(ifIndex) + sizeof(srcAddress))
+    if (size < sizeof(seed) + sizeof(ifIndex) + sizeof(srcAddress) + sizeof(advanceTime) + sizeof(bufferLength))
     {
         return 0;
     }
 
-    if (size > sizeof(seed) + sizeof(ifIndex) + sizeof(srcAddress) + kMaxMessageSize)
+    if (size > sizeof(seed) + kMaxIterations * (sizeof(ifIndex) + sizeof(srcAddress) + sizeof(advanceTime) +
+                                                sizeof(bufferLength) + kMaxMessageSize))
     {
         return 0;
     }
@@ -118,19 +143,28 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     Log("---------------------------------------------------------------------------------------");
     Log("Fuzz");
 
-    fdp.ConsumeData(&ifIndex, sizeof(ifIndex));
-    fdp.ConsumeData(&srcAddress, sizeof(srcAddress));
-    bufferLength = fdp.RemainingBytes();
-    buffer       = fdp.ConsumeRemainingBytes();
-
-    otPlatInfraIfRecvIcmp6Nd(&node.GetInstance(), ifIndex, &srcAddress, buffer, bufferLength);
-
-    nexus.AdvanceTime(10 * 1000);
-
-    if (buffer)
+    for (uint16_t i = 0; i < kMaxIterations; i++)
     {
+        if (fdp.RemainingBytes() < sizeof(ifIndex) + sizeof(srcAddress) + sizeof(advanceTime) + sizeof(bufferLength))
+        {
+            break;
+        }
+
+        fdp.ConsumeData(&ifIndex, sizeof(ifIndex));
+        fdp.ConsumeData(&srcAddress, sizeof(srcAddress));
+        advanceTime  = fdp.ConsumeIntegralInRange(0u, kMaxAdvanceTime);
+        bufferLength = fdp.ConsumeIntegralInRange<uint16_t>(
+            0, Min<size_t>(fdp.RemainingBytes() - sizeof(bufferLength), kMaxMessageSize));
+        buffer = fdp.ConsumeBytes(bufferLength);
+
+        otPlatInfraIfRecvIcmp6Nd(&node.GetInstance(), ifIndex, &srcAddress, buffer, bufferLength);
+
+        nexus.AdvanceTime(advanceTime);
+
         free(buffer);
     }
+
+    nexus.AdvanceTime(10 * 1000);
 
     return 0;
 }
