@@ -142,6 +142,8 @@ public:
 
     /**
      * Starts the supervision listener operation.
+     *
+     * Does nothing if the listener is already running or paused.
      */
     void Start(void);
 
@@ -153,7 +155,8 @@ public:
     /**
      * Pauses the supervision listener operation, keeping the fire time of the pending check timeout.
      *
-     * While paused, received frames do not restart the check timeout.
+     * While paused, received frames do not restart the check timeout, and a check timeout that expires is handled on
+     * `Resume()`.
      */
     void Pause(void);
 
@@ -161,8 +164,7 @@ public:
      * Resumes the supervision listener operation after `Pause()`.
      *
      * The pending check timeout keeps its original fire time, and expires right away if that time already passed.
-     * If `Start()` was called while paused, or the check timeout was not pending on `Pause()`, this behaves like
-     * `Start()`. If `Stop()` was called while paused, this does nothing.
+     * If `Stop()` was called while paused, this does nothing.
      */
     void Resume(void);
 

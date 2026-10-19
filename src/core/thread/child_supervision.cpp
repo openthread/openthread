@@ -149,24 +149,33 @@ SupervisionListener::SupervisionListener(Instance &aInstance)
 
 void SupervisionListener::Start(void)
 {
+    VerifyOrExit(mState == kStopped);
+
     mState = kRunning;
     RestartTimer();
+
+exit:
+    return;
 }
 
 void SupervisionListener::Stop(void)
 {
+    VerifyOrExit(mState != kStopped);
+
     mState = kStopped;
     mTimer.Stop();
+
+exit:
+    return;
 }
 
 void SupervisionListener::Pause(void)
 {
-    VerifyOrExit((mState == kRunning) && mTimer.IsRunning());
+    VerifyOrExit(mState == kRunning);
 
-    // `mTimer` keeps its fire time while stopped, so time spent paused still counts toward the check timeout.
+    // `mTimer` keeps running while paused, so time spent paused still counts toward the check timeout.
     // Otherwise, pausing more often than the check timeout would prevent the detection of a lost parent.
     mState = kPaused;
-    mTimer.Stop();
 
 exit:
     return;
@@ -174,19 +183,12 @@ exit:
 
 void SupervisionListener::Resume(void)
 {
-    State     prevState = mState;
-    TimeMilli fireTime  = mTimer.GetFireTime();
-
-    VerifyOrExit(prevState != kStopped);
+    VerifyOrExit(mState == kPaused);
 
     mState = kRunning;
-    RestartTimer();
 
-    // A fire time already in the past makes the timer fire right away.
-    if ((prevState == kPaused) && mTimer.IsRunning())
-    {
-        mTimer.FireAtIfEarlier(fireTime);
-    }
+    // If the check timeout expired while paused, `FireAt()` with its past fire time makes it fire right away.
+    mTimer.FireAt(mTimer.GetFireTime());
 
 exit:
     return;
@@ -228,7 +230,7 @@ void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bo
 {
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
-    VerifyOrExit(mTimer.IsRunning() && aIsSecure && Get<Mle::Mle>().IsChild() &&
+    VerifyOrExit((mState == kRunning) && aIsSecure && Get<Mle::Mle>().IsChild() &&
                  (Get<NeighborTable>().FindNeighbor(aSourceAddress) == &Get<Mle::Mle>().GetParent()));
 
     RestartTimer();
@@ -251,15 +253,21 @@ void SupervisionListener::RestartTimer(void)
 
 void SupervisionListener::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::Mle>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrExit(mState == kRunning);
 
-    LogWarn("Supervision timeout. No frame from parent in %u sec", mTimeout);
-    mCounter++;
+    // The timer can still fire with a zero timeout, from a fire time set before the check timeout was disabled.
+    if ((mTimeout != 0) && Get<Mle::Mle>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle())
+    {
+        LogWarn("Supervision timeout. No frame from parent in %u sec", mTimeout);
+        mCounter++;
 
-    IgnoreError(Get<Mle::Mle>().SendChildUpdateRequestToParent());
+        IgnoreError(Get<Mle::Mle>().SendChildUpdateRequestToParent());
+    }
+
+    RestartTimer();
 
 exit:
-    RestartTimer();
+    return;
 }
 
 } // namespace ot

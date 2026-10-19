@@ -190,6 +190,7 @@ void TestChildSupervisionWithDiscoveryScans(void)
     VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
 
     SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+
     sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
 
     Log("---------------------------------------------------------------------------------------");
@@ -214,6 +215,63 @@ void TestChildSupervisionWithDiscoveryScans(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
+void TestChildSupervisionDisabledWithDiscoveryScan(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
+    static constexpr uint32_t kScanDuration = 10 * 1000; // (msec)
+
+    Core nexus;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+    sed.Get<SupervisionListener>().ResetCounter();
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Disable the supervision check during a discovery scan");
+
+    SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(
+        Mac::ChannelMask(1u << leader.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
+        /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+    sed.Get<SupervisionListener>().SetTimeout(0);
+
+    // Wait past the fire time the check timeout had before it was disabled.
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + kScanDuration);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Run a discovery scan with the supervision check disabled");
+
+    SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(
+        Mac::ChannelMask(1u << leader.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
+        /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+    nexus.AdvanceTime(kScanDuration);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -221,6 +279,7 @@ int main(void)
 {
     ot::Nexus::TestChildSupervision();
     ot::Nexus::TestChildSupervisionWithDiscoveryScans();
+    ot::Nexus::TestChildSupervisionDisabledWithDiscoveryScan();
     printf("All tests passed\n");
     return 0;
 }
