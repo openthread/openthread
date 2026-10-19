@@ -4012,6 +4012,123 @@ void TestRouterNsProbe(void)
     VerifyOrQuit(!sRsEmitted);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Verify Peer BR reachability tracking when multicast RAs continue arriving
+    // while unicast NS/NA is blocked (e.g., Wi-Fi AP L2 client isolation).
+
+    {
+        Ip6::Address                      routerAddressC = AddressFromString("fe80::cccc");
+        BorderRouter::PrefixTableIterator iter;
+        BorderRouter::RouterEntry         routerEntry;
+        bool                              foundRouterC;
+
+        SendRouterAdvert(routerAddressC, {Rio(localOmr, kValidLitime, NetworkData::kRoutePreferenceMedium)});
+        AdvanceTime(10);
+
+        foundRouterC = false;
+        sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
+        while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(iter, routerEntry) == kErrorNone)
+        {
+            if (AsCoreType(&routerEntry.mAddress) == routerAddressC)
+            {
+                VerifyOrQuit(routerEntry.mIsPeerBr);
+                VerifyOrQuit(routerEntry.mIsReachable);
+                foundRouterC = true;
+            }
+        }
+        VerifyOrQuit(foundRouterC);
+
+        // Block NS responses and advance past kPeerBrReachableInterval (200s) + 5 NS probes.
+        sRespondToNs = false;
+        sNsEmitted   = false;
+
+        AdvanceTime(220 * 1000);
+
+        VerifyOrQuit(sNsEmitted);
+
+        // Verify router C is still tracked as a Peer BR (disregarded RIO preserved)
+        // and marked unreachable.
+        foundRouterC = false;
+        sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
+        while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(iter, routerEntry) == kErrorNone)
+        {
+            if (AsCoreType(&routerEntry.mAddress) == routerAddressC)
+            {
+                VerifyOrQuit(routerEntry.mIsPeerBr);
+                VerifyOrQuit(!routerEntry.mIsReachable);
+                foundRouterC = true;
+            }
+        }
+        VerifyOrQuit(foundRouterC);
+
+        // Receive another multicast RA from Peer BR C while unicast NS/NA is still blocked.
+        // Verify that multicast RA alone does NOT reset `mIsReachable` to true, and instead
+        // triggers a unicast NS probe.
+        sNsEmitted = false;
+        SendRouterAdvert(routerAddressC, {Rio(localOmr, kValidLitime, NetworkData::kRoutePreferenceMedium)});
+        AdvanceTime(10);
+
+        VerifyOrQuit(sNsEmitted);
+
+        foundRouterC = false;
+        sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
+        while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(iter, routerEntry) == kErrorNone)
+        {
+            if (AsCoreType(&routerEntry.mAddress) == routerAddressC)
+            {
+                VerifyOrQuit(routerEntry.mIsPeerBr);
+                VerifyOrQuit(!routerEntry.mIsReachable);
+                foundRouterC = true;
+            }
+        }
+        VerifyOrQuit(foundRouterC);
+
+        // Re-enable NS responses; the next RA triggers an NS probe which receives an NA,
+        // restoring `mIsReachable` to true.
+        sRespondToNs = true;
+        sNsEmitted   = false;
+        SendRouterAdvert(routerAddressC, {Rio(localOmr, kValidLitime, NetworkData::kRoutePreferenceMedium)});
+        AdvanceTime(10);
+
+        VerifyOrQuit(sNsEmitted);
+
+        foundRouterC = false;
+        sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
+        while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(iter, routerEntry) == kErrorNone)
+        {
+            if (AsCoreType(&routerEntry.mAddress) == routerAddressC)
+            {
+                VerifyOrQuit(routerEntry.mIsPeerBr);
+                VerifyOrQuit(routerEntry.mIsReachable);
+                foundRouterC = true;
+            }
+        }
+        VerifyOrQuit(foundRouterC);
+
+        // Let Peer BR C become unreachable again, then advertise a non-disregarded route prefix.
+        // Verify that `mAllEntriesDisregarded` is updated before `IsPeerBr()` is evaluated so
+        // Router C transitions to a reachable non-peer router and retains the new route prefix.
+        sRespondToNs = false;
+        AdvanceTime(220 * 1000);
+
+        SendRouterAdvert(routerAddressC, {Rio(localOmr, kValidLitime, NetworkData::kRoutePreferenceMedium),
+                                          Rio(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium)});
+        AdvanceTime(10);
+
+        foundRouterC = false;
+        sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
+        while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(iter, routerEntry) == kErrorNone)
+        {
+            if (AsCoreType(&routerEntry.mAddress) == routerAddressC)
+            {
+                VerifyOrQuit(!routerEntry.mIsPeerBr);
+                VerifyOrQuit(routerEntry.mIsReachable);
+                foundRouterC = true;
+            }
+        }
+        VerifyOrQuit(foundRouterC);
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
     AdvanceTime(3000);
