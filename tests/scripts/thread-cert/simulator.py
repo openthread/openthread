@@ -314,12 +314,15 @@ class VirtualTime(BaseSimulator):
                 if addr == self._spinel_cli_addr:
                     continue
 
+                if port in self.devices and self.devices[port]['alarm']:
+                    self.event_queue.remove(self.devices[port]['alarm'])
+
                 self.devices[port] = {}
                 self.devices[port]['sock'] = sock
                 self.devices[port]['alarm'] = None
                 self.devices[port]['msgs'] = []
                 self.devices[port]['time'] = self.current_time
-                self.awake_devices.discard(port)
+                self.awake_devices.add(port)
 
             elif mask & selectors.EVENT_READ:
                 try:
@@ -330,6 +333,9 @@ class VirtualTime(BaseSimulator):
                 if msg:
                     yield (msg, port)
                 else:
+                    if self.devices[port]['alarm']:
+                        self.event_queue.remove(self.devices[port]['alarm'])
+                        self.devices[port]['alarm'] = None
                     del self.devices[port]['sock']
                     self.sel.unregister(key.fileobj)
                     key.fileobj.close()

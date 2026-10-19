@@ -129,9 +129,10 @@ class OtCliCommandRunner(OTCommandHandler):
 
         if cmd in ('reset', 'factoryreset'):
             self.wait(3, maybeoff=True)
-            self.__otcli.writeline('extaddr')
-            self.wait(1)
+            self.execute_command('extaddr', timeout=timeout)
             return []
+
+        self.__otcli.wait(0)
 
         if self.__expect_command_echoback:
             self.__expect_line(timeout, cmd)
@@ -253,7 +254,7 @@ class OtCliCommandRunner(OTCommandHandler):
 
             line = line.rstrip()
 
-            if line.startswith('> '):
+            while line.startswith('> '):
                 line = line[2:]
 
             if self.__line_read_callback is not None:
