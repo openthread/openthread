@@ -112,7 +112,7 @@ do_check()
     RADIO_NCP_PATH="$PWD/build/simulation/examples/apps/ncp/ot-rcp"
     RADIO_URL="spinel+hdlc+forkpty://${RADIO_NCP_PATH}?forkpty-arg=2"
 
-    sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I wpan0 -B veth-a "${RADIO_URL}" &
+    sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d5 -v -I wpan0 -B veth-a "${RADIO_URL}" &
     wait_for "state" "Done" || die "failed to start daemon"
 
     # verify this reset and factoryreset end immediately

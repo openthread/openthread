@@ -152,7 +152,7 @@ do_check()
     if [[ ${OT_DAEMON} == 'on' ]]; then
         # The log file is in our own tmp directory, so the redirect does not need sudo.
         # shellcheck disable=SC2024
-        sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" >"${OT_DAEMON_OUTPUT}" 2>&1 &
+        sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d5 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" >"${OT_DAEMON_OUTPUT}" 2>&1 &
         OT_DAEMON_JOB=$!
         sleep 3
         # macOS cannot explicitly set network interface name
@@ -163,6 +163,9 @@ do_check()
         else
             OT_CTL=(sudo "${OT_CTL_PATH}")
         fi
+        # -d5 asks for debug logging; the daemon's output must carry OpenThread's own log lines, not only the
+        # syslog() lines of its startup.
+        timeout_run 10 grep -qE '\[(D|I)\] ' "${OT_DAEMON_OUTPUT}" || die 'the daemon does not log at the level -d asked for'
         "${OT_CTL[@]}" -I "${NETIF_NAME}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
 
         # verify supports options in OpenThread commands without separator --
@@ -191,8 +194,8 @@ do_check()
             die
         fi
 
-        # check_daemon_multicast_group reads INFO lines of the netif; `-d7` does not take
-        # effect, as main.c sets the level before the instance exists.
+        # check_daemon_multicast_group reads INFO lines of the netif; -d5 above gives them along
+        # with everything at DEBG, so settle on INFO for the rest of the run.
         "${OT_CTL[@]}" -I "${NETIF_NAME}" log level 4 | grep 'Done' || die 'failed to set log level'
         OT_CLI_CMD="${OT_CTL[*]} -I ${NETIF_NAME}"
     else

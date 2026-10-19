@@ -323,10 +323,11 @@ static otInstance *InitInstance(PosixConfig *aConfig)
 
     syslog(LOG_INFO, "Running %s", otGetVersionString());
     syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
-    IgnoreError(otLoggingSetLevel(aConfig->mLogLevel));
 
     instance = otSysInit(&aConfig->mPlatformConfig);
     VerifyOrDie(instance != NULL, OT_EXIT_FAILURE);
+    // The instance starts at OPENTHREAD_CONFIG_LOG_LEVEL_INIT; a level set before it exists is lost.
+    IgnoreError(otLoggingSetLevel(aConfig->mLogLevel));
     syslog(LOG_INFO, "Thread interface: %s", otSysGetThreadNetifName());
 
     if (aConfig->mPlatformConfig.mCoprocessorType != OT_COPROCESSOR_RCP)
