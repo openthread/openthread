@@ -54,26 +54,33 @@ public:
         mSize -= aLength;
     }
 
-    uint8_t *ConsumeRemainingBytes(void)
+    uint8_t *ConsumeBytes(size_t aLength)
     {
-        uint8_t *buf = static_cast<uint8_t *>(malloc(mSize));
-        memcpy(buf, mData, mSize);
-        mSize = 0;
+        assert(aLength <= mSize);
+
+        uint8_t *buf = nullptr;
+
+        if (aLength > 0)
+        {
+            buf = static_cast<uint8_t *>(malloc(aLength));
+            memcpy(buf, mData, aLength);
+            mData += aLength;
+            mSize -= aLength;
+        }
+
         return buf;
     }
 
-    uint8_t ConsumeIntegralInRange(uint8_t aMin, uint8_t aMax)
+    template <typename IntType> IntType ConsumeIntegralInRange(IntType aMin, IntType aMax)
     {
-        assert(aMin < aMax);
+        assert(aMin <= aMax);
 
-        uint16_t range = aMax - aMin;
-        uint8_t  result;
+        uint64_t range = static_cast<uint64_t>(aMax) - aMin;
+        IntType  result;
 
         ConsumeData(&result, sizeof(result));
 
-        result = result % (range + 1);
-
-        return result + aMin;
+        return (range == 0) ? aMin : static_cast<IntType>(aMin + (result % (range + 1)));
     }
 
     size_t RemainingBytes(void) { return mSize; }
@@ -85,18 +92,23 @@ private:
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    const uint16_t kMaxIterations  = 8;
+    const uint32_t kMaxAdvanceTime = 10000;
+
     FuzzDataProvider fdp(data, size);
 
     unsigned int seed;
     otRadioFrame frame;
     otError      error;
+    uint32_t     advanceTime;
 
-    if (size < sizeof(seed) + sizeof(error) + sizeof(frame))
+    if (size < sizeof(seed) + sizeof(error) + sizeof(frame) + sizeof(advanceTime) + sizeof(frame.mLength))
     {
         return 0;
     }
 
-    if (size > sizeof(seed) + sizeof(error) + sizeof(frame) + OT_RADIO_FRAME_MAX_SIZE)
+    if (size > sizeof(seed) + kMaxIterations * (sizeof(error) + sizeof(frame) + sizeof(advanceTime) +
+                                                sizeof(frame.mLength) + OT_RADIO_FRAME_MAX_SIZE))
     {
         return 0;
     }
@@ -128,31 +140,29 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     Log("---------------------------------------------------------------------------------------");
     Log("Fuzz");
 
-    error = static_cast<otError>(fdp.ConsumeIntegralInRange(OT_ERROR_NONE, OT_NUM_ERRORS - 1));
-
-    fdp.ConsumeData(&frame, sizeof(frame));
-
-    frame.mLength = fdp.RemainingBytes();
-
-    if (frame.mLength == 0)
+    for (uint16_t i = 0; i < kMaxIterations; i++)
     {
-        frame.mPsdu = NULL;
-    }
-    else
-    {
-        frame.mPsdu = fdp.ConsumeRemainingBytes();
-    }
+        if (fdp.RemainingBytes() < sizeof(error) + sizeof(frame) + sizeof(advanceTime) + sizeof(frame.mLength))
+        {
+            break;
+        }
 
-    otPlatRadioReceiveDone(&node.GetInstance(), &frame, error);
+        error = static_cast<otError>(fdp.ConsumeIntegralInRange<uint8_t>(OT_ERROR_NONE, OT_NUM_ERRORS - 1));
+        fdp.ConsumeData(&frame, sizeof(frame));
+        advanceTime   = fdp.ConsumeIntegralInRange(0u, kMaxAdvanceTime);
+        frame.mLength = fdp.ConsumeIntegralInRange<uint16_t>(
+            0, Min<size_t>(fdp.RemainingBytes() - sizeof(frame.mLength), OT_RADIO_FRAME_MAX_SIZE));
+        frame.mPsdu = fdp.ConsumeBytes(frame.mLength);
 
-    nexus.AdvanceTime(10 * 1000);
+        otPlatRadioReceiveDone(&node.GetInstance(), &frame, error);
 
-    if (frame.mPsdu)
-    {
+        nexus.AdvanceTime(advanceTime);
+
         free(frame.mPsdu);
     }
 
-exit:
+    nexus.AdvanceTime(10 * 1000);
+
     return 0;
 }
 

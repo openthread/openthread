@@ -83,12 +83,15 @@ static int CliOutput(void *aContext, const char *aFormat, va_list aArguments)
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    const uint16_t kMaxCommands    = 16;
     const uint16_t kMaxCommandSize = 4096;
 
     FuzzDataProvider fdp(data, size);
 
     unsigned int seed;
     uint8_t     *buffer;
+    char        *line;
+    uint16_t     numCommands = 0;
 
     if (size < sizeof(seed))
     {
@@ -131,7 +134,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     buffer = fdp.ConsumeRemainingBytes();
 
-    otCliInputLine(reinterpret_cast<char *>(buffer));
+    for (line = strtok(reinterpret_cast<char *>(buffer), "\n"); line != nullptr && numCommands < kMaxCommands;
+         line = strtok(nullptr, "\n"), numCommands++)
+    {
+        otCliInputLine(line);
+        nexus.AdvanceTime(10 * 1000);
+    }
 
     nexus.AdvanceTime(60 * 1000);
 
