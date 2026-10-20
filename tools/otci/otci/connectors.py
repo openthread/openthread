@@ -77,6 +77,9 @@ class OtCliPopen(OtCliHandler):
         self.__nodeid = nodeid
         self.__simulator = simulator
 
+        if self.__simulator is not None:
+            self.wait(0)
+
     def __repr__(self):
         return 'OTCli<%d>' % self.__nodeid
 
@@ -91,7 +94,7 @@ class OtCliPopen(OtCliHandler):
 
     def wait(self, duration: float, **kwargs):
         if self.__simulator is not None:
-            if kwargs.get('maybeoff', False):
+            if duration == 0 or kwargs.get('maybeoff', False):
                 kwargs['nodeid'] = self.__nodeid
 
             # Virtual time simulation
