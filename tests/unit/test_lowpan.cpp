@@ -2161,6 +2161,51 @@ void TestLowpanDecompressRecursion(void)
     printf("PASS\n\n");
 }
 
+#if OPENTHREAD_FTD
+void TestPrepareMeshFrame(void)
+{
+    Instance      *instance = testInitInstance();
+    Message       *message;
+    Mac::Addresses macAddrs;
+    Mac::TxFrame   txFrame{};
+    uint8_t        psdu[OT_RADIO_FRAME_MAX_SIZE];
+    uint16_t       maxPayload;
+
+    printf("\n=== Test name: Prepare Mesh Frame ===\n\n");
+
+    VerifyOrQuit(instance != nullptr);
+
+    txFrame.mPsdu = psdu;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    txFrame.SetRadioType(Radio::kTypeIeee802154);
+#endif
+
+    macAddrs.mSource.SetShort(0x1000);
+    macAddrs.mDestination.SetShort(0x2000);
+
+    message = instance->Get<MessagePool>().Allocate(Message::kType6lowpan);
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(instance->Get<MessageFramer>().PrepareMeshFrame(txFrame, *message, macAddrs));
+    maxPayload = txFrame.GetMtu() - txFrame.GetLength();
+
+    SuccessOrQuit(message->SetLength(maxPayload));
+    SuccessOrQuit(instance->Get<MessageFramer>().PrepareMeshFrame(txFrame, *message, macAddrs));
+    VerifyOrQuit(txFrame.GetLength() == txFrame.GetMtu());
+
+    SuccessOrQuit(message->SetLength(maxPayload + 1));
+    VerifyOrQuit(instance->Get<MessageFramer>().PrepareMeshFrame(txFrame, *message, macAddrs) == kErrorNoBufs);
+
+    SuccessOrQuit(message->SetLength(maxPayload - 1));
+    SuccessOrQuit(instance->Get<MessageFramer>().PrepareMeshFrame(txFrame, *message, macAddrs));
+    VerifyOrQuit(txFrame.GetLength() == txFrame.GetMtu() - 1);
+
+    message->Free();
+    testFreeInstance(instance);
+    printf("PASS\n\n");
+}
+#endif // OPENTHREAD_FTD
+
 } // namespace ot
 
 int main(void)
@@ -2169,6 +2214,9 @@ int main(void)
     ot::TestLowpanMeshHeader();
     ot::TestLowpanFragmentHeader();
     ot::TestLowpanDecompressRecursion();
+#if OPENTHREAD_FTD
+    ot::TestPrepareMeshFrame();
+#endif
 
     printf("All tests passed\n");
     return 0;
