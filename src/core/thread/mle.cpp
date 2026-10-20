@@ -4211,17 +4211,25 @@ void Mle::ParentCandidate::Clear(void)
 {
     Instance &instance = GetInstance();
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    RemoveAllForwardTrackingSeriesInfo();
+#endif
+
     ClearAllBytes(*this);
     Init(instance);
 }
 
-void Mle::ParentCandidate::CopyTo(Parent &aParent) const
+void Mle::ParentCandidate::CopyTo(Parent &aParent)
 {
     // We use an intermediate pointer to copy `ParentCandidate`
     // to silence code checker's warning about object slicing
     // (assigning a sub-class to base class instance).
 
-    const Parent *candidateAsParent = this;
+    Parent *candidateAsParent = this;
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    aParent.RemoveAllForwardTrackingSeriesInfo();
+#endif
 
     aParent = *candidateAsParent;
 }
