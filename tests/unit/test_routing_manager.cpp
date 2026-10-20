@@ -5141,12 +5141,13 @@ void TestDhcp6Pd(void)
         {kInvalidDhcp6Ra3, sizeof(kInvalidDhcp6Ra3)},
     };
 
-    Ip6::Prefix localOmr;
-    Ip6::Prefix prefix;
-    Ip6::Prefix ulaPrefix;
-    Ip6::Prefix newPrefix;
-    Ip6::Prefix shortPrefix;
-    uint16_t    heapAllocations;
+    Ip6::Prefix  localOmr;
+    Ip6::Prefix  prefix;
+    Ip6::Prefix  ulaPrefix;
+    Ip6::Prefix  newPrefix;
+    Ip6::Prefix  shortPrefix;
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    uint16_t     heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestDhcp6Pd");
@@ -5197,6 +5198,66 @@ void TestDhcp6Pd(void)
     // Deprecated prefixes will be removed.
     VerifyNoPdOmrPrefix();
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // AIL router advertises a default route, then a DHCPv6-PD prefix is delegated.
+
+    Log("DHCPv6-PD prefix with AIL default route");
+
+    SendRouterAdvert(routerAddressA, DefaultRoute(kValidLitime, NetworkData::kRoutePreferenceMedium));
+    AdvanceTime(10000);
+    VerifyNoPdOmrPrefix();
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute);
+
+    prefix = PrefixFromString("2001:db8:5:6::", 64);
+    ReportPdPrefixesAsRa({Pio(prefix, kValidLitime, kPreferredLifetime)});
+    sExpectedRios.Add(prefix);
+
+    // Check before the delayed routing policy evaluation can run.
+    AdvanceTime(100);
+    VerifyPdOmrPrefix(prefix);
+    VerifyOmrPrefixInNetData(prefix, /* aDefaultRoute */ true);
+    VerifyExternalRouteInNetData(kDefaultRoute);
+
+    AdvanceTime(10000);
+    VerifyPdOmrPrefix(prefix);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOmrPrefixInNetData(prefix, /* aDefaultRoute */ true);
+    VerifyExternalRouteInNetData(kDefaultRoute);
+
+    // Router A removes the default route.
+    SendRouterAdvert(routerAddressA, DefaultRoute(0, NetworkData::kRoutePreferenceMedium));
+    AdvanceTime(10000);
+    VerifyPdOmrPrefix(prefix);
+    VerifyOmrPrefixInNetData(prefix, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute);
+
+    // Restore and refresh the AIL default route every 500 seconds, before it becomes stale.
+    // PD prefix not renewed, so it can expire while the AIL default route remains active.
+    for (uint16_t index = 0; index < 3; index++)
+    {
+        SendRouterAdvert(routerAddressA, DefaultRoute(kValidLitime, NetworkData::kRoutePreferenceMedium));
+        AdvanceTime(500 * 1000);
+    }
+
+    sExpectedRios.Clear();
+    VerifyPdOmrPrefix(prefix);
+    VerifyOmrPrefixInNetData(prefix, /* aDefaultRoute */ true);
+    VerifyExternalRouteInNetData(kDefaultRoute);
+
+    SendRouterAdvert(routerAddressA, DefaultRoute(kValidLitime, NetworkData::kRoutePreferenceMedium));
+    AdvanceTime(400000);
+    VerifyNoPdOmrPrefix();
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute);
+
+    // Withdraw the AIL default route so subsequent cases start from the original state.
+    SendRouterAdvert(routerAddressA, DefaultRoute(0, NetworkData::kRoutePreferenceMedium));
+    AdvanceTime(10000);
+    VerifyNoPdOmrPrefix();
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Multiple prefixes are reported, ensure favored one is used.

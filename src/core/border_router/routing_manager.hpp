@@ -1083,6 +1083,7 @@ private:
     bool NetworkDataContainsUlaRoute(void) const;
 
     void HandleLocalOnLinkPrefixChanged(void);
+    void HandleFavoredOmrPrefixChanged(void);
 
     // Callback from `RxRaTracker`
     void HandleRxRaTrackerEvents(const RxRaTracker::Events &aEvents);
