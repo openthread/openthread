@@ -4782,6 +4782,15 @@ enum
      */
     SPINEL_PROP_RCP_RADIO_AVAILABILITY = SPINEL_PROP_RCP_EXT__BEGIN + 6,
 
+    /// Reserved RCP extension properties
+    /**
+     * Properties in the range [`SPINEL_PROP_RCP_EXT_RESERVED__BEGIN`, `SPINEL_PROP_RCP_EXT_RESERVED__END`) are reserved
+     * for RCP extensions under development out of tree, which may be merged back later. They MUST NOT be assigned to
+     * other properties.
+     */
+    SPINEL_PROP_RCP_EXT_RESERVED__BEGIN = SPINEL_PROP_RCP_EXT__BEGIN + 0xf0,
+    SPINEL_PROP_RCP_EXT_RESERVED__END   = SPINEL_PROP_RCP_EXT__BEGIN + 0x100,
+
     SPINEL_PROP_RCP_EXT__END = 0x900,
 
     SPINEL_PROP_MULTIPAN__BEGIN = 0x900,
