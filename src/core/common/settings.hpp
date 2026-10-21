@@ -784,10 +784,7 @@ public:
      * @retval kErrorNotFound   No corresponding value in the setting store.
      * @retval kErrorNoBufs     Buffer has not enough space to store the data.
      */
-    Error ReadTcatCommissionerCertificate(uint8_t *aCert, uint16_t &aCertLen)
-    {
-        return Get<SettingsDriver>().Get(kKeyTcatCommrCert, aCert, &aCertLen);
-    }
+    Error ReadTcatCommissionerCertificate(uint8_t *aCert, uint16_t &aCertLen) const;
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
     /**

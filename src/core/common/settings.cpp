@@ -234,6 +234,11 @@ void Settings::SaveTcatCommissionerCertificate(const uint8_t *aCert, uint16_t aC
 
     SuccessOrAssert(error);
 }
+
+Error Settings::ReadTcatCommissionerCertificate(uint8_t *aCert, uint16_t &aCertLen) const
+{
+    return Get<SettingsDriver>().Get(kKeyTcatCommrCert, aCert, &aCertLen);
+}
 #endif
 
 #if OPENTHREAD_FTD
