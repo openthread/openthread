@@ -131,4 +131,59 @@
 #define AssertPointerIsNotNull(aPointer)
 #endif
 
+/**
+ * @def OT_SECURITY_CHECK
+ *
+ * Release-surviving bounds check for buffer operations.
+ *
+ * Unlike `OT_ASSERT`, this check is never compiled out in release builds. On violation it traps immediately
+ * to prevent buffer overflows from propagating.
+ *
+ * Disable with `OPENTHREAD_CONFIG_SECURITY_CHECK_ENABLE=0` (not recommended outside benchmarks).
+ *
+ * @param[in]  cond  A Boolean expression that must be true for the operation to proceed safely.
+ */
+#ifndef OPENTHREAD_CONFIG_SECURITY_CHECK_ENABLE
+#define OPENTHREAD_CONFIG_SECURITY_CHECK_ENABLE 1
+#endif
+
+#if OPENTHREAD_CONFIG_SECURITY_CHECK_ENABLE
+
+#if defined(__GNUC__) || defined(__clang__)
+#define OT_SECURITY_CHECK(cond) \
+    do                          \
+    {                           \
+        if (!(cond))            \
+        {                       \
+            __builtin_trap();   \
+        }                       \
+    } while (0)
+#elif defined(_MSC_VER)
+#define OT_SECURITY_CHECK(cond) \
+    do                          \
+    {                           \
+        if (!(cond))            \
+        {                       \
+            __debugbreak();     \
+        }                       \
+    } while (0)
+#else
+#define OT_SECURITY_CHECK(cond) \
+    do                          \
+    {                           \
+        if (!(cond))            \
+        {                       \
+            while (1)           \
+            {                   \
+            }                   \
+        }                       \
+    } while (0)
+#endif
+
+#else // OPENTHREAD_CONFIG_SECURITY_CHECK_ENABLE
+
+#define OT_SECURITY_CHECK(cond)
+
+#endif // OPENTHREAD_CONFIG_SECURITY_CHECK_ENABLE
+
 #endif // OT_CORE_COMMON_DEBUG_HPP_

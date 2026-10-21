@@ -133,6 +133,7 @@ exit:
 
 void FrameBuilder::WriteBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength)
 {
+    OT_SECURITY_CHECK(static_cast<uint32_t>(aOffset) + aLength <= mLength);
     memcpy(mBuffer + aOffset, aBuffer, aLength);
 }
 
@@ -140,7 +141,7 @@ Error FrameBuilder::InsertBytes(uint16_t aOffset, const void *aBuffer, uint16_t 
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(aOffset <= mLength);
+    OT_SECURITY_CHECK(aOffset <= mLength);
 
     VerifyOrExit(CanAppend(aLength), error = kErrorNoBufs);
 
@@ -154,6 +155,7 @@ exit:
 
 void FrameBuilder::RemoveBytes(uint16_t aOffset, uint16_t aLength)
 {
+    OT_SECURITY_CHECK(static_cast<uint32_t>(aOffset) + aLength <= mLength);
     memmove(mBuffer + aOffset, mBuffer + aOffset + aLength, mLength - aOffset - aLength);
     mLength -= aLength;
 }
