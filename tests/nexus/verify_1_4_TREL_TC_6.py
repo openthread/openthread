@@ -37,6 +37,7 @@ sys.path.append(CUR_DIR)
 import verify_utils
 from pktverify import consts
 from pktverify.addrs import Ipv6Addr
+from pktverify.null_field import nullField
 
 
 def verify(pv):
@@ -177,10 +178,10 @@ def verify(pv):
         filter(lambda p: all(v >= 0 for v in verify_utils.as_list(p.mdns.srv.priority))).\
         filter(lambda p: all(v >= 0 for v in verify_utils.as_list(p.mdns.srv.weight))).\
         filter(lambda p: all(v > 0 for v in verify_utils.as_list(p.mdns.srv.port))).\
-        filter(lambda p: not hasattr(p.mdns, 'txt') or (XA_RECORD in verify_utils.as_list(p.mdns.txt) and
-                                                        XP_RECORD in verify_utils.as_list(p.mdns.txt))).\
-        filter(lambda p: not hasattr(p.mdns, 'aaaa') or (any(addr.is_link_local for addr in verify_utils.as_list(p.mdns.aaaa)) and
-                                                         any(addr[:8] == GUA_PREFIX_ADDR[:8] for addr in verify_utils.as_list(p.mdns.aaaa)))).\
+        filter(lambda p: p.mdns.txt is nullField or (XA_RECORD in verify_utils.as_list(p.mdns.txt) and
+                                                     XP_RECORD in verify_utils.as_list(p.mdns.txt))).\
+        filter(lambda p: p.mdns.aaaa is nullField or (any(addr.is_link_local for addr in verify_utils.as_list(p.mdns.aaaa)) and
+                                                      any(addr[:8] == GUA_PREFIX_ADDR[:8] for addr in verify_utils.as_list(p.mdns.aaaa)))).\
         must_next()
 
 
