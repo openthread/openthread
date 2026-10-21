@@ -734,6 +734,7 @@ Error Frame::DetermineLengths(Lengths &aLengths) const
     aLengths.mHeader     = info.mHeader.GetLength();
     aLengths.mPayload    = info.mPayload.GetLength();
     aLengths.mFooter     = GetLength() - aLengths.mHeader - aLengths.mPayload;
+    VerifyOrExit(static_cast<uint32_t>(aLengths.mHeader) + aLengths.mFooter <= GetMtu(), error = kErrorParse);
     aLengths.mMaxPayload = GetMtu() - (aLengths.mHeader + aLengths.mFooter);
 
 exit:
@@ -817,6 +818,7 @@ const HeaderIe *Frame::ParseInfo::FindHeaderIe(HeaderIeMatcher aMatcher) const
             ExitNow();
         }
 
+        VerifyOrExit(ieData.CanRead(ie->GetLength()));
         ieData.SkipOver(ie->GetLength());
     }
 
@@ -1046,6 +1048,10 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, con
     if (aIeLength > 0)
     {
         OT_ASSERT(aIeData != nullptr);
+        VerifyOrExit(static_cast<uint32_t>(ackInfo.mHeader.GetLength()) + aIeLength + ackInfo.mMicSize +
+                             GetFcsSize() <=
+                         GetMtu(),
+                     error = kErrorNoBufs);
 
         SetIePresent(true);
         memcpy(GetPsduStartingAt(ackInfo.mHeader.GetLength()), aIeData, aIeLength);
