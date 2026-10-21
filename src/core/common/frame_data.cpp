@@ -34,6 +34,7 @@
 #include "frame_data.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/encoding.hpp"
 
 namespace ot {
@@ -72,7 +73,11 @@ exit:
     return error;
 }
 
-void FrameData::SkipOver(uint16_t aLength) { Init(GetBytes() + aLength, GetLength() - aLength); }
+void FrameData::SkipOver(uint16_t aLength)
+{
+    OT_SECURITY_CHECK(aLength <= GetLength());
+    Init(GetBytes() + aLength, GetLength() - aLength);
+}
 
 const void *FrameData::ReadLength(uint16_t aLength)
 {

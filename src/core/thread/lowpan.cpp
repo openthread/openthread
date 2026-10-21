@@ -1087,12 +1087,15 @@ void Lowpan::MarkCompressedEcn(Message &aMessage, uint16_t aOffset)
     uint8_t byte;
 
     aOffset += sizeof(uint16_t);
-    IgnoreError(aMessage.Read(aOffset, byte));
+    SuccessOrExit(aMessage.Read(aOffset, byte));
 
     byte &= ~kEcnMask;
     byte |= static_cast<uint8_t>(Ip6::kEcnMarked << kEcnOffset);
 
     aMessage.Write(aOffset, byte);
+
+exit:
+    return;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

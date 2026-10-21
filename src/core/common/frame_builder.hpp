@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/error.hpp"
 #include "common/type_traits.hpp"
@@ -313,6 +314,7 @@ public:
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
+        OT_SECURITY_CHECK(static_cast<uint32_t>(aOffset) + sizeof(ObjectType) <= mLength);
         return reinterpret_cast<ObjectType *>(mBuffer + aOffset);
     }
 

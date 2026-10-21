@@ -518,6 +518,7 @@ public:
      */
     HasRouteEntry *GetEntry(uint8_t aIndex)
     {
+        OT_SECURITY_CHECK(aIndex < GetNumEntries());
         return reinterpret_cast<HasRouteEntry *>(GetValue() + (aIndex * sizeof(HasRouteEntry)));
     }
 
@@ -530,6 +531,7 @@ public:
      */
     const HasRouteEntry *GetEntry(uint8_t aIndex) const
     {
+        OT_SECURITY_CHECK(aIndex < GetNumEntries());
         return reinterpret_cast<const HasRouteEntry *>(GetValue() + (aIndex * sizeof(HasRouteEntry)));
     }
 
@@ -1032,6 +1034,7 @@ public:
      */
     BorderRouterEntry *GetEntry(uint8_t aIndex)
     {
+        OT_SECURITY_CHECK(aIndex < GetNumEntries());
         return reinterpret_cast<BorderRouterEntry *>(GetValue() + (aIndex * sizeof(BorderRouterEntry)));
     }
 
@@ -1044,6 +1047,7 @@ public:
      */
     const BorderRouterEntry *GetEntry(uint8_t aIndex) const
     {
+        OT_SECURITY_CHECK(aIndex < GetNumEntries());
         return reinterpret_cast<const BorderRouterEntry *>(GetValue() + (aIndex * sizeof(BorderRouterEntry)));
     }
 

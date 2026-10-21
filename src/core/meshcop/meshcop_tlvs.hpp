@@ -42,6 +42,7 @@
 
 #include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
+#include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/num_utils.hpp"
@@ -1128,7 +1129,7 @@ public:
      */
     void SetAdvData(const uint8_t *aAdvData, uint8_t aAdvDataLength)
     {
-        OT_ASSERT((aAdvData != nullptr) && (aAdvDataLength > 0) && (aAdvDataLength <= kAdvDataMaxLength));
+        OT_SECURITY_CHECK((aAdvData != nullptr) && (aAdvDataLength > 0) && (aAdvDataLength <= kAdvDataMaxLength));
 
         SetLength(aAdvDataLength + sizeof(mOui));
         memcpy(mAdvData, aAdvData, aAdvDataLength);

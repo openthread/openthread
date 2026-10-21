@@ -39,6 +39,7 @@
 #include "common/as_core_type.hpp"
 #include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
+#include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/frame_builder.hpp"
 #include "common/num_utils.hpp"
@@ -396,7 +397,11 @@ public:
      *
      * @returns The length of Link Metrics Data in bytes.
      */
-    uint8_t GetMetricsDataLen(void) const { return GetSize() - sizeof(LinkMetricsProbingIe); }
+    uint8_t GetMetricsDataLen(void) const
+    {
+        OT_SECURITY_CHECK(GetSize() >= sizeof(LinkMetricsProbingIe));
+        return GetSize() - sizeof(LinkMetricsProbingIe);
+    }
 
     /**
      * Returns a pointer to the Link Metrics Data bytes.

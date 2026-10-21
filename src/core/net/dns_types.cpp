@@ -403,9 +403,9 @@ Error Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuff
         case kErrorNotFound:
             // We reach the end of name successfully. Always add a terminating dot
             // at the end.
+            VerifyOrExit(aNameBufferSize >= 2, error = kErrorNoBufs);
             *aNameBuffer++ = kLabelSeparatorChar;
             aNameBufferSize--;
-            VerifyOrExit(aNameBufferSize >= sizeof(uint8_t), error = kErrorNoBufs);
             *aNameBuffer = kNullChar;
             aOffset      = iterator.mNameEndOffset;
             error        = kErrorNone;
@@ -602,6 +602,7 @@ Error Name::LabelIterator::GetNextLabel(void)
 
             uint16_t pointerValue;
             uint16_t nextLabelOffset;
+            uint32_t nextOffset;
 
             SuccessOrExit(error = mMessage.Read(mNextLabelOffset, pointerValue));
 
@@ -612,8 +613,10 @@ Error Name::LabelIterator::GetNextLabel(void)
 
             // `mMessage.GetOffset()` must point to the start of the
             // DNS header.
-            nextLabelOffset = mMessage.GetOffset() + (BigEndian::HostSwap16(pointerValue) & kPointerLabelOffsetMask);
-            VerifyOrExit(nextLabelOffset < mMinLabelOffset, error = kErrorParse);
+            nextOffset = static_cast<uint32_t>(mMessage.GetOffset()) +
+                         (BigEndian::HostSwap16(pointerValue) & kPointerLabelOffsetMask);
+            VerifyOrExit(nextOffset < mMinLabelOffset, error = kErrorParse);
+            nextLabelOffset  = static_cast<uint16_t>(nextOffset);
             mNextLabelOffset = nextLabelOffset;
             mMinLabelOffset  = nextLabelOffset;
 
