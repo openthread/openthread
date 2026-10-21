@@ -175,7 +175,11 @@ void Interpreter::OutputResult(otError aError)
         ExitNow();
     }
 
+#if OPENTHREAD_PLATFORM_NEXUS
+    VerifyOrExit(mCommandIsPending);
+#else
     OT_ASSERT(mCommandIsPending);
+#endif
 
     VerifyOrExit(aError != OT_ERROR_PENDING);
 
