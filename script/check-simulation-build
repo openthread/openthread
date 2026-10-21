@@ -31,7 +31,7 @@ set -euxo pipefail
 
 main()
 {
-    "$(dirname "$0")"/check-simulation-build-cmake
+    "$(dirname "$0")"/check-simulation-build-cmake "$@"
 }
 
 main "$@"

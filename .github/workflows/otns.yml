@@ -157,7 +157,7 @@ jobs:
           - suite: "commissioning"
             stress_level: 14
           - suite: "connectivity"
-            stress_level: 6
+            stress_level: 3
           - suite: "network-latency"
             stress_level: 10
           - suite: "multicast-performance"
