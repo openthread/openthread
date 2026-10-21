@@ -37,6 +37,7 @@
 #include "nexus_radio_model.hpp"
 #include "thread/child_table.hpp"
 #include "thread/mle.hpp"
+#include "thread/network_data_leader.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -57,6 +58,7 @@ Core::Core(void)
     sCore  = this;
     sInUse = true;
 
+    ClearAllBytes(mLowpanContexts);
     mNextAlarmTime = NumericLimits<uint64_t>::kMax;
 
     pcapFile = getenv("OT_NEXUS_PCAP_FILE");
@@ -271,6 +273,35 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
     }
     fprintf(file, "  },\n");
 
+    for (Node &node : mNodes)
+    {
+        UpdateLowpanContexts(node);
+    }
+
+    fprintf(file, "  \"lowpan_contexts\": {\n");
+    {
+        bool first = true;
+
+        for (uint8_t cid = 1; cid < GetArrayLength(mLowpanContexts); cid++)
+        {
+            const Ip6::Prefix &prefix = mLowpanContexts[cid];
+
+            if (prefix.GetLength() == 0)
+            {
+                continue;
+            }
+
+            fprintf(file, "%s    \"%u\": \"%s\"", first ? "" : ",\n", cid, prefix.ToString().AsCString());
+            first = false;
+        }
+
+        if (!first)
+        {
+            fprintf(file, "\n");
+        }
+    }
+    fprintf(file, "  },\n");
+
     fprintf(file, "  \"extra_vars\": {\n");
     if (leaderNode != nullptr)
     {
@@ -297,6 +328,20 @@ exit:
 }
 
 void Core::AddNetworkKey(const NetworkKey &aKey) { SuccessOrQuit(mNetworkKeys.PushBack(aKey)); }
+
+void Core::UpdateLowpanContexts(Node &aNode)
+{
+    NetworkData::Iterator          iterator = NetworkData::kIteratorInit;
+    NetworkData::LowpanContextInfo contextInfo;
+
+    while (aNode.Get<NetworkData::Leader>().GetNext(iterator, contextInfo) == kErrorNone)
+    {
+        if ((contextInfo.mContextId >= 1) && (contextInfo.mContextId < GetArrayLength(mLowpanContexts)))
+        {
+            mLowpanContexts[contextInfo.mContextId] = AsConst(contextInfo).GetPrefix();
+        }
+    }
+}
 
 Core::TestVar &Core::NewTestVar(const char *aName)
 {
@@ -513,10 +558,13 @@ exit:
 
 void Core::HandleStateChanged(otChangedFlags aFlags, void *aContext)
 {
-    OT_UNUSED_VARIABLE(aFlags);
-
     Core &core = Core::Get();
     Node *node = static_cast<Node *>(aContext);
+
+    if ((node != nullptr) && ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0))
+    {
+        core.UpdateLowpanContexts(*node);
+    }
 
     VerifyOrExit(!core.mObservers.IsEmpty() && node != nullptr);
 
@@ -665,6 +713,7 @@ bool Core::IsUiConnected(void) const
 void Core::Reset(void)
 {
     mNodes.Clear();
+    ClearAllBytes(mLowpanContexts);
     mCurNodeId     = 0;
     mNow           = 0;
     mNextAlarmTime = NumericLimits<uint64_t>::kMax;

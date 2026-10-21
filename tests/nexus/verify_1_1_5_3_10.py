@@ -75,10 +75,6 @@ def verify(pv):
     ROUTER_1_GUA = [addr for addr in pv.vars['ROUTER_1_IPADDRS'] if str(addr).lower().startswith('2003:')][0]
     MED_1_GUA = [addr for addr in pv.vars['MED_1_IPADDRS'] if str(addr).lower().startswith('2003:')][0]
 
-    def is_same_iid(addr1, addr2):
-        # Compare only the last 64 bits (IID)
-        return addr1[8:] == addr2[8:]
-
     # Step 1: Border Router
     # - Description: Harness configures the device with the two On-Mesh Prefixes below:
     #   - Prefix 1: P_Prefix=2003::/64 P_stable=1 P_default=1 P_slaac=1 P_on_mesh=1 P_preferred=1
@@ -108,20 +104,20 @@ def verify(pv):
         filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
         filter_coap_request(consts.ADDR_QRY_URI).\
         filter(lambda p: p.coap.type == COAP_TYPE_NON).\
-        filter(lambda p: is_same_iid(p.coap.tlv.target_eid, ROUTER_1_GUA)).\
+        filter(lambda p: p.coap.tlv.target_eid == ROUTER_1_GUA).\
         must_next()
 
     # 2. Address Notification to DUT
     pkts.filter_coap_request(consts.ADDR_NTF_URI).\
         filter_ipv6_dst(DUT_RLOC).\
-        filter(lambda p: is_same_iid(p.coap.tlv.target_eid, ROUTER_1_GUA)).\
+        filter(lambda p: p.coap.tlv.target_eid == ROUTER_1_GUA).\
         must_next()
 
     # 3. DUT forwards Echo Request to Router_1
     pkts.filter_wpan_src16(DUT_RLOC16).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_ping_request().\
-        filter(lambda p: is_same_iid(p.ipv6.dst, ROUTER_1_GUA)).\
+        filter_ipv6_dst(ROUTER_1_GUA).\
         must_next()
 
     # Step 4: Border Router
@@ -140,7 +136,7 @@ def verify(pv):
     # Border Router sends Address Query for MED_1 GUA
     pkts.filter_wpan_src16(BR_RLOC16).\
         filter_coap_request(consts.ADDR_QRY_URI).\
-        filter(lambda p: is_same_iid(p.coap.tlv.target_eid, MED_1_GUA)).\
+        filter(lambda p: p.coap.tlv.target_eid == MED_1_GUA).\
         must_next()
 
     # DUT responds with Address Notification
@@ -154,7 +150,7 @@ def verify(pv):
                           consts.NL_RLOC16_TLV,
                           consts.NL_ML_EID_TLV
                           } <= set(p.coap.tlv.type)).\
-        filter(lambda p: is_same_iid(p.coap.tlv.target_eid, MED_1_GUA)).\
+        filter(lambda p: p.coap.tlv.target_eid == MED_1_GUA).\
         must_next()
 
     # Step 5: MED_1
@@ -169,7 +165,7 @@ def verify(pv):
     # First, find the Echo Reply being forwarded to MED_1.
     pkts.filter_wpan_src16(DUT_RLOC16).\
         filter_ping_reply().\
-        filter(lambda p: is_same_iid(p.ipv6.dst, MED_1_GUA)).\
+        filter_ipv6_dst(MED_1_GUA).\
         must_next()
     end_of_step_5 = pkts.index
 
@@ -177,7 +173,7 @@ def verify(pv):
     pkts.range(start_of_step_5, end_of_step_5).\
         filter_wpan_src16(DUT_RLOC16).\
         filter_coap_request(consts.ADDR_QRY_URI).\
-        filter(lambda p: is_same_iid(p.coap.tlv.target_eid, ROUTER_1_GUA)).\
+        filter(lambda p: p.coap.tlv.target_eid == ROUTER_1_GUA).\
         must_not_next()
 
     # Step 6: Router_2 (DUT)
@@ -190,7 +186,7 @@ def verify(pv):
 
     pkts.filter_wpan_src16(DUT_RLOC16).\
         filter_coap_request(consts.ADDR_QRY_URI).\
-        filter(lambda p: is_same_iid(p.coap.tlv.target_eid, ROUTER_1_GUA)).\
+        filter(lambda p: p.coap.tlv.target_eid == ROUTER_1_GUA).\
         must_next()
 
     # Step 7: MED_1
@@ -204,14 +200,14 @@ def verify(pv):
     # Border Router sends Address Query for MED_1 GUA
     pkts.filter_wpan_src16(BR_RLOC16).\
         filter_coap_request(consts.ADDR_QRY_URI).\
-        filter(lambda p: is_same_iid(p.coap.tlv.target_eid, MED_1_GUA)).\
+        filter(lambda p: p.coap.tlv.target_eid == MED_1_GUA).\
         must_next()
 
     # DUT must NOT respond with Address Notification
     with pkts.save_index():
         pkts.filter_ipv6_src(DUT_RLOC).\
             filter_coap_request(consts.ADDR_NTF_URI).\
-            filter(lambda p: is_same_iid(p.coap.tlv.target_eid, MED_1_GUA)).\
+            filter(lambda p: p.coap.tlv.target_eid == MED_1_GUA).\
             must_not_next()
 
 

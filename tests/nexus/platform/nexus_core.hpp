@@ -41,6 +41,7 @@
 #include "common/array.hpp"
 #include "common/owning_list.hpp"
 #include "instance/instance.hpp"
+#include "net/ip6_address.hpp"
 #include "thread/key_manager.hpp"
 
 namespace ot {
@@ -156,6 +157,7 @@ private:
     };
 
     TestVar &NewTestVar(const char *aName);
+    void     UpdateLowpanContexts(Node &aNode);
 
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);
@@ -173,6 +175,7 @@ private:
     Pcap                  mPcap;
     Array<NetworkKey, 16> mNetworkKeys;
     Array<TestVar, 128>   mTestVars;
+    Ip6::Prefix           mLowpanContexts[16];
     uint16_t              mCurNodeId;
     bool                  mPendingAction;
     bool                  mSaveNodeLogs;
