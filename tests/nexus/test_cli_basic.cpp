@@ -234,6 +234,18 @@ void TestCliBasic(void)
     VerifyOrQuit(leader.GetCliOutputLines()[0].EndsWith("Error 28: ResponseTimeout"));
 
     Log("---------------------------------------------------------------------------------------");
+    Log("Check `factoryreset` while an asynchronous CLI command is pending");
+
+    leader.InputCli("dns browse _test._udp.default.service.arpa");
+    VerifyOrQuit(leader.GetCliOutputLines().GetLength() == 0);
+
+    leader.InputCli("factoryreset");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    nexus.AdvanceTime(25 * Time::kOneSecondInMsec);
+    VerifyOrQuit(leader.GetCliOutputLines().GetLength() == 2);
+
+    Log("---------------------------------------------------------------------------------------");
     Log("Check behavior with an invalid CLI command");
 
     leader.InputCli("invalidcommand");
