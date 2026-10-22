@@ -272,6 +272,76 @@ expect_line "Done"
 send "diag rawpowersetting disable\n"
 expect_line "Done"
 
+send_user "radio promiscuous test\n"
+send "diag radio promiscuous\n"
+expect_line "enabled"
+expect_line "Done"
+
+send "diag radio promiscuous disable\n"
+expect_line "Done"
+
+send "diag radio promiscuous\n"
+expect_line "disabled"
+expect_line "Done"
+
+send "diag radio promiscuous enable\n"
+expect_line "Done"
+
+send "diag radio promiscuous\n"
+expect_line "enabled"
+expect_line "Done"
+
+send "diag radio promiscuous invalid\n"
+expect "Error 7: InvalidArgs"
+
+send "diag radio promiscuous enable foo\n"
+expect "Error 7: InvalidArgs"
+
+send_user "radio panid test\n"
+send "diag radio panid 0x1234\n"
+expect_line "Done"
+
+send "diag radio panid\n"
+expect_line "0x1234"
+expect_line "Done"
+
+send "diag radio panid 0x12345\n"
+expect "Error 7: InvalidArgs"
+
+send "diag radio panid 0x1234 foo\n"
+expect "Error 7: InvalidArgs"
+
+send_user "radio shortaddr test\n"
+send "diag radio shortaddr 0xaaaa\n"
+expect_line "Done"
+
+send "diag radio shortaddr\n"
+expect_line "0xaaaa"
+expect_line "Done"
+
+send "diag radio shortaddr invalid\n"
+expect "Error 7: InvalidArgs"
+
+send "diag radio shortaddr 0xaaaa foo\n"
+expect "Error 7: InvalidArgs"
+
+send_user "radio extaddr test\n"
+send "diag radio extaddr 8070605040302010\n"
+expect_line "Done"
+
+send "diag radio extaddr\n"
+expect_line "8070605040302010"
+expect_line "Done"
+
+send "diag radio extaddr 80706050403020\n"
+expect "Error 7: InvalidArgs"
+
+send "diag radio extaddr 807060504030201000\n"
+expect "Error 7: InvalidArgs"
+
+send "diag radio extaddr 8070605040302010 foo\n"
+expect "Error 7: InvalidArgs"
+
 send "diag invalid_commad\n"
 expect "Error 35: InvalidCommand"
 
@@ -280,5 +350,36 @@ expect_line "Done"
 
 send "diag channel\n"
 expect "Error 13: InvalidState"
+
+send_user "radio address reset test\n"
+send "panid\n"
+set panid [expect_line {0x[0-9a-f]{4}}]
+expect_line "Done"
+
+send "extaddr\n"
+set extaddr [expect_line {[0-9a-f]{16}}]
+expect_line "Done"
+
+send "diag start\n"
+expect_line "Done"
+
+send "diag radio promiscuous\n"
+expect_line "enabled"
+expect_line "Done"
+
+send "diag radio panid\n"
+expect_line $panid
+expect_line "Done"
+
+send "diag radio shortaddr\n"
+expect_line "0xfffe"
+expect_line "Done"
+
+send "diag radio extaddr\n"
+expect_line $extaddr
+expect_line "Done"
+
+send "diag stop\n"
+expect_line "Done"
 
 dispose_all
