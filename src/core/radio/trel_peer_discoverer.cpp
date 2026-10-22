@@ -161,13 +161,8 @@ void PeerDiscoverer::RegisterService(void)
 
 extern "C" void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo)
 {
-    Instance &instance = AsCoreType(aInstance);
-
-    VerifyOrExit(instance.IsInitialized());
-    instance.Get<PeerDiscoverer>().HandleDiscoveredPeerInfo(*static_cast<const PeerDiscoverer::PeerInfo *>(aInfo));
-
-exit:
-    return;
+    AsCoreType(aInstance).Get<PeerDiscoverer>().HandleDiscoveredPeerInfo(
+        *static_cast<const PeerDiscoverer::PeerInfo *>(aInfo));
 }
 
 void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)

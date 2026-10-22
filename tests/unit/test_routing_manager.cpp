@@ -4556,9 +4556,7 @@ void TestSavedOnLinkPrefixes(void)
 
     Log("Disabling and re-enabling OT Instance");
 
-    testFreeInstance(sInstance);
-
-    InitTest(/* aEnablBorderRouting */ true, /* aAfterReset */ true);
+    InitTest(/* aEnablBorderRouting */ true, /* aResetInstance */ true);
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 

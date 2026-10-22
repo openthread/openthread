@@ -78,7 +78,8 @@ LogLevel Instance::sGlobalLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG
 #endif
 
 Instance::Instance(void)
-    : mActiveInstanceTracker(*this)
+    : mIsInitialized(false)
+    , mActiveInstanceTracker(*this)
     , mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
@@ -329,7 +330,6 @@ Instance::Instance(void)
 #else
 #endif
 #endif
-    , mIsInitialized(false)
     , mId(Random::NonCrypto::Generate<uint32_t>())
 {
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && \
@@ -363,15 +363,10 @@ Utils::Heap &Instance::GetHeap(void)
 
 Instance &Instance::InitSingle(void)
 {
-    Instance *instance = &Get();
-
-    VerifyOrExit(!instance->mIsInitialized);
-
-    instance = new (&gInstanceRaw) Instance();
+    Instance *instance = new (&gInstanceRaw) Instance();
 
     instance->AfterInit();
 
-exit:
     return *instance;
 }
 
@@ -390,10 +385,9 @@ Instance *Instance::InitMultiple(uint8_t aIdx)
 {
     size_t    bufferSize;
     uint64_t *instanceBuffer = gMultiInstanceRaw + aIdx * kInstanceSizeInUint64s;
-    Instance *instance       = reinterpret_cast<Instance *>(instanceBuffer);
+    Instance *instance       = nullptr;
 
     VerifyOrExit(aIdx < kNumStaticInstances);
-    VerifyOrExit(!instance->mIsInitialized);
 
     bufferSize = (&gMultiInstanceRaw[kMultiInstanceSizeInUint64s] - instanceBuffer) * sizeof(uint64_t);
     instance   = Instance::Init(instanceBuffer, &bufferSize);
@@ -487,8 +481,6 @@ void Instance::AfterInit(void)
 
 void Instance::Finalize(void)
 {
-    VerifyOrExit(mIsInitialized);
-
     mIsInitialized = false;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -505,9 +497,6 @@ void Instance::Finalize(void)
     IgnoreError(Get<Mac::SubMac>().Disable());
 
     this->~Instance();
-
-exit:
-    return;
 }
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
