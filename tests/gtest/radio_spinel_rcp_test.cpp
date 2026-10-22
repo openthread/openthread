@@ -105,7 +105,7 @@ TEST(RadioSpinelTransmit, shouldCauseSwitchingToRxChannelAfterTxDone)
     constexpr int8_t     kTxPower   = 100;
 
     uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
-    Mac::TxFrame txFrame;
+    Mac::TxFrame txFrame{};
 
     txFrame.mPsdu = frameBuffer;
 
@@ -257,7 +257,7 @@ TEST(RadioSpinelTransmit, shouldNotCauseSwitchingToRxAfterTxDoneIfNotRxOnWhenIdl
     constexpr int8_t     kTxPower   = 100;
 
     uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
-    Mac::TxFrame txFrame;
+    Mac::TxFrame txFrame{};
 
     txFrame.mPsdu = frameBuffer;
 
