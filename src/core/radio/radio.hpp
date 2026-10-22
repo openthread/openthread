@@ -138,6 +138,7 @@ enum Capability : uint16_t
     kCapRxOnWhenIdle       = OT_RADIO_CAPS_RX_ON_WHEN_IDLE,      ///< Supports RxOnWhenIdle handling.
     kCapTransmitFramePower = OT_RADIO_CAPS_TRANSMIT_FRAME_POWER, ///< Supports setting per-frame transmit power.
     kCapAltShortAddr       = OT_RADIO_CAPS_ALT_SHORT_ADDR,       ///< Supports setting alternate short address.
+    kCapScheduledTx        = OT_RADIO_CAPS_SCHEDULED_TX,         ///< Radio supports scheduling frame TX.
 };
 
 /**
@@ -226,6 +227,19 @@ public:
      *                        channel, kErrorAbort when transmission was aborted for other reasons.
      */
     void HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, Error aError);
+
+    /**
+     * This callback method handles a "Scheduled Transmit Done" event from radio platform.
+     *
+     * Used when radio provides the `kCapScheduledTx` capability. It is called from `otPlatRadioScheduledTxDone()`.
+     *
+     * @param[in]  aAckFrame  A pointer to the ACK frame, `nullptr` if no ACK was received.
+     * @param[in]  aError     kErrorNone when the frame was transmitted,
+     *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                        kErrorChannelAccessFailure tx could not take place due to activity on the
+     *                        channel, kErrorAbort when transmission was aborted for other reasons.
+     */
+    void HandleScheduledTxDone(Mac::RxFrame *aAckFrame, Error aError);
 
     /**
      * This callback method handles "Energy Scan Done" event from radio platform.
@@ -682,6 +696,44 @@ public:
     Error Transmit(Mac::TxFrame &aFrame);
 
     /**
+     * Gets the radio frame buffer for scheduled transmissions.
+     *
+     * Used when radio provides the `kCapScheduledTx` capability.
+     *
+     * OpenThread forms the IEEE 802.15.4 frame in this buffer then calls `ScheduleTx()` to schedule transmission.
+     *
+     * @returns A reference to the scheduled transmit frame buffer.
+     */
+    Mac::TxFrame &GetScheduledTxFrame(void);
+
+    /**
+     * Schedules a frame transmission at a specific target radio time.
+     *
+     * Used when radio provides the `kCapScheduledTx` capability.
+     *
+     * The caller must form the IEEE 802.15.4 frame in the buffer provided by `GetScheduledTxFrame()` before
+     * scheduling transmission.
+     *
+     * @param[in] aTxTime  The target transmission time (end of SFD at the local antenna) in microseconds relative to
+     *                     the local radio clock (see `GetNow()`).
+     *
+     * @retval kErrorNone          Successfully scheduled the frame transmission.
+     * @retval kErrorBusy          A previously scheduled transmission is still active.
+     * @retval kErrorInvalidState  The radio is disabled.
+     */
+    Error ScheduleTx(Time64 aTxTime);
+
+    /**
+     * Cancels a previously scheduled transmission.
+     *
+     * Used when radio provides the `kCapScheduledTx` capability.
+     *
+     * @retval kErrorNone  Successfully canceled the scheduled transmission (or no scheduled transmission was pending).
+     * @retval kErrorBusy  The scheduled transmission has already started and could not be canceled.
+     */
+    Error CancelScheduledTx(void);
+
+    /**
      * Gets the most recent RSSI measurement.
      *
      * @returns The RSSI in dBm when it is valid.  127 when RSSI is invalid.
@@ -1039,6 +1091,15 @@ inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
     return *static_cast<Mac::TxFrame *>(otPlatRadioGetTransmitBuffer(GetInstancePtr()));
 }
 
+inline Mac::TxFrame &Radio::GetScheduledTxFrame(void)
+{
+    return *static_cast<Mac::TxFrame *>(otPlatRadioGetScheduledTxFrame(GetInstancePtr()));
+}
+
+inline Error Radio::ScheduleTx(Time64 aTxTime) { return otPlatRadioScheduleTx(GetInstancePtr(), aTxTime); }
+
+inline Error Radio::CancelScheduledTx(void) { return otPlatRadioCancelScheduledTx(GetInstancePtr()); }
+
 inline int8_t Radio::GetRssi(void) { return otPlatRadioGetRssi(GetInstancePtr()); }
 
 inline Error Radio::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
@@ -1138,6 +1199,15 @@ inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
 }
 
 inline Error Radio::Transmit(Mac::TxFrame &) { return kErrorAbort; }
+
+inline Mac::TxFrame &Radio::GetScheduledTxFrame(void)
+{
+    return *static_cast<Mac::TxFrame *>(otPlatRadioGetScheduledTxFrame(GetInstancePtr()));
+}
+
+inline Error Radio::ScheduleTx(Time64) { return kErrorNotImplemented; }
+
+inline Error Radio::CancelScheduledTx(void) { return kErrorNotImplemented; }
 
 inline int8_t Radio::GetRssi(void) { return kInvalidRssi; }
 

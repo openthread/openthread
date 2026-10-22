@@ -673,6 +673,12 @@ exit:
     return;
 }
 
+void SubMac::HandleScheduledTxDone(RxFrame *aAckFrame, Error aError)
+{
+    OT_UNUSED_VARIABLE(aAckFrame);
+    OT_UNUSED_VARIABLE(aError);
+}
+
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
 void SubMac::ReprocessSecurityForRetx(TxFrame::ParseInfo &aFrameInfo)

@@ -115,6 +115,21 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     }
 }
 
+extern "C" void otPlatRadioScheduledTxDone(otInstance *aInstance, otRadioFrame *aAckFrame, otError aError)
+{
+    Instance     &instance = AsCoreType(aInstance);
+    Mac::RxFrame *ackFrame = static_cast<Mac::RxFrame *>(aAckFrame);
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (ackFrame != nullptr)
+    {
+        ackFrame->SetRadioType(Radio::kTypeIeee802154);
+    }
+#endif
+
+    instance.Get<Radio::Callbacks>().HandleScheduledTxDone(ackFrame, aError);
+}
+
 extern "C" void otPlatRadioAvailabilityUpdated(otInstance *aInstance)
 {
     AsCoreType(aInstance).Get<Radio::Callbacks>().HandleRadioAvailabilityUpdated();
@@ -171,6 +186,8 @@ extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *, otError) {}
 extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *) {}
 
 extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *, otRadioFrame *, otError) {}
+
+extern "C" void otPlatRadioScheduledTxDone(otInstance *, otRadioFrame *, otError) {}
 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t) {}
 
@@ -354,6 +371,28 @@ extern "C" OT_TOOL_WEAK otError otPlatRadioReceiveAt(otInstance   *aInstance,
     OT_UNUSED_VARIABLE(aChannel);
     OT_UNUSED_VARIABLE(aStart);
     OT_UNUSED_VARIABLE(aDuration);
+
+    return kErrorNotImplemented;
+}
+
+extern "C" OT_TOOL_WEAK otRadioFrame *otPlatRadioGetScheduledTxFrame(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return nullptr;
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioScheduleTx(otInstance *aInstance, otRadioTime64 aTxTime)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aTxTime);
+
+    return kErrorNotImplemented;
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioCancelScheduledTx(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
 
     return kErrorNotImplemented;
 }
