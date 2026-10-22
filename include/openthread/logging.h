@@ -43,6 +43,10 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>
 
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#include OPENTHREAD_CONFIG_LOG_OFFLOADING_HEADER_FILE
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -129,10 +133,17 @@ otError otLoggingSetLevel(otLogLevel aLogLevel);
  * Is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
  * level is below critical, this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_CRIT()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otLogCritPlat(...) OT_LOG_PLATFORM_CRIT("Platform", __VA_ARGS__)
+#else
 void otLogCritPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+#endif
 
 /**
  * Emits a log message at warning log level.
@@ -140,10 +151,17 @@ void otLogCritPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  * Is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
  * level is below warning, this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_WARN()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otLogWarnPlat(...) OT_LOG_PLATFORM_WARN("Platform", __VA_ARGS__)
+#else
 void otLogWarnPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+#endif
 
 /**
  * Emits a log message at note log level.
@@ -151,10 +169,17 @@ void otLogWarnPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  * Is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
  * level is below note, this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_NOTE()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otLogNotePlat(...) OT_LOG_PLATFORM_NOTE("Platform", __VA_ARGS__)
+#else
 void otLogNotePlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+#endif
 
 /**
  * Emits a log message at info log level.
@@ -162,10 +187,17 @@ void otLogNotePlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  * Is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
  * level is below info, this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_INFO()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otLogInfoPlat(...) OT_LOG_PLATFORM_INFO("Platform", __VA_ARGS__)
+#else
 void otLogInfoPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+#endif
 
 /**
  * Emits a log message at debug log level.
@@ -173,10 +205,17 @@ void otLogInfoPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  * Is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
  * level is below debug, this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_DEBG()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otLogDebgPlat(...) OT_LOG_PLATFORM_DEBG("Platform", __VA_ARGS__)
+#else
 void otLogDebgPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+#endif
 
 /**
  * Generates a memory dump at critical log level.
@@ -184,11 +223,18 @@ void otLogDebgPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
  * critical this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_DUMP_CRIT()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otDumpCritPlat(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_CRIT("Platform", aText, aData, aDataLength)
+#else
 void otDumpCritPlat(const char *aText, const void *aData, uint16_t aDataLength);
+#endif
 
 /**
  * Generates a memory dump at warning log level.
@@ -196,11 +242,18 @@ void otDumpCritPlat(const char *aText, const void *aData, uint16_t aDataLength);
  * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
  * warning this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_DUMP_WARN()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otDumpWarnPlat(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_WARN("Platform", aText, aData, aDataLength)
+#else
 void otDumpWarnPlat(const char *aText, const void *aData, uint16_t aDataLength);
+#endif
 
 /**
  * Generates a memory dump at note log level.
@@ -208,11 +261,18 @@ void otDumpWarnPlat(const char *aText, const void *aData, uint16_t aDataLength);
  * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
  * note this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_DUMP_NOTE()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otDumpNotePlat(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_NOTE("Platform", aText, aData, aDataLength)
+#else
 void otDumpNotePlat(const char *aText, const void *aData, uint16_t aDataLength);
+#endif
 
 /**
  * Generates a memory dump at info log level.
@@ -220,11 +280,18 @@ void otDumpNotePlat(const char *aText, const void *aData, uint16_t aDataLength);
  * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
  * info this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_DUMP_INFO()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otDumpInfoPlat(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_INFO("Platform", aText, aData, aDataLength)
+#else
 void otDumpInfoPlat(const char *aText, const void *aData, uint16_t aDataLength);
+#endif
 
 /**
  * Generates a memory dump at debug log level.
@@ -232,11 +299,18 @@ void otDumpInfoPlat(const char *aText, const void *aData, uint16_t aDataLength);
  * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
  * debug this function does not emit any log message.
  *
+ * @note If `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is set, this expands directly to the platform-provided
+ * `OT_LOG_PLATFORM_DUMP_DEBG()` macro (using `"Platform"` as the module name) instead of calling a real function.
+ *
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
  */
+#if OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+#define otDumpDebgPlat(aText, aData, aDataLength) OT_LOG_PLATFORM_DUMP_DEBG("Platform", aText, aData, aDataLength)
+#else
 void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength);
+#endif
 
 /**
  * Emits a log message at given log level using a platform module name.

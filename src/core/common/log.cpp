@@ -60,6 +60,11 @@ namespace ot {
 
 #if OT_SHOULD_LOG
 
+// `LogAtLevel()` and `LogOnError()` back the `Log{Crit,Warn,Note,Info,Debg}()`/`Log{Level}OnError()` macros only
+// when `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is not set (see the corresponding note in `log.hpp`), so they are
+// excluded here to avoid dead code when it is set.
+#if !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+
 template <LogLevel kLogLevel> void Logger::LogAtLevel(const char *aModuleName, const char *aFormat, ...)
 {
     va_list args;
@@ -98,6 +103,8 @@ template void Logger::LogOnError<kLogLevelWarn>(const char *aModuleName, Error a
 template void Logger::LogOnError<kLogLevelNote>(const char *aModuleName, Error aError, const char *aFormat, ...);
 template void Logger::LogOnError<kLogLevelInfo>(const char *aModuleName, Error aError, const char *aFormat, ...);
 template void Logger::LogOnError<kLogLevelDebg>(const char *aModuleName, Error aError, const char *aFormat, ...);
+
+#endif // !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
 
 void Logger::LogInModule(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, ...)
 {
@@ -233,6 +240,11 @@ exit:
 
 #if OPENTHREAD_CONFIG_LOG_PKT_DUMP
 
+// `DumpAtLevel()` backs the `Dump{Crit,Warn,Note,Info,Debg}()` macros only when
+// `OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE` is not set (see the corresponding note in `log.hpp`), so it is excluded
+// here to avoid dead code when it is set.
+#if !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
+
 template <LogLevel kLogLevel>
 void Logger::DumpAtLevel(const char *aModuleName, const char *aText, const void *aData, uint16_t aDataLength)
 {
@@ -264,6 +276,8 @@ template void Logger::DumpAtLevel<kLogLevelDebg>(const char *aModuleName,
                                                  const char *aText,
                                                  const void *aData,
                                                  uint16_t    aDataLength);
+
+#endif // !OPENTHREAD_CONFIG_LOG_OFFLOADING_ENABLE
 
 void Logger::DumpInModule(const char *aModuleName,
                           LogLevel    aLogLevel,
