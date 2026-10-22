@@ -147,13 +147,10 @@ def _verify_echo(pv, src_ext, dst_ext, target_ip):
     start_index = pkts.index
 
     # Find Echo Reply from MED_2 to MED_1
-    # We use a suffix match for the IP address to be robust against potential 6LoWPAN decompression issues
-    # where the prefix might be lost but the IID is preserved.
     target_ip_addr = Ipv6Addr(target_ip)
-    target_iid_bytes = target_ip_addr[8:]
     pkts.filter_wpan_src64(dst_ext).\
-        filter(lambda p: p.icmpv6.type == consts.ICMPV6_TYPE_ECHO_REPLY and\
-                         (p.ipv6.src == target_ip_addr or p.ipv6.src[8:] == target_iid_bytes)).\
+        filter_ipv6_src(target_ip_addr).\
+        filter_ping_reply().\
         must_next()
     end_index = pkts.index
 
@@ -162,8 +159,7 @@ def _verify_echo(pv, src_ext, dst_ext, target_ip):
         filter_wpan_src64(pv.vars['LEADER']).\
         filter_ipv6_src(DUT_RLOC).\
         filter_coap_request(consts.ADDR_QRY_URI).\
-        filter(lambda p: Ipv6Addr(p.coap.tlv.target_eid) == target_ip_addr or\
-                         Ipv6Addr(p.coap.tlv.target_eid)[8:] == target_iid_bytes).\
+        filter(lambda p: p.coap.tlv.target_eid == target_ip_addr).\
         must_not_next()
 
 

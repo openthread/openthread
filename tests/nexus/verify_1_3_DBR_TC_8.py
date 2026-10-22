@@ -683,13 +683,10 @@ def verify(pv):
                  getattr(p.thread_address.tlv, 'target_eid', None) and \
                  Ipv6Addr(p.thread_address.tlv.target_eid)[:8] == Ipv6Addr(OMR_4_PREFIX)[:8])
 
-        # We allow matching by IID as well because 6LoWPAN context IDs might
-        # not be correctly mapped in the verifier's Wireshark preferences.
         is_er = (hasattr(p, 'wpan') and \
                  hasattr(p, 'ipv6') and \
                  getattr(p.ipv6, 'dst', None) and \
-                 (Ipv6Addr(p.ipv6.dst) == ED_1_OMR_4 or \
-                  Ipv6Addr(p.ipv6.dst)[8:] == Ipv6Addr(ED_1_OMR_4)[8:]) and\
+                 Ipv6Addr(p.ipv6.dst) == ED_1_OMR_4 and \
                  hasattr(p, 'icmpv6') and p.icmpv6.type == consts.ICMPV6_TYPE_ECHO_REPLY)
 
         return is_aq or (is_er and p.wpan.src64 == BR_1 and p.icmpv6.echo.identifier == _pkt.icmpv6.echo.identifier)

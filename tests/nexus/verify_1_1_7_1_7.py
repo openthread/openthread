@@ -284,11 +284,8 @@ def verify(pv):
             rloc16 = pv.vars[src_node_name + '_RLOC16']
             p = pkts.filter_ping_request().\
                 filter(lambda p: p.wpan.src16 == rloc16).\
-                filter(lambda p: p.ipv6.dst.startswith(prefix[:8]) or
-                                 p.ipv6.dst.startswith(bytes(8))).\
+                filter(lambda p: p.ipv6.dst.startswith(prefix[:8])).\
                 must_next()
-            # The 'startswith(bytes(8))' check above handles cases where the 6LoWPAN dissector cannot fully decompress
-            # the IPv6 address (e.g., missing context), resulting in an address starting with null bytes.
             pkts.filter_ping_reply(identifier=p.icmpv6.echo.identifier).\
                 filter(lambda p: p.wpan.src16 == pv.vars['LEADER_RLOC16']).\
                 must_next()
