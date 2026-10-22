@@ -694,6 +694,16 @@ void Core::UpdateNextAlarmMicro(const Alarm &aAlarm)
     }
 }
 
+void Core::UpdateNextScheduledTx(const Radio &aRadio)
+{
+    if (aRadio.mScheduledTxPending)
+    {
+        uint64_t txTime = Max(aRadio.mScheduledTxTime, mNow);
+
+        mNextAlarmTime = Min(mNextAlarmTime, txTime);
+    }
+}
+
 bool Core::IsUiConnected(void) const
 {
     bool connected = false;
@@ -738,6 +748,7 @@ void Core::AdvanceTime(uint32_t aDuration)
             Process(node);
             UpdateNextAlarmMilli(node.mAlarmMilli);
             UpdateNextAlarmMicro(node.mAlarmMicro);
+            UpdateNextScheduledTx(node.mRadio);
         }
 
         if (!mPendingAction)
@@ -771,25 +782,49 @@ void Core::Process(Node &aNode)
 
 void Core::ProcessRadio(Node &aNode)
 {
+    if (aNode.mRadio.mScheduledTxPending && (mNow >= aNode.mRadio.mScheduledTxTime))
+    {
+        aNode.mRadio.mScheduledTxPending = false;
+
+        if (mNow > aNode.mRadio.mScheduledTxTime)
+        {
+            otPlatRadioScheduledTxDone(&aNode.GetInstance(), nullptr, kErrorAbort);
+        }
+        else
+        {
+            ProcessRadioTx(aNode, aNode.mRadio.mScheduledTxFrame, kScheduledTx);
+        }
+    }
+
+    if (aNode.mRadio.mState == Radio::kStateTransmit)
+    {
+        ProcessRadioTx(aNode, aNode.mRadio.mTxFrame, kRegularTx);
+    }
+}
+
+void Core::ProcessRadioTx(Node &aNode, Radio::Frame &aTxFrame, TxType aTxType)
+{
     Mac::TxFrame::ParseInfo txFrameInfo;
     Mac::Address            dstAddr;
     uint16_t                dstPanId;
     bool                    ackRequested;
     AckMode                 ackMode = kNoAck;
     Node                   *ackNode = nullptr;
+    Radio::Frame            ackFrame;
+    Radio::Frame           *ackFramePtr = nullptr;
+    Error                   txError;
 
-    VerifyOrExit(aNode.mRadio.mState == Radio::kStateTransmit);
-
-    IgnoreError(txFrameInfo.ParseFrom(aNode.mRadio.mTxFrame, Mac::Frame::kParseFully));
+    IgnoreError(txFrameInfo.ParseFrom(aTxFrame, Mac::Frame::kParseFully));
 
     dstAddr  = txFrameInfo.mAddrs.mDestination;
     dstPanId = txFrameInfo.mPanIds.IsDestinationPresent() ? txFrameInfo.mPanIds.GetDestination() : Mac::kPanIdBroadcast;
     ackRequested = txFrameInfo.mIsAckRequest;
+    txError      = ackRequested ? kErrorNoAck : kErrorNone;
 
-    SuccessOrQuit(otMacFrameProcessTxSfd(&aNode.mRadio.mTxFrame, mNow, &aNode.mRadio.mRadioContext));
-    static_cast<Radio::Frame &>(aNode.mRadio.mTxFrame).UpdateFcs();
+    SuccessOrQuit(otMacFrameProcessTxSfd(&aTxFrame, mNow, &aNode.mRadio.mRadioContext));
+    aTxFrame.UpdateFcs();
 
-    mPcap.WriteFrame(aNode.mRadio.mTxFrame, mNow);
+    mPcap.WriteFrame(aTxFrame, mNow);
 
     if (!mObservers.IsEmpty())
     {
@@ -820,18 +855,20 @@ void Core::ProcessRadio(Node &aNode)
 
         for (Observer &observer : mObservers)
         {
-            observer.OnPacketEvent(aNode.GetInstance().GetId(), dstNodeId, aNode.mRadio.mTxFrame.GetPsdu(),
-                                   aNode.mRadio.mTxFrame.GetLength());
+            observer.OnPacketEvent(aNode.GetInstance().GetId(), dstNodeId, aTxFrame.GetPsdu(), aTxFrame.GetLength());
         }
     }
 
-    otPlatRadioTxStarted(&aNode.GetInstance(), &aNode.mRadio.mTxFrame);
+    if (aTxType == kRegularTx)
+    {
+        otPlatRadioTxStarted(&aNode.GetInstance(), &aTxFrame);
+    }
 
     for (Node &rxNode : mNodes)
     {
         bool matchesDst;
 
-        if ((&rxNode == &aNode) || !rxNode.mRadio.CanReceiveOnChannel(aNode.mRadio.mTxFrame.GetChannel()))
+        if ((&rxNode == &aNode) || !rxNode.mRadio.CanReceiveOnChannel(aTxFrame.GetChannel()))
         {
             continue;
         }
@@ -842,11 +879,10 @@ void Core::ProcessRadio(Node &aNode)
         {
             // `rxNode` should receive this frame.
 
-            Radio::Frame rxFrame(aNode.mRadio.mTxFrame);
+            Radio::Frame rxFrame(aTxFrame);
+            int16_t      localRssi = RadioModel::CalculateRssi(aNode, rxNode);
 
             rxFrame.mInfo.mRxInfo.mTimestamp = mNow;
-
-            int16_t localRssi = RadioModel::CalculateRssi(aNode, rxNode);
 
             // Completely intercept and drop packets that dip below target receiver sensitivity
             if (RadioModel::ShouldDropPacket(localRssi))
@@ -881,14 +917,16 @@ void Core::ProcessRadio(Node &aNode)
         }
     }
 
-    aNode.mRadio.mChannel = aNode.mRadio.mTxFrame.mChannel;
-    aNode.mRadio.mState   = Radio::kStateReceive;
+    if (aTxType == kRegularTx)
+    {
+        aNode.mRadio.mChannel = aTxFrame.mChannel;
+        aNode.mRadio.mState   = Radio::kStateReceive;
+    }
 
     if (ackNode != nullptr)
     {
-        Radio::Frame        ackFrame;
-        const Mac::RxFrame &rxFrame =
-            static_cast<const Mac::RxFrame &>(static_cast<const Mac::Frame &>(aNode.mRadio.mTxFrame));
+        const Mac::RxFrame &rxFrame = static_cast<const Mac::RxFrame &>(static_cast<const Mac::Frame &>(aTxFrame));
+        int16_t             ackRssi;
 
         if (txFrameInfo.mVersion == Mac::Frame::kVersion2015)
         {
@@ -897,7 +935,7 @@ void Core::ProcessRadio(Node &aNode)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
             if ((ackNode->mRadio.mRadioContext.mCslPeriod > 0) &&
-                otMacFrameSrcAddrMatchCslReceiverPeer(&aNode.mRadio.mTxFrame, &ackNode->mRadio.mRadioContext))
+                otMacFrameSrcAddrMatchCslReceiverPeer(&aTxFrame, &ackNode->mRadio.mRadioContext))
             {
                 ackIeDataLength = otMacFrameGenerateCslIeTemplate(ackIeData);
             }
@@ -932,29 +970,29 @@ void Core::ProcessRadio(Node &aNode)
 
         ackFrame.UpdateFcs();
 
+        ackRssi = RadioModel::CalculateRssi(*ackNode, aNode);
+
+        ackFrame.mInfo.mRxInfo.mRssi      = ClampToInt8(ackRssi);
+        ackFrame.mInfo.mRxInfo.mLqi       = kDefaultRxLqi;
+        ackFrame.mInfo.mRxInfo.mTimestamp = mNow;
+
+        mPcap.WriteFrame(ackFrame, mNow);
+
+        if (!RadioModel::ShouldDropPacket(ackRssi))
         {
-            int16_t ackRssi = RadioModel::CalculateRssi(*ackNode, aNode);
-
-            ackFrame.mInfo.mRxInfo.mRssi      = ClampToInt8(ackRssi);
-            ackFrame.mInfo.mRxInfo.mLqi       = kDefaultRxLqi;
-            ackFrame.mInfo.mRxInfo.mTimestamp = mNow;
-
-            mPcap.WriteFrame(ackFrame, mNow);
-
-            if (RadioModel::ShouldDropPacket(ackRssi))
-            {
-                otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, nullptr, kErrorNoAck);
-            }
-            else
-            {
-                otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, &ackFrame, kErrorNone);
-            }
+            ackFramePtr = &ackFrame;
+            txError     = kErrorNone;
         }
     }
-    else
+
+    switch (aTxType)
     {
-        otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, nullptr,
-                          ackRequested ? kErrorNoAck : kErrorNone);
+    case kRegularTx:
+        otPlatRadioTxDone(&aNode.GetInstance(), &aTxFrame, ackFramePtr, txError);
+        break;
+    case kScheduledTx:
+        otPlatRadioScheduledTxDone(&aNode.GetInstance(), ackFramePtr, txError);
+        break;
     }
 
 exit:
