@@ -73,10 +73,12 @@ jobs:
         cache: pip
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+        ./tests/toranj/start.sh bootstrap
     - name: Build & Run
       run: |
         top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
@@ -108,10 +110,12 @@ jobs:
         cache: pip
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+        ./tests/toranj/start.sh bootstrap
     - name: Build & Run
       run: |
         top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
@@ -141,6 +145,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
@@ -168,6 +173,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
@@ -194,6 +200,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
@@ -220,6 +227,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
@@ -248,6 +256,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
@@ -270,6 +279,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         brew update
         brew install ninja
@@ -293,7 +303,9 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y lcov
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:

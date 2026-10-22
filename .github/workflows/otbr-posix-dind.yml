@@ -64,29 +64,37 @@ jobs:
         submodules: recursive
         persist-credentials: false
 
-    - name: Clone ot-br-posix and replace openthread submodule
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+    - name: Bootstrap
+      timeout-minutes: 15
+      shell: bash ./script/retry {0}
       run: |
         OPENTHREAD_DIR=$(pwd)
+        docker rm -f otbr-dind >/dev/null 2>&1 || true
+        sudo rm -rf /tmp/ot-br-posix
         ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 --recurse-submodules --shallow-submodules /tmp/ot-br-posix
         cd /tmp/ot-br-posix
         rm -rf third_party/openthread/repo
         mkdir -p third_party/openthread/repo
         rsync -r --exclude=.git --exclude=build --exclude=ot_testing "${OPENTHREAD_DIR}/." third_party/openthread/repo
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-
-    - name: Build DinD Runner Image
-      run: |
-        cd /tmp/ot-br-posix
         docker build -t otbr-dind-runner -f etc/docker/test/Dockerfile.dind_runner .
-
-    - name: Run DinD Integration Test
-      run: |
-        cd /tmp/ot-br-posix
-        docker run --privileged --rm \
+        docker rm -f otbr-dind >/dev/null 2>&1 || true
+        docker run -d --privileged --name otbr-dind \
           -v /tmp/ot-br-posix:/usr/src/ot-br-posix \
           -w /usr/src/ot-br-posix \
           -e DOCKER_HOST=unix:///var/run/docker.sock \
           otbr-dind-runner \
-          bash -c "dockerd --host=unix:///var/run/docker.sock >/dev/null 2>&1 & ./tests/scripts/test_dind_dns_sd.sh ${{ matrix.mdns }}"
+          sh -c "dockerd --host=unix:///var/run/docker.sock >/dev/null 2>&1"
+        if grep -q -- '--setup-only' tests/scripts/test_dind_dns_sd.sh; then
+          docker exec otbr-dind ./tests/scripts/test_dind_dns_sd.sh --setup-only ${{ matrix.mdns }}
+        fi
+
+    - name: Run DinD Integration Test
+      run: |
+        if grep -q -- '--run-only' /tmp/ot-br-posix/tests/scripts/test_dind_dns_sd.sh; then
+          docker exec otbr-dind ./tests/scripts/test_dind_dns_sd.sh --run-only ${{ matrix.mdns }}
+        else
+          docker exec otbr-dind ./tests/scripts/test_dind_dns_sd.sh ${{ matrix.mdns }}
+        fi
