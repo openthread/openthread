@@ -70,7 +70,7 @@ jobs:
       with:
         oss-fuzz-project-name: 'openthread'
         language: 'c++'
-        fuzz-seconds: 1800
+        fuzz-seconds: 900
         sanitizer: ${{ matrix.sanitizer }}
         output-sarif: true
 

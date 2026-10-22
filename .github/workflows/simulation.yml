@@ -180,10 +180,16 @@ jobs:
         retention-days: 1
 
   expects:
+    name: expects-${{ matrix.category }}
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        category: [cli, non-cli]
     env:
       COVERAGE: 1
       VIRTUAL_TIME: 0
+      OT_EXPECT_CATEGORY: ${{ matrix.category }}
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -218,7 +224,7 @@ jobs:
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: ${{ failure() && env.CRASHED == '1' }}
       with:
-        name: core-expect
+        name: core-expect-${{ matrix.category }}
         path: |
           ./ot-core-dump/*
     - name: Generate Coverage
@@ -226,7 +232,7 @@ jobs:
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
-        name: cov-expects
+        name: cov-expects-${{ matrix.category }}
         path: tmp/coverage.info
         retention-days: 1
 

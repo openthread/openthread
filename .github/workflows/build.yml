@@ -302,12 +302,13 @@ jobs:
         script/check-arm-build
 
   gcc:
-    name: gcc-${{ matrix.gcc_ver }}
+    name: gcc-${{ matrix.gcc_ver }}-${{ matrix.target }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         gcc_ver: [9, 10, 11, 12]
+        target: [simulation-1.1, simulation-1.4, posix, posix-daemon]
     env:
       CC: gcc-${{ matrix.gcc_ver }}
       CXX: g++-${{ matrix.gcc_ver }}
@@ -333,16 +334,26 @@ jobs:
         sudo apt-get --no-install-recommends install -y gcc-${{ matrix.gcc_ver }} g++-${{ matrix.gcc_ver }} ninja-build libreadline-dev libncurses-dev
     - name: Build
       run: |
-        script/check-simulation-build
-        script/check-posix-build
+        case ${{ matrix.target }} in
+          simulation-1.1)
+            script/check-simulation-build 1.1
+            ;;
+          simulation-1.4)
+            script/check-simulation-build 1.4
+            ;;
+          posix | posix-daemon)
+            script/check-posix-build "${{ matrix.target }}"
+            ;;
+        esac
 
   clang:
-    name: clang-${{ matrix.clang_ver }}
+    name: clang-${{ matrix.clang_ver }}-${{ matrix.target }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         clang_ver: ["17", "18", "19"]
+        target: [simulation-1.1, simulation-1.4, posix, posix-daemon]
     env:
       CC: clang-${{ matrix.clang_ver }}
       CXX: clang++-${{ matrix.clang_ver }}
@@ -366,8 +377,17 @@ jobs:
           sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
       - name: Build
         run: |
-          script/check-simulation-build
-          script/check-posix-build
+          case ${{ matrix.target }} in
+            simulation-1.1)
+              script/check-simulation-build 1.1
+              ;;
+            simulation-1.4)
+              script/check-simulation-build 1.4
+              ;;
+            posix | posix-daemon)
+              script/check-posix-build "${{ matrix.target }}"
+              ;;
+          esac
 
   gn:
     runs-on: ubuntu-24.04
@@ -391,10 +411,12 @@ jobs:
         script/check-gn-build
 
   macos:
-    name: macos-${{ matrix.CC }}
+    name: macos-${{ matrix.CC }}-${{ matrix.target }}
     strategy:
       fail-fast: false
       matrix:
+        CC: [clang, gcc]
+        target: [posix, simulation-1.1, simulation-1.4]
         include:
           - CC: clang
             CXX: clang++
@@ -422,5 +444,14 @@ jobs:
         unzip ninja-mac.zip && mv ninja /usr/local/bin/.
     - name: Build
       run: |
-        script/check-posix-build
-        script/check-simulation-build
+        case ${{ matrix.target }} in
+          simulation-1.1)
+            script/check-simulation-build 1.1
+            ;;
+          simulation-1.4)
+            script/check-simulation-build 1.4
+            ;;
+          posix)
+            script/check-posix-build
+            ;;
+        esac

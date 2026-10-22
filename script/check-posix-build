@@ -31,8 +31,22 @@ set -euxo pipefail
 
 main()
 {
-    "$(dirname "$0")"/check-posix-build-cmake
-    "$(dirname "$0")"/check-posix-build-cmake -DOT_DAEMON=ON
+    case "${1:-all}" in
+        posix)
+            "$(dirname "$0")"/check-posix-build-cmake
+            ;;
+        posix-daemon)
+            "$(dirname "$0")"/check-posix-build-cmake -DOT_DAEMON=ON
+            ;;
+        all)
+            "$(dirname "$0")"/check-posix-build-cmake
+            "$(dirname "$0")"/check-posix-build-cmake -DOT_DAEMON=ON
+            ;;
+        *)
+            echo "Unknown group: $1" >&2
+            exit 1
+            ;;
+    esac
 }
 
 main "$@"
