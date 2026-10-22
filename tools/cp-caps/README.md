@@ -1,8 +1,16 @@
-# RCP Capabilities Test
+# Co-Processor Capability Test Suite (cp-caps)
 
-This test is used for testing RCP capabilities.
+The Co-Processor Capability Test Suite (`cp-caps`) checks which capabilities an OpenThread co-processor (currently an RCP) supports, such as diag commands, IEEE 802.15.4 frame formats, CSL, data poll, and link metrics. It also measures performance metrics, such as Thread network 1-hop throughput.
 
-## Test Topology
+Unlike a conformance or certification test suite, it profiles the co-processor: each test case reports whether a capability is supported (`OK` or `NotSupported`) or a measured value, rather than an overall pass or fail.
+
+The test suite consists of:
+
+- Test cases (`test_*.py`): each test case tests a capability area and is run using Python's `unittest` framework.
+- A test harness (`device_manager.py`): connects to and controls the testbed devices using [OTCI](../otci) and outputs the results.
+- A testbed: the devices the test cases run on (see [Testbed](#testbed)).
+
+## Testbed
 
 ```
                     +-------+
@@ -105,7 +113,7 @@ $ deactivate
 ```bash
 usage: [device configurations] python3 -m unittest -q [test cases]
 
-This unittest is used for testing RCP capabilities.
+This test suite is used for testing the capabilities of the RCP.
 
 Device configurations:
   ADB_KEY=<adb_key>              Full path to the adb key
