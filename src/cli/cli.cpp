@@ -4679,11 +4679,62 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
             }
         }
     }
+    /**
+     * @cli neighbor (rloc16)
+     * @code
+     * neighbor 0xc800
+     * Role: R
+     * Rloc16: 0xc800
+     * Ext Addr: 9a91556102c39ddb
+     * Age: 2
+     * Connection Time: 644
+     * Avg RSSI: -29
+     * Last RSSI: -29
+     * Link Quality In: 3
+     * Frame Error: 0.00 %
+     * Msg Error: 0.00 %
+     * Mode: rdn
+     * Version: 5
+     * Done
+     * @endcode
+     * @cparam neighbor @ca{rloc16}
+     * @par api_copy
+     * #otThreadGetNeighborInfoByRloc16
+     * @par
+     * Prints information about the neighbor with the given RLOC16.
+     * @par
+     * For `Role`, the possible values are `C` (Child) or `R` (Router). `Age` and `Connection Time` are in seconds.
+     */
     else
     {
-        error = OT_ERROR_INVALID_ARGS;
+        uint16_t               rloc16;
+        PercentageStringBuffer stringBuffer;
+        otLinkModeConfig       linkMode;
+        char                   linkModeString[kLinkModeStringSize];
+
+        SuccessOrExit(error = aArgs[0].ParseAsUint16(rloc16));
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = otThreadGetNeighborInfoByRloc16(GetInstancePtr(), rloc16, &neighborInfo));
+
+        OutputLine("Role: %c", neighborInfo.mIsChild ? 'C' : 'R');
+        OutputLine("Rloc16: 0x%04x", neighborInfo.mRloc16);
+        OutputFormat("Ext Addr: ");
+        OutputExtAddressLine(neighborInfo.mExtAddress);
+        OutputLine("Age: %lu", ToUlong(neighborInfo.mAge));
+        OutputLine("Connection Time: %lu", ToUlong(neighborInfo.mConnectionTime));
+        OutputLine("Avg RSSI: %d", neighborInfo.mAverageRssi);
+        OutputLine("Last RSSI: %d", neighborInfo.mLastRssi);
+        OutputLine("Link Quality In: %u", neighborInfo.mLinkQualityIn);
+        OutputLine("Frame Error: %s %%", PercentageToString(neighborInfo.mFrameErrorRate, stringBuffer));
+        OutputLine("Msg Error: %s %%", PercentageToString(neighborInfo.mMessageErrorRate, stringBuffer));
+        linkMode.mRxOnWhenIdle = neighborInfo.mRxOnWhenIdle;
+        linkMode.mDeviceType   = neighborInfo.mFullThreadDevice;
+        linkMode.mNetworkData  = neighborInfo.mFullNetworkData;
+        OutputLine("Mode: %s", LinkModeToString(linkMode, linkModeString));
+        OutputLine("Version: %u", neighborInfo.mVersion);
     }
 
+exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
