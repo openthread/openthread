@@ -75,6 +75,9 @@ void SecurityPolicy::SetToDefaultFlags(void)
     mTobleLinkEnabled               = true;
     mNonCcmRoutersEnabled           = false;
     mVersionThresholdForRouting     = 0;
+    mReservedBit10Cleared           = false;
+    mReservedBit11Cleared           = false;
+    mReservedBit12Cleared           = false;
 }
 
 void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
@@ -95,6 +98,12 @@ void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
     mTobleLinkEnabled           = aFlags[1] & kTobleLinkMask;
     mNonCcmRoutersEnabled       = (aFlags[1] & kNonCcmRoutersMask) == 0;
     mVersionThresholdForRouting = aFlags[1] & kVersionThresholdForRoutingMask;
+
+    // Track which reserved bits are cleared in the received
+    // flags so that they are preserved when the flags are encoded.
+    mReservedBit10Cleared = (aFlags[1] & kReservedBit10Mask) == 0;
+    mReservedBit11Cleared = (aFlags[1] & kReservedBit11Mask) == 0;
+    mReservedBit12Cleared = (aFlags[1] & kReservedBit12Mask) == 0;
 
 exit:
     return;
@@ -153,7 +162,21 @@ void SecurityPolicy::GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const
         aFlags[1] |= kNonCcmRoutersMask;
     }
 
-    aFlags[1] |= kReservedMask;
+    if (!mReservedBit10Cleared)
+    {
+        aFlags[1] |= kReservedBit10Mask;
+    }
+
+    if (!mReservedBit11Cleared)
+    {
+        aFlags[1] |= kReservedBit11Mask;
+    }
+
+    if (!mReservedBit12Cleared)
+    {
+        aFlags[1] |= kReservedBit12Mask;
+    }
+
     aFlags[1] |= mVersionThresholdForRouting;
 
 exit:
