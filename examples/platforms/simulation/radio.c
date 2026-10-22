@@ -119,9 +119,6 @@ static uint8_t sAckIeDataLength = 0;
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 static bool sRadioCoexEnabled = true;
 #endif
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-static otRadioIeInfo sTransmitIeInfo;
-#endif
 
 #if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
 static FilterMode sFilterMode = SIM_FILTER_OFF;
@@ -1014,13 +1011,6 @@ void platformRadioInit(void)
     sRadioContext.mCslShortAddress       = OT_RADIO_INVALID_SHORT_ADDR;
     sRadioContext.mShortAddress          = OT_RADIO_INVALID_SHORT_ADDR;
     sRadioContext.mAlternateShortAddress = OT_RADIO_INVALID_SHORT_ADDR;
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    sTransmitFrame.mInfo.mTxInfo.mIeInfo = &sTransmitIeInfo;
-#else
-    sTransmitFrame.mInfo.mTxInfo.mIeInfo = NULL;
-#endif
-    sAckFrame.mInfo.mTxInfo.mIeInfo = NULL;
 
     for (size_t i = 0; i <= SIM_RADIO_CHANNEL_MAX - SIM_RADIO_CHANNEL_MIN; i++)
     {

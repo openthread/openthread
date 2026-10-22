@@ -413,6 +413,12 @@ Error SubMac::Send(void)
     }
 #endif
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    // Clear the TX timestamp, so that `TimeSyncRestore()` can tell
+    // whether the Time IE has been finalized by the radio platform.
+    mTransmitFrame.SetTxTimestamp(0);
+#endif
+
     ProcessTransmitSecurity(frameInfo);
 
     mCsmaBackoffs    = 0;
@@ -667,6 +673,10 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
         ReprocessSecurityForRetx(frameInfo);
+#endif
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        frameInfo.TimeSyncRestore();
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY

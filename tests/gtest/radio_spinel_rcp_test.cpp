@@ -1096,3 +1096,173 @@ TEST(RadioSpinelTransmit, shouldRejectReceiveDuringPendingTransmit)
     EXPECT_EQ(platform.mTransmitCount, 1u);
     EXPECT_EQ(lastStatuses[kTxTid], std::vector<unsigned int>{SPINEL_STATUS_OK});
 }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+static void PrepareTimeSyncFrame(Mac::TxFrame &aTxFrame, uint8_t *aPsdu, int64_t aNetworkTimeOffset, uint8_t aSequence)
+{
+    constexpr Mac::PanId kSrcPanId  = 0x1234;
+    constexpr Mac::PanId kDstPanId  = 0x4321;
+    constexpr uint8_t    kDstAddr[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    constexpr uint16_t   kSrcAddr   = 0xac00;
+
+    Mac::TxFrame::BuildInfo buildInfo;
+    Mac::TxFrame::ParseInfo frameInfo;
+
+    aTxFrame.mPsdu = aPsdu;
+
+    buildInfo.mType    = Mac::Frame::kTypeData;
+    buildInfo.mVersion = Mac::Frame::kVersion2015;
+    buildInfo.mAddrs.mSource.SetShort(kSrcAddr);
+    buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+    buildInfo.mPanIds.SetSource(kSrcPanId);
+    buildInfo.mPanIds.SetDestination(kDstPanId);
+    buildInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+    buildInfo.mAppendTimeIe  = true;
+    buildInfo.mEmptyPayload  = true;
+
+    aTxFrame.PrepareHeadersWithEmptyPayload(buildInfo);
+    aTxFrame.mChannel = 11;
+
+    ASSERT_EQ(frameInfo.ParseFrom(aTxFrame, Mac::Frame::kParseFully), kErrorNone);
+    ASSERT_NE(frameInfo.Find<Mac::TimeIe>(), nullptr);
+    frameInfo.TimeSyncInit(aNetworkTimeOffset, aSequence);
+}
+
+static const Mac::TimeIe *FindTimeIe(const otRadioFrame *aFrame, Mac::TxFrame::ParseInfo &aFrameInfo)
+{
+    const Mac::TimeIe *timeIe = nullptr;
+
+    if (aFrameInfo.ParseFrom(*static_cast<const Mac::TxFrame *>(aFrame), Mac::Frame::kParseFully) == kErrorNone)
+    {
+        timeIe = aFrameInfo.Find<Mac::TimeIe>();
+    }
+
+    return timeIe;
+}
+
+TEST(MacFrameTimeSync, shouldFinalizeAndRestoreTimeIe)
+{
+    constexpr int64_t       kNetworkTimeOffset = -1000;
+    constexpr uint8_t       kSequence          = 7;
+    constexpr Radio::Time64 kTxTimestamp       = 500000;
+
+    uint8_t                 frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame            txFrame{};
+    Mac::TxFrame::ParseInfo frameInfo;
+    const Mac::TimeIe      *timeIe;
+
+    PrepareTimeSyncFrame(txFrame, frameBuffer, kNetworkTimeOffset, kSequence);
+
+    timeIe = FindTimeIe(&txFrame, frameInfo);
+    ASSERT_NE(timeIe, nullptr);
+    EXPECT_EQ(timeIe->GetSequence(), kSequence);
+    EXPECT_EQ(static_cast<int64_t>(timeIe->GetTime()), kNetworkTimeOffset);
+
+    // Restoring a Time IE which is not finalized does nothing.
+    txFrame.SetTxTimestamp(0);
+    frameInfo.TimeSyncRestore();
+    EXPECT_EQ(static_cast<int64_t>(timeIe->GetTime()), kNetworkTimeOffset);
+
+    frameInfo.TimeSyncFinalize(kTxTimestamp);
+    EXPECT_EQ(txFrame.GetTxTimestamp(), kTxTimestamp);
+    EXPECT_EQ(timeIe->GetSequence(), kSequence);
+    EXPECT_EQ(static_cast<int64_t>(timeIe->GetTime()), static_cast<int64_t>(kTxTimestamp) + kNetworkTimeOffset);
+
+    frameInfo.TimeSyncRestore();
+    EXPECT_EQ(txFrame.GetTxTimestamp(), 0u);
+    EXPECT_EQ(static_cast<int64_t>(timeIe->GetTime()), kNetworkTimeOffset);
+
+    // Restoring again does nothing.
+    frameInfo.TimeSyncRestore();
+    EXPECT_EQ(static_cast<int64_t>(timeIe->GetTime()), kNetworkTimeOffset);
+}
+
+TEST(RadioSpinelTimeSync, shouldPassNetworkTimeOffsetIfRcpExpectsNetworkTimeOffset)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, Transmit, (otRadioFrame * aFrame), (override));
+    };
+
+    constexpr int64_t kNetworkTimeOffset = 1000;
+    constexpr uint8_t kSequence          = 1;
+
+    MockPlatform platform;
+    uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame txFrame{};
+
+    PrepareTimeSyncFrame(txFrame, frameBuffer, kNetworkTimeOffset, kSequence);
+
+    EXPECT_CALL(platform, Transmit(Truly([](otRadioFrame *aFrame) -> bool {
+                    Mac::TxFrame::ParseInfo frameInfo;
+                    const Mac::TimeIe      *timeIe = FindTimeIe(aFrame, frameInfo);
+
+                    return (timeIe != nullptr) && (timeIe->GetSequence() == kSequence) &&
+                           (static_cast<int64_t>(timeIe->GetTime()) == kNetworkTimeOffset);
+                })))
+        .Times(1);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+
+    platform.GoInMs(1000);
+}
+
+TEST(RadioSpinelTimeSync, shouldConvertNetworkTimeToOffsetIfHostDoesNotSetNetworkTimeOffset)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, Transmit, (otRadioFrame * aFrame), (override));
+    };
+
+    constexpr int64_t kNetworkTime = 1000;
+    constexpr uint8_t kSequence    = 1;
+
+    MockPlatform  platform;
+    uint8_t       frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame  txFrame{};
+    otRadioTime64 requestTime;
+    otRadioTime64 transmitTime = 0;
+    int64_t       timeInTimeIe = 0;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    // Emulate a host which puts the network time in the Time IE.
+    ASSERT_EQ(platform.mRadioSpinel.Set(SPINEL_PROP_NEST_NETWORK_TIME_EXPECTING_OFFSET, SPINEL_DATATYPE_BOOL_S, false),
+              kErrorNone);
+
+    PrepareTimeSyncFrame(txFrame, frameBuffer, kNetworkTime, kSequence);
+
+    EXPECT_CALL(platform, Transmit(testing::_)).Times(1).WillOnce(testing::Invoke([&](otRadioFrame *aFrame) -> otError {
+        Mac::TxFrame::ParseInfo frameInfo;
+        const Mac::TimeIe      *timeIe = FindTimeIe(aFrame, frameInfo);
+
+        EXPECT_NE(timeIe, nullptr);
+
+        if (timeIe != nullptr)
+        {
+            EXPECT_EQ(timeIe->GetSequence(), kSequence);
+            timeInTimeIe = static_cast<int64_t>(timeIe->GetTime());
+        }
+
+        transmitTime = otPlatRadioGetNow(FakePlatform::CurrentInstance());
+
+        return OT_ERROR_NONE;
+    }));
+
+    platform.GoInMs(500);
+    requestTime = otPlatRadioGetNow(FakePlatform::CurrentInstance());
+    ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+    platform.GoInMs(1000);
+
+    // The RCP converts the network time to the offset based on its radio time when the request is received.
+    EXPECT_GT(requestTime, 0u);
+    EXPECT_GE(transmitTime, requestTime);
+    EXPECT_LE(timeInTimeIe, kNetworkTime - static_cast<int64_t>(requestTime));
+    EXPECT_GE(timeInTimeIe, kNetworkTime - static_cast<int64_t>(transmitTime));
+}
+
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

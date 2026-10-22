@@ -635,6 +635,47 @@ public:
          */
         void RestoreTransmitSecurity(const ExtAddress &aExtAddress);
 #endif
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        /**
+         * Initializes the Time IE in the frame to be transmitted.
+         *
+         * The frame MUST be fully parsed before calling this method. If the frame contains a Time IE and its security
+         * is not processed yet, this method sets the time sync sequence of the Time IE to @p aTimeSyncSeq and the time
+         * field of the Time IE to the network time offset @p aNetworkTimeOffset. The time field is later converted to
+         * the network time by `TimeSyncFinalize()` when the frame is transmitted. Otherwise, this method performs no
+         * action.
+         *
+         * @param[in] aNetworkTimeOffset  The offset to the network time (in microseconds).
+         * @param[in] aTimeSyncSeq        The time sync sequence.
+         */
+        void TimeSyncInit(int64_t aNetworkTimeOffset, uint8_t aTimeSyncSeq);
+
+        /**
+         * Finalizes the Time IE in the frame being transmitted.
+         *
+         * This method sets the TX timestamp of the frame to @p aTxTimestamp. The frame MUST be fully parsed before
+         * calling this method. If the frame contains a Time IE and its security is not processed yet, this method also
+         * converts the time field of the Time IE from the network time offset (set by `TimeSyncInit()`) to the network
+         * time, by adding @p aTxTimestamp to it.
+         *
+         * Is intended to be called by the radio platform when the end of the SFD is present at the local antenna.
+         *
+         * @param[in] aTxTimestamp  The time of the local radio clock (in microseconds) when the end of the SFD is
+         *                          present at the local antenna.
+         */
+        void TimeSyncFinalize(Radio::Time64 aTxTimestamp);
+
+        /**
+         * Restores the Time IE in the frame for retransmission.
+         *
+         * The frame MUST be fully parsed before calling this method. If the frame contains a Time IE which is finalized
+         * by `TimeSyncFinalize()` (i.e., the TX timestamp of the frame is not zero) and its security is not processed,
+         * this method restores the time field of the Time IE back to the network time offset by subtracting the TX
+         * timestamp of the frame from it, and then clears the TX timestamp. Otherwise, this method performs no action.
+         */
+        void TimeSyncRestore(void);
+#endif
     };
 
     /**
