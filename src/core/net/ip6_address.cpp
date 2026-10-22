@@ -589,10 +589,7 @@ void Address::ToString(char *aBuffer, uint16_t aSize) const
     ToString(writer);
 }
 
-void Address::ToString(StringWriter &aWriter) const
-{
-    AppendHexWords(aWriter, static_cast<uint8_t>(GetArrayLength(mFields.m16)));
-}
+void Address::ToString(StringWriter &aWriter) const { AppendHexWords(aWriter, kSize / sizeof(uint16_t)); }
 
 void Address::AppendHexWords(StringWriter &aWriter, uint8_t aLength) const
 {
