@@ -46,20 +46,26 @@ sleep 15
 switch_node 3
 send "state\n"
 expect "router"
+expect_line "Done"
 send "commissioner state\n"
 expect "disabled"
+expect_line "Done"
 
 switch_node 2
 send "state\n"
 expect "router"
+expect_line "Done"
 send "commissioner state\n"
 expect "disabled"
+expect_line "Done"
 
 switch_node 1
 send "state\n"
 expect "leader"
+expect_line "Done"
 send "commissioner state\n"
 expect "active"
+expect_line "Done"
 
 ###########################################
 # Starting a commissioner on the same partition with the same ID makes
@@ -67,27 +73,48 @@ expect "active"
 
 switch_node 2
 send "commissioner start\n"
-expect "Done"
-wait_for "commissioner state" "active"
+expect "Commissioner: petitioning"
+expect_line "Done"
+wait_for "" "Commissioner: active"
+send "commissioner state\n"
+expect "active"
+expect_line "Done"
 switch_node 1
 sleep 5
-wait_for "commissioner state" "disabled"
+wait_for "" "Commissioner: disabled"
+send "commissioner state\n"
+expect "disabled"
+expect_line "Done"
 
 switch_node 3
 send "commissioner start\n"
-expect "Done"
-wait_for "commissioner state" "active"
+expect "Commissioner: petitioning"
+expect_line "Done"
+wait_for "" "Commissioner: active"
+send "commissioner state\n"
+expect "active"
+expect_line "Done"
 sleep 5
 switch_node 2
-wait_for "commissioner state" "disabled"
+wait_for "" "Commissioner: disabled"
+send "commissioner state\n"
+expect "disabled"
+expect_line "Done"
 
 switch_node 1
 send "commissioner start\n"
-expect "Done"
-wait_for "commissioner state" "active"
+expect "Commissioner: petitioning"
+expect_line "Done"
+wait_for "" "Commissioner: active"
+send "commissioner state\n"
+expect "active"
+expect_line "Done"
 sleep 5
 switch_node 3
-wait_for "commissioner state" "disabled"
+wait_for "" "Commissioner: disabled"
+send "commissioner state\n"
+expect "disabled"
+expect_line "Done"
 
 ###########################################
 # Starting another commissioner on the same partition, using a different ID avoids
@@ -95,45 +122,64 @@ wait_for "commissioner state" "disabled"
 
 switch_node 2
 send "commissioner id COMMISSIONER_2\n"
-expect "Done"
+expect_line "Done"
 send "commissioner start\n"
-expect "Done"
-wait_for "commissioner state" "petitioning"
-wait_for "commissioner state" "disabled"
+expect "Commissioner: petitioning"
+expect_line "Done"
+wait_for "" "Commissioner: disabled"
+send "commissioner state\n"
+expect "disabled"
+expect_line "Done"
 
 switch_node 1
 send "commissioner state\n"
 expect "active"
+expect_line "Done"
 
 switch_node 3
 send "commissioner id COMMISSIONER_3\n"
-expect "Done"
+expect_line "Done"
 send "commissioner start\n"
-expect "Done"
-wait_for "commissioner state" "petitioning"
-wait_for "commissioner state" "disabled"
+expect "Commissioner: petitioning"
+expect_line "Done"
+wait_for "" "Commissioner: disabled"
+send "commissioner state\n"
+expect "disabled"
+expect_line "Done"
 
 switch_node 1
 send "commissioner state\n"
 expect "active"
+expect_line "Done"
 
 ###########################################
 # Stop active commissioner and start another one
 send "commissioner stop\n"
+expect "Commissioner: disabled"
+expect_line "Done"
+send "commissioner state\n"
+expect "disabled"
+expect_line "Done"
 
 switch_node 2
 send "commissioner id COMMISSIONER_2\n"
-expect "Done"
+expect_line "Done"
 send "commissioner start\n"
-expect "Done"
-wait_for "commissioner state" "petitioning"
-wait_for "commissioner state" "active"
+expect "Commissioner: petitioning"
+expect_line "Done"
+wait_for "" "Commissioner: active"
+send "commissioner state\n"
+expect "active"
+expect_line "Done"
 
 switch_node 1
 send "commissioner start\n"
-expect "Done"
-wait_for "commissioner state" "petitioning"
-wait_for "commissioner state" "disabled"
+expect "Commissioner: petitioning"
+expect_line "Done"
+wait_for "" "Commissioner: disabled"
+send "commissioner state\n"
+expect "disabled"
+expect_line "Done"
 
 ###########################################
 dispose_all
