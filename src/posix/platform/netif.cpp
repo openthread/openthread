@@ -216,14 +216,14 @@ static void DeleteAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen);
 static void UpdateMeshLocalPrefixLabel(otInstance *aInstance);
 #endif
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && defined(__linux__)
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
 static constexpr uint32_t kOmrRoutesPriority = OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY;
 static constexpr uint8_t  kMaxOmrRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM;
 static uint8_t            sAddedOmrRoutesNum = 0;
 static otIp6Prefix        sAddedOmrRoutes[kMaxOmrRoutesNum];
 #endif
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && defined(__linux__)
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 static constexpr uint32_t kExternalRoutePriority  = OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY;
 static constexpr uint8_t  kMaxExternalRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM;
 static uint8_t            sAddedExternalRoutesNum = 0;
@@ -1278,7 +1278,6 @@ exit:
     return error;
 }
 
-#ifdef __linux__
 static void AddAddressLabel(const uint8_t *aAddress, uint8_t aPrefixLen, uint32_t aLabel)
 {
     constexpr unsigned int kBufSize = 128;
@@ -1409,8 +1408,362 @@ exit:
 }
 #endif // __linux__
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE || \
-    OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+static uint32_t sRouteMessageSequence = 0;
+
+// The addresses of a routing socket message are stored rounded up: to 4 bytes on Apple, to `sizeof(long)` on
+// FreeBSD (`SA_SIZE`), to 8 bytes on NetBSD (`RT_ROUNDUP`, which <net/route.h> exposes under _NETBSD_SOURCE only);
+// an empty address (the default route's netmask) takes one unit.
+static size_t RouteSockaddrSize(size_t aLength)
+{
+#if defined(__FreeBSD__)
+    constexpr size_t kAlign = sizeof(long);
+#elif defined(__NetBSD__)
+    constexpr size_t kAlign = sizeof(uint64_t);
+#else
+    constexpr size_t kAlign = sizeof(uint32_t);
+#endif
+
+    return (aLength == 0) ? kAlign : ((aLength + kAlign - 1) & ~(kAlign - 1));
+}
+
+struct RouteMessage
+{
+    struct rt_msghdr mHeader;
+    uint8_t          mAddresses[2 * sizeof(struct sockaddr_in6) + 2 * sizeof(struct sockaddr_dl) + 4 * sizeof(long)];
+};
+
+// Builds an RTM_ADD, RTM_DELETE or RTM_GET for the route to `aPrefix` through the Thread interface, as
+// `route add -net ... -interface` does: the destination, the interface by index as a link-level gateway (RTM_ADD
+// and RTM_DELETE) or an empty link-level address for the kernel to name the interface in (RTM_GET, which NetBSD
+// answers with the index only when asked), and the netmask unless the prefix is a full address.
+static void BuildRouteMessage(RouteMessage &aMessage, uint8_t aType, const otIp6Prefix &aPrefix)
+{
+    struct sockaddr_in6 dst     = {};
+    struct sockaddr_dl  link    = {};
+    struct sockaddr_in6 netmask = {};
+    uint8_t            *cursor;
+
+    aMessage = {};
+    cursor   = aMessage.mAddresses;
+
+    dst.sin6_len    = sizeof(dst);
+    dst.sin6_family = AF_INET6;
+    memcpy(&dst.sin6_addr, aPrefix.mPrefix.mFields.m8, sizeof(dst.sin6_addr));
+
+    link.sdl_len    = sizeof(link);
+    link.sdl_family = AF_LINK;
+
+    aMessage.mHeader.rtm_version = RTM_VERSION;
+    aMessage.mHeader.rtm_type    = aType;
+    aMessage.mHeader.rtm_flags   = RTF_UP | RTF_STATIC;
+    aMessage.mHeader.rtm_addrs   = RTA_DST;
+    aMessage.mHeader.rtm_pid     = getpid();
+    aMessage.mHeader.rtm_seq     = static_cast<int>(++sRouteMessageSequence);
+
+    memcpy(cursor, &dst, sizeof(dst));
+    cursor += RouteSockaddrSize(sizeof(dst));
+
+    if (aType != RTM_GET)
+    {
+        link.sdl_index = static_cast<unsigned short>(otSysGetThreadNetifIndex());
+
+        aMessage.mHeader.rtm_addrs |= RTA_GATEWAY;
+        memcpy(cursor, &link, sizeof(link));
+        cursor += RouteSockaddrSize(sizeof(link));
+    }
+
+    if (aPrefix.mLength >= OT_IP6_ADDRESS_BITSIZE)
+    {
+        aMessage.mHeader.rtm_flags |= RTF_HOST;
+    }
+    else
+    {
+        netmask.sin6_len    = sizeof(netmask);
+        netmask.sin6_family = AF_INET6;
+        InitNetaskWithPrefixLength(&netmask.sin6_addr, aPrefix.mLength);
+
+        aMessage.mHeader.rtm_addrs |= RTA_NETMASK;
+        memcpy(cursor, &netmask, sizeof(netmask));
+        cursor += RouteSockaddrSize(sizeof(netmask));
+    }
+
+    if (aType == RTM_GET)
+    {
+        aMessage.mHeader.rtm_addrs |= RTA_IFP;
+        memcpy(cursor, &link, sizeof(link));
+        cursor += RouteSockaddrSize(sizeof(link));
+    }
+
+    aMessage.mHeader.rtm_msglen =
+        static_cast<unsigned short>(sizeof(aMessage.mHeader) + static_cast<size_t>(cursor - aMessage.mAddresses));
+}
+
+// The prefix length of a netmask as the kernel reports it: trimmed to its last non-zero byte.
+static uint8_t RouteNetmaskLength(const struct sockaddr *aNetmask)
+{
+    const struct sockaddr_in6 *mask   = reinterpret_cast<const struct sockaddr_in6 *>(aNetmask);
+    const uint8_t             *start  = reinterpret_cast<const uint8_t *>(mask);
+    const uint8_t             *bytes  = mask->sin6_addr.s6_addr;
+    size_t                     count  = 0;
+    uint8_t                    length = 0;
+
+    if (aNetmask->sa_len > static_cast<size_t>(bytes - start))
+    {
+        count = OT_MIN(static_cast<size_t>(aNetmask->sa_len) - static_cast<size_t>(bytes - start),
+                       static_cast<size_t>(OT_IP6_ADDRESS_SIZE));
+    }
+
+    // Leading ones up to the first zero bit; a mask with holes counts as the prefix before the first one.
+    for (size_t i = 0; i < count; i++)
+    {
+        uint8_t bit;
+
+        for (bit = 0x80; (bit != 0) && (bytes[i] & bit); bit >>= 1)
+        {
+            length++;
+        }
+
+        if (bit != 0)
+        {
+            break;
+        }
+    }
+
+    return length;
+}
+
+enum RouteLookupResult : uint8_t
+{
+    kRouteAbsent,        ///< No route to exactly the prefix.
+    kRouteOnThreadNetif, ///< The route to the prefix goes through the Thread interface.
+    kRouteElsewhere,     ///< The route to the prefix goes through another interface.
+    kRouteUnknown,       ///< The lookup failed.
+};
+
+// Looks the kernel's route to exactly `aPrefix` up. The BSDs keep one route per destination and netmask, whoever
+// added it, and XNU and NetBSD delete by destination and netmask alone, so a route the host or another process owns
+// must be left alone. Asked with RTM_GET on a socket of its own, since the shared one is read by the mainloop; the
+// kernel may answer with a covering route (the default route, a shorter prefix), which is not the one asked for.
+static RouteLookupResult LookUpRoute(const otIp6Prefix &aPrefix)
+{
+    static constexpr size_t kReplySize = 1024;
+
+    RouteLookupResult result = kRouteUnknown;
+    int               fd     = -1;
+    struct timeval    timeout;
+    RouteMessage      request;
+    union
+    {
+        struct rt_msghdr mHeader;
+        uint8_t          mBytes[kReplySize];
+    } reply;
+    ssize_t                len;
+    const uint8_t         *cursor;
+    const struct sockaddr *dst     = nullptr;
+    const struct sockaddr *netmask = nullptr;
+
+    fd = ot::Posix::SocketWithCloseExec(PF_ROUTE, SOCK_RAW, AF_INET6, ot::Posix::kSocketBlock);
+    VerifyOrExit(fd >= 0, LogWarn("Failed to open a routing socket: %s", strerror(errno)));
+
+    // The answer comes with the write or right after it; a bounded wait keeps a lost one from stalling the daemon.
+    timeout.tv_sec  = 1;
+    timeout.tv_usec = 0;
+    VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) == 0,
+                 LogWarn("Failed to set the routing socket's timeout: %s", strerror(errno)));
+
+    BuildRouteMessage(request, RTM_GET, aPrefix);
+
+    if (write(fd, &request, request.mHeader.rtm_msglen) < 0)
+    {
+        if (errno == ESRCH)
+        {
+            result = kRouteAbsent;
+        }
+        else
+        {
+            LogWarn("Failed to look up a route: %s", strerror(errno));
+        }
+
+        ExitNow();
+    }
+
+    // The answer carries our pid and sequence number; anything else is an unrelated message.
+    do
+    {
+        do
+        {
+            len = read(fd, reply.mBytes, sizeof(reply.mBytes));
+        } while ((len < 0) && (errno == EINTR));
+
+        if (len < static_cast<ssize_t>(sizeof(reply.mHeader)))
+        {
+            LogWarn("Failed to read the route lookup: %s", (len < 0) ? strerror(errno) : "short message");
+            ExitNow();
+        }
+    } while ((reply.mHeader.rtm_pid != request.mHeader.rtm_pid) || (reply.mHeader.rtm_seq != request.mHeader.rtm_seq) ||
+             (reply.mHeader.rtm_type != RTM_GET));
+
+    // The destination and the netmask of the route found.
+    cursor = reply.mBytes + sizeof(reply.mHeader);
+
+    for (unsigned int index = 0; index < RTAX_MAX; index++)
+    {
+        const struct sockaddr *sa;
+
+        if ((reply.mHeader.rtm_addrs & (1 << index)) == 0)
+        {
+            continue;
+        }
+
+        VerifyOrExit(cursor + sizeof(sa->sa_len) <= reply.mBytes + len);
+        sa = reinterpret_cast<const struct sockaddr *>(cursor);
+        VerifyOrExit(cursor + RouteSockaddrSize(sa->sa_len) <= reply.mBytes + len);
+
+        if (index == RTAX_DST)
+        {
+            dst = sa;
+        }
+        else if (index == RTAX_NETMASK)
+        {
+            netmask = sa;
+        }
+
+        cursor += RouteSockaddrSize(sa->sa_len);
+    }
+
+    result = kRouteAbsent;
+
+    // The kernel keys a route by its masked destination, so the request's host bits do not count.
+    VerifyOrExit(dst != nullptr && dst->sa_family == AF_INET6 && dst->sa_len >= sizeof(struct sockaddr_in6));
+    {
+        otIp6Address dstAddress;
+
+        memcpy(dstAddress.mFields.m8, &reinterpret_cast<const struct sockaddr_in6 *>(dst)->sin6_addr,
+               sizeof(dstAddress.mFields.m8));
+        VerifyOrExit(otIp6PrefixMatch(&dstAddress, &aPrefix.mPrefix) >= aPrefix.mLength);
+    }
+
+    if (aPrefix.mLength >= OT_IP6_ADDRESS_BITSIZE)
+    {
+        VerifyOrExit(reply.mHeader.rtm_flags & RTF_HOST);
+    }
+    else
+    {
+        VerifyOrExit(((reply.mHeader.rtm_flags & RTF_HOST) == 0) && (netmask != nullptr) &&
+                     (RouteNetmaskLength(netmask) == aPrefix.mLength));
+    }
+
+    result = (reply.mHeader.rtm_index == otSysGetThreadNetifIndex()) ? kRouteOnThreadNetif : kRouteElsewhere;
+
+exit:
+    if (fd >= 0)
+    {
+        close(fd);
+    }
+
+    return result;
+}
+
+static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
+{
+    otError      error = OT_ERROR_NONE;
+    RouteMessage request;
+    char         prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    // Routes have no priority on the BSDs: one route per destination, whoever added it. A default route through
+    // the Thread interface would collide with the host's (EEXIST) or become it, where Linux keeps it behind the
+    // host's by its metric; the prefix is tracked without a kernel route.
+    OT_UNUSED_VARIABLE(aPriority);
+
+    otIp6PrefixToString(&aPrefix, prefixString, sizeof(prefixString));
+
+    VerifyOrExit(otSysGetThreadNetifIndex() > 0 && sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(aPrefix.mLength > 0,
+                 LogInfo("Tracking %s without a kernel route: no default route through %s", prefixString, gNetifName));
+
+    BuildRouteMessage(request, RTM_ADD, aPrefix);
+
+    if (write(sNetlinkFd, &request, request.mHeader.rtm_msglen) < 0)
+    {
+        // EEXIST: a route to the prefix is there already, ours or somebody else's.
+        if (errno != EEXIST)
+        {
+            LogWarn("Failed to add route %s: %s", prefixString, strerror(errno));
+            ExitNow(error = OT_ERROR_FAILED);
+        }
+
+        if (LookUpRoute(aPrefix) == kRouteOnThreadNetif)
+        {
+            LogInfo("Route %s exists already through %s", prefixString, gNetifName);
+        }
+        else
+        {
+            LogWarn("Not installing route %s: another route to it exists", prefixString);
+            error = OT_ERROR_FAILED;
+        }
+
+        ExitNow();
+    }
+
+    LogInfo("Added route %s through %s", prefixString, gNetifName);
+
+exit:
+    return error;
+}
+
+static otError DeleteRoute(const otIp6Prefix &aPrefix)
+{
+    otError      error = OT_ERROR_NONE;
+    RouteMessage request;
+    char         prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    otIp6PrefixToString(&aPrefix, prefixString, sizeof(prefixString));
+
+    VerifyOrExit(otSysGetThreadNetifIndex() > 0 && sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(aPrefix.mLength > 0, LogInfo("No kernel route was installed for %s", prefixString));
+
+    // Deleting by destination and netmask would remove whatever route is there now.
+    switch (LookUpRoute(aPrefix))
+    {
+    case kRouteOnThreadNetif:
+        break;
+    case kRouteAbsent:
+        LogInfo("Route %s is gone already", prefixString);
+        ExitNow();
+    case kRouteElsewhere:
+        LogWarn("Not deleting route %s: it is not through %s any more", prefixString, gNetifName);
+        ExitNow();
+    case kRouteUnknown:
+        ExitNow(error = OT_ERROR_FAILED);
+    }
+
+    BuildRouteMessage(request, RTM_DELETE, aPrefix);
+
+    if (write(sNetlinkFd, &request, request.mHeader.rtm_msglen) < 0)
+    {
+        if (errno != ESRCH)
+        {
+            LogWarn("Failed to delete route %s: %s", prefixString, strerror(errno));
+            ExitNow(error = OT_ERROR_FAILED);
+        }
+
+        LogInfo("Route %s is gone already", prefixString);
+        ExitNow();
+    }
+
+    LogInfo("Deleted route %s through %s", prefixString, gNetifName);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+
+#if defined(__linux__) &&                                                                                           \
+    (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE || \
+     OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE)
 static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
 {
     return AddRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength, aPriority);
@@ -1598,6 +1951,7 @@ exit:
 }
 #endif // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 
+#ifdef __linux__
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static otError AddIp4Route(const otIp4Cidr &aIp4Cidr, uint32_t aPriority)
 {
@@ -1786,10 +2140,10 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
 #endif
     if (OT_CHANGED_THREAD_NETDATA & aFlags)
     {
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && defined(__linux__)
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
         UpdateOmrRoutes(aInstance);
 #endif
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && defined(__linux__)
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
         UpdateExternalRoutes(aInstance);
 #endif
 #if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE

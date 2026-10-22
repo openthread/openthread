@@ -83,7 +83,9 @@ timeout_run()
 do_build()
 {
     ./script/cmake-build simulation
-    ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
+    # OMR prefixes are installed as kernel routes (which needs border routing for otNetDataContainsOmrPrefix), so that
+    # the daemon's route handling is exercised.
+    ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_POSIX_INSTALL_OMR_ROUTES=ON -DOT_BORDER_ROUTING=ON -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
 }
 
 # The netif joins ff02::1 on the Thread interface when it comes up and leaves it when it
@@ -125,6 +127,63 @@ check_daemon_netif_down()
     "${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig | grep 'down' || die 'ot-daemon does not respond after ifconfig down'
 
     check_daemon_multicast_group Removed
+}
+
+# Lists a route to the prefix through the Thread interface. On Linux only the daemon's (proto boot) counts, since the
+# kernel adds one of its own (proto kernel) for the interface's address once the address is deprecated.
+kernel_route_known()
+{
+    if [[ ${OSTYPE} == "linux-gnu"* ]]; then
+        ip -6 route show "$1" dev "${NETIF_NAME}" proto boot | grep .
+    else
+        netstat -rn -f inet6 | grep -F "$1" | grep -w "${NETIF_NAME}"
+    fi
+}
+
+# Runs an ot-ctl command on the daemon and succeeds when it answers Done. The output is collected first, so that a
+# grep -q cannot end ot-ctl before it has read the daemon's whole reply.
+ot_ctl_done()
+{
+    local output
+
+    output=$("${OT_CTL[@]}" -I "${NETIF_NAME}" "$@") || return 1
+    grep -q Done <<<"${output}"
+}
+
+# Passes when the route listing fails too, so it must follow a kernel_route_known that passed.
+kernel_route_gone()
+{
+    ! kernel_route_known "$1"
+}
+
+check_daemon_omr_route()
+{
+    local omr_prefix=fd00:dead:beef::/64
+    # OpenThread prints every group within the prefix length, zero groups included.
+    local logged_prefix=fd00:dead:beef:0::/64
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # An OMR prefix in the network data becomes a kernel route through the Thread interface, and goes with the prefix.
+    # The kernel installs a prefix route of its own for the address the daemon configures from the prefix (XNU cannot
+    # be told not to), so the table alone does not prove the daemon's work: its log must show the route. The daemon
+    # logs critical lines only until told otherwise, and the route is reported at the info level.
+    ot_ctl_done log level 4 || die 'log level failed'
+    ot_ctl_done prefix add "${omr_prefix}" paos || die 'prefix add failed'
+    ot_ctl_done netdata register || die 'netdata register failed'
+    timeout_run 10 kernel_route_known "${omr_prefix}" || die 'the OMR prefix was not installed as a route through the Thread interface'
+    timeout_run 10 grep -qE "(Successfully added|Failed to add) an OMR route ${logged_prefix} in kernel" "${OT_DAEMON_OUTPUT}" \
+        || die 'the daemon did not report the route of the OMR prefix'
+    grep -qF "Successfully added an OMR route ${logged_prefix} in kernel" "${OT_DAEMON_OUTPUT}" \
+        || die 'the daemon failed to install the route of the OMR prefix'
+
+    ot_ctl_done prefix remove "${omr_prefix}" || die 'prefix remove failed'
+    ot_ctl_done netdata register || die 'netdata register failed'
+    timeout_run 10 kernel_route_gone "${omr_prefix}" || die 'the route of the removed OMR prefix is still installed'
+    timeout_run 10 grep -qE "(Successfully deleted|Failed to delete) an OMR route ${logged_prefix} in kernel" "${OT_DAEMON_OUTPUT}" \
+        || die 'the daemon did not report the removal of the route of the OMR prefix'
+    grep -qF "Successfully deleted an OMR route ${logged_prefix} in kernel" "${OT_DAEMON_OUTPUT}" \
+        || die 'the daemon failed to delete the route of the OMR prefix'
 }
 
 do_check()
@@ -275,6 +334,7 @@ EOF
 
     # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
     if [[ $OSTYPE != "linux-gnu"* ]]; then
+        check_daemon_omr_route
         check_daemon_netif_down
         return 0
     fi
@@ -305,6 +365,7 @@ EOF
         die 'Tmf is not blocked'
     fi
 
+    check_daemon_omr_route
     check_daemon_netif_down
 }
 
