@@ -119,9 +119,9 @@ def verify(pv):
     #     IPv6 packet with the Hop Limit field of the inner packet set to 58.
     print("Step 3: BR_1 forwards to Thread as MPL, inner HL=58")
     pkts.filter_wpan_src64(BR_1).\
-        filter_AMPLFMA().\
-        filter(lambda p: p.ipv6inner.dst == MA1).\
-        filter(lambda p: p.ipv6inner.hlim == HL_58).\
+        filter_MPL().\
+        filter(lambda p: p.ipv6.dst == MA1).\
+        filter(lambda p: p.ipv6.hlim == HL_58).\
         filter(lambda p: p.icmpv6.echo.identifier == ECHO_ID1).\
         filter(lambda p: p.lowpan.frag).\
         must_next()
@@ -154,8 +154,8 @@ def verify(pv):
     print("Step 6: BR_1 MUST NOT forward to Thread")
     pkts.copy().\
         filter_wpan_src64(BR_1).\
-        filter_AMPLFMA().\
-        filter(lambda p: p.ipv6inner.dst == MA1).\
+        filter_MPL().\
+        filter(lambda p: p.ipv6.dst == MA1).\
         filter(lambda p: p.icmpv6.echo.identifier == ECHO_ID2).\
         must_not_next()
 
@@ -168,9 +168,9 @@ def verify(pv):
     #   - N/A
     print("Step 7: Router sends Echo Request in MPL to MA2, inner HL=159")
     pkts.filter_wpan_src64(ROUTER).\
-        filter_AMPLFMA().\
-        filter(lambda p: p.ipv6inner.dst == MA2).\
-        filter(lambda p: p.ipv6inner.hlim == HL_159).\
+        filter_MPL().\
+        filter(lambda p: p.ipv6.dst == MA2).\
+        filter(lambda p: p.ipv6.hlim == HL_159).\
         filter(lambda p: p.icmpv6.echo.identifier == ECHO_ID3).\
         filter(lambda p: p.lowpan.frag).\
         must_next()
@@ -197,9 +197,9 @@ def verify(pv):
     #   - N/A
     print("Step 9: Router sends Echo Request in MPL to MA2, inner HL=2")
     pkts.filter_wpan_src64(ROUTER).\
-        filter_AMPLFMA().\
-        filter(lambda p: p.ipv6inner.dst == MA2).\
-        filter(lambda p: p.ipv6inner.hlim == HL_2).\
+        filter_MPL().\
+        filter(lambda p: p.ipv6.dst == MA2).\
+        filter(lambda p: p.ipv6.hlim == HL_2).\
         filter(lambda p: p.icmpv6.echo.identifier == ECHO_ID4).\
         filter(lambda p: p.lowpan.frag).\
         must_next()
@@ -226,9 +226,9 @@ def verify(pv):
     #   - N/A
     print("Step 11: Router sends Echo Request in MPL to MA2, inner HL=1")
     pkts.filter_wpan_src64(ROUTER).\
-        filter_AMPLFMA().\
-        filter(lambda p: p.ipv6inner.dst == MA2).\
-        filter(lambda p: p.ipv6inner.hlim == HL_1).\
+        filter_MPL().\
+        filter(lambda p: p.ipv6.dst == MA2).\
+        filter(lambda p: p.ipv6.hlim == HL_1).\
         filter(lambda p: p.icmpv6.echo.identifier == ECHO_ID5).\
         filter(lambda p: p.lowpan.frag).\
         must_next()
@@ -253,9 +253,9 @@ def verify(pv):
     #   - N/A
     print("Step 13: Router sends Echo Request in MPL to MA2, inner HL=0")
     pkts.filter_wpan_src64(ROUTER).\
-        filter_AMPLFMA().\
-        filter(lambda p: p.ipv6inner.dst == MA2).\
-        filter(lambda p: p.ipv6inner.hlim == HL_0).\
+        filter_MPL().\
+        filter(lambda p: p.ipv6.dst == MA2).\
+        filter(lambda p: p.ipv6.hlim == HL_0).\
         filter(lambda p: p.icmpv6.echo.identifier == ECHO_ID6).\
         filter(lambda p: p.lowpan.frag).\
         must_next()
