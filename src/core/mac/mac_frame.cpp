@@ -880,8 +880,7 @@ void TxFrame::PayloadBuilder::InitFrom(TxFrame &aFrame)
 
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
-    uint8_t       *psduBuffer   = mPsdu;
-    otRadioIeInfo *ieInfoBuffer = mInfo.mTxInfo.mIeInfo;
+    uint8_t *psduBuffer = mPsdu;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     uint8_t radioType = mRadioType;
 #endif
@@ -891,19 +890,13 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
     // Set the original buffer pointers (and link type) back on
     // the frame (which were overwritten by above `memcpy()`).
 
-    mPsdu                 = psduBuffer;
-    mInfo.mTxInfo.mIeInfo = ieInfoBuffer;
+    mPsdu = psduBuffer;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     mRadioType = radioType;
 #endif
 
     memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.mLength);
-
-    // mIeInfo may be null when TIME_SYNC is not enabled.
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
-#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (mRadioType != aFromFrame.GetRadioType())
@@ -941,6 +934,58 @@ exit:
     SetIsHeaderUpdated(false);
 }
 #endif
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+void TxFrame::ParseInfo::TimeSyncInit(int64_t aNetworkTimeOffset, uint8_t aTimeSyncSeq)
+{
+    TimeIe *timeIe;
+
+    VerifyOrExit(!IsSecurityProcessed());
+
+    timeIe = Find<TimeIe>();
+    VerifyOrExit(timeIe != nullptr);
+
+    timeIe->SetSequence(aTimeSyncSeq);
+    timeIe->SetTime(static_cast<uint64_t>(aNetworkTimeOffset));
+
+exit:
+    return;
+}
+
+void TxFrame::ParseInfo::TimeSyncFinalize(Radio::Time64 aTxTimestamp)
+{
+    TimeIe *timeIe;
+
+    SetTxTimestamp(aTxTimestamp);
+
+    VerifyOrExit(!IsSecurityProcessed());
+
+    timeIe = Find<TimeIe>();
+    VerifyOrExit(timeIe != nullptr);
+
+    timeIe->SetTime(timeIe->GetTime() + aTxTimestamp);
+
+exit:
+    return;
+}
+
+void TxFrame::ParseInfo::TimeSyncRestore(void)
+{
+    TimeIe *timeIe;
+
+    VerifyOrExit(GetTxTimestamp() != 0);
+    VerifyOrExit(!IsSecurityProcessed());
+
+    timeIe = Find<TimeIe>();
+    VerifyOrExit(timeIe != nullptr);
+
+    timeIe->SetTime(timeIe->GetTime() - GetTxTimestamp());
+    SetTxTimestamp(0);
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 {

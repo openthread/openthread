@@ -374,7 +374,6 @@ void Radio::Reset(void)
     mRadioContext.mCslShortAddress       = Mac::kShortAddrInvalid;
     mRadioContext.mShortAddress          = Mac::kShortAddrInvalid;
     mRadioContext.mAlternateShortAddress = Mac::kShortAddrInvalid;
-    mTxFrame.mInfo.mTxInfo.mIeInfo       = &mTxIeInfo;
 }
 
 Error Radio::ConfigureEnhAckProbing(Mac::ShortAddress      aShortAddress,

@@ -250,19 +250,6 @@ typedef enum
 } otRadioKeyType;
 
 /**
- * Represents the Time IE (Information Element) related information of a radio frame.
- *
- * This structure is only used by the experimental Time Synchronization service feature (enabled via
- * `OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`).
- */
-typedef struct otRadioIeInfo
-{
-    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
-    uint8_t mTimeIeOffset;      ///< The Time IE offset from the start of PSDU (`0` indicates no Time IE).
-    uint8_t mTimeSyncSeq;       ///< The Time sync sequence.
-} otRadioIeInfo;
-
-/**
  * Represents an IEEE 802.15.4 radio frame.
  */
 typedef struct otRadioFrame
@@ -285,22 +272,6 @@ typedef struct otRadioFrame
         struct
         {
             const otMacKeyMaterial *mAesKey; ///< The key material used for AES-CCM frame security.
-
-            /**
-             * The pointer to the Time IE related information.
-             *
-             * This field is only used when the experimental Time Synchronization feature is enabled via
-             * `OPENTHREAD_CONFIG_TIME_SYNC_ENABLE` and is ignored otherwise.
-             *
-             * When `OPENTHREAD_CONFIG_TIME_SYNC_ENABLE` is enabled, the radio platform MUST provide an
-             * `otRadioIeInfo` structure and set this pointer on the transmit `otRadioFrame` buffer returned to the
-             * OpenThread stack (e.g., via `otPlatRadioGetTransmitBuffer()`). The OpenThread stack populates `*mIeInfo`
-             * when preparing a transmit frame, and the radio platform uses it (when `mTimeIeOffset != 0`) to update
-             * the Time IE in `mPsdu` before transmission.
-             *
-             * When this feature is disabled, this pointer will not be used and may be set to `NULL`.
-             */
-            otRadioIeInfo *mIeInfo;
 
             /**
              * The base time in microseconds for timed transmissions relative to the local radio clock (see
@@ -436,6 +407,12 @@ typedef struct otRadioFrame
              *
              * The platform should update this field before `otPlatRadioTxStarted()` is fired for each transmit attempt,
              * or before `otPlatRadioScheduledTxDone()` is invoked for a scheduled transmission.
+             *
+             * When the experimental Time Synchronization feature is enabled (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) and
+             * the frame contains a Time IE, the OpenThread stack sets the time field of the Time IE to the offset to
+             * the Thread network time. The radio platform MUST then add this timestamp to the time field of the Time IE
+             * when the end of the SFD is present at the local antenna (before the frame security is processed), so that
+             * the Time IE carries the Thread network time.
              */
             otRadioTime64 mTimestamp;
         } mTxInfo;
@@ -1371,8 +1348,8 @@ otRadioFrame *otPlatRadioGetScheduledTxFrame(otInstance *aInstance);
  *     are used in order on the air if other transmissions or enhanced acknowledgments occur before @p aTxTime and that
  *     no frame counter is wasted if the scheduled transmission is canceled or aborted before the frame is prepared at
  *     @p aTxTime.
- *   - All other fields (`mChannel`, `mAesKey`, `mIeInfo`, `mTxPower`) MUST follow their existing behavior as defined
- *     for `otPlatRadioTransmit()`.
+ *   - All other fields (`mChannel`, `mAesKey`, `mTxPower`) MUST follow their existing behavior as defined for
+ *     `otPlatRadioTransmit()`.
  *
  * - Completion and Callbacks:
  *   - The radio platform MUST report the outcome of the scheduled transmission using the `otPlatRadioScheduledTxDone()`

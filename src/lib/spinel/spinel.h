@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 12
+#define SPINEL_RCP_API_VERSION 13
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -5189,6 +5189,19 @@ enum
      * This property is deprecated.
      */
     SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED = SPINEL_PROP_NEST__BEGIN + 2,
+
+    /// Network Time Offset in Time IE
+    /** Format: `b` (Write-only)
+     *
+     * Indicates whether the time field of the Time IE in frames sent via `SPINEL_PROP_STREAM_RAW` is the offset to the
+     * network time (`true`), or the network time estimated by the host (`false`, the default value).
+     *
+     * When this property is `true`, the RCP converts the offset to network time when the frame is transmitted. When it
+     * is `false`, the RCP converts the network time back to the offset based on its current radio time first.
+     *
+     * This property is only supported when the RCP is built with the time synchronization feature.
+     */
+    SPINEL_PROP_NEST_NETWORK_TIME_EXPECTING_OFFSET = SPINEL_PROP_NEST__BEGIN + 3,
 
     SPINEL_PROP_NEST__END = 0x3C00,
 

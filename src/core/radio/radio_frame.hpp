@@ -487,38 +487,22 @@ public:
      */
     void SetIsHeaderUpdated(bool aIsHeaderUpdated) { AsFrame().mInfo.mTxInfo.mIsHeaderUpdated = aIsHeaderUpdated; }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
-     * Sets the Time IE offset.
+     * Gets the TX timestamp of the frame.
      *
-     * @param[in]  aOffset  The Time IE offset, 0 means no Time IE.
+     * The TX timestamp is the time of the local radio clock in microseconds when the end of the SFD was present at the
+     * local antenna.
+     *
+     * @returns The TX timestamp of the frame.
      */
-    void SetTimeIeOffset(uint8_t aOffset) { AsFrame().mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
+    Time64 GetTxTimestamp(void) const { return AsFrame().mInfo.mTxInfo.mTimestamp; }
 
     /**
-     * Gets the Time IE offset.
+     * Sets the TX timestamp of the frame.
      *
-     * @returns The Time IE offset, 0 means no Time IE.
+     * @param[in] aTimestamp  The TX timestamp of the frame.
      */
-    uint8_t GetTimeIeOffset(void) const { return AsFrame().mInfo.mTxInfo.mIeInfo->mTimeIeOffset; }
-
-    /**
-     * Sets the offset to network time.
-     *
-     * @param[in]  aNetworkTimeOffset  The offset to network time.
-     */
-    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
-    {
-        AsFrame().mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset = aNetworkTimeOffset;
-    }
-
-    /**
-     * Sets the time sync sequence.
-     *
-     * @param[in]  aTimeSyncSeq  The time sync sequence.
-     */
-    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { AsFrame().mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    void SetTxTimestamp(Time64 aTimestamp) { AsFrame().mInfo.mTxInfo.mTimestamp = aTimestamp; }
 
     /**
      * Indicates whether or not a target transmission time is specified for the frame.
