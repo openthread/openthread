@@ -34,6 +34,8 @@
 #ifndef OT_CORE_CONFIG_THREAD_DIRECT_H_
 #define OT_CORE_CONFIG_THREAD_DIRECT_H_
 
+#include "config/border_routing.h"
+
 /**
  * @addtogroup config-thread-direct
  *
@@ -60,6 +62,63 @@
 #ifndef OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 #define OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE 0
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE
+ *
+ * Define to 1 to allow Thread Direct `KeyManager` to allocate registered key entries from the heap.
+ *
+ * When disabled (set to 0), a fixed-size `Pool` with `OPENTHREAD_CONFIG_TD_MAX_REGISTERED_KEYS` entries is used.
+ *
+ * By default, this is enabled (set to 1) when both `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` and
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE` are enabled, and disabled (set to 0) otherwise.
+ */
+#ifndef OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+#define OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE 1
+#else
+#define OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE 0
+#endif
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TD_MAX_REGISTERED_KEYS
+ *
+ * Specifies the maximum number of registered Thread Direct keys.
+ *
+ * When `OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE` is enabled, this limits the maximum number of heap-allocated
+ * key entries, and can be set to 0 to allow an unlimited number of keys. When heap allocation is disabled, this
+ * specifies the size of the internal `Pool` used for allocating key entries.
+ *
+ * By default, this is set to 0 (unlimited) when `OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE` is enabled, and 8
+ * otherwise.
+ */
+#ifndef OPENTHREAD_CONFIG_TD_MAX_REGISTERED_KEYS
+#if OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE
+#define OPENTHREAD_CONFIG_TD_MAX_REGISTERED_KEYS 0
+#else
+#define OPENTHREAD_CONFIG_TD_MAX_REGISTERED_KEYS 8
+#endif
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TD_FRAME_COUNTER_AHEAD
+ *
+ * The value ahead of the current MAC security frame counter for persistent storage of Thread Direct keys.
+ */
+#ifndef OPENTHREAD_CONFIG_TD_FRAME_COUNTER_AHEAD
+#define OPENTHREAD_CONFIG_TD_FRAME_COUNTER_AHEAD 1000
+#endif
+
+//----------------------------------------------------------------------------------------------------------------------
+// Derived configs
+
+#ifdef OT_CONFIG_THREAD_DIRECT_ENABLE
+#error "OT_CONFIG_THREAD_DIRECT_ENABLE MUST NOT be defined directly. It is derived from other configs"
+#endif
+
+#define OT_CONFIG_THREAD_DIRECT_ENABLE \
+    (OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE)
 
 /**
  * @}

@@ -95,6 +95,8 @@ protected:
  */
 template <class Type, uint16_t kPoolSize> class Pool : public PoolBase<Type>
 {
+    static_assert(kPoolSize > 0, "kPoolSize cannot be zero!");
+
 public:
     /**
      * Initializes the pool.
