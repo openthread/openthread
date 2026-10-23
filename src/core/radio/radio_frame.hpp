@@ -55,6 +55,11 @@ namespace Radio {
 class Frame;
 
 /**
+ * Represents a callback function pointer to update the PSDU right before transmission.
+ */
+typedef otRadioPsduUpdater PsduUpdater;
+
+/**
  * Defines a CRTP base class providing property accessors for a radio frame.
  *
  * Users of this class should follow CRTP-style inheritance, where the `FrameType` class inherits from
@@ -554,6 +559,23 @@ public:
     {
         SetTxDelayBaseTime(ConvertTime64To32(aBaseTime));
         SetTxDelay(static_cast<uint32_t>(aTargetTxTime - aBaseTime));
+    }
+
+    /**
+     * Clears the PSDU updater callback and its context on the frame.
+     */
+    void ClearPsduUpdater(void) { SetPsduUpdater(nullptr, nullptr); }
+
+    /**
+     * Sets the PSDU updater callback and its context on the frame.
+     *
+     * @param[in] aUpdater  The PSDU updater callback function pointer.
+     * @param[in] aContext  The context pointer passed to @p aUpdater when invoked.
+     */
+    void SetPsduUpdater(PsduUpdater aUpdater, void *aContext)
+    {
+        AsFrame().mInfo.mTxInfo.mPsduUpdater        = aUpdater;
+        AsFrame().mInfo.mTxInfo.mPsduUpdaterContext = aContext;
     }
 
 private:
