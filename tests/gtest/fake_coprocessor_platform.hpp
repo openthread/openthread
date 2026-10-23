@@ -29,6 +29,8 @@
 #ifndef OT_GTEST_FAKE_COPROCESSOR_PLATFORM_HPP_
 #define OT_GTEST_FAKE_COPROCESSOR_PLATFORM_HPP_
 
+#include <functional>
+
 #include <openthread/config.h>
 
 #include "fake_platform.hpp"
@@ -76,11 +78,21 @@ public:
         mReceived = true;
         if (aError == kErrorNone)
         {
+            if (mFrameObserver)
+            {
+                mFrameObserver(mDecoderBuffer->GetFrame(), mDecoderBuffer->GetLength());
+            }
+
             mReceiveFrameCallback(mReceiveFrameContext);
         }
     }
 
     int Receive(const uint8_t *aBuffer, uint16_t aLength);
+
+    /**
+     * Optional observer called with every spinel frame received from the coprocessor.
+     */
+    std::function<void(const uint8_t *aFrame, uint16_t aLength)> mFrameObserver;
 
 private:
     ReceiveFrameCallback            mReceiveFrameCallback = nullptr;
