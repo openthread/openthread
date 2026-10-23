@@ -118,6 +118,7 @@ public:
 
     void UpdateNextAlarmMilli(const Alarm &aAlarm);
     void UpdateNextAlarmMicro(const Alarm &aAlarm);
+    void UpdateNextScheduledTx(const Radio &aRadio);
     void MarkPendingAction(void) { mPendingAction = true; }
 
     Node *FindNodeByAddress(const Ip6::Address &aAddress);
@@ -137,6 +138,12 @@ private:
         kNoAck,
         kSendAckNoFramePending,
         kSendAckFramePending,
+    };
+
+    enum TxType : uint8_t
+    {
+        kRegularTx,
+        kScheduledTx,
     };
 
     struct IcmpEchoResponseContext
@@ -161,6 +168,7 @@ private:
 
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);
+    void ProcessRadioTx(Node &aNode, Radio::Frame &aTxFrame, TxType aTxType);
     void ProcessInfraIf(Node &aNode);
 
     static void HandleIcmpResponse(void                *aContext,
