@@ -59,11 +59,21 @@ TEST(RadioSpinelFatalRcpFailure, invokesCallbackBeforeExitingAfterRcpStopsRespon
 #else
     constexpr int kExpectedExitCode = OT_EXIT_RADIO_SPINEL_NO_RESPONSE;
 #endif
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0 && \
+    OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+    const char *expectedMarker = "VENDOR_RESET_CALLBACK_AFTER_FATAL=1";
+#else
+    const char *expectedMarker = "FATAL_RCP_CALLBACK_RADIO_DISABLED=1";
+#endif
     EXPECT_EXIT(
         {
             FakeCoprocessorPlatform      platform;
             Spinel::RadioSpinelCallbacks callbacks{};
             static Spinel::RadioSpinel  *sFailedRadio;
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+            static uint8_t sFatalCallbackCount;
+            sFatalCallbackCount = 0;
+#endif
 
             sFailedRadio = &platform.mRadioSpinel;
 
@@ -82,11 +92,26 @@ TEST(RadioSpinelFatalRcpFailure, invokesCallbackBeforeExitingAfterRcpStopsRespon
                     _exit(97);
                 }
 
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+                ++sFatalCallbackCount;
+#endif
                 fprintf(stderr, "FATAL_RCP_CALLBACK_RADIO_DISABLED=1\n");
                 fflush(stderr);
             };
 
             platform.mRadioSpinel.SetCallbacks(callbacks);
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+            platform.mSpinelDriver.SetCoprocessorResetFailureCallback(
+                [](void *aContext) {
+                    if (*static_cast<uint8_t *>(aContext) != 1)
+                    {
+                        _exit(96);
+                    }
+                    fprintf(stderr, "VENDOR_RESET_CALLBACK_AFTER_FATAL=1\n");
+                    fflush(stderr);
+                },
+                &sFatalCallbackCount);
+#endif
             if (platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()) != kErrorNone)
             {
                 _exit(99);
@@ -97,7 +122,7 @@ TEST(RadioSpinelFatalRcpFailure, invokesCallbackBeforeExitingAfterRcpStopsRespon
             platform.mRadioSpinel.SetPromiscuous(true);
             _exit(98);
         },
-        ::testing::ExitedWithCode(kExpectedExitCode), "FATAL_RCP_CALLBACK_RADIO_DISABLED=1");
+        ::testing::ExitedWithCode(kExpectedExitCode), expectedMarker);
 }
 
 TEST(RadioSpinelTransmit, shouldPassDesiredTxPowerToRadioPlatform)
