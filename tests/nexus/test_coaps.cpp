@@ -61,13 +61,13 @@ static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageIn
     SuccessOrQuit(instance.Get<Coap::ApplicationCoapSecure>().SendMessage(*response));
 }
 
-static void HandleResponse(void *aContext, Coap::Msg *aMsg, otError aError)
+static void HandleResponse(void *aContext, Coap::Msg *aMsg, Error aError)
 {
     OT_UNUSED_VARIABLE(aContext);
 
     sResponseHandlerCalled = true;
 
-    Log("Received CoAP response, error: %d", aError);
+    Log("Received CoAP response, error: %d", static_cast<otError>(aError));
     VerifyOrQuit(aError == OT_ERROR_NONE);
     VerifyOrQuit(aMsg != nullptr);
 
