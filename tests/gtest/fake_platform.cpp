@@ -522,8 +522,12 @@ otError otPlatRadioGetAvailability(otInstance *, otRadioAvailability *aAvailabil
     return FakePlatform::CurrentPlatform().GetRadioAvailability(*aAvailability);
 }
 
-// Add WEAK here because in some unit test there is an implementation for `otPlatRadioSetChannelTargetPower`
-OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t, int16_t) { return OT_ERROR_NONE; }
+#if !(OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE)
+otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t aChannel, int16_t aTargetPower)
+{
+    return FakePlatform::CurrentPlatform().ChannelTargetPowerSet(aChannel, aTargetPower);
+}
+#endif
 
 void otPlatReset(otInstance *) {}
 

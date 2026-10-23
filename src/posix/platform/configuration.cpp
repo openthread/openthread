@@ -98,8 +98,8 @@ otError Configuration::SetRegion(uint16_t aRegionCode)
     }
 
     SuccessOrExit(error = UpdateChannelMasks(domain));
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     SuccessOrExit(error = UpdateTargetPower(domain));
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     SuccessOrExit(error = UpdateCalibratedPower());
 #endif
 
@@ -205,7 +205,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 otError Configuration::UpdateTargetPower(const Power::Domain &aDomain)
 {
     otError            error    = OT_ERROR_NONE;
@@ -233,6 +232,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 otError Configuration::UpdateCalibratedPower(void)
 {
     otError                error    = OT_ERROR_NONE;
@@ -274,6 +274,7 @@ exit:
 
     return error;
 }
+#endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 
 otError Configuration::GetNextTargetPower(const Power::Domain &aDomain,
                                           int                 &aIterator,
@@ -300,7 +301,6 @@ otError Configuration::GetNextTargetPower(const Power::Domain &aDomain,
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 
 bool Configuration::IsValid(void) const
 {
@@ -309,11 +309,11 @@ bool Configuration::IsValid(void) const
     VerifyOrExit(mProductConfigFile.DoesExist(), ret = false);
 
     ret = mProductConfigFile.HasKey(kKeySupportedChannelMask) || mProductConfigFile.HasKey(kKeyPreferredChannelMask) ||
-          mProductConfigFile.HasKey(kKeyRegionDomainMapping);
+          mProductConfigFile.HasKey(kKeyRegionDomainMapping) || mProductConfigFile.HasKey(kKeyTargetPower);
     VerifyOrExit(!ret);
 
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    ret = (mProductConfigFile.HasKey(kKeyCalibratedPower) || mProductConfigFile.HasKey(kKeyTargetPower));
+    ret = mProductConfigFile.HasKey(kKeyCalibratedPower);
 #endif
 
 exit:

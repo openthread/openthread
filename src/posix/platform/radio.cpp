@@ -1042,13 +1042,13 @@ otError otPlatRadioClearCalibratedPowers(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
     return GetRadioSpinel().ClearCalibratedPowers();
 }
+#endif
 
 otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return GetRadioSpinel().SetChannelTargetPower(aChannel, aTargetPower);
 }
-#endif
 
 otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
