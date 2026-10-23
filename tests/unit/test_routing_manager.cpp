@@ -5943,7 +5943,6 @@ void TestRdnss(void)
     FinalizeTest();
 }
 
-
 void TestGracefulDetachWithdrawsRoutesImmediately(void)
 {
     Ip6::Prefix localOmr;

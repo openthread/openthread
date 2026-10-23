@@ -36,8 +36,8 @@
 #include <string.h>
 
 #include <openthread/logging.h>
-#include <openthread/platform/diag.h>
 #include <openthread/thread.h>
+#include <openthread/platform/diag.h>
 
 #include "common/code_utils.hpp"
 #include "common/new.hpp"

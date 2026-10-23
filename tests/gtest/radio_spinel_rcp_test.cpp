@@ -52,12 +52,16 @@ using namespace ot;
 using ::testing::AnyNumber;
 using ::testing::Truly;
 
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT == 0
 TEST(RadioSpinelFatalRcpFailure, invokesCallbackBeforeExitingAfterRcpStopsResponding)
 {
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    constexpr int kExpectedExitCode = OT_EXIT_FAILURE;
+#else
+    constexpr int kExpectedExitCode = OT_EXIT_RADIO_SPINEL_NO_RESPONSE;
+#endif
     EXPECT_EXIT(
         {
-            FakeCoprocessorPlatform platform;
+            FakeCoprocessorPlatform      platform;
             Spinel::RadioSpinelCallbacks callbacks{};
 
             callbacks.mEnergyScanDone  = [](otInstance *, int8_t) {};
@@ -80,9 +84,8 @@ TEST(RadioSpinelFatalRcpFailure, invokesCallbackBeforeExitingAfterRcpStopsRespon
             platform.mRadioSpinel.SetPromiscuous(true);
             _exit(98);
         },
-        ::testing::ExitedWithCode(OT_EXIT_RADIO_SPINEL_NO_RESPONSE), "FATAL_RCP_CALLBACK_INSTANCE=1");
+        ::testing::ExitedWithCode(kExpectedExitCode), "FATAL_RCP_CALLBACK_INSTANCE=1");
 }
-#endif
 
 TEST(RadioSpinelTransmit, shouldPassDesiredTxPowerToRadioPlatform)
 {

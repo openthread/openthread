@@ -146,6 +146,8 @@ void RadioSpinel::Init(bool          aSkipRcpVersionCheck,
     mTimeSyncEnabled = aEnableRcpTimeSync;
 
     mSpinelDriver = aSpinelDriver;
+    mSpinelDriver->SetFatalResetCallback(
+        [](void *aContext) { static_cast<RadioSpinel *>(aContext)->NotifyFatalRcpFailure(); }, this);
     mSpinelDriver->SetFrameHandler(&HandleReceivedFrame, &HandleSavedFrame, this);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
