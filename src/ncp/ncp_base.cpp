@@ -247,7 +247,9 @@ NcpBase::NcpBase(Instance **aInstances, uint8_t aCount)
     : NcpBase(aInstances[0])
 {
     OT_ASSERT(aCount > 0);
-    OT_ASSERT(aCount < SPINEL_HEADER_IID_MAX); // One IID reserved for broadcast
+    OT_ASSERT(aCount <= SPINEL_HEADER_IID_MAX); // One IID reserved for broadcast
+
+    memset(mInstances, 0, sizeof(mInstances));
 
     uint8_t skipped = 0;
 

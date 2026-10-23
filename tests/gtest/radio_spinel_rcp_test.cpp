@@ -238,10 +238,13 @@ TEST(RadioSpinelTransmit, shouldPerformCsmaCaWhenEnabled)
                 })))
         .Times(1);
 
-    // Receive(11) will be called exactly twice:
-    // 1. one time to prepare for TX because the fake platform doesn't support sleep-to-tx capability.
-    // 2. one time in CSMA backoff because rx-on-when-idle is true.
+    // The fake platform needs one Receive(11) call to prepare for TX (no sleep-to-tx support).
+    // The normal radio build requires another call for software CSMA backoff. Multi-PAN RCP disables this backoff.
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    EXPECT_CALL(platform, Receive(11)).Times(1);
+#else
     EXPECT_CALL(platform, Receive(11)).Times(2);
+#endif
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
