@@ -60,7 +60,7 @@ struct RadioSpinelCallbacks
      *                        kErrorAbort when reception was aborted and a frame was not received,
      *                        kErrorNoBufs when a frame could not be received due to lack of rx buffer space.
      */
-    void (*mReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, Error aError);
+    void (*mReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
     /**
      * The callback notifies user of `RadioSpinel` that the transmit operation has completed, providing, if
@@ -74,7 +74,7 @@ struct RadioSpinelCallbacks
      *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
      *                        kErrorAbort when transmission was aborted for other reasons.
      */
-    void (*mTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, Error aError);
+    void (*mTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
     /**
      * This callback notifies user of `RadioSpinel` that energy scan is complete.
