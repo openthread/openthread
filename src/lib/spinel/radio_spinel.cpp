@@ -1278,15 +1278,38 @@ otError RadioSpinel::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     mScanChannel    = aScanChannel;
     mScanDuration   = aScanDuration;
     mEnergyScanning = true;
+
+    VerifyOrExit(mRcpFailure == kRcpFailureNone, error = OT_ERROR_FAILED);
 #endif
 
-    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, &aScanChannel, sizeof(uint8_t)));
-    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_PERIOD, SPINEL_DATATYPE_UINT16_S, aScanDuration));
-    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_STATE, SPINEL_DATATYPE_UINT8_S, SPINEL_SCAN_STATE_ENERGY));
+    assert(mWaitingTid == 0);
+
+    // Let recovery restart the current channel scan without retrying its individual properties.
+    SuccessOrExit(error = RequestWithExpectedCommand(SPINEL_CMD_PROP_VALUE_IS, SPINEL_CMD_PROP_VALUE_SET,
+                                                     SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, &aScanChannel,
+                                                     sizeof(uint8_t)));
+    SuccessOrExit(error =
+                      RequestWithExpectedCommand(SPINEL_CMD_PROP_VALUE_IS, SPINEL_CMD_PROP_VALUE_SET,
+                                                 SPINEL_PROP_MAC_SCAN_PERIOD, SPINEL_DATATYPE_UINT16_S, aScanDuration));
+    SuccessOrExit(error = RequestWithExpectedCommand(SPINEL_CMD_PROP_VALUE_IS, SPINEL_CMD_PROP_VALUE_SET,
+                                                     SPINEL_PROP_MAC_SCAN_STATE, SPINEL_DATATYPE_UINT8_S,
+                                                     SPINEL_SCAN_STATE_ENERGY));
 
     mChannel = aScanChannel;
 
 exit:
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    if (mEnergyScanning && mRcpFailure != kRcpFailureNone && mRcpRestorationEnabled)
+    {
+        RecoverFromRcpFailure();
+        error = OT_ERROR_NONE;
+    }
+
+    if (error != OT_ERROR_NONE)
+    {
+        mEnergyScanning = false;
+    }
+#endif
     return error;
 }
 
@@ -1537,6 +1560,22 @@ otError RadioSpinel::RequestWithPropertyFormatV(const char       *aPropertyForma
     mPropertyFormat = aPropertyFormat;
     error           = RequestV(aCommand, aKey, aFormat, aArgs);
     mPropertyFormat = nullptr;
+
+    return error;
+}
+
+otError RadioSpinel::RequestWithExpectedCommand(uint32_t          aExpectedCommand,
+                                                uint32_t          aCommand,
+                                                spinel_prop_key_t aKey,
+                                                const char       *aFormat,
+                                                ...)
+{
+    otError error;
+    va_list args;
+
+    va_start(args, aFormat);
+    error = RequestWithExpectedCommandV(aExpectedCommand, aCommand, aKey, aFormat, args);
+    va_end(args);
 
     return error;
 }
