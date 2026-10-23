@@ -172,6 +172,7 @@ void RxRaTracker::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket,
     RouterAdvert::RxMessage raMsg(aPacket);
     RouterAdvOrigin         origin = kAnotherRouter;
     Router                 *router;
+    bool                    isNewRouter;
 
     VerifyOrExit(mIsRunning);
 
@@ -203,7 +204,8 @@ void RxRaTracker::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket,
 
     VerifyOrExit(origin != kThisBrRoutingManager);
 
-    router = mRouters.FindMatching(aSrcAddress);
+    router      = mRouters.FindMatching(aSrcAddress);
+    isNewRouter = (router == nullptr);
 
     if (router == nullptr)
     {
@@ -258,9 +260,28 @@ void RxRaTracker::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket,
         }
     }
 
-    router->mIsLocalDevice = (origin == kThisBrOtherEntity);
+    router->mIsLocalDevice         = (origin == kThisBrOtherEntity);
+    router->mAllEntriesDisregarded = true;
 
-    router->ResetReachabilityState();
+    for (const OnLinkPrefix &entry : router->mOnLinkPrefixes)
+    {
+        router->mAllEntriesDisregarded &= entry.ShouldDisregard();
+    }
+
+    for (const RoutePrefix &entry : router->mRoutePrefixes)
+    {
+        router->mAllEntriesDisregarded &= entry.ShouldDisregard();
+    }
+
+    if (isNewRouter || router->mIsLocalDevice || !router->IsPeerBr())
+    {
+        router->ResetReachabilityState();
+    }
+    else if (!router->IsReachable())
+    {
+        router->ClearNonDisregardedEntries();
+        SendNeighborSolicitToRouter(*router);
+    }
 
     Evaluate();
 
@@ -1091,30 +1112,7 @@ void RxRaTracker::HandleRouterTimer(void)
             LogInfo("No response to all Neighbor Solicitations attempts from router %s - marking it unreachable",
                     router.mAddress.ToString().AsCString());
 
-            // Remove route prefix entries and deprecate on-link prefix entries
-            // of the unreachable router.
-
-            for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
-            {
-                entry.Deprecate();
-            }
-
-            for (RoutePrefix &entry : router.mRoutePrefixes)
-            {
-                entry.ClearValidLifetime();
-            }
-
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-            for (Nat64Prefix &entry : router.mNat64Prefixes)
-            {
-                entry.ClearValidLifetime();
-            }
-#endif
-
-            for (RdnssAddress &entry : router.mRdnssAddresses)
-            {
-                entry.ClearLifetime();
-            }
+            router.ClearNonDisregardedEntries();
         }
     }
 
@@ -1144,8 +1142,15 @@ void RxRaTracker::SendNeighborSolicitToRouter(const Router &aRouter)
 
     IgnoreError(Get<InfraIf>().Send(packet, aRouter.mAddress));
 
-    LogInfo("Sent Neighbor Solicitation to %s - attempt:%u/%u", aRouter.mAddress.ToString().AsCString(),
-            aRouter.mNsProbeCount, Router::kMaxNsProbes);
+    if (aRouter.IsReachable())
+    {
+        LogInfo("Sent Neighbor Solicitation to %s - attempt:%u/%u", aRouter.mAddress.ToString().AsCString(),
+                aRouter.mNsProbeCount, Router::kMaxNsProbes);
+    }
+    else
+    {
+        LogInfo("Sent Neighbor Solicitation to %s", aRouter.mAddress.ToString().AsCString());
+    }
 
 exit:
     return;
@@ -1649,6 +1654,38 @@ void RxRaTracker::Router::DetermineReachabilityTimeout(void)
 
 exit:
     return;
+}
+
+void RxRaTracker::Router::ClearNonDisregardedEntries(void)
+{
+    // Remove non-disregarded route prefix entries and deprecate on-link prefix
+    // entries of the unreachable router. Preserving disregarded entries keeps
+    // an unreachable peer BR tracked in `mRouters` until RA lifetime expires.
+
+    for (OnLinkPrefix &entry : mOnLinkPrefixes)
+    {
+        entry.Deprecate();
+    }
+
+    for (RoutePrefix &entry : mRoutePrefixes)
+    {
+        if (!entry.ShouldDisregard())
+        {
+            entry.ClearValidLifetime();
+        }
+    }
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    for (Nat64Prefix &entry : mNat64Prefixes)
+    {
+        entry.ClearValidLifetime();
+    }
+#endif
+
+    for (RdnssAddress &entry : mRdnssAddresses)
+    {
+        entry.ClearLifetime();
+    }
 }
 
 bool RxRaTracker::Router::Matches(const EmptyChecker &aChecker)
