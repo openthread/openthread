@@ -37,6 +37,7 @@
 
 #include <openthread/logging.h>
 #include <openthread/platform/diag.h>
+#include <openthread/thread.h>
 
 #include "common/code_utils.hpp"
 #include "common/new.hpp"
@@ -58,6 +59,13 @@ namespace Posix {
 
 namespace {
 extern "C" void platformRadioInit(const char *aUrl) { sRadio.Init(aUrl); }
+
+void HandleFatalRcpFailure(otInstance *aInstance)
+{
+    // DetachGracefully() stops border routing synchronously, withdrawing the advertised
+    // prefixes on the infrastructure interface before it attempts any radio traffic.
+    IgnoreError(otThreadDetachGracefully(aInstance, nullptr, nullptr));
+}
 } // namespace
 
 const char Radio::kLogModuleName[] = "Radio";
@@ -99,6 +107,7 @@ void Radio::Init(const char *aUrl)
     callbacks.mReceiveDone       = otPlatRadioReceiveDone;
     callbacks.mTransmitDone      = otPlatRadioTxDone;
     callbacks.mTxStarted         = otPlatRadioTxStarted;
+    callbacks.mFatalRcpFailure   = HandleFatalRcpFailure;
 #if OPENTHREAD_POSIX_CONFIG_TMP_STORAGE_ENABLE
     callbacks.mSaveRadioSpinelMetrics    = SaveRadioSpinelMetrics;
     callbacks.mRestoreRadioSpinelMetrics = RestoreRadioSpinelMetrics;
