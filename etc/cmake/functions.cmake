@@ -28,7 +28,7 @@
 
 function(ot_git_version git_version)
     execute_process(
-        COMMAND git describe --dirty --always
+        COMMAND git describe --tags --dirty --always
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_REV OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_QUIET
