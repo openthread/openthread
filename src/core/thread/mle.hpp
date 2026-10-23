@@ -1096,6 +1096,13 @@ public:
      */
     void RemoveScheduledParentResponses(void) { mDelayedSender.RemoveScheduledParentResponses(); }
 
+    /**
+     * Removes any scheduled Link Request to a given router.
+     *
+     * @param[in] aRouter  The router whose scheduled Link Request should be removed.
+     */
+    void RemoveScheduledLinkRequest(const Router &aRouter) { mDelayedSender.RemoveScheduledLinkRequest(aRouter); }
+
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     /**
      * Sets steering data out of band
