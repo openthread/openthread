@@ -29,6 +29,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstdio>
+#include <unistd.h>
+
+#include "lib/platform/exit_code.h"
+
 #include <map>
 #include <vector>
 
@@ -46,6 +51,38 @@ using namespace ot;
 
 using ::testing::AnyNumber;
 using ::testing::Truly;
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT == 0
+TEST(RadioSpinelFatalRcpFailure, invokesCallbackBeforeExitingAfterRcpStopsResponding)
+{
+    EXPECT_EXIT(
+        {
+            FakeCoprocessorPlatform platform;
+            Spinel::RadioSpinelCallbacks callbacks{};
+
+            callbacks.mEnergyScanDone  = [](otInstance *, int8_t) {};
+            callbacks.mReceiveDone     = [](otInstance *, otRadioFrame *, Error) {};
+            callbacks.mTransmitDone    = [](otInstance *, otRadioFrame *, otRadioFrame *, Error) {};
+            callbacks.mTxStarted       = [](otInstance *, otRadioFrame *) {};
+            callbacks.mFatalRcpFailure = [](otInstance *aInstance) {
+                fprintf(stderr, "FATAL_RCP_CALLBACK_INSTANCE=%d\n", aInstance != nullptr);
+                fflush(stderr);
+            };
+
+            platform.mRadioSpinel.SetCallbacks(callbacks);
+            if (platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()) != kErrorNone)
+            {
+                _exit(99);
+            }
+
+            platform.mSpinelInterface.mDropResponses = true;
+            // The next synchronous Spinel request must time out and invoke the fatal callback.
+            platform.mRadioSpinel.SetPromiscuous(true);
+            _exit(98);
+        },
+        ::testing::ExitedWithCode(OT_EXIT_RADIO_SPINEL_NO_RESPONSE), "FATAL_RCP_CALLBACK_INSTANCE=1");
+}
+#endif
 
 TEST(RadioSpinelTransmit, shouldPassDesiredTxPowerToRadioPlatform)
 {
