@@ -28,10 +28,12 @@
 
 option(OT_BUILD_GTEST "enable gtest")
 
-if(OT_FTD AND BUILD_TESTING)
+if(BUILD_TESTING)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_USE_STD_NEW=1")
     if(NOT OT_PLATFORM STREQUAL "nexus")
-        add_subdirectory(unit)
+        if(OT_FTD OR (OT_RCP AND OT_MULTIPAN_RCP))
+            add_subdirectory(unit)
+        endif()
         if(OT_BUILD_GTEST)
             add_subdirectory(gtest)
         endif()
