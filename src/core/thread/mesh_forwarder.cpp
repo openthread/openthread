@@ -1765,7 +1765,7 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
         break;
     }
 
-    VerifyOrExit(GetInstance().GetLogLevel() >= logLevel);
+    VerifyOrExit(GetInstance().ShouldLogAt(logLevel));
 
     switch (aMessage.GetType())
     {

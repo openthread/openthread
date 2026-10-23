@@ -148,28 +148,20 @@ void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, cons
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    if (Instance::Get().IsInitialized())
-    {
-        VerifyOrExit(Instance::Get().GetLogLevel() >= aLogLevel);
-    }
-    else
-    {
-        VerifyOrExit(OPENTHREAD_CONFIG_LOG_LEVEL_INIT >= aLogLevel);
-    }
+    VerifyOrExit(Instance::GetLogLevel() >= aLogLevel);
 #elif !OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
     VerifyOrExit(Instance::GetGlobalLogLevel() >= aLogLevel);
 #else
     {
         Instance *instance = Instance::GetActiveInstance();
 
-        VerifyOrExit(instance != nullptr);
-        if (instance->IsInitialized())
+        if (instance != nullptr)
         {
-            VerifyOrExit(instance->GetLogLevel() >= aLogLevel);
+            VerifyOrExit(instance->ShouldLogAt(aLogLevel));
         }
         else
         {
-            VerifyOrExit(OPENTHREAD_CONFIG_LOG_LEVEL_INIT >= aLogLevel);
+            VerifyOrExit(Instance::GetGlobalLogLevel() >= aLogLevel);
         }
     }
 #endif
