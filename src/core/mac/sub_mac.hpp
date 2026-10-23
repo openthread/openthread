@@ -557,6 +557,7 @@ private:
     static constexpr Capability kCapRxOnWhenIdle       = Radio::kCapRxOnWhenIdle;
     static constexpr Capability kCapTransmitFramePower = Radio::kCapTransmitFramePower;
     static constexpr Capability kCapAltShortAddr       = Radio::kCapAltShortAddr;
+    static constexpr Capability kCapScheduledTx        = Radio::kCapScheduledTx;
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
@@ -755,6 +756,7 @@ private:
     void HandleReceiveDone(RxFrame *aFrame, Error aError);
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+    void HandleScheduledTxDone(RxFrame *aAckFrame, Error aError);
     void SignalFrameCounterUsedOnTxDone(const TxFrame::ParseInfo &aFrameInfo);
     void HandleEnergyScanDone(int8_t aMaxRssi);
     void HandleTimer(void);
