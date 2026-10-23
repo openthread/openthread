@@ -526,12 +526,36 @@ int Resolver::CreateUdpSocket(sa_family_t aFamily, bool aBindToInfraNetif)
             ExitNow();
         }
 
-        if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, infraNetifName, strlen(infraNetifName)) < 0)
         {
-            LogDebg("Failed to bind the UDP socket to infra interface %s: %s", infraNetifName, strerror(errno));
-            close(fd);
-            fd = -1;
-            ExitNow();
+            int rval;
+
+#ifdef __linux__
+            rval = setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, infraNetifName, strlen(infraNetifName));
+#else
+            // IPV6_BOUND_IF takes the interface index, and 0 would unbind the socket; the index the stack
+            // tracks is the one used for the scope of the queries as well.
+            uint32_t ifIndex = otSysGetInfraNetifIndex();
+
+            assert(aFamily == AF_INET6);
+
+            if (ifIndex == 0)
+            {
+                LogDebg("No index for infra interface %s", infraNetifName);
+                close(fd);
+                fd = -1;
+                ExitNow();
+            }
+
+            rval = setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &ifIndex, sizeof(ifIndex));
+#endif // __linux__
+
+            if (rval < 0)
+            {
+                LogDebg("Failed to bind the UDP socket to infra interface %s: %s", infraNetifName, strerror(errno));
+                close(fd);
+                fd = -1;
+                ExitNow();
+            }
         }
     }
 #else
