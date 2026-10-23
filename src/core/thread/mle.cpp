@@ -4772,7 +4772,19 @@ void Mle::Attacher::HandleTimer(void)
         mReceivedResponseFromParent = false;
         mParentRequestCounter       = 0;
         mChildIdRequestsRemaining   = kMaxChildIdRequests;
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+
+        // A sleepy child keeps its device mode while searching for a
+        // better parent or partition, so it only temporarily enables
+        // the receiver.
+
+        if (Get<Mle>().IsChild() && !Get<Mle>().IsRxOnWhenIdle())
+        {
+            Get<MeshForwarder>().SuspendSleepyOperation();
+        }
+        else
+        {
+            Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        }
 
         OT_FALL_THROUGH;
 
@@ -4910,7 +4922,7 @@ uint32_t Mle::Attacher::Reattach(void)
             if (!Get<Mle>().IsRxOnWhenIdle())
             {
                 Get<DataPollSender>().SetAttachMode(false);
-                Get<MeshForwarder>().SetRxOnWhenIdle(false);
+                Get<MeshForwarder>().ResumeSleepyOperation();
             }
 
             ExitNow();
