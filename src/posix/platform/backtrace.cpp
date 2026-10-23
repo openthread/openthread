@@ -49,7 +49,7 @@
 static otSysCrashCallback sCrashCallback = nullptr;
 
 void otSysRegisterCrashCallback(otSysCrashCallback aCallback) { sCrashCallback = aCallback; }
-#if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
+#if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__) || defined(__APPLE__)
 #if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 #include <log/log.h>
 #include <utils/CallStack.h>
@@ -80,29 +80,27 @@ static void demangleSymbol(int aIndex, const char *aSymbol)
     char               program[kMaxNameSize + 1];
     char               mangledName[kMaxNameSize + 1];
     char              *demangledName = nullptr;
-    char              *functionName  = nullptr;
-    unsigned int       offset        = 0;
-    unsigned int       address       = 0;
+    const char        *functionName  = nullptr;
+    unsigned long      offset        = 0;
+    unsigned long      address       = 0;
 
-    // Try to demangle a C++ name
-    if (sscanf(aSymbol, "%256[^(]%*[^_]%256[^)+]%*[^0x]%x%*[^0x]%x", program, mangledName, &offset, &address) == 4)
-    {
-        demangledName = abi::__cxa_demangle(mangledName, nullptr, nullptr, &status);
-        functionName  = demangledName;
-    }
+#if defined(__APPLE__)
+    // "3   ot-daemon                           0x0000000104a1c2f0 _ZN2ot5Posix6Daemon7ProcessEv + 48"
+    VerifyOrExit(sscanf(aSymbol, "%*d %256s %lx %256s + %lu", program, &address, mangledName, &offset) == 4);
+#else
+    // "ot-daemon(_ZN2ot5Posix6Daemon7ProcessEv+0x30) [0x55d6b4a2c1a3]", with a C symbol in place of the
+    // mangled name for a C frame
+    VerifyOrExit(sscanf(aSymbol, "%256[^(](%256[^)+]%*[^0x]%lx%*[^0x]%lx", program, mangledName, &offset, &address) ==
+                 4);
+#endif
 
-    VerifyOrExit(demangledName == nullptr);
-
-    // If failed to demangle a C++ name, try to get a regular C symbol
-    if (sscanf(aSymbol, "%256[^(](%256[^)+]%*[^0x]%x%*[^0x]%x", program, mangledName, &offset, &address) == 4)
-    {
-        functionName = mangledName;
-    }
+    demangledName = abi::__cxa_demangle(mangledName, nullptr, nullptr, &status);
+    functionName  = (demangledName != nullptr) ? demangledName : mangledName;
 
 exit:
     if (functionName != nullptr)
     {
-        otLogCritPlat("#%2d: %s %s+0x%x [0x%x]\n", aIndex, program, functionName, offset, address);
+        otLogCritPlat("#%2d: %s %s+0x%lx [0x%lx]\n", aIndex, program, functionName, offset, address);
     }
     else
     {
@@ -184,7 +182,7 @@ void platformBacktraceInit(void)
         sigaction(kSignals[i], &sigact, &sSigActions[i]);
     }
 }
-#else  // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
+#else  // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__) || defined(__APPLE__)
 void platformBacktraceInit(void) {}
-#endif // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
+#endif // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__) || defined(__APPLE__)
 #endif // OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
