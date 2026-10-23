@@ -56,12 +56,19 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
+    - name: Bootstrap
+      timeout-minutes: 10
+      shell: bash ./script/retry {0}
+      env:
+        PR_BODY: "${{ github.event.pull_request.body }}"
+      run: |
+        ./script/check-size setup
     - name: Run
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
         PR_NUMBER: "${{ github.event.pull_request.number }}"
       run: |
-        ./script/check-size
+        ./script/check-size nrf52840
         cat /tmp/ot-size-report/report_pr >> $GITHUB_STEP_SUMMARY
     - name: Upload report
       if: ${{ github.event_name == 'pull_request' }}

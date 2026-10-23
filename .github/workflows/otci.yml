@@ -72,11 +72,13 @@ jobs:
         cache: pip
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         python3 -m pip install pytype adb-shell
+        (cd tools/otci && python3 -m pip install . && rm -rf build ./*.egg-info)
     - name: Style check
       run: |
         PYTHONPATH=./tests/scripts/thread-cert pytype tools/otci
@@ -84,9 +86,6 @@ jobs:
       run: |
         ./script/cmake-build simulation -DOT_THREAD_VERSION=1.4 -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON \
         -DOT_CSL_RECEIVER=ON -DOT_SIMULATION_VIRTUAL_TIME=${VIRTUAL_TIME}
-    - name: Install OTCI Python Library
-      run: |
-        (cd tools/otci && python3 -m pip install .)
     - name: Run
       run: |
         export PYTHONPATH=./tests/scripts/thread-cert/
