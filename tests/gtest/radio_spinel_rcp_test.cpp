@@ -63,13 +63,26 @@ TEST(RadioSpinelFatalRcpFailure, invokesCallbackBeforeExitingAfterRcpStopsRespon
         {
             FakeCoprocessorPlatform      platform;
             Spinel::RadioSpinelCallbacks callbacks{};
+            static Spinel::RadioSpinel  *sFailedRadio;
+
+            sFailedRadio = &platform.mRadioSpinel;
 
             callbacks.mEnergyScanDone  = [](otInstance *, int8_t) {};
             callbacks.mReceiveDone     = [](otInstance *, otRadioFrame *, Error) {};
             callbacks.mTransmitDone    = [](otInstance *, otRadioFrame *, otRadioFrame *, Error) {};
             callbacks.mTxStarted       = [](otInstance *, otRadioFrame *) {};
             callbacks.mFatalRcpFailure = [](otInstance *aInstance) {
-                fprintf(stderr, "FATAL_RCP_CALLBACK_INSTANCE=%d\n", aInstance != nullptr);
+                otRadioFrame frame{};
+
+                // A graceful-detach callback must not be able to send a frame through
+                // the already failed RCP, even if it attempts a router address release.
+                if (aInstance == nullptr || sFailedRadio->IsEnabled() ||
+                    sFailedRadio->Transmit(frame) != OT_ERROR_INVALID_STATE)
+                {
+                    _exit(97);
+                }
+
+                fprintf(stderr, "FATAL_RCP_CALLBACK_RADIO_DISABLED=1\n");
                 fflush(stderr);
             };
 
@@ -84,7 +97,7 @@ TEST(RadioSpinelFatalRcpFailure, invokesCallbackBeforeExitingAfterRcpStopsRespon
             platform.mRadioSpinel.SetPromiscuous(true);
             _exit(98);
         },
-        ::testing::ExitedWithCode(kExpectedExitCode), "FATAL_RCP_CALLBACK_INSTANCE=1");
+        ::testing::ExitedWithCode(kExpectedExitCode), "FATAL_RCP_CALLBACK_RADIO_DISABLED=1");
 }
 
 TEST(RadioSpinelTransmit, shouldPassDesiredTxPowerToRadioPlatform)
