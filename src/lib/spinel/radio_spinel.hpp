@@ -984,6 +984,7 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
      */
     otError ClearCalibratedPowers(void);
+#endif
 
     /**
      * Set the target power for the given channel.
@@ -998,7 +999,6 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
      */
     otError SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower);
-#endif
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     /**

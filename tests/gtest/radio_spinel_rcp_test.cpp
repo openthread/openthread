@@ -628,6 +628,74 @@ TEST(RadioSpinelProperty, shouldSetEmptyPropertyValue)
     EXPECT_EQ(platform.SrcMatchCountShortEntries(), 0);
 }
 
+TEST(RadioSpinelTargetPower, shouldSetChannelTargetPowerAndRejectInvalidChannel)
+{
+    constexpr uint8_t kChannelA        = 11;
+    constexpr uint8_t kChannelB        = 18;
+    constexpr uint8_t kChannelDisabled = 26;
+    constexpr int16_t kPowerA          = 1234;
+    constexpr int16_t kPowerB          = -550;
+    constexpr int16_t kPowerDisabled   = INT16_MAX;
+
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    EXPECT_EQ(platform.mRadioSpinel.SetChannelTargetPower(10, kPowerA), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.SetChannelTargetPower(27, kPowerA), kErrorInvalidArgs);
+#if !(OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE)
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
+#endif
+
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelTargetPower(kChannelA, kPowerA), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelTargetPower(kChannelB, kPowerB), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelTargetPower(kChannelDisabled, kPowerDisabled), kErrorNone);
+
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    {
+        const uint8_t kRawPowerSetting[] = {0x01};
+        int16_t       targetPower        = 0;
+        int16_t       actualPower        = 0;
+        uint8_t       rawPowerSetting[sizeof(kRawPowerSetting)];
+        uint16_t      rawPowerSettingLength;
+
+        ASSERT_EQ(platform.mRadioSpinel.AddCalibratedPower(kChannelA, 0, kRawPowerSetting, sizeof(kRawPowerSetting)),
+                  kErrorNone);
+        ASSERT_EQ(platform.mRadioSpinel.AddCalibratedPower(kChannelB, 0, kRawPowerSetting, sizeof(kRawPowerSetting)),
+                  kErrorNone);
+        ASSERT_EQ(
+            platform.mRadioSpinel.AddCalibratedPower(kChannelDisabled, 0, kRawPowerSetting, sizeof(kRawPowerSetting)),
+            kErrorNone);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelA, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerA);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelB, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerB);
+
+        // `kPowerDisabled` (`INT16_MAX`) disables the channel, so no power settings are available.
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        EXPECT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelDisabled, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNotFound);
+    }
+#else
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelA), kPowerA);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelB), kPowerB);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelDisabled), kPowerDisabled);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(12), FakePlatform::kNoTargetPower);
+
+    platform.ChannelTargetPowerFailWith(OT_ERROR_NOT_IMPLEMENTED);
+    EXPECT_EQ(platform.mRadioSpinel.SetChannelTargetPower(kChannelA, kPowerA), kErrorNotImplemented);
+#endif
+}
+
 TEST(RadioSpinelProperty, shouldGetEmptyPropertyValue)
 {
     FakeCoprocessorPlatform platform;

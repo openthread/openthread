@@ -2771,7 +2771,6 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_TARGET_POWER>(void)
 {
     otError error;
@@ -2786,6 +2785,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_PHY_CALIBRATED_POWER>(void)
 {
     otError        error;

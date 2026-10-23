@@ -153,10 +153,10 @@ private:
     otError GetDomain(uint16_t aRegionCode, Power::Domain &aDomain);
     otError GetChannelMask(const char *aKey, const Power::Domain &aDomain, uint32_t &aChannelMask);
     otError UpdateChannelMasks(const Power::Domain &aDomain);
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     otError UpdateTargetPower(const Power::Domain &aDomain);
-    otError UpdateCalibratedPower(void);
     otError GetNextTargetPower(const Power::Domain &aDomain, int &aIterator, Power::TargetPower &aTargetPower);
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    otError UpdateCalibratedPower(void);
 #endif
 
     ConfigFile mFactoryConfigFile;
