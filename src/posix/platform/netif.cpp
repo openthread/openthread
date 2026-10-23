@@ -3274,10 +3274,37 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 #if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
 static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 {
-    (void)aPlatformConfig;
     int                 err = 0;
     struct sockaddr_ctl addr;
     struct ctl_info     info;
+    unsigned int        unit = 0; // 0: the kernel picks the lowest free utun
+
+    // A requested name utunN asks for that unit, which gives the interface a stable name across restarts; the
+    // digits must be the whole rest of the name. Any other name, the default wpan0 among them, leaves the choice
+    // to the kernel, the only way to a free utun.
+    if ((aPlatformConfig->mInterfaceName != nullptr) && (strncmp(aPlatformConfig->mInterfaceName, "utun", 4) == 0))
+    {
+        const char   *digits = aPlatformConfig->mInterfaceName + 4;
+        char         *end;
+        unsigned long number;
+
+        errno  = 0;
+        number = strtoul(digits, &end, 10);
+
+        if ((*digits < '0') || (*digits > '9') || (*end != '\0') || (errno != 0) || (number >= UINT32_MAX) ||
+            (strlen(aPlatformConfig->mInterfaceName) >= IFNAMSIZ))
+        {
+            LogCrit("Invalid interface name %s: utun needs a number", aPlatformConfig->mInterfaceName);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
+        }
+
+        unit = static_cast<unsigned int>(number) + 1; // sc_unit is the utun number plus one
+    }
+    else if (aPlatformConfig->mInterfaceName != nullptr)
+    {
+        LogNote("Interface name %s cannot be chosen on macOS; the kernel picks a utun",
+                aPlatformConfig->mInterfaceName);
+    }
 
     sTunFd = ot::Posix::SocketWithCloseExec(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -3292,9 +3319,14 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     addr.sc_family  = AF_SYSTEM;
     addr.ss_sysaddr = AF_SYS_CONTROL;
 
-    addr.sc_unit = 0;
+    addr.sc_unit = unit;
     err          = connect(sTunFd, (struct sockaddr *)&addr, sizeof(addr));
-    VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
+    if (err != 0)
+    {
+        // EBUSY: the requested utun exists already.
+        LogCrit("Failed to create %s: %s", (unit != 0) ? aPlatformConfig->mInterfaceName : "a utun", strerror(errno));
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
 
     socklen_t devNameLen;
     devNameLen = (socklen_t)sizeof(gNetifName);
