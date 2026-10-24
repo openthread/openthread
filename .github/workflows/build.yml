@@ -59,6 +59,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y shellcheck iwyu
@@ -83,14 +84,35 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Run linkspector
-      uses: umbrelladocs/action-linkspector@6c637d70424624231467a4ca918be54fa3b792d0 # v1.5.4
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      with:
+        node-version: 24
+        package-manager-cache: false
+
+    - name: Bootstrap
+      timeout-minutes: 10
+      shell: bash ./script/retry {0}
       env:
         PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        reporter: github-pr-review
-        fail_on_error: true
+      run: |
+        npm install -g @umbrelladocs/linkspector@0.5.5
+        wget --timeout=30 --tries=4 -O /tmp/reviewdog.tar.gz https://github.com/reviewdog/reviewdog/releases/download/v0.21.0/reviewdog_0.21.0_Linux_x86_64.tar.gz
+        sudo tar -xzf /tmp/reviewdog.tar.gz -C /usr/local/bin reviewdog
+        rm -f /tmp/reviewdog.tar.gz
+
+    - name: Run linkspector
+      env:
+        PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set +o pipefail
+        linkspector check -c .linkspector.yml -j |
+          reviewdog -f=rdjson \
+            -name=Linkspector \
+            -reporter=github-pr-review \
+            -filter-mode=added \
+            -fail-level=any \
+            -level=error
 
   cmake-presets:
     runs-on: ubuntu-24.04
@@ -105,7 +127,9 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
     - name: Build
       run: |
@@ -126,7 +150,9 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
     - name: Build and test with platform-specific options enabled
       run: |
@@ -148,10 +174,13 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
-        sudo apt-get remove cmake
-        sudo apt-get purge --auto-remove cmake
+        sudo apt-get remove -y cmake || true
+        sudo apt-get purge -y --auto-remove cmake || true
+        rm -rf cmake-3.10.3*
         wget --timeout=30 --tries=4 http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
         tar xf cmake-3.10.3.tar.gz
         cd cmake-3.10.3
@@ -190,6 +219,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
@@ -211,6 +241,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y clang-tools-14 ninja-build
@@ -232,7 +263,9 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
         cd third_party/mbedtls/repo && git fetch --tags && git checkout tags/v2.28.8
     - name: Build
@@ -288,12 +321,16 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
+      env:
+        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
-        cd /tmp
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-        wget --timeout=30 --tries 4 --no-verbose ${{ matrix.gcc_download_url }} -O gcc-arm
-        tar xf gcc-arm
+        rm -rf /tmp/gcc-arm /tmp/${{ matrix.gcc_extract_dir }}
+        wget --timeout=30 --tries 4 --no-verbose ${{ matrix.gcc_download_url }} -O /tmp/gcc-arm
+        tar xf /tmp/gcc-arm -C /tmp
+        script/check-arm-build setup
     - name: Build
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
@@ -324,6 +361,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         case ${{ matrix.gcc_ver }} in
@@ -369,7 +407,9 @@ jobs:
           persist-credentials: false
       - name: Bootstrap
         timeout-minutes: 10
+        shell: bash ./script/retry {0}
         run: |
+          rm -f llvm.sh
           wget --timeout=30 --tries=4 https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ matrix.clang_ver }}
@@ -403,6 +443,7 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build gn
@@ -438,10 +479,12 @@ jobs:
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         brew update
+        rm -f ninja-mac.zip /usr/local/bin/ninja
         wget --timeout=30 --tries 4 https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip
-        unzip ninja-mac.zip && mv ninja /usr/local/bin/.
+        unzip -o ninja-mac.zip && mv ninja /usr/local/bin/.
     - name: Build
       run: |
         case ${{ matrix.target }} in

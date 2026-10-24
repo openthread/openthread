@@ -46,10 +46,10 @@ readonly OT_REPORT_FILE_PR
 
 PR_NUMBER="${PR_NUMBER:-}"
 
+export PATH=/var/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
+
 setup_arm_gcc_7()
 {
-    export PATH=/var/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
-
     if arm-none-eabi-gcc --version | grep -q 'Arm Embedded Processors 7'; then
         return 0
     fi
@@ -59,6 +59,7 @@ setup_arm_gcc_7()
     local stage
     stage="$(mktemp -d /var/tmp/.ot-arm-gcc7.XXXXXX)"
     trap 'rm -rf "${stage:-}"' EXIT
+    rm -rf /var/tmp/gcc-arm-none-eabi-7-2018-q2-update
     if wget --tries 4 --no-verbose -O "${stage}/toolchain.tar.bz2" "${toolchain_url}" \
         && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c - \
         && tar xj -C /var/tmp -f "${stage}/toolchain.tar.bz2"; then
@@ -74,13 +75,28 @@ setup_arm_gcc_7()
 
 setup_ninja_build()
 {
+    sudo apt-get update
     sudo apt-get --no-install-recommends install -y ninja-build
+}
+
+setup_repos()
+{
+    rm -rf "${OT_TMP_DIR}"
+    mkdir -p "${OT_TMP_DIR}"
+
+    if [[ "${GITHUB_ACTIONS+x}" ]] && [[ -n ${OT_SHA_OLD} ]] && ! git cat-file -e "${OT_SHA_OLD}^{commit}" 2>/dev/null; then
+        git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
+    fi
+
+    script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/ot-nrf528xx-new"
+    script/git-tool clone no-depend https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/ot-nrf528xx-old"
 }
 
 setup()
 {
     setup_arm_gcc_7
     setup_ninja_build
+    setup_repos
 }
 
 nm_size()
@@ -131,8 +147,13 @@ build_nrf52840()
     local config_name="ot-core-config-check-size-$1.h"
     local config_file="../examples/config/${config_name}"
 
-    mkdir -p "${OT_TMP_DIR}/${folder}"
-    script/git-tool "${clone_options[@]}" https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/${folder}"
+    rm -rf "${OT_TMP_DIR:?}/${folder}"
+    if [[ -d "${OT_TMP_DIR}/ot-nrf528xx-$2/.git" ]]; then
+        cp -a "${OT_TMP_DIR}/ot-nrf528xx-$2" "${OT_TMP_DIR}/${folder}"
+    else
+        mkdir -p "${OT_TMP_DIR}/${folder}"
+        script/git-tool "${clone_options[@]}" https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/${folder}"
+    fi
     rm -rf "${OT_TMP_DIR}/${folder}/openthread/*" # replace openthread submodule with latest commit
     git archive "${sha}" | tar x -C "${OT_TMP_DIR}/${folder}/openthread"
 
@@ -305,10 +326,10 @@ size_nrf52840()
 {
     export OT_SHA_NEW OT_SHA_OLD
 
-    rm -rf "${OT_TMP_DIR}"
     mkdir -p "${OT_TMP_DIR}"
+    rm -rf "${OT_REPORT_FILE_TABLE}" "${OT_REPORT_FILE_TABLE}_libs" "${OT_REPORT_FILE_PR}" "${OT_REPORT_FILE_PR}_libs"
 
-    if [[ "${GITHUB_ACTIONS+x}" ]]; then
+    if [[ "${GITHUB_ACTIONS+x}" ]] && [[ -n ${OT_SHA_OLD} ]] && ! git cat-file -e "${OT_SHA_OLD}^{commit}" 2>/dev/null; then
         git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
     fi
 
