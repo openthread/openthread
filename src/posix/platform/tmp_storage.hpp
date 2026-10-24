@@ -87,7 +87,7 @@ private:
     bool    BootTimeMatch(time_t aBootTimeA, time_t aBootTimeB);
 
     SettingsFile mStorageFile;
-    bool    mIsFileInitialized;
+    bool         mIsFileInitialized;
 };
 
 } // namespace Posix

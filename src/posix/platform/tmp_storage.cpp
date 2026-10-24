@@ -59,6 +59,7 @@ void TmpStorage::Init(void) { mIsFileInitialized = false; }
 
 void TmpStorage::InitStorageFile(void)
 {
+    otError  error = OT_ERROR_NONE;
     time_t   storedBootTime;
     time_t   currentBootTime;
     uint16_t valueLength = sizeof(time_t);
@@ -69,19 +70,16 @@ void TmpStorage::InitStorageFile(void)
 
     currentBootTime = GetBootTime();
 
+    error = mStorageFile.Get(kKeyBootTime, 0, reinterpret_cast<uint8_t *>(&storedBootTime), &valueLength);
+
     // If failed to get the boot time or the current boot time doesn't match the stored boot time, it means
     // the system has been rebooted.
-    if (mStorageFile.Get(kKeyBootTime, 0, reinterpret_cast<uint8_t *>(&storedBootTime), &valueLength) == OT_ERROR_NONE)
+    if ((error != OT_ERROR_NONE) || (valueLength != sizeof(time_t)) || !BootTimeMatch(storedBootTime, currentBootTime))
     {
-        if ((valueLength != sizeof(time_t)) || !BootTimeMatch(storedBootTime, currentBootTime))
-        {
-            IgnoreReturnValue(mStorageFile.Delete(kKeyBootTime, 0));
-            IgnoreReturnValue(mStorageFile.Delete(kKeyRadioSpinelMetrics, 0));
-        }
+        mStorageFile.Wipe();
+        mStorageFile.Set(kKeyBootTime, reinterpret_cast<const uint8_t *>(&currentBootTime),
+                         static_cast<uint16_t>(sizeof(currentBootTime)));
     }
-
-    mStorageFile.Set(kKeyBootTime, reinterpret_cast<const uint8_t *>(&currentBootTime),
-                     static_cast<uint16_t>(sizeof(currentBootTime)));
 
 exit:
     return;
