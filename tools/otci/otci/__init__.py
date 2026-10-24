@@ -34,6 +34,8 @@ from .connectors import OtCliHandler
 from .otci import OTCI
 from .otci import (
     connect_cli_sim,
+    connect_cli_posix,
+    connect_cli_adb_spinel_proxy,
     connect_cli_serial,
     connect_ncp_sim,
     connect_cmd_handler,
@@ -46,6 +48,8 @@ from .types import Rloc16, ChildId, NetifIdentifier
 
 _connectors = [
     'connect_cli_sim',
+    'connect_cli_posix',
+    'connect_cli_adb_spinel_proxy',
     'connect_cli_serial',
     'connect_ncp_sim',
     'connect_otbr_ssh',
