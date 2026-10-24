@@ -229,6 +229,7 @@ private:
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     static int ForkPty(const Url::Url &aRadioUrl);
 #endif
+    static int OpenUnixSocket(const Url::Url &aRadioUrl);
 
     static constexpr uint16_t kMaxWaitTime    = 2000; ///< Max wait time in msec for socket to become writable.
     static constexpr uint16_t kResetTimeout   = 5000; ///< Max wait time in msec for file to become ready.
