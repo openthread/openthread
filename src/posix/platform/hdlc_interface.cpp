@@ -52,8 +52,10 @@
 #include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/resource.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/un.h>
 #include <sys/wait.h>
 #include <syslog.h>
 #include <termios.h>
@@ -63,6 +65,7 @@
 
 #include "common/code_utils.hpp"
 #include "lib/spinel/spinel.h"
+#include "posix/platform/utils.hpp"
 
 #ifdef __APPLE__
 
@@ -165,6 +168,11 @@ otError HdlcInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackConte
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
     }
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
+    else if (S_ISSOCK(st.st_mode))
+    {
+        mSockFd = OpenUnixSocket(mRadioUrl);
+        VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
+    }
     else
     {
         LogCrit("Radio file '%s' not supported", mRadioUrl.GetPath());
@@ -732,6 +740,42 @@ int HdlcInterface::ForkPty(const Url::Url &aRadioUrl)
     return fd;
 }
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
+
+int HdlcInterface::OpenUnixSocket(const Url::Url &aRadioUrl)
+{
+    int                fd;
+    int                flags;
+    const char        *path = aRadioUrl.GetPath();
+    size_t             pathLen;
+    struct sockaddr_un addr;
+
+    VerifyOrExit(path != nullptr, fd = -1);
+    pathLen = strlen(path);
+    VerifyOrDie(pathLen < sizeof(addr.sun_path), OT_EXIT_INVALID_ARGUMENTS);
+
+    // Connect in blocking mode so that `connect()` completes synchronously, then
+    // switch the socket to non-blocking mode for subsequent I/O.
+    fd = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketBlock);
+    VerifyOrExit(fd != -1, perror("socket unix failed"));
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    memcpy(addr.sun_path, path, pathLen);
+
+    if (connect(fd, reinterpret_cast<const struct sockaddr *>(&addr), sizeof(addr)) == -1)
+    {
+        perror("connect unix socket failed");
+        close(fd);
+        fd = -1;
+        ExitNow();
+    }
+
+    VerifyOrDie((flags = fcntl(fd, F_GETFL)) != -1, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(fcntl(fd, F_SETFL, flags | O_NONBLOCK) != -1, OT_EXIT_ERROR_ERRNO);
+
+exit:
+    return fd;
+}
 
 void HdlcInterface::HandleHdlcFrame(void *aContext, otError aError)
 {
