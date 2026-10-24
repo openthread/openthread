@@ -2818,8 +2818,10 @@ exit:
 
 #ifdef __linux__
 
-#define ERR_RTA(errmsg, requestPayloadLength) \
-    ((struct rtattr *)((char *)(errmsg)) + NLMSG_ALIGN(sizeof(struct nlmsgerr)) + NLMSG_ALIGN(requestPayloadLength))
+#define ERR_RTA(errmsg, requestPayloadLength)                                         \
+    (reinterpret_cast<const struct rtattr *>(reinterpret_cast<const char *>(errmsg) + \
+                                             NLMSG_ALIGN(sizeof(struct nlmsgerr)) +   \
+                                             NLMSG_ALIGN(requestPayloadLength)))
 
 // The format of NLMSG_ERROR is described below:
 //
@@ -2841,7 +2843,7 @@ static void HandleNetlinkResponse(otInstance *aInstance, struct nlmsghdr *msg)
 
     const struct nlmsgerr *err;
     const char            *errorMsg;
-    size_t                 rtaLength;
+    bool                   malformed            = false;
     size_t                 requestPayloadLength = 0;
     uint32_t               requestSeq           = msg->nlmsg_seq;
     PendingNetlinkRequest *pending              = nullptr;
@@ -2870,27 +2872,59 @@ static void HandleNetlinkResponse(otInstance *aInstance, struct nlmsghdr *msg)
     // The payload of the request is omitted if NLM_F_CAPPED is set
     if (!(msg->nlmsg_flags & NLM_F_CAPPED))
     {
-        requestPayloadLength = NLMSG_PAYLOAD(&err->msg, 0);
+        if (err->msg.nlmsg_len < NLMSG_HDRLEN)
+        {
+            malformed = true;
+        }
+        else
+        {
+            requestPayloadLength = NLMSG_PAYLOAD(&err->msg, 0);
+        }
     }
 
     // Only extract inner TLV error if flag is set
-    if (msg->nlmsg_flags & NLM_F_ACK_TLVS)
+    if (!malformed && (msg->nlmsg_flags & NLM_F_ACK_TLVS))
     {
-        rtaLength = NLMSG_PAYLOAD(msg, sizeof(struct nlmsgerr)) - requestPayloadLength;
+        size_t errPayloadLength = NLMSG_PAYLOAD(msg, sizeof(struct nlmsgerr));
 
-        for (struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
-             rta                = RTA_NEXT(rta, rtaLength))
+        if (requestPayloadLength > errPayloadLength || errPayloadLength < NLMSG_ALIGN(requestPayloadLength))
         {
-            if (rta->rta_type == NLMSGERR_ATTR_MSG)
+            malformed = true;
+        }
+        else
+        {
+            // Use a signed remaining length as required by RTA_OK / RTA_NEXT.
+            int rtaLength = static_cast<int>(errPayloadLength - NLMSG_ALIGN(requestPayloadLength));
+
+            for (const struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
+                 rta                      = RTA_NEXT(rta, rtaLength))
             {
-                errorMsg = reinterpret_cast<const char *>(RTA_DATA(rta));
-                break;
-            }
-            else
-            {
-                LogDebg("Ignoring netlink response attribute %d (request#%u)", rta->rta_type, requestSeq);
+                if (rta->rta_type == NLMSGERR_ATTR_MSG)
+                {
+                    const char *attrMsg = reinterpret_cast<const char *>(RTA_DATA(rta));
+
+                    if (memchr(attrMsg, '\0', RTA_PAYLOAD(rta)) != nullptr)
+                    {
+                        errorMsg = attrMsg;
+                    }
+                    else
+                    {
+                        malformed = true;
+                    }
+
+                    break;
+                }
+                else
+                {
+                    LogDebg("Ignoring netlink response attribute %d (request#%u)", rta->rta_type, requestSeq);
+                }
             }
         }
+    }
+
+    if (malformed)
+    {
+        LogWarn("Malformed netlink error reply of request#%u", requestSeq);
     }
 
     if (pending != nullptr)
