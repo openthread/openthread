@@ -194,7 +194,6 @@ private:
             , mIsFilterEnabled(false)
             , mReceiveCount(0)
             , mNumFrames(0)
-            , mFilterAddress()
         {
         }
 
