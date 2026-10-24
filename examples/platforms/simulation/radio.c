@@ -57,6 +57,7 @@
 #define SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL (5)
 #define SIM_RADIO_CHANNEL_MIN OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN
 #define SIM_RADIO_CHANNEL_MAX OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX
+#define SIM_SCHED_TX_ACK_TIMEOUT_US (16 * OT_US_PER_MS)
 
 //---------------------------------------------------------------------------------------------------------------------
 // Structs and types
@@ -76,6 +77,16 @@ typedef enum
     SIM_FILTER_DENY_LIST,
     SIM_FILTER_ALLOW_LIST,
 } FilterMode;
+
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+typedef enum
+{
+    SIM_SCHED_TX_IDLE,
+    SIM_SCHED_TX_PENDING,
+    SIM_SCHED_TX_PENDING_ABORT,
+    SIM_SCHED_TX_WAIT_FOR_ACK,
+} SchedTxState;
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // Variables
@@ -124,16 +135,25 @@ static otRadioIeInfo sTransmitIeInfo;
 #endif
 
 #if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
-static FilterMode sFilterMode = SIM_FILTER_OFF;
-static uint8_t    sFilterNodeIdsBitVector[(MAX_NETWORK_SIZE + 7) / 8];
+static FilterMode    sFilterMode = SIM_FILTER_OFF;
+static uint8_t       sFilterNodeIdsBitVector[(MAX_NETWORK_SIZE + 7) / 8];
+static SchedTxState  sSchedTxState = SIM_SCHED_TX_IDLE;
+static otRadioTime64 sSchedTxTime  = 0;
+static RadioMessage  sSchedTxMessage;
+static otRadioFrame  sSchedTxFrame;
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+static otRadioIeInfo sSchedTxIeInfo;
+#endif
 #endif
 
-otRadioCaps gRadioCaps =
+otRadioCaps gRadioCaps = (OT_RADIO_CAPS_ALT_SHORT_ADDR
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    OT_RADIO_CAPS_ALT_SHORT_ADDR | OT_RADIO_CAPS_TRANSMIT_SEC;
-#else
-    OT_RADIO_CAPS_ALT_SHORT_ADDR;
+                          | OT_RADIO_CAPS_TRANSMIT_SEC
 #endif
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+                          | OT_RADIO_CAPS_SCHEDULED_TX
+#endif
+);
 
 //---------------------------------------------------------------------------------------------------------------------
 // Local (`static`) functions
@@ -388,10 +408,36 @@ exit:
     }
 }
 
+static bool IsAckMatch(const otRadioFrame *aAckFrame, const otRadioFrame *aTxFrame)
+{
+    uint8_t rxSeq;
+    uint8_t txSeq;
+
+    return (otMacFrameGetSequence(aAckFrame, &rxSeq) == OT_ERROR_NONE) &&
+           (otMacFrameGetSequence(aTxFrame, &txSeq) == OT_ERROR_NONE) && (rxSeq == txSeq);
+}
+
 static void RadioReceive(otInstance *aInstance)
 {
     bool isTxDone = false;
     bool isAck    = otMacFrameIsAck(&sReceiveFrame);
+
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    if ((sSchedTxState == SIM_SCHED_TX_WAIT_FOR_ACK) && (sReceiveMessage.mChannel == sSchedTxFrame.mChannel) && isAck &&
+        IsAckMatch(&sReceiveFrame, &sSchedTxFrame))
+    {
+        otRadioFrame ackFrame = sReceiveFrame;
+
+        ackFrame.mChannel                 = sReceiveMessage.mChannel;
+        ackFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();
+        ackFrame.mInfo.mRxInfo.mRssi      = -20;
+        ackFrame.mInfo.mRxInfo.mLqi       = OT_RADIO_LQI_NONE;
+
+        sSchedTxState = SIM_SCHED_TX_IDLE;
+        otPlatRadioScheduledTxDone(aInstance, &ackFrame, OT_ERROR_NONE);
+        goto exit;
+    }
+#endif
 
     otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
@@ -403,11 +449,7 @@ static void RadioReceive(otInstance *aInstance)
     {
         if (otMacFrameIsAckRequested(&sTransmitFrame))
         {
-            uint8_t rxSeq;
-            uint8_t txSeq;
-
-            isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame, &rxSeq) == OT_ERROR_NONE &&
-                       otMacFrameGetSequence(&sTransmitFrame, &txSeq) == OT_ERROR_NONE && rxSeq == txSeq;
+            isTxDone = isAck && IsAckMatch(&sReceiveFrame, &sTransmitFrame);
         }
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
         // Simulate tx done when receiving the echo frame.
@@ -466,6 +508,89 @@ exit:
 }
 
 #if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+
+static void RadioSendSchedTx(otInstance *aInstance)
+{
+    if ((sSchedTxFrame.mChannel < SIM_RADIO_CHANNEL_MIN) || (sSchedTxFrame.mChannel > SIM_RADIO_CHANNEL_MAX) ||
+        (otMacFrameProcessTxSfd(&sSchedTxFrame, sSchedTxTime, &sRadioContext) != OT_ERROR_NONE))
+    {
+        sSchedTxState = SIM_SCHED_TX_IDLE;
+        otPlatRadioScheduledTxDone(aInstance, NULL, OT_ERROR_ABORT);
+        goto exit;
+    }
+
+    if (sTxWait)
+    {
+        sState  = OT_RADIO_STATE_RECEIVE;
+        sTxWait = false;
+        otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_ABORT);
+    }
+
+    sSchedTxMessage.mChannel = sSchedTxFrame.mChannel;
+    RadioComputeCrc(&sSchedTxMessage, sSchedTxFrame.mLength);
+    RadioTransmit(&sSchedTxMessage, &sSchedTxFrame);
+
+    if (otMacFrameIsAckRequested(&sSchedTxFrame))
+    {
+        sSchedTxState = SIM_SCHED_TX_WAIT_FOR_ACK;
+        sSchedTxTime  = otPlatTimeGet() + SIM_SCHED_TX_ACK_TIMEOUT_US;
+    }
+    else
+    {
+        sSchedTxState = SIM_SCHED_TX_IDLE;
+        otPlatRadioScheduledTxDone(aInstance, NULL, OT_ERROR_NONE);
+    }
+
+exit:
+    return;
+}
+
+static void RadioProcessSchedTx(otInstance *aInstance)
+{
+    switch (sSchedTxState)
+    {
+    case SIM_SCHED_TX_IDLE:
+        break;
+
+    case SIM_SCHED_TX_PENDING_ABORT:
+        sSchedTxState = SIM_SCHED_TX_IDLE;
+        otPlatRadioScheduledTxDone(aInstance, NULL, OT_ERROR_ABORT);
+        break;
+
+    case SIM_SCHED_TX_PENDING:
+        if (otPlatTimeGet() >= sSchedTxTime)
+        {
+            RadioSendSchedTx(aInstance);
+        }
+        break;
+
+    case SIM_SCHED_TX_WAIT_FOR_ACK:
+        if (otPlatTimeGet() >= sSchedTxTime)
+        {
+            sSchedTxState = SIM_SCHED_TX_IDLE;
+            otPlatRadioScheduledTxDone(aInstance, NULL, OT_ERROR_NO_ACK);
+        }
+        break;
+    }
+}
+
+static void UpdateTimeout(uint64_t aTargetTime, uint64_t aNow, struct timeval *aTimeout)
+{
+    struct timeval tv = {0, 0};
+
+    if (aTargetTime > aNow)
+    {
+        uint64_t remaining = aTargetTime - aNow;
+
+        tv.tv_sec  = (time_t)(remaining / OT_US_PER_S);
+        tv.tv_usec = (suseconds_t)(remaining % OT_US_PER_S);
+    }
+
+    if (timercmp(&tv, aTimeout, <))
+    {
+        *aTimeout = tv;
+    }
+}
 
 static bool FilterContainsId(uint16_t aNodeId)
 {
@@ -593,6 +718,9 @@ otError otPlatRadioDisable(otInstance *aInstance)
     otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP, error = OT_ERROR_INVALID_STATE);
 
     sState = OT_RADIO_STATE_DISABLED;
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    sSchedTxState = SIM_SCHED_TX_IDLE;
+#endif
 
 exit:
     return error;
@@ -663,6 +791,60 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 
     return &sTransmitFrame;
 }
+
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+otRadioFrame *otPlatRadioGetScheduledTxFrame(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(aInstance != NULL);
+
+    return &sSchedTxFrame;
+}
+
+otError otPlatRadioScheduleTx(otInstance *aInstance, otRadioTime64 aTxTime)
+{
+    otError       error = OT_ERROR_NONE;
+    otRadioTime64 now;
+
+    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
+
+    otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sSchedTxState == SIM_SCHED_TX_IDLE, error = OT_ERROR_BUSY);
+
+    now = otPlatTimeGet();
+
+    sSchedTxTime  = aTxTime;
+    sSchedTxState = (aTxTime > now) ? SIM_SCHED_TX_PENDING : SIM_SCHED_TX_PENDING_ABORT;
+
+exit:
+    return error;
+}
+
+otError otPlatRadioCancelScheduledTx(otInstance *aInstance)
+{
+    otError error = OT_ERROR_NONE;
+
+    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
+
+    switch (sSchedTxState)
+    {
+    case SIM_SCHED_TX_IDLE:
+    case SIM_SCHED_TX_PENDING:
+    case SIM_SCHED_TX_PENDING_ABORT:
+        sSchedTxState = SIM_SCHED_TX_IDLE;
+        break;
+
+    case SIM_SCHED_TX_WAIT_FOR_ACK:
+        error = OT_ERROR_BUSY;
+        break;
+    }
+
+    return error;
+}
+#endif // !OPENTHREAD_SIMULATION_VIRTUAL_TIME
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
@@ -1005,6 +1187,13 @@ void platformRadioInit(void)
     sPortOffset *= (MAX_NETWORK_SIZE + 1);
 
     utilsInitSocket(&sSocket, sPortBase + sPortOffset);
+
+    sSchedTxFrame.mPsdu = sSchedTxMessage.mPsdu;
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    sSchedTxFrame.mInfo.mTxInfo.mIeInfo = &sSchedTxIeInfo;
+#else
+    sSchedTxFrame.mInfo.mTxInfo.mIeInfo = NULL;
+#endif
 #endif
 
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
@@ -1032,7 +1221,14 @@ void platformRadioInit(void)
 #endif
 }
 
-bool platformRadioIsTransmitPending(void) { return sState == OT_RADIO_STATE_TRANSMIT && !sTxWait; }
+bool platformRadioIsTransmitPending(void)
+{
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    return (sState == OT_RADIO_STATE_TRANSMIT) && !sTxWait && (sSchedTxState != SIM_SCHED_TX_WAIT_FOR_ACK);
+#else
+    return (sState == OT_RADIO_STATE_TRANSMIT) && !sTxWait;
+#endif
+}
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength)
@@ -1048,7 +1244,7 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
 #else
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
 {
-    if (sState != OT_RADIO_STATE_TRANSMIT || sTxWait)
+    if (sState != OT_RADIO_STATE_TRANSMIT || sTxWait || (sSchedTxState == SIM_SCHED_TX_WAIT_FOR_ACK))
     {
         utilsAddSocketRxFd(&sSocket, aReadFdSet, aMaxFd);
     }
@@ -1076,6 +1272,11 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct ti
             *aTimeout = tv;
         }
     }
+
+    if (sSchedTxState != SIM_SCHED_TX_IDLE)
+    {
+        UpdateTimeout(sSchedTxTime, otPlatTimeGet(), aTimeout);
+    }
 }
 
 // no need to close in virtual time mode.
@@ -1101,6 +1302,8 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
             RadioReceive(aInstance);
         }
     }
+
+    RadioProcessSchedTx(aInstance);
 #endif
 
     if (platformRadioIsTransmitPending())
