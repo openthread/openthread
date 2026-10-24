@@ -638,6 +638,10 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
 /**
  * Set the PAN ID for address filtering.
  *
+ * When address filtering is active, the radio platform MUST check a received frame's Destination PAN ID against
+ * @p aPanId (or the broadcast PAN ID `0xffff`) only if the Destination PAN ID field is present in the frame. Frames
+ * that do not contain a Destination PAN ID field MUST NOT be rejected due to PAN ID mismatch (@sa otPlatRadioEnable()).
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPanId     The IEEE 802.15.4 PAN ID.
  */
@@ -646,6 +650,8 @@ void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanId);
 /**
  * Set the Extended Address for address filtering.
  *
+ * @sa otPlatRadioEnable() for address filtering requirements on frames with no destination address.
+ *
  * @param[in] aInstance    The OpenThread instance structure.
  * @param[in] aExtAddress  A pointer to the IEEE 802.15.4 Extended Address stored in little-endian byte order.
  */
@@ -653,6 +659,8 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 
 /**
  * Set the Short Address for address filtering.
+ *
+ * @sa otPlatRadioEnable() for address filtering requirements on frames with no destination address.
  *
  * @param[in] aInstance      The OpenThread instance structure.
  * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
@@ -935,6 +943,18 @@ otRadioState otPlatRadioGetState(otInstance *aInstance);
 
 /**
  * Enable the radio.
+ *
+ * When the radio is enabled (and promiscuous mode is disabled), the radio platform MUST configure its IEEE
+ * 802.15.4-2015 address filter to operate in PAN Coordinator mode (`macPanCoord = true`):
+ *
+ * - Accept received Data and MAC Command frames that have no destination address (`Destination Addressing Mode =
+ *   0b00`), in addition to frames matching the PAN ID, short address (or alternate short address), extended address,
+ *   or broadcast address configured via `otPlatRadioSetPanId()`, `otPlatRadioSetShortAddress()`,
+ *   `otPlatRadioSetAlternateShortAddress()`, and `otPlatRadioSetExtendedAddress()`.
+ * - Check the Destination PAN ID against the configured PAN ID (or the broadcast PAN ID `0xffff`) only when a
+ *   Destination PAN ID field is present in the received frame.
+ * - Received frames that have no destination address (`Destination Addressing Mode = 0b00`) SHOULD NOT be
+ *   acknowledged.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
