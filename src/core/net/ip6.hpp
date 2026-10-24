@@ -317,7 +317,7 @@ public:
      *
      * @returns TRUE if the filter is enabled, FALSE otherwise.
      */
-    bool IsTmfOriginFilterEnabled(void) { return mTmfOriginFilterEnabled; }
+    bool IsTmfOriginFilterEnabled(void) const { return mTmfOriginFilterEnabled; }
 
 #endif
 

@@ -406,15 +406,19 @@ public:
     const uint8_t *GetMetricsData(void) const { return GetBytes() + sizeof(LinkMetricsProbingIe); }
 
     /**
+     * Returns a pointer to the Link Metrics Data bytes.
+     *
+     * @returns A pointer to the Link Metrics Data bytes.
+     */
+    uint8_t *GetMetricsData(void) { return GetBytes() + sizeof(LinkMetricsProbingIe); }
+
+    /**
      * Writes Link Metrics Data content from a given buffer.
      *
      * @param[in] aData  A pointer to a buffer containing the data to write. The caller must ensure that at least
      *                   `GetMetricsDataLen()` bytes are available in @p aData.
      */
-    void WriteMetricsDataFrom(const uint8_t *aData)
-    {
-        memcpy(AsNonConst(GetMetricsData()), aData, GetMetricsDataLen());
-    }
+    void WriteMetricsDataFrom(const uint8_t *aData) { memcpy(GetMetricsData(), aData, GetMetricsDataLen()); }
 
 private:
     static constexpr uint8_t kSubType = 0x00;

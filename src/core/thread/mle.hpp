@@ -1824,7 +1824,7 @@ private:
         // before sending the first message.
 
     public:
-        PrevRoleRestorer(Instance &aInstance);
+        explicit PrevRoleRestorer(Instance &aInstance);
 
         Error Start(void);
         void  Stop(void);

@@ -383,7 +383,6 @@ public:
         kHardwareTypeEui64    = 27, ///< EUI64 HW Type.
     };
 
-private:
     Duid(void) = delete;
 };
 
@@ -433,8 +432,10 @@ private:
  */
 class IdOption
 {
-protected:
+public:
     IdOption(void) = delete;
+
+protected:
     static Error Read(Option::Code aCode, const Message &aMessage, OffsetRange &aDuidOffsetRange);
     static Error ReadEui64(Option::Code aCode, const Message &aMessage, Mac::ExtAddress &aExtAddress);
     static Error MatchesEui64(Option::Code aCode, const Message &aMessage, const Mac::ExtAddress &aExtAddress);
