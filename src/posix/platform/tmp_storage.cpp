@@ -91,7 +91,6 @@ void TmpStorage::Deinit(void)
 {
     mStorageFile.Deinit();
     mIsFileInitialized = false;
-
 }
 
 void TmpStorage::SaveRadioSpinelMetrics(const otRadioSpinelMetrics &aMetrics)
