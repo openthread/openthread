@@ -78,6 +78,7 @@ const char *otSysGetRadioUrlHelpString(void)
     "    forkpty-arg[=argument string]  Command line arguments for subprocess, can be repeated.\n"   \
     "    spinel+hdlc+uart://${PATH_TO_UART_DEVICE}?${Parameters} for real uart device\n"             \
     "    spinel+hdlc+forkpty://${PATH_TO_UART_DEVICE}?${Parameters} for forking a pty subprocess.\n" \
+    "    spinel+hdlc+unix://${PATH_TO_UNIX_SOCKET}?${Parameters} for unix stream socket.\n"          \
     "Parameters:\n"                                                                                  \
     "    uart-parity[=even|odd]         Uart parity config, optional.\n"                             \
     "    uart-stop[=number-of-bits]     Uart stop bit, default is 1.\n"                              \
