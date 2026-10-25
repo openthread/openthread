@@ -503,9 +503,9 @@ TEST(RadioSpinelMaxPowerTable, shouldRestoreEachChannelWithItsOwnPower)
     constexpr uint8_t kChannelA = 11;
     constexpr uint8_t kChannelB = 15;
     constexpr uint8_t kChannelC = 26;
-    constexpr int8_t  kPowerA   = 5;
-    constexpr int8_t  kPowerB   = 14;
-    constexpr int8_t  kPowerC   = 20;
+    constexpr int16_t kPowerA   = 500;
+    constexpr int16_t kPowerB   = 1400;
+    constexpr int16_t kPowerC   = 2000;
 
     FakeCoprocessorPlatform platform;
 
@@ -515,29 +515,84 @@ TEST(RadioSpinelMaxPowerTable, shouldRestoreEachChannelWithItsOwnPower)
     ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannelB, kPowerB), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannelC, kPowerC), kErrorNone);
 
-    ASSERT_EQ(platform.ChannelMaxTxPowerGet(kChannelA), kPowerA);
-    ASSERT_EQ(platform.ChannelMaxTxPowerGet(kChannelB), kPowerB);
-    ASSERT_EQ(platform.ChannelMaxTxPowerGet(kChannelC), kPowerC);
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    {
+        const uint8_t kRawPowerSetting[] = {0x01};
+        int16_t       targetPower        = 0;
+        int16_t       actualPower        = 0;
+        uint8_t       rawPowerSetting[sizeof(kRawPowerSetting)];
+        uint16_t      rawPowerSettingLength;
+
+        for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
+        {
+            ASSERT_EQ(platform.mRadioSpinel.AddCalibratedPower(channel, 0, kRawPowerSetting, sizeof(kRawPowerSetting)),
+                      kErrorNone);
+        }
+
+        // Forget what the RCP was told, so what follows can only come from the
+        // restore itself.
+        ASSERT_EQ(
+            otPlatRadioSetChannelTargetPower(FakePlatform::CurrentInstance(), kChannelA, OT_RADIO_POWER_INVALID_IN_MBM),
+            kErrorNone);
+        ASSERT_EQ(
+            otPlatRadioSetChannelTargetPower(FakePlatform::CurrentInstance(), kChannelB, OT_RADIO_POWER_INVALID_IN_MBM),
+            kErrorNone);
+        ASSERT_EQ(
+            otPlatRadioSetChannelTargetPower(FakePlatform::CurrentInstance(), kChannelC, OT_RADIO_POWER_INVALID_IN_MBM),
+            kErrorNone);
+
+        platform.mRadioSpinel.RestoreProperties();
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelA, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerA);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelB, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerB);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelC, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerC);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), 12, &targetPower, &actualPower,
+                                                  rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        constexpr int16_t kDefaultPower = MaxPowerTable::kPowerDefault;
+        EXPECT_EQ(targetPower, kDefaultPower);
+    }
+#else
+    ASSERT_EQ(platform.ChannelTargetPowerGet(kChannelA), kPowerA);
+    ASSERT_EQ(platform.ChannelTargetPowerGet(kChannelB), kPowerB);
+    ASSERT_EQ(platform.ChannelTargetPowerGet(kChannelC), kPowerC);
 
     // Forget what the RCP was told, so what follows can only come from the
     // restore itself.
-    platform.ChannelMaxTxPowerClear();
-    ASSERT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+    platform.ChannelTargetPowerClear();
+    ASSERT_EQ(platform.ChannelTargetPowerCount(), 0u);
 
     platform.mRadioSpinel.RestoreProperties();
 
     // Each configured channel comes back with its own power, not with a
     // neighbour's and not with the table default.
-    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannelA), kPowerA);
-    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannelB), kPowerB);
-    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannelC), kPowerC);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelA), kPowerA);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelB), kPowerB);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelC), kPowerC);
 
     // Channels never configured keep the table default, which is what the
     // restore sends for them. Copied into a local first: `kPowerDefault` is a
     // `static constexpr` with no out-of-line definition, and EXPECT_EQ binds
     // its arguments by reference, which would odr-use it.
-    constexpr int8_t kDefaultPower = MaxPowerTable::kPowerDefault;
-    EXPECT_EQ(platform.ChannelMaxTxPowerGet(12), kDefaultPower);
+    constexpr int16_t kDefaultPower = MaxPowerTable::kPowerDefault;
+    EXPECT_EQ(platform.ChannelTargetPowerGet(12), kDefaultPower);
+#endif
 }
 
 TEST(RadioSpinelMaxPowerTable, shouldNotTouchTheRcpWhenNoChannelWasConfigured)
@@ -547,18 +602,21 @@ TEST(RadioSpinelMaxPowerTable, shouldNotTouchTheRcpWhenNoChannelWasConfigured)
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
 
     platform.ChannelMaxTxPowerClear();
+    platform.ChannelTargetPowerClear();
     platform.mRadioSpinel.RestoreProperties();
 
     // Nothing was configured, so the restore must not send the table's
     // defaults to the RCP -- 16 blocking transactions on every recovery for a
     // feature nobody asked for.
     EXPECT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
 }
 
+#if !(OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE)
 TEST(RadioSpinelMaxPowerTable, shouldSurviveAnRcpThatDoesNotImplementIt)
 {
     constexpr uint8_t kChannel = 11;
-    constexpr int8_t  kPower   = 5;
+    constexpr int16_t kPower   = 500;
 
     FakeCoprocessorPlatform platform;
 
@@ -570,21 +628,56 @@ TEST(RadioSpinelMaxPowerTable, shouldSurviveAnRcpThatDoesNotImplementIt)
     // `SPINEL_STATUS_UNIMPLEMENTED`, but both reach the host as
     // `OT_ERROR_NOT_IMPLEMENTED`, which is the path under test.
     platform.ChannelMaxTxPowerFailWith(OT_ERROR_NOT_IMPLEMENTED);
+    platform.ChannelTargetPowerFailWith(OT_ERROR_NOT_IMPLEMENTED);
     platform.ChannelMaxTxPowerClear();
+    platform.ChannelTargetPowerClear();
 
     // Must not abort: this used to be a `DieNow()`, so a regression takes the
     // whole test binary down rather than failing an assertion.
     platform.mRadioSpinel.RestoreProperties();
 
     EXPECT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
 
     // And it must give up rather than ask again on every later recovery, even
     // once the RCP would accept it.
     platform.ChannelMaxTxPowerFailWith(OT_ERROR_NONE);
+    platform.ChannelTargetPowerFailWith(OT_ERROR_NONE);
     platform.mRadioSpinel.RestoreProperties();
 
     EXPECT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
 }
+
+TEST(RadioSpinelMaxPowerTable, shouldFallbackToLegacyMaxPowerWhenTargetPowerNotSupported)
+{
+    constexpr uint8_t kChannel     = 11;
+    constexpr uint8_t kNegChannel  = 12;
+    constexpr int16_t kPower       = 1234;
+    constexpr int16_t kNegPowerMbm = -550;
+
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    platform.ChannelTargetPowerFailWith(OT_ERROR_NOT_IMPLEMENTED);
+
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannel, kPower), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kNegChannel, kNegPowerMbm), kErrorNone);
+
+    // Fallback sends SPINEL_PROP_PHY_CHAN_MAX_POWER in 1 dBm (1234 -> 12, -550 -> -6).
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannel), 12);
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kNegChannel), -6);
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
+
+    // Restore should also use legacy max power table.
+    platform.ChannelMaxTxPowerClear();
+    platform.mRadioSpinel.RestoreProperties();
+
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannel), 12);
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kNegChannel), -6);
+}
+#endif
 
 TEST(RadioSpinelSrcMatch, shouldNotDuplicateSrcMatchEntriesOnRestoreProperties)
 {

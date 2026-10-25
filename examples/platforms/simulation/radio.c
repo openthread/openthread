@@ -729,6 +729,24 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 
     assert(aInstance != NULL);
 
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    if (maxPower == OT_RADIO_POWER_INVALID)
+    {
+        int16_t  targetPower           = OT_RADIO_POWER_INVALID_IN_MBM;
+        int16_t  actualPower           = OT_RADIO_POWER_INVALID_IN_MBM;
+        uint8_t  rawPowerSetting[1]    = {0};
+        uint16_t rawPowerSettingLength = sizeof(rawPowerSetting);
+        otError  error = otPlatDiagRadioGetPowerSettings(aInstance, sCurrentChannel, &targetPower, &actualPower,
+                                                         rawPowerSetting, &rawPowerSettingLength);
+        OT_UNUSED_VARIABLE(error);
+
+        if (targetPower != OT_RADIO_POWER_INVALID_IN_MBM)
+        {
+            maxPower = (int8_t)(targetPower / 100 - ((targetPower < 0 && targetPower % 100 != 0) ? 1 : 0));
+        }
+    }
+#endif
+
     *aPower = sTxPower < maxPower ? sTxPower : maxPower;
 
     return OT_ERROR_NONE;
@@ -961,6 +979,17 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
 exit:
     return error;
 }
+
+#if !(OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE)
+otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower)
+{
+    int16_t powerDbm = aTargetPower / 100 - ((aTargetPower < 0 && aTargetPower % 100 != 0) ? 1 : 0);
+    int8_t  maxPower =
+        (aTargetPower == OT_RADIO_POWER_INVALID_IN_MBM) ? (int8_t)OT_RADIO_POWER_INVALID : (int8_t)powerDbm;
+
+    return otPlatRadioSetChannelMaxTransmitPower(aInstance, aChannel, maxPower);
+}
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 otError otPlatRadioConfigureEnhAckProbing(otInstance          *aInstance,

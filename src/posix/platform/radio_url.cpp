@@ -108,7 +108,11 @@ const char *otSysGetRadioUrlHelpString(void)
     "    max-power-table               Max power for channels in ascending order separated by commas,\n"   \
     "                                  If the number of values is less than that of supported channels,\n" \
     "                                  the last value will be applied to all remaining channels.\n"        \
-    "                                  Special value 0x7f disables a channel.\n"
+    "                                  Special value 0x7f disables a channel.\n"                           \
+    "    max-power-table-mbm           Max power (in 0.01 dBm) for channels in ascending order\n"          \
+    "                                  separated by commas. If the number of values is less than that\n"   \
+    "                                  of supported channels, the last value will be applied to all\n"     \
+    "                                  remaining channels. Special value 0x7fff disables a channel.\n"
 
 // Only meaningful while max-power-table is compiled in; without it the note
 // would point at a parameter the help does not list.
