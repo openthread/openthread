@@ -200,6 +200,8 @@ build_posix()
 
     if [[ ${OT_NATIVE_IP} == 1 ]]; then
         options+=("-DOT_PLATFORM_UDP=ON" "-DOT_PLATFORM_NETIF=ON")
+    else
+        options+=("-DOT_PLATFORM_UDP=OFF" "-DOT_PLATFORM_NETIF=OFF")
     fi
 
     if [[ ${ot_extra_options[*]+x} ]]; then
@@ -463,6 +465,9 @@ ot_exec_expect_script()
 
 do_expect()
 {
+    # shellcheck source=script/_maybe_isolate
+    source "$(dirname "${BASH_SOURCE[0]}")/_maybe_isolate" expect "$@"
+
     local test_patterns
 
     if [[ -n ${OT_EXPECT_CATEGORY:-} ]]; then

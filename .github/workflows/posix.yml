@@ -81,7 +81,8 @@ jobs:
       shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y bind9-host expect lcov ninja-build ntp
+        sudo apt-get --no-install-recommends install -y dnsmasq-base expect lcov ninja-build xxd
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         sudo bash script/install_socat
         pip install bleak 'cryptography==43.0.0'
     - name: Run RCP Mode
@@ -111,11 +112,6 @@ jobs:
       if: matrix.category == 'tun'
       run: |
         echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
-        sudo systemctl restart ntp
-        sudo socat 'UDP6-LISTEN:53,fork,reuseaddr,bind=[::1]' UDP:127.0.0.53:53 &
-        socat 'TCP6-LISTEN:2000,fork,reuseaddr' TCP:127.0.0.53:53 &
-        host ipv6.google.com 127.0.0.53
-        host ipv6.google.com ::1
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
         OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
