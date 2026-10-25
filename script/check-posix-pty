@@ -30,6 +30,11 @@
 set -e
 set -x
 
+# Addresses set_up_infra_if added to the infrastructure interface, for at_exit to remove.
+ADDED_INFRA_ADDRS=()
+# The NAT64 translator's IPv4 range, OPENTHREAD_POSIX_CONFIG_NAT64_CIDR's default.
+NAT64_CIDR=192.168.255.0/24
+
 die()
 {
     echo " *** ERROR: " "$*"
@@ -46,6 +51,10 @@ at_exit()
     sudo killall ot-cli || true
     sudo killall ot-rcp || true
     sudo killall socat || true
+
+    for addr in "${ADDED_INFRA_ADDRS[@]}"; do
+        sudo ip addr del "${addr}" dev "${INFRA_IF_NAME}" || true
+    done
 
     # The daemon's output no longer streams through tee; show it when the check failed.
     if [[ ${EXIT_CODE} != 0 && -f ${OT_DAEMON_OUTPUT:-} ]]; then
@@ -84,8 +93,9 @@ do_build()
 {
     ./script/cmake-build simulation
     # OMR prefixes are installed as kernel routes (which needs border routing for otNetDataContainsOmrPrefix), so that
-    # the daemon's route handling is exercised.
-    ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_POSIX_INSTALL_OMR_ROUTES=ON -DOT_BORDER_ROUTING=ON -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
+    # the daemon's route handling is exercised. The NAT64 translator (with the border routing manager that hands it
+    # its prefix) is on for check_daemon_nat64.
+    ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_POSIX_INSTALL_OMR_ROUTES=ON -DOT_BORDER_ROUTING=ON -DOT_NAT64_TRANSLATOR=ON -DOT_NAT64_BORDER_ROUTING=ON -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
 }
 
 # The netif joins ff02::1 on the Thread interface when it comes up and leaves it when it
@@ -186,6 +196,98 @@ check_daemon_omr_route()
         || die 'the daemon failed to delete the route of the OMR prefix'
 }
 
+# The border routing manager, which hands the NAT64 translator its prefix, needs an infrastructure interface that is
+# running with a link-local address. The loopback interface serves, so that nothing is advertised on a real link: lo0
+# has fe80::1 on macOS; lo gets one here on Linux, and an IPv4 address of its own to stand for the host behind the
+# translator (an echo request to 127.0.0.1 coming in through the Thread interface would be a martian). On macOS the
+# host answers from the Thread interface's own IPv4 address, the CIDR's network address the daemon gives it while
+# the translator is active: XNU's net.inet.ip.check_interface (on by default) drops a datagram that arrives on an
+# interface which does not own its destination address, so no address of en0 or lo0 can be the target.
+set_up_infra_if()
+{
+    if [[ ${OSTYPE} == "linux-gnu"* ]]; then
+        INFRA_IF_NAME=lo
+        HOST_IP4=172.16.64.1
+        for addr in fe80::1/64 "${HOST_IP4}/32"; do
+            if sudo ip addr add "${addr}" dev "${INFRA_IF_NAME}" 2>/dev/null; then
+                ADDED_INFRA_ADDRS+=("${addr}")
+            fi
+        done
+    else
+        INFRA_IF_NAME=lo0
+        HOST_IP4=${NAT64_CIDR%/*}
+    fi
+
+    INFRA_IF_INDEX=$(python3 -c 'import socket, sys; print(socket.if_nametoindex(sys.argv[1]))' "${INFRA_IF_NAME}")
+    [[ -n ${HOST_IP4} && -n ${INFRA_IF_INDEX} ]] || die 'no infrastructure interface or host address for the NAT64 check'
+}
+
+nat64_translator_active()
+{
+    local output
+
+    output=$("${OT_CTL[@]}" -I "${NETIF_NAME}" nat64 state) || return 1
+    grep -qE 'Translator: *Active' <<<"${output}"
+}
+
+# Lists the IPv4 route to the CIDR through the Thread interface. netstat prints a network without its trailing zero
+# octets, and without the prefix length when it is the classful one (192.168.255 for 192.168.255.0/24).
+kernel_route4_known()
+{
+    local network=${1%/*}
+    local short=${network%.0}
+    local length=${1##*/}
+
+    if [[ ${OSTYPE} == "linux-gnu"* ]]; then
+        ip -4 route show "$1" dev "${NETIF_NAME}" | grep .
+    else
+        netstat -rn -f inet | grep -E "^(${network//./\\.}|${short//./\\.})(/${length})?[[:space:]]" | grep -w "${NETIF_NAME}"
+    fi
+}
+
+# Passes when the route listing fails too, so it must follow a kernel_route4_known that passed.
+kernel_route4_gone()
+{
+    ! kernel_route4_known "$1"
+}
+
+# `ping <IPv4>` synthesizes the address from the NAT64 prefix in the network data, which the publisher adds up to
+# 3.5 s after the translator turned active, and the request needs the node's OMR address as its source, which arrives
+# the same way; so the ping is retried until a reply comes.
+host_reached_through_nat64()
+{
+    local output
+
+    output=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ping "$1") || return 1
+    echo "${output}"
+    grep -q 'bytes from' <<<"${output}"
+}
+
+# Thread devices reach IPv4 hosts through the NAT64 translator when the daemon routes the translator's IPv4 range (its
+# CIDR) and the NAT64 prefix through the Thread interface and writes the translated datagrams to the tunnel as IPv4.
+# Checked from the daemon's own node: `ping <IPv4>` synthesizes the NAT64 address, the translator turns the echo request
+# into IPv4 for the host, and the host's reply comes back through the CIDR route.
+check_daemon_nat64()
+{
+    local cidr=${NAT64_CIDR}
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    ot_ctl_done br init "${INFRA_IF_INDEX}" 1 || die 'br init failed'
+    ot_ctl_done br enable || die 'br enable failed'
+    ot_ctl_done nat64 enable || die 'nat64 enable failed'
+    timeout_run 30 nat64_translator_active || die 'the NAT64 translator did not become active'
+    timeout_run 10 kernel_route4_known "${cidr}" || die 'the NAT64 CIDR was not installed as a route through the Thread interface'
+    timeout_run 10 grep -q 'Added route for NAT64 CIDR' "${OT_DAEMON_OUTPUT}" || die 'the daemon did not report the route of the NAT64 CIDR'
+    timeout_run 10 grep -q 'Added route for NAT64 prefix' "${OT_DAEMON_OUTPUT}" || die 'the daemon did not report the route of the NAT64 prefix'
+    timeout_run 30 host_reached_through_nat64 "${HOST_IP4}" || die "no echo reply from ${HOST_IP4} through the NAT64 translator"
+
+    ot_ctl_done nat64 disable || die 'nat64 disable failed'
+    timeout_run 10 kernel_route4_gone "${cidr}" || die 'the route of the NAT64 CIDR is still installed'
+    timeout_run 10 grep -q 'Deleted route for NAT64 CIDR' "${OT_DAEMON_OUTPUT}" || die 'the daemon did not report the removal of the NAT64 CIDR route'
+    ot_ctl_done br disable || die 'br disable failed'
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -209,9 +311,10 @@ do_check()
     RADIO_URL="spinel+hdlc+uart://${SOCAT_PTY}?region=US&max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
 
     if [[ ${OT_DAEMON} == 'on' ]]; then
+        set_up_infra_if
         # The log file is in our own tmp directory, so the redirect does not need sudo.
         # shellcheck disable=SC2024
-        sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d5 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" >"${OT_DAEMON_OUTPUT}" 2>&1 &
+        sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d5 -v -I "${VALID_NETIF_NAME}" -B "${INFRA_IF_NAME}" "${RADIO_URL}" >"${OT_DAEMON_OUTPUT}" 2>&1 &
         OT_DAEMON_JOB=$!
         sleep 3
         # macOS cannot explicitly set network interface name
@@ -338,6 +441,7 @@ EOF
     # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
     if [[ $OSTYPE != "linux-gnu"* ]]; then
         check_daemon_omr_route
+        check_daemon_nat64
         check_daemon_netif_down
         return 0
     fi
@@ -369,6 +473,7 @@ EOF
     fi
 
     check_daemon_omr_route
+    check_daemon_nat64
     check_daemon_netif_down
 }
 
