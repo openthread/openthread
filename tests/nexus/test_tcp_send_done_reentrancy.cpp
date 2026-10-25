@@ -78,7 +78,9 @@ struct ClientContext
     GuardedBuffer    *mSecondBuffer;
     const otSockAddr *mReconnectAddress;
     uint16_t          mSendDoneCalls;
+    uint16_t          mDisconnectedCalls;
     bool              mEstablished;
+    bool              mEndOfStream;
 };
 
 struct ServerContext
@@ -92,7 +94,7 @@ static void HandleClientEstablished(otTcpEndpoint *aEndpoint)
     static_cast<ClientContext *>(otTcpEndpointGetContext(aEndpoint))->mEstablished = true;
 }
 
-static void HandleClientSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aBuffer)
+static void HandleClientSendDoneAndAbort(otTcpEndpoint *aEndpoint, otLinkedBuffer *aBuffer)
 {
     ClientContext &context = *static_cast<ClientContext *>(otTcpEndpointGetContext(aEndpoint));
 
@@ -113,6 +115,38 @@ static void HandleClientSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aBuff
         // Abort permits the endpoint to be reused immediately. Reconnect to
         // ensure that checking only whether the endpoint is closed cannot make
         // TCP resume walking the old send-buffer list.
+        VerifyOrQuit(context.mReconnectAddress != nullptr);
+        SuccessOrQuit(otTcpConnect(aEndpoint, context.mReconnectAddress, OT_TCP_CONNECT_NO_FAST_OPEN));
+    }
+}
+
+static void HandleClientSendDoneAfterDisconnect(otTcpEndpoint *aEndpoint, otLinkedBuffer *)
+{
+    static_cast<ClientContext *>(otTcpEndpointGetContext(aEndpoint))->mSendDoneCalls++;
+}
+
+static void HandleClientReceiveAvailable(otTcpEndpoint *aEndpoint, size_t, bool aEndOfStream, size_t)
+{
+    static_cast<ClientContext *>(otTcpEndpointGetContext(aEndpoint))->mEndOfStream = aEndOfStream;
+}
+
+static void HandleClientDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason)
+{
+    ClientContext &context = *static_cast<ClientContext *>(otTcpEndpointGetContext(aEndpoint));
+
+    context.mDisconnectedCalls++;
+
+    if (context.mDisconnectedCalls == 1)
+    {
+        VerifyOrQuit(aReason == OT_TCP_DISCONNECTED_REASON_NORMAL);
+        VerifyOrQuit(context.mSecondBuffer != nullptr);
+
+        // The disconnected callback returns all send buffers to the
+        // application. Reclaim one immediately and reconnect the endpoint so
+        // stale signal processing cannot use the old buffer chain.
+        context.mSecondBuffer->Protect();
+        context.mSecondBuffer = nullptr;
+
         VerifyOrQuit(context.mReconnectAddress != nullptr);
         SuccessOrQuit(otTcpConnect(aEndpoint, context.mReconnectAddress, OT_TCP_CONNECT_NO_FAST_OPEN));
     }
@@ -156,7 +190,7 @@ void TestTcpSendDoneReentrancy(void)
     uint8_t            serverReceiveBuffer[128];
     uint8_t            clientReceiveBuffer[128];
     ServerContext      serverContext{&serverEndpoint, false};
-    ClientContext      clientContext{nullptr, nullptr, 0, false};
+    ClientContext      clientContext{nullptr, nullptr, 0, 0, false, false};
 
     otTcpEndpointInitializeArgs serverEndpointArgs{};
     serverEndpointArgs.mReceiveBuffer     = serverReceiveBuffer;
@@ -170,7 +204,7 @@ void TestTcpSendDoneReentrancy(void)
     otTcpEndpointInitializeArgs clientEndpointArgs{};
     clientEndpointArgs.mContext             = &clientContext;
     clientEndpointArgs.mEstablishedCallback = HandleClientEstablished;
-    clientEndpointArgs.mSendDoneCallback    = HandleClientSendDone;
+    clientEndpointArgs.mSendDoneCallback    = HandleClientSendDoneAndAbort;
     clientEndpointArgs.mReceiveBuffer       = clientReceiveBuffer;
     clientEndpointArgs.mReceiveBufferSize   = sizeof(clientReceiveBuffer);
 
@@ -221,6 +255,79 @@ void TestTcpSendDoneReentrancy(void)
     SuccessOrQuit(serverEndpoint.Deinitialize());
     SuccessOrQuit(serverListener.StopListening());
     SuccessOrQuit(serverListener.Deinitialize());
+
+    // Exercise the same endpoint-reuse hazard when tcplp_input() closes a
+    // connection before ProcessSignals() is entered. Have the server close its
+    // send side first so the client reaches LAST_ACK when it sends data and its
+    // FIN. The ACK then retires the buffers and closes the client connection in
+    // one input pass.
+    Ip6::Tcp::Endpoint closingServerEndpoint;
+    Ip6::Tcp::Listener closingServerListener;
+    Ip6::Tcp::Endpoint closingClientEndpoint;
+    uint8_t            closingServerReceiveBuffer[128];
+    uint8_t            closingClientReceiveBuffer[128];
+    ServerContext      closingServerContext{&closingServerEndpoint, false};
+    ClientContext      closingClientContext{nullptr, nullptr, 0, 0, false, false};
+
+    otTcpEndpointInitializeArgs closingServerEndpointArgs{};
+    closingServerEndpointArgs.mReceiveBuffer     = closingServerReceiveBuffer;
+    closingServerEndpointArgs.mReceiveBufferSize = sizeof(closingServerReceiveBuffer);
+
+    otTcpListenerInitializeArgs closingListenerArgs{};
+    closingListenerArgs.mContext             = &closingServerContext;
+    closingListenerArgs.mAcceptReadyCallback = HandleServerAcceptReady;
+    closingListenerArgs.mAcceptDoneCallback  = HandleServerAcceptDone;
+
+    otTcpEndpointInitializeArgs closingClientEndpointArgs{};
+    closingClientEndpointArgs.mContext                  = &closingClientContext;
+    closingClientEndpointArgs.mEstablishedCallback      = HandleClientEstablished;
+    closingClientEndpointArgs.mSendDoneCallback         = HandleClientSendDoneAfterDisconnect;
+    closingClientEndpointArgs.mReceiveAvailableCallback = HandleClientReceiveAvailable;
+    closingClientEndpointArgs.mDisconnectedCallback     = HandleClientDisconnected;
+    closingClientEndpointArgs.mReceiveBuffer            = closingClientReceiveBuffer;
+    closingClientEndpointArgs.mReceiveBufferSize        = sizeof(closingClientReceiveBuffer);
+
+    SuccessOrQuit(closingServerEndpoint.Initialize(serverNode, closingServerEndpointArgs));
+    SuccessOrQuit(closingServerListener.Initialize(serverNode, closingListenerArgs));
+    SuccessOrQuit(closingClientEndpoint.Initialize(clientNode, closingClientEndpointArgs));
+    SuccessOrQuit(closingServerListener.Listen(listenAddress));
+
+    closingClientContext.mReconnectAddress = &reconnectAddress;
+    SuccessOrQuit(closingClientEndpoint.Connect(serverAddress, OT_TCP_CONNECT_NO_FAST_OPEN));
+
+    nexus.AdvanceTime(kTcpTime);
+    VerifyOrQuit(closingClientContext.mEstablished);
+    VerifyOrQuit(closingServerContext.mAccepted);
+
+    SuccessOrQuit(closingServerEndpoint.SendEndOfStream());
+    nexus.AdvanceTime(kTcpTime);
+    VerifyOrQuit(closingClientContext.mEndOfStream);
+
+    static const uint8_t kClosingFirstData[]  = {17, 18, 19, 20};
+    static const uint8_t kClosingSecondData[] = {21, 22, 23, 24, 25};
+    otLinkedBuffer       closingFirst{};
+    GuardedBuffer        closingSecond;
+
+    closingFirst.mData                 = kClosingFirstData;
+    closingFirst.mLength               = sizeof(kClosingFirstData);
+    closingSecond.Get().mData          = kClosingSecondData;
+    closingSecond.Get().mLength        = sizeof(kClosingSecondData);
+    closingClientContext.mSecondBuffer = &closingSecond;
+
+    SuccessOrQuit(closingClientEndpoint.SendByReference(closingFirst, OT_TCP_SEND_MORE_TO_COME));
+    SuccessOrQuit(closingClientEndpoint.SendByReference(closingSecond.Get(), OT_TCP_SEND_MORE_TO_COME));
+    SuccessOrQuit(closingClientEndpoint.SendEndOfStream());
+
+    nexus.AdvanceTime(kTcpTime);
+
+    VerifyOrQuit(closingClientContext.mDisconnectedCalls >= 1);
+    VerifyOrQuit(closingClientContext.mSecondBuffer == nullptr);
+    VerifyOrQuit(closingClientContext.mSendDoneCalls == 0);
+
+    SuccessOrQuit(closingClientEndpoint.Deinitialize());
+    SuccessOrQuit(closingServerEndpoint.Deinitialize());
+    SuccessOrQuit(closingServerListener.StopListening());
+    SuccessOrQuit(closingServerListener.Deinitialize());
 
     nexus.SaveTestInfo("test_tcp_send_done_reentrancy.json");
 }

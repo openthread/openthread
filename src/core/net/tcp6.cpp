@@ -288,9 +288,9 @@ Error Tcp::Endpoint::Abort(void)
 {
     struct tcpcb &tp = GetTcb();
 
-    // Signal any active `ProcessSignals()` call to stop using resources that
-    // are returned to the application by `Abort()`.
-    mPendingCallbacks &= ~kProcessSignalsActiveFlag;
+    // Cancel callbacks for the old connection and signal any active
+    // `ProcessSignals()` call to stop using resources returned by `Abort()`.
+    mPendingCallbacks = 0;
     tcp_usr_abort(&tp);
     /* connection_lost will do any reinitialization work for this socket. */
     return kErrorNone;
@@ -669,14 +669,22 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
 
         otLinkedBuffer *priorHead    = lbuf_head(&tp->sendbuf);
         size_t          priorBacklog = endpoint->GetSendBufferBytes() - endpoint->GetInFlightBytes();
+        bool            ownsProcessSignalsFlag;
 
+        ownsProcessSignalsFlag = StartProcessingSignals(*endpoint);
         ClearAllBytes(sig);
         nextAction = tcplp_input(ip6Header, tcpHeader, &aMessage, tp, nullptr, &sig);
         if (nextAction != RELOOKUP_REQUIRED)
         {
-            ProcessSignals(*endpoint, priorHead, priorBacklog, sig);
+            ProcessSignals(*endpoint, priorHead, priorBacklog, sig, ownsProcessSignalsFlag);
             ExitNow();
         }
+
+        if (ownsProcessSignalsFlag && IsInitialized(*endpoint))
+        {
+            StopProcessingSignals(*endpoint);
+        }
+
         /* If the matching socket was in the TIME-WAIT state, then we try passive sockets. */
     }
 
@@ -691,7 +699,7 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
         OT_ASSERT(nextAction != RELOOKUP_REQUIRED);
         if (sig.accepted_connection != nullptr)
         {
-            ProcessSignals(Tcp::Endpoint::FromTcb(*sig.accepted_connection), nullptr, 0, sig);
+            ProcessSignals(Tcp::Endpoint::FromTcb(*sig.accepted_connection), nullptr, 0, sig, true);
         }
         ExitNow();
     }
@@ -703,32 +711,45 @@ exit:
     return error;
 }
 
+bool Tcp::StartProcessingSignals(Endpoint &aEndpoint) const
+{
+    bool ownsProcessSignalsFlag = (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) == 0;
+
+    aEndpoint.mPendingCallbacks |= kProcessSignalsActiveFlag;
+
+    return ownsProcessSignalsFlag;
+}
+
+void Tcp::StopProcessingSignals(Endpoint &aEndpoint) const
+{
+    aEndpoint.mPendingCallbacks &= ~kProcessSignalsActiveFlag;
+}
+
+bool Tcp::CanProcessSignals(const Endpoint &aEndpoint) const
+{
+    return IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
+           !aEndpoint.IsClosed();
+}
+
 void Tcp::ProcessSignals(Endpoint             &aEndpoint,
                          otLinkedBuffer       *aPriorHead,
                          size_t                aPriorBacklog,
-                         struct tcplp_signals &aSignals) const
+                         struct tcplp_signals &aSignals,
+                         bool                  aOwnsProcessSignalsFlag) const
 {
-    bool ownsProcessSignalsFlag = false;
+    VerifyOrExit(CanProcessSignals(aEndpoint));
 
-    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
-
-    // User callbacks can abort and immediately reuse this endpoint. `Abort()`
-    // clears this flag so that old signal processing does not resume against
-    // resources already returned to the application. Nested `ProcessSignals()`
-    // calls share the outer flag, so an abort stops every active invocation.
-    if ((aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) == 0)
-    {
-        aEndpoint.mPendingCallbacks |= kProcessSignalsActiveFlag;
-        ownsProcessSignalsFlag = true;
-    }
+    // User callbacks can close and immediately reuse this endpoint. Connection
+    // loss and `Abort()` clear the flag so old signal processing cannot resume
+    // against resources already returned to the application. Nested calls
+    // share the outer flag, so closing the connection stops every invocation.
 
     if (aSignals.conn_established && aEndpoint.mEstablishedCallback != nullptr)
     {
         aEndpoint.mEstablishedCallback(&aEndpoint);
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
-                 !aEndpoint.IsClosed());
+    VerifyOrExit(CanProcessSignals(aEndpoint));
     if (aEndpoint.mSendDoneCallback != nullptr)
     {
         otLinkedBuffer *curr = aPriorHead;
@@ -737,11 +758,11 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
 
         for (uint32_t i = 0; i != aSignals.links_popped; i++)
         {
-            VerifyOrExit(i == 0 ||
-                         (IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
-                          !aEndpoint.IsClosed()));
+            otLinkedBuffer *next;
 
-            otLinkedBuffer *next = curr->mNext;
+            VerifyOrExit(i == 0 || CanProcessSignals(aEndpoint));
+
+            next = curr->mNext;
 
             curr->mNext = nullptr;
             aEndpoint.mSendDoneCallback(&aEndpoint, curr);
@@ -749,8 +770,7 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
         }
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
-                 !aEndpoint.IsClosed());
+    VerifyOrExit(CanProcessSignals(aEndpoint));
     if (aEndpoint.mForwardProgressCallback != nullptr)
     {
         size_t backlogBytes = aEndpoint.GetBacklogBytes();
@@ -762,8 +782,7 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
         }
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
-                 !aEndpoint.IsClosed());
+    VerifyOrExit(CanProcessSignals(aEndpoint));
     if ((aSignals.recvbuf_added || aSignals.rcvd_fin) && aEndpoint.mReceiveAvailableCallback != nullptr)
     {
         aEndpoint.mReceiveAvailableCallback(&aEndpoint, cbuf_used_space(&aEndpoint.GetTcb().recvbuf),
@@ -771,17 +790,16 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
                                             cbuf_free_space(&aEndpoint.GetTcb().recvbuf));
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && (aEndpoint.mPendingCallbacks & kProcessSignalsActiveFlag) != 0 &&
-                 !aEndpoint.IsClosed());
+    VerifyOrExit(CanProcessSignals(aEndpoint));
     if (aEndpoint.GetTcb().t_state == TCP6S_TIME_WAIT && aEndpoint.mDisconnectedCallback != nullptr)
     {
         aEndpoint.mDisconnectedCallback(&aEndpoint, OT_TCP_DISCONNECTED_REASON_TIME_WAIT);
     }
 
 exit:
-    if (ownsProcessSignalsFlag && IsInitialized(aEndpoint))
+    if (aOwnsProcessSignalsFlag && IsInitialized(aEndpoint))
     {
-        aEndpoint.mPendingCallbacks &= ~kProcessSignalsActiveFlag;
+        StopProcessingSignals(aEndpoint);
     }
 
     return;
@@ -1053,6 +1071,7 @@ struct tcpcb *tcplp_sys_accept_ready(struct tcpcb_listen *aTcbListen, struct in6
          * be necessary, but we do it anyway.
          */
         VerifyOrExit(tcp.IsInitialized(endpoint) && endpoint.IsClosed());
+        VerifyOrExit(tcp.StartProcessingSignals(endpoint));
 
         rv = &endpoint.GetTcb();
 
@@ -1100,6 +1119,10 @@ bool tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
 void tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum)
 {
     Tcp::Endpoint &endpoint = Tcp::Endpoint::FromTcb(*aTcb);
+
+    // All pending callbacks belong to the connection that was just closed.
+    // Clear them before the application can reuse the endpoint.
+    endpoint.mPendingCallbacks = 0;
 
     if (endpoint.mDisconnectedCallback != nullptr)
     {
