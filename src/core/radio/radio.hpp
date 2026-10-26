@@ -702,9 +702,10 @@ public:
      *
      * OpenThread forms the IEEE 802.15.4 frame in this buffer then calls `ScheduleTx()` to schedule transmission.
      *
-     * @returns A reference to the scheduled transmit frame buffer.
+     * @returns A pointer to the scheduled transmit frame buffer, or `nullptr` if the radio platform does not provide
+     *          one (e.g., scheduled TX is not supported).
      */
-    Mac::TxFrame &GetScheduledTxFrame(void);
+    Mac::TxFrame *GetScheduledTxFrame(void);
 
     /**
      * Schedules a frame transmission at a specific target radio time.
@@ -1091,9 +1092,9 @@ inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
     return *static_cast<Mac::TxFrame *>(otPlatRadioGetTransmitBuffer(GetInstancePtr()));
 }
 
-inline Mac::TxFrame &Radio::GetScheduledTxFrame(void)
+inline Mac::TxFrame *Radio::GetScheduledTxFrame(void)
 {
-    return *static_cast<Mac::TxFrame *>(otPlatRadioGetScheduledTxFrame(GetInstancePtr()));
+    return static_cast<Mac::TxFrame *>(otPlatRadioGetScheduledTxFrame(GetInstancePtr()));
 }
 
 inline Error Radio::ScheduleTx(Time64 aTxTime) { return otPlatRadioScheduleTx(GetInstancePtr(), aTxTime); }
@@ -1200,9 +1201,9 @@ inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
 
 inline Error Radio::Transmit(Mac::TxFrame &) { return kErrorAbort; }
 
-inline Mac::TxFrame &Radio::GetScheduledTxFrame(void)
+inline Mac::TxFrame *Radio::GetScheduledTxFrame(void)
 {
-    return *static_cast<Mac::TxFrame *>(otPlatRadioGetScheduledTxFrame(GetInstancePtr()));
+    return static_cast<Mac::TxFrame *>(otPlatRadioGetScheduledTxFrame(GetInstancePtr()));
 }
 
 inline Error Radio::ScheduleTx(Time64) { return kErrorNotImplemented; }

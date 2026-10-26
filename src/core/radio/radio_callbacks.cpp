@@ -59,7 +59,14 @@ void Callbacks::HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame
 void Callbacks::HandleScheduledTxDone(Mac::RxFrame *aAckFrame, Error aError)
 {
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
-    Get<Statistics>().RecordTxDone(aError, Get<Radio>().GetScheduledTxFrame().GetLength());
+    {
+        const Mac::TxFrame *txFrame = Get<Radio>().GetScheduledTxFrame();
+
+        if (txFrame != nullptr)
+        {
+            Get<Statistics>().RecordTxDone(aError, txFrame->GetLength());
+        }
+    }
 #endif
     Get<Mac::SubMac>().HandleScheduledTxDone(aAckFrame, aError);
 }

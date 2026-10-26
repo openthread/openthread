@@ -1238,7 +1238,7 @@ extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFr
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @returns A pointer to the scheduled transmit frame buffer.
+ * @returns A pointer to the scheduled transmit frame buffer, or NULL if scheduled transmission is not supported.
  */
 otRadioFrame *otPlatRadioGetScheduledTxFrame(otInstance *aInstance);
 
