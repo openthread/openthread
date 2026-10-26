@@ -304,11 +304,9 @@ static bool sIsSyncingState = false;
 // Joining an interface-local or link-local multicast group fails with EINVAL until IPv6 is attached to the
 // interface, as the kernel takes the scope zone of such a group from the interface's IPv6 data. A tun interface
 // gets IPv6 attached by its first `SIOCAIFADDR_IN6`, which `UpdateUnicast()` issues only after the stack has
-// subscribed `ff02::1`. Such joins are deferred until then and replayed by `UpdateUnicast()`.
-static constexpr size_t kMaxDeferredJoins = 8;
-static otIp6Address     sDeferredJoins[kMaxDeferredJoins];
-static size_t           sDeferredJoinsCount = 0;
-static bool             sIsIp6Attached      = false;
+// subscribed `ff02::1`. Such joins are deferred until then: once IPv6 is attached, every such group the stack is
+// subscribed to is joined from `otIp6GetMulticastAddresses()`, so no list of deferred joins is kept that could fill up.
+static bool sIsIp6Attached = false;
 #endif
 
 #define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
@@ -920,76 +918,39 @@ static bool IsLinkOrNodeLocalMulticast(const struct in6_addr &aAddress)
     return IN6_IS_ADDR_MC_LINKLOCAL(&aAddress) || IN6_IS_ADDR_MC_NODELOCAL(&aAddress);
 }
 
-static otError AddDeferredJoin(const otIp6Address &aAddress)
+static void JoinDeferredGroups(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    for (size_t i = 0; i < sDeferredJoinsCount; i++)
+    for (const otNetifMulticastAddress *addr = otIp6GetMulticastAddresses(gInstance); addr != nullptr;
+         addr                                = addr->mNext)
     {
-        // Deferred already; a single leave must remove the group.
-        VerifyOrExit(!otIp6IsAddressEqual(&sDeferredJoins[i], &aAddress));
-    }
+        struct ipv6_mreq mreq;
 
-    VerifyOrExit(sDeferredJoinsCount < kMaxDeferredJoins, error = OT_ERROR_NO_BUFS);
-    sDeferredJoins[sDeferredJoinsCount++] = aAddress;
+        memcpy(&mreq.ipv6mr_multiaddr, &addr->mAddress, sizeof(mreq.ipv6mr_multiaddr));
+        mreq.ipv6mr_interface = gNetifIndex;
 
-exit:
-    return error;
-}
-
-static bool RemoveDeferredJoin(const otIp6Address &aAddress)
-{
-    bool removed = false;
-
-    for (size_t i = 0; i < sDeferredJoinsCount; i++)
-    {
-        if (!otIp6IsAddressEqual(&sDeferredJoins[i], &aAddress))
+        // Only Thread-origin groups are joined by `UpdateMulticast()`, and only scoped ones could have been deferred.
+        if ((addr->mAddressOrigin != OT_ADDRESS_ORIGIN_THREAD) || !IsLinkOrNodeLocalMulticast(mreq.ipv6mr_multiaddr))
         {
             continue;
         }
-
-        for (size_t j = i + 1; j < sDeferredJoinsCount; j++)
-        {
-            sDeferredJoins[j - 1] = sDeferredJoins[j];
-        }
-
-        sDeferredJoinsCount--;
-        removed = true;
-        break;
-    }
-
-    return removed;
-}
-
-static void JoinDeferredGroups(void)
-{
-    for (size_t i = 0; i < sDeferredJoinsCount; i++)
-    {
-        const otIp6Address &address = sDeferredJoins[i];
-        struct ipv6_mreq    mreq;
-
-        memcpy(&mreq.ipv6mr_multiaddr, &address, sizeof(mreq.ipv6mr_multiaddr));
-        mreq.ipv6mr_interface = gNetifIndex;
 
         // EADDRINUSE: the socket is a member of the group already.
         if ((setsockopt(sIpFd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq, sizeof(mreq)) != 0) && (errno != EADDRINUSE))
         {
             LogWarn("IPV6_JOIN_GROUP failure (%d) for deferred multicast address %s", errno,
-                    Ip6AddressString(&address).AsCString());
+                    Ip6AddressString(&addr->mAddress).AsCString());
             DieNow(OT_EXIT_FAILURE);
         }
 
-        LogInfo("Added multicast address %s", Ip6AddressString(&address).AsCString());
+        LogInfo("Added multicast address %s", Ip6AddressString(&addr->mAddress).AsCString());
     }
-
-    sDeferredJoinsCount = 0;
 }
 
 static void HandleIp6Attached(void)
 {
     VerifyOrExit(!sIsIp6Attached);
 
-    // IPv6 is attached to the interface now, so the joins that had to wait can proceed (see `sDeferredJoins`).
+    // IPv6 is attached to the interface now, so the joins that had to wait can proceed (see `sIsIp6Attached`).
     sIsIp6Attached = true;
     JoinDeferredGroups();
 
@@ -1062,38 +1023,48 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     struct ipv6_mreq mreq;
     otError          error = OT_ERROR_NONE;
     int              err;
+#if defined(__APPLE__) || defined(__FreeBSD__)
+    bool isScopedGroup = false;
+#endif
 
     assert(gInstance == aInstance);
 
     VerifyOrExit(sIpFd >= 0);
 
+    memcpy(&mreq.ipv6mr_multiaddr, &aAddress, sizeof(mreq.ipv6mr_multiaddr));
+    mreq.ipv6mr_interface = gNetifIndex;
+
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    if (!aIsAdded && RemoveDeferredJoin(aAddress))
+    isScopedGroup = IsLinkOrNodeLocalMulticast(mreq.ipv6mr_multiaddr);
+
+    if (!aIsAdded && !sIsIp6Attached && isScopedGroup)
     {
-        // The join never reached the kernel, so there is no membership to leave.
+        // A join of such a group succeeds only once IPv6 is attached, so the join was deferred and never reached the
+        // kernel: there is no membership to leave, and the group is no longer subscribed when IPv6 gets attached.
         LogInfo("Dropped deferred join of multicast address %s", Ip6AddressString(&aAddress).AsCString());
         ExitNow();
     }
 #endif
 
-    memcpy(&mreq.ipv6mr_multiaddr, &aAddress, sizeof(mreq.ipv6mr_multiaddr));
-    mreq.ipv6mr_interface = gNetifIndex;
-
     err = setsockopt(sIpFd, IPPROTO_IPV6, (aIsAdded ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP), &mreq, sizeof(mreq));
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    if ((err != 0) && aIsAdded && (errno == EINVAL) && !sIsIp6Attached &&
-        IsLinkOrNodeLocalMulticast(mreq.ipv6mr_multiaddr))
+    if ((err != 0) && aIsAdded && isScopedGroup)
     {
-        // The kernel cannot scope the group before IPv6 is attached to the interface, which the first unicast
-        // address will do (see `sDeferredJoins`).
-        error = AddDeferredJoin(aAddress);
-        VerifyOrExit(error == OT_ERROR_NONE, LogWarn("Cannot defer join of multicast address %s, list is full",
-                                                     Ip6AddressString(&aAddress).AsCString()));
+        if ((errno == EINVAL) && !sIsIp6Attached)
+        {
+            // The kernel cannot scope the group before IPv6 is attached to the interface, which the first unicast
+            // address will do (see `sIsIp6Attached`).
+            LogInfo("Deferred join of multicast address %s until IPv6 is attached to %s",
+                    Ip6AddressString(&aAddress).AsCString(), gNetifName);
+            ExitNow();
+        }
 
-        LogInfo("Deferred join of multicast address %s until IPv6 is attached to %s",
-                Ip6AddressString(&aAddress).AsCString(), gNetifName);
-        ExitNow();
+        if (errno == EADDRINUSE)
+        {
+            // `JoinDeferredGroups()` joined the group already, ahead of this notification.
+            err = 0;
+        }
     }
 #endif
 
@@ -1105,11 +1076,10 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     }
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    if (aIsAdded && IsLinkOrNodeLocalMulticast(mreq.ipv6mr_multiaddr))
+    if (aIsAdded && isScopedGroup)
     {
         // The kernel scoped the group to the interface, which needs IPv6 attached: a recycled utun or a BSD tun
-        // has it before the first unicast address. The group is a member now, so a deferred join of it is void.
-        (void)RemoveDeferredJoin(aAddress);
+        // has it before the first unicast address.
         HandleIp6Attached();
     }
 #endif
@@ -3448,9 +3418,8 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     VerifyOrDie(gNetifIndex > 0, OT_EXIT_FAILURE);
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    // A new tun interface has no IPv6 attached yet (see `sDeferredJoins`).
-    sIsIp6Attached      = false;
-    sDeferredJoinsCount = 0;
+    // A new tun interface has no IPv6 attached yet (see `sIsIp6Attached`).
+    sIsIp6Attached = false;
 #endif
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
@@ -3551,9 +3520,7 @@ void platformNetifDeinit(void)
 #endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    // Deferred joins never reached the kernel; there is nothing to leave.
-    sIsIp6Attached      = false;
-    sDeferredJoinsCount = 0;
+    sIsIp6Attached = false;
 #endif
 
     gNetifIndex = 0;
