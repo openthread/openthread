@@ -559,6 +559,11 @@ public:
      */
     bool StartProcessingSignals(Endpoint &aEndpoint) const;
 
+    /**
+     * Indicates whether signal processing may continue on an Endpoint.
+     */
+    bool CanProcessSignals(const Endpoint &aEndpoint) const;
+
 private:
     static constexpr uint16_t kDynamicPortMin = 49152;
     static constexpr uint16_t kDynamicPortMax = 65535;
@@ -579,7 +584,6 @@ private:
                         bool                  aOwnsProcessSignalsFlag) const;
 
     void StopProcessingSignals(Endpoint &aEndpoint) const;
-    bool CanProcessSignals(const Endpoint &aEndpoint) const;
 
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);

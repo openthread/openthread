@@ -37,6 +37,13 @@
 #include "platform/nexus_node.hpp"
 #include "thread/mle.hpp"
 
+struct in6_addr;
+
+extern "C" bool tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
+                                              struct tcpcb        *aAccepted,
+                                              struct in6_addr     *aAddr,
+                                              uint16_t             aPort);
+
 namespace ot {
 namespace Nexus {
 
@@ -73,6 +80,53 @@ private:
     otLinkedBuffer *mBuffer;
 };
 
+class GuardedEndpoint
+{
+public:
+    using Endpoint = Ip6::Tcp::Endpoint;
+
+    GuardedEndpoint(void)
+        : mProtected(false)
+    {
+        long pageSize = sysconf(_SC_PAGESIZE);
+
+        VerifyOrQuit(pageSize > 0);
+
+        mPageSize = static_cast<size_t>(pageSize);
+        VerifyOrQuit(sizeof(Endpoint) <= mPageSize);
+
+        mPage = mmap(nullptr, mPageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        VerifyOrQuit(mPage != MAP_FAILED);
+
+        mEndpoint = new (mPage) Endpoint;
+    }
+
+    ~GuardedEndpoint(void)
+    {
+        if (mProtected)
+        {
+            VerifyOrQuit(mprotect(mPage, mPageSize, PROT_READ | PROT_WRITE) == 0);
+        }
+
+        mEndpoint->~Endpoint();
+        VerifyOrQuit(munmap(mPage, mPageSize) == 0);
+    }
+
+    Endpoint &Get(void) { return *mEndpoint; }
+
+    void Protect(void)
+    {
+        VerifyOrQuit(mprotect(mPage, mPageSize, PROT_NONE) == 0);
+        mProtected = true;
+    }
+
+private:
+    void     *mPage;
+    size_t    mPageSize;
+    Endpoint *mEndpoint;
+    bool      mProtected;
+};
+
 struct ClientContext
 {
     GuardedBuffer    *mSecondBuffer;
@@ -87,6 +141,24 @@ struct ServerContext
 {
     Ip6::Tcp::Endpoint *mAcceptEndpoint;
     bool                mAccepted;
+};
+
+struct DeinitializingServerContext
+{
+    GuardedEndpoint *mEndpoint;
+    bool             mAcceptDoneCalled;
+};
+
+struct ForwardProgressContext
+{
+    GuardedEndpoint *mEndpoint;
+    uint16_t         mCalls;
+};
+
+struct ReconnectingServerContext
+{
+    const otSockAddr *mReconnectAddress;
+    bool              mAcceptDoneCalled;
 };
 
 static void HandleClientEstablished(otTcpEndpoint *aEndpoint)
@@ -166,6 +238,53 @@ static otTcpIncomingConnectionAction HandleServerAcceptReady(otTcpListener *aLis
 static void HandleServerAcceptDone(otTcpListener *aListener, otTcpEndpoint *, const otSockAddr *)
 {
     static_cast<ServerContext *>(otTcpListenerGetContext(aListener))->mAccepted = true;
+}
+
+static otTcpIncomingConnectionAction HandleDeinitializingServerAcceptReady(otTcpListener *aListener,
+                                                                           const otSockAddr *,
+                                                                           otTcpEndpoint **aAcceptInto)
+{
+    DeinitializingServerContext &context =
+        *static_cast<DeinitializingServerContext *>(otTcpListenerGetContext(aListener));
+
+    *aAcceptInto = &context.mEndpoint->Get();
+
+    return OT_TCP_INCOMING_CONNECTION_ACTION_ACCEPT;
+}
+
+static void HandleServerAcceptDoneAndDeinitialize(otTcpListener *aListener,
+                                                  otTcpEndpoint *aEndpoint,
+                                                  const otSockAddr *)
+{
+    DeinitializingServerContext &context =
+        *static_cast<DeinitializingServerContext *>(otTcpListenerGetContext(aListener));
+
+    VerifyOrQuit(aEndpoint == &context.mEndpoint->Get());
+    context.mAcceptDoneCalled = true;
+
+    SuccessOrQuit(otTcpEndpointDeinitialize(aEndpoint));
+    context.mEndpoint->Protect();
+}
+
+static void HandleServerAcceptDoneAndReconnect(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *)
+{
+    ReconnectingServerContext &context = *static_cast<ReconnectingServerContext *>(otTcpListenerGetContext(aListener));
+
+    context.mAcceptDoneCalled = true;
+
+    SuccessOrQuit(otTcpAbort(aEndpoint));
+    VerifyOrQuit(context.mReconnectAddress != nullptr);
+    SuccessOrQuit(otTcpConnect(aEndpoint, context.mReconnectAddress, OT_TCP_CONNECT_NO_FAST_OPEN));
+}
+
+static void HandleForwardProgressAndDeinitialize(otTcpEndpoint *aEndpoint, size_t, size_t)
+{
+    ForwardProgressContext &context = *static_cast<ForwardProgressContext *>(otTcpEndpointGetContext(aEndpoint));
+
+    context.mCalls++;
+
+    SuccessOrQuit(otTcpEndpointDeinitialize(aEndpoint));
+    context.mEndpoint->Protect();
 }
 
 void TestTcpSendDoneReentrancy(void)
@@ -328,6 +447,180 @@ void TestTcpSendDoneReentrancy(void)
     SuccessOrQuit(closingServerEndpoint.Deinitialize());
     SuccessOrQuit(closingServerListener.StopListening());
     SuccessOrQuit(closingServerListener.Deinitialize());
+
+    // Verify that reconnecting an endpoint from the accept-done callback
+    // invalidates signal processing for the connection that was accepted.
+    {
+        Ip6::Tcp::Endpoint        acceptingServerEndpoint;
+        Ip6::Tcp::Listener        acceptingServerListener;
+        uint8_t                   acceptingServerReceiveBuffer[128];
+        ReconnectingServerContext acceptingServerContext{&reconnectAddress, false};
+        otIp6Address              peerAddress{};
+
+        otTcpEndpointInitializeArgs acceptingServerEndpointArgs{};
+        acceptingServerEndpointArgs.mReceiveBuffer     = acceptingServerReceiveBuffer;
+        acceptingServerEndpointArgs.mReceiveBufferSize = sizeof(acceptingServerReceiveBuffer);
+
+        otTcpListenerInitializeArgs acceptingListenerArgs{};
+        acceptingListenerArgs.mContext            = &acceptingServerContext;
+        acceptingListenerArgs.mAcceptDoneCallback = HandleServerAcceptDoneAndReconnect;
+
+        SuccessOrQuit(acceptingServerEndpoint.Initialize(serverNode, acceptingServerEndpointArgs));
+        SuccessOrQuit(acceptingServerListener.Initialize(serverNode, acceptingListenerArgs));
+        VerifyOrQuit(serverNode.Get<Ip6::Tcp>().StartProcessingSignals(acceptingServerEndpoint));
+
+        VerifyOrQuit(!tcplp_sys_accepted_connection(
+            &acceptingServerListener.GetTcbListen(), &acceptingServerEndpoint.GetTcb(),
+            reinterpret_cast<struct in6_addr *>(&peerAddress), BigEndian::HostSwap16(kPort)));
+        VerifyOrQuit(acceptingServerContext.mAcceptDoneCalled);
+
+        SuccessOrQuit(acceptingServerEndpoint.Deinitialize());
+        SuccessOrQuit(acceptingServerListener.Deinitialize());
+    }
+
+    // Verify that deinitializing and reclaiming an accepted endpoint from the
+    // accept-done callback does not leave TCP using the endpoint to send a
+    // duplicate reset or to process signals for the abandoned connection.
+    {
+        GuardedEndpoint             acceptingServerEndpoint;
+        Ip6::Tcp::Listener          acceptingServerListener;
+        Ip6::Tcp::Endpoint          acceptingClientEndpoint;
+        uint8_t                     acceptingServerReceiveBuffer[128];
+        uint8_t                     acceptingClientReceiveBuffer[128];
+        DeinitializingServerContext acceptingServerContext{&acceptingServerEndpoint, false};
+
+        otTcpEndpointInitializeArgs acceptingServerEndpointArgs{};
+        acceptingServerEndpointArgs.mReceiveBuffer     = acceptingServerReceiveBuffer;
+        acceptingServerEndpointArgs.mReceiveBufferSize = sizeof(acceptingServerReceiveBuffer);
+
+        otTcpListenerInitializeArgs acceptingListenerArgs{};
+        acceptingListenerArgs.mContext             = &acceptingServerContext;
+        acceptingListenerArgs.mAcceptReadyCallback = HandleDeinitializingServerAcceptReady;
+        acceptingListenerArgs.mAcceptDoneCallback  = HandleServerAcceptDoneAndDeinitialize;
+
+        otTcpEndpointInitializeArgs acceptingClientEndpointArgs{};
+        acceptingClientEndpointArgs.mReceiveBuffer     = acceptingClientReceiveBuffer;
+        acceptingClientEndpointArgs.mReceiveBufferSize = sizeof(acceptingClientReceiveBuffer);
+
+        SuccessOrQuit(acceptingServerEndpoint.Get().Initialize(serverNode, acceptingServerEndpointArgs));
+        SuccessOrQuit(acceptingServerListener.Initialize(serverNode, acceptingListenerArgs));
+        SuccessOrQuit(acceptingClientEndpoint.Initialize(clientNode, acceptingClientEndpointArgs));
+        SuccessOrQuit(acceptingServerListener.Listen(listenAddress));
+        SuccessOrQuit(acceptingClientEndpoint.Connect(serverAddress, OT_TCP_CONNECT_NO_FAST_OPEN));
+
+        nexus.AdvanceTime(kTcpTime);
+        VerifyOrQuit(acceptingServerContext.mAcceptDoneCalled);
+
+        SuccessOrQuit(acceptingClientEndpoint.Deinitialize());
+        SuccessOrQuit(acceptingServerListener.StopListening());
+        SuccessOrQuit(acceptingServerListener.Deinitialize());
+    }
+
+    // Exercise a pending forward-progress callback dispatched by the TCP
+    // tasklet. The callback deinitializes the endpoint and immediately makes
+    // its backing memory inaccessible.
+    {
+        Ip6::Tcp::Endpoint     progressServerEndpoint;
+        Ip6::Tcp::Listener     progressServerListener;
+        GuardedEndpoint        progressClientEndpoint;
+        uint8_t                progressServerReceiveBuffer[128];
+        uint8_t                progressClientReceiveBuffer[128];
+        ServerContext          progressServerContext{&progressServerEndpoint, false};
+        ForwardProgressContext progressClientContext{&progressClientEndpoint, 0};
+
+        otTcpEndpointInitializeArgs progressServerEndpointArgs{};
+        progressServerEndpointArgs.mReceiveBuffer     = progressServerReceiveBuffer;
+        progressServerEndpointArgs.mReceiveBufferSize = sizeof(progressServerReceiveBuffer);
+
+        otTcpListenerInitializeArgs progressListenerArgs{};
+        progressListenerArgs.mContext             = &progressServerContext;
+        progressListenerArgs.mAcceptReadyCallback = HandleServerAcceptReady;
+        progressListenerArgs.mAcceptDoneCallback  = HandleServerAcceptDone;
+
+        otTcpEndpointInitializeArgs progressClientEndpointArgs{};
+        progressClientEndpointArgs.mContext           = &progressClientContext;
+        progressClientEndpointArgs.mReceiveBuffer     = progressClientReceiveBuffer;
+        progressClientEndpointArgs.mReceiveBufferSize = sizeof(progressClientReceiveBuffer);
+
+        SuccessOrQuit(progressServerEndpoint.Initialize(serverNode, progressServerEndpointArgs));
+        SuccessOrQuit(progressServerListener.Initialize(serverNode, progressListenerArgs));
+        SuccessOrQuit(progressClientEndpoint.Get().Initialize(clientNode, progressClientEndpointArgs));
+        SuccessOrQuit(progressServerListener.Listen(listenAddress));
+        SuccessOrQuit(progressClientEndpoint.Get().Connect(serverAddress, OT_TCP_CONNECT_NO_FAST_OPEN));
+
+        nexus.AdvanceTime(kTcpTime);
+        VerifyOrQuit(progressServerContext.mAccepted);
+
+        progressClientEndpoint.Get().mForwardProgressCallback = HandleForwardProgressAndDeinitialize;
+
+        static const uint8_t kProgressData[] = {26, 27, 28, 29};
+        otLinkedBuffer       progressBuffer{};
+
+        progressBuffer.mData   = kProgressData;
+        progressBuffer.mLength = sizeof(kProgressData);
+
+        SuccessOrQuit(progressClientEndpoint.Get().SendByReference(progressBuffer, 0));
+        nexus.AdvanceTime(0);
+        VerifyOrQuit(progressClientContext.mCalls == 1);
+
+        SuccessOrQuit(progressServerEndpoint.Deinitialize());
+        SuccessOrQuit(progressServerListener.StopListening());
+        SuccessOrQuit(progressServerListener.Deinitialize());
+    }
+
+    // Exercise the forward-progress callback dispatched directly from
+    // ProcessSignals() after an ACK. Cancel the tasklet callback so the ACK is
+    // the first event to report progress.
+    {
+        Ip6::Tcp::Endpoint     progressServerEndpoint;
+        Ip6::Tcp::Listener     progressServerListener;
+        GuardedEndpoint        progressClientEndpoint;
+        uint8_t                progressServerReceiveBuffer[128];
+        uint8_t                progressClientReceiveBuffer[128];
+        ServerContext          progressServerContext{&progressServerEndpoint, false};
+        ForwardProgressContext progressClientContext{&progressClientEndpoint, 0};
+
+        otTcpEndpointInitializeArgs progressServerEndpointArgs{};
+        progressServerEndpointArgs.mReceiveBuffer     = progressServerReceiveBuffer;
+        progressServerEndpointArgs.mReceiveBufferSize = sizeof(progressServerReceiveBuffer);
+
+        otTcpListenerInitializeArgs progressListenerArgs{};
+        progressListenerArgs.mContext             = &progressServerContext;
+        progressListenerArgs.mAcceptReadyCallback = HandleServerAcceptReady;
+        progressListenerArgs.mAcceptDoneCallback  = HandleServerAcceptDone;
+
+        otTcpEndpointInitializeArgs progressClientEndpointArgs{};
+        progressClientEndpointArgs.mContext           = &progressClientContext;
+        progressClientEndpointArgs.mReceiveBuffer     = progressClientReceiveBuffer;
+        progressClientEndpointArgs.mReceiveBufferSize = sizeof(progressClientReceiveBuffer);
+
+        SuccessOrQuit(progressServerEndpoint.Initialize(serverNode, progressServerEndpointArgs));
+        SuccessOrQuit(progressServerListener.Initialize(serverNode, progressListenerArgs));
+        SuccessOrQuit(progressClientEndpoint.Get().Initialize(clientNode, progressClientEndpointArgs));
+        SuccessOrQuit(progressServerListener.Listen(listenAddress));
+        SuccessOrQuit(progressClientEndpoint.Get().Connect(serverAddress, OT_TCP_CONNECT_NO_FAST_OPEN));
+
+        nexus.AdvanceTime(kTcpTime);
+        VerifyOrQuit(progressServerContext.mAccepted);
+
+        progressClientEndpoint.Get().mForwardProgressCallback = HandleForwardProgressAndDeinitialize;
+
+        static const uint8_t kProgressData[] = {30, 31, 32, 33};
+        otLinkedBuffer       progressBuffer{};
+
+        progressBuffer.mData   = kProgressData;
+        progressBuffer.mLength = sizeof(kProgressData);
+
+        SuccessOrQuit(progressClientEndpoint.Get().SendByReference(progressBuffer, 0));
+        progressClientEndpoint.Get().mPendingCallbacks = 0;
+
+        nexus.AdvanceTime(kTcpTime);
+        VerifyOrQuit(progressClientContext.mCalls == 1);
+
+        SuccessOrQuit(progressServerEndpoint.Deinitialize());
+        SuccessOrQuit(progressServerListener.StopListening());
+        SuccessOrQuit(progressServerListener.Deinitialize());
+    }
 
     nexus.SaveTestInfo("test_tcp_send_done_reentrancy.json");
 }

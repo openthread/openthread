@@ -477,15 +477,21 @@ void Tcp::Endpoint::PostCallbacksAfterSend(size_t aSent, size_t aBacklogBefore)
 
 bool Tcp::Endpoint::FirePendingCallbacks(void)
 {
-    bool calledUserCallback = false;
+    otTcpForwardProgress callback = nullptr;
+    bool                 calledUserCallback;
 
     if ((mPendingCallbacks & kForwardProgressCallbackFlag) != 0 && mForwardProgressCallback != nullptr)
     {
-        mForwardProgressCallback(this, GetSendBufferBytes(), GetBacklogBytes());
-        calledUserCallback = true;
+        callback = mForwardProgressCallback;
     }
 
-    mPendingCallbacks = 0;
+    mPendingCallbacks  = 0;
+    calledUserCallback = (callback != nullptr);
+
+    if (callback != nullptr)
+    {
+        callback(this, GetSendBufferBytes(), GetBacklogBytes());
+    }
 
     return calledUserCallback;
 }
@@ -777,8 +783,8 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
 
         if (aSignals.bytes_acked > 0 || backlogBytes < aPriorBacklog)
         {
-            aEndpoint.mForwardProgressCallback(&aEndpoint, aEndpoint.GetSendBufferBytes(), backlogBytes);
             aEndpoint.mPendingCallbacks &= ~kForwardProgressCallbackFlag;
+            aEndpoint.mForwardProgressCallback(&aEndpoint, aEndpoint.GetSendBufferBytes(), backlogBytes);
         }
     }
 
@@ -1107,7 +1113,7 @@ bool tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
         addr.mPort = BigEndian::HostSwap16(aPort);
         listener.mAcceptDoneCallback(&listener, &endpoint, &addr);
 
-        if (!tcp.IsInitialized(endpoint) || endpoint.IsClosed())
+        if (!tcp.CanProcessSignals(endpoint))
         {
             accepted = false;
         }
