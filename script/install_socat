@@ -75,4 +75,11 @@ cd "$TEMP_PATH"
     "$SOCAT_URL"
 verify_sha256 "$SOCAT_TAR"
 tar -xjf "$SOCAT_TAR"
-cd "$SOCAT" && ./configure "$INSTALL_PREFIX" && make && sudo make install
+cd "$SOCAT"
+# Fix C23 / glibc 2.43 build failure where const-preserving strchr() rejects
+# mutating asctime()'s char * return value through a const char * variable.
+sed '/^static int printtime(/,/^}/s/const char \*s;/char *s;/' filan.c >filan.c.tmp
+mv filan.c.tmp filan.c
+./configure "$INSTALL_PREFIX"
+make
+sudo make install
