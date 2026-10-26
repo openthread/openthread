@@ -29,6 +29,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstdio>
+#include <unistd.h>
+
+#include "lib/platform/exit_code.h"
+
 #include <map>
 #include <vector>
 
@@ -46,6 +51,79 @@ using namespace ot;
 
 using ::testing::AnyNumber;
 using ::testing::Truly;
+
+TEST(RadioSpinelFatalRcpFailure, invokesCallbackBeforeExitingAfterRcpStopsResponding)
+{
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    constexpr int kExpectedExitCode = OT_EXIT_FAILURE;
+#else
+    constexpr int kExpectedExitCode = OT_EXIT_RADIO_SPINEL_NO_RESPONSE;
+#endif
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0 && \
+    OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+    const char *expectedMarker = "VENDOR_RESET_CALLBACK_AFTER_FATAL=1";
+#else
+    const char *expectedMarker = "FATAL_RCP_CALLBACK_RADIO_DISABLED=1";
+#endif
+    EXPECT_EXIT(
+        {
+            FakeCoprocessorPlatform      platform;
+            Spinel::RadioSpinelCallbacks callbacks{};
+            static Spinel::RadioSpinel  *sFailedRadio;
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+            static uint8_t sFatalCallbackCount;
+            sFatalCallbackCount = 0;
+#endif
+
+            sFailedRadio = &platform.mRadioSpinel;
+
+            callbacks.mEnergyScanDone  = [](otInstance *, int8_t) {};
+            callbacks.mReceiveDone     = [](otInstance *, otRadioFrame *, Error) {};
+            callbacks.mTransmitDone    = [](otInstance *, otRadioFrame *, otRadioFrame *, Error) {};
+            callbacks.mTxStarted       = [](otInstance *, otRadioFrame *) {};
+            callbacks.mFatalRcpFailure = [](otInstance *aInstance) {
+                otRadioFrame frame{};
+
+                // A graceful-detach callback must not be able to send a frame through
+                // the already failed RCP, even if it attempts a router address release.
+                if (aInstance == nullptr || sFailedRadio->IsEnabled() ||
+                    sFailedRadio->Transmit(frame) != OT_ERROR_INVALID_STATE)
+                {
+                    _exit(97);
+                }
+
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+                ++sFatalCallbackCount;
+#endif
+                fprintf(stderr, "FATAL_RCP_CALLBACK_RADIO_DISABLED=1\n");
+                fflush(stderr);
+            };
+
+            platform.mRadioSpinel.SetCallbacks(callbacks);
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+            platform.mSpinelDriver.SetCoprocessorResetFailureCallback(
+                [](void *aContext) {
+                    if (*static_cast<uint8_t *>(aContext) != 1)
+                    {
+                        _exit(96);
+                    }
+                    fprintf(stderr, "VENDOR_RESET_CALLBACK_AFTER_FATAL=1\n");
+                    fflush(stderr);
+                },
+                &sFatalCallbackCount);
+#endif
+            if (platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()) != kErrorNone)
+            {
+                _exit(99);
+            }
+
+            platform.mSpinelInterface.mDropResponses = true;
+            // The next synchronous Spinel request must time out and invoke the fatal callback.
+            platform.mRadioSpinel.SetPromiscuous(true);
+            _exit(98);
+        },
+        ::testing::ExitedWithCode(kExpectedExitCode), expectedMarker);
+}
 
 TEST(RadioSpinelTransmit, shouldPassDesiredTxPowerToRadioPlatform)
 {

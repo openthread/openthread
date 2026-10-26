@@ -5943,6 +5943,37 @@ void TestRdnss(void)
     FinalizeTest();
 }
 
+void TestGracefulDetachWithdrawsRoutesImmediately(void)
+{
+    Ip6::Prefix localOmr;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestGracefulDetachWithdrawsRoutesImmediately");
+
+    InitTest(/* aEnablBorderRouting */ true);
+    AdvanceTime(30000);
+
+    SuccessOrQuit(otBorderRoutingGetOmrPrefix(sInstance, &localOmr));
+
+    sRaValidated = false;
+    sExpectedPio = kNoPio;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    // The RCP may have failed permanently. Infrastructure routes must be withdrawn
+    // synchronously without waiting for the radio-dependent detach to complete.
+    SuccessOrQuit(otThreadDetachGracefully(sInstance, nullptr, nullptr));
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    for (const RioPrefix &rio : sExpectedRios)
+    {
+        VerifyOrQuit(rio.mLifetime == 0);
+    }
+
+    FinalizeTest();
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 } // namespace ot
@@ -5981,6 +6012,7 @@ int main(void)
     ot::TestDhcp6PdConflict();
 #endif
     ot::TestRdnss();
+    ot::TestGracefulDetachWithdrawsRoutesImmediately();
 
     printf("All tests passed\n");
 #else

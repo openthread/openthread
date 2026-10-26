@@ -52,6 +52,8 @@ SpinelDriver::SpinelDriver(void)
     , mSpinelVersionMajor(-1)
     , mSpinelVersionMinor(-1)
     , mIsCoprocessorReady(false)
+    , mFatalResetCallback(nullptr)
+    , mFatalResetContext(nullptr)
 #if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
     , mCoprocessorResetFailureCallback(nullptr)
     , mCoprocessorResetFailureContext(nullptr)
@@ -178,6 +180,10 @@ exit:
     if (!resetDone)
     {
         LogCrit("Failed to reset co-processor!");
+        if (mFatalResetCallback != nullptr)
+        {
+            mFatalResetCallback(mFatalResetContext);
+        }
 #if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
         if (mCoprocessorResetFailureCallback)
         {

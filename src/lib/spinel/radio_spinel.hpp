@@ -108,6 +108,16 @@ struct RadioSpinelCallbacks
     void (*mSwitchoverDone)(otInstance *aInstance, bool aSuccess);
 
     /**
+     * Notifies the platform before a fatal RCP failure terminates the process, allowing it to
+     * withdraw its infrastructure routing advertisements while the host network is still available.
+     *
+     * The callback must not depend on the RCP: the radio is unavailable at this point.
+     *
+     * @param[in]  aInstance  The OpenThread instance, if it has been enabled.
+     */
+    void (*mFatalRcpFailure)(otInstance *aInstance);
+
+    /**
      * This method saves the radio spinel metrics to the temporary storage.
      *
      * @param[in]  aMetrics   A reference to the radio spinel metrics.
@@ -1183,6 +1193,7 @@ private:
 
     void HandleRcpUnexpectedReset(spinel_status_t aStatus);
     void HandleRcpTimeout(void);
+    void NotifyFatalRcpFailure(void);
     void RecoverFromRcpFailure(void);
 
     static void HandleReceivedFrame(const uint8_t *aFrame,
@@ -1289,9 +1300,10 @@ private:
     uint32_t            mBusLatency;
 
     State mState;
-    bool  mIsPromiscuous : 1; ///< Promiscuous mode.
-    bool  mRxOnWhenIdle : 1;  ///< RxOnWhenIdle mode.
-    bool  mIsTimeSynced : 1;  ///< Host has calculated the time difference between host and RCP.
+    bool  mIsPromiscuous : 1;           ///< Promiscuous mode.
+    bool  mRxOnWhenIdle : 1;            ///< RxOnWhenIdle mode.
+    bool  mIsTimeSynced : 1;            ///< Host has calculated the time difference between host and RCP.
+    bool  mFatalRcpFailureNotified : 1; ///< Prevent reentrant fatal-failure callbacks.
 
     static bool sSupportsLogStream; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
     static bool sSupportsResetToBootloader; ///< RCP supports resetting into bootloader mode.

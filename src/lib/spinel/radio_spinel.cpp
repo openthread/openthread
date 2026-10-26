@@ -85,6 +85,7 @@ RadioSpinel::RadioSpinel(void)
     , mIsPromiscuous(false)
     , mRxOnWhenIdle(true)
     , mIsTimeSynced(false)
+    , mFatalRcpFailureNotified(false)
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     , mRcpFailureCount(0)
     , mRcpFailure(kRcpFailureNone)
@@ -145,6 +146,8 @@ void RadioSpinel::Init(bool          aSkipRcpVersionCheck,
     mTimeSyncEnabled = aEnableRcpTimeSync;
 
     mSpinelDriver = aSpinelDriver;
+    mSpinelDriver->SetFatalResetCallback(
+        [](void *aContext) { static_cast<RadioSpinel *>(aContext)->NotifyFatalRcpFailure(); }, this);
     mSpinelDriver->SetFrameHandler(&HandleReceivedFrame, &HandleSavedFrame, this);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -2062,6 +2065,21 @@ void RadioSpinel::SetBusLatency(uint32_t aBusLatency)
     }
 }
 
+void RadioSpinel::NotifyFatalRcpFailure(void)
+{
+    if (!mFatalRcpFailureNotified)
+    {
+        mFatalRcpFailureNotified = true;
+
+        // Prevent the platform's shutdown callback from attempting further radio transactions.
+        mState = kStateDisabled;
+        if (mInstance != nullptr && mCallbacks.mFatalRcpFailure != nullptr)
+        {
+            mCallbacks.mFatalRcpFailure(mInstance);
+        }
+    }
+}
+
 void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 {
     OT_UNUSED_VARIABLE(aStatus);
@@ -2079,6 +2097,7 @@ void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
         IgnoreReturnValue(Set(SPINEL_PROP_RCP_LOG_CRASH_DUMP, nullptr));
     }
 
+    NotifyFatalRcpFailure();
 #if OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE
     abort();
 #else
@@ -2099,6 +2118,7 @@ void RadioSpinel::HandleRcpTimeout(void)
     LogCrit("- Make sure RCP is running the correct firmware");
     LogCrit("- Double check the config parameters passed as `RadioURL` input");
 
+    NotifyFatalRcpFailure();
     DieNow(OT_EXIT_RADIO_SPINEL_NO_RESPONSE);
 #endif
 }
@@ -2130,6 +2150,7 @@ void RadioSpinel::RecoverFromRcpFailure(void)
     if (mRcpFailureCount > kMaxFailureCount)
     {
         LogCrit("Too many rcp failures, exiting");
+        NotifyFatalRcpFailure();
         DieNow(OT_EXIT_FAILURE);
     }
 

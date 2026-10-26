@@ -100,6 +100,16 @@ public:
     void SetCoprocessorReady(void) { mIsCoprocessorReady = true; }
 
     /**
+     * Registers a callback invoked before a fatal reset failure exits the host.
+     * This is independent of the optional vendor reset-failure notification.
+     */
+    void SetFatalResetCallback(void (*aCallback)(void *), void *aContext)
+    {
+        mFatalResetCallback = aCallback;
+        mFatalResetContext  = aContext;
+    }
+
+    /**
      * Send a reset command to the co-processor.
      *
      * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM, SPINEL_RESET_STACK, or SPINEL_RESET_BOOTLOADER.
@@ -332,6 +342,9 @@ private:
     char mVersion[kVersionStringSize];
 
     Array<unsigned int, kCapsBufferSize> mCoprocessorCaps;
+
+    void (*mFatalResetCallback)(void *);
+    void *mFatalResetContext;
 
 #if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
     otSpinelDriverCoprocessorResetFailureCallback mCoprocessorResetFailureCallback;
