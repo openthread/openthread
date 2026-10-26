@@ -88,16 +88,187 @@ bool Key::ShouldUpdateSavedFrameCounter(void) const
 
 uint32_t Key::UpdateSavedFrameCounter(void)
 {
-    if (CanAddSafely(mFrameCounter, kStoredCounterAhead))
+    mSavedFrameCounter = AddSafely(mFrameCounter, kStoredCounterAhead);
+
+    return mSavedFrameCounter;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+uint32_t SlotDurationToUsec(SlotDuration aSlotDuration)
+{
+    uint32_t dur = 625;
+
+    switch (aSlotDuration)
     {
-        mSavedFrameCounter = mFrameCounter + kStoredCounterAhead;
+    case kSlotDuration625Usec:
+        break;
+    case kSlotDuration1250Usec:
+        dur = 1250;
+        break;
+    }
+
+    return dur;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// RadioAvailability
+
+Error RadioAvailability::Init(Radio::Time64  aStartTime,
+                              SlotDuration   aSlotDuration,
+                              uint8_t        aBitLength,
+                              const uint8_t *aBitmap)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aBitLength <= kMaxBitmapLength, error = kErrorInvalidArgs);
+
+    Clear();
+    VerifyOrExit(aBitLength > 0);
+
+    mStartTime    = aStartTime;
+    mSlotDuration = aSlotDuration;
+    mBitLength    = aBitLength;
+    memcpy(mBitmap, aBitmap, BytesForBitSize(aBitLength));
+
+exit:
+    return error;
+}
+
+void RadioAvailability::DetermineSlotInfo(Radio::Time64 aTime, SlotInfo &aSlotInfo) const
+{
+    // Determines the bitmap slot index (`aSlotInfo.mIndex`) corresponding
+    // to `aTime` and populates `aSlotInfo.mWindow` with the remaining time
+    // window in that slot `[aTime, slotEndTime)`.
+    //
+    // Caller MUST ensure `IsSpecified()` is true (`mBitLength > 0`).
+
+    bool     isBeforeStartTime = (aTime < mStartTime);
+    uint32_t slotDurInUsec     = SlotDurationToUsec(mSlotDuration);
+    uint64_t diff;
+    uint32_t offsetInSlot;
+
+    // Each slot is a half-open interval `[start, start + slotDuration)`.
+    // When `aTime < mStartTime`, the slot immediately before `mStartTime`
+    // covers `[mStartTime - slotDuration, mStartTime - 1]`, so we measure
+    // backwards from `mStartTime - 1`.
+
+    diff = isBeforeStartTime ? (mStartTime - 1 - aTime) : (aTime - mStartTime);
+
+    aSlotInfo.mIndex             = static_cast<uint8_t>((diff / slotDurInUsec) % mBitLength);
+    offsetInSlot                 = static_cast<uint32_t>(diff % slotDurInUsec);
+    aSlotInfo.mWindow.mStartTime = aTime;
+
+    if (isBeforeStartTime)
+    {
+        // Map the backward slot offset (`0` for the slot right before
+        // `mStartTime`) to the corresponding bitmap index from the end.
+
+        aSlotInfo.mIndex            = mBitLength - 1 - aSlotInfo.mIndex;
+        aSlotInfo.mWindow.mDuration = offsetInSlot + 1;
     }
     else
     {
-        SetToUintMax(mSavedFrameCounter);
+        aSlotInfo.mWindow.mDuration = slotDurInUsec - offsetInSlot;
+    }
+}
+
+void RadioAvailability::AdvanceToNextSlot(SlotInfo &aSlotInfo) const
+{
+    aSlotInfo.mIndex             = (aSlotInfo.mIndex + 1) % mBitLength;
+    aSlotInfo.mWindow.mStartTime = aSlotInfo.mWindow.GetEndTime();
+    aSlotInfo.mWindow.mDuration  = SlotDurationToUsec(mSlotDuration);
+}
+
+bool RadioAvailability::IsAvailable(uint8_t aBitIndex) const
+{
+    uint8_t bitFlag = (0x80 >> (aBitIndex % kBitsPerByte));
+
+    return (mBitmap[aBitIndex / kBitsPerByte] & bitFlag);
+}
+
+bool RadioAvailability::IsAvailableAt(Radio::Time64 aTime) const
+{
+    bool     isAvailable = true;
+    SlotInfo slotInfo;
+
+    VerifyOrExit(IsSpecified());
+
+    DetermineSlotInfo(aTime, slotInfo);
+    isAvailable = IsAvailable(slotInfo.mIndex);
+
+exit:
+    return isAvailable;
+}
+
+bool RadioAvailability::IsAvailableIn(const Window &aWindow) const
+{
+    bool          isAvailable = false;
+    Radio::Time64 endTime     = aWindow.GetEndTime();
+    SlotInfo      slotInfo;
+
+    VerifyOrExit(IsSpecified(), isAvailable = true);
+
+    DetermineSlotInfo(aWindow.mStartTime, slotInfo);
+    VerifyOrExit(IsAvailable(slotInfo.mIndex));
+
+    for (uint8_t count = 1; (count < mBitLength) && (slotInfo.mWindow.GetEndTime() < endTime); count++)
+    {
+        AdvanceToNextSlot(slotInfo);
+        VerifyOrExit(IsAvailable(slotInfo.mIndex));
     }
 
-    return mSavedFrameCounter;
+    isAvailable = true;
+
+exit:
+    return isAvailable;
+}
+
+Error RadioAvailability::FindNextAvailableWindow(Radio::Time64 aTime, Window &aWindow) const
+{
+    Error    error = kErrorNone;
+    SlotInfo slotInfo;
+
+    if (!IsSpecified())
+    {
+        aWindow.mStartTime = aTime;
+        aWindow.mDuration  = Window::kMaxDuration;
+        ExitNow();
+    }
+
+    DetermineSlotInfo(aTime, slotInfo);
+
+    if (!IsAvailable(slotInfo.mIndex))
+    {
+        error = kErrorNotFound;
+
+        for (uint8_t count = 1; count < mBitLength; count++)
+        {
+            AdvanceToNextSlot(slotInfo);
+
+            if (IsAvailable(slotInfo.mIndex))
+            {
+                error = kErrorNone;
+                break;
+            }
+        }
+
+        SuccessOrExit(error);
+    }
+
+    aWindow = slotInfo.mWindow;
+
+    for (uint8_t count = 1; count < mBitLength; count++)
+    {
+        AdvanceToNextSlot(slotInfo);
+        VerifyOrExit(IsAvailable(slotInfo.mIndex));
+        aWindow.mDuration += slotInfo.mWindow.mDuration;
+    }
+
+    aWindow.mDuration = Window::kMaxDuration;
+
+exit:
+    return error;
 }
 
 } // namespace ThreadDirect

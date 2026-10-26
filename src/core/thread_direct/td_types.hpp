@@ -37,9 +37,13 @@
 #include "openthread-core-config.h"
 
 #include <openthread/thread_direct.h>
+#include <openthread/platform/radio.h>
 
 #include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
+#include "common/clearable.hpp"
 #include "common/equatable.hpp"
+#include "common/error.hpp"
 #include "common/heap_allocatable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -194,10 +198,168 @@ private:
     uint32_t    mSavedFrameCounter;
 };
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+/**
+ * Defines the slot durations of a radio availability schedule (`otRadioAvailabilitySlotDuration`).
+ */
+enum SlotDuration : uint8_t
+{
+    kSlotDuration625Usec  = OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US,  ///< 625 microseconds.
+    kSlotDuration1250Usec = OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US, ///< 1250 microseconds (1.25 msec).
+};
+
+/**
+ * Converts a `SlotDuration` enumerator to its duration in microseconds.
+ *
+ * @param[in] aSlotDuration  The slot duration enumerator.
+ *
+ * @returns The slot duration in microseconds.
+ */
+uint32_t SlotDurationToUsec(SlotDuration aSlotDuration);
+
+/**
+ * Represents a periodic radio availability schedule bitmap.
+ */
+class RadioAvailability : public Clearable<RadioAvailability>
+{
+public:
+    static constexpr uint8_t kMaxBitmapSize = OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE; ///< Max bitmap size in bytes.
+
+    static constexpr uint8_t kMaxBitmapLength = kMaxBitmapSize * kBitsPerByte; ///< Max bitmap length in bits.
+
+    /**
+     * Represents a time window (start time and duration).
+     */
+    struct Window
+    {
+        static constexpr uint32_t kMaxDuration = NumericLimits<uint32_t>::kMax; ///< Maximum (unbounded) duration.
+
+        /**
+         * Gets the end time of the window (`mStartTime + mDuration`).
+         *
+         * @returns The end time of the window in microseconds.
+         */
+        Radio::Time64 GetEndTime(void) const { return AddSafely<uint64_t>(mStartTime, mDuration); }
+
+        Radio::Time64 mStartTime; ///< Start time as `Radio::Time64`.
+        uint32_t      mDuration;  ///< Duration in microseconds.
+    };
+
+    /**
+     * Initializes the `RadioAvailability` as cleared (not specified / always available).
+     */
+    RadioAvailability(void) { Clear(); }
+
+    /**
+     * Initializes the `RadioAvailability` schedule.
+     *
+     * @param[in] aStartTime     The start time of the schedule.
+     * @param[in] aSlotDuration  The duration of each slot.
+     * @param[in] aBitLength     The number of slots (bits) in the schedule (`0` indicates always available).
+     * @param[in] aBitmap        A pointer to the MSB-first availability bitmap.
+     *
+     * @retval kErrorNone         Successfully initialized the schedule.
+     * @retval kErrorInvalidArgs  @p aBitLength exceeds `kMaxBitmapLength`.
+     */
+    Error Init(Radio::Time64 aStartTime, SlotDuration aSlotDuration, uint8_t aBitLength, const uint8_t *aBitmap);
+
+    /**
+     * Indicates whether a periodic availability schedule is specified (`GetBitLength() != 0`).
+     *
+     * When not specified (`GetBitLength() == 0`), the radio is considered always available.
+     *
+     * @retval TRUE   If a schedule is specified.
+     * @retval FALSE  If no schedule is specified (always available).
+     */
+    bool IsSpecified(void) const { return mBitLength != 0; }
+
+    /**
+     * Gets the start time of the schedule.
+     *
+     * @returns The start time of the schedule in microseconds.
+     */
+    Radio::Time64 GetStartTime(void) const { return mStartTime; }
+
+    /**
+     * Gets the slot duration of the schedule.
+     *
+     * @returns The slot duration enumerator.
+     */
+    SlotDuration GetSlotDuration(void) const { return mSlotDuration; }
+
+    /**
+     * Gets the length of the bitmap in bits (number of slots in the periodic schedule).
+     *
+     * @returns The bitmap length in bits (`0` if not specified).
+     */
+    uint8_t GetBitLength(void) const { return mBitLength; }
+
+    /**
+     * Gets the availability bitmap buffer.
+     *
+     * @returns A pointer to the availability bitmap byte array.
+     */
+    const uint8_t *GetBitmap(void) const { return mBitmap; }
+
+    /**
+     * Indicates whether the radio is available at a given time.
+     *
+     * @param[in] aTime  The radio time in microseconds to check.
+     *
+     * @retval TRUE   If the radio is available at @p aTime.
+     * @retval FALSE  If the radio is not available at @p aTime.
+     */
+    bool IsAvailableAt(Radio::Time64 aTime) const;
+
+    /**
+     * Indicates whether the radio is continuously available throughout a given time window.
+     *
+     * @param[in] aWindow  The time window to check.
+     *
+     * @retval TRUE   If the radio is available throughout @p aWindow.
+     * @retval FALSE  If the radio is unavailable during any part of @p aWindow.
+     */
+    bool IsAvailableIn(const Window &aWindow) const;
+
+    /**
+     * Finds the next contiguous available time window starting on or after a given time.
+     *
+     * If @p aTime falls within an available slot, @p aWindow starts at @p aTime and extends through the end of that
+     * contiguous run of available slots. Otherwise, @p aWindow starts at the beginning of the next available slot.
+     * If the radio is always available (either `!IsSpecified()` or all slots in the bitmap are available),
+     * `aWindow.mDuration` is set to `Window::kMaxDuration`.
+     *
+     * @param[in]  aTime    The radio time from which to start searching.
+     * @param[out] aWindow  A reference to a `Window` to output the found available window.
+     *
+     * @retval kErrorNone      Successfully found an available window and populated @p aWindow.
+     * @retval kErrorNotFound  No available slot exists in the schedule.
+     */
+    Error FindNextAvailableWindow(Radio::Time64 aTime, Window &aWindow) const;
+
+private:
+    struct SlotInfo
+    {
+        uint8_t mIndex;
+        Window  mWindow;
+    };
+
+    bool IsAvailable(uint8_t aBitIndex) const;
+    void DetermineSlotInfo(Radio::Time64 aTime, SlotInfo &aSlotInfo) const;
+    void AdvanceToNextSlot(SlotInfo &aSlotInfo) const;
+
+    Radio::Time64 mStartTime;
+    SlotDuration  mSlotDuration;
+    uint8_t       mBitLength;
+    uint8_t       mBitmap[kMaxBitmapSize];
+};
+
 } // namespace ThreadDirect
 
 DefineCoreType(otThreadDirectKeyId, ThreadDirect::KeyId);
 DefineCoreType(otThreadDirectKey, ThreadDirect::Key);
+DefineMapEnum(otRadioAvailabilitySlotDuration, ThreadDirect::SlotDuration);
 
 } // namespace ot
 
