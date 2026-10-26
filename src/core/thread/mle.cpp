@@ -3224,6 +3224,15 @@ void Mle::DelayedSender::ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint32_
     AddSchedule(kTypeLinkAccept, destination, aDelay, &aInfo, sizeof(aInfo));
 }
 
+bool Mle::DelayedSender::HasAnyScheduledLinkAccept(const Router &aRouter) const
+{
+    Ip6::Address destination;
+
+    destination.InitAsLinkLocalAddress(aRouter.GetExtAddress());
+
+    return HasMatchingSchedule(kTypeLinkAccept, destination);
+}
+
 void Mle::DelayedSender::ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
                                                    const DiscoveryResponseInfo &aInfo,
                                                    uint32_t                     aDelay)
