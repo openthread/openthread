@@ -2020,8 +2020,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 				 */
 				 bool accepted = tcplp_sys_accepted_connection(tp->accepted_from, tp, &ip6->ip6_src, th->th_sport);
 				 if (!accepted) {
-					 rstreason = ECONNREFUSED;
-					 goto dropwithreset;
+					 goto drop;
 				 }
 			 }
 		}
