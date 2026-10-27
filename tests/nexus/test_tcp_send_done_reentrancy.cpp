@@ -469,9 +469,10 @@ void TestTcpSendDoneReentrancy(void)
         SuccessOrQuit(acceptingServerListener.Initialize(serverNode, acceptingListenerArgs));
         VerifyOrQuit(serverNode.Get<Ip6::Tcp>().StartProcessingSignals(acceptingServerEndpoint));
 
-        VerifyOrQuit(!tcplp_sys_accepted_connection(
-            &acceptingServerListener.GetTcbListen(), &acceptingServerEndpoint.GetTcb(),
-            reinterpret_cast<struct in6_addr *>(&peerAddress), BigEndian::HostSwap16(kPort)));
+        VerifyOrQuit(!tcplp_sys_accepted_connection(&acceptingServerListener.GetTcbListen(),
+                                                    &acceptingServerEndpoint.GetTcb(),
+                                                    reinterpret_cast<struct in6_addr *>(&peerAddress),
+                                                    BigEndian::HostSwap16(kPort)));
         VerifyOrQuit(acceptingServerContext.mAcceptDoneCalled);
 
         SuccessOrQuit(acceptingServerEndpoint.Deinitialize());
