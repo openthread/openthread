@@ -592,8 +592,54 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadInt8(aFrame.mInfo.mTxInfo.mTxPower));
 
 exit:
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (error == OT_ERROR_NONE)
+    {
+        ConvertTimeIeToNetworkTimeOffset(aFrame);
+    }
+#endif
     return error;
 }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+void NcpBase::ConvertTimeIeToNetworkTimeOffset(otRadioFrame &aFrame)
+{
+    // The OpenThread stack expects the time field of the Time IE to
+    // be the offset to the network time, which is converted to the
+    // network time when the frame is transmitted. A host which does
+    // not set `SPINEL_PROP_NEST_NETWORK_TIME_EXPECTING_OFFSET` puts
+    // the network time (estimated at the time of request) in the
+    // Time IE instead, so convert it to the offset based on the
+    // current radio time.
+
+    Mac::TxFrame::ParseInfo frameInfo;
+    Mac::TimeIe            *timeIe;
+
+    VerifyOrExit(!mNetworkTimeExpectingOffset);
+    SuccessOrExit(frameInfo.ParseFrom(static_cast<Mac::TxFrame &>(aFrame), Mac::Frame::kParseFully));
+    VerifyOrExit(!frameInfo.IsSecurityProcessed());
+
+    timeIe = frameInfo.Find<Mac::TimeIe>();
+    VerifyOrExit(timeIe != nullptr);
+
+    timeIe->SetTime(timeIe->GetTime() - otLinkRawGetRadioTime(mInstance));
+
+exit:
+    return;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NEST_NETWORK_TIME_EXPECTING_OFFSET>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    value;
+
+    SuccessOrExit(error = mDecoder.ReadBool(value));
+    mNetworkTimeExpectingOffset = value;
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
 {

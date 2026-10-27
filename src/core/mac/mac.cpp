@@ -977,22 +977,7 @@ void Mac::BeginTransmit(void)
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    {
-        TimeIe *timeIe = frameInfo.Find<TimeIe>();
-
-        if (timeIe == nullptr)
-        {
-            frame->SetTimeIeOffset(0);
-        }
-        else
-        {
-            uint8_t offset = static_cast<uint8_t>(timeIe->GetData() - frame->GetPsdu());
-
-            frame->SetTimeIeOffset(offset);
-            frame->SetTimeSyncSeq(Get<TimeSync>().GetTimeSyncSeq());
-            frame->SetNetworkTimeOffset(Get<TimeSync>().GetNetworkTimeOffset());
-        }
-    }
+    frameInfo.TimeSyncInit(Get<TimeSync>().GetNetworkTimeOffset(), Get<TimeSync>().GetTimeSyncSeq());
 #endif
 
     if (!frameInfo.IsSecurityProcessed())

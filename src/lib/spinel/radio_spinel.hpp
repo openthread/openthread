@@ -1181,6 +1181,10 @@ private:
 
     void CalcRcpTimeOffset(void);
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    void ConvertTimeIeToNetworkTime(otRadioFrame &aFrame);
+#endif
+
     void HandleRcpUnexpectedReset(spinel_status_t aStatus);
     void HandleRcpTimeout(void);
     void RecoverFromRcpFailure(void);
@@ -1274,10 +1278,6 @@ private:
     otRadioFrame      mAckRadioFrame;
     otRadioFrame     *mTransmitFrame; ///< Points to the frame to send
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    otRadioIeInfo mTxIeInfo;
-#endif
-
     otExtAddress        mExtendedAddress;
     uint16_t            mShortAddress;
     uint16_t            mPanId;
@@ -1368,6 +1368,9 @@ private:
 
     bool mTimeSyncEnabled : 1;
     bool mTimeSyncOn : 1;
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    bool mRcpExpectsNetworkTimeOffset : 1; ///< Whether the RCP expects the network time offset in the Time IE.
+#endif
 
     SpinelDriver *mSpinelDriver;
 };

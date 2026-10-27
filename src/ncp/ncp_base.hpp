@@ -716,6 +716,9 @@ protected:
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    void ConvertTimeIeToNetworkTimeOffset(otRadioFrame &aFrame);
+#endif
     otError DecodeStreamRawTxRequest(otRadioFrame &aFrame);
     otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
@@ -877,6 +880,9 @@ protected:
     uint8_t mCurTransmitTID[kSpinelInterfaceCount];
     int8_t  mCurScanChannel[kSpinelInterfaceCount];
     bool    mSrcMatchEnabled[kSpinelInterfaceCount];
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    bool mNetworkTimeExpectingOffset;
+#endif
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD

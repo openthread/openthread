@@ -359,6 +359,24 @@ typedef struct otRadioContext
 } otRadioContext;
 
 /**
+ * Updates the Time IE (if present) of a frame being transmitted at SFD.
+ *
+ * This function sets the Tx timestamp of the frame to @p aRadioTime. When the time synchronization feature is enabled
+ * (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) and the frame contains a Time IE, it also converts the time field of the
+ * Time IE from the network time offset (set by OpenThread stack) to the network time, by adding @p aRadioTime to it.
+ * Nothing is done to the frame if it does not contain a Time IE, or if the frame security is already processed.
+ *
+ * Is intended to be called from SFD callback (ISR) of the radio platform, before the frame security is processed.
+ *
+ * @param[in,out]   aFrame          The target frame. MUST NOT be `NULL`.
+ * @param[in]       aRadioTime      The radio time when the SFD was at the antenna.
+ *
+ * @retval  TRUE    The Time IE of the frame is updated (frame security should be processed afterwards).
+ * @retval  FALSE   The frame does not contain a Time IE, or the frame security is already processed.
+ */
+bool otMacFrameUpdateTimeIe(otRadioFrame *aFrame, uint64_t aRadioTime);
+
+/**
  * Perform processing of SFD callback from ISR.
  *
  * This function may do multiple tasks as follows.
