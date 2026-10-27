@@ -93,6 +93,7 @@ public:
      * Optional observer called with every spinel frame received from the coprocessor.
      */
     std::function<void(const uint8_t *aFrame, uint16_t aLength)> mFrameObserver;
+    otError                                                      mSendError = OT_ERROR_NONE;
 
 private:
     ReceiveFrameCallback            mReceiveFrameCallback = nullptr;
@@ -104,7 +105,7 @@ private:
 class FakeCoprocessorPlatform : public FakePlatform
 {
 public:
-    FakeCoprocessorPlatform();
+    explicit FakeCoprocessorPlatform(otRadioCaps aRadioCaps = OT_RADIO_CAPS_NONE, bool aSoftwareReset = false);
     virtual ~FakeCoprocessorPlatform() = default;
 
     Spinel::RadioSpinel   mRadioSpinel;
