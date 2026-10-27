@@ -344,10 +344,13 @@ class OtbrSshCommandRunner(OTCommandHandler):
 
 class OtbrAdbCommandRunner(OTCommandHandler):
 
-    from adb_shell.adb_device import AdbDevice
-
-    def __init__(self, adb: AdbDevice, adb_key: Optional[str] = None):
-        from adb_shell.auth.sign_pythonrsa import PythonRSASigner
+    def __init__(self, adb: Any, adb_key: Optional[str] = None):
+        try:
+            from adb_shell.auth.sign_pythonrsa import PythonRSASigner
+        except ImportError:
+            raise ImportError(
+                "adb_shell package is required for OtbrAdbCommandRunner. Install it or use host POSIX CLI with ADB Spinel proxy."
+            )
 
         self.__adb = adb
         self.__line_read_callback = None

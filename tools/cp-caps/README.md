@@ -116,18 +116,28 @@ usage: [device configurations] python3 -m unittest -q [test cases]
 This test suite is used for testing the capabilities of the RCP.
 
 Device configurations:
-  ADB_KEY=<adb_key>              Full path to the adb key
-  DEBUG=on                       Enable the debug information
-  DUT_ADB_TCP=<device_ip>        Connect to the DUT via adb tcp
-  DUT_ADB_USB=<serial_number>    Connect to the DUT via adb usb
-  DUT_CLI_SERIAL=<serial_device> Connect to the DUT via cli serial port
-  DUT_SSH=<device_ip>            Connect to the DUT via ssh
-  REF_ADB_USB=<serial_number>    Connect to the reference device via adb usb
-  REF_CLI_SERIAL=<serial_device> Connect to the reference device via cli serial port
-  REF_SSH=<device_ip>            Connect to the reference device via ssh
-  SNIFFER_SERIAL=<serial_device> Use the RCP at the serial port as the sniffer (optional)
-  SNIFFER_RADIO_URL=<radio_url>  Use the RCP at the radio URL as the sniffer (optional)
-  OT_EXTCAP=<ot_extcap_path>     Full path to the ot-extcap executable used by the sniffer (default: ot-extcap)
+  ADB_KEY=<adb_key>                  Full path to the adb key
+  DEBUG=on                           Enable the debug information
+  DUT_ADB_TCP=<device_ip>            Connect to the DUT via adb tcp
+  DUT_ADB_USB=<serial_number>        Connect to the DUT via adb usb
+  DUT_ADB_SPINEL_PROXY=<serial>      Connect to the DUT Android device via adb Spinel proxy (host ot-cli)
+  DUT_SPINEL_PROXY=1                 Enable adb Spinel proxy mode for DUT_ADB_USB/DUT_ADB_TCP (host ot-cli)
+  DUT_SPINEL_PROXY_SOCKET=<path>     Socket path for adb Spinel proxy forwarding
+  DUT_RADIO_URL=<radio_url>          Connect to the DUT via host POSIX ot-cli over radio URL
+  DUT_CLI_SERIAL=<serial_device>     Connect to the DUT via cli serial port
+  DUT_SSH=<device_ip>                Connect to the DUT via ssh
+  REF_ADB_TCP=<device_ip>            Connect to the reference device via adb tcp
+  REF_ADB_USB=<serial_number>        Connect to the reference device via adb usb
+  REF_ADB_SPINEL_PROXY=<serial>      Connect to the reference Android device via adb Spinel proxy (host ot-cli)
+  REF_SPINEL_PROXY=1                 Enable adb Spinel proxy mode for REF_ADB_USB/REF_ADB_TCP (host ot-cli)
+  REF_SPINEL_PROXY_SOCKET=<path>     Socket path for reference device adb Spinel proxy forwarding
+  REF_RADIO_URL=<radio_url>          Connect to the reference device via host POSIX ot-cli over radio URL
+  REF_CLI_SERIAL=<serial_device>     Connect to the reference device via cli serial port
+  REF_SSH=<device_ip>                Connect to the reference device via ssh
+  OT_CLI=<ot_cli_path>               Full path to the host POSIX ot-cli executable (default: ot-cli)
+  SNIFFER_SERIAL=<serial_device>     Use the RCP at the serial port as the sniffer (optional)
+  SNIFFER_RADIO_URL=<radio_url>      Use the RCP at the radio URL as the sniffer (optional)
+  OT_EXTCAP=<ot_extcap_path>         Full path to the ot-extcap executable used by the sniffer (default: ot-extcap)
 
 Test cases:
   test_csl                 test whether the RCP supports CSL transmitter
@@ -142,6 +152,12 @@ Examples:
 
 Run test cases of the specified categories:
   DUT_ADB_USB=1169UC2F2T0M95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_csl test_data_poll
+
+Run test cases with host POSIX ot-cli over Radio URL (e.g. Unix socket):
+  DUT_RADIO_URL="spinel+hdlc+unix:///tmp/ot_spinel_proxy" REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_diag_commands
+
+Run test cases with automated Android adb Spinel proxy setup:
+  DUT_ADB_SPINEL_PROXY=1169UC2F2T0M95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_diag_commands
 
 Run all test cases:
   DUT_ADB_USB=1169UC2F2T0M95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest discover -q -s ./ -p 'test_*.py'

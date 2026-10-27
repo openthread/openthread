@@ -3676,6 +3676,54 @@ def connect_cli_sim(executable: str, nodeid: int, simulator: Optional[Simulator]
     return OTCI(cmd_handler)
 
 
+def connect_cli_posix(radio_url: str,
+                      executable: str = 'ot-cli',
+                      extra_args: Optional[List[str]] = None,
+                      nodeid: int = 1,
+                      simulator: Optional[Simulator] = None) -> OTCI:
+    cli_handler = connectors.OtCliPosix(radio_url=radio_url,
+                                        executable=executable,
+                                        extra_args=extra_args,
+                                        nodeid=nodeid,
+                                        simulator=simulator)
+    cmd_handler = OtCliCommandRunner(cli_handler)
+    return OTCI(cmd_handler)
+
+
+def connect_cli_adb_spinel_proxy(device_serial: Optional[str] = None,
+                                 host: Optional[str] = None,
+                                 port: Optional[int] = 5555,
+                                 socket_path: Optional[str] = None,
+                                 executable: str = 'ot-cli',
+                                 extra_args: Optional[List[str]] = None,
+                                 nodeid: int = 1,
+                                 auto_setup: bool = True,
+                                 adb_key: Optional[str] = None) -> OTCI:
+    from .adb_spinel_proxy import AdbSpinelProxyManager
+
+    proxy_manager = AdbSpinelProxyManager(
+        device_serial=device_serial,
+        host=host,
+        port=port,
+        socket_path=socket_path,
+        auto_setup=auto_setup,
+        adb_key=adb_key,
+    )
+    try:
+        proxy_manager.setup()
+        cli_handler = connectors.OtCliAdbSpinelProxy(
+            proxy_manager=proxy_manager,
+            executable=executable,
+            extra_args=extra_args,
+            nodeid=nodeid,
+        )
+    except Exception:
+        proxy_manager.close()
+        raise
+    cmd_handler = OtCliCommandRunner(cli_handler)
+    return OTCI(cmd_handler)
+
+
 def connect_cli_serial(dev: str, baudrate: int = 115200) -> OTCI:
     cli_handler = connectors.OtCliSerial(dev, baudrate)
     cmd_handler = OtCliCommandRunner(cli_handler)
