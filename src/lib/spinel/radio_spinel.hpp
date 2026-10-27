@@ -631,11 +631,11 @@ public:
     bool IsTransmitDone(void) const { return mState == kStateTransmitDone; }
 
     /**
-     * Returns the timeout timepoint for the pending transmission.
+     * Returns the earliest pending transmit or energy scan deadline, or `UINT64_MAX` if none is pending.
      *
-     * @returns The timeout timepoint for the pending transmission.
+     * @returns The deadline, in microseconds on the platform clock.
      */
-    uint64_t GetTxRadioEndUs(void) const { return mTxRadioEndUs; }
+    uint64_t GetNextRadioOperationDeadline(void) const;
 
     /**
      * Processes any pending the I/O data.
@@ -1104,6 +1104,8 @@ private:
     static constexpr uint64_t kTxWaitUs =
         OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS *
         kUsPerSec; ///< Maximum time of waiting for `TransmitDone` event, in microseconds.
+    static constexpr uint64_t kEnergyScanWaitUs =
+        static_cast<uint64_t>(OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS) * kUsPerSec;
 
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
@@ -1337,7 +1339,9 @@ private:
     bool mMaxPowerTableSet : 1;            ///< Whether any channel's max transmit power has been set.
     bool mCoexEnabledSet : 1;              ///< Whether coex enabled has been set.
     bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has been set.
-    bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.
+    bool mEnergyScanning : 1;              ///< Whether an energy scan is active.
+    bool mEnergyScanStarted : 1;           ///< A scan was accepted and requires a completion callback.
+    bool mEnergyScanDonePending : 1;       ///< An invalid scan result must be reported.
     bool mMacFrameCounterSet : 1;          ///< Whether the MAC frame counter has been set.
     bool mSrcMatchSet : 1;                 ///< Whether the source match feature has been set.
 
@@ -1350,6 +1354,7 @@ private:
 #endif
 
     uint64_t mTxRadioEndUs;
+    uint64_t mEnergyScanEndUs;
     uint64_t mRadioTimeRecalcStart; ///< When to recalculate RCP time offset.
     uint64_t mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
 

@@ -61,9 +61,11 @@ bool operator<(const otExtAddress &aLeft, const otExtAddress &aRight)
 
 namespace ot {
 
-FakePlatform *FakePlatform::sPlatform = nullptr;
+FakePlatform     *FakePlatform::sPlatform = nullptr;
+constexpr int16_t FakePlatform::kNoTargetPower;
 
-FakePlatform::FakePlatform()
+FakePlatform::FakePlatform(otRadioCaps aRadioCaps)
+    : mRadioCaps(aRadioCaps)
 {
     assert(sPlatform == nullptr);
     sPlatform = this;
@@ -431,7 +433,7 @@ otError otPlatRadioEnable(otInstance *) { return OT_ERROR_NONE; }
 
 otError otPlatRadioDisable(otInstance *) { return OT_ERROR_NONE; }
 
-otError otPlatRadioSleep(otInstance *) { return OT_ERROR_NONE; }
+otError otPlatRadioSleep(otInstance *) { return FakePlatform::CurrentPlatform().RadioSleep(); }
 
 otError otPlatRadioReceive(otInstance *, uint8_t aChannel) { return FakePlatform::CurrentPlatform().Receive(aChannel); }
 
@@ -449,7 +451,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *) { return FakePlatform::
 
 int8_t otPlatRadioGetRssi(otInstance *) { return 0; }
 
-otRadioCaps otPlatRadioGetCaps(otInstance *) { return OT_RADIO_CAPS_NONE; }
+otRadioCaps otPlatRadioGetCaps(otInstance *) { return FakePlatform::CurrentPlatform().GetRadioCaps(); }
 
 bool otPlatRadioGetPromiscuous(otInstance *) { return false; }
 
@@ -494,7 +496,10 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *) { FakePlatform::CurrentP
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *) { FakePlatform::CurrentPlatform().SrcMatchClearExtEntries(); }
 
-otError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatRadioEnergyScan(otInstance *, uint8_t aChannel, uint16_t aDuration)
+{
+    return FakePlatform::CurrentPlatform().EnergyScan(aChannel, aDuration);
+}
 
 otError otPlatRadioSetTransmitPower(otInstance *, int8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
 
