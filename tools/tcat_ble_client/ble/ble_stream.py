@@ -35,6 +35,8 @@ from bleak import BleakClient
 from bleak.backends.device import BLEDevice
 from bleak.backends.characteristic import BleakGATTCharacteristic
 
+from constants import BLE_RX_QUIET_TIME_SEC, POLL_INTERVAL_SEC
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,7 +91,7 @@ class BleStream:
             await self.client.write_gatt_char(rx_char, s)
         return len(data)
 
-    async def recv(self, bufsize, recv_timeout=0.200):
+    async def recv(self, bufsize, recv_timeout=BLE_RX_QUIET_TIME_SEC):
         # check to drain bytes already received before reporting the closed connection
         if not self.__receive_buffer:
             if not self.client.is_connected:
@@ -97,7 +99,7 @@ class BleStream:
             return b''
 
         while asyncio.get_running_loop().time() - self.__last_recv_time <= recv_timeout:
-            await asyncio.sleep(0.020)
+            await asyncio.sleep(POLL_INTERVAL_SEC)
 
         data = self.__receive_buffer[:bufsize]
         self.__receive_buffer = self.__receive_buffer[bufsize:]

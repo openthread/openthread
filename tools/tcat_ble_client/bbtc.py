@@ -40,6 +40,7 @@ from cli.cli import CLI
 from cli.base_commands import connection_closed_helper, disconnect_helper
 from dataset.dataset import ThreadDataset
 from cli.command import CommandResult
+from constants import EVENT_POLL_INTERVAL_SEC, SIMULATION_HOST
 from tlv.tcat_tlv import TcatTLVType
 from tlv.tlv import TLV
 from utils import hexdump_ot, select_device_by_user_input, quit_with_reason
@@ -141,7 +142,7 @@ async def receive_loop(cli_context: dict):
                     await connection_closed_helper(cli_context)
                 continue
 
-        await asyncio.sleep(0.100)
+        await asyncio.sleep(EVENT_POLL_INTERVAL_SEC)
 
 
 def validate_unsolicited_tlv(tlv: TLV):
@@ -167,7 +168,7 @@ async def get_device_by_args(args) -> BLEDevice | UdpStream | None:
         tcat_devices = await ble_scanner.scan_tcat_devices(adapter=args.adapter)
         device = select_device_by_user_input(tcat_devices)
     elif args.simulation:
-        device = UdpStream("127.0.0.1", int(args.simulation))
+        device = UdpStream(SIMULATION_HOST, int(args.simulation))
 
     return device
 

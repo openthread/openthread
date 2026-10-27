@@ -41,6 +41,12 @@ from ble.ble_stream import BleStream
 from ble.ble_stream_secure import BleStreamSecure
 from ble import ble_scanner
 from ble.udp_stream import UdpStream
+from constants import (
+    SIMULATION_HOST,
+    TLS_CLOSE_TIMEOUT_SEC,
+    TLS_HANDSHAKE_TIMEOUT_BLE_SEC,
+    TLS_HANDSHAKE_TIMEOUT_SIMULATION_SEC,
+)
 from cli.command import Command, CommandResultNone, CommandResultTLV, CommandResult, CommandResultError
 from dataset.dataset import ThreadDataset
 from tlv.tlv import TLV
@@ -444,8 +450,8 @@ def _handshake_progress_bar(is_concluded: bool):
 
 async def connect_helper(device: BLEDevice | UdpStream,
                          context: dict,
-                         timeout_ble=30.0,
-                         timeout_simulation=5.0) -> bool:
+                         timeout_ble=TLS_HANDSHAKE_TIMEOUT_BLE_SEC,
+                         timeout_simulation=TLS_HANDSHAKE_TIMEOUT_SIMULATION_SEC) -> bool:
     """Helper function for CLI and commands to establish a new secure connection with a TCAT device.
 
     Handles both BLE and simulated UDP connections. Loads certificates and performs handshake
@@ -454,8 +460,8 @@ async def connect_helper(device: BLEDevice | UdpStream,
     Args:
         device: BLEDevice object, or UdpStream (for simulation)
         context: Dictionary containing application context including command line arguments
-        timeout_ble: Timeout in seconds for handshake with real TCAT device (default: 30.0)
-        timeout_simulation: Timeout in seconds for handshake for simulated TCAT device (default: 5.0)
+        timeout_ble: Timeout in seconds for handshake with real TCAT device
+        timeout_simulation: Timeout in seconds for handshake for simulated TCAT device
 
     Returns:
         True if connection was successful, False otherwise.
@@ -523,7 +529,7 @@ async def disconnect_helper(context: dict) -> None:
         print('Disconnecting...')
         doing_disconn = True
         logger.debug('Closing TLS connection.')
-        await bless.close(timeout=5.0)
+        await bless.close(timeout=TLS_CLOSE_TIMEOUT_SEC)
 
     if bles is not None:
         logger.debug('Closing BLE connection.')
@@ -584,7 +590,7 @@ class SimulationCommand(Command):
         if context['ble_sstream'] is not None and context['ble_sstream'].is_connected:
             return CommandResultError('already connected to a TCAT device. Use \'disconnect\' first.')
 
-        device = UdpStream("127.0.0.1", int(args[0]))
+        device = UdpStream(SIMULATION_HOST, int(args[0]))
         await connect_helper(device, context)
         return CommandResultNone()
 
