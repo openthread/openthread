@@ -797,26 +797,26 @@ template <> inline const uint32_t &Dataset::Info::Get<Dataset::kChannelMask>(voi
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Active and Pending Timestamp
 
-template <> inline void Dataset::Info::Get<Dataset::kActiveTimestamp>(Timestamp &aTimestamp) const
+template <> inline void Dataset::Info::Get<Dataset::kActiveTimestamp>(Timestamp &aComponent) const
 {
-    aTimestamp.SetFrom(mActiveTimestamp);
+    aComponent.SetFrom(mActiveTimestamp);
 }
 
-template <> inline void Dataset::Info::Get<Dataset::kPendingTimestamp>(Timestamp &aTimestamp) const
+template <> inline void Dataset::Info::Get<Dataset::kPendingTimestamp>(Timestamp &aComponent) const
 {
-    aTimestamp.SetFrom(mPendingTimestamp);
+    aComponent.SetFrom(mPendingTimestamp);
 }
 
-template <> inline void Dataset::Info::Set<Dataset::kActiveTimestamp>(const Timestamp &aTimestamp)
+template <> inline void Dataset::Info::Set<Dataset::kActiveTimestamp>(const Timestamp &aComponent)
 {
     GetComponents().MarkAsPresent<kActiveTimestamp>();
-    aTimestamp.ConvertTo(mActiveTimestamp);
+    aComponent.ConvertTo(mActiveTimestamp);
 }
 
-template <> inline void Dataset::Info::Set<Dataset::kPendingTimestamp>(const Timestamp &aTimestamp)
+template <> inline void Dataset::Info::Set<Dataset::kPendingTimestamp>(const Timestamp &aComponent)
 {
     GetComponents().MarkAsPresent<kPendingTimestamp>();
-    aTimestamp.ConvertTo(mPendingTimestamp);
+    aComponent.ConvertTo(mPendingTimestamp);
 }
 
 } // namespace MeshCoP

@@ -399,7 +399,7 @@ public:
      * @retval  TRUE   Expect to respond with CoAP reset message on error.
      * @retval  FALSE  No CoAP reset message should be sent on error.
      */
-    bool RequireResetOnError(void) { return IsConfirmable() || IsNonConfirmable(); }
+    bool RequireResetOnError(void) const { return IsConfirmable() || IsNonConfirmable(); }
 
 private:
     Type     mType;

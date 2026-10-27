@@ -624,7 +624,7 @@ private:
      *
      * @param[in] aPrefixLengthCode   The prefix length code.
      */
-    void SetPrefixLengthCode(const uint8_t aPrefixLengthCode);
+    void SetPrefixLengthCode(uint8_t aPrefixLengthCode);
 
     uint16_t mPrefixAttr; // The prefix attributes (Scaled Lifetime and Prefix Length Code).
     uint8_t  mPrefixMsb[12];

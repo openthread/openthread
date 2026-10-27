@@ -644,7 +644,7 @@ public:
      *
      * @param[in] aChannel       The channel.
      */
-    ChannelTlvValue(uint16_t aChannel)
+    explicit ChannelTlvValue(uint16_t aChannel)
         : ChannelTlvValue(0, aChannel)
     {
     }
@@ -719,7 +719,7 @@ public:
      *
      * @param[in] aChannel       The channel.
      */
-    CslChannelTlvValue(uint16_t aChannel)
+    explicit CslChannelTlvValue(uint16_t aChannel)
         : ChannelTlvValue(aChannel)
     {
     }

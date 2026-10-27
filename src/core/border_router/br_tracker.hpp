@@ -112,7 +112,7 @@ private:
     {
         struct RlocFilter
         {
-            RlocFilter(const NetworkData::Rlocs &aRlocs)
+            explicit RlocFilter(const NetworkData::Rlocs &aRlocs)
                 : mExcludeRlocs(aRlocs)
             {
             }

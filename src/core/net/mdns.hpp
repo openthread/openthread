@@ -1827,7 +1827,7 @@ private:
 
     struct CacheContext : private NonCopyable
     {
-        CacheContext(Instance &aInstance);
+        explicit CacheContext(Instance &aInstance);
         TimeMilli GetNow(void) const { return mNextFireTime.GetNow(); }
 
         NextFireTime mNextFireTime;

@@ -922,7 +922,7 @@ public:
          *
          * @param[in] aTransport  The DTLS transport to use for this session.
          */
-        Session(Transport &aTransport)
+        explicit Session(Transport &aTransport)
             : SecureSession(aTransport)
         {
         }

@@ -675,10 +675,10 @@ public:
 
         typedef MeshCoP::BorderAgent::Id ValueType; ///< The associated value type.
 
+        BorderAgentId(void) = delete;
+
     private:
         static void Log(Action aAction, const MeshCoP::BorderAgent::Id &aId);
-
-        BorderAgentId(void) = delete;
     };
 #endif
 

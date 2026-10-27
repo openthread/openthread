@@ -459,7 +459,7 @@ public:
      *
      * @returns TRUE if the "DNS name compression" mode is enabled, FALSE otherwise.
      */
-    bool IsDnsNameCompressionEnabled(void) { return mDnsNameCompressionEnabled; }
+    bool IsDnsNameCompressionEnabled(void) const { return mDnsNameCompressionEnabled; }
 #endif
 
     /**
@@ -544,10 +544,10 @@ private:
         // set to `nullptr` to avoid any potential use of a dangling pointer.
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
-        ActiveInstanceTracker(Instance &aInstance) { gActiveInstance = &aInstance; }
+        explicit ActiveInstanceTracker(Instance &aInstance) { gActiveInstance = &aInstance; }
         ~ActiveInstanceTracker(void) { gActiveInstance = nullptr; }
 #else
-        ActiveInstanceTracker(Instance &) {}
+        explicit ActiveInstanceTracker(Instance &) {}
 #endif
     };
 

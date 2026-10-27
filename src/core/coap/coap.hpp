@@ -921,7 +921,7 @@ private:
             using Handler = ResponseHandler;
 
             Matcher(void) { mMode = kAny; }
-            Matcher(const Ip6::Address &aSourceAddress) { mMode = kAddress, mAddress = &aSourceAddress; }
+            explicit Matcher(const Ip6::Address &aSourceAddress) { mMode = kAddress, mAddress = &aSourceAddress; }
             Matcher(Handler aHandler, void *aContext) { mMode = kHandler, mHandler = aHandler, mContext = aContext; }
 
             bool Matches(const Request &aRequest) const;

@@ -98,7 +98,7 @@ public:
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
      */
-    TxtData(Instance &aInstance);
+    explicit TxtData(Instance &aInstance);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
 
