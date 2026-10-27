@@ -89,8 +89,8 @@ void RegisterServices(Node &aNode, uint16_t aClientId)
         Error error = aNode.Get<Srp::Client>().AddService(service);
         if (error != kErrorNone)
         {
-            Log("AddService failed with error %s (%d) for client %u, instance %u", ErrorToString(error), error,
-                aClientId, j);
+            Log("AddService failed with error %s (%d) for client %u, instance %u", ErrorToString(error),
+                static_cast<otError>(error), aClientId, j);
         }
         SuccessOrQuit(error);
 
