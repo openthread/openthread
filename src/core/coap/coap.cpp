@@ -28,6 +28,7 @@
 
 #include "coap.hpp"
 
+#include "common/string.hpp"
 #include "instance/instance.hpp"
 
 /**
@@ -115,6 +116,58 @@ void Msg::UpdateMessageId(uint16_t aMessageId)
     mMessage.WriteMessageId(aMessageId);
 }
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
+void CoapBase::Block2ResponseMetadata::InitFromRequest(const Msg &aRxMsg, const char *aUriPath)
+{
+    SuccessOrAssert(StringCopy(mUriPath, aUriPath));
+
+    mSockAddr  = aRxMsg.mMessageInfo.GetSockAddr();
+    mSockPort  = aRxMsg.mMessageInfo.GetSockPort();
+    mPeerAddr  = aRxMsg.mMessageInfo.GetPeerAddr();
+    mPeerPort  = aRxMsg.mMessageInfo.GetPeerPort();
+    mMessageId = aRxMsg.GetMessageId();
+    mToken     = aRxMsg.GetToken();
+    mIsSet     = true;
+}
+
+bool CoapBase::Block2ResponseMetadata::MatchesRequest(const Msg &aRxMsg, const char *aUriPath) const
+{
+    bool matches = false;
+
+    VerifyOrExit(mIsSet);
+    VerifyOrExit(mSockAddr == aRxMsg.mMessageInfo.GetSockAddr());
+    VerifyOrExit(mSockPort == aRxMsg.mMessageInfo.GetSockPort());
+    VerifyOrExit(mPeerAddr == aRxMsg.mMessageInfo.GetPeerAddr());
+    VerifyOrExit(mPeerPort == aRxMsg.mMessageInfo.GetPeerPort());
+    VerifyOrExit(StringMatch(mUriPath, aUriPath));
+
+    matches = true;
+
+exit:
+    return matches;
+}
+
+bool CoapBase::Block2ResponseMetadata::MatchesResponse(const Msg &aTxMsg) const
+{
+    bool matches = false;
+
+    VerifyOrExit(mIsSet);
+    VerifyOrExit(aTxMsg.mMessageInfo.GetSockAddr().IsUnspecified() || (mSockAddr == aTxMsg.mMessageInfo.GetSockAddr()));
+    VerifyOrExit((aTxMsg.mMessageInfo.GetSockPort() == 0) || (mSockPort == aTxMsg.mMessageInfo.GetSockPort()));
+    VerifyOrExit(mPeerAddr == aTxMsg.mMessageInfo.GetPeerAddr());
+    VerifyOrExit(mPeerPort == aTxMsg.mMessageInfo.GetPeerPort());
+    VerifyOrExit(mToken == aTxMsg.GetToken());
+    VerifyOrExit((aTxMsg.GetType() != kTypeAck) || (mMessageId == aTxMsg.GetMessageId()));
+
+    matches = true;
+
+exit:
+    return matches;
+}
+
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // CoapBase
 
@@ -135,6 +188,10 @@ void CoapBase::ClearAllRequestsAndResponses(void)
 {
     mPendingRequests.AbortAllRequests();
     mResponseCache.RemoveAll();
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    FreeLastBlockResponse();
+    ClearPendingBlock2Response();
+#endif
 }
 
 void CoapBase::AddResource(Resource &aResource) { IgnoreError(mResources.Add(aResource)); }
@@ -254,6 +311,7 @@ Error CoapBase::SendMessage(Message                &aMessage,
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     SuccessOrExit(error = ProcessBlockwiseSend(txMsg, aCallbacks));
+    ClearPendingBlock2ResponseFor(txMsg);
 #endif
 
     switch (txMsg.GetType())
@@ -805,7 +863,9 @@ Error CoapBase::ProcessBlockwiseSend(Msg &aMsg, const SendCallbacks &aCallbacks)
     switch (type)
     {
     case kTypeAck:
+        VerifyOrExit(mPendingBlock2ResponseMetadata.MatchesResponse(aMsg));
         SuccessOrExit(error = CacheLastBlockResponse(&aMsg.mMessage));
+        CommitPendingBlock2Response();
         break;
 
     case kTypeNonConfirmable:
@@ -955,6 +1015,7 @@ Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStrin
                     switch (ProcessBlock1Request(aRxMsg, resource, totalTransferSize))
                     {
                     case kErrorNone:
+                        mPendingBlock2ResponseMetadata.InitFromRequest(aRxMsg, resource.GetUriPath());
                         resource.HandleRequest(aRxMsg);
                         OT_FALL_THROUGH;
                     case kErrorBusy:
@@ -1000,6 +1061,7 @@ Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStrin
         }
         else
         {
+            mPendingBlock2ResponseMetadata.InitFromRequest(aRxMsg, resource.GetUriPath());
             resource.HandleRequest(aRxMsg);
             error      = kErrorNone;
             aDidHandle = true;
@@ -1018,6 +1080,8 @@ void CoapBase::FreeLastBlockResponse(void)
         mLastResponse->Free();
         mLastResponse = nullptr;
     }
+
+    mLastResponseMetadata.Clear();
 }
 
 Error CoapBase::CacheLastBlockResponse(Message *aResponse)
@@ -1031,6 +1095,25 @@ Error CoapBase::CacheLastBlockResponse(Message *aResponse)
 
 exit:
     return error;
+}
+
+void CoapBase::ClearPendingBlock2Response(void) { mPendingBlock2ResponseMetadata.Clear(); }
+
+void CoapBase::ClearPendingBlock2ResponseFor(const Msg &aTxMsg)
+{
+    VerifyOrExit(aTxMsg.IsResponse());
+    VerifyOrExit(mPendingBlock2ResponseMetadata.MatchesResponse(aTxMsg));
+
+    ClearPendingBlock2Response();
+
+exit:
+    return;
+}
+
+void CoapBase::CommitPendingBlock2Response(void)
+{
+    mLastResponseMetadata = mPendingBlock2ResponseMetadata;
+    ClearPendingBlock2Response();
 }
 
 Error CoapBase::PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
@@ -1272,11 +1355,13 @@ Error CoapBase::ProcessBlock2Request(Msg &aRxMsg, const ResourceBlockWise &aReso
 
     if (msgBlockInfo.mBlockNumber == 0)
     {
+        mPendingBlock2ResponseMetadata.InitFromRequest(aRxMsg, aResource.GetUriPath());
         aResource.HandleRequest(aRxMsg);
         ExitNow();
     }
 
     VerifyOrExit(mLastResponse != nullptr, error = kErrorNoFrameReceived);
+    VerifyOrExit(mLastResponseMetadata.MatchesRequest(aRxMsg, aResource.GetUriPath()), error = kErrorNoFrameReceived);
 
     VerifyOrExit((response = NewMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -1326,7 +1411,10 @@ Error CoapBase::ProcessBlock2Request(Msg &aRxMsg, const ResourceBlockWise &aReso
 
     if (responseBlockInfo.mMoreBlocks)
     {
+        Block2ResponseMetadata lastResponseMetadata = mLastResponseMetadata;
+
         SuccessOrExit(error = CacheLastBlockResponse(response));
+        mLastResponseMetadata = lastResponseMetadata;
     }
     else
     {
