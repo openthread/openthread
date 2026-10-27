@@ -125,7 +125,9 @@ private:
     static constexpr uint8_t kNetworkKeyProvisioningMask     = 1 << 0;
     static constexpr uint8_t kTobleLinkMask                  = 1 << 7;
     static constexpr uint8_t kNonCcmRoutersMask              = 1 << 6;
-    static constexpr uint8_t kReservedMask                   = 0x38;
+    static constexpr uint8_t kReservedBit10Mask              = 1 << 5;
+    static constexpr uint8_t kReservedBit11Mask              = 1 << 4;
+    static constexpr uint8_t kReservedBit12Mask              = 1 << 3;
     static constexpr uint8_t kVersionThresholdForRoutingMask = 0x07;
 
     void SetToDefaultFlags(void);
