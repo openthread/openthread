@@ -477,7 +477,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
 
     if (!value)
     {
-        error = otLinkRawSetReceiveDone(mInstance, nullptr);
+        SuccessOrExit(error = otLinkRawSetReceiveDone(mInstance, nullptr));
+        mCurScanChannel[mCurCommandIid] = kInvalidScanChannel;
     }
     else
     {

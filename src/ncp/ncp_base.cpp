@@ -1877,12 +1877,18 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
             mCurScanChannel[mCurCommandIid] = static_cast<int8_t>(scanChannel);
 
             error = otLinkRawEnergyScan(mInstance, scanChannel, mScanPeriod, LinkRawEnergyScanDone);
+            if (error != OT_ERROR_NONE)
+            {
+                mCurScanChannel[mCurCommandIid] = kInvalidScanChannel;
+            }
         }
         else
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
         {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
             error = otLinkEnergyScan(mInstance, mScanChannelMask, mScanPeriod, &HandleEnergyScanResult_Jump, this);
+#else
+        error = OT_ERROR_INVALID_STATE;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
         }
 
