@@ -29,6 +29,14 @@
 
 source "tests/scripts/expect/_common.exp"
 
+set dnsmasq_pid [exec dnsmasq -d --no-resolv --no-hosts \
+    --address=/ipv6.google.com/2001:4860:4860::8888 \
+    --address=/ipv6.google.com/8.8.8.8 \
+    --port=53 &]
+exit -onexit {
+    catch {exec kill $dnsmasq_pid}
+}
+
 spawn_node 1
 setup_default_network
 
@@ -54,3 +62,4 @@ expect "DNS response for ipv6.google.com"
 expect_line "Done"
 
 dispose_all
+exec kill $dnsmasq_pid

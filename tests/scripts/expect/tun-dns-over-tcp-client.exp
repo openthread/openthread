@@ -30,6 +30,14 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
+set dnsmasq_pid [exec dnsmasq -d --no-resolv --no-hosts \
+    --address=/ipv6.google.com/2001:4860:4860::8888 \
+    --address=/ipv6.google.com/8.8.8.8 \
+    --port=2000 &]
+exit -onexit {
+    catch {exec kill $dnsmasq_pid}
+}
+
 spawn_node 2 "cli"
 spawn_node 1
 setup_leader
@@ -44,3 +52,4 @@ expect "DNS response for ipv6.google.com"
 expect_line "Done"
 
 dispose_all
+exec kill $dnsmasq_pid

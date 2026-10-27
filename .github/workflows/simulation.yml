@@ -225,6 +225,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         sudo bash script/install_socat
         pip install bleak 'cryptography==43.0.0'
     - name: Run RCP Mode
