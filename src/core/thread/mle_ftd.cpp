@@ -1789,7 +1789,6 @@ void Mle::HandleTimeTick(void)
                 if (age >= kMaxNeighborAgeOnChild)
                 {
                     LogInfo("No Adv from router 0x%04x - removing router", router.GetRloc16());
-                    mDelayedSender.RemoveScheduledLinkRequest(router);
                     RemoveNeighbor(router);
                     continue;
                 }
@@ -3207,12 +3206,18 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
 
         mChildTable.RemoveStoredChild(child);
     }
-    else if (aNeighbor.IsStateValid())
+    else if (mRouterTable.Contains(aNeighbor))
     {
-        OT_ASSERT(mRouterTable.Contains(aNeighbor));
+        Router &router = static_cast<Router &>(aNeighbor);
 
-        mNeighborTable.Signal(NeighborTable::kRouterRemoved, aNeighbor);
-        mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
+        mDelayedSender.RemoveScheduledLinkRequest(router);
+        router.ClearLinkAcceptTimeout();
+
+        if (router.IsStateValid())
+        {
+            mNeighborTable.Signal(NeighborTable::kRouterRemoved, router);
+            mRouterTable.RemoveRouterLink(router);
+        }
     }
 
     aNeighbor.GetLinkInfo().Clear();

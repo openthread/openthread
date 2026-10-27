@@ -71,6 +71,14 @@ void RouterTable::ClearNeighbors(void)
 {
     for (Router &router : mRouters)
     {
+        if (router.IsStateInvalid())
+        {
+            continue;
+        }
+
+        Get<Mle::Mle>().RemoveScheduledLinkRequest(router);
+        router.ClearLinkAcceptTimeout();
+
         if (router.IsStateValid())
         {
             Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, router);
@@ -108,6 +116,11 @@ void RouterTable::RemoveRouter(Router &aRouter)
     // `mRouterIdMap`.
 
     bool isSelf = IsSelfRouterId(aRouter.GetRouterId());
+
+    if (!aRouter.IsStateInvalid())
+    {
+        Get<Mle::Mle>().RemoveScheduledLinkRequest(aRouter);
+    }
 
     if (aRouter.IsStateValid())
     {
