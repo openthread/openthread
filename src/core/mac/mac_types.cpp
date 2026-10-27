@@ -286,7 +286,7 @@ void KeyMaterial::Clear(void)
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     DestroyKey();
-    SetKeyRef(kInvalidKeyRef);
+    SetKeyRefToInvalid();
 #else
     GetKey().Clear();
 #endif
@@ -343,7 +343,7 @@ void KeyMaterial::ConvertToCryptoKey(Crypto::Key &aCryptoKey) const
 void KeyMaterial::DestroyKey(void)
 {
     Crypto::Storage::DestroyKey(GetKeyRef());
-    SetKeyRef(kInvalidKeyRef);
+    SetKeyRefToInvalid();
 }
 #endif
 

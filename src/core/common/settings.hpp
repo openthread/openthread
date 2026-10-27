@@ -52,6 +52,7 @@
 #include "net/ip6_address.hpp"
 #include "net/slaac_address.hpp"
 #include "thread/version.hpp"
+#include "thread_direct/td_types.hpp"
 #include "utils/flash.hpp"
 
 namespace ot {
@@ -72,7 +73,7 @@ protected:
         kActionSave,
         kActionResave,
         kActionDelete,
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OT_CONFIG_THREAD_DIRECT_ENABLE
         kActionAdd,
         kActionRemove,
         kActionDeleteAll,
@@ -106,22 +107,24 @@ public:
      */
     enum Key : uint16_t
     {
-        kKeyActiveDataset     = OT_SETTINGS_KEY_ACTIVE_DATASET,
-        kKeyPendingDataset    = OT_SETTINGS_KEY_PENDING_DATASET,
-        kKeyNetworkInfo       = OT_SETTINGS_KEY_NETWORK_INFO,
-        kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
-        kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
-        kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
-        kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
-        kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
-        kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
-        kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
-        kKeyBrOnLinkPrefixes  = OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES,
-        kKeyBorderAgentId     = OT_SETTINGS_KEY_BORDER_AGENT_ID,
-        kKeyTcatCommrCert     = OT_SETTINGS_KEY_TCAT_COMMR_CERT,
+        kKeyActiveDataset       = OT_SETTINGS_KEY_ACTIVE_DATASET,
+        kKeyPendingDataset      = OT_SETTINGS_KEY_PENDING_DATASET,
+        kKeyNetworkInfo         = OT_SETTINGS_KEY_NETWORK_INFO,
+        kKeyParentInfo          = OT_SETTINGS_KEY_PARENT_INFO,
+        kKeyChildInfo           = OT_SETTINGS_KEY_CHILD_INFO,
+        kKeySlaacIidSecretKey   = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
+        kKeySrpEcdsaKey         = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
+        kKeySrpClientInfo       = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
+        kKeySrpServerInfo       = OT_SETTINGS_KEY_SRP_SERVER_INFO,
+        kKeyBrUlaPrefix         = OT_SETTINGS_KEY_BR_ULA_PREFIX,
+        kKeyBrOnLinkPrefixes    = OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES,
+        kKeyBorderAgentId       = OT_SETTINGS_KEY_BORDER_AGENT_ID,
+        kKeyTcatCommrCert       = OT_SETTINGS_KEY_TCAT_COMMR_CERT,
+        kKeyThreadDirectKeys    = OT_SETTINGS_KEY_THREAD_DIRECT_KEYS,
+        kKeyThreadDirectKeyRefs = OT_SETTINGS_KEY_THREAD_DIRECT_KEY_REFS,
     };
 
-    static constexpr Key kLastKey = kKeyTcatCommrCert; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeyThreadDirectKeyRefs; ///< The last (numerically) enumerator value in `Key`.
 
     static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
                   "Core settings keys overlap with vendor reserved keys");
@@ -682,6 +685,112 @@ public:
     };
 #endif
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+
+    /**
+     * Represents a Thread Direct key info entry stored in settings.
+     */
+    OT_TOOL_PACKED_BEGIN
+    class ThreadDirectKeyInfo : public Clearable<ThreadDirectKeyInfo>
+    {
+        friend class Settings;
+
+    public:
+        /**
+         * Initializes the `ThreadDirectKeyInfo` object.
+         */
+        void Init(void) { Clear(); }
+
+#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        static constexpr Key kKey = kKeyThreadDirectKeys; ///< The associated key.
+
+        /**
+         * Gets the literal key.
+         *
+         * @returns The literal key.
+         */
+        const ThreadDirect::LiteralKey &GetKey(void) const { return mKey; }
+
+        /**
+         * Sets the literal key.
+         *
+         * @param[in] aKey  The literal key.
+         */
+        void SetKey(const ThreadDirect::LiteralKey &aKey) { mKey = aKey; }
+#else
+        static constexpr Key kKey = kKeyThreadDirectKeyRefs; ///< The associated key.
+
+        /**
+         * Gets the key reference (`KeyRef`).
+         *
+         * @returns The key reference.
+         */
+        ThreadDirect::KeyRef GetKeyRef(void) const { return LittleEndian::HostSwap32(mKeyRef); }
+
+        /**
+         * Sets the key reference (`KeyRef`).
+         *
+         * @param[in] aKeyRef  The key reference.
+         */
+        void SetKeyRef(ThreadDirect::KeyRef aKeyRef) { mKeyRef = LittleEndian::HostSwap32(aKeyRef); }
+#endif
+
+        /**
+         * Gets the MAC security frame counter.
+         *
+         * @returns The frame counter.
+         */
+        uint32_t GetFrameCounter(void) const { return LittleEndian::HostSwap32(mFrameCounter); }
+
+        /**
+         * Sets the MAC security frame counter.
+         *
+         * @param[in] aFrameCounter  The frame counter.
+         */
+        void SetFrameCounter(uint32_t aFrameCounter) { mFrameCounter = LittleEndian::HostSwap32(aFrameCounter); }
+
+        /**
+         * Gets the Key ID.
+         *
+         * @returns The Key ID.
+         */
+        const ThreadDirect::KeyId &GetKeyId(void) const { return mKeyId; }
+
+        /**
+         * Sets the Key ID.
+         *
+         * @param[in] aKeyId  The Key ID.
+         */
+        void SetKeyId(const ThreadDirect::KeyId &aKeyId) { mKeyId = aKeyId; }
+
+        /**
+         * Indicates whether the `ThreadDirectKeyInfo` matches a given `ThreadDirect::Key` (same key material and ID).
+         *
+         * @param[in] aKey  The `ThreadDirect::Key` to compare with.
+         *
+         * @retval TRUE   If the entry matches @p aKey.
+         * @retval FALSE  If the entry does not match @p aKey.
+         */
+        bool Matches(const ThreadDirect::Key &aKey) const;
+
+    private:
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+        void Log(Action aAction) const;
+#else
+        void Log(Action) const {}
+#endif
+
+#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        ThreadDirect::LiteralKey mKey;
+#else
+        ThreadDirect::KeyRef mKeyRef;
+#endif
+        uint32_t            mFrameCounter;
+        ThreadDirect::KeyId mKeyId;
+    } OT_TOOL_PACKED_END;
+
+#endif // OT_CONFIG_THREAD_DIRECT_ENABLE
+
 protected:
     explicit SettingsBase(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -1061,6 +1170,40 @@ public:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    /**
+     * Saves or updates a Thread Direct key entry in the settings.
+     *
+     * Also updates the saved frame counter on @p aKey (advancing it by `kStoredCounterAhead`).
+     *
+     * @param[in,out] aKey  The Thread Direct key to save.
+     */
+    void SaveThreadDirectKey(ThreadDirect::Key &aKey);
+
+    /**
+     * Deletes a Thread Direct key entry matching @p aKey from the settings.
+     *
+     * @param[in] aKey  The Thread Direct key to delete.
+     */
+    void DeleteThreadDirectKey(const ThreadDirect::Key &aKey);
+
+    /**
+     * Deletes all Thread Direct key entries from the settings.
+     */
+    void DeleteAllThreadDirectKeys(void);
+
+    /**
+     * Retrieves a Thread Direct key info entry at a given index from the settings.
+     *
+     * @param[in]  aIndex    The index to read.
+     * @param[out] aKeyInfo  A reference to `ThreadDirectKeyInfo` to output the read value.
+     *
+     * @retval kErrorNone      Successfully read the value.
+     * @retval kErrorNotFound  No corresponding value in the setting store at @p aIndex.
+     */
+    Error ReadThreadDirectKey(int aIndex, ThreadDirectKeyInfo &aKeyInfo) const;
+#endif
+
 private:
 #if OPENTHREAD_FTD
     class ChildInfoIteratorBuilder : public InstanceLocator
@@ -1081,6 +1224,10 @@ private:
     Error ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const;
     void  SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength);
     void  DeleteEntry(Key aKey);
+
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    void RemoveMatchingThreadDirectKeys(const ThreadDirect::Key &aKey, bool aKeepEntryMatchingFrameCounter);
+#endif
 
     static void Log(Action aAction, Error aError, Key aKey, const void *aValue = nullptr);
 

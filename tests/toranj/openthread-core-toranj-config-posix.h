@@ -89,6 +89,10 @@
 // them. The `toranj` build under the simulation platform covers the
 // opposite/alternative configurations (e.g., allows `USE_HEAP`).
 
+#define OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE 0
+
+#define OPENTHREAD_CONFIG_TD_MAX_REGISTERED_KEYS 8
+
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE 0
 
 #define OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE 1
