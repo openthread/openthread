@@ -78,6 +78,7 @@
 #include "cli/cli_srp_server.hpp"
 #include "cli/cli_tcat.hpp"
 #include "cli/cli_tcp.hpp"
+#include "cli/cli_thread_direct.hpp"
 #include "cli/cli_udp.hpp"
 #include "cli/cli_utils.hpp"
 
@@ -459,6 +460,10 @@ private:
     SrpServer mSrpServer;
 #endif
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    ThreadDirect mThreadDirect;
+#endif
+
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     History mHistory;
 #endif
@@ -468,6 +473,7 @@ private:
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
     Tcat mTcat;
 #endif
+
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     PingSender mPing;
 #endif
