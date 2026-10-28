@@ -477,14 +477,6 @@ jobs:
       with:
         submodules: recursive
         persist-credentials: false
-    - name: Bootstrap
-      timeout-minutes: 10
-      shell: bash ./script/retry {0}
-      run: |
-        brew update
-        rm -f ninja-mac.zip /usr/local/bin/ninja
-        wget --timeout=30 --tries 4 https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip
-        unzip -o ninja-mac.zip && mv ninja /usr/local/bin/.
     - name: Build
       run: |
         case ${{ matrix.target }} in

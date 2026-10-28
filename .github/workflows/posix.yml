@@ -261,8 +261,6 @@ jobs:
         rm -f /usr/local/bin/python3.11
         rm -f /usr/local/bin/python3-config
         rm -f /usr/local/bin/python3.11-config
-        brew update
-        brew install ninja
         sudo bash script/install_socat
     - name: Build
       run: |
