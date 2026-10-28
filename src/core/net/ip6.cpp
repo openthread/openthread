@@ -390,6 +390,8 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     uint8_t  dscp;
     uint16_t payloadLength = aMessage.GetLength();
 
+    SuccessOrExit(error = ApplyTmfOriginFilter(aMessage, aIpProto));
+
     if ((aIpProto == kProtoUdp) &&
         Get<Tmf::Agent>().IsTmfMessage(aMessageInfo.GetSockAddr(), aMessageInfo.GetPeerAddr(),
                                        aMessageInfo.GetPeerPort()))
@@ -611,6 +613,8 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         VerifyOrExit((fragment = NewMessage()) != nullptr, error = kErrorNoBufs);
         IgnoreError(fragment->SetPriority(aMessage.GetPriority()));
         fragment->SetLoopbackToHostAllowed(aMessage.IsLoopbackToHostAllowed());
+        fragment->SetOrigin(aMessage.GetOrigin());
+        fragment->SetLinkSecurityEnabled(aMessage.IsLinkSecurityEnabled());
         SuccessOrExit(error = fragment->SetLength(aMessage.GetOffset() + sizeof(fragmentHeader) + payloadFragment));
 
         header.SetPayloadLength(payloadFragment + sizeof(fragmentHeader));
@@ -650,6 +654,7 @@ Error Ip6::HandleFragment(Message &aMessage)
     Error          error = kErrorNone;
     Header         header, headerBuffer;
     FragmentHeader fragmentHeader;
+    ThreadLinkInfo linkInfo;
     Message       *message         = nullptr;
     uint16_t       offset          = 0;
     uint16_t       payloadFragment = 0;
@@ -670,7 +675,9 @@ Error Ip6::HandleFragment(Message &aMessage)
         SuccessOrExit(error = msg.Read(0, headerBuffer));
 
         if (msg.GetDatagramTag() == fragmentHeader.GetIdentification() &&
-            headerBuffer.GetSource() == header.GetSource() && headerBuffer.GetDestination() == header.GetDestination())
+            headerBuffer.GetSource() == header.GetSource() &&
+            headerBuffer.GetDestination() == header.GetDestination() && msg.GetOrigin() == aMessage.GetOrigin() &&
+            msg.IsLinkSecurityEnabled() == aMessage.IsLinkSecurityEnabled())
         {
             message = &msg;
             break;
@@ -699,6 +706,17 @@ Error Ip6::HandleFragment(Message &aMessage)
         message->SetTimestampToNow();
         message->SetOffset(0);
         message->SetDatagramTag(fragmentHeader.GetIdentification());
+        message->SetOrigin(aMessage.GetOrigin());
+        message->SetLinkSecurityEnabled(aMessage.IsLinkSecurityEnabled());
+
+        // The link info (PAN ID, channel, RSS, radio type) of the first
+        // fragment, when received over Thread radio, is copied to the
+        // reassembled datagram.
+
+        if (aMessage.GetLinkInfo(linkInfo) == kErrorNone)
+        {
+            message->UpdateLinkInfoFrom(linkInfo);
+        }
 
         header.SetNextHeader(fragmentHeader.GetNextHeader());
         SuccessOrExit(error = message->Append(header));
@@ -882,10 +900,10 @@ exit:
 
 Error Ip6::ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHeader, OffsetRange &aOffsetRange) const
 {
-    // Walks the extension header chain starting at the message offset,
-    // updating `aNextHeader` in place to the final upper-layer
-    // protocol carried in `aMessage`, with `aOffsetRange` starting at
-    // the corresponding upper-layer header.
+    // Walks the extension header chain starting at the beginning of
+    // `aOffsetRange`, updating `aNextHeader` in place to the final
+    // upper-layer protocol carried in `aMessage`, with `aOffsetRange`
+    // starting at the corresponding upper-layer header.
     //
     // A continuation (non-first) fragment does not contain the
     // upper-layer header; in this case `aNextHeader` is left as
@@ -898,8 +916,6 @@ Error Ip6::ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHead
     static constexpr uint8_t kMaxExtHeaderChain = 8;
 
     Error error = kErrorNone;
-
-    aOffsetRange.InitFromMessageOffsetToEnd(aMessage);
 
     for (uint8_t numHeaders = 0;; numHeaders++)
     {
@@ -946,11 +962,67 @@ bool Ip6::HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const
     bool        hasTunnel = true;
     OffsetRange offsetRange;
 
+    offsetRange.InitFromMessageOffsetToEnd(aMessage);
     SuccessOrExit(ResolveUpperLayerProtocol(aMessage, aNextHeader, offsetRange));
     hasTunnel = (aNextHeader == kProtoIp6);
 
 exit:
     return hasTunnel;
+}
+
+Error Ip6::ApplyTmfOriginFilter(const Message &aMessage, uint8_t aNextHeader) const
+{
+    // Checks whether a host-untrusted message is a TMF message (a UDP
+    // datagram to the TMF port), which must be dropped. Returns
+    // `kErrorDrop` for such a message, `kErrorParse` if its
+    // upper-layer header cannot be resolved or read, and `kErrorNone`
+    // otherwise (including any message that is not host-untrusted).
+    //
+    // The header at the message offset is the one `aNextHeader`
+    // indicates: the one following the IPv6 header in
+    // `HandleDatagram()`, or the upper-layer header in
+    // `SendDatagram()`, before the IPv6 header is added.
+    //
+    // A multicast message to a scope larger than realm-local is
+    // encapsulated in IP-in-IP by `PrepareMulticastToLargerThanRealmLocal()`
+    // before `HandleDatagram()`, so the embedded message is checked.
+    // `SendRaw()` drops a host-untrusted IP-in-IP message, so this is
+    // the only encapsulation expected; a further one is dropped.
+
+    Error       error = kErrorNone;
+    OffsetRange offsetRange;
+    UdpHeader   udpHeader;
+
+    VerifyOrExit(aMessage.IsOriginHostUntrusted());
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    VerifyOrExit(mTmfOriginFilterEnabled);
+#endif
+
+    offsetRange.InitFromMessageOffsetToEnd(aMessage);
+    SuccessOrExit(error = ResolveUpperLayerProtocol(aMessage, aNextHeader, offsetRange));
+
+    if (aNextHeader == kProtoIp6)
+    {
+        Header header;
+
+        SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, header));
+        aNextHeader = header.GetNextHeader();
+        SuccessOrExit(error = ResolveUpperLayerProtocol(aMessage, aNextHeader, offsetRange));
+        VerifyOrExit(aNextHeader != kProtoIp6, error = kErrorDrop);
+    }
+
+    VerifyOrExit(aNextHeader == kProtoUdp);
+    SuccessOrExit(error = aMessage.Read(offsetRange, udpHeader));
+
+    if (udpHeader.GetDestinationPort() == Tmf::kUdpPort)
+    {
+        LogInfo("Dropping TMF message from untrusted origin");
+        error = kErrorDrop;
+    }
+
+exit:
+    return error;
 }
 
 Error Ip6::TakeOrCopyMessagePtr(OwnedPtr<Message> &aTargetPtr,
@@ -1362,6 +1434,12 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
 
     aMessagePtr->SetOffset(sizeof(header));
 
+    // Drop an untrusted TMF message before processing the extension
+    // headers, where an MPL option would buffer a copy of it for
+    // retransmission.
+
+    SuccessOrExit(error = ApplyTmfOriginFilter(*aMessagePtr, header.GetNextHeader()));
+
     // Process IPv6 Extension Headers
     nextHeader = header.GetNextHeader();
     SuccessOrExit(error = HandleExtensionHeaders(aMessagePtr, header, nextHeader, receive));
@@ -1416,9 +1494,10 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
         aMessagePtr->Write<uint8_t>(Header::kHopLimitFieldOffset, header.GetHopLimit());
 
         // Resolve any extension headers left unprocessed on the
-        // forward path so the checks below apply to the final
+        // forward path so the check below applies to the final
         // upper-layer protocol.
 
+        upperOffsetRange.InitFromMessageOffsetToEnd(*aMessagePtr);
         SuccessOrExit(error = ResolveUpperLayerProtocol(*aMessagePtr, nextHeader, upperOffsetRange));
 
         if (nextHeader == kProtoIcmp6)
@@ -1428,23 +1507,6 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
             SuccessOrExit(error = aMessagePtr->Read(upperOffsetRange, icmpType));
 
             VerifyOrExit(DoesArrayContain(kForwardIcmpTypes, icmpType), error = kErrorDrop);
-        }
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        if (mTmfOriginFilterEnabled)
-#endif
-        {
-            if (aMessagePtr->IsOriginHostUntrusted() && (nextHeader == kProtoUdp))
-            {
-                UdpHeader udpHeader;
-
-                SuccessOrExit(error = aMessagePtr->Read(upperOffsetRange, udpHeader));
-
-                if (udpHeader.GetDestinationPort() == Tmf::kUdpPort)
-                {
-                    LogInfo("Dropping TMF message from untrusted origin");
-                    ExitNow(error = kErrorDrop);
-                }
-            }
         }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO

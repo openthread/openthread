@@ -437,7 +437,17 @@ void Mpl::HandleRetransmissionTimer(void)
 
             metadata.RemoveFrom(*messageCopy);
             messageCopy->SetLoopbackToHostAllowed(true);
-            messageCopy->SetOrigin(Message::kOriginHostTrusted);
+
+            // A message received over Thread radio is retransmitted
+            // as originating from this device. A message from the host
+            // keeps its origin, so a host-untrusted message is never
+            // retransmitted as trusted.
+
+            if (messageCopy->IsOriginThreadNetif())
+            {
+                messageCopy->SetOrigin(Message::kOriginHostTrusted);
+            }
+
             Get<Ip6>().EnqueueDatagram(*messageCopy);
         }
     }
