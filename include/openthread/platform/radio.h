@@ -638,6 +638,9 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
 /**
  * Set the PAN ID for address filtering.
  *
+ * @sa otPlatRadioEnable()
+ * @sa otPlatRadioSetPromiscuous()
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPanId     The IEEE 802.15.4 PAN ID.
  */
@@ -646,6 +649,9 @@ void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanId);
 /**
  * Set the Extended Address for address filtering.
  *
+ * @sa otPlatRadioEnable()
+ * @sa otPlatRadioSetPromiscuous()
+ *
  * @param[in] aInstance    The OpenThread instance structure.
  * @param[in] aExtAddress  A pointer to the IEEE 802.15.4 Extended Address stored in little-endian byte order.
  */
@@ -653,6 +659,9 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 
 /**
  * Set the Short Address for address filtering.
+ *
+ * @sa otPlatRadioEnable()
+ * @sa otPlatRadioSetPromiscuous()
  *
  * @param[in] aInstance      The OpenThread instance structure.
  * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
@@ -935,6 +944,39 @@ otRadioState otPlatRadioGetState(otInstance *aInstance);
 
 /**
  * Enable the radio.
+ *
+ * When the radio is enabled and address filtering is active (i.e., promiscuous mode is disabled; see
+ * `otPlatRadioSetPromiscuous()`), the radio platform is expected to perform the following address filtering behaviors:
+ *
+ * - Accept received Data and MAC Command frames that have no destination address (Destination Addressing Mode =
+ *   `0b00`), in addition to Beacon frames and frames addressed to the broadcast address (`0xffff`) or matching the
+ *   short address (or alternate short address) or extended address configured via `otPlatRadioSetShortAddress()`,
+ *   `otPlatRadioSetAlternateShortAddress()`, and `otPlatRadioSetExtendedAddress()`.
+ * - Check a received frame's Destination PAN ID against the PAN ID configured via `otPlatRadioSetPanId()` (or the
+ *   broadcast PAN ID `0xffff`) only when a Destination PAN ID field is present in the frame. Frames that omit the
+ *   Destination PAN ID field MUST NOT be rejected due to PAN ID mismatch, and the Source PAN ID (if present) MUST NOT
+ *   be checked against the configured PAN ID.
+ * - Thread frames that omit the destination address (Destination Addressing Mode = `0b00`) always have the
+ *   Acknowledgment Request (`AR`) bit set to `0`. Received frames with no destination address (Destination Addressing
+ *   Mode = `0b00`) SHOULD NOT be acknowledged, even if the `AR` bit is set to `1`.
+ *
+ * Address filtering is required by the radio platform for auto-ACK generation. While filtering received frames in the
+ * radio platform before calling `otPlatRadioReceiveDone()` is not strictly required (as the OpenThread `Mac` layer
+ * also performs address filtering on received frames), it is recommended (especially on RCP platforms to avoid
+ * forwarding unaddressed frames over Spinel to the host), and whenever performed by the radio platform, it MUST follow
+ * the rules above.
+ *
+ * @note On some IEEE 802.15.4 radio hardware or drivers (e.g., `nrf_802154`), accepting Data and MAC Command frames
+ * with no destination address (Destination Addressing Mode = `0b00`) requires enabling PAN Coordinator mode
+ * (`macPanCoord = true`). When using such a hardware filter, platform implementations should ensure that it does not
+ * reject frames whose Source PAN ID differs from the configured PAN ID when the Destination PAN ID is omitted, and
+ * should suppress auto-ACK generation for frames with Destination Addressing Mode = `0b00` even when `AR = 1`.
+ *
+ * @sa otPlatRadioSetPanId()
+ * @sa otPlatRadioSetExtendedAddress()
+ * @sa otPlatRadioSetShortAddress()
+ * @sa otPlatRadioSetAlternateShortAddress()
+ * @sa otPlatRadioSetPromiscuous()
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
