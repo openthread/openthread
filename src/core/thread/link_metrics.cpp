@@ -619,6 +619,16 @@ exit:
 
 void Subject::Free(SeriesInfo &aSeriesInfo) { mSeriesInfoPool.Free(aSeriesInfo); }
 
+void Subject::FreeAll(LinkedList<SeriesInfo> &aSeriesInfoList)
+{
+    SeriesInfo *seriesInfo;
+
+    while ((seriesInfo = aSeriesInfoList.Pop()) != nullptr)
+    {
+        Free(*seriesInfo);
+    }
+}
+
 Error Subject::ReadTypeIdsFromMessage(const Message &aMessage, const OffsetRange &aOffsetRange, Metrics &aMetrics)
 {
     Error       error       = kErrorNone;

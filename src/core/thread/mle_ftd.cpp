@@ -3236,9 +3236,6 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
 
     aNeighbor.GetLinkInfo().Clear();
     aNeighbor.SetState(Neighbor::kStateInvalid);
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    aNeighbor.RemoveAllForwardTrackingSeriesInfo();
-#endif
 
 exit:
     return;
@@ -3339,6 +3336,9 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     RouterIdMask routerIdMask;
     uint8_t      routerId;
     Router      *router;
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    Neighbor::SeriesInfoList parentSeriesInfoList;
+#endif
 
     mAddressSolicitPending = false;
 
@@ -3380,6 +3380,12 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
 
     SetRouterId(routerId);
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    // Save the series tracked for `mParent` before `SetStateRouter()`
+    // invalidates it, so they move to its router entry below.
+    parentSeriesInfoList = mParent.GetForwardTrackingSeriesInfoList();
+#endif
+
     SetStateRouter(Rloc16FromRouterId(mRouterId));
 
     // We keep the router table next hop and cost as what we had as a
@@ -3404,6 +3410,9 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     router = mRouterTable.FindRouterById(mParent.GetRouterId());
     VerifyOrExit(router != nullptr);
     router->SetFrom(mParent);
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    router->GetForwardTrackingSeriesInfoList() = parentSeriesInfoList;
+#endif
     router->SetState(Neighbor::kStateValid);
     router->SetNextHopToInvalid();
 
@@ -3454,6 +3463,9 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     }
 
 exit:
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    Get<LinkMetrics::Subject>().FreeAll(parentSeriesInfoList);
+#endif
     mAnnounceHandler.HandleRouterRoleTransitionAttemptDone();
 }
 

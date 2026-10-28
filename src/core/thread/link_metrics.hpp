@@ -314,6 +314,13 @@ public:
      */
     void Free(SeriesInfo &aSeriesInfo);
 
+    /**
+     * Frees all SeriesInfo entries in a given list.
+     *
+     * @param[in,out]  aSeriesInfoList   A reference to the list of SeriesInfo entries to free. It is left empty.
+     */
+    void FreeAll(LinkedList<SeriesInfo> &aSeriesInfoList);
+
 private:
     // Max number of SeriesInfo that could be allocated by the pool.
 #if OPENTHREAD_FTD

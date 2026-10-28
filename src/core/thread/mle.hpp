@@ -1802,7 +1802,7 @@ private:
     public:
         void Init(Instance &aInstance) { Parent::Init(aInstance); }
         void Clear(void);
-        void CopyTo(Parent &aParent) const;
+        void CopyTo(Parent &aParent);
 
         RxChallenge  mRxChallenge;
         Connectivity mConnectivity;
