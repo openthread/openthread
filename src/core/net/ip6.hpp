@@ -345,6 +345,7 @@ private:
                           bool          &aForwardThread,
                           bool          &aForwardHost,
                           bool          &aReceive) const;
+    bool  CanReturnToHost(const Message &aMessage, const Header &aHeader) const;
     Error PassToHost(OwnedPtr<Message> &aMessagePtr,
                      const Header      &aHeader,
                      uint8_t            aIpProto,

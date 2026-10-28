@@ -328,6 +328,7 @@ public:
         kSubTypeMplRetransmission      = 2, ///< MPL next retransmission message
         kSubTypeJoinerEntrust          = 3, ///< Joiner Entrust
         kSubTypeJoinerFinalizeResponse = 4, ///< Joiner Finalize Response
+        kSubTypeNat64Translated        = 5, ///< IPv6 message translated from IPv4 by NAT64
 
     };
 

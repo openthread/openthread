@@ -299,6 +299,7 @@ Error Translator::TranslateIp4ToIp6(Message &aMessage)
     }
 
     aMessage.SetType(Message::kTypeIp6);
+    aMessage.SetSubType(Message::kSubTypeNat64Translated);
 
     mCounters.Count4To6Packet(ip4Headers);
     mapping->mCounters.Count4To6Packet(ip4Headers);

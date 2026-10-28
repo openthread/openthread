@@ -1282,6 +1282,7 @@ void Ip6::DetermineAction(const Message &aMessage,
     if (Get<NetworkData::Leader>().RouteLookup(aHeader.GetSource(), aHeader.GetDestination(), rloc16) != kErrorNone)
     {
         // No route in mesh, forward to host (as a last resort).
+        VerifyOrExit(CanReturnToHost(aMessage, aHeader));
         LogInfo("Failed to find valid route for: %s", aHeader.GetDestination().ToString().AsCString());
         aForwardHost = true;
         ExitNow();
@@ -1293,7 +1294,7 @@ void Ip6::DetermineAction(const Message &aMessage,
 
     if (Get<Mle::Mle>().HasRloc16(rloc16))
     {
-        aForwardHost = true;
+        aForwardHost = CanReturnToHost(aMessage, aHeader);
     }
     else
     {
@@ -1302,6 +1303,40 @@ void Ip6::DetermineAction(const Message &aMessage,
 
 exit:
     return;
+}
+
+bool Ip6::CanReturnToHost(const Message &aMessage, const Header &aHeader) const
+{
+    // Determines whether a unicast message that `DetermineAction()`
+    // would forward to the host may be passed to it. A message from
+    // the host was already routed to Thread by the host. Returning
+    // it can make the host route it to Thread again, so that it
+    // circulates between the host and Thread until its hop limit
+    // expires.
+    //
+    // NAT64 messages are allowed. A message to the NAT64 prefix is
+    // passed to the host as a translated IPv4 message. A message
+    // translated from an IPv4 message from the host is a reply to a
+    // requester that may be on the host, and the host has not seen
+    // it as an IPv6 message yet.
+
+    bool canReturn = true;
+
+    OT_UNUSED_VARIABLE(aHeader);
+
+    VerifyOrExit(aMessage.IsOriginHostUntrusted());
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    VerifyOrExit(!Get<Nat64::Translator>().IsTranslatedIp6Destination(aHeader.GetDestination()));
+    VerifyOrExit(aMessage.GetSubType() != Message::kSubTypeNat64Translated);
+#endif
+
+    LogInfo("Dropping host-originated packet to %s: would return to host",
+            aHeader.GetDestination().ToString().AsCString());
+    canReturn = false;
+
+exit:
+    return canReturn;
 }
 
 Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, uint8_t aRecursionDepth)

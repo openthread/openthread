@@ -181,6 +181,8 @@ public:
     /**
      * Translates an IPv4 message to an IPv6 message.
      *
+     * On success, the sub-type of @p aMessage is set to `Message::kSubTypeNat64Translated`.
+     *
      * @param[in,out] aMessage    The message to be processed.
      *
      * @retval kErrorNone    The message was successfully translated from IPv4 to IPv6.
@@ -199,6 +201,21 @@ public:
      *                       destined for a NAT64-mapped address). In this case, the message is not modified.
      */
     Error TranslateIp6ToIp4(Message &aMessage);
+
+    /**
+     * Indicates whether an IPv6 message to a given destination is translated to IPv4 by `TranslateIp6ToIp4()`.
+     *
+     * The translator translates a message when it is active and the destination matches its NAT64 prefix.
+     *
+     * @param[in] aDestination  The IPv6 destination address of the message.
+     *
+     * @retval TRUE   The translator is active and @p aDestination matches its NAT64 prefix.
+     * @retval FALSE  The translator is not active or @p aDestination does not match its NAT64 prefix.
+     */
+    bool IsTranslatedIp6Destination(const Ip6::Address &aDestination) const
+    {
+        return (mState == kStateActive) && aDestination.MatchesPrefix(mNat64Prefix);
+    }
 
     /**
      * Sets the CIDR used when setting the source address of the outgoing translated IPv4 datagrams. A valid CIDR must
