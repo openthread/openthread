@@ -195,6 +195,25 @@ template <typename UintType> bool CanAddSafely(UintType aFirstValue, UintType aS
 }
 
 /**
+ * Adds two unsigned integers safely, clamping the result to the maximum value of the type on overflow.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in] aFirstValue   The first operand in the addition.
+ * @param[in] aSecondValue  The second operand in the addition.
+ *
+ * @returns The sum of @p aFirstValue and @p aSecondValue, or `NumericLimits<UintType>::kMax` if the addition overflows.
+ */
+template <typename UintType> UintType AddSafely(UintType aFirstValue, UintType aSecondValue)
+{
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
+
+    UintType sum = static_cast<UintType>(aFirstValue + aSecondValue);
+
+    return (sum >= aFirstValue) ? sum : NumericLimits<UintType>::kMax;
+}
+
+/**
  * This template function checks whether a given value is in a given closed range [min, max].
  *
  * Uses `operator<=` to compare the values. The behavior is undefined if the value of @p aMin is greater than @p aMax.
