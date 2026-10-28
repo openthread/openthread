@@ -93,6 +93,11 @@ Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
     return neighbor;
 }
 
+Neighbor *NeighborTable::FindNeighbor(Mac::ShortAddress aShortAddress)
+{
+    return FindNeighbor(aShortAddress, Neighbor::kInStateValidOrRestoring);
+}
+
 Neighbor *NeighborTable::FindNeighbor(Mac::ShortAddress aShortAddress, Neighbor::StateFilter aFilter)
 {
     Neighbor *neighbor = nullptr;
@@ -104,9 +109,19 @@ exit:
     return neighbor;
 }
 
+Neighbor *NeighborTable::FindNeighbor(const Mac::ExtAddress &aExtAddress)
+{
+    return FindNeighbor(aExtAddress, Neighbor::kInStateValidOrRestoring);
+}
+
 Neighbor *NeighborTable::FindNeighbor(const Mac::ExtAddress &aExtAddress, Neighbor::StateFilter aFilter)
 {
     return FindNeighbor(Neighbor::AddressMatcher(aExtAddress, aFilter));
+}
+
+Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress)
+{
+    return FindNeighbor(aMacAddress, Neighbor::kInStateValidOrRestoring);
 }
 
 Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor::StateFilter aFilter)
@@ -128,6 +143,11 @@ Neighbor *NeighborTable::FindChildOrRouter(const Neighbor::AddressMatcher &aMatc
     }
 
     return neighbor;
+}
+
+Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address)
+{
+    return FindNeighbor(aIp6Address, Neighbor::kInStateValidOrRestoring);
 }
 
 Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter)

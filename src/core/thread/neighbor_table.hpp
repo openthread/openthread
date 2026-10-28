@@ -130,50 +130,90 @@ public:
                          Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
-     * Searches in the neighbor table to find a `Neighbor` corresponding to a given short address.
+     * Searches in the neighbor table to find a `Neighbor` corresponding to a given short address also matching state
+     * filter `Neighbor::kInStateValidOrRestoring`.
+     *
+     * @param[in]  aShortAddress  A short address.
+     *
+     * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress, `nullptr` otherwise.
+     */
+    Neighbor *FindNeighbor(Mac::ShortAddress aShortAddress);
+
+    /**
+     * Searches in the neighbor table to find a `Neighbor` corresponding to a given short address and matching a given
+     * state filter.
      *
      * @param[in]  aShortAddress  A short address.
      * @param[in]  aFilter        A neighbor state filter.
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress, `nullptr` otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress and @p aFilter, `nullptr` otherwise.
      */
-    Neighbor *FindNeighbor(Mac::ShortAddress     aShortAddress,
-                           Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
+    Neighbor *FindNeighbor(Mac::ShortAddress aShortAddress, Neighbor::StateFilter aFilter);
 
     /**
-     * Searches in the neighbor table to find a `Neighbor` corresponding to a given MAC Extended Address.
+     * Searches in the neighbor table to find a `Neighbor` corresponding to a given MAC Extended Address also matching
+     * state filter `Neighbor::kInStateValidOrRestoring`.
+     *
+     * @param[in]  aExtAddress   A MAC Extended Address.
+     *
+     * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, `nullptr` otherwise.
+     */
+    Neighbor *FindNeighbor(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * Searches in the neighbor table to find a `Neighbor` corresponding to a given MAC Extended Address and matching a
+     * given state filter.
      *
      * @param[in]  aExtAddress   A MAC Extended Address.
      * @param[in]  aFilter       A neighbor state filter.
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, `nullptr` otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress and @p aFilter, `nullptr` otherwise.
      */
-    Neighbor *FindNeighbor(const Mac::ExtAddress &aExtAddress,
-                           Neighbor::StateFilter  aFilter = Neighbor::kInStateValidOrRestoring);
+    Neighbor *FindNeighbor(const Mac::ExtAddress &aExtAddress, Neighbor::StateFilter aFilter);
 
     /**
-     * Searches in the neighbor table to find a `Neighbor` object corresponding to a given MAC address.
+     * Searches in the neighbor table to find a `Neighbor` object corresponding to a given MAC address also matching
+     * state filter `Neighbor::kInStateValidOrRestoring`.
+     *
+     * @param[in]  aMacAddress  A MAC address.
+     *
+     * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, `nullptr` otherwise.
+     */
+    Neighbor *FindNeighbor(const Mac::Address &aMacAddress);
+
+    /**
+     * Searches in the neighbor table to find a `Neighbor` object corresponding to a given MAC address and matching a
+     * given state filter.
      *
      * @param[in]  aMacAddress  A MAC address.
      * @param[in]  aFilter      A neighbor state filter.
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, `nullptr` otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress and @p aFilter, `nullptr` otherwise.
      */
-    Neighbor *FindNeighbor(const Mac::Address   &aMacAddress,
-                           Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
+    Neighbor *FindNeighbor(const Mac::Address &aMacAddress, Neighbor::StateFilter aFilter);
 
 #if OPENTHREAD_FTD
 
     /**
-     * Searches in the neighbor table to find a `Neighbor` object corresponding to a given IPv6 address.
+     * Searches in the neighbor table to find a `Neighbor` object corresponding to a given IPv6 address also matching
+     * state filter `Neighbor::kInStateValidOrRestoring`.
      *
      * @param[in]  aIp6Address  An IPv6 address.
-     * @pram[in]   aFilter      A neighbor state filter.
      *
      * @returns A pointer to the `Neighbor` corresponding to @p aIp6Address, `nullptr` otherwise.
      */
-    Neighbor *FindNeighbor(const Ip6::Address   &aIp6Address,
-                           Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
+    Neighbor *FindNeighbor(const Ip6::Address &aIp6Address);
+
+    /**
+     * Searches in the neighbor table to find a `Neighbor` object corresponding to a given IPv6 address and matching a
+     * given state filter.
+     *
+     * @param[in]  aIp6Address  An IPv6 address.
+     * @param[in]  aFilter      A neighbor state filter.
+     *
+     * @returns A pointer to the `Neighbor` corresponding to @p aIp6Address and @p aFilter, `nullptr` otherwise.
+     */
+    Neighbor *FindNeighbor(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter);
 
     /**
      * Searches in the neighbor table to find a `Neighbor` for which a one-way link is maintained (as in the
