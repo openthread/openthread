@@ -106,6 +106,26 @@ void TestCoapsPsk(void)
     const uint8_t kPsk[]         = {'p', 's', 'k'};
     const char    kPskIdentity[] = "pskIdentity";
 
+    Ip6::SockAddr sockaddr;
+    sockaddr.SetAddress(leader.Get<Mle::Mle>().GetMeshLocalEid());
+    sockaddr.SetPort(OT_DEFAULT_COAP_SECURE_PORT);
+
+    Log("Verify Connect and receive when cipher suite is not set");
+    SuccessOrQuit(leader.Get<Coap::ApplicationCoapSecure>().Open(OT_DEFAULT_COAP_SECURE_PORT));
+    SuccessOrQuit(router.Get<Coap::ApplicationCoapSecure>().Open(0));
+    VerifyOrQuit(router.Get<Coap::ApplicationCoapSecure>().Connect(sockaddr) == kErrorInvalidState);
+
+    router.Get<Coap::ApplicationCoapSecure>().SetPreSharedKey(
+        kPsk, sizeof(kPsk), reinterpret_cast<const uint8_t *>(kPskIdentity), strlen(kPskIdentity));
+    SuccessOrQuit(router.Get<Coap::ApplicationCoapSecure>().Connect(sockaddr));
+    nexus.AdvanceTime(1 * 1000);
+    VerifyOrQuit(!leader.Get<Coap::ApplicationCoapSecure>().IsConnectionActive());
+    router.Get<Coap::ApplicationCoapSecure>().Disconnect();
+    nexus.AdvanceTime(1 * 1000);
+
+    leader.Get<Coap::ApplicationCoapSecure>().Close();
+    router.Get<Coap::ApplicationCoapSecure>().Close();
+
     Log("Start CoAPS on Leader (PSK)");
     leader.Get<Coap::ApplicationCoapSecure>().SetPreSharedKey(
         kPsk, sizeof(kPsk), reinterpret_cast<const uint8_t *>(kPskIdentity), strlen(kPskIdentity));
@@ -118,10 +138,6 @@ void TestCoapsPsk(void)
     router.Get<Coap::ApplicationCoapSecure>().SetPreSharedKey(
         kPsk, sizeof(kPsk), reinterpret_cast<const uint8_t *>(kPskIdentity), strlen(kPskIdentity));
     SuccessOrQuit(router.Get<Coap::ApplicationCoapSecure>().Open(0));
-
-    Ip6::SockAddr sockaddr;
-    sockaddr.SetAddress(leader.Get<Mle::Mle>().GetMeshLocalEid());
-    sockaddr.SetPort(OT_DEFAULT_COAP_SECURE_PORT);
 
     Log("Connect Router to Leader");
     SuccessOrQuit(router.Get<Coap::ApplicationCoapSecure>().Connect(sockaddr));
