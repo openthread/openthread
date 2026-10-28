@@ -1055,8 +1055,8 @@ otError otPlatRadioSleep(otInstance *aInstance);
  * If the radio is receiving a frame or transmitting an ACK, the ongoing receive operation SHOULD be completed
  * first before switching to `aChannel`. In this case, the channel change is scheduled to occur right after the
  * receive operation is done.
- * In the exceptional case that a frame receive operation is aborted, this event SHOULD be reported via
- * `otPlatRadioReceiveDone()` with `aError` set to `OT_ERROR_ABORT`.
+ * In the exceptional case that a frame receive operation is aborted, this event MAY be reported via
+ * `otPlatRadioReceiveDone()` with `aError` set to `OT_ERROR_ABORT` (or the callback MAY be omitted).
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aChannel   The channel to use for receiving.
@@ -1244,8 +1244,8 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * and `OT_RADIO_CAPS_TRANSMIT_TIMING`). In that case, the timed frame transmission has priority over ongoing
  * reception and the ongoing receive operation (frame reception and/or ACK transmission) MUST be aborted if
  * the radio determines it cannot finish the operation before the scheduled frame transmission is due.
- * An ongoing frame reception that is aborted SHOULD be reported via `otPlatRadioReceiveDone()` with `aError`
- * set to `OT_ERROR_ABORT`.
+ * An ongoing frame reception that is aborted MAY be reported via `otPlatRadioReceiveDone()` with `aError`
+ * set to `OT_ERROR_ABORT` (or the callback MAY be omitted).
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aFrame     A pointer to the frame to be transmitted.
@@ -1367,7 +1367,7 @@ otRadioFrame *otPlatRadioGetScheduledTxFrame(otInstance *aInstance);
  *     invoking `otPlatRadioScheduledTxDone()` with `OT_ERROR_ABORT`. The radio platform MUST NOT invoke
  *     `otPlatRadioScheduledTxDone()` synchronously from within `otPlatRadioScheduleTx()`. If
  *     `otPlatRadioCancelScheduledTx()` is called before this deferred `OT_ERROR_ABORT` callback is invoked, the radio
- *     platform MAY either cancel the pending callback and return `OT_ERROR_NONE`, or return `OT_ERROR_BUSY` and
+ *     platform MUST either cancel the pending callback and return `OT_ERROR_NONE`, or return `OT_ERROR_BUSY` and
  *     proceed with invoking the `otPlatRadioScheduledTxDone()` callback.
  *
  * - Operational Precedence, Preemption, and State Restoration:
@@ -1376,15 +1376,15 @@ otRadioFrame *otPlatRadioGetScheduledTxFrame(otInstance *aInstance);
  *       frame (e.g., after SHR detection) or transmitting an acknowledgment for a received frame when the radio needs
  *       to prepare/transmit for @p aTxTime, the scheduled transmission SHOULD take precedence—the active reception or
  *       acknowledgment transmission SHOULD be stopped/aborted so that the scheduled transmission goes out on time at
- *       @p aTxTime. When an ongoing reception or acknowledgment transmission is aborted, the radio platform MAY either
- *       invoke `otPlatRadioReceiveDone()` with `OT_ERROR_ABORT` or not invoke `otPlatRadioReceiveDone()` at all (if the
- *       radio platform still delivers a received frame whose acknowledgment transmission was aborted via
- *       `otPlatRadioReceiveDone()` with `OT_ERROR_NONE`, `mAckedWithFramePending` and `mAckedWithSecEnhAck` MUST be set
- *       to `false`).
+ *       @p aTxTime. When an ongoing frame reception is aborted, the radio platform MAY report this via
+ *       `otPlatRadioReceiveDone()` with `OT_ERROR_ABORT` (or omit invoking otPlatRadioReceiveDone()). If a frame was
+ *       already received and only its ACK transmission was aborted, and the radio platform still delivers the received
+ *       frame via `otPlatRadioReceiveDone()` with OT_ERROR_NONE, then `mAckedWithFramePending` and
+ *       `mAckedWithSecEnhAck` MUST be both set to false.
  *     - Concurrent `otPlatRadioTransmit()`: If the radio is instructed to transmit a frame via `otPlatRadioTransmit()`
  *       close to or overlapping with a previously scheduled transmission, the scheduled transmission SHOULD take
  *       precedence and be performed at @p aTxTime. For the conflicting `otPlatRadioTransmit()` operation, the radio
- *       platform MAY either:
+ *       platform MUST either:
  *       - Abort the `otPlatRadioTransmit()` operation and invoke `otPlatRadioTxDone()` with `OT_ERROR_ABORT` (so the
  *         OpenThread stack does not remain blocked waiting for `otPlatRadioTxDone()` and can handle any retries), or
  *       - Defer the `otPlatRadioTransmit()` operation until after the scheduled transmission completes, provided that
@@ -1539,7 +1539,7 @@ otError otPlatRadioScheduleTx(otInstance *aInstance, otRadioTime64 aTxTime);
  *   - The OpenThread stack will wait until `otPlatRadioScheduledTxDone()` is invoked before modifying the scheduled TX
  *     frame buffer or scheduling a new transmission.
  * - Note that if a deferred `OT_ERROR_ABORT` callback is pending (e.g., due to a past/missed target time or Coex
- *   denial), the radio platform MAY handle `otPlatRadioCancelScheduledTx()` in whichever way it prefers: it may either
+ *   denial), the radio platform handles `otPlatRadioCancelScheduledTx()` in one of these two ways: either
  *   cancel the pending callback and return `OT_ERROR_NONE`, or return `OT_ERROR_BUSY` and let the
  *   `otPlatRadioScheduledTxDone()` callback be invoked.
  *
