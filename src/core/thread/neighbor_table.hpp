@@ -94,40 +94,14 @@ public:
     explicit NeighborTable(Instance &aInstance);
 
     /**
-     * Searches among parent and parent candidate to find a `Neighbor` corresponding to a given short
-     * address.
-     *
-     * @param[in]  aShortAddress  A short address.
-     * @param[in]  aFilter        A neighbor state filter
-     *
-     * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress, `nullptr` otherwise.
-     */
-    Neighbor *FindParent(Mac::ShortAddress     aShortAddress,
-                         Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
-
-    /**
      * Searches in parent and parent candidate to find a `Neighbor` corresponding to a given MAC Extended
-     * Address.
+     * Address also matching state filter `kInStateValidOrRestoring`.
      *
      * @param[in]  aExtAddress   A MAC Extended Address.
-     * @param[in]  aFilter       A neighbor state filter
      *
      * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, `nullptr` otherwise.
      */
-    Neighbor *FindParent(const Mac::ExtAddress &aExtAddress,
-                         Neighbor::StateFilter  aFilter = Neighbor::kInStateValidOrRestoring);
-
-    /**
-     * Searches among parent and parent candidate to find a `Neighbor` object corresponding to a given MAC
-     * address.
-     *
-     * @param[in]  aMacAddress  A MAC address.
-     * @param[in]  aFilter      A neighbor state filter
-     *
-     * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, `nullptr` otherwise.
-     */
-    Neighbor *FindParent(const Mac::Address   &aMacAddress,
-                         Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
+    Neighbor *FindParent(const Mac::ExtAddress &aExtAddress);
 
     /**
      * Searches in the neighbor table to find a `Neighbor` corresponding to a given short address.

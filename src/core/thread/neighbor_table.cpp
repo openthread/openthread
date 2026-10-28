@@ -59,19 +59,9 @@ Neighbor *NeighborTable::FindParent(const Neighbor::AddressMatcher &aMatcher)
     return neighbor;
 }
 
-Neighbor *NeighborTable::FindParent(Mac::ShortAddress aShortAddress, Neighbor::StateFilter aFilter)
+Neighbor *NeighborTable::FindParent(const Mac::ExtAddress &aExtAddress)
 {
-    return FindParent(Neighbor::AddressMatcher(aShortAddress, aFilter));
-}
-
-Neighbor *NeighborTable::FindParent(const Mac::ExtAddress &aExtAddress, Neighbor::StateFilter aFilter)
-{
-    return FindParent(Neighbor::AddressMatcher(aExtAddress, aFilter));
-}
-
-Neighbor *NeighborTable::FindParent(const Mac::Address &aMacAddress, Neighbor::StateFilter aFilter)
-{
-    return FindParent(Neighbor::AddressMatcher(aMacAddress, aFilter));
+    return FindParent(Neighbor::AddressMatcher(aExtAddress, Neighbor::kInStateValidOrRestoring));
 }
 
 Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
