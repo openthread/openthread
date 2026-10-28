@@ -79,15 +79,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-uint8_t otLinkGetWakeupChannel(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupChannel();
-}
-
-otError otLinkSetWakeupChannel(otInstance *, uint8_t) { return kErrorNotImplemented; }
-#endif
-
 uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().GetSupportedChannelMask().GetMask();
@@ -489,13 +480,3 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 
     return error;
 }
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-otError otLinkSetWakeUpListenEnabled(otInstance *, bool) { return kErrorNotImplemented; }
-
-bool otLinkIsWakeupListenEnabled(otInstance *) { return false; }
-
-void otLinkGetWakeupListenParameters(otInstance *, uint32_t *, uint32_t *) {}
-
-otError otLinkSetWakeupListenParameters(otInstance *, uint32_t, uint32_t) { return kErrorNotImplemented; }
-#endif

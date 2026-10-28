@@ -87,7 +87,6 @@ Mac::Mac(Instance &aInstance)
     , mCslChannel(0)
     , mCslPeriod(0)
 #endif
-    , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
     , mActiveScanCallback()
     , mLinks(aInstance)
     , mOperationTask(aInstance)

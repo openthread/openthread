@@ -3304,8 +3304,12 @@ enum
      */
     SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 62,
 
-    /// Wake-up Channel
-    /** Format: `C`
+    /// Wake-up Channel - Deprecated
+    /**
+     * This property is deprecated and is no longer supported. Since it has already been allocated,
+     * the property ID and name remain reserved and MUST NOT be reused for other purposes.
+     *
+     * Format: `C`
      *
      * The Wake-up sample channel. Channel value should be `0` (Set Wake-up Channel unspecified,
      * which means the device will use the PAN channel) or within the range [1, 10] (if 915-MHz

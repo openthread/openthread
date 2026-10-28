@@ -365,11 +365,6 @@ private:
     static void HandleIp6Receive(otMessage *aMessage, void *aContext);
 #endif
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    static void HandleWakeupResult(otError aError, void *aContext);
-    void        HandleWakeupResult(otError aError);
-#endif
-
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE

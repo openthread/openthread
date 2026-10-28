@@ -760,4 +760,8 @@
 #error "OPENTHREAD_CONFIG_P2P_MAX_PEERS was removed (legacy thread-in-mobile)"
 #endif
 
+#ifdef OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL
+#error "OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL was removed (legacy thread-in-mobile)"
+#endif
+
 #endif // OT_CORE_CONFIG_OPENTHREAD_CORE_CONFIG_CHECK_H_
