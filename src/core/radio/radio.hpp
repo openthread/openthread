@@ -103,6 +103,7 @@ constexpr uint32_t kSupportedChannels = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIE
 constexpr uint8_t  kChannelMin        = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN;
 constexpr uint8_t  kChannelMax        = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX;
 #endif
+constexpr uint8_t kDefaultChannel = OPENTHREAD_CONFIG_DEFAULT_CHANNEL;
 
 constexpr uint8_t kFrameMinSize = OT_RADIO_FRAME_MIN_SIZE;
 constexpr uint8_t kFrameMaxSize = OT_RADIO_FRAME_MAX_SIZE;
