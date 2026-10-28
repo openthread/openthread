@@ -46,6 +46,8 @@ namespace Mac {
 
 RegisterLogModule("SubMac");
 
+//---------------------------------------------------------------------------------------------------------------------
+
 SubMac::SubMac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRadioCaps(Get<Radio::Radio>().GetCaps())
@@ -1064,32 +1066,6 @@ exit:
     nextFireTime.ScheduleTimer(mTimer);
 }
 
-void SubMac::TimedRx::Init(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel)
-{
-    mStartTime   = aStartTime;
-    mDuration    = aDuration;
-    mChannel     = aChannel;
-    mIsSpecified = true;
-}
-
-void SubMac::TimedRx::ScheduleOnRadio(Radio::Radio &aRadio) const
-{
-    Error error = aRadio.ReceiveAt(mChannel, Radio::ConvertTime64To32(mStartTime), mDuration);
-
-    LogWarnOnError(error, "Radio::ReceiveAt()");
-}
-
-bool SubMac::TimedRx::operator==(const TimedRx &aOther) const
-{
-    bool matches = false;
-
-    VerifyOrExit(mIsSpecified && aOther.mIsSpecified);
-    matches = (mStartTime == aOther.mStartTime) && (mDuration == aOther.mDuration) && (mChannel == aOther.mChannel);
-
-exit:
-    return matches;
-}
-
 #endif // OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
 
 void SubMac::HandleTimer(void)
@@ -1342,6 +1318,35 @@ void SubMac::NextRadioFireTime::ScheduleTimer(TimerMicro &aTimer) const
 
 exit:
     return;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// TimedRx
+
+void SubMac::TimedRx::Init(Radio::Time64 aStartTime, uint32_t aDuration, uint8_t aChannel)
+{
+    mStartTime   = aStartTime;
+    mDuration    = aDuration;
+    mChannel     = aChannel;
+    mIsSpecified = true;
+}
+
+void SubMac::TimedRx::ScheduleOnRadio(Radio::Radio &aRadio) const
+{
+    Error error = aRadio.ReceiveAt(mChannel, Radio::ConvertTime64To32(mStartTime), mDuration);
+
+    LogWarnOnError(error, "Radio::ReceiveAt()");
+}
+
+bool SubMac::TimedRx::operator==(const TimedRx &aOther) const
+{
+    bool matches = false;
+
+    VerifyOrExit(mIsSpecified && aOther.mIsSpecified);
+    matches = (mStartTime == aOther.mStartTime) && (mDuration == aOther.mDuration) && (mChannel == aOther.mChannel);
+
+exit:
+    return matches;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

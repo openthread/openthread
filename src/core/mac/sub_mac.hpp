@@ -529,6 +529,9 @@ public:
 #endif
 
 private:
+    //------------------------------------------------------------------------------------------------------------------
+    // Constants
+
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
     static constexpr uint8_t  kCsmaMaxBe         = 5;                  // macMaxBE (IEEE 802.15.4-2006).
     static constexpr uint32_t kUnitBackoffPeriod = 20;                 // Number of symbols (IEEE 802.15.4-2006).
@@ -576,6 +579,17 @@ private:
 
 #endif
 
+#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
+    // Lead time (in microseconds) to schedule a delayed tx earlier
+    // than expected target tx time. Only used when radio does not
+    // itself support `kCapTransmitTiming`.
+    static constexpr uint32_t kTimedTxLeadTime =
+        OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD + kCcaSampleInterval + Radio::kHeaderShrDuration;
+#endif
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Enumerations
+
     enum State : uint8_t
     {
         kStateDisabled,    // Radio is disabled.
@@ -595,13 +609,8 @@ private:
 #endif
     };
 
-#if OT_CONFIG_MAC_TARGET_TIME_TX_ENABLE
-    // Lead time (in microseconds) to schedule a delayed tx earlier
-    // than expected target tx time. Only used when radio does not
-    // itself support `kCapTransmitTiming`.
-    static constexpr uint32_t kTimedTxLeadTime =
-        OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD + kCcaSampleInterval + Radio::kHeaderShrDuration;
-#endif
+    //------------------------------------------------------------------------------------------------------------------
+    // Nested types
 
 #if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
     class NextRadioFireTime
@@ -623,6 +632,8 @@ private:
         Radio::SyncedTime mNow;
         Radio::Time64     mFireTime;
     };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     class TimedRx : public Clearable<TimedRx>, public Unequatable<TimedRx>
     {
@@ -646,6 +657,8 @@ private:
         uint8_t       mChannel;
         bool          mIsSpecified;
     };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     void HandleListenSchedulerTimer(void) { mListenScheduler.HandleTimer(); }
 
@@ -694,6 +707,8 @@ private:
 
 #endif // OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     class CslReceiver : public InstanceLocator
     {
@@ -739,8 +754,12 @@ private:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Methods
+
     void Init(void);
     bool IsEnabled(void) const { return mState != kStateDisabled; }
+    void SetState(State aState);
     bool RadioSupports(Capability aCapability) const { return (mRadioCaps & aCapability) != 0; }
     bool ShouldHandle(Capability aCapability) const;
     bool ShouldHandleCsmaBackoff(void) const;
@@ -760,15 +779,15 @@ private:
     void SignalFrameCounterUsedOnTxDone(const TxFrame::ParseInfo &aFrameInfo);
     void HandleEnergyScanDone(int8_t aMaxRssi);
     void HandleTimer(void);
-
 #if OT_CONFIG_MAC_TARGET_TIME_RX_ENABLE
     void ReceiveAt(const TimedRx &aTimedRx);
     void StartPendingTimedRx(void);
     void ProcessTimedRx(void);
 #endif
-
-    void               SetState(State aState);
     static const char *StateToString(State aState);
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Variables
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     using SubMacTimer = TimerMicroIn<SubMac, &SubMac::HandleTimer>;
@@ -802,9 +821,7 @@ private:
     TimedRx         mPendingTimedRx;
     ListenScheduler mListenScheduler;
 #endif
-
     SubMacTimer mTimer;
-
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     CslReceiver mCslReceiver;
 #endif
