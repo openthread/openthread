@@ -277,12 +277,6 @@ jobs:
       with:
         submodules: recursive
         persist-credentials: false
-    - name: Bootstrap
-      timeout-minutes: 10
-      shell: bash ./script/retry {0}
-      run: |
-        brew update
-        brew install ninja
     - name: Build
       run: |
         ./tests/toranj/build.sh posix-15.4
