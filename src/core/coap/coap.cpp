@@ -721,6 +721,29 @@ void CoapBase::ProcessReceivedRequest(Msg &aRxMsg)
 
     SuccessOrExit(error = aRxMsg.mMessage.ReadUriPathOptions(uriPath));
 
+     // Check that a FETCH request has at least one of a Content-Format (RFC 8132), or OSCORE option (RFC 8613).
+    if (aRxMsg.IsFetchRequest())
+    {
+        Option::Iterator iterator;
+
+        SuccessOrExit(error = iterator.Init(aRxMsg.mMessage, kOptionOscore));
+
+        if (iterator.IsDone())
+        {
+            SuccessOrExit(error = iterator.Init(aRxMsg.mMessage, kOptionContentFormat));
+        }
+
+        if (iterator.IsDone())
+        {
+            if (!aRxMsg.mMessageInfo.GetSockAddr().IsMulticast())
+            {
+                IgnoreError(SendResponse(kCodeUnsupportedFormat, aRxMsg));
+            }
+
+            ExitNow(error = kErrorNone);
+        }
+    }
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     {
         bool didHandle = false;
@@ -1383,10 +1406,10 @@ Error CoapBase::PendingRequests::ProcessObserveSend(const Msg &aTxMsg, Request &
     SuccessOrExit(error = iterator.Init(aTxMsg.mMessage, kOptionObserve));
     aRequest.mMetadata.mObserve = !iterator.IsDone();
 
-    // Special case, if we're sending a GET with Observe=1, that is a
+    // Special case, if we're sending a GET or FETCH with Observe=1, that is a
     // cancellation.
 
-    if (aRequest.mMetadata.mObserve && aTxMsg.IsGetRequest())
+    if (aRequest.mMetadata.mObserve && (aTxMsg.IsGetRequest() || aTxMsg.IsFetchRequest()))
     {
         uint64_t value = 0;
 
