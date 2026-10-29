@@ -2324,7 +2324,7 @@ void RadioSpinel::RestoreProperties(void)
 
     // Guarded, because the table holds `kPowerDefault` for every channel unless
     // the radio URL configured one. Without this, every restore would issue 16
-    // blocking transactions for users who never pass `max-power-table`.
+    // blocking transactions for users who never pass `max-power-table-mbm`.
     if (mMaxPowerTableSet)
     {
         for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)

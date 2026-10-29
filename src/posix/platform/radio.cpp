@@ -215,20 +215,8 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
     int16_t           power             = kPowerDefault;
     const char       *maxPowerTable     = nullptr;
     char             *maxPowerTableCopy = nullptr;
-    bool              inMbm             = false;
 
-    if ((maxPowerTable = aRadioUrl.GetValue("max-power-table-mbm")) != nullptr)
-    {
-        inMbm = true;
-    }
-    else if ((maxPowerTable = aRadioUrl.GetValue("max-power-table")) != nullptr)
-    {
-        inMbm = false;
-    }
-    else
-    {
-        ExitNow();
-    }
+    VerifyOrExit((maxPowerTable = aRadioUrl.GetValue("max-power-table-mbm")) != nullptr);
 
     maxPowerTableCopy = strdup(maxPowerTable);
     VerifyOrDie(maxPowerTableCopy != nullptr, OT_EXIT_FAILURE);
@@ -238,32 +226,17 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
     {
         long val = strtol(str, nullptr, 0);
 
-        if (inMbm)
+        if (val >= OT_RADIO_POWER_INVALID_IN_MBM)
         {
-            if (val >= OT_RADIO_POWER_INVALID_IN_MBM)
-            {
-                power = MaxPowerTable::kPowerInvalid;
-            }
-            else if (val < INT16_MIN)
-            {
-                power = INT16_MIN;
-            }
-            else
-            {
-                power = static_cast<int16_t>(val);
-            }
+            power = MaxPowerTable::kPowerInvalid;
         }
-        else if (val < INT8_MIN)
+        else if (val < INT16_MIN)
         {
-            power = INT8_MIN * 100;
-        }
-        else if (val < OT_RADIO_POWER_INVALID)
-        {
-            power = static_cast<int16_t>(val * 100);
+            power = INT16_MIN;
         }
         else
         {
-            power = MaxPowerTable::kPowerInvalid;
+            power = static_cast<int16_t>(val);
         }
 
         error = mRadioSpinel.SetChannelMaxTransmitPower(channel, power);
