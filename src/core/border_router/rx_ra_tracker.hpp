@@ -423,6 +423,7 @@ private:
         bool ShouldCheckReachability(void) const;
         void ResetReachabilityState(void);
         void DetermineReachabilityTimeout(void);
+        void ClearNonDisregardedEntries(void);
         bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
         bool Matches(const EmptyChecker &aChecker);
         bool IsPeerBr(void) const;
