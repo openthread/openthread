@@ -47,7 +47,7 @@ RegisterLogModule("LinkRaw");
 
 LinkRaw::LinkRaw(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
+    , mReceiveChannel(Radio::kDefaultChannel)
     , mPanId(kPanIdBroadcast)
     , mReceiveDoneCallback(nullptr)
     , mTransmitDoneCallback(nullptr)
@@ -67,10 +67,8 @@ void LinkRaw::Init(void)
     mEnergyScanDoneCallback = nullptr;
     mTransmitDoneCallback   = nullptr;
     mReceiveDoneCallback    = nullptr;
-
-    mReceiveChannel      = OPENTHREAD_CONFIG_DEFAULT_CHANNEL;
-    mPanId               = kPanIdBroadcast;
-    mReceiveDoneCallback = nullptr;
+    mReceiveChannel         = Radio::kDefaultChannel;
+    mPanId                  = kPanIdBroadcast;
 #if OPENTHREAD_RADIO
     mSubMac.Init();
 #endif
