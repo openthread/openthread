@@ -156,3 +156,16 @@ OpenThread Posix Daemon mode uses a unix socket as input and output, so that Ope
 # Built-in controller
 ./build/posix/src/posix/ot-ctl
 ```
+
+## Traffic statistics
+
+The POSIX platform records cumulative IPv6 packet and byte counts at the virtual interface between OpenThread and the host network stack. The `threadToExternal` direction is from the OpenThread stack to the host; `externalToThread` is from the host to the OpenThread stack. These counters describe observations at that boundary, not confirmed delivery over Thread or an external network interface. The border router's own control traffic and multicast packets looped back to the host can be counted, even when no other Thread devices are attached.
+
+Only packets with an IPv6 header and version 6 are counted. IPv4 packets, including the IPv4 side of NAT64 traffic, are excluded. Byte counts include the IPv6 header and payload but exclude tunnel and link-layer headers.
+
+The following POSIX APIs are declared in [`openthread-system.h`](platform/include/openthread/openthread-system.h):
+
+- `otSysGetTrafficStats()` returns totals for both directions and the most recently counted source/destination addresses. Before the first packet in a direction, its counters are zero and its last addresses are `"-"`.
+- `otSysGetPerDestStats()` returns counters grouped by the source/destination IPv6 address pair in each direction. There is no transport-protocol or port distinction. Each direction retains up to `OT_SYS_DEST_STATS_MAX` pairs (currently 64). A full table continues updating existing pairs but does not add new ones. Global totals continue increasing for untracked pairs, so they may exceed the sum of the pair counters. Array order is not significant.
+
+Both APIs return pointers to internal data updated by the mainloop. Call them on the OpenThread mainloop thread and copy the structures there to retain a snapshot. Reads do not reset the counters. Counters accumulate from process startup and are initialized again on process restart. OpenThread does not retain a history of snapshots; a consumer such as OTBR can copy and expose them through its own API.

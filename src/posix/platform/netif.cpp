@@ -174,9 +174,60 @@ extern int
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
 
+static otSysTrafficStats sTrafficStats = {0, 0, 0, 0, "-", "-", "-", "-"};
+static otSysPerDestStats sPerDestStats;
+
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+
+/**
+ * Updates a source/destination pair, adding it if the table has capacity.
+ *
+ * @param[in,out] aTable    The table of source/destination pairs.
+ * @param[in,out] aCount    The number of valid entries in the table.
+ * @param[in]     aSrcAddr  The source IPv6 address string.
+ * @param[in]     aDstAddr  The destination IPv6 address string.
+ * @param[in]     aBytes    The IPv6 packet length, including the IPv6 header.
+ */
+static void UpdateDestTable(otSysDestEntry *aTable,
+                            uint16_t       *aCount,
+                            const char     *aSrcAddr,
+                            const char     *aDstAddr,
+                            uint64_t        aBytes)
+{
+    // Update an existing source/destination pair.
+    for (uint16_t i = 0; i < *aCount; i++)
+    {
+        if (strncmp(aTable[i].mSrcAddr, aSrcAddr, sizeof(aTable[i].mSrcAddr)) == 0 &&
+            strncmp(aTable[i].mDstAddr, aDstAddr, sizeof(aTable[i].mDstAddr)) == 0)
+        {
+            aTable[i].mPackets++;
+            aTable[i].mBytes += aBytes;
+            return;
+        }
+    }
+
+    // Add a new pair only if the table has capacity.
+    if (*aCount < OT_SYS_DEST_STATS_MAX)
+    {
+        strncpy(aTable[*aCount].mSrcAddr, aSrcAddr, sizeof(aTable[*aCount].mSrcAddr) - 1);
+        strncpy(aTable[*aCount].mDstAddr, aDstAddr, sizeof(aTable[*aCount].mDstAddr) - 1);
+        aTable[*aCount].mSrcAddr[sizeof(aTable[*aCount].mSrcAddr) - 1] = '\0';
+        aTable[*aCount].mDstAddr[sizeof(aTable[*aCount].mDstAddr) - 1] = '\0';
+        aTable[*aCount].mPackets                                       = 1;
+        aTable[*aCount].mBytes                                         = aBytes;
+        (*aCount)++;
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+
 const char *otSysGetThreadNetifName(void) { return gNetifName; }
 
 unsigned int otSysGetThreadNetifIndex(void) { return gNetifIndex; }
+
+const otSysTrafficStats *otSysGetTrafficStats(void) { return &sTrafficStats; }
+
+const otSysPerDestStats *otSysGetPerDestStats(void) { return &sPerDestStats; }
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 
@@ -2158,6 +2209,27 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
 #endif
 }
 
+static constexpr uint8_t kIpVersion4 = 4;
+static constexpr uint8_t kIpVersion6 = 6;
+
+/**
+ * Returns the IP version from the first byte of a packet.
+ *
+ * @param[in] aData  A pointer to at least one byte of packet data.
+ *
+ * @returns The IP version in the high four bits of the first byte.
+ */
+static uint8_t getIpVersion(const uint8_t *aData)
+{
+    assert(aData != nullptr);
+
+    // Mute compiler warnings.
+    OT_UNUSED_VARIABLE(kIpVersion4);
+    OT_UNUSED_VARIABLE(kIpVersion6);
+
+    return (static_cast<uint8_t>(aData[0]) >> 4) & 0x0F;
+}
+
 static void processReceive(otMessage *aMessage, void *aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
@@ -2178,6 +2250,22 @@ static void processReceive(otMessage *aMessage, void *aContext)
     VerifyOrExit(sTunFd > 0);
 
     VerifyOrExit(otMessageRead(aMessage, 0, &packet[offset], maxLength) == length, error = OT_ERROR_NO_BUFS);
+
+    // The receive callback also handles translated IPv4 packets, which are not counted.
+    if (length >= OT_IP6_HEADER_SIZE && getIpVersion(reinterpret_cast<const uint8_t *>(&packet[offset])) == kIpVersion6)
+    {
+        char srcStr[INET6_ADDRSTRLEN];
+        char dstStr[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, &packet[offset + 8], srcStr, sizeof(srcStr));
+        inet_ntop(AF_INET6, &packet[offset + 24], dstStr, sizeof(dstStr));
+
+        sTrafficStats.mThreadToExternalPackets++;
+        sTrafficStats.mThreadToExternalBytes += length;
+        strncpy(sTrafficStats.mLastThreadToExternalSrc, srcStr, sizeof(sTrafficStats.mLastThreadToExternalSrc) - 1);
+        strncpy(sTrafficStats.mLastThreadToExternalDst, dstStr, sizeof(sTrafficStats.mLastThreadToExternalDst) - 1);
+        UpdateDestTable(sPerDestStats.mThreadToExternal, &sPerDestStats.mThreadToExternalCount, srcStr, dstStr, length);
+        LogInfo("[TRAFFIC] Thread->External src=%s dst=%s len=%u", srcStr, dstStr, length);
+    }
 
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
     LogInfo("Packet from NCP (%u bytes)", static_cast<uint16_t>(length));
@@ -2202,24 +2290,6 @@ exit:
         LogWarn("Failed to receive, error:%s", otThreadErrorToString(error));
     }
 }
-
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE ||                                                    \
-    (OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
-     !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE)
-static constexpr uint8_t kIpVersion4 = 4;
-static constexpr uint8_t kIpVersion6 = 6;
-
-static uint8_t getIpVersion(const uint8_t *data)
-{
-    assert(data != nullptr);
-
-    // Mute compiler warnings.
-    OT_UNUSED_VARIABLE(kIpVersion4);
-    OT_UNUSED_VARIABLE(kIpVersion6);
-
-    return (static_cast<uint8_t>(data[0]) >> 4) & 0x0F;
-}
-#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
     !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
@@ -2358,6 +2428,22 @@ static void processTransmit(otInstance *aInstance)
 #endif
         VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
         otMessageSetOrigin(message, OT_MESSAGE_ORIGIN_HOST_UNTRUSTED);
+    }
+
+    // Count only IPv6 packets; IPv4 packets sent through NAT64 are not counted.
+    if (rval >= OT_IP6_HEADER_SIZE && getIpVersion(reinterpret_cast<const uint8_t *>(&packet[offset])) == kIpVersion6)
+    {
+        char srcStr[INET6_ADDRSTRLEN];
+        char dstStr[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, reinterpret_cast<uint8_t *>(&packet[offset]) + 8, srcStr, sizeof(srcStr));
+        inet_ntop(AF_INET6, reinterpret_cast<uint8_t *>(&packet[offset]) + 24, dstStr, sizeof(dstStr));
+        sTrafficStats.mExternalToThreadPackets++;
+        sTrafficStats.mExternalToThreadBytes += static_cast<uint64_t>(rval);
+        strncpy(sTrafficStats.mLastExternalToThreadSrc, srcStr, sizeof(sTrafficStats.mLastExternalToThreadSrc) - 1);
+        strncpy(sTrafficStats.mLastExternalToThreadDst, dstStr, sizeof(sTrafficStats.mLastExternalToThreadDst) - 1);
+        UpdateDestTable(sPerDestStats.mExternalToThread, &sPerDestStats.mExternalToThreadCount, srcStr, dstStr,
+                        static_cast<uint64_t>(rval));
+        LogInfo("[TRAFFIC] External->Thread src=%s dst=%s len=%zd", srcStr, dstStr, rval);
     }
 
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
