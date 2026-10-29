@@ -109,6 +109,9 @@ Error Icmp::SendError(Icmp6Header::Type  aType,
 
     VerifyOrExit((message = Get<Ip6>().NewMessage(settings)) != nullptr, error = kErrorNoBufs);
 
+    // Allow this internally generated error to reach the host.
+    message->SetLoopbackToHostAllowed(true);
+
     // Prepare the ICMPv6 error message. We only include the IPv6 header
     // of the original message causing the error.
 
@@ -200,6 +203,9 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
         LogDebg("Failed to allocate a new message");
         ExitNow();
     }
+
+    // Allow this internally generated reply to reach the host.
+    replyMessage->SetLoopbackToHostAllowed(true);
 
     dataOffset = aRequestMessage.GetOffset() + Header::kDataFieldOffset;
 
