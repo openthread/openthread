@@ -77,12 +77,6 @@ namespace Mac {
 constexpr uint16_t kScanDurationDefault = OPENTHREAD_CONFIG_MAC_SCAN_DURATION; ///< Duration per channel (in msec).
 
 /**
- * Specifies the number of microseconds ahead of time that the MAC layer should deliver a CSL frame to the sub-MAC
- * layer.
- */
-constexpr uint16_t kCslRequestAhead = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US;
-
-/**
  * Defines the function pointer which is called during an Energy Scan when the scan result for a channel is
  * ready or when the scan completes.
  */

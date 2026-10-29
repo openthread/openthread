@@ -242,6 +242,8 @@ public:
     void Clear(void);
 
 private:
+    static constexpr uint16_t kCslRequestAhead = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US;
+
     typedef IndirectSenderBase::FrameContext FrameContext;
 
     void RescheduleCslTx(void);
