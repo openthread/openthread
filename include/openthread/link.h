@@ -1127,11 +1127,14 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
 /**
  * Sets the rx-on-when-idle state.
  *
+ * Succeeds when raw link-layer is enabled, or when link-layer is enabled and Thread protocols are disabled.
+ *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aRxOnWhenIdle  TRUE to keep radio in Receive state, FALSE to put to Sleep state during idle periods.
  *
  * @retval OT_ERROR_NONE             If successful.
- * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ * @retval OT_ERROR_INVALID_STATE    If raw link-layer is not enabled and either link-layer is disabled or Thread
+ *                                   protocols are enabled.
  */
 otError otLinkSetRxOnWhenIdle(otInstance *aInstance, bool aRxOnWhenIdle);
 

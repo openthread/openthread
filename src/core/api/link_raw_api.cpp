@@ -287,24 +287,18 @@ void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui
     otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
 }
 
-#endif // OPENTHREAD_RADIO
-
-#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-
 otError otLinkSetRxOnWhenIdle(otInstance *aInstance, bool aRxOnWhenIdle)
 {
-    Error error = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
 
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(AsCoreType(aInstance).Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
-#else
-    VerifyOrExit(AsCoreType(aInstance).Get<Mac::Mac>().IsEnabled() &&
-                     AsCoreType(aInstance).Get<Mle::Mle>().IsDisabled(),
-                 error = kErrorInvalidState);
-#endif
-
-    AsCoreType(aInstance).Get<Mac::SubMac>().SetRxOnWhenIdle(aRxOnWhenIdle);
+    VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
+    instance.Get<Mac::SubMac>().SetRxOnWhenIdle(aRxOnWhenIdle);
 
 exit:
     return error;
 }
+
+#endif // OPENTHREAD_RADIO
+
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
