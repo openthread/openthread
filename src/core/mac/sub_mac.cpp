@@ -838,7 +838,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 
     if (RadioSupports(kCapEnergyScan))
     {
-        IgnoreError(Get<Radio::Radio>().EnergyScan(aScanChannel, aScanDuration));
+        SuccessOrExit(error = Get<Radio::Radio>().EnergyScan(aScanChannel, aScanDuration));
         SetState(kStateEnergyScan);
     }
     else if (ShouldHandle(kCapEnergyScan))

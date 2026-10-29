@@ -391,17 +391,13 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 
 void platformRadioUpdateFdSet(otSysMainloopContext *aContext)
 {
-    uint64_t now      = otPlatTimeGet();
-    uint64_t deadline = GetRadioSpinel().GetNextRadioTimeRecalcStart();
+    uint64_t now               = otPlatTimeGet();
+    uint64_t deadline          = GetRadioSpinel().GetNextRadioTimeRecalcStart();
+    uint64_t operationDeadline = GetRadioSpinel().GetNextRadioOperationDeadline();
 
-    if (GetRadioSpinel().IsTransmitting())
+    if (operationDeadline < deadline)
     {
-        uint64_t txRadioEndUs = GetRadioSpinel().GetTxRadioEndUs();
-
-        if (txRadioEndUs < deadline)
-        {
-            deadline = txRadioEndUs;
-        }
+        deadline = operationDeadline;
     }
 
     if (now < deadline)
