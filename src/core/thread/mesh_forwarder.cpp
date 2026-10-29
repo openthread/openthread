@@ -74,6 +74,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mEnabled(false)
     , mTxPaused(false)
     , mSendBusy(false)
+    , mRxOnWhenIdle(false)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
     , mDelayNextTx(false)
     , mTxDelayTimer(aInstance)
@@ -93,6 +94,7 @@ void MeshForwarder::Start(void)
 {
     if (!mEnabled)
     {
+        mRxOnWhenIdle = true;
         Get<Mac::Mac>().SetRxOnWhenIdle(true);
 #if OPENTHREAD_FTD
         mIndirectSender.Start();
@@ -123,8 +125,9 @@ void MeshForwarder::Stop(void)
     mDelayNextTx = false;
 #endif
 
-    mEnabled     = false;
-    mSendMessage = nullptr;
+    mEnabled      = false;
+    mRxOnWhenIdle = false;
+    mSendMessage  = nullptr;
     Get<Mac::Mac>().SetRxOnWhenIdle(false);
 
 exit:
@@ -844,9 +847,17 @@ bool MeshForwarder::GetRxOnWhenIdle(void) const { return Get<Mac::Mac>().GetRxOn
 
 void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
-    Get<Mac::Mac>().SetRxOnWhenIdle(aRxOnWhenIdle);
+    mRxOnWhenIdle = aRxOnWhenIdle;
+    UpdateRxOnWhenIdle();
+}
 
-    if (aRxOnWhenIdle)
+void MeshForwarder::UpdateRxOnWhenIdle(void)
+{
+    bool rxOnWhenIdle = mRxOnWhenIdle || Get<Mle::DiscoverScanner>().IsScanning();
+
+    Get<Mac::Mac>().SetRxOnWhenIdle(rxOnWhenIdle);
+
+    if (rxOnWhenIdle || Get<Mle::Mle>().IsDisabled())
     {
         mDataPollSender.StopPolling();
         Get<SupervisionListener>().Stop();

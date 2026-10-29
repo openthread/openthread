@@ -115,8 +115,15 @@ void TestDiscoverScanRequestCallback(void)
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
 
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+    VerifyOrQuit(leader.Get<Mac::Mac>().GetRxOnWhenIdle());
 
+    VerifyOrQuit(!scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
     scanner.Get<ThreadNetif>().Up();
+    VerifyOrQuit(scanner.Get<Mle::Mle>().IsDisabled());
+    VerifyOrQuit(scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
+
+    scanner.Get<MeshForwarder>().SetRxOnWhenIdle(false);
+    VerifyOrQuit(!scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Register Discovery Request callback on `leader`");
@@ -131,8 +138,10 @@ void TestDiscoverScanRequestCallback(void)
     SuccessOrQuit(scanner.Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), 0xffff, /* aJoiner */ false,
                                                                /* aFilter */ false, /* aFilterIndexes */ nullptr,
                                                                HandleDiscoverResult, &resultContext));
+    VerifyOrQuit(scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
 
     nexus.AdvanceTime(10 * Time::kOneSecondInMsec);
+    VerifyOrQuit(!scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check the Discovery Request callback is invoked correctly");
@@ -154,6 +163,37 @@ void TestDiscoverScanRequestCallback(void)
     VerifyOrQuit(result->GetPanId() == leader.Get<Mac::Mac>().GetPanId());
     VerifyOrQuit(result->GetChannel() == leader.Get<Mac::Mac>().GetPanChannel());
     VerifyOrQuit(result->IsDiscover());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Verify changing rx-on-when-idle during an active discovery scan");
+
+    // Start scan while sleepy (`RxOnWhenIdle == false`), then set `RxOnWhenIdle` to `true` mid-scan.
+    requestContext.Clear();
+    resultContext.Clear();
+    SuccessOrQuit(scanner.Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), 0xffff, /* aJoiner */ false,
+                                                               /* aFilter */ false, /* aFilterIndexes */ nullptr,
+                                                               HandleDiscoverResult, &resultContext));
+    VerifyOrQuit(scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
+    scanner.Get<MeshForwarder>().SetRxOnWhenIdle(true);
+    VerifyOrQuit(scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
+    nexus.AdvanceTime(10 * Time::kOneSecondInMsec);
+    VerifyOrQuit(resultContext.mDiscoverDone);
+    VerifyOrQuit(scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
+
+    // Start scan while awake (`RxOnWhenIdle == true`), then set `RxOnWhenIdle` to `false` mid-scan.
+    requestContext.Clear();
+    resultContext.Clear();
+    SuccessOrQuit(scanner.Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), 0xffff, /* aJoiner */ false,
+                                                               /* aFilter */ false, /* aFilterIndexes */ nullptr,
+                                                               HandleDiscoverResult, &resultContext));
+    VerifyOrQuit(scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
+    scanner.Get<MeshForwarder>().SetRxOnWhenIdle(false);
+    // Receiver must remain on while scan is still in progress, then turn off once scan completes.
+    VerifyOrQuit(scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
+    nexus.AdvanceTime(10 * Time::kOneSecondInMsec);
+    VerifyOrQuit(resultContext.mDiscoverDone);
+    VerifyOrQuit(resultContext.mScanResults.GetLength() == 1);
+    VerifyOrQuit(!scanner.Get<Mac::Mac>().GetRxOnWhenIdle());
 }
 
 } // namespace Nexus
