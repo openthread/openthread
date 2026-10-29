@@ -436,10 +436,9 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)
         // The commissioner rejected the JOIN_FIN.req: acknowledge the
         // entrust message (the exchange is part of the certified message
         // flow) without adopting the delivered credentials. The joining
-        // process then completes with `kErrorRejected` from the timer.
+        // process then completes with `kErrorRejected`.
         error = kErrorNone;
         SendJoinerEntrustResponse(aMsg);
-        mTimer.Start(kConfigExtAddressDelay);
         ExitNow();
     }
 
@@ -456,9 +455,6 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)
 
     SendJoinerEntrustResponse(aMsg);
 
-    // Delay extended address configuration to allow DTLS wrap up.
-    mTimer.Start(kConfigExtAddressDelay);
-
 exit:
     LogWarnOnError(error, "process joiner entrust");
 }
@@ -472,9 +468,12 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
     VerifyOrExit(message != nullptr);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);
+    message->RegisterTxCallback(HandleJoinerEntrustResponseTxDone, this);
 
     responseInfo.GetSockAddr().Clear();
     SuccessOrExit(Get<Tmf::Agent>().SendMessage(message.PassOwnership(), responseInfo));
+
+    mTimer.Stop();
 
     if (!mFinalizeRejected)
     {
@@ -483,6 +482,23 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
 
     LogInfo("Sent %s response", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=send | type=JOIN_ENT.rsp");
+
+exit:
+    return;
+}
+
+void Joiner::HandleJoinerEntrustResponseTxDone(const otMessage *aMessage, otError aError, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+
+    Joiner &joiner = *static_cast<Joiner *>(aContext);
+
+    // `Finish()` may already have run (e.g., via `Stop()` or an earlier Entrust response).
+    VerifyOrExit(joiner.mState == kStateJoined || (joiner.mFinalizeRejected && joiner.mState == kStateEntrust));
+
+    LogWarnOnError(aError, "send %s response", UriToString<kUriJoinerEntrust>());
+
+    joiner.HandleTimer();
 
 exit:
     return;
@@ -501,7 +517,7 @@ void Joiner::HandleTimer(void)
     case kStateEntrust:
         // After a rejected JOIN_FIN.rsp the joining process always ends
         // with `kErrorRejected`, whether the entrust was acknowledged
-        // (short delay) or never arrived (response timeout).
+        // or never arrived (response timeout).
         error = mFinalizeRejected ? kErrorRejected : kErrorResponseTimeout;
         break;
 
