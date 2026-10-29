@@ -178,8 +178,7 @@ public:
     static const char *StateToString(State aState);
 
 private:
-    static constexpr uint32_t kConfigExtAddressDelay = 100;  // in msec.
-    static constexpr uint32_t kResponseTimeout       = 4000; // in msec
+    static constexpr uint32_t kResponseTimeout = 4000; // in msec
 
     void                   SetState(State aState);
     void                   SetIdFromIeeeEui64(void);
@@ -194,7 +193,8 @@ private:
                                                         const char *aVendorData);
     void                   FreeJoinerFinalizeMessage(void);
     void                   SendJoinerFinalize(void);
-    void                   SendJoinerEntrustResponse(const Coap::Msg &aMsg);
+    Error                  SendJoinerEntrustResponse(const Coap::Msg &aMsg);
+    static void            HandleJoinerEntrustResponseTxDone(const otMessage *aMessage, otError aError, void *aContext);
     static Seeker::Verdict EvaluateScanResult(void *aContext, const otSeekerScanResult *aResult);
     Seeker::Verdict        EvaluateScanResult(const ScanResult *aResult);
     void                   HandleScanCompleted(void);
