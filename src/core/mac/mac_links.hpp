@@ -174,6 +174,7 @@ public:
         mTxFrame802154.ClearTargetTxTime();
         mTxFrame802154.SetTxPower(Radio::kInvalidPower);
         mTxFrame802154.SetCslIePresent(false);
+        mTxFrame802154.ClearPsduUpdater();
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         mTxFrameTrel.SetLength(0);
@@ -181,6 +182,7 @@ public:
         mTxFrameTrel.SetIsSecurityProcessed(false);
         mTxFrameTrel.SetCsmaCaEnabled(true);
         mTxFrameTrel.SetIsHeaderUpdated(false);
+        mTxFrameTrel.ClearPsduUpdater();
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
