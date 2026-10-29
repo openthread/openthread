@@ -1564,7 +1564,6 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const Mac::Address &aMacS
 
     mCounters.UpdateOnRx(aMessage);
 
-    aMessage.SetLoopbackToHostAllowed(true);
     aMessage.SetOrigin(Message::kOriginThreadNetif);
 
     return Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(&aMessage));

@@ -1012,7 +1012,15 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
     Error             error = kErrorNone;
     OwnedPtr<Message> messagePtr;
 
-    VerifyOrExit(aMessagePtr->IsLoopbackToHostAllowed());
+    switch (aMessagePtr->GetOrigin())
+    {
+    case Message::kOriginThreadNetif:
+        break;
+    case Message::kOriginHostTrusted:
+    case Message::kOriginHostUntrusted:
+        VerifyOrExit(aMessagePtr->IsLoopbackToHostAllowed());
+        break;
+    }
 
     VerifyOrExit(mReceiveCallback.IsSet(), error = kErrorNoRoute);
 
