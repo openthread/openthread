@@ -488,13 +488,6 @@ uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-otError otThreadWakeup(otInstance *, const otExtAddress *, uint16_t, uint16_t, otWakeupCallback, void *)
-{
-    return kErrorNotImplemented;
-}
-#endif
-
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint16_t aSize)
 {
