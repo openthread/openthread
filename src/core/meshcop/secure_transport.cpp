@@ -108,6 +108,7 @@ Error SecureSession::Connect(const Ip6::SockAddr &aSockAddr)
     Error error;
 
     VerifyOrExit(mTransport.mIsOpen, error = kErrorInvalidState);
+    VerifyOrExit(mTransport.HasCipherSuite(), error = kErrorInvalidState);
     VerifyOrExit(!IsSessionInUse(), error = kErrorInvalidState);
 
     Init();
@@ -162,7 +163,7 @@ Error SecureSession::Setup(void)
     Error error = kErrorNone;
     int   rval  = 0;
 
-    OT_ASSERT(mTransport.mCipherSuite != SecureTransport::kUnspecifiedCipherSuite);
+    OT_ASSERT(mTransport.HasCipherSuite());
 
     SetState(kStateInitializing);
 
@@ -739,6 +740,7 @@ void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &a
     SecureSession *session;
 
     VerifyOrExit(mIsOpen);
+    VerifyOrExit(HasCipherSuite());
 
     session = mSessions.FindMatching(aMessageInfo);
 

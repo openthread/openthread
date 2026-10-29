@@ -791,6 +791,7 @@ private:
         kUnspecifiedCipherSuite,
     };
 
+    bool HasCipherSuite(void) const { return mCipherSuite != kUnspecifiedCipherSuite; }
     void RemoveDisconnectedSessions(void);
     void DecremenetRemainingConnectionAttempts(void);
     bool HasNoRemainingConnectionAttempts(void) const;
