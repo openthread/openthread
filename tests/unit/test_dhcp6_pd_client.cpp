@@ -2013,8 +2013,8 @@ void TestDhcp6PdLifetimeT1AndT2Adjustments(void)
         // Client must honor the given T2 and pick T1 not larger than it.
         {0, 800, 1800, 800, 800, 1800},
 
-        // Only T2 is zero, but T1 exceeds (Preferred Lifetime - 900 sec) so is reduced first to 900. Then T2 can be
-        // set as the default 0.8 times Preferred Lifetime.
+        // Only T2 is zero. Client picks T2 as 0.8 times the preferred lifetime (1440 >= 1300) and clamps T1 to
+        // (preferred lifetime - 900 sec).
         {1300, 0, 1800, 900, 1440, 1800},
 
         // Only T2 is zero. Given T1 is used as is. Client picks T2 as 0.8 times the preferred lifetime.
