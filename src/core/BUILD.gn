@@ -666,6 +666,8 @@ openthread_core_files = [
   "radio/radio_frame.cpp",
   "radio/radio_frame.hpp",
   "radio/radio_platform.cpp",
+  "radio/radio_statistics.cpp",
+  "radio/radio_statistics.hpp",
   "radio/radio_types.cpp",
   "radio/radio_types.hpp",
   "radio/trel_interface.cpp",

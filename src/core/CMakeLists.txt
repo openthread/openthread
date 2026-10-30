@@ -225,6 +225,7 @@ set(COMMON_SOURCES
     radio/radio_callbacks.cpp
     radio/radio_frame.cpp
     radio/radio_platform.cpp
+    radio/radio_statistics.cpp
     radio/radio_types.cpp
     radio/trel_interface.cpp
     radio/trel_link.cpp
