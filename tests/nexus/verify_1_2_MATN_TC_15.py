@@ -86,7 +86,10 @@ def verify(pv):
             return True
 
         # Check for BR RLOC
-        br_rloc16 = vars.get(f'{br_name}_RLOC16')
+        if br_name == 'BR_1':
+            br_rloc16 = int(vars['BR_1_INITIAL_RLOC16'])
+        else:
+            br_rloc16 = vars.get(f'{br_name}_RLOC16')
         if br_rloc16 is not None and locator == br_rloc16:
             return True
 
@@ -120,7 +123,7 @@ def verify(pv):
     #   - The DUT MUST unicast an MLR.req CoAP request as follows: coap://[<BR_2 RLOC or PBBR ALOC>]:MM/n/mr
     #   - Where the payload contains: IPv6 Addresses TLV: MA1
     print("Step 2: TD registers for MA1 at BR_2.")
-    pkts.filter_wpan_src64(vars['TD']).\
+    mlr_req = pkts.filter_wpan_src64(vars['TD']).\
         filter_coap_request(MLR_URI).\
         filter(lambda p: p.coap.tlv.ipv6_address == [MA1]).\
         filter(lambda p: is_br_rloc_or_aloc(p.ipv6.dst, 'BR_2')).\
@@ -158,8 +161,10 @@ def verify(pv):
     # - Pass Criteria:
     #   - N/A
     print("Step 5: Router forwards the response.")
+    # TD may register as a child before upgrading back to router; use its RLOC at registration time.
+    td_rloc16 = int.from_bytes(ipaddress.ip_address(str(mlr_req.ipv6.src)).packed[-2:], 'big')
     pkts.filter_wpan_src64(vars['Router']).\
-        filter_wpan_dst16(vars['TD_RLOC16']).\
+        filter_wpan_dst16(td_rloc16).\
         filter_coap_ack(MLR_URI).\
         filter(lambda p: p.coap.tlv.status == ST_MLR_SUCCESS).\
         must_next()
