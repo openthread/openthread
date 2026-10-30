@@ -1,0 +1,142 @@
+/*
+ *  Copyright (c) 2020-2026, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "radio_statistics.hpp"
+
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+
+#include "instance/instance.hpp"
+
+namespace ot {
+namespace Radio {
+
+inline uint64_t UintSafeMinus(uint64_t aLhs, uint64_t aRhs) { return aLhs > aRhs ? (aLhs - aRhs) : 0; }
+
+Statistics::Statistics(void)
+    : mStatus(kDisabled)
+{
+    ResetTime();
+}
+
+void Statistics::RecordStateChange(Status aStatus)
+{
+    UpdateTime();
+    mStatus = aStatus;
+}
+
+void Statistics::HandleReceiveAt(uint32_t aDurationUs)
+{
+    // The actual rx time of ReceiveAt cannot be obtained from software level. This is a workaround.
+    if (mStatus == kSleep)
+    {
+        mTimeStats.mRxTime += aDurationUs;
+    }
+}
+
+void Statistics::RecordTxDone(Error aError, uint16_t aPsduLength)
+{
+    if (aError == kErrorNone || aError == kErrorNoAck)
+    {
+        uint32_t txTimeUs    = (aPsduLength + kPhyHeaderSize) * kSymbolsPerOctet * kSymbolTime;
+        uint32_t rxAckTimeUs = (Mac::Frame::GetImmAckLength() + kPhyHeaderSize) * kPhyUsPerByte;
+
+        UpdateTime();
+        mTimeStats.mTxTime += txTimeUs;
+
+        if (mStatus == kReceive)
+        {
+            mTimeStats.mRxTime = UintSafeMinus(mTimeStats.mRxTime, txTimeUs);
+        }
+        else if (mStatus == kSleep)
+        {
+            mTimeStats.mSleepTime = UintSafeMinus(mTimeStats.mSleepTime, txTimeUs);
+            if (aError == kErrorNone)
+            {
+                mTimeStats.mRxTime += rxAckTimeUs;
+                mTimeStats.mSleepTime = UintSafeMinus(mTimeStats.mSleepTime, rxAckTimeUs);
+            }
+        }
+    }
+}
+
+void Statistics::RecordRxDone(Error aError)
+{
+    uint32_t ackTimeUs;
+
+    VerifyOrExit(aError == kErrorNone);
+
+    UpdateTime();
+    // Currently we cannot know the actual length of ACK. So assume the ACK is an immediate ACK.
+    ackTimeUs = (Mac::Frame::GetImmAckLength() + kPhyHeaderSize) * kPhyUsPerByte;
+    mTimeStats.mTxTime += ackTimeUs;
+    if (mStatus == kReceive)
+    {
+        mTimeStats.mRxTime = UintSafeMinus(mTimeStats.mRxTime, ackTimeUs);
+    }
+
+exit:
+    return;
+}
+
+const Statistics::TimeStats &Statistics::GetStats(void)
+{
+    UpdateTime();
+
+    return mTimeStats;
+}
+
+void Statistics::ResetTime(void)
+{
+    ClearAllBytes(mTimeStats);
+    mLastUpdateTime = TimerMicro::GetNow();
+}
+
+void Statistics::UpdateTime(void)
+{
+    TimeMicro nowTime     = TimerMicro::GetNow();
+    uint32_t  timeElapsed = nowTime - mLastUpdateTime;
+
+    switch (mStatus)
+    {
+    case kSleep:
+        mTimeStats.mSleepTime += timeElapsed;
+        break;
+    case kReceive:
+        mTimeStats.mRxTime += timeElapsed;
+        break;
+    case kDisabled:
+        mTimeStats.mDisabledTime += timeElapsed;
+        break;
+    }
+    mLastUpdateTime = nowTime;
+}
+
+} // namespace Radio
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
