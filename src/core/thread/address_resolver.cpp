@@ -799,6 +799,7 @@ exit:
 template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
 {
     Ip6::Address target;
+    Child       *child;
     uint32_t     lastTransactionTime;
 
     VerifyOrExit(aMsg.IsNonConfirmable());
@@ -815,20 +816,13 @@ template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
         ExitNow();
     }
 
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
-    {
-        if (child.IsFullThreadDevice() || child.GetLinkFailures() >= Mle::kFailedChildTransmissions)
-        {
-            continue;
-        }
+    child = Get<ChildTable>().FindMinimalChild(target);
 
-        if (child.HasIp6Address(target))
-        {
-            lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child.GetLastHeard());
-            SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime,
-                                     aMsg.mMessageInfo.GetPeerAddr());
-            ExitNow();
-        }
+    if (child != nullptr)
+    {
+        lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child->GetLastHeard());
+        SendAddressQueryResponse(target, child->GetMeshLocalIid(), &lastTransactionTime,
+                                 aMsg.mMessageInfo.GetPeerAddr());
     }
 
 exit:

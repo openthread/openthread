@@ -154,6 +154,23 @@ Child *ChildTable::FindChild(const Mac::Address &aMacAddress, Child::StateFilter
     return FindChild(Child::AddressMatcher(aMacAddress, aFilter));
 }
 
+Child *ChildTable::FindMinimalChild(const Ip6::Address &aAddress)
+{
+    Child *child = nullptr;
+
+    for (Child &entry : Iterate(Child::kInStateValid))
+    {
+        if (!entry.IsFullThreadDevice() && entry.GetLinkFailures() < Mle::kFailedChildTransmissions &&
+            entry.HasIp6Address(aAddress))
+        {
+            child = &entry;
+            break;
+        }
+    }
+
+    return child;
+}
+
 bool ChildTable::HasChildren(Child::StateFilter aFilter) const
 {
     return mChildren.ContainsMatching(Child::AddressMatcher(aFilter));
