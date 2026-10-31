@@ -1381,6 +1381,7 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
             router = mRouterTable.FindRouterById(routerId);
             VerifyOrExit(router != nullptr);
 
+            RemoveNeighborIfRloc16Mismatches(aRxInfo, aSourceAddress);
             EstablishRouterLinkOnFtdChild(*router, aRxInfo, linkMargin);
         }
 
@@ -1419,7 +1420,12 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
         // Change the cache entries associated with the former child
         // from using the old RLOC16 to its new RLOC16.
         Get<AddressResolver>().ReplaceEntriesForRloc16(aRxInfo.mNeighbor->GetRloc16(), router->GetRloc16());
+
+        RemoveNeighbor(*aRxInfo.mNeighbor);
+        aRxInfo.mNeighbor = router;
     }
+
+    RemoveNeighborIfRloc16Mismatches(aRxInfo, aSourceAddress);
 
     // Send unicast link request if no link to router and no
     // unicast/multicast link request in progress
@@ -1440,10 +1446,7 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
     mRouterTable.UpdateRoutes(routeTlvData, routerId);
 
 exit:
-    if (aRxInfo.mNeighbor && aRxInfo.mNeighbor->GetRloc16() != aSourceAddress)
-    {
-        RemoveNeighbor(*aRxInfo.mNeighbor);
-    }
+    RemoveNeighborIfRloc16Mismatches(aRxInfo, aSourceAddress);
 
     return error;
 }
@@ -3228,6 +3231,15 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
 
 exit:
     return;
+}
+
+void Mle::RemoveNeighborIfRloc16Mismatches(RxInfo &aRxInfo, uint16_t aRloc16)
+{
+    if ((aRxInfo.mNeighbor != nullptr) && (aRxInfo.mNeighbor->GetRloc16() != aRloc16))
+    {
+        RemoveNeighbor(*aRxInfo.mNeighbor);
+        aRxInfo.mNeighbor = nullptr;
+    }
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

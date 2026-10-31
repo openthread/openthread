@@ -2431,6 +2431,7 @@ private:
     void     SetChildStateToValid(Child &aChild);
     bool     HasChildren(void);
     void     RemoveChildren(void);
+    void     RemoveNeighborIfRloc16Mismatches(RxInfo &aRxInfo, uint16_t aRloc16);
     void     HandleAdvertiseTrickleTimer(void);
     void     HandleTimeTick(void);
     void     ScheduleChildUpdateToRestoreNonSleepyChildren(void);
