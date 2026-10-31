@@ -1,0 +1,157 @@
+#!/bin/bash
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+#  Generate openthread-mbedtls-config.h from mbedtls-config.h with every
+#  OPENTHREAD_CONFIG_* condition resolved, so that the result does not
+#  depend on OpenThread's private headers.
+#
+#  The values come from the C compiler, evaluated against the same
+#  definitions and include paths the OpenThread sources are built with.
+#  `unifdefall` cannot do this on its own: it reads macro values with
+#  `cpp -dM`, which leaves them unexpanded, and `unifdef` keeps every
+#  condition whose macro value is an expression rather than a number
+#  (`OPENTHREAD_CONFIG_TLS_ENABLE`, for one), see openthread/openthread#10772.
+#
+#  A symbol reaches `unifdef` as the integer it expands to when it expands
+#  to one, otherwise as the truth value the compiler gives `#if symbol`.
+#  The build fails if any OPENTHREAD_CONFIG_* symbol survives in the output.
+#
+#  usage: gen-mbedtls-config <cc> <unifdef> <template> <output> [compile flags...]
+#
+
+set -euo pipefail
+
+cc=""
+tmpdir=""
+declare -a flags=()
+
+trap '[[ -z $tmpdir ]] || rm -rf "$tmpdir"' EXIT
+
+die()
+{
+    echo "$0: $*" >&2
+    exit 1
+}
+
+# Preprocess $tmpdir/probe.c against the OpenThread configuration and keep
+# the lines the probe marked with "@ ".
+probe()
+{
+    "$cc" ${flags[@]+"${flags[@]}"} -E -P "$tmpdir/probe.c" >"$tmpdir/probe.out"
+    grep '^@ ' "$tmpdir/probe.out" | cut -c3- >"$1" || true
+    [[ $(wc -l <"$1") -eq $(wc -l <"$2") ]] || die "the compiler answered $(wc -l <"$1") of $(wc -l <"$2") questions about $2"
+}
+
+main()
+{
+    cc="$1"
+    local unifdef="$2"
+    local template="$3"
+    local output="$4"
+    shift 4
+    flags=("$@")
+
+    tmpdir="$(mktemp -d)"
+
+    # The OpenThread configuration symbols that control conditions in the template.
+    "$unifdef" -s "$template" | grep '^OPENTHREAD_CONFIG_' | sort -u >"$tmpdir/symbols" || true
+
+    local -a args=()
+    local sym state expansion value
+
+    # Is each symbol defined, and what does it expand to?
+    {
+        echo '#include "openthread-core-config.h"'
+        echo '#define OT_GEN_STR_(x) #x'
+        echo '#define OT_GEN_XSTR_(x) OT_GEN_STR_(x)'
+        while read -r sym; do
+            printf '#ifdef %s\n@ defined OT_GEN_XSTR_(%s)\n#else\n@ undefined\n#endif\n' "$sym" "$sym"
+        done <"$tmpdir/symbols"
+    } >"$tmpdir/probe.c"
+    probe "$tmpdir/expansions" "$tmpdir/symbols"
+
+    # Integers go through as they are; anything else is asked as a truth value.
+    : >"$tmpdir/truths"
+    while read -r sym state expansion; do
+        if [[ $state == undefined ]]; then
+            args+=("-U$sym")
+            continue
+        fi
+        expansion="${expansion#\"}"
+        expansion="${expansion%\"}"
+        value="${expansion// /}"
+        if [[ $value =~ ^\(?(-?(0[xX][0-9A-Fa-f]+|[0-9]+))\)?$ ]]; then
+            args+=("-D$sym=${BASH_REMATCH[1]}")
+        elif [[ -z $value || $value == \\\"* ]]; then
+            # Empty or a string: only `#ifdef` can ask about it.
+            args+=("-D$sym=1")
+        else
+            echo "$sym" >>"$tmpdir/truths"
+        fi
+    done < <(paste -d ' ' "$tmpdir/symbols" "$tmpdir/expansions")
+
+    if [[ -s $tmpdir/truths ]]; then
+        {
+            echo '#include "openthread-core-config.h"'
+            while read -r sym; do
+                printf '#if %s\n@ 1\n#else\n@ 0\n#endif\n' "$sym"
+            done <"$tmpdir/truths"
+        } >"$tmpdir/probe.c"
+        probe "$tmpdir/values" "$tmpdir/truths"
+        while read -r sym value; do
+            args+=("-D$sym=$value")
+        done < <(paste -d ' ' "$tmpdir/truths" "$tmpdir/values")
+    fi
+
+    # unifdef exits 1 when it changed something and 2 on errors.
+    local status=0
+    "$unifdef" ${args[@]+"${args[@]}"} "$template" >"$tmpdir/resolved" || status=$?
+    [[ $status -le 1 ]] || die "unifdef failed on $template"
+
+    # The resolved header no longer needs OpenThread's core configuration.
+    sed '/openthread-core-config\.h/d' "$tmpdir/resolved" >"$tmpdir/output"
+
+    # No directive may still mention an OpenThread symbol (a comment may); a directive continued with
+    # backslashes is checked as one line, reported under its first.
+    awk '
+        !cont { first = NR; line = "" }
+        { line = line $0 }
+        sub(/\\$/, "", line) { cont = 1; next }
+        { cont = 0 }
+        line ~ /^[[:space:]]*#/ && line ~ /OPENTHREAD_CONFIG_/ { print first ": " line }
+    ' "$tmpdir/output" >"$tmpdir/leftover"
+
+    if [[ -s $tmpdir/leftover ]]; then
+        cat "$tmpdir/leftover" >&2
+        die "OpenThread configuration symbols survive in the header generated from $template"
+    fi
+
+    mv "$tmpdir/output" "$output"
+}
+
+main "$@"
