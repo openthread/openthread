@@ -1409,7 +1409,8 @@ exit:
 #endif // __linux__
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE || \
+    OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static uint32_t sRouteMessageSequence = 0;
 
 // The addresses of a routing socket message are stored rounded up: to 4 bytes on Apple, to `sizeof(long)` on
@@ -1434,23 +1435,140 @@ struct RouteMessage
     uint8_t          mAddresses[2 * sizeof(struct sockaddr_in6) + 2 * sizeof(struct sockaddr_dl) + 4 * sizeof(long)];
 };
 
+// The destination of a kernel route: an IPv6 prefix, or an IPv4 CIDR for the traffic of the NAT64 translator.
+struct RoutePrefix
+{
+    sa_family_t mFamily;                       ///< AF_INET6 or AF_INET.
+    uint8_t     mLength;                       ///< The prefix length in bits.
+    uint8_t     mAddress[OT_IP6_ADDRESS_SIZE]; ///< The address; its first OT_IP4_ADDRESS_SIZE bytes for AF_INET.
+
+    uint8_t AddressSize(void) const { return (mFamily == AF_INET) ? OT_IP4_ADDRESS_SIZE : OT_IP6_ADDRESS_SIZE; }
+    uint8_t AddressBits(void) const { return static_cast<uint8_t>(AddressSize() * 8); }
+};
+
+static RoutePrefix ToRoutePrefix(const otIp6Prefix &aPrefix)
+{
+    RoutePrefix prefix = {};
+
+    prefix.mFamily = AF_INET6;
+    prefix.mLength = aPrefix.mLength;
+    memcpy(prefix.mAddress, aPrefix.mPrefix.mFields.m8, OT_IP6_ADDRESS_SIZE);
+
+    return prefix;
+}
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+static RoutePrefix ToRoutePrefix(const otIp4Cidr &aCidr)
+{
+    RoutePrefix prefix = {};
+
+    prefix.mFamily = AF_INET;
+    prefix.mLength = aCidr.mLength;
+    memcpy(prefix.mAddress, aCidr.mAddress.mFields.m8, OT_IP4_ADDRESS_SIZE);
+
+    return prefix;
+}
+#endif
+
+static void RoutePrefixToString(const RoutePrefix &aPrefix, char *aBuffer, uint16_t aSize)
+{
+    if (aPrefix.mFamily == AF_INET)
+    {
+        otIp4Cidr cidr;
+
+        memcpy(cidr.mAddress.mFields.m8, aPrefix.mAddress, OT_IP4_ADDRESS_SIZE);
+        cidr.mLength = aPrefix.mLength;
+        otIp4CidrToString(&cidr, aBuffer, aSize);
+    }
+    else
+    {
+        otIp6Prefix prefix;
+
+        memcpy(prefix.mPrefix.mFields.m8, aPrefix.mAddress, OT_IP6_ADDRESS_SIZE);
+        prefix.mLength = aPrefix.mLength;
+        otIp6PrefixToString(&prefix, aBuffer, aSize);
+    }
+}
+
+// Whether `aAddress` lies within `aPrefix`.
+static bool IsInPrefix(const uint8_t *aAddress, const RoutePrefix &aPrefix)
+{
+    uint8_t bytes = aPrefix.mLength / 8;
+    uint8_t bits  = aPrefix.mLength % 8;
+    bool    match = (memcmp(aAddress, aPrefix.mAddress, bytes) == 0);
+
+    if (match && (bits != 0))
+    {
+        uint8_t mask = static_cast<uint8_t>(0xff << (8 - bits));
+
+        match = (((aAddress[bytes] ^ aPrefix.mAddress[bytes]) & mask) == 0);
+    }
+
+    return match;
+}
+
+// Fills `aMask` with `aLength` leading one bits.
+static void FillNetmask(uint8_t *aMask, uint8_t aSize, uint8_t aLength)
+{
+    memset(aMask, 0, aSize);
+
+    for (uint8_t i = 0; (i < aSize) && (aLength > 0); i++)
+    {
+        uint8_t bits = (aLength >= 8) ? 8 : aLength;
+
+        aMask[i] = static_cast<uint8_t>(0xff << (8 - bits));
+        aLength  = static_cast<uint8_t>(aLength - bits);
+    }
+}
+
+// The address bytes of a socket address of `aFamily`.
+static const uint8_t *SockaddrAddress(const struct sockaddr *aSockaddr, sa_family_t aFamily)
+{
+    return (aFamily == AF_INET)
+               ? reinterpret_cast<const uint8_t *>(&reinterpret_cast<const struct sockaddr_in *>(aSockaddr)->sin_addr)
+               : reinterpret_cast<const struct sockaddr_in6 *>(aSockaddr)->sin6_addr.s6_addr;
+}
+
+// Writes a socket address of `aPrefix`'s family holding `aAddress` at `aCursor`; returns the rounded size it takes.
+static size_t AppendRouteSockaddr(uint8_t *aCursor, const RoutePrefix &aPrefix, const uint8_t *aAddress)
+{
+    size_t length;
+
+    if (aPrefix.mFamily == AF_INET)
+    {
+        struct sockaddr_in sin = {};
+
+        sin.sin_len    = sizeof(sin);
+        sin.sin_family = AF_INET;
+        memcpy(&sin.sin_addr, aAddress, sizeof(sin.sin_addr));
+        memcpy(aCursor, &sin, sizeof(sin));
+        length = sizeof(sin);
+    }
+    else
+    {
+        struct sockaddr_in6 sin6 = {};
+
+        sin6.sin6_len    = sizeof(sin6);
+        sin6.sin6_family = AF_INET6;
+        memcpy(&sin6.sin6_addr, aAddress, sizeof(sin6.sin6_addr));
+        memcpy(aCursor, &sin6, sizeof(sin6));
+        length = sizeof(sin6);
+    }
+
+    return RouteSockaddrSize(length);
+}
+
 // Builds an RTM_ADD, RTM_DELETE or RTM_GET for the route to `aPrefix` through the Thread interface, as
 // `route add -net ... -interface` does: the destination, the interface by index as a link-level gateway (RTM_ADD
 // and RTM_DELETE) or an empty link-level address for the kernel to name the interface in (RTM_GET, which NetBSD
 // answers with the index only when asked), and the netmask unless the prefix is a full address.
-static void BuildRouteMessage(RouteMessage &aMessage, uint8_t aType, const otIp6Prefix &aPrefix)
+static void BuildRouteMessage(RouteMessage &aMessage, uint8_t aType, const RoutePrefix &aPrefix)
 {
-    struct sockaddr_in6 dst     = {};
-    struct sockaddr_dl  link    = {};
-    struct sockaddr_in6 netmask = {};
-    uint8_t            *cursor;
+    struct sockaddr_dl link = {};
+    uint8_t           *cursor;
 
     aMessage = {};
     cursor   = aMessage.mAddresses;
-
-    dst.sin6_len    = sizeof(dst);
-    dst.sin6_family = AF_INET6;
-    memcpy(&dst.sin6_addr, aPrefix.mPrefix.mFields.m8, sizeof(dst.sin6_addr));
 
     link.sdl_len    = sizeof(link);
     link.sdl_family = AF_LINK;
@@ -1462,8 +1580,7 @@ static void BuildRouteMessage(RouteMessage &aMessage, uint8_t aType, const otIp6
     aMessage.mHeader.rtm_pid     = getpid();
     aMessage.mHeader.rtm_seq     = static_cast<int>(++sRouteMessageSequence);
 
-    memcpy(cursor, &dst, sizeof(dst));
-    cursor += RouteSockaddrSize(sizeof(dst));
+    cursor += AppendRouteSockaddr(cursor, aPrefix, aPrefix.mAddress);
 
     if (aType != RTM_GET)
     {
@@ -1474,19 +1591,18 @@ static void BuildRouteMessage(RouteMessage &aMessage, uint8_t aType, const otIp6
         cursor += RouteSockaddrSize(sizeof(link));
     }
 
-    if (aPrefix.mLength >= OT_IP6_ADDRESS_BITSIZE)
+    if (aPrefix.mLength >= aPrefix.AddressBits())
     {
         aMessage.mHeader.rtm_flags |= RTF_HOST;
     }
     else
     {
-        netmask.sin6_len    = sizeof(netmask);
-        netmask.sin6_family = AF_INET6;
-        InitNetaskWithPrefixLength(&netmask.sin6_addr, aPrefix.mLength);
+        uint8_t netmask[OT_IP6_ADDRESS_SIZE];
+
+        FillNetmask(netmask, aPrefix.AddressSize(), aPrefix.mLength);
 
         aMessage.mHeader.rtm_addrs |= RTA_NETMASK;
-        memcpy(cursor, &netmask, sizeof(netmask));
-        cursor += RouteSockaddrSize(sizeof(netmask));
+        cursor += AppendRouteSockaddr(cursor, aPrefix, netmask);
     }
 
     if (aType == RTM_GET)
@@ -1500,19 +1616,19 @@ static void BuildRouteMessage(RouteMessage &aMessage, uint8_t aType, const otIp6
         static_cast<unsigned short>(sizeof(aMessage.mHeader) + static_cast<size_t>(cursor - aMessage.mAddresses));
 }
 
-// The prefix length of a netmask as the kernel reports it: trimmed to its last non-zero byte.
-static uint8_t RouteNetmaskLength(const struct sockaddr *aNetmask)
+// The prefix length of a netmask as the kernel reports it: trimmed to its last non-zero byte, its family often
+// left unset, so the destination's family says where its address bytes start.
+static uint8_t RouteNetmaskLength(const struct sockaddr *aNetmask, const RoutePrefix &aPrefix)
 {
-    const struct sockaddr_in6 *mask   = reinterpret_cast<const struct sockaddr_in6 *>(aNetmask);
-    const uint8_t             *start  = reinterpret_cast<const uint8_t *>(mask);
-    const uint8_t             *bytes  = mask->sin6_addr.s6_addr;
-    size_t                     count  = 0;
-    uint8_t                    length = 0;
+    const uint8_t *start  = reinterpret_cast<const uint8_t *>(aNetmask);
+    const uint8_t *bytes  = SockaddrAddress(aNetmask, aPrefix.mFamily);
+    size_t         count  = 0;
+    uint8_t        length = 0;
 
     if (aNetmask->sa_len > static_cast<size_t>(bytes - start))
     {
         count = OT_MIN(static_cast<size_t>(aNetmask->sa_len) - static_cast<size_t>(bytes - start),
-                       static_cast<size_t>(OT_IP6_ADDRESS_SIZE));
+                       static_cast<size_t>(aPrefix.AddressSize()));
     }
 
     // Leading ones up to the first zero bit; a mask with holes counts as the prefix before the first one.
@@ -1546,7 +1662,7 @@ enum RouteLookupResult : uint8_t
 // added it, and XNU and NetBSD delete by destination and netmask alone, so a route the host or another process owns
 // must be left alone. Asked with RTM_GET on a socket of its own, since the shared one is read by the mainloop; the
 // kernel may answer with a covering route (the default route, a shorter prefix), which is not the one asked for.
-static RouteLookupResult LookUpRoute(const otIp6Prefix &aPrefix)
+static RouteLookupResult LookUpRoute(const RoutePrefix &aPrefix)
 {
     static constexpr size_t kReplySize = 1024;
 
@@ -1564,7 +1680,7 @@ static RouteLookupResult LookUpRoute(const otIp6Prefix &aPrefix)
     const struct sockaddr *dst     = nullptr;
     const struct sockaddr *netmask = nullptr;
 
-    fd = ot::Posix::SocketWithCloseExec(PF_ROUTE, SOCK_RAW, AF_INET6, ot::Posix::kSocketBlock);
+    fd = ot::Posix::SocketWithCloseExec(PF_ROUTE, SOCK_RAW, aPrefix.mFamily, ot::Posix::kSocketBlock);
     VerifyOrExit(fd >= 0, LogWarn("Failed to open a routing socket: %s", strerror(errno)));
 
     // The answer comes with the write or right after it; a bounded wait keeps a lost one from stalling the daemon.
@@ -1636,23 +1752,19 @@ static RouteLookupResult LookUpRoute(const otIp6Prefix &aPrefix)
     result = kRouteAbsent;
 
     // The kernel keys a route by its masked destination, so the request's host bits do not count.
-    VerifyOrExit(dst != nullptr && dst->sa_family == AF_INET6 && dst->sa_len >= sizeof(struct sockaddr_in6));
-    {
-        otIp6Address dstAddress;
+    VerifyOrExit(dst != nullptr && dst->sa_family == aPrefix.mFamily &&
+                 dst->sa_len >=
+                     ((aPrefix.mFamily == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
+    VerifyOrExit(IsInPrefix(SockaddrAddress(dst, aPrefix.mFamily), aPrefix));
 
-        memcpy(dstAddress.mFields.m8, &reinterpret_cast<const struct sockaddr_in6 *>(dst)->sin6_addr,
-               sizeof(dstAddress.mFields.m8));
-        VerifyOrExit(otIp6PrefixMatch(&dstAddress, &aPrefix.mPrefix) >= aPrefix.mLength);
-    }
-
-    if (aPrefix.mLength >= OT_IP6_ADDRESS_BITSIZE)
+    if (aPrefix.mLength >= aPrefix.AddressBits())
     {
         VerifyOrExit(reply.mHeader.rtm_flags & RTF_HOST);
     }
     else
     {
         VerifyOrExit(((reply.mHeader.rtm_flags & RTF_HOST) == 0) && (netmask != nullptr) &&
-                     (RouteNetmaskLength(netmask) == aPrefix.mLength));
+                     (RouteNetmaskLength(netmask, aPrefix) == aPrefix.mLength));
     }
 
     result = (reply.mHeader.rtm_index == otSysGetThreadNetifIndex()) ? kRouteOnThreadNetif : kRouteElsewhere;
@@ -1666,7 +1778,7 @@ exit:
     return result;
 }
 
-static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
+static otError AddRoute(const RoutePrefix &aPrefix, uint32_t aPriority)
 {
     otError      error = OT_ERROR_NONE;
     RouteMessage request;
@@ -1677,7 +1789,7 @@ static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
     // host's by its metric; the prefix is tracked without a kernel route.
     OT_UNUSED_VARIABLE(aPriority);
 
-    otIp6PrefixToString(&aPrefix, prefixString, sizeof(prefixString));
+    RoutePrefixToString(aPrefix, prefixString, sizeof(prefixString));
 
     VerifyOrExit(otSysGetThreadNetifIndex() > 0 && sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(aPrefix.mLength > 0,
@@ -1713,13 +1825,13 @@ exit:
     return error;
 }
 
-static otError DeleteRoute(const otIp6Prefix &aPrefix)
+static otError DeleteRoute(const RoutePrefix &aPrefix)
 {
     otError      error = OT_ERROR_NONE;
     RouteMessage request;
     char         prefixString[OT_IP6_PREFIX_STRING_SIZE];
 
-    otIp6PrefixToString(&aPrefix, prefixString, sizeof(prefixString));
+    RoutePrefixToString(aPrefix, prefixString, sizeof(prefixString));
 
     VerifyOrExit(otSysGetThreadNetifIndex() > 0 && sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(aPrefix.mLength > 0, LogInfo("No kernel route was installed for %s", prefixString));
@@ -1758,7 +1870,113 @@ static otError DeleteRoute(const otIp6Prefix &aPrefix)
 exit:
     return error;
 }
-#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+
+static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
+{
+    return AddRoute(ToRoutePrefix(aPrefix), aPriority);
+}
+
+static otError DeleteRoute(const otIp6Prefix &aPrefix) { return DeleteRoute(ToRoutePrefix(aPrefix)); }
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+// The BSDs install a route through an interface only when the interface has an address of the route's family (XNU's
+// ifa_ifwithroute answers ENETUNREACH otherwise), and the Thread interface has no IPv4 address of its own. For as long
+// as the CIDR route is installed it carries the CIDR's network address, as a point-to-point address with itself as
+// the peer, the way VPN tunnels configure a utun. The translator never hands that address out: for prefixes up to /30
+// it uses the host ids between the network and the broadcast address. A /31 or /32 leaves no address to spare.
+static otError SetIp4Address(const otIp4Cidr &aIp4Cidr, bool aIsAdded)
+{
+    otError            error = OT_ERROR_NONE;
+    int                fd    = -1;
+    struct sockaddr_in address;
+    struct sockaddr_in netmask;
+    char               addressString[OT_IP4_ADDRESS_STRING_SIZE];
+    otIp4Address       networkAddress;
+
+    VerifyOrExit(aIp4Cidr.mLength <= 30, error = OT_ERROR_INVALID_ARGS;
+                 LogWarn("No address to spare for %s on a /%u NAT64 CIDR", gNetifName, aIp4Cidr.mLength));
+
+    networkAddress.mFields.m32 =
+        aIp4Cidr.mAddress.mFields.m32 & ((aIp4Cidr.mLength == 0) ? 0 : htonl(~0u << (32 - aIp4Cidr.mLength)));
+    otIp4AddressToString(&networkAddress, addressString, sizeof(addressString));
+
+    memset(&address, 0, sizeof(address));
+    address.sin_len    = sizeof(address);
+    address.sin_family = AF_INET;
+    memcpy(&address.sin_addr, networkAddress.mFields.m8, sizeof(address.sin_addr));
+
+    memset(&netmask, 0, sizeof(netmask));
+    netmask.sin_len         = sizeof(netmask);
+    netmask.sin_family      = AF_INET;
+    netmask.sin_addr.s_addr = htonl(0xffffffff);
+
+    fd = ot::Posix::SocketWithCloseExec(AF_INET, SOCK_DGRAM, IPPROTO_IP, ot::Posix::kSocketBlock);
+    VerifyOrExit(fd >= 0, error = OT_ERROR_FAILED; LogWarn("Failed to open an IPv4 socket: %s", strerror(errno)));
+
+    if (aIsAdded)
+    {
+        struct ifaliasreq request;
+
+        memset(&request, 0, sizeof(request));
+        strlcpy(request.ifra_name, gNetifName, sizeof(request.ifra_name));
+        memcpy(&request.ifra_addr, &address, sizeof(address));
+        memcpy(&request.ifra_broadaddr, &address, sizeof(address));
+        memcpy(&request.ifra_mask, &netmask, sizeof(netmask));
+
+        VerifyOrExit(ioctl(fd, SIOCAIFADDR, &request) == 0, error = OT_ERROR_FAILED;
+                     LogWarn("Failed to add %s to %s: %s", addressString, gNetifName, strerror(errno)));
+    }
+    else
+    {
+        struct ifreq request;
+
+        memset(&request, 0, sizeof(request));
+        strlcpy(request.ifr_name, gNetifName, sizeof(request.ifr_name));
+        memcpy(&request.ifr_addr, &address, sizeof(address));
+
+        VerifyOrExit((ioctl(fd, SIOCDIFADDR, &request) == 0) || (errno == EADDRNOTAVAIL), error = OT_ERROR_FAILED;
+                     LogWarn("Failed to remove %s from %s: %s", addressString, gNetifName, strerror(errno)));
+    }
+
+    LogInfo("%s %s %s %s for the NAT64 CIDR route", aIsAdded ? "Added" : "Removed", addressString,
+            aIsAdded ? "to" : "from", gNetifName);
+
+exit:
+    if (fd >= 0)
+    {
+        close(fd);
+    }
+
+    return error;
+}
+
+static otError AddIp4Route(const otIp4Cidr &aIp4Cidr, uint32_t aPriority)
+{
+    otError error;
+
+    SuccessOrExit(error = SetIp4Address(aIp4Cidr, /* aIsAdded */ true));
+
+    error = AddRoute(ToRoutePrefix(aIp4Cidr), aPriority);
+
+    if (error != OT_ERROR_NONE)
+    {
+        IgnoreError(SetIp4Address(aIp4Cidr, /* aIsAdded */ false));
+    }
+
+exit:
+    return error;
+}
+
+static otError DeleteIp4Route(const otIp4Cidr &aIp4Cidr)
+{
+    otError error = DeleteRoute(ToRoutePrefix(aIp4Cidr));
+
+    IgnoreError(SetIp4Address(aIp4Cidr, /* aIsAdded */ false));
+
+    return error;
+}
+#endif
+#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || ... || OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 #endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
 #if defined(__linux__) &&                                                                                           \
@@ -1977,7 +2195,7 @@ static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsA
     }
 }
 
-#if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 static otIp4Cidr   sActiveNat64Cidr;
 static otIp6Prefix sActiveNat64Ip6Prefix;
@@ -2124,7 +2342,7 @@ static void processNat64StateChange(void)
         deleteNat64Ip6Route();
     }
 }
-#endif // defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
 {
@@ -2150,13 +2368,31 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
         ot::Posix::UpdateIpSets(aInstance);
 #endif
     }
-#if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     if ((OT_CHANGED_NAT64_TRANSLATOR_STATE | OT_CHANGED_THREAD_NETIF_STATE) & aFlags)
     {
         processNat64StateChange();
     }
 #endif
 }
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE ||                                                    \
+    (OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
+     !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE)
+static constexpr uint8_t kIpVersion4 = 4;
+static constexpr uint8_t kIpVersion6 = 6;
+
+static uint8_t getIpVersion(const uint8_t *data)
+{
+    assert(data != nullptr);
+
+    // Mute compiler warnings.
+    OT_UNUSED_VARIABLE(kIpVersion4);
+    OT_UNUSED_VARIABLE(kIpVersion6);
+
+    return (static_cast<uint8_t>(data[0]) >> 4) & 0x0F;
+}
+#endif
 
 static void processReceive(otMessage *aMessage, void *aContext)
 {
@@ -2185,11 +2421,23 @@ static void processReceive(otMessage *aMessage, void *aContext)
 #endif
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-    packet[0] = 0;
-    packet[1] = 0;
-    packet[2] = (PF_INET6 << 8) & 0xFF;
-    packet[3] = (PF_INET6 << 0) & 0xFF;
-    length += 4;
+    {
+        // The header names the address family of the datagram; the NAT64 translator's are IPv4.
+        uint32_t family = PF_INET6;
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+        if ((length > 0) && (getIpVersion(reinterpret_cast<uint8_t *>(&packet[offset])) == kIpVersion4))
+        {
+            family = PF_INET;
+        }
+#endif
+
+        packet[0] = 0;
+        packet[1] = 0;
+        packet[2] = static_cast<char>((family >> 8) & 0xFF);
+        packet[3] = static_cast<char>((family >> 0) & 0xFF);
+        length += 4;
+    }
 #endif
 
     VerifyOrExit(write(sTunFd, packet, length) == length, perror("write"); error = OT_ERROR_FAILED);
@@ -2202,24 +2450,6 @@ exit:
         LogWarn("Failed to receive, error:%s", otThreadErrorToString(error));
     }
 }
-
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE ||                                                    \
-    (OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
-     !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE)
-static constexpr uint8_t kIpVersion4 = 4;
-static constexpr uint8_t kIpVersion6 = 6;
-
-static uint8_t getIpVersion(const uint8_t *data)
-{
-    assert(data != nullptr);
-
-    // Mute compiler warnings.
-    OT_UNUSED_VARIABLE(kIpVersion4);
-    OT_UNUSED_VARIABLE(kIpVersion6);
-
-    return (static_cast<uint8_t>(data[0]) >> 4) & 0x0F;
-}
-#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
     !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
