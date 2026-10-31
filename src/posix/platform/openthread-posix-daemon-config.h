@@ -39,12 +39,16 @@
  * @def OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
  *
  * Define socket basename used by POSIX app daemon.
+ *
+ * The socket and its lock file live in the runtime directory: /run on Linux, /var/run elsewhere. Under /tmp, which
+ * macOS prunes of regular files unused for three days, the lock file of a long-running daemon disappears and a
+ * second daemon can start.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
 #ifdef __linux__
 #define OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "/run/openthread-%s"
 #else
-#define OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "/tmp/openthread-%s"
+#define OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "/var/run/openthread-%s"
 #endif
 #endif
 
