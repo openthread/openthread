@@ -369,7 +369,7 @@ jobs:
             sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
             ;;
         esac
-        sudo apt-get --no-install-recommends install -y gcc-${{ matrix.gcc_ver }} g++-${{ matrix.gcc_ver }} ninja-build libreadline-dev libncurses-dev
+        sudo apt-get --no-install-recommends install -y gcc-${{ matrix.gcc_ver }} g++-${{ matrix.gcc_ver }} ninja-build libreadline-dev libncurses-dev unifdef
     - name: Build
       run: |
         case ${{ matrix.target }} in
@@ -414,7 +414,7 @@ jobs:
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ matrix.clang_ver }}
           sudo apt-get update
-          sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
+          sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev unifdef
       - name: Build
         run: |
           case ${{ matrix.target }} in
