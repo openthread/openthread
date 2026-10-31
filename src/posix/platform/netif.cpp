@@ -299,6 +299,9 @@ static constexpr size_t kMaxIp6Size = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
 static bool sIsSyncingState = false;
 #endif
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+static bool sIsHostNetifUp = false; ///< The host's link state as last seen, to act on changes only.
+#endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
 // Joining an interface-local or link-local multicast group fails with EINVAL until IPv6 is attached to the
@@ -1149,6 +1152,11 @@ static void SetLinkState(otInstance *aInstance, bool aState)
         sIsSyncingState = true;
 #endif
     }
+
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    // The host's link state is what was just set (see `sIsHostNetifUp`).
+    sIsHostNetifUp = aState;
+#endif
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -2798,19 +2806,38 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 exit:;
 }
 
-static void processNetifInfoEvent(otInstance *aInstance, struct rt_msghdr *rtm)
+static void processNetifInfoEvent(otInstance *aInstance, struct rt_msghdr *aRtm)
 {
-    struct if_msghdr *ifm   = reinterpret_cast<struct if_msghdr *>(rtm);
+    struct if_msghdr *ifm   = reinterpret_cast<struct if_msghdr *>(aRtm);
     otError           error = OT_ERROR_NONE;
+    struct ifreq      ifr;
+    bool              isUp;
 
     VerifyOrExit(ifm->ifm_index == static_cast<int>(gNetifIndex));
 
-    UpdateLink(aInstance);
+    // RTM_IFINFO is sent for every change of the interface and carries the flags of that moment, so
+    // read the flags as they are now and act on a change of the host's link state only (as the Linux
+    // handler does with ifi_change): a message queued for another reason cannot then undo a change
+    // OpenThread made in the meantime.
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, gNetifName, sizeof(ifr.ifr_name));
+    VerifyOrExit(ioctl(sIpFd, SIOCGIFFLAGS, &ifr) == 0, LogWarn("ioctl(SIOCGIFFLAGS): %s", strerror(errno));
+                 error = OT_ERROR_FAILED);
+    isUp = ((ifr.ifr_flags & IFF_UP) != 0);
+
+    VerifyOrExit(isUp != sIsHostNetifUp);
+    sIsHostNetifUp = isUp;
+
+    LogInfo("Host netif is %s", isUp ? "up" : "down");
+
+    VerifyOrExit(isUp != otIp6IsEnabled(aInstance));
+    SuccessOrExit(error = otIp6SetEnabled(aInstance, isUp));
+    LogInfo("Succeeded to sync netif state with host");
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        LogWarn("Failed to process info event: %s", otThreadErrorToString(error));
+        LogWarn("Failed to sync netif state with host: %s", otThreadErrorToString(error));
     }
 }
 
@@ -3478,6 +3505,13 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     platformConfigureNetLink();
     platformConfigureTunDevice(aPlatformConfig);
 
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    // A macOS utun is created up (a BSD tun is not). Start down, as a Linux tun does: OpenThread
+    // brings the interface up with its IPv6, and the host's changes of the link state are passed
+    // to OpenThread from there on.
+    SetLinkState(gInstance, false);
+#endif
+
     gNetifIndex = if_nametoindex(gNetifName);
     VerifyOrDie(gNetifIndex > 0, OT_EXIT_FAILURE);
 
@@ -3588,6 +3622,10 @@ void platformNetifDeinit(void)
     // Deferred joins never reached the kernel; there is nothing to leave.
     sIsIp6Attached      = false;
     sDeferredJoinsCount = 0;
+#endif
+
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    sIsHostNetifUp = false;
 #endif
 
     gNetifIndex = 0;
