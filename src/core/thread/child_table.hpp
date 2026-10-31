@@ -176,6 +176,16 @@ public:
     Child *FindChild(const Mac::Address &aMacAddress, Child::StateFilter aFilter);
 
     /**
+     * Finds a valid MTD child with a registered IPv6 address and fewer than `Mle::kFailedChildTransmissions`
+     * consecutive link failures.
+     *
+     * @param[in] aAddress  The IPv6 address to find.
+     *
+     * @returns A pointer to the matching child, or `nullptr` if none is found.
+     */
+    Child *FindMinimalChild(const Ip6::Address &aAddress);
+
+    /**
      * Indicates whether the child table contains any child matching a given state filter.
      *
      * @param[in]  aFilter  A child state filter.
