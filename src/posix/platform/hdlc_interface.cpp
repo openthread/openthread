@@ -636,17 +636,11 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
         else if (aRadioUrl.HasParam("uart-init-deassert"))
         {
             // When flow control is disabled, deassert DTR and RTS on init
-#ifndef __APPLE__
-            int flags;
-#endif
+            int flags = TIOCM_DTR | TIOCM_RTS;
 
             tios.c_cflag &= ~(CRTSCTS);
 
-#ifndef __APPLE__
-            // Deassert DTR and RTS
-            flags = TIOCM_DTR | TIOCM_RTS;
-            VerifyOrExit(ioctl(fd, TIOCMBIC, &flags) != -1, perror("tiocmbic"));
-#endif
+            VerifyOrExit((rval = ioctl(fd, TIOCMBIC, &flags)) != -1, perror("tiocmbic"));
         }
 
         VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));
