@@ -1287,6 +1287,14 @@ void Ip6::DetermineAction(const Message &aMessage,
         ExitNow();
     }
 
+#if OPENTHREAD_FTD
+    if (Get<ChildTable>().FindMinimalChild(aHeader.GetDestination()) != nullptr)
+    {
+        aForwardThread = true;
+        ExitNow();
+    }
+#endif
+
     if (Get<NetworkData::Leader>().RouteLookup(aHeader.GetSource(), aHeader.GetDestination(), rloc16) != kErrorNone)
     {
         // No route in mesh, forward to host (as a last resort).
