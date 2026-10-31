@@ -463,7 +463,7 @@ private:
     Error HandleDatagram(Message &aMessage, const Mac::Address &aMacSource);
     void  ClearReassemblyList(void);
     Error RemoveUnsecureReassemblyMessage(void);
-    void  HandleDiscoverComplete(void);
+    void  UpdateRxOnWhenIdle(void);
 
     void          HandleReceivedFrame(Mac::RxFrame::ParseInfo &aFrameInfo);
     Mac::TxFrame *PrepareFrame(Mac::TxFrames &aTxFrames);
@@ -578,6 +578,7 @@ private:
     bool           mEnabled : 1;
     bool           mTxPaused : 1;
     bool           mSendBusy : 1;
+    bool           mRxOnWhenIdle : 1;
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
     bool         mDelayNextTx : 1;
     TxDelayTimer mTxDelayTimer;

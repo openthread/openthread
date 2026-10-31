@@ -147,11 +147,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     mScanChannel = Mac::ChannelMask::kChannelIteratorFirst;
     mState       = (mScanChannels.GetNextChannel(mScanChannel) == kErrorNone) ? kStateScanning : kStateScanDone;
 
-    // For rx-off-when-idle device, temporarily enable receiver during discovery procedure.
-    if (!Get<Mle>().IsDisabled() && !Get<Mle>().IsRxOnWhenIdle())
-    {
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
-    }
+    Get<MeshForwarder>().UpdateRxOnWhenIdle();
 
     Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, Ip6::Address::GetLinkLocalAllRoutersMulticast());
 
@@ -250,12 +246,6 @@ void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage, Error
 
 void DiscoverScanner::HandleDiscoverComplete(void)
 {
-    // Restore Data Polling or CSL for rx-off-when-idle device.
-    if (!Get<Mle>().IsDisabled() && !Get<Mle>().IsRxOnWhenIdle())
-    {
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
-    }
-
     switch (mState)
     {
     case kStateIdle:
@@ -264,10 +254,12 @@ void DiscoverScanner::HandleDiscoverComplete(void)
     case kStateScanning:
         mTimer.Stop();
         Get<MeshForwarder>().ResumeMessageTransmissions();
+        mState = kStateScanDone;
 
         OT_FALL_THROUGH;
 
     case kStateScanDone:
+        Get<MeshForwarder>().UpdateRxOnWhenIdle();
         Get<Mac::Mac>().ClearTemporaryChannel();
 
         if (mShouldRestorePanId)

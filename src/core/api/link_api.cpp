@@ -480,3 +480,25 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 
     return error;
 }
+
+otError otLinkSetRxOnWhenIdle(otInstance *aInstance, bool aRxOnWhenIdle)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    if (instance.Get<Mac::LinkRaw>().IsEnabled())
+    {
+        instance.Get<Mac::SubMac>().SetRxOnWhenIdle(aRxOnWhenIdle);
+        ExitNow();
+    }
+#endif
+
+    VerifyOrExit(instance.Get<Mac::Mac>().IsEnabled() && instance.Get<Mle::Mle>().IsDisabled(),
+                 error = kErrorInvalidState);
+
+    instance.Get<MeshForwarder>().SetRxOnWhenIdle(aRxOnWhenIdle);
+
+exit:
+    return error;
+}
