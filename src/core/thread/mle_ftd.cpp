@@ -914,6 +914,7 @@ Error Mle::SendLinkAccept(const LinkAcceptInfo &aInfo)
         SuccessOrExit(error = mTxChallengeTable.GenerateFor(router->GetRouterId(), challenge));
         SuccessOrExit(error = message->AppendChallengeTlv(challenge));
         SuccessOrExit(error = message->AppendTlvRequestTlv(kRouterTlvs));
+        router->RestartLinkAcceptTimeout();
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1819,7 +1820,7 @@ void Mle::HandleTimeTick(void)
         }
 
         if (router.IsStateLinkRequest() && !mDelayedSender.HasAnyScheduledLinkRequest(router) &&
-            !router.IsWaitingForLinkAccept())
+            !mDelayedSender.HasAnyScheduledLinkAccept(router) && !router.IsWaitingForLinkAccept())
         {
             LogInfo("Router 0x%04x - Failed to schedule/send Link Request", router.GetRloc16());
             RemoveNeighbor(router);

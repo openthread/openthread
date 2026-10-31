@@ -1708,6 +1708,7 @@ private:
         void RemoveScheduledLinkRequest(const Router &aRouter);
         bool HasAnyScheduledLinkRequest(const Router &aRouter) const;
         void ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint32_t aDelay);
+        bool HasAnyScheduledLinkAccept(const Router &aRouter) const;
         void ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
                                        const DiscoveryResponseInfo &aInfo,
                                        uint32_t                     aDelay);
