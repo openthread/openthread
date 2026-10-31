@@ -51,7 +51,7 @@ namespace ot {
 class FakePlatform
 {
 public:
-    FakePlatform();
+    explicit FakePlatform(otRadioCaps aRadioCaps = OT_RADIO_CAPS_NONE);
     virtual ~FakePlatform();
 
     static FakePlatform &CurrentPlatform() { return *sPlatform; }
@@ -88,6 +88,8 @@ public:
 #endif
 
     uint8_t               GetReceiveChannel(void) const { return mChannel; }
+    virtual otRadioCaps   GetRadioCaps(void) const { return mRadioCaps; }
+    virtual otError       EnergyScan(uint8_t, uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
     virtual otRadioFrame *GetTransmitBuffer() { return &mTransmitFrame; }
     virtual otError       Transmit(otRadioFrame *aFrame);
     virtual otError       ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
@@ -196,6 +198,7 @@ protected:
     static FakePlatform *sPlatform;
 
     otInstance *mInstance = nullptr;
+    otRadioCaps mRadioCaps;
 
     uint64_t mNow = 0;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
