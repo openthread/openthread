@@ -855,15 +855,16 @@ public:
     const char *GetVersion(void) const { return mSpinelDriver->GetVersion(); }
 
     /**
-     * Sets the max transmit power.
+     * Sets the max transmit power for a given channel.
      *
      * @param[in] aChannel    The radio channel.
-     * @param[in] aMaxPower   The max transmit power in dBm.
+     * @param[in] aMaxPower   The max transmit power in 0.01 dBm. Passing `OT_RADIO_POWER_INVALID_IN_MBM` will disable
+     *                        this channel.
      *
      * @retval  OT_ERROR_NONE           Successfully set the max transmit power.
      * @retval  OT_ERROR_INVALID_ARGS   Channel is not in valid range.
      */
-    otError SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aMaxPower);
+    otError SetChannelMaxTransmitPower(uint8_t aChannel, int16_t aMaxPower);
 
     /**
      * Tries to retrieve a spinel property from OpenThread transceiver.
@@ -990,7 +991,8 @@ public:
      * Set the target power for the given channel.
      *
      * @param[in]  aChannel      The radio channel.
-     * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `INT16_MAX` will disable this channel.
+     * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `OT_RADIO_POWER_INVALID_IN_MBM` will disable this
+     *                           channel.
      *
      * @retval  OT_ERROR_NONE              Successfully set the target power.
      * @retval  OT_ERROR_INVALID_ARGS      The @p aChannel or @p aTargetPower is invalid..
@@ -1217,6 +1219,8 @@ private:
 
     void HandleCompatibilityError(void);
 
+    static int8_t ConvertMbmToDbm(int16_t aPowerMbm);
+
     typedef otRadioSpinelMetrics Metrics;
 
     class MetricsTracker
@@ -1368,6 +1372,7 @@ private:
 
     bool mTimeSyncEnabled : 1;
     bool mTimeSyncOn : 1;
+    bool mSupportsTargetPower : 1;
 
     SpinelDriver *mSpinelDriver;
 };

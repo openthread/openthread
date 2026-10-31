@@ -152,6 +152,12 @@ Error PowerCalibration::GetPowerSettings(uint8_t   aChannel,
     chIndex     = aChannel - Radio::kChannelMin;
     targetPower = mTargetPowerTable[chIndex];
     VerifyOrExit(targetPower != kInvalidPower, error = kErrorNotFound);
+
+    if (aTargetPower != nullptr)
+    {
+        *aTargetPower = targetPower;
+    }
+
     VerifyOrExit(mCalibratedPowerTables[chIndex].GetLength() > 0, error = kErrorNotFound);
 
     for (uint8_t i = 0; i < mCalibratedPowerTables[chIndex].GetLength(); i++)

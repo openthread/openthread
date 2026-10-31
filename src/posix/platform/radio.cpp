@@ -207,16 +207,28 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
     OT_UNUSED_VARIABLE(aRadioUrl);
 
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-    otError          error;
-    constexpr int8_t kPowerDefault     = 30; // Default power 1 watt (30 dBm).
-    char            *str               = nullptr;
-    char            *pSave             = nullptr;
-    uint8_t          channel           = ot::Radio::kChannelMin;
-    int8_t           power             = kPowerDefault;
-    const char      *maxPowerTable     = nullptr;
-    char            *maxPowerTableCopy = nullptr;
+    otError           error;
+    constexpr int16_t kPowerDefault     = MaxPowerTable::kPowerDefault;
+    char             *str               = nullptr;
+    char             *pSave             = nullptr;
+    uint8_t           channel           = ot::Radio::kChannelMin;
+    int16_t           power             = kPowerDefault;
+    const char       *maxPowerTable     = nullptr;
+    char             *maxPowerTableCopy = nullptr;
+    bool              inMbm             = false;
 
-    VerifyOrExit((maxPowerTable = aRadioUrl.GetValue("max-power-table")) != nullptr);
+    if ((maxPowerTable = aRadioUrl.GetValue("max-power-table-mbm")) != nullptr)
+    {
+        inMbm = true;
+    }
+    else if ((maxPowerTable = aRadioUrl.GetValue("max-power-table")) != nullptr)
+    {
+        inMbm = false;
+    }
+    else
+    {
+        ExitNow();
+    }
 
     maxPowerTableCopy = strdup(maxPowerTable);
     VerifyOrDie(maxPowerTableCopy != nullptr, OT_EXIT_FAILURE);
@@ -224,7 +236,36 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
     for (str = strtok_r(maxPowerTableCopy, ",", &pSave); str != nullptr && channel <= ot::Radio::kChannelMax;
          str = strtok_r(nullptr, ",", &pSave))
     {
-        power = static_cast<int8_t>(strtol(str, nullptr, 0));
+        long val = strtol(str, nullptr, 0);
+
+        if (inMbm)
+        {
+            if (val >= OT_RADIO_POWER_INVALID_IN_MBM)
+            {
+                power = MaxPowerTable::kPowerInvalid;
+            }
+            else if (val < INT16_MIN)
+            {
+                power = INT16_MIN;
+            }
+            else
+            {
+                power = static_cast<int16_t>(val);
+            }
+        }
+        else if (val < INT8_MIN)
+        {
+            power = INT8_MIN * 100;
+        }
+        else if (val < OT_RADIO_POWER_INVALID)
+        {
+            power = static_cast<int16_t>(val * 100);
+        }
+        else
+        {
+            power = MaxPowerTable::kPowerInvalid;
+        }
+
         error = mRadioSpinel.SetChannelMaxTransmitPower(channel, power);
         VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_EXIT_FAILURE);
         if (error == OT_ERROR_NOT_IMPLEMENTED)
@@ -255,7 +296,6 @@ exit:
     {
         free(maxPowerTableCopy);
     }
-    return;
 #endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
 }
 
@@ -1023,7 +1063,11 @@ uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return GetRadioSpinel().SetChannelMaxTransmitPower(aChannel, aMaxPower);
+
+    int16_t maxPower = (aMaxPower == OT_RADIO_POWER_INVALID) ? ot::MaxPowerTable::kPowerInvalid
+                                                             : static_cast<int16_t>(aMaxPower * 100);
+
+    return GetRadioSpinel().SetChannelMaxTransmitPower(aChannel, maxPower);
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
