@@ -58,11 +58,18 @@ int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption
     int fd   = -1;
 
 #ifdef __APPLE__
-    VerifyOrExit((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
+    // Without SOCK_CLOEXEC and SOCK_NONBLOCK the flags are set afterwards: FD_CLOEXEC is a descriptor flag
+    // (F_SETFD), O_NONBLOCK a file status flag (F_SETFL). F_SETFD silently drops O_NONBLOCK.
+    VerifyOrExit((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket"));
 
     VerifyOrExit((rval = fcntl(fd, F_GETFD, 0)) != -1, perror("fcntl(F_GETFD)"));
-    rval |= aBlockOption == kSocketNonBlock ? O_NONBLOCK | FD_CLOEXEC : FD_CLOEXEC;
-    VerifyOrExit((rval = fcntl(fd, F_SETFD, rval)) != -1, perror("fcntl(F_SETFD)"));
+    VerifyOrExit((rval = fcntl(fd, F_SETFD, rval | FD_CLOEXEC)) != -1, perror("fcntl(F_SETFD)"));
+
+    if (aBlockOption == kSocketNonBlock)
+    {
+        VerifyOrExit((rval = fcntl(fd, F_GETFL, 0)) != -1, perror("fcntl(F_GETFL)"));
+        VerifyOrExit((rval = fcntl(fd, F_SETFL, rval | O_NONBLOCK)) != -1, perror("fcntl(F_SETFL)"));
+    }
 #else
     aType |= aBlockOption == kSocketNonBlock ? SOCK_CLOEXEC | SOCK_NONBLOCK : SOCK_CLOEXEC;
     VerifyOrExit((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
