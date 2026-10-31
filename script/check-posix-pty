@@ -186,6 +186,21 @@ check_daemon_omr_route()
         || die 'the daemon failed to delete the route of the OMR prefix'
 }
 
+check_netif_mtu()
+{
+    local mtu
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # The Thread interface carries IPv6 datagrams of at most 1280 bytes on every platform.
+    if [[ ${OSTYPE} == darwin* ]]; then
+        mtu=$(ifconfig "${NETIF_NAME}" | sed -n 's/.* mtu \([0-9]*\).*/\1/p')
+    else
+        mtu=$(ip link show "${NETIF_NAME}" | sed -n 's/.* mtu \([0-9]*\) .*/\1/p')
+    fi
+    [[ ${mtu} == 1280 ]] || die "the Thread interface MTU is '${mtu}', expected 1280"
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -225,6 +240,8 @@ do_check()
         # -d5 asks for debug logging; the daemon's output must carry OpenThread's own log lines, not only the
         # syslog() lines of its startup.
         timeout_run 10 grep -qE '\[(D|I)\] ' "${OT_DAEMON_OUTPUT}" || die 'the daemon does not log at the level -d asked for'
+
+        check_netif_mtu
         "${OT_CTL[@]}" -I "${NETIF_NAME}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
 
         # verify supports options in OpenThread commands without separator --
