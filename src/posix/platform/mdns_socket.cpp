@@ -45,6 +45,9 @@
 #include <linux/rtnetlink.h>
 #include <sys/ioctl.h>
 #endif
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET)
+#include <net/route.h>
+#endif
 
 #include <openthread/platform/time.h>
 
@@ -109,6 +112,9 @@ void MdnsSocket::Init(void)
 #if OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK
     mNetlinkFd = -1;
 #endif
+#if OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET
+    mRouteFd = -1;
+#endif
 }
 
 void MdnsSocket::SetUp(void)
@@ -155,6 +161,8 @@ void MdnsSocket::Update(Mainloop::Context &aContext)
     UpdateTimeout(aContext);
 #elif (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
     UpdateNetlink(aContext);
+#elif (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET)
+    UpdateRouteSocket(aContext);
 #endif
 
 exit:
@@ -189,6 +197,8 @@ void MdnsSocket::Process(const Mainloop::Context &aContext)
     ProcessTimeout();
 #elif (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
     ProcessNetlink(aContext);
+#elif (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET)
+    ProcessRouteSocket(aContext);
 #endif
 
 exit:
@@ -866,6 +876,167 @@ exit:
 }
 
 #endif //  (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
+
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET)
+
+// The size a socket address occupies in a routing message: its `sa_len` rounded up as the kernel rounds it, a
+// `sa_len` of 0 occupying one rounding unit (FreeBSD exports its rounding as SA_SIZE, NetBSD as RT_ROUNDUP).
+static size_t RouteSockaddrSize(const struct sockaddr &aSockaddr)
+{
+#if defined(__FreeBSD__)
+    return SA_SIZE(&aSockaddr);
+#elif defined(__NetBSD__)
+    return RT_ROUNDUP(aSockaddr.sa_len);
+#else
+    constexpr size_t kAlign = sizeof(uint32_t);
+    size_t           len    = aSockaddr.sa_len;
+
+    return (len > 0) ? ((len + kAlign - 1) & ~(kAlign - 1)) : kAlign;
+#endif
+}
+
+void MdnsSocket::StartAddressMonitoring(void)
+{
+    mRouteFd = SocketWithCloseExec(PF_ROUTE, SOCK_RAW, AF_UNSPEC, kSocketBlock);
+    VerifyOrDie(mRouteFd >= 0, OT_EXIT_ERROR_ERRNO);
+
+    // Where the platform can filter (NetBSD), receive the address messages only. Elsewhere (macOS) every
+    // routing message of the host arrives and the others are ignored.
+#if defined(RO_MSGFILTER)
+    {
+        uint8_t filter[] = {RTM_NEWADDR, RTM_DELADDR};
+
+        VerifyOrDie(setsockopt(mRouteFd, AF_ROUTE, RO_MSGFILTER, filter, sizeof(filter)) == 0, OT_EXIT_ERROR_ERRNO);
+    }
+#endif
+
+    ReportInfraIfAddresses();
+}
+
+void MdnsSocket::StopAddressMonitoring(void)
+{
+    if (mRouteFd >= 0)
+    {
+        close(mRouteFd);
+    }
+
+    mRouteFd = -1;
+}
+
+void MdnsSocket::UpdateRouteSocket(Mainloop::Context &aContext) const { Mainloop::AddToReadFdSet(mRouteFd, aContext); }
+
+void MdnsSocket::ProcessRouteSocket(const Mainloop::Context &aContext)
+{
+    // Every routing message begins with its length, the version and the type; the header that
+    // follows depends on the type. The socket delivers one message per read.
+    static constexpr size_t kPreludeSize =
+        sizeof(rt_msghdr::rtm_msglen) + sizeof(rt_msghdr::rtm_version) + sizeof(rt_msghdr::rtm_type);
+    static constexpr size_t kBufSize = 8192;
+
+    union
+    {
+        rt_msghdr mHeader; // for the alignment of `mBytes`
+        uint8_t   mBytes[kBufSize];
+    } buffer;
+    ssize_t          rval;
+    const rt_msghdr *header = &buffer.mHeader;
+
+    VerifyOrExit(mRouteFd >= 0);
+    VerifyOrExit(Mainloop::IsFdReadable(mRouteFd, aContext));
+
+    rval = recv(mRouteFd, buffer.mBytes, sizeof(buffer.mBytes), 0);
+
+    if (rval < 0)
+    {
+        VerifyOrExit((errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR));
+
+        // ENOBUFS: the kernel dropped messages; the addresses are re-read in full instead.
+        LogWarn("Failed to receive routing message: %s; reporting the addresses again", strerror(errno));
+        ReportInfraIfAddresses();
+        ExitNow();
+    }
+
+    VerifyOrExit(static_cast<size_t>(rval) >= kPreludeSize);
+    VerifyOrExit(header->rtm_version == RTM_VERSION);
+    VerifyOrExit((header->rtm_type == RTM_NEWADDR) || (header->rtm_type == RTM_DELADDR));
+    VerifyOrExit(static_cast<size_t>(rval) >= sizeof(struct ifa_msghdr));
+
+    ProcessRouteAddrEvent(buffer.mBytes, static_cast<size_t>(rval));
+
+exit:
+    return;
+}
+
+void MdnsSocket::ProcessRouteAddrEvent(const uint8_t *aMessage, size_t aLength) const
+{
+    const struct ifa_msghdr *ifam   = reinterpret_cast<const struct ifa_msghdr *>(aMessage);
+    bool                     added  = (ifam->ifam_type == RTM_NEWADDR);
+    const uint8_t           *cursor = aMessage + sizeof(struct ifa_msghdr);
+    const uint8_t           *end    = aMessage + aLength;
+
+    VerifyOrExit(ifam->ifam_index == mInfraIfIndex);
+
+    // The socket addresses follow the header in the order of the RTAX_* bits set in `ifam_addrs`.
+    for (int index = 0; index < RTAX_MAX; index++)
+    {
+        const struct sockaddr *sa;
+
+        if ((ifam->ifam_addrs & (1 << index)) == 0)
+        {
+            continue;
+        }
+
+        // `sa_len` and `sa_family` come first; a trimmed netmask can be shorter than `struct sockaddr`.
+        VerifyOrExit(cursor + sizeof(sa->sa_len) + sizeof(sa->sa_family) <= end);
+        sa = reinterpret_cast<const struct sockaddr *>(cursor);
+        // The next address starts after the rounded-up size, which must fit as well.
+        VerifyOrExit(cursor + RouteSockaddrSize(*sa) <= end);
+
+        if (index == RTAX_IFA)
+        {
+            otIp6Address ip6Addr;
+
+            if ((sa->sa_family == AF_INET6) && (sa->sa_len >= sizeof(struct sockaddr_in6)))
+            {
+                struct sockaddr_in6 sin6;
+
+                memcpy(&sin6, sa, sizeof(sin6));
+
+                // The kernel embeds the interface index in bytes 2 and 3 of a link-local address.
+                if (IN6_IS_ADDR_LINKLOCAL(&sin6.sin6_addr))
+                {
+                    sin6.sin6_addr.s6_addr[2] = 0;
+                    sin6.sin6_addr.s6_addr[3] = 0;
+                }
+
+                ReadIp6AddressFrom(&sin6.sin6_addr, ip6Addr);
+            }
+            else if ((sa->sa_family == AF_INET) && (sa->sa_len >= sizeof(struct sockaddr_in)))
+            {
+                struct sockaddr_in sin;
+                otIp4Address       ip4Addr;
+
+                memcpy(&sin, sa, sizeof(sin));
+                memcpy(&ip4Addr, &sin.sin_addr, sizeof(ip4Addr));
+                otIp4ToIp4MappedIp6Address(&ip4Addr, &ip6Addr);
+            }
+            else
+            {
+                ExitNow();
+            }
+
+            otPlatMdnsHandleHostAddressEvent(mInstance, &ip6Addr, added, mInfraIfIndex);
+            ExitNow();
+        }
+
+        cursor += RouteSockaddrSize(*sa);
+    }
+
+exit:
+    return;
+}
+
+#endif // (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_ROUTE_SOCKET)
 
 //---------------------------------------------------------------------------------------------------------------------
 // Socket helpers
