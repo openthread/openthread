@@ -3308,10 +3308,41 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 #if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
 static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 {
-    (void)aPlatformConfig;
-    int                 err = 0;
+    constexpr char      kUtunPrefix[] = "utun";
+    int                 err           = 0;
     struct sockaddr_ctl addr;
     struct ctl_info     info;
+    uint32_t            unit = 0; // 0: the kernel picks the lowest free utun
+    const char         *name = aPlatformConfig->mInterfaceName;
+
+    // A requested name utunN asks for that unit, which gives the interface a stable name across restarts; the
+    // digits must be the whole rest of the name, written as the kernel names the interface (no leading zero).
+    // The default name, which main.c passes when -I is not given, leaves the choice to the kernel, the only way
+    // to a free utun; any other name cannot be honoured on macOS and is refused.
+    if ((name != nullptr) && (strncmp(name, kUtunPrefix, sizeof(kUtunPrefix) - 1) == 0))
+    {
+        const char   *digits = name + sizeof(kUtunPrefix) - 1;
+        char         *end;
+        unsigned long number;
+
+        errno  = 0;
+        number = strtoul(digits, &end, 10);
+
+        if ((*digits < '0') || (*digits > '9') || ((*digits == '0') && (digits[1] != '\0')) || (*end != '\0') ||
+            (errno != 0) || (number >= UINT32_MAX) || (strlen(name) >= IFNAMSIZ))
+        {
+            LogCrit("Invalid utun interface name: %s", name);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
+        }
+
+        unit = static_cast<uint32_t>(number) + 1; // sc_unit is the utun number plus one
+    }
+    else if ((name != nullptr) && (name[0] != '\0') &&
+             (strcmp(name, OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME) != 0))
+    {
+        LogCrit("Interface name %s cannot be chosen on macOS: use utunN for a given utun, or none", name);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
 
     sTunFd = ot::Posix::SocketWithCloseExec(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -3326,9 +3357,17 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     addr.sc_family  = AF_SYSTEM;
     addr.ss_sysaddr = AF_SYS_CONTROL;
 
-    addr.sc_unit = 0;
-    err          = connect(sTunFd, (struct sockaddr *)&addr, sizeof(addr));
-    VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
+    addr.sc_unit = unit;
+    err          = connect(sTunFd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
+    if (err != 0)
+    {
+        int error = errno; // the log call may change it, and the exit code reports it
+
+        // EBUSY: the requested utun exists already.
+        LogCrit("Failed to create %s: %s", (unit != 0) ? name : "a utun", strerror(error));
+        errno = error;
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
 
     socklen_t devNameLen;
     devNameLen = (socklen_t)sizeof(gNetifName);
