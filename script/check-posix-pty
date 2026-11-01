@@ -47,6 +47,12 @@ at_exit()
     sudo killall ot-rcp || true
     sudo killall socat || true
 
+    # On macOS the daemon ends on SIGTERM without removing its socket and lock file, and utun names are reused
+    # across runs; stale files would make the next run's socket check pass for the wrong reason.
+    if [[ ${OT_DAEMON} == 'on' && -n ${NETIF_NAME:-} ]]; then
+        sudo rm -f "$(daemon_socket_basename).sock" "$(daemon_socket_basename).lock"
+    fi
+
     # The daemon's output no longer streams through tee; show it when the check failed.
     if [[ ${EXIT_CODE} != 0 && -f ${OT_DAEMON_OUTPUT:-} ]]; then
         cat "${OT_DAEMON_OUTPUT}"
@@ -186,6 +192,25 @@ check_daemon_omr_route()
         || die 'the daemon failed to delete the route of the OMR prefix'
 }
 
+# The default socket basename of the build: in the runtime directory, not /tmp.
+daemon_socket_basename()
+{
+    if [[ ${OSTYPE} == linux-gnu* ]]; then
+        echo "/run/openthread-${NETIF_NAME}"
+    else
+        echo "/var/run/openthread-${NETIF_NAME}"
+    fi
+}
+
+check_daemon_socket_path()
+{
+    local basename
+
+    basename=$(daemon_socket_basename)
+    sudo test -S "${basename}.sock" || die "ot-daemon does not listen on ${basename}.sock"
+    sudo test -f "${basename}.lock" || die "ot-daemon lock file ${basename}.lock does not exist"
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -216,6 +241,7 @@ do_check()
         sleep 3
         # macOS cannot explicitly set network interface name
         NETIF_NAME=$(grep -o 'Thread interface: .\+' "${OT_DAEMON_OUTPUT}" | cut -d: -f2 | tr -d ' \r\n')
+        check_daemon_socket_path
         OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
         if [[ ${OT_DAEMON_ALLOW_ALL} == 1 ]] || [[ -n ${OT_ISOLATED_REEXEC:-} ]]; then
             OT_CTL=("${OT_CTL_PATH}")
