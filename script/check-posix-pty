@@ -186,6 +186,55 @@ check_daemon_omr_route()
         || die 'the daemon failed to delete the route of the OMR prefix'
 }
 
+set_host_address()
+{
+    if [[ ${OSTYPE} == darwin* ]]; then
+        sudo ifconfig "${NETIF_NAME}" inet6 "$2" prefixlen 64 "$([[ $1 == add ]] && echo alias || echo -alias)"
+    else
+        sudo ip -6 addr "$1" "$2/64" dev "${NETIF_NAME}"
+    fi
+}
+
+check_daemon_address_events()
+{
+    local address='fd00:1234:5678::1'
+    # ot-ctl prints every address as eight groups, without "::"; `ipaddr -v` adds the origin, the prefix
+    # length taken from the trimmed netmask and the flags the address was added with.
+    local listed='fd00:1234:5678:0:0:0:0:1'
+    local listed_verbose="${listed} origin:manual plen:64 preferred:1 valid:1"
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # The routing socket (netlink on Linux) reports every address and multicast membership of the
+    # interface to the daemon, its own included, and the daemon logs each report at info level.
+    grep -q 'ADD \[U\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of OpenThread's own addresses did not reach ot-daemon"
+    grep -q 'ADD \[M\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of the interface's multicast memberships did not reach ot-daemon"
+
+    # An address the host adds becomes an address of OpenThread and goes with its removal.
+    set_host_address add "${address}"
+    timeout_run 10 host_address_known "${listed_verbose}" || die 'an address added on the host did not reach OpenThread'
+
+    set_host_address del "${address}"
+    timeout_run 10 host_address_gone "${listed}" || die 'an address removed on the host is still known to OpenThread'
+}
+
+# The CLI ends its lines with CR LF; the CR goes before the whole-line match.
+host_address_known()
+{
+    local addresses
+
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ipaddr -v) || return 1
+    grep -Fx "$1" <<<"${addresses//$'\r'/}" >/dev/null
+}
+
+host_address_gone()
+{
+    local addresses
+
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ipaddr) || return 1
+    ! grep -Fx "$1" <<<"${addresses//$'\r'/}" >/dev/null
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -334,19 +383,22 @@ EOF
     fi
 
     check_daemon_multicast_group Added
+    check_daemon_address_events
+
+    # A group an application joins on the host becomes a membership of OpenThread and goes with the leave
+    # (netlink on Linux, RTM_NEWMADDR/RTM_DELMADDR on BSD).
+    if [[ ${OT_DAEMON} == 'on' ]]; then
+        NETIF_INDEX=$(python3 -c 'import socket, sys; print(socket.if_nametoindex(sys.argv[1]))' "${NETIF_NAME}")
+        sudo env PATH="$(dirname "${OT_CTL_PATH}"):${PATH}" \
+            python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" "${NETIF_NAME}" \
+            || die 'multicast group join failed'
+    fi
 
     # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
     if [[ $OSTYPE != "linux-gnu"* ]]; then
         check_daemon_omr_route
         check_daemon_netif_down
         return 0
-    fi
-
-    if [[ ${OT_DAEMON} == 'on' ]]; then
-        NETIF_INDEX=$(ip link show "${NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
-        sudo env PATH="$(dirname "${OT_CTL_PATH}"):${PATH}" \
-            python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" "${NETIF_NAME}" \
-            || die 'multicast group join failed'
     fi
 
     # Retrievie test resource through application CoAP
