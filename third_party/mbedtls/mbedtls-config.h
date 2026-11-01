@@ -26,9 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Spans multiple lines to avoid being processed by unifdef
-#ifndef \
-    MBEDTLS_CONFIG_H
+#ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
 #include "openthread-core-config.h"
@@ -191,9 +189,7 @@
 #define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
 #define MBEDTLS_ENTROPY_MAX_SOURCES 1
 
-// Spans multiple lines to avoid being processed by unifdef
-#if defined(\
-    MBEDTLS_USER_CONFIG_FILE)
+#if defined(MBEDTLS_USER_CONFIG_FILE)
 #include MBEDTLS_USER_CONFIG_FILE
 #endif
 

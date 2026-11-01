@@ -463,7 +463,7 @@ jobs:
             CXX: clang++
           - CC: gcc
             CXX: g++
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       CC: ${{ matrix.CC }}
       CXX: ${{ matrix.CXX }}
