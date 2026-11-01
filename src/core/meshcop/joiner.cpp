@@ -46,7 +46,6 @@ Joiner::Joiner(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateIdle)
     , mFinalizeRejected(false)
-    , mFinalizeMessage(nullptr)
     , mTimer(aInstance)
 {
     SetIdFromIeeeEui64();
@@ -154,7 +153,7 @@ Error Joiner::Start(const char      *aPskd,
 exit:
     if ((error != kErrorNone) && shouldCleanup)
     {
-        FreeJoinerFinalizeMessage();
+        mFinalizeMessage.Free();
         Get<Tmf::SecureAgent>().Close();
         Get<Seeker>().Stop();
         SetState(kStateIdle);
@@ -197,7 +196,7 @@ void Joiner::Finish(Error aError)
     }
 
     SetState(kStateIdle);
-    FreeJoinerFinalizeMessage();
+    mFinalizeMessage.Free();
 
     mCompletionCallback.InvokeIfSet(aError);
 
@@ -334,7 +333,7 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     Error                 error = kErrorNone;
     VendorStackVersionTlv vendorStackVersionTlv;
 
-    mFinalizeMessage = Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriJoinerFinalize);
+    mFinalizeMessage.Reset(Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriJoinerFinalize));
     VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
 
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
@@ -366,17 +365,6 @@ exit:
     return error;
 }
 
-void Joiner::FreeJoinerFinalizeMessage(void)
-{
-    VerifyOrExit(mFinalizeMessage != nullptr);
-
-    mFinalizeMessage->Free();
-    mFinalizeMessage = nullptr;
-
-exit:
-    return;
-}
-
 void Joiner::SendJoinerFinalize(void)
 {
     OT_ASSERT(mFinalizeMessage != nullptr);
@@ -386,7 +374,7 @@ void Joiner::SendJoinerFinalize(void)
 #endif
 
     SuccessOrExit(Get<Tmf::SecureAgent>().SendMessage(*mFinalizeMessage, HandleJoinerFinalizeResponse, this));
-    mFinalizeMessage = nullptr;
+    mFinalizeMessage.Release();
 
     LogInfo("Sent %s", UriToString<kUriJoinerFinalize>());
 
@@ -477,17 +465,16 @@ exit:
 
 void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
 {
-    Error            error = kErrorNone;
-    Coap::Message   *message;
-    Ip6::MessageInfo responseInfo(aMsg.mMessageInfo);
+    OwnedPtr<Coap::Message> message;
+    Ip6::MessageInfo        responseInfo(aMsg.mMessageInfo);
 
-    message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage));
+    VerifyOrExit(message != nullptr);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     responseInfo.GetSockAddr().Clear();
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, responseInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(message.PassOwnership(), responseInfo));
 
     if (!mFinalizeRejected)
     {
@@ -498,7 +485,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
     LogCert("[THCI] direction=send | type=JOIN_ENT.rsp");
 
 exit:
-    FreeMessageOnError(message, error);
+    return;
 }
 
 void Joiner::HandleTimer(void)
