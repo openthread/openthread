@@ -89,7 +89,6 @@
 #include "crypto/mbedtls.hpp"
 #include "crypto/storage.hpp"
 #include "mac/mac.hpp"
-#include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
 #include "meshcop/border_agent_admitter.hpp"
 #include "meshcop/border_agent_ephemeral_key.hpp"
@@ -148,6 +147,7 @@
 #include "thread/time_sync_service.hpp"
 #include "thread/tmf.hpp"
 #include "thread/vendor_info.hpp"
+#include "thread_direct/td_key_manager.hpp"
 #include "utils/channel_manager.hpp"
 #include "utils/channel_monitor.hpp"
 #include "utils/heap.hpp"
@@ -285,9 +285,12 @@ public:
 #endif
 
     /**
-     * Indicates whether or not the instance is valid/initialized and not yet finalized.
+     * Indicates whether or not the instance is fully initialized and not yet being finalized.
      *
-     * @returns TRUE if the instance is valid/initialized, FALSE otherwise.
+     * This is only meant for core modules (e.g. logging) that may run while the instance is being constructed or
+     * destructed. It MUST NOT be used to check whether an `Instance` object is alive.
+     *
+     * @returns TRUE if the instance is initialized, FALSE otherwise.
      */
     bool IsInitialized(void) const { return mIsInitialized; }
 
@@ -457,7 +460,7 @@ public:
      *
      * @returns TRUE if the "DNS name compression" mode is enabled, FALSE otherwise.
      */
-    bool IsDnsNameCompressionEnabled(void) { return mDnsNameCompressionEnabled; }
+    bool IsDnsNameCompressionEnabled(void) const { return mDnsNameCompressionEnabled; }
 #endif
 
     /**
@@ -542,10 +545,10 @@ private:
         // set to `nullptr` to avoid any potential use of a dangling pointer.
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
-        ActiveInstanceTracker(Instance &aInstance) { gActiveInstance = &aInstance; }
+        explicit ActiveInstanceTracker(Instance &aInstance) { gActiveInstance = &aInstance; }
         ~ActiveInstanceTracker(void) { gActiveInstance = nullptr; }
 #else
-        ActiveInstanceTracker(Instance &) {}
+        explicit ActiveInstanceTracker(Instance &) {}
 #endif
     };
 
@@ -575,6 +578,12 @@ private:
     //
     // Tasklet and Timer Schedulers are first to ensure other
     // objects/classes can use them from their constructors.
+
+    // `mIsInitialized` is the very first member so that it is
+    // initialized before any other member. This allows modules
+    // (e.g. logging) to safely call `IsInitialized()` while the
+    // other members are being constructed or destructed.
+    bool mIsInitialized;
 
     ActiveInstanceTracker mActiveInstanceTracker;
 
@@ -718,6 +727,10 @@ private:
     NetDiag::Server mNetDiagServer;
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     NetDiag::Client mNetDiagClient;
+#endif
+
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    ThreadDirect::KeyManager mThreadDirectKeyManager;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
@@ -909,8 +922,6 @@ private:
 #endif
 #endif
 
-    bool mIsInitialized;
-
     uint32_t mId;
 };
 
@@ -968,14 +979,6 @@ template <> inline NeighborTable &Instance::Get(void) { return mMle.mNeighborTab
 template <> inline ChildTable &Instance::Get(void) { return mMle.mChildTable; }
 
 template <> inline RouterTable &Instance::Get(void) { return mMle.mRouterTable; }
-#endif
-
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-template <> inline PeerTable &Instance::Get(void) { return mMle.mP2p.mPeerTable; }
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-template <> inline WakeupTxScheduler &Instance::Get(void) { return mMle.mWakeupTxScheduler; }
 #endif
 
 template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }
@@ -1136,6 +1139,10 @@ template <> inline NetDiag::Server &Instance::Get(void) { return mNetDiagServer;
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 template <> inline NetDiag::Client &Instance::Get(void) { return mNetDiagClient; }
+#endif
+
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+template <> inline ThreadDirect::KeyManager &Instance::Get(void) { return mThreadDirectKeyManager; }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE

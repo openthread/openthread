@@ -190,9 +190,9 @@ void Test1_2_LP_7_2_2(void)
     SuccessOrQuit(ssed1.Get<DataPollSender>().SetExternalPollPeriod(kPollRate5s));
     SuccessOrQuit(ssed2.Get<DataPollSender>().SetExternalPollPeriod(kPollRate5s));
     SuccessOrQuit(ssed3.Get<DataPollSender>().SetExternalPollPeriod(kPollRate5s));
-    ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout);
-    ssed2.Get<Mle::Mle>().SetCslTimeout(kCslTimeout);
-    ssed3.Get<Mle::Mle>().SetCslTimeout(kCslTimeout);
+    SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
+    SuccessOrQuit(ssed2.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
+    SuccessOrQuit(ssed3.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
 
     /**
      * Step 1: All

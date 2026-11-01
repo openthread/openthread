@@ -129,9 +129,10 @@ class OtCliCommandRunner(OTCommandHandler):
 
         if cmd in ('reset', 'factoryreset'):
             self.wait(3, maybeoff=True)
-            self.__otcli.writeline('extaddr')
-            self.wait(1)
+            self.execute_command('extaddr', timeout=timeout)
             return []
+
+        self.__otcli.wait(0)
 
         if self.__expect_command_echoback:
             self.__expect_line(timeout, cmd)
@@ -253,7 +254,7 @@ class OtCliCommandRunner(OTCommandHandler):
 
             line = line.rstrip()
 
-            if line.startswith('> '):
+            while line.startswith('> '):
                 line = line[2:]
 
             if self.__line_read_callback is not None:
@@ -343,10 +344,13 @@ class OtbrSshCommandRunner(OTCommandHandler):
 
 class OtbrAdbCommandRunner(OTCommandHandler):
 
-    from adb_shell.adb_device import AdbDevice
-
-    def __init__(self, adb: AdbDevice, adb_key: Optional[str] = None):
-        from adb_shell.auth.sign_pythonrsa import PythonRSASigner
+    def __init__(self, adb: Any, adb_key: Optional[str] = None):
+        try:
+            from adb_shell.auth.sign_pythonrsa import PythonRSASigner
+        except ImportError:
+            raise ImportError(
+                "adb_shell package is required for OtbrAdbCommandRunner. Install it or use host POSIX CLI with ADB Spinel proxy."
+            )
 
         self.__adb = adb
         self.__line_read_callback = None

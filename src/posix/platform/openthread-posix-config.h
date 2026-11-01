@@ -113,7 +113,7 @@
  * Define as 1 to enable max power table support.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE 0
+#define OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE 1
 #endif
 
 /**
@@ -194,6 +194,7 @@
  * Defines the priority of OMR routes added to kernel. The larger the number, the lower the priority. We
  * need to assign a high priority to such routes so that kernel prefers the Thread link rather than infrastructure.
  * Otherwise we may unnecessarily transmit packets via infrastructure, which potentially causes looping issue.
+ * Routes have no priority on the BSDs, where the value is ignored.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY
 #define OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY 1
@@ -214,7 +215,7 @@
  * Define as 1 to add external routes to POSIX kernel when external routes are changed in netdata.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE 1
+#define OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE 0
 #endif
 
 /**
@@ -224,6 +225,7 @@
  * need to assign a low priority to such routes so that kernel prefers the infra link rather than thread. Otherwise we
  * may unnecessarily transmit packets via thread, which potentially causes performance issue. In linux, normally infra
  * link routes' metric value is not greater than 1024, hence 65535 should be big enough.
+ * Routes have no priority on the BSDs, where the value is ignored.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY
 #define OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY 65535
@@ -431,7 +433,13 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF
  *
- * Define as 1 to let the upstream DNS bind the socket to infra network interface.
+ * Define as 1 to bind the sockets used to query recursive DNS servers discovered through RDNSS
+ * to the infra network interface. Those servers are discovered on the infra link, so queries to
+ * them are always sent out that interface, regardless of the host routing table.
+ *
+ * Nameservers from the host's resolv.conf (or set via `otSysUpstreamDnsSetServerList()`) are
+ * host-wide configuration and are always reached following the host's routing table, independent
+ * of this setting.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF
 #define OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF 1

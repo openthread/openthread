@@ -187,17 +187,6 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
             break;
         }
 
-        case Tlv::kWakeupChannel:
-        {
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-            uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
-            error           = Get<Mac::Mac>().SetWakeupChannel(channel);
-
-            LogCritOnError(error, "set wake-up channel to %u when applying dataset", channel);
-#endif
-            break;
-        }
-
         case Tlv::kPanId:
             Get<Mac::Mac>().SetPanId(cur->ReadValueAs<PanIdTlv>());
             break;
@@ -668,11 +657,6 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         tlvList.Add(Tlv::kChannel);
     }
 
-    if (aDatasetComponents.IsPresent<Dataset::kWakeupChannel>())
-    {
-        tlvList.Add(Tlv::kWakeupChannel);
-    }
-
     if (aDatasetComponents.IsPresent<Dataset::kPskc>())
     {
         tlvList.Add(Tlv::kPskc);
@@ -799,8 +783,8 @@ void DatasetManager::SaveTlvInSecureStorageAndClearValue(Dataset &aDataset, Tlv:
     VerifyOrExit(tlv != nullptr);
     VerifyOrExit(tlv->GetLength() > 0);
 
-    SuccessOrAssert(ImportKey(aKeyRef, kKeyTypeRaw, kKeyAlgorithmVendor, kUsageExport, kTypePersistent, tlv->GetValue(),
-                              tlv->GetLength()));
+    SuccessOrAssert(SaveKey(aKeyRef, kKeyTypeRaw, kKeyAlgorithmVendor, kUsageExport, kTypePersistent, tlv->GetValue(),
+                            tlv->GetLength()));
 
     memset(tlv->GetValue(), 0, tlv->GetLength());
 
@@ -819,7 +803,7 @@ Error DatasetManager::ReadTlvFromSecureStorage(Dataset &aDataset, Tlv::Type aTlv
     VerifyOrExit(tlv != nullptr);
     VerifyOrExit(tlv->GetLength() > 0);
 
-    SuccessOrExit(error = ExportKey(aKeyRef, tlv->GetValue(), tlv->GetLength(), readLength));
+    SuccessOrExit(error = ReadKey(aKeyRef, tlv->GetValue(), tlv->GetLength(), readLength));
     VerifyOrExit(readLength == tlv->GetLength(), error = OT_ERROR_FAILED);
 
 exit:

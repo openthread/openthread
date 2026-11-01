@@ -19,7 +19,6 @@ The Active Operational Dataset includes parameters that are currently in use acr
 
 - Active Timestamp
 - Channel
-- Wake-up Channel
 - Channel Mask
 - Extended PAN ID
 - Mesh-Local Prefix
@@ -47,7 +46,6 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
    > dataset
    Active Timestamp: 1
    Channel: 15
-   Wake-up Channel: 16
    Channel Mask: 0x07fff800
    Ext PAN ID: 39758ec8144b07fb
    Mesh Local Prefix: fdf1:f1ad:d079:7dc0::/64
@@ -107,7 +105,6 @@ After the device successfully attaches to a Thread network, the device will retr
    > dataset active
    Active Timestamp: 1
    Channel: 15
-   Wake-up Channel: 16
    Channel Mask: 0x07fff800
    Ext PAN ID: 39758ec8144b07fb
    Mesh Local Prefix: fdf1:f1ad:d079:7dc0::/64
@@ -306,7 +303,6 @@ Normally, an active Commissioner will set a new Pending Operational Dataset. For
 - [securitypolicy](#securitypolicy)
 - [tlvs](#tlvs)
 - [updater](#updater)
-- [wakeupchannel](#wakeupchannel)
 
 ## Command Details
 
@@ -340,7 +336,6 @@ pskc
 securitypolicy
 set
 tlvs
-wakeupchannel
 Done
 ```
 
@@ -354,7 +349,6 @@ Print Active Operational Dataset in human-readable form.
 > dataset active
 Active Timestamp: 1
 Channel: 15
-Wake-up Channel: 16
 Channel Mask: 0x07fff800
 Ext PAN ID: 39758ec8144b07fb
 Mesh Local Prefix: fdf1:f1ad:d079:7dc0::/64
@@ -372,7 +366,6 @@ Print Active Operational Dataset in human-readable form and redact the sensitive
 > dataset active -ns
 Active Timestamp: 1
 Channel: 15
-Wake-up Channel: 16
 Channel Mask: 0x07fff800
 Ext PAN ID: 39758ec8144b07fb
 Mesh Local Prefix: fdf1:f1ad:d079:7dc0::/64
@@ -869,24 +862,5 @@ Done
 Done
 > dataset updater
 Disabled
-Done
-```
-
-### wakeupchannel
-
-Usage: `wakeupchannel [channel]`
-
-Get wake-up channel.
-
-```bash
-> dataset wakeupchannel
-13
-Done
-```
-
-Set wake-up channel.
-
-```bash
-> dataset wakeupchannel 13
 Done
 ```

@@ -78,6 +78,7 @@ const char *otSysGetRadioUrlHelpString(void)
     "    forkpty-arg[=argument string]  Command line arguments for subprocess, can be repeated.\n"   \
     "    spinel+hdlc+uart://${PATH_TO_UART_DEVICE}?${Parameters} for real uart device\n"             \
     "    spinel+hdlc+forkpty://${PATH_TO_UART_DEVICE}?${Parameters} for forking a pty subprocess.\n" \
+    "    spinel+hdlc+unix://${PATH_TO_UNIX_SOCKET}?${Parameters} for unix stream socket.\n"          \
     "Parameters:\n"                                                                                  \
     "    uart-parity[=even|odd]         Uart parity config, optional.\n"                             \
     "    uart-stop[=number-of-bits]     Uart stop bit, default is 1.\n"                              \
@@ -103,13 +104,20 @@ const char *otSysGetRadioUrlHelpString(void)
 #endif // OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE
 
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-#define OT_RADIO_URL_HELP_MAX_POWER_TABLE                                                                  \
-    "    max-power-table               Max power for channels in ascending order separated by commas,\n"   \
-    "                                  If the number of values is less than that of supported channels,\n" \
-    "                                  the last value will be applied to all remaining channels.\n"        \
-    "                                  Special value 0x7f disables a channel.\n"
+#define OT_RADIO_URL_HELP_MAX_POWER_TABLE                                                                \
+    "    max-power-table-mbm           Max power (in 0.01 dBm) for channels in ascending order\n"        \
+    "                                  separated by commas. If the number of values is less than that\n" \
+    "                                  of supported channels, the last value will be applied to all\n"   \
+    "                                  remaining channels. Special value 0x7fff disables a channel.\n"
+
+// Only meaningful while max-power-table-mbm is compiled in; without it the note
+// would point at a parameter the help does not list.
+#define OT_RADIO_URL_HELP_TX_POWER_CAP                                                                    \
+    "                                  max-power-table-mbm only caps the power; the radio transmits at\n" \
+    "                                  min(tx-power, max-power-table-mbm).\n"
 #else
 #define OT_RADIO_URL_HELP_MAX_POWER_TABLE
+#define OT_RADIO_URL_HELP_TX_POWER_CAP
 #endif
 
     return "RadioURL:\n" OT_RADIO_URL_HELP_BUS OT_SPINEL_SPI_RADIO_URL_HELP_BUS OT_SPINEL_HDLC_RADIO_URL_HELP_BUS
@@ -117,6 +125,7 @@ const char *otSysGetRadioUrlHelpString(void)
            "    region[=region-code]          Set the radio's region code. The region code must be an\n"
            "                                  ISO 3166 alpha-2 code.\n"
            "    cca-threshold[=dbm]           Set the radio's CCA ED threshold in dBm measured at antenna connector.\n"
+           "    tx-power[=dbm]                Set the radio's transmit power in dBm.\n" OT_RADIO_URL_HELP_TX_POWER_CAP
            "    enable-coex[=1|0]             If not specified, RCP coex operates with its default configuration.\n"
            "                                  Disable coex with 0, and enable it with other values.\n"
            "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"

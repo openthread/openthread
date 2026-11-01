@@ -530,11 +530,6 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
         SuccessOrExit(error = mRioAdvertiser.AppendRios(raMsg));
     }
 
-    if (Get<InfraIf>().GetLinkLayerAddress(linkAddr) == kErrorNone)
-    {
-        SuccessOrExit(error = raMsg.AppendLinkLayerOption(linkAddr, Option::kSourceLinkLayerAddr));
-    }
-
     if (mExtraRaOptions.GetLength() > 0)
     {
         SuccessOrExit(error = raMsg.AppendBytes(mExtraRaOptions.GetBytes(), mExtraRaOptions.GetLength()));
@@ -543,6 +538,11 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     // A valid RA message should contain at lease one option.
     // Exit when the size of packet is less than the size of header.
     VerifyOrExit(raMsg.ContainsAnyOptions());
+
+    if (Get<InfraIf>().GetLinkLayerAddress(linkAddr) == kErrorNone)
+    {
+        SuccessOrExit(error = raMsg.AppendLinkLayerOption(linkAddr, Option::kSourceLinkLayerAddr));
+    }
 
     raMsg.GetAsPacket(packet);
 
@@ -632,6 +632,19 @@ void RoutingManager::HandleLocalOnLinkPrefixChanged(void)
     mRoutePublisher.Evaluate();
     Get<RxRaTracker>().HandleLocalOnLinkPrefixChanged();
     ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+
+exit:
+    return;
+}
+
+void RoutingManager::HandleFavoredOmrPrefixChanged(void)
+{
+    // This is a callback from `OmrPrefixManager` indicating that
+    // the favored OMR prefix has changed.
+
+    VerifyOrExit(mIsRunning);
+
+    mRoutePublisher.Evaluate();
 
 exit:
     return;
@@ -756,9 +769,10 @@ void RoutingManager::OmrPrefixManager::Stop(void)
     VerifyOrExit(mIsRunning);
 
     RemoveLocalFromNetData();
-    ClearFavoredPrefix();
 
-    mIsRunning = false;
+    mIsRunning    = false;
+    mDefaultRoute = false;
+    ClearFavoredPrefix();
 
 exit:
     return;
@@ -854,6 +868,10 @@ void RoutingManager::OmrPrefixManager::SetFavoredPrefix(const OmrPrefix &aOmrPre
         Get<HistoryTracker::Local>().RecordFavoredOmrPrefix(mFavoredPrefix.GetPrefix(), mFavoredPrefix.GetPreference(),
                                                             mFavoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix());
 #endif
+        if (mIsRunning)
+        {
+            Get<RoutingManager>().HandleFavoredOmrPrefixChanged();
+        }
     }
 }
 
@@ -977,6 +995,11 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
             ExitNow();
         }
 
+        if (mLocalInNetDataState != kAdded)
+        {
+            ClearFavoredPrefix();
+        }
+
         // Apply a random delay before adding a self-generated ULA OMR
         // prefix. This allows other BRs time to publish their prefixes,
         // or provides time for the `PdPrefixManager` to be delegated a
@@ -1012,8 +1035,8 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
     // Since there is a `favoredPrefix` different from our local prefix,
     // we remove our local prefix if it is added or scheduled to be added.
 
-    SetFavoredPrefix(favoredPrefix);
     RemoveLocalFromNetData();
+    SetFavoredPrefix(favoredPrefix);
 
 exit:
     return;
@@ -1272,8 +1295,9 @@ void RoutingManager::OnLinkPrefixManager::Init(void)
 
         lifetime = Min(savedPrefix.GetLifetime(), Time::MsecToSec(TimerMilli::kMaxDelay));
 
-        entry->mPrefix     = savedPrefix.GetPrefix();
-        entry->mExpireTime = now + Time::SecToMsec(lifetime);
+        entry->mPrefix        = savedPrefix.GetPrefix();
+        entry->mDeprecateTime = now;
+        entry->mExpireTime    = now + Time::SecToMsec(lifetime);
 
         LogInfo("Restored old prefix %s, lifetime:%lu", entry->mPrefix.ToString().AsCString(), ToUlong(lifetime));
 
@@ -1384,6 +1408,10 @@ void RoutingManager::OnLinkPrefixManager::Stop(void)
         break;
 
     case kPublishing:
+    case kToAdvertise:
+        SetState(kIdle);
+        break;
+
     case kAdvertising:
     case kDeprecating:
         SetState(kDeprecating);
@@ -1481,6 +1509,7 @@ void RoutingManager::OnLinkPrefixManager::PublishAndAdvertise(void)
         break;
 
     case kPublishing:
+    case kToAdvertise:
     case kAdvertising:
         ExitNow();
     }
@@ -1497,7 +1526,7 @@ void RoutingManager::OnLinkPrefixManager::PublishAndAdvertise(void)
 
     if (Get<RoutingManager>().NetworkDataContainsUlaRoute())
     {
-        SetState(kAdvertising);
+        SetState(kToAdvertise);
     }
 
 exit:
@@ -1506,16 +1535,28 @@ exit:
 
 void RoutingManager::OnLinkPrefixManager::Deprecate(void)
 {
-    // Deprecate the local on-link prefix if it was being advertised
-    // before. While depreciating the prefix, we wait for the lifetime
-    // timer to expire before unpublishing the prefix from the Network
-    // Data. We also continue to include it as a PIO in the RA message
-    // with zero preferred lifetime and the remaining valid lifetime
-    // until the timer expires.
+    // Deprecate the local on-link prefix only if it was being advertised
+    // before (`kAdvertising`).
+    //
+    // If the prefix is in `kPublishing` or `kToAdvertise` state, no
+    // outgoing RA containing the prefix as a PIO has been emitted yet.
+    // Since hosts on the infrastructure link have not seen or configured
+    // addresses from this prefix, there is no need to deprecate it, and
+    // it transitions directly to `kIdle`.
+    //
+    // While deprecating the prefix, we wait for the lifetime timer to
+    // expire before unpublishing the prefix from the Network Data. We
+    // also continue to include it as a PIO in the RA message with zero
+    // preferred lifetime and the remaining valid lifetime until the
+    // timer expires.
 
     switch (GetState())
     {
     case kPublishing:
+    case kToAdvertise:
+        SetState(kIdle);
+        break;
+
     case kAdvertising:
         SetState(kDeprecating);
         break;
@@ -1529,9 +1570,9 @@ void RoutingManager::OnLinkPrefixManager::Deprecate(void)
 bool RoutingManager::OnLinkPrefixManager::ShouldPublishUlaRoute(void) const
 {
     // Determine whether or not we should publish ULA prefix. We need
-    // to publish if we are in any of `kPublishing`, `kAdvertising`,
-    // or `kDeprecating` states, or if there is at least one old local
-    // prefix being deprecated.
+    // to publish if we are in any of `kPublishing`, `kToAdvertise`,
+    // `kAdvertising`, or `kDeprecating` states, or if there is at
+    // least one old local prefix being deprecated.
 
     return (GetState() != kIdle) || !mOldLocalPrefixes.IsEmpty();
 }
@@ -1540,12 +1581,31 @@ void RoutingManager::OnLinkPrefixManager::ResetExpireTime(TimeMilli aNow)
 {
     mExpireTime = aNow + TimeMilli::SecToMsec(kDefaultOnLinkPrefixLifetime);
     mTimer.FireAtIfEarlier(mExpireTime);
-    SavePrefix(mLocalPrefix, mExpireTime);
+
+    if (GetState() == kAdvertising)
+    {
+        SavePrefix(mLocalPrefix, mExpireTime);
+    }
 }
 
 bool RoutingManager::OnLinkPrefixManager::IsPublishingOrAdvertising(void) const
 {
-    return (GetState() == kPublishing) || (GetState() == kAdvertising);
+    bool matches = false;
+
+    switch (GetState())
+    {
+    case kIdle:
+    case kDeprecating:
+        break;
+
+    case kPublishing:
+    case kToAdvertise:
+    case kAdvertising:
+        matches = true;
+        break;
+    }
+
+    return matches;
 }
 
 Error RoutingManager::OnLinkPrefixManager::AppendAsPiosTo(RouterAdvert::TxMessage &aRaMessage)
@@ -1562,8 +1622,11 @@ exit:
 Error RoutingManager::OnLinkPrefixManager::AppendCurPrefix(RouterAdvert::TxMessage &aRaMessage)
 {
     // Append the local on-link prefix to the `aRaMessage` as a PIO
-    // only if it is being advertised or deprecated.
+    // only if it is ready to be advertised (`kToAdvertise`), is being
+    // advertised (`kAdvertising`), or is being deprecated (`kDeprecating`).
     //
+    // If in `kToAdvertise` state, we transition to `kAdvertising` as this
+    // is the first RA containing the prefix, and reset the expire time.
     // If in `kAdvertising` state, we reset the expire time.
     // If in `kDeprecating` state, we include it as PIO with zero
     // preferred lifetime and the remaining valid lifetime.
@@ -1576,6 +1639,10 @@ Error RoutingManager::OnLinkPrefixManager::AppendCurPrefix(RouterAdvert::TxMessa
 
     switch (GetState())
     {
+    case kToAdvertise:
+        SetState(kAdvertising);
+        OT_FALL_THROUGH;
+
     case kAdvertising:
         ResetExpireTime(now);
         break;
@@ -1615,6 +1682,16 @@ Error RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(RouterAdvert::TxMes
             continue;
         }
 
+        // If another router on the infrastructure link is actively
+        // advertising this prefix as a preferred on-link prefix after we
+        // started deprecating it, we skip including it as a deprecating
+        // PIO to avoid sending conflicting advertisements.
+
+        if (Get<RxRaTracker>().HasSeenPreferredOnLinkPrefixAfter(oldPrefix.mPrefix, oldPrefix.mDeprecateTime))
+        {
+            continue;
+        }
+
         validLifetime = TimeMilli::MsecToSec(oldPrefix.mExpireTime - now);
 
         flags = PrefixInfoOption::kOnLinkFlag | PrefixInfoOption::kAutoConfigFlag;
@@ -1634,7 +1711,7 @@ void RoutingManager::OnLinkPrefixManager::HandleNetDataChange(void)
 
     if (Get<RoutingManager>().NetworkDataContainsUlaRoute())
     {
-        SetState(kAdvertising);
+        SetState(kToAdvertise);
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 
@@ -1651,7 +1728,7 @@ void RoutingManager::OnLinkPrefixManager::HandleExtPanIdChange(void)
     // so to allow Thread nodes to continue to communicate with `InfraIf`
     // device using addresses based on this prefix.
 
-    uint16_t    oldState  = GetState();
+    State       oldState  = GetState();
     Ip6::Prefix oldPrefix = mLocalPrefix;
 
     GenerateLocalPrefix();
@@ -1662,6 +1739,7 @@ void RoutingManager::OnLinkPrefixManager::HandleExtPanIdChange(void)
     {
     case kIdle:
     case kPublishing:
+    case kToAdvertise:
         break;
 
     case kAdvertising:
@@ -1711,8 +1789,9 @@ void RoutingManager::OnLinkPrefixManager::DeprecateOldPrefix(const Ip6::Prefix &
         Get<Settings>().RemoveBrOnLinkPrefix(removedPrefix);
     }
 
-    entry->mPrefix     = aPrefix;
-    entry->mExpireTime = aExpireTime;
+    entry->mPrefix        = aPrefix;
+    entry->mDeprecateTime = TimerMilli::GetNow();
+    entry->mExpireTime    = aExpireTime;
     mTimer.FireAtIfEarlier(aExpireTime);
 
     SavePrefix(aPrefix, aExpireTime);
@@ -1741,6 +1820,7 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
     case kIdle:
         break;
     case kPublishing:
+    case kToAdvertise:
     case kAdvertising:
     case kDeprecating:
         if (nextExpireTime.GetNow() >= mExpireTime)
@@ -1784,6 +1864,7 @@ const char *RoutingManager::OnLinkPrefixManager::StateToString(State aState)
 #define OnLinkPrefixManagerStateMapList(_) \
     _(kIdle, "Removed")                    \
     _(kPublishing, "Publishing")           \
+    _(kToAdvertise, "ToAdvertise")         \
     _(kAdvertising, "Advertising")         \
     _(kDeprecating, "Deprecating")
 

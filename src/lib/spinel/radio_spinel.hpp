@@ -855,15 +855,16 @@ public:
     const char *GetVersion(void) const { return mSpinelDriver->GetVersion(); }
 
     /**
-     * Sets the max transmit power.
+     * Sets the max transmit power for a given channel.
      *
      * @param[in] aChannel    The radio channel.
-     * @param[in] aMaxPower   The max transmit power in dBm.
+     * @param[in] aMaxPower   The max transmit power in 0.01 dBm. Passing `OT_RADIO_POWER_INVALID_IN_MBM` will disable
+     *                        this channel.
      *
      * @retval  OT_ERROR_NONE           Successfully set the max transmit power.
      * @retval  OT_ERROR_INVALID_ARGS   Channel is not in valid range.
      */
-    otError SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aMaxPower);
+    otError SetChannelMaxTransmitPower(uint8_t aChannel, int16_t aMaxPower);
 
     /**
      * Tries to retrieve a spinel property from OpenThread transceiver.
@@ -984,12 +985,14 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
      */
     otError ClearCalibratedPowers(void);
+#endif
 
     /**
      * Set the target power for the given channel.
      *
      * @param[in]  aChannel      The radio channel.
-     * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `INT16_MAX` will disable this channel.
+     * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `OT_RADIO_POWER_INVALID_IN_MBM` will disable this
+     *                           channel.
      *
      * @retval  OT_ERROR_NONE              Successfully set the target power.
      * @retval  OT_ERROR_INVALID_ARGS      The @p aChannel or @p aTargetPower is invalid..
@@ -998,7 +1001,6 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
      */
     otError SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower);
-#endif
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     /**
@@ -1139,6 +1141,11 @@ private:
                                        spinel_prop_key_t aKey,
                                        const char       *aFormat,
                                        va_list           aArgs);
+    otError RequestWithExpectedCommand(uint32_t          aExpectedCommand,
+                                       uint32_t          aCommand,
+                                       spinel_prop_key_t aKey,
+                                       const char       *aFormat,
+                                       ...);
     otError RequestWithExpectedCommandV(uint32_t          aExpectedCommand,
                                         uint32_t          aCommand,
                                         spinel_prop_key_t aKey,
@@ -1159,7 +1166,7 @@ private:
      */
     bool IsSafeToHandleNow(spinel_prop_key_t aKey) const
     {
-        return !(aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT);
+        return aKey != SPINEL_PROP_STREAM_RAW && aKey != SPINEL_PROP_MAC_ENERGY_SCAN_RESULT;
     }
 
     void HandleNotification(const uint8_t *aFrame, uint16_t aLength, bool &aShouldSaveFrame);
@@ -1211,6 +1218,8 @@ private:
 #endif
 
     void HandleCompatibilityError(void);
+
+    static int8_t ConvertMbmToDbm(int16_t aPowerMbm);
 
     typedef otRadioSpinelMetrics Metrics;
 
@@ -1329,6 +1338,7 @@ private:
     bool mMacKeySet : 1;                   ///< Whether MAC key has been set.
     bool mCcaEnergyDetectThresholdSet : 1; ///< Whether CCA energy detect threshold has been set.
     bool mTransmitPowerSet : 1;            ///< Whether transmit power has been set.
+    bool mMaxPowerTableSet : 1;            ///< Whether any channel's max transmit power has been set.
     bool mCoexEnabledSet : 1;              ///< Whether coex enabled has been set.
     bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has been set.
     bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.
@@ -1362,6 +1372,7 @@ private:
 
     bool mTimeSyncEnabled : 1;
     bool mTimeSyncOn : 1;
+    bool mSupportsTargetPower : 1;
 
     SpinelDriver *mSpinelDriver;
 };

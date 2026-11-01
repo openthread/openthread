@@ -302,6 +302,7 @@ void MdnsSocket::SendUnicast(otMessage *aMessage, const otPlatMdnsAddressInfo *a
 
     VerifyOrExit(mEnabled);
     VerifyOrExit(aAddress->mInfraIfIndex == mInfraIfIndex);
+    VerifyOrExit(aAddress->mPort != 0);
 
     length = otMessageGetLength(aMessage);
 
@@ -427,7 +428,17 @@ void MdnsSocket::SendQueuedMessages(MsgType aMsgType)
             }
 
             bytesSent = sendto(mFd6, buffer, length, 0, reinterpret_cast<struct sockaddr *>(&addr6), sizeof(addr6));
-            VerifyOrExit(bytesSent == length);
+
+            if (bytesSent < 0)
+            {
+                if ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == ENOBUFS) || (errno == EINTR))
+                {
+                    ExitNow();
+                }
+
+                LogWarn("sendto(IPv6) failed, errno:%s - dropping message", strerror(errno));
+            }
+
             metadata.mIp6Port = 0;
             mPendingIp6Tx--;
             break;
@@ -438,7 +449,17 @@ void MdnsSocket::SendQueuedMessages(MsgType aMsgType)
             addr.sin_port   = htons(metadata.mIp4Port);
             memcpy(&addr.sin_addr.s_addr, &metadata.mIp4Address, sizeof(otIp4Address));
             bytesSent = sendto(mFd4, buffer, length, 0, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
-            VerifyOrExit(bytesSent == length);
+
+            if (bytesSent < 0)
+            {
+                if ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == ENOBUFS) || (errno == EINTR))
+                {
+                    ExitNow();
+                }
+
+                LogWarn("sendto(IPv4) failed, errno:%s - dropping message", strerror(errno));
+            }
+
             metadata.mIp4Port = 0;
             mPendingIp4Tx--;
             break;

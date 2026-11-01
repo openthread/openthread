@@ -60,55 +60,53 @@ set(MULTIPAN_RCP_COMPILE_OPTIONS
     -DOPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1
 )
 
-add_library(ot-test-platform-ftd
-    test_platform.cpp
-    test_util.cpp
-)
-add_library(ot-test-platform-rcp
-    test_platform.cpp
-    test_util.cpp
-)
-
-target_include_directories(ot-test-platform-ftd
-    PRIVATE
-        ${COMMON_INCLUDES}
-)
-
-target_include_directories(ot-test-platform-rcp
-    PRIVATE
-	${COMMON_INCLUDES}
-)
-
-target_compile_options(ot-test-platform-ftd
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-)
-
-target_compile_options(ot-test-platform-rcp
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS_RCP}
-)
-
-if(OT_MULTIPAN_RCP)
-    target_compile_options(ot-test-platform-rcp
+if(OT_FTD)
+    add_library(ot-test-platform-ftd
+        test_platform.cpp
+        test_util.cpp
+    )
+    target_include_directories(ot-test-platform-ftd
         PRIVATE
-            "-DOPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1"
-            "-DOPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE=1"
-            "-DOPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1"
+            ${COMMON_INCLUDES}
+    )
+    target_compile_options(ot-test-platform-ftd
+        PRIVATE
+            ${COMMON_COMPILE_OPTIONS}
+    )
+    target_link_libraries(ot-test-platform-ftd
+        PRIVATE
+            ot-config
+            ${OT_MBEDTLS}
     )
 endif()
 
-target_link_libraries(ot-test-platform-ftd
-    PRIVATE
-        ot-config
-        ${OT_MBEDTLS}
-)
-
-target_link_libraries(ot-test-platform-rcp
-    PRIVATE
-        ot-config
-        ${OT_MBEDTLS}
-)
+if(OT_RCP)
+    add_library(ot-test-platform-rcp
+        test_platform.cpp
+        test_util.cpp
+    )
+    target_include_directories(ot-test-platform-rcp
+        PRIVATE
+            ${COMMON_INCLUDES}
+    )
+    target_compile_options(ot-test-platform-rcp
+        PRIVATE
+            ${COMMON_COMPILE_OPTIONS_RCP}
+    )
+    if(OT_MULTIPAN_RCP)
+        target_compile_options(ot-test-platform-rcp
+            PRIVATE
+                "-DOPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1"
+                "-DOPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE=1"
+                "-DOPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1"
+        )
+    endif()
+    target_link_libraries(ot-test-platform-rcp
+        PRIVATE
+            ot-config
+            ${OT_MBEDTLS}
+    )
+endif()
 
 set(COMMON_LIBS
     openthread-spinel-ncp
@@ -197,92 +195,97 @@ endmacro()
 #----------------------------------------------------------------------------------------------------------------------
 # Unit tests
 
-ot_unit_test(address_sanitizer)
-ot_unit_test(aes)
-ot_unit_test(array)
-ot_unit_test(binary_search)
-ot_unit_test(bit_utils)
-ot_unit_test(bit_set)
-ot_unit_test(checksum)
-ot_unit_test(child)
-ot_unit_test(child_table)
-ot_unit_test(cmd_line_parser)
-ot_unit_test(coap_message)
-ot_unit_test(coap_overflow)
-ot_unit_test(crc)
-ot_unit_test(data)
-ot_unit_test(dataset)
-ot_unit_test(dhcp6_pd_client)
-ot_unit_test(dns)
-ot_unit_test(dns_client)
-ot_unit_test(dnssd_discovery_proxy)
-ot_unit_test(dso)
-ot_unit_test(ecdsa)
-ot_unit_test(flash)
-ot_unit_test(frame_builder)
-ot_unit_test(hdlc)
-ot_unit_test(heap)
-ot_unit_test(heap_array)
-ot_unit_test(heap_string)
-ot_unit_test(hkdf_sha256)
-ot_unit_test(hmac_sha256)
-ot_unit_test(ip4_header)
-ot_unit_test(ip6_header)
-ot_unit_test(ip_address)
-ot_unit_test(link_metrics_manager)
-ot_unit_test(link_quality)
-ot_unit_test(linked_list)
-ot_unit_test(lowpan)
-ot_unit_test(ltv)
-ot_unit_test(mac_frame)
-ot_unit_test(macros)
-ot_unit_test(mdns)
-ot_unit_test(meshcop)
-ot_unit_test(message)
-ot_unit_test(message_queue)
-ot_unit_test(mle)
-ot_unit_test(msg_backed_array)
-ot_unit_test(multicast_listeners_table)
-ot_unit_test(nat64)
-ot_unit_test(netif)
-ot_unit_test(network_data)
-ot_unit_test(network_name)
-ot_unit_test(offset_range)
-ot_unit_test(pool)
-ot_unit_test(plat_tcp)
-ot_unit_test(power_calibration)
-ot_unit_test(priority_queue)
-ot_unit_test(pskc)
-ot_unit_test(random)
-ot_unit_test(routing_manager)
-ot_unit_test(seeker)
-ot_unit_test(serial_number)
-ot_unit_test(smart_ptrs)
-ot_unit_test(spinel_buffer)
-ot_unit_test(spinel_decoder)
-ot_unit_test(spinel_encoder)
-ot_unit_test(spinel_prop_codec)
-ot_unit_test(srp_adv_proxy)
-ot_unit_test(srp_server)
-ot_unit_test(string)
-ot_unit_test(tasklet)
-ot_unit_test(tcat)
-ot_unit_test(timer)
-ot_unit_test(tlv)
-ot_unit_test(toolchain test_toolchain_c.c)
-ot_unit_test(trickle_timer)
-ot_unit_test(url)
-ot_unit_test(vendor_oui)
+if(OT_FTD)
+    ot_unit_test(address_sanitizer)
+    ot_unit_test(aes)
+    ot_unit_test(array)
+    ot_unit_test(binary_search)
+    ot_unit_test(bit_utils)
+    ot_unit_test(bit_set)
+    ot_unit_test(checksum)
+    ot_unit_test(child)
+    ot_unit_test(child_table)
+    ot_unit_test(cmd_line_parser)
+    ot_unit_test(coap_message)
+    ot_unit_test(coap_overflow)
+    ot_unit_test(crc)
+    ot_unit_test(data)
+    ot_unit_test(dataset)
+    ot_unit_test(dhcp6_pd_client)
+    ot_unit_test(dns)
+    ot_unit_test(dns_client)
+    ot_unit_test(dnssd_discovery_proxy)
+    ot_unit_test(dso)
+    ot_unit_test(ecdsa)
+    ot_unit_test(flash)
+    ot_unit_test(frame_builder)
+    ot_unit_test(hdlc)
+    ot_unit_test(heap)
+    ot_unit_test(heap_array)
+    ot_unit_test(heap_string)
+    ot_unit_test(hkdf_sha256)
+    ot_unit_test(hmac_sha256)
+    ot_unit_test(ip4_header)
+    ot_unit_test(ip6_header)
+    ot_unit_test(ip_address)
+    ot_unit_test(link_metrics_manager)
+    ot_unit_test(link_quality)
+    ot_unit_test(linked_list)
+    ot_unit_test(lowpan)
+    ot_unit_test(ltv)
+    ot_unit_test(mac_filter)
+    ot_unit_test(mac_frame)
+    ot_unit_test(macros)
+    ot_unit_test(mdns)
+    ot_unit_test(meshcop)
+    ot_unit_test(message)
+    ot_unit_test(message_queue)
+    ot_unit_test(mle)
+    ot_unit_test(msg_backed_array)
+    ot_unit_test(multicast_listeners_table)
+    ot_unit_test(nat64)
+    ot_unit_test(netif)
+    ot_unit_test(network_data)
+    ot_unit_test(network_name)
+    ot_unit_test(offset_range)
+    ot_unit_test(pool)
+    ot_unit_test(plat_tcp)
+    ot_unit_test(power_calibration)
+    ot_unit_test(priority_queue)
+    ot_unit_test(pskc)
+    ot_unit_test(random)
+    ot_unit_test(routing_manager)
+    ot_unit_test(seeker)
+    ot_unit_test(serial_number)
+    ot_unit_test(smart_ptrs)
+    ot_unit_test(spinel_buffer)
+    ot_unit_test(spinel_decoder)
+    ot_unit_test(spinel_encoder)
+    ot_unit_test(spinel_prop_codec)
+    ot_unit_test(srp_adv_proxy)
+    ot_unit_test(srp_server)
+    ot_unit_test(string)
+    ot_unit_test(sub_mac_recv_at)
+    ot_unit_test(tasklet)
+    ot_unit_test(tcat)
+    ot_unit_test(thread_direct)
+    ot_unit_test(timer)
+    ot_unit_test(tlv)
+    ot_unit_test(toolchain test_toolchain_c.c)
+    ot_unit_test(trickle_timer)
+    ot_unit_test(url)
+    ot_unit_test(vendor_oui)
 
-ot_unit_ncp_test(cli)
-ot_unit_ncp_test(dnssd)
-ot_unit_ncp_test(infra_if)
-ot_unit_ncp_test(srp_server)
-ot_unit_ncp_test(ephemeral_key)
+    ot_unit_ncp_test(cli)
+    ot_unit_ncp_test(dnssd)
+    ot_unit_ncp_test(infra_if)
+    ot_unit_ncp_test(srp_server)
+    ot_unit_ncp_test(ephemeral_key)
+endif()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-if(OT_MULTIPAN_RCP)
+if(OT_RCP AND OT_MULTIPAN_RCP)
     add_executable(ot-test-multipan-rcp-instances
         test_multipan_rcp_instances.cpp
     )

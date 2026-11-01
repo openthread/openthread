@@ -144,7 +144,8 @@ private:
     static constexpr uint32_t kMinPreferredLifetime = OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MIN_LIFETIME;
     static constexpr uint32_t kMaxPreferredLifetime = OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MAX_LIFETIME;
     static constexpr uint32_t kMaxValidMarginAfterPreferredLifetime = 2 * Time::kOneMinuteInSec;
-    static constexpr uint32_t kMinT1                                = 5 * Time::kOneMinuteInSec;
+    static constexpr uint32_t kMinT1                                = 1 * Time::kOneMinuteInSec;
+    static constexpr uint32_t kMinRenewablePreferredLifetime        = 5 * Time::kOneMinuteInSec;
     static constexpr uint32_t kMinT1MarginBeforePreferredLifetime   = 15 * Time::kOneMinuteInSec;
     static constexpr uint32_t kMinT2MarginBeforePreferredLifetime   = 6 * Time::kOneMinuteInSec;
 
@@ -230,7 +231,7 @@ private:
     void      UpdateStateAfterRetxExhausted(void);
     Error     AppendIaPdOption(Message &aMessage);
     Error     AppendIaPrefixOption(Message &aMessage, const Ip6::Prefix &aPrefix);
-    void      HandleReceived(Message &aMessage);
+    void      HandleReceived(OwnedPtr<Message> aMessagePtr);
     Error     ParseHeaderAndValidateMessage(Message &aMessage, Dhcp6::Header &aHeader);
     void      HandleAdvertise(const Message &aMessage);
     void      HandleReply(const Message &aMessage);

@@ -79,29 +79,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-uint8_t otLinkGetWakeupChannel(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupChannel();
-}
-
-otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel)
-{
-    Error     error    = kErrorNone;
-    Instance &instance = AsCoreType(aInstance);
-
-    VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
-
-    SuccessOrExit(error = instance.Get<Mac::Mac>().SetWakeupChannel(aChannel));
-
-    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
-    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-
 uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().GetSupportedChannelMask().GetMask();
@@ -429,7 +406,10 @@ otError otLinkSetCslChannel(otInstance *aInstance, uint8_t aChannel)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(Radio::IsCslChannelValid(aChannel), error = kErrorInvalidArgs);
+    if (aChannel != 0)
+    {
+        VerifyOrExit(Radio::IsChannelValid(aChannel), error = kErrorInvalidArgs);
+    }
 
     AsCoreType(aInstance).Get<Mac::Mac>().SetCslChannel(aChannel);
 
@@ -439,7 +419,7 @@ exit:
 
 uint32_t otLinkGetCslPeriod(otInstance *aInstance)
 {
-    return Mac::Mac::CslPeriodToUsec(AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod());
+    return Mac::CslPeriodToUsec(AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod());
 }
 
 otError otLinkSetCslPeriod(otInstance *aInstance, uint32_t aPeriod)
@@ -453,9 +433,9 @@ otError otLinkSetCslPeriod(otInstance *aInstance, uint32_t aPeriod)
     }
     else
     {
-        VerifyOrExit((aPeriod % Radio::kUsPerTenSymbols) == 0, error = kErrorInvalidArgs);
-        periodInTenSymbolsUnit = ClampToUint16(aPeriod / Radio::kUsPerTenSymbols);
-        VerifyOrExit(periodInTenSymbolsUnit >= Radio::kMinCslPeriod, error = kErrorInvalidArgs);
+        VerifyOrExit((aPeriod % Radio::kTenSymbolsDuration) == 0, error = kErrorInvalidArgs);
+        periodInTenSymbolsUnit = ClampToUint16(aPeriod / Radio::kTenSymbolsDuration);
+        VerifyOrExit(periodInTenSymbolsUnit >= Mac::kMinCslPeriod, error = kErrorInvalidArgs);
     }
 
     AsCoreType(aInstance).Get<Mac::Mac>().SetCslPeriod(periodInTenSymbolsUnit);
@@ -468,13 +448,7 @@ uint32_t otLinkGetCslTimeout(otInstance *aInstance) { return AsCoreType(aInstanc
 
 otError otLinkSetCslTimeout(otInstance *aInstance, uint32_t aTimeout)
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(Radio::kMaxCslTimeout >= aTimeout, error = kErrorInvalidArgs);
-    AsCoreType(aInstance).Get<Mle::Mle>().SetCslTimeout(aTimeout);
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetCslTimeout(aTimeout);
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -506,25 +480,3 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 
     return error;
 }
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenEnabled(aEnable);
-}
-
-bool otLinkIsWakeupListenEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().IsWakeupListenEnabled();
-}
-
-void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval, uint32_t *aDuration)
-{
-    AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupListenParameters(*aInterval, *aDuration);
-}
-
-otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterval, uint32_t aDuration)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenParameters(aInterval, aDuration);
-}
-#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE

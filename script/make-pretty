@@ -64,6 +64,14 @@
 
 set -euo pipefail
 
+repo_dir=$(cd "$(dirname "$0")/.." && pwd)
+readonly repo_dir
+
+if [[ -z ${VIRTUAL_ENV:-} ]] && [[ -x "${repo_dir}/.venv/bin/python3" ]]; then
+    export VIRTUAL_ENV="${repo_dir}/.venv"
+    export PATH="${VIRTUAL_ENV}/bin:$PATH"
+fi
+
 OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
 readonly OT_BUILD_JOBS
 

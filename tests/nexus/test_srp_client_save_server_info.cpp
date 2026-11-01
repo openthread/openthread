@@ -94,14 +94,13 @@ void TestSrpClientSaveServerInfo(const char *aJsonFileName)
 
     SuccessOrQuit(client.Get<Srp::Client>().SetHostName("host"));
     SuccessOrQuit(client.Get<Srp::Client>().EnableAutoHostAddress());
-    {
-        Srp::Client::Service service;
-        ClearAllBytes(service);
-        service.mName         = "_ipps._tcp";
-        service.mInstanceName = "my-service";
-        service.mPort         = kSrpServicePort;
-        SuccessOrQuit(client.Get<Srp::Client>().AddService(service));
-    }
+
+    Srp::Client::Service service;
+    ClearAllBytes(service);
+    service.mName         = "_ipps._tcp";
+    service.mInstanceName = "my-service";
+    service.mPort         = kSrpServicePort;
+    SuccessOrQuit(client.Get<Srp::Client>().AddService(service));
 
     client.Get<Srp::Client>().EnableAutoStartMode(nullptr, nullptr);
     VerifyOrQuit(client.Get<Srp::Client>().IsAutoStartModeEnabled());

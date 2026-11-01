@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes implementation for Crypto Internal Trusted Storage (ITS) APIs.
+ *   This file includes implementation for cryptographic secure storage APIs.
  */
 
 #include "crypto/storage.hpp"
@@ -47,7 +47,7 @@ Error Key::ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const
 
     OT_ASSERT(IsKeyRef());
 
-    SuccessOrAssert(Crypto::Storage::ExportKey(GetKeyRef(), aKeyBuffer, aKeyLength, readKeyLength));
+    SuccessOrAssert(Crypto::Storage::ReadKey(GetKeyRef(), aKeyBuffer, aKeyLength, readKeyLength));
 
     VerifyOrExit(readKeyLength <= aKeyLength, error = kErrorNoBufs);
 

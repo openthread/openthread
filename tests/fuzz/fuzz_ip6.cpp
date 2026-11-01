@@ -54,12 +54,15 @@ public:
         mSize -= aLength;
     }
 
-    otError ConsumeRemainingBytes(otMessage *aMessage)
+    otError ConsumeBytes(otMessage *aMessage, uint16_t aLength)
     {
+        assert(aLength <= mSize);
+
         otError error;
 
-        SuccessOrExit(error = otMessageAppend(aMessage, mData, static_cast<uint16_t>(mSize)));
-        mSize = 0;
+        SuccessOrExit(error = otMessageAppend(aMessage, mData, aLength));
+        mData += aLength;
+        mSize -= aLength;
 
     exit:
         return error;
@@ -76,6 +79,18 @@ public:
         return result & 1;
     }
 
+    template <typename IntType> IntType ConsumeIntegralInRange(IntType aMin, IntType aMax)
+    {
+        assert(aMin <= aMax);
+
+        uint64_t range = static_cast<uint64_t>(aMax) - aMin;
+        IntType  result;
+
+        ConsumeData(&result, sizeof(result));
+
+        return (range == 0) ? aMin : static_cast<IntType>(aMin + (result % (range + 1)));
+    }
+
     size_t RemainingBytes(void) { return mSize; }
 
 private:
@@ -85,20 +100,26 @@ private:
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    const uint16_t kMaxIterations  = 8;
     const uint16_t kMaxMessageSize = 2048;
+    const uint32_t kMaxAdvanceTime = 10000;
 
     FuzzDataProvider fdp(data, size);
 
     unsigned int      seed;
     otMessage        *message;
     otMessageSettings settings;
+    uint16_t          messageLength;
+    uint32_t          advanceTime;
 
-    if (size < sizeof(seed) + sizeof(settings.mLinkSecurityEnabled) + sizeof(settings.mPriority))
+    if (size < sizeof(seed) + sizeof(settings.mLinkSecurityEnabled) + sizeof(settings.mPriority) + sizeof(advanceTime) +
+                   sizeof(messageLength))
     {
         return 0;
     }
 
-    if (size > sizeof(seed) + sizeof(settings.mLinkSecurityEnabled) + sizeof(settings.mPriority) + kMaxMessageSize)
+    if (size > sizeof(seed) + kMaxIterations * (sizeof(settings.mLinkSecurityEnabled) + sizeof(settings.mPriority) +
+                                                sizeof(advanceTime) + sizeof(messageLength) + kMaxMessageSize))
     {
         return 0;
     }
@@ -130,16 +151,30 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     Log("---------------------------------------------------------------------------------------");
     Log("Fuzz");
 
-    memset(&settings, 0, sizeof(settings));
-    settings.mLinkSecurityEnabled = fdp.ConsumeBool();
-    fdp.ConsumeData(&settings.mPriority, sizeof(settings.mPriority));
+    for (uint16_t i = 0; i < kMaxIterations; i++)
+    {
+        if (fdp.RemainingBytes() < sizeof(settings.mLinkSecurityEnabled) + sizeof(settings.mPriority) +
+                                       sizeof(advanceTime) + sizeof(messageLength))
+        {
+            break;
+        }
 
-    message = otIp6NewMessage(&node.GetInstance(), &settings);
-    VerifyOrExit(message != nullptr);
+        memset(&settings, 0, sizeof(settings));
+        settings.mLinkSecurityEnabled = fdp.ConsumeBool();
+        settings.mPriority = fdp.ConsumeIntegralInRange<uint8_t>(OT_MESSAGE_PRIORITY_LOW, OT_MESSAGE_PRIORITY_HIGH);
+        advanceTime        = fdp.ConsumeIntegralInRange(0u, kMaxAdvanceTime);
+        messageLength      = fdp.ConsumeIntegralInRange<uint16_t>(
+            0, Min<size_t>(fdp.RemainingBytes() - sizeof(messageLength), kMaxMessageSize));
 
-    SuccessOrQuit(fdp.ConsumeRemainingBytes(message));
+        message = otIp6NewMessage(&node.GetInstance(), &settings);
+        VerifyOrExit(message != nullptr);
 
-    otIp6Send(&node.GetInstance(), message);
+        SuccessOrQuit(fdp.ConsumeBytes(message, messageLength));
+
+        otIp6Send(&node.GetInstance(), message);
+
+        nexus.AdvanceTime(advanceTime);
+    }
 
     nexus.AdvanceTime(10 * 1000);
 

@@ -98,7 +98,6 @@ public:
         kPendingDataset        = 25, ///< Pending Operational Dataset TLV
         kDiscovery             = 26, ///< Thread Discovery TLV
         kSupervisionInterval   = 27, ///< Supervision Interval TLV
-        kWakeupChannel         = 74, ///< Wakeup Channel TLV
         kCslChannel            = 80, ///< CSL Channel TLV
         kCslTimeout            = 85, ///< CSL Timeout TLV
         kCslClockAccuracy      = 86, ///< CSL Clock Accuracy TLV
@@ -645,7 +644,7 @@ public:
      *
      * @param[in] aChannel       The channel.
      */
-    ChannelTlvValue(uint16_t aChannel)
+    explicit ChannelTlvValue(uint16_t aChannel)
         : ChannelTlvValue(0, aChannel)
     {
     }
@@ -704,9 +703,40 @@ private:
 typedef SimpleTlvInfo<Tlv::kChannel, ChannelTlvValue> ChannelTlv;
 
 /**
+ * Implements CSL Channel TLV value format.
+ */
+OT_TOOL_PACKED_BEGIN
+class CslChannelTlvValue : public ChannelTlvValue
+{
+public:
+    /**
+     * Default constructor.
+     */
+    CslChannelTlvValue(void) = default;
+
+    /**
+     * Initializes the `CslChannelTlvValue` with zero channel page and a given channel value.
+     *
+     * @param[in] aChannel       The channel.
+     */
+    explicit CslChannelTlvValue(uint16_t aChannel)
+        : ChannelTlvValue(aChannel)
+    {
+    }
+
+    /**
+     * Indicates whether or not the CSL Channel and Channel Page values are valid.
+     *
+     * @retval TRUE   If the Channel and Channel Page values are valid.
+     * @retval FALSE  If the Channel and Channel Page values are not valid.
+     */
+    bool IsValid(void) const;
+} OT_TOOL_PACKED_END;
+
+/**
  * Defines CSL Channel TLV constants and types.
  */
-typedef SimpleTlvInfo<Tlv::kCslChannel, ChannelTlvValue> CslChannelTlv;
+typedef SimpleTlvInfo<Tlv::kCslChannel, CslChannelTlvValue> CslChannelTlv;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**

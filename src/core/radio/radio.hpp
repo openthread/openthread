@@ -43,6 +43,7 @@
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "mac/mac_frame.hpp"
@@ -67,25 +68,9 @@ constexpr uint8_t kSfdSize       = 1;                                   ///< SFD
 constexpr uint8_t kPhrSize       = 1;                                   ///< PHY Header (PHR) size in bytes.
 constexpr uint8_t kPhyHeaderSize = kPreambleSize + kSfdSize + kPhrSize; ///< Total PHY header size in bytes.
 
-constexpr uint32_t kUsPerTenSymbols   = OT_US_PER_TEN_SYMBOLS; ///< Time for 10 symbols in units of microseconds
-constexpr uint32_t kHeaderShrDuration = 160;                   ///< Duration of SHR in us
-constexpr uint32_t kHeaderPhrDuration = 32;                    ///< Duration of PHR in us
-constexpr uint32_t kOctetDuration     = 32;                    ///< Duration of one octet in us
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-/**
- * Minimum CSL period supported in units of 10 symbols.
- */
-constexpr uint64_t kMinCslPeriod  = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD * 1000 / kUsPerTenSymbols;
-constexpr uint64_t kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT;
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-/**
- * Minimum wake-up listen duration supported in microseconds.
- */
-constexpr uint32_t kMinWakeupListenDuration = 100;
-#endif
+constexpr uint32_t kHeaderShrDuration = 160; ///< Duration of SHR in us
+constexpr uint32_t kHeaderPhrDuration = 32;  ///< Duration of PHR in us
+constexpr uint32_t kOctetDuration     = 32;  ///< Duration of one octet in us
 
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD) && \
     !OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
@@ -118,6 +103,7 @@ constexpr uint32_t kSupportedChannels = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIE
 constexpr uint8_t  kChannelMin        = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN;
 constexpr uint8_t  kChannelMax        = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX;
 #endif
+constexpr uint8_t kDefaultChannel = OPENTHREAD_CONFIG_DEFAULT_CHANNEL;
 
 constexpr uint8_t kFrameMinSize = OT_RADIO_FRAME_MIN_SIZE;
 constexpr uint8_t kFrameMaxSize = OT_RADIO_FRAME_MAX_SIZE;
@@ -153,6 +139,7 @@ enum Capability : uint16_t
     kCapRxOnWhenIdle       = OT_RADIO_CAPS_RX_ON_WHEN_IDLE,      ///< Supports RxOnWhenIdle handling.
     kCapTransmitFramePower = OT_RADIO_CAPS_TRANSMIT_FRAME_POWER, ///< Supports setting per-frame transmit power.
     kCapAltShortAddr       = OT_RADIO_CAPS_ALT_SHORT_ADDR,       ///< Supports setting alternate short address.
+    kCapScheduledTx        = OT_RADIO_CAPS_SCHEDULED_TX,         ///< Radio supports scheduling frame TX.
 };
 
 /**
@@ -191,12 +178,17 @@ constexpr bool SupportsChannelPage(uint8_t aChannelPage)
 uint32_t ChannelMaskForPage(uint8_t aChannelPage);
 
 /**
- * Checks if a given channel is valid as a CSL channel.
+ * Checks if a given channel is a valid channel number (within `[kChannelMin, kChannelMax]`).
  *
- * @retval true   The channel is valid.
- * @retval false  The channel is invalid.
+ * @param[in] aChannel  The channel number to check.
+ *
+ * @retval TRUE   The channel is within `[kChannelMin, kChannelMax]`.
+ * @retval FALSE  The channel is outside `[kChannelMin, kChannelMax]`.
  */
-bool IsCslChannelValid(uint8_t aCslChannel);
+constexpr bool IsChannelValid(uint16_t aChannel)
+{
+    return IsValueInRange<uint16_t>(aChannel, kChannelMin, kChannelMax);
+}
 
 class Radio;
 
@@ -238,6 +230,19 @@ public:
     void HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, Error aError);
 
     /**
+     * This callback method handles a "Scheduled Transmit Done" event from radio platform.
+     *
+     * Used when radio provides the `kCapScheduledTx` capability. It is called from `otPlatRadioScheduledTxDone()`.
+     *
+     * @param[in]  aAckFrame  A pointer to the ACK frame, `nullptr` if no ACK was received.
+     * @param[in]  aError     kErrorNone when the frame was transmitted,
+     *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                        kErrorChannelAccessFailure tx could not take place due to activity on the
+     *                        channel, kErrorAbort when transmission was aborted for other reasons.
+     */
+    void HandleScheduledTxDone(Mac::RxFrame *aAckFrame, Error aError);
+
+    /**
      * This callback method handles "Energy Scan Done" event from radio platform.
      *
      * Is used when radio provides the `kCapEnergyScan` capability. It is called from `otPlatRadioEnergyScanDone()`.
@@ -250,6 +255,13 @@ public:
      * This callback method handles "Bus Latency Changed" event from radio platform.
      */
     void HandleBusLatencyChanged(void);
+
+    /**
+     * This callback method handles a "Radio Availability Updated" event from radio platform.
+     *
+     * It is called from `otPlatRadioAvailabilityUpdated()`.
+     */
+    void HandleRadioAvailabilityUpdated(void);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     /**
@@ -388,6 +400,16 @@ public:
      * @returns The radio capability bit vector (see `Capability` definitions).
      */
     Capabilities GetCaps(void);
+
+    /**
+     * Gets the current radio availability schedule.
+     *
+     * @param[out] aAvailability  A reference to an `otRadioAvailability` to populate.
+     *
+     * @retval kErrorNone            Successfully retrieved the radio availability schedule.
+     * @retval kErrorNotImplemented  The radio platform does not support reporting radio availability.
+     */
+    Error GetAvailability(otRadioAvailability &aAvailability);
 
     /**
      * Gets the radio receive sensitivity value.
@@ -574,7 +596,6 @@ public:
      */
     Error Receive(uint8_t aChannel);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     /**
      * Schedules a radio reception window at a specific time and duration.
      *
@@ -586,7 +607,6 @@ public:
      * @retval kErrorFailed  The receive window could not be scheduled.
      */
     Error ReceiveAt(uint8_t aChannel, Time32 aStart, uint32_t aDuration);
-#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
@@ -675,6 +695,44 @@ public:
      * @retval kErrorInvalidState  The radio was not in the Receive state.
      */
     Error Transmit(Mac::TxFrame &aFrame);
+
+    /**
+     * Gets the radio frame buffer for scheduled transmissions.
+     *
+     * Used when radio provides the `kCapScheduledTx` capability.
+     *
+     * OpenThread forms the IEEE 802.15.4 frame in this buffer then calls `ScheduleTx()` to schedule transmission.
+     *
+     * @returns A reference to the scheduled transmit frame buffer.
+     */
+    Mac::TxFrame &GetScheduledTxFrame(void);
+
+    /**
+     * Schedules a frame transmission at a specific target radio time.
+     *
+     * Used when radio provides the `kCapScheduledTx` capability.
+     *
+     * The caller must form the IEEE 802.15.4 frame in the buffer provided by `GetScheduledTxFrame()` before
+     * scheduling transmission.
+     *
+     * @param[in] aTxTime  The target transmission time (end of SFD at the local antenna) in microseconds relative to
+     *                     the local radio clock (see `GetNow()`).
+     *
+     * @retval kErrorNone          Successfully scheduled the frame transmission.
+     * @retval kErrorBusy          A previously scheduled transmission is still active.
+     * @retval kErrorInvalidState  The radio is disabled.
+     */
+    Error ScheduleTx(Time64 aTxTime);
+
+    /**
+     * Cancels a previously scheduled transmission.
+     *
+     * Used when radio provides the `kCapScheduledTx` capability.
+     *
+     * @retval kErrorNone  Successfully canceled the scheduled transmission (or no scheduled transmission was pending).
+     * @retval kErrorBusy  The scheduled transmission has already started and could not be canceled.
+     */
+    Error CancelScheduledTx(void);
 
     /**
      * Gets the most recent RSSI measurement.
@@ -910,6 +968,11 @@ inline uint32_t Radio::GetPreferredChannelMask(void) { return otPlatRadioGetPref
 
 inline Capabilities Radio::GetCaps(void) { return otPlatRadioGetCaps(GetInstancePtr()); }
 
+inline Error Radio::GetAvailability(otRadioAvailability &aAvailability)
+{
+    return otPlatRadioGetAvailability(GetInstancePtr(), &aAvailability);
+}
+
 inline int8_t Radio::GetReceiveSensitivity(void) const { return otPlatRadioGetReceiveSensitivity(GetInstancePtr()); }
 
 inline void Radio::SetPanId(Mac::PanId aPanId) { otPlatRadioSetPanId(GetInstancePtr(), aPanId); }
@@ -990,7 +1053,6 @@ inline Error Radio::Receive(uint8_t aChannel)
     return otPlatRadioReceive(GetInstancePtr(), aChannel);
 }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 inline Error Radio::ReceiveAt(uint8_t aChannel, Time32 aStart, uint32_t aDuration)
 {
     Error error = otPlatRadioReceiveAt(GetInstancePtr(), aChannel, aStart, aDuration);
@@ -1002,7 +1064,6 @@ inline Error Radio::ReceiveAt(uint8_t aChannel, Time32 aStart, uint32_t aDuratio
 #endif
     return error;
 }
-#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 inline void Radio::UpdateCslSampleTime(Time32 aCslSampleTime)
@@ -1030,6 +1091,15 @@ inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
 {
     return *static_cast<Mac::TxFrame *>(otPlatRadioGetTransmitBuffer(GetInstancePtr()));
 }
+
+inline Mac::TxFrame &Radio::GetScheduledTxFrame(void)
+{
+    return *static_cast<Mac::TxFrame *>(otPlatRadioGetScheduledTxFrame(GetInstancePtr()));
+}
+
+inline Error Radio::ScheduleTx(Time64 aTxTime) { return otPlatRadioScheduleTx(GetInstancePtr(), aTxTime); }
+
+inline Error Radio::CancelScheduledTx(void) { return otPlatRadioCancelScheduledTx(GetInstancePtr()); }
 
 inline int8_t Radio::GetRssi(void) { return otPlatRadioGetRssi(GetInstancePtr()); }
 
@@ -1065,6 +1135,8 @@ inline bool Radio::GetDiagMode(void) { return otPlatDiagModeGet(); }
 #else //----------------------------------------------------------------------------------------------------------------
 
 inline Capabilities Radio::GetCaps(void) { return kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries; }
+
+inline Error Radio::GetAvailability(otRadioAvailability &) { return kErrorNotImplemented; }
 
 inline int8_t Radio::GetReceiveSensitivity(void) const { return kDefaultReceiveSensitivity; }
 
@@ -1104,9 +1176,7 @@ inline Error Radio::Sleep(void) { return kErrorNone; }
 
 inline Error Radio::Receive(uint8_t) { return kErrorNone; }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-inline Error Radio::ReceiveAt(uint8_t, uint32_t, uint32_t) { return kErrorNone; }
-#endif
+inline Error Radio::ReceiveAt(uint8_t, uint32_t, uint32_t) { return kErrorNotImplemented; }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 inline void Radio::UpdateCslSampleTime(Time32) {}
@@ -1130,6 +1200,15 @@ inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
 }
 
 inline Error Radio::Transmit(Mac::TxFrame &) { return kErrorAbort; }
+
+inline Mac::TxFrame &Radio::GetScheduledTxFrame(void)
+{
+    return *static_cast<Mac::TxFrame *>(otPlatRadioGetScheduledTxFrame(GetInstancePtr()));
+}
+
+inline Error Radio::ScheduleTx(Time64) { return kErrorNotImplemented; }
+
+inline Error Radio::CancelScheduledTx(void) { return kErrorNotImplemented; }
 
 inline int8_t Radio::GetRssi(void) { return kInvalidRssi; }
 

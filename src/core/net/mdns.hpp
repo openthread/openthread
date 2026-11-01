@@ -934,8 +934,6 @@ private:
     static constexpr uint16_t kClassCacheFlushFlag      = (1U << 15);
     static constexpr uint16_t kClassMask                = (0x7fff);
 
-    static constexpr uint16_t kUnspecifiedOffset = 0;
-
     static constexpr uint8_t kNumSections = 4;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1018,6 +1016,28 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    class CompressOffset
+    {
+    public:
+        CompressOffset(void)
+            : mOffset(kUnknown)
+        {
+        }
+
+        void     Clear(void) { mOffset = kUnknown; }
+        bool     IsKnown(void) const { return (mOffset != kUnknown); }
+        uint16_t GetOffset(void) const { return mOffset; }
+        void     Save(const Message &aMessage, Section aSection);
+        void     UpdateFrom(const CompressOffset &aOther) { mOffset = IsKnown() ? mOffset : aOther.mOffset; }
+
+    private:
+        static constexpr uint16_t kUnknown = 0;
+
+        uint16_t mOffset;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     struct AnswerInfo
     {
         TimeMilli GetAnswerTime(void) const { return (mQueryRxTime + mAnswerDelay); }
@@ -1091,6 +1111,7 @@ private:
         void     UpdateFireTimeOn(FireTime &aFireTime);
         void     DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
         uint32_t GetDurationSinceLastMulticast(TimeMilli aTime) const;
+        uint32_t GetDurationSinceLastUnicast(TimeMilli aTime) const;
         Error    GetLastMulticastTime(TimeMilli &aLastMulticastTime) const;
 
         // `AppendState` methods: Used to track whether the record
@@ -1116,7 +1137,9 @@ private:
         TimeMilli GetAnswerTime(void) const { return mQueryRxTime + mAnswerDelay; }
 
         static constexpr uint32_t kMinIntervalBetweenMulticast = 1000; // msec
+        static constexpr uint32_t kMinIntervalBetweenUnicast   = 1000; // msec
         static constexpr uint32_t kLastMulticastTimeAge        = 10 * Time::kOneHourInMsec;
+        static constexpr uint32_t kLastUnicastTimeAge          = 10 * Time::kOneHourInMsec;
 
         static_assert(kNotAppended == 0, "kNotAppended MUST be zero, so `Clear()` works correctly");
 
@@ -1124,6 +1147,7 @@ private:
         bool        mMulticastAnswerPending : 1;
         bool        mUnicastAnswerPending : 1;
         bool        mIsLastMulticastValid : 1;
+        bool        mIsLastUnicastValid : 1;
         bool        mCanExtendAnswerDelay : 1;
         uint8_t     mAnnounceCounter;
         AppendState mAppendState;
@@ -1133,6 +1157,7 @@ private:
         TimeMilli   mAnnounceTime;
         TimeMilli   mQueryRxTime;
         TimeMilli   mLastMulticastTime;
+        TimeMilli   mLastUnicastTime;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1198,7 +1223,7 @@ private:
                                 Section          aSection,
                                 const TypeArray &aTypes,
                                 NameAppender     aNameAppender);
-        bool ShouldAnswerNsec(TimeMilli aNow) const;
+        bool ShouldAnswerNsec(const EntryContext &aContext) const;
         void DetermineNextFireTime(void);
         void DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
         void ScheduleTimer(void);
@@ -1343,7 +1368,7 @@ private:
         Heap::String         mName;
         AddrRecord           mIp6AddrRecord;
         OwnedPtr<AddrRecord> mIp4AddrRecord;
-        uint16_t             mNameOffset;
+        CompressOffset       mNameOffset;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1384,6 +1409,8 @@ private:
 #endif
 
     private:
+        typedef bool (ServiceEntry::*OffsetDiscoverer)(const ServiceEntry &aOther, void *aContext);
+
         class SubType : public LinkedListEntry<SubType>, public Heap::Allocatable<SubType>, private ot::NonCopyable
         {
         public:
@@ -1392,10 +1419,10 @@ private:
             bool  Matches(const EmptyChecker &aChecker) const;
             bool  IsContainedIn(const Service &aService) const;
 
-            SubType     *mNext;
-            Heap::String mLabel;
-            RecordInfo   mPtrRecord;
-            uint16_t     mSubServiceNameOffset;
+            SubType       *mNext;
+            Heap::String   mLabel;
+            RecordInfo     mPtrRecord;
+            CompressOffset mSubServiceNameOffset;
         };
 
         Error Init(Instance &aInstance, const char *aServiceInstance, const char *aServiceType);
@@ -1406,7 +1433,15 @@ private:
         void  PrepareResponseRecords(EntryContext &aContext);
         void  UpdateRecordsState(const TxMessage &aResponse);
         void  DetermineNextFireTime(void);
-        void  DiscoverOffsetsAndHost(HostEntry *&aHost);
+        void  MarkToAppendHostAddrRecordsInAdditionalData(void);
+        void  DiscoverHost(void);
+        void  DiscoverCompressOffset(OffsetDiscoverer aDiscoverer, void *aContext = nullptr);
+        void  DiscoverServiceTypeCompressOffset(void);
+        bool  DiscoverServiceTypeOffsetFrom(const ServiceEntry &aOther, void *aContext);
+        void  DiscoverHostNameCompressOffset(void);
+        bool  DiscoverHostNameOffsetFrom(const ServiceEntry &aOther, void *aContext);
+        void  DiscoverSubServiceNameCompressOffsetFor(SubType &aSubType);
+        bool  DiscoverSubServiceNameOffsetFrom(const ServiceEntry &aOther, void *aContext);
         void  UpdateServiceTypes(void);
         void  AppendSrvRecordTo(TxMessage &aTxMessage, Section aSection);
         void  AppendTxtRecordTo(TxMessage &aTxMessage, Section aSection);
@@ -1415,7 +1450,6 @@ private:
         void  AppendNsecRecordTo(TxMessage &aTxMessage, Section aSection);
         void  AppendServiceNameTo(TxMessage &TxMessage, Section aSection, bool aPerformNameCompression = true);
         void  AppendServiceTypeTo(TxMessage &aTxMessage, Section aSection);
-        void  AppendSubServiceTypeTo(TxMessage &aTxMessage, Section aSection);
         void  AppendSubServiceNameTo(TxMessage &aTxMessage, Section aSection, SubType &aSubType);
         void  AppendHostNameTo(TxMessage &aTxMessage, Section aSection);
 
@@ -1435,10 +1469,11 @@ private:
         uint16_t            mPriority;
         uint16_t            mWeight;
         uint16_t            mPort;
-        uint16_t            mServiceNameOffset;
-        uint16_t            mServiceTypeOffset;
-        uint16_t            mSubServiceTypeOffset;
-        uint16_t            mHostNameOffset;
+        CompressOffset      mServiceNameOffset;
+        CompressOffset      mServiceTypeOffset;
+        CompressOffset      mSubServiceTypeOffset;
+        CompressOffset      mHostNameOffset;
+        HostEntry          *mHostEntry;
         bool                mIsAddedInServiceTypes;
     };
 
@@ -1472,7 +1507,7 @@ private:
 
     private:
         void PrepareResponseRecords(EntryContext &aContext);
-        void AppendPtrRecordTo(TxMessage &aResponse, uint16_t aServiceTypeOffset);
+        void AppendPtrRecordTo(TxMessage &aResponse, CompressOffset &aServiceTypeOffset);
 
         ServiceType *mNext;
         Heap::String mServiceType;
@@ -1498,9 +1533,11 @@ private:
         TxMessage(Instance &aInstance, Type aType, const AddressInfo &aUnicastDest, uint16_t aQueryId);
         Type          GetType(void) const { return mType; }
         Message      &SelectMessageFor(Section aSection);
-        AppendOutcome AppendLabel(Section aSection, const char *aLabel, uint16_t &aCompressOffset);
-        AppendOutcome AppendMultipleLabels(Section aSection, const char *aLabels, uint16_t &aCompressOffset);
-        void          AppendServiceType(Section aSection, const char *aServiceType, uint16_t &aCompressOffset);
+        void          AppendLabel(Section aSection, const char *aLabel);
+        AppendOutcome AppendLabel(Section aSection, const char *aLabel, CompressOffset &aCompressOffset);
+        void          AppendMultipleLabels(Section aSection, const char *aLabels);
+        AppendOutcome AppendMultipleLabels(Section aSection, const char *aLabels, CompressOffset &aCompressOffset);
+        void          AppendServiceType(Section aSection, const char *aServiceType, CompressOffset &aCompressOffset);
         void          AppendDomainName(Section aSection);
         void          AppendServicesDnssdName(Section aSection);
         void          AddQuestionFrom(const Message &aMessage);
@@ -1516,13 +1553,11 @@ private:
         void          Init(Type aType, uint16_t aMessageId = 0);
         void          Reinit(void);
         bool          IsOverSizeLimit(void) const;
-        AppendOutcome AppendLabels(Section     aSection,
-                                   const char *aLabels,
-                                   bool        aIsSingleLabel,
-                                   uint16_t   &aCompressOffset);
+        AppendOutcome AppendLabels(Section         aSection,
+                                   const char     *aLabels,
+                                   bool            aIsSingleLabel,
+                                   CompressOffset &aCompressOffset);
         bool          ShouldClearAppendStateOnReinit(const Entry &aEntry) const;
-
-        static void SaveOffset(uint16_t &aCompressOffset, const Message &aMessage, Section aSection);
 
         static const char *TypeToString(Type aType);
 
@@ -1532,10 +1567,10 @@ private:
         RecordCounts      mSavedRecordCounts;
         uint16_t          mSavedMsgLength;
         uint16_t          mSavedExtraMsgLength;
-        uint16_t          mDomainOffset;        // Offset for domain name `.local.` for name compression.
-        uint16_t          mUdpOffset;           // Offset to `_udp.local.`
-        uint16_t          mTcpOffset;           // Offset to `_tcp.local.`
-        uint16_t          mServicesDnssdOffset; // Offset to `_services._dns-sd`
+        CompressOffset    mDomainOffset;        // Offset for domain name `.local.` for name compression.
+        CompressOffset    mUdpOffset;           // Offset to `_udp.local.`
+        CompressOffset    mTcpOffset;           // Offset to `_tcp.local.`
+        CompressOffset    mServicesDnssdOffset; // Offset to `_services._dns-sd`
         AddressInfo       mUnicastDest;
         Type              mType;
     };
@@ -1792,7 +1827,7 @@ private:
 
     struct CacheContext : private NonCopyable
     {
-        CacheContext(Instance &aInstance);
+        explicit CacheContext(Instance &aInstance);
         TimeMilli GetNow(void) const { return mNextFireTime.GetNow(); }
 
         NextFireTime mNextFireTime;
@@ -1951,9 +1986,9 @@ private:
         Heap::String         mServiceType;
         Heap::String         mSubTypeLabel;
         OwningList<PtrEntry> mPtrEntries;
-        uint16_t             mServiceTypeOffset;
-        uint16_t             mSubServiceTypeOffset;
-        uint16_t             mSubServiceNameOffset;
+        CompressOffset       mServiceTypeOffset;
+        CompressOffset       mSubServiceTypeOffset;
+        CompressOffset       mSubServiceNameOffset;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1998,8 +2033,8 @@ private:
         CacheRecordInfo mRecord;
         Heap::String    mServiceInstance;
         Heap::String    mServiceType;
-        uint16_t        mServiceNameOffset;
-        uint16_t        mServiceTypeOffset;
+        CompressOffset  mServiceNameOffset;
+        CompressOffset  mServiceTypeOffset;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2370,7 +2405,6 @@ private:
     static void     UpdateCacheFlushFlagIn(ResourceRecord &aResourceRecord,
                                            Section         aSection,
                                            bool            aIsLegacyUnicast = false);
-    static void     UpdateCompressOffset(uint16_t &aOffset, uint16_t aNewOffse);
     static bool     QuestionMatches(uint16_t aQuestionRrType, uint16_t aRrType);
     static bool     RrClassIsInternetOrAny(uint16_t aRrClass);
 

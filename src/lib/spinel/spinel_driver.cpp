@@ -247,8 +247,10 @@ otError SpinelDriver::SendCommand(uint32_t          aCommand,
     // Pack the data (if any)
     if (aFormat)
     {
+        // A value can be empty (e.g. an empty array), in which case zero
+        // bytes are packed.
         packed = spinel_datatype_vpack(buffer + offset, sizeof(buffer) - offset, aFormat, aArgs);
-        VerifyOrExit(packed > 0 && static_cast<size_t>(packed + offset) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(packed >= 0 && static_cast<size_t>(packed + offset) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
         offset += static_cast<uint16_t>(packed);
     }
@@ -505,13 +507,17 @@ void SpinelDriver::ProcessFrameQueue(void)
 {
     uint8_t *frame = nullptr;
     uint16_t length;
+    otError  error;
 
     assert(mSavedFrameHandler != nullptr && mFrameHandlerContext != nullptr);
 
-    while (mRxFrameBuffer.GetNextSavedFrame(frame, length) == OT_ERROR_NONE)
+    do
     {
-        mSavedFrameHandler(frame, length, mFrameHandlerContext);
-    }
+        while ((error = mRxFrameBuffer.GetNextSavedFrame(frame, length)) == OT_ERROR_NONE)
+        {
+            mSavedFrameHandler(frame, length, mFrameHandlerContext);
+        }
+    } while (error == OT_ERROR_ABORT);
 
     mRxFrameBuffer.ClearSavedFrames();
 }

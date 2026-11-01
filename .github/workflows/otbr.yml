@@ -86,7 +86,7 @@ jobs:
       NAT64: ${{ matrix.nat64 }}
       MAX_JOBS: 3
     steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
         persist-credentials: false
@@ -94,28 +94,26 @@ jobs:
       if: ${{ matrix.use_core_firewall }}
       run: |
         echo "FIREWALL=0" >> $GITHUB_ENV
-    - name: Build OTBR Docker
+    - name: Bootstrap
+      timeout-minutes: 15
+      shell: bash ./script/retry {0}
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
         TREL: ${{ matrix.otbr_trel }}
       run: |
-        ./script/test build_otbr_docker
-    - name: Bootstrap
-      timeout-minutes: 10
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo rm -f /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build lcov
         sudo bash script/install_socat
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+        ./script/test build_otbr_docker
+        ./script/test get_thread_wireshark
+        curl -fsSL https://codecov.io/env -o /tmp/codecov_env.sh
     - name: Build
       run: |
         ./script/test build
-    - name: Get Thread-Wireshark
-      run: |
-        ./script/test get_thread_wireshark
     - name: Run
       run: |
-        export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
+        export CI_ENV="$(bash /tmp/codecov_env.sh) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ${{ matrix.cert_scripts }} || (sudo chmod a+r ot_testing/* && false)
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -147,13 +145,15 @@ jobs:
     - thread-border-router
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y lcov
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
@@ -164,7 +164,7 @@ jobs:
       run: |
         script/test combine_coverage
     - name: Upload Coverage
-      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+      uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v7.1.0
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:

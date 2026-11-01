@@ -115,13 +115,14 @@ void Link::HandleTxTasklet(void) { BeginTransmit(); }
 
 void Link::BeginTransmit(void)
 {
-    Mac::Address  destAddr;
-    Mac::PanId    destPanId;
-    Header::Type  type;
-    Packet        txPacket;
-    Neighbor     *neighbor    = nullptr;
-    Mac::RxFrame *ackFrame    = nullptr;
-    bool          isDiscovery = false;
+    Mac::TxFrame::ParseInfo txFrameInfo;
+    Mac::Address            destAddr;
+    Mac::PanId              destPanId;
+    Header::Type            type;
+    Packet                  txPacket;
+    Neighbor               *neighbor    = nullptr;
+    Mac::RxFrame           *ackFrame    = nullptr;
+    bool                    isDiscovery = false;
 
     VerifyOrExit(mState == kStateTransmit);
 
@@ -131,7 +132,9 @@ void Link::BeginTransmit(void)
 
     VerifyOrExit(!mTxFrame.IsEmpty(), InvokeSendDone(kErrorAbort));
 
-    IgnoreError(mTxFrame.GetDstAddr(destAddr));
+    IgnoreError(txFrameInfo.ParseFrom(mTxFrame, Mac::Frame::kParseFully));
+
+    destAddr = txFrameInfo.mAddrs.mDestination;
 
     if (destAddr.IsNone() || destAddr.IsBroadcast())
     {
@@ -166,17 +169,21 @@ void Link::BeginTransmit(void)
         // MAC Key ID mode 2. All data communication uses MAC Key ID
         // Mode 1.
 
-        if (!mTxFrame.GetSecurityEnabled())
+        if (!txFrameInfo.mIsSecurityEnabled)
         {
             isDiscovery = true;
         }
         else
         {
-            isDiscovery = mTxFrame.HasKeyIdMode(Mac::Frame::kKeyIdMode2);
+            isDiscovery = (txFrameInfo.mKeyIdMode == Mac::Frame::kKeyIdMode2);
         }
     }
 
-    if (mTxFrame.GetDstPanId(destPanId) != kErrorNone)
+    if (txFrameInfo.mPanIds.IsDestinationPresent())
+    {
+        destPanId = txFrameInfo.mPanIds.GetDestination();
+    }
+    else
     {
         destPanId = Mac::kPanIdBroadcast;
     }
@@ -209,7 +216,7 @@ void Link::BeginTransmit(void)
 
     VerifyOrExit(mInterface.Send(txPacket, isDiscovery) == kErrorNone, InvokeSendDone(kErrorAbort));
 
-    if (mTxFrame.GetAckRequest())
+    if (txFrameInfo.mIsAckRequest)
     {
         uint16_t fcf = Mac::Frame::kTypeAck;
 
@@ -220,7 +227,7 @@ void Link::BeginTransmit(void)
 
         // Prepare the ack frame (FCF followed by sequence number)
         LittleEndian::WriteUint16(fcf, mAckFrameBuffer);
-        mAckFrameBuffer[sizeof(fcf)] = mTxFrame.GetSequence();
+        mAckFrameBuffer[sizeof(fcf)] = txFrameInfo.mSequenceNum;
 
         mRxFrame.mPsdu    = mAckFrameBuffer;
         mRxFrame.mLength  = k154AckFrameSize;
@@ -244,10 +251,14 @@ exit:
 
 void Link::InvokeSendDone(Error aError, Mac::RxFrame *aAckFrame)
 {
+    Mac::TxFrame::ParseInfo frameInfo;
+
     SetState(kStateReceive);
 
-    Get<Mac::Mac>().RecordFrameTransmitStatus(mTxFrame, aError, /* aRetryCount */ 0, /* aWillRetx */ false);
-    Get<Mac::Mac>().HandleTransmitDone(mTxFrame, aAckFrame, aError);
+    IgnoreError(frameInfo.ParseFrom(mTxFrame, Mac::Frame::kParseFully));
+
+    Get<Mac::Mac>().RecordFrameTransmitStatus(frameInfo, aError, /* aRetryCount */ 0, /* aWillRetx */ false);
+    Get<Mac::Mac>().HandleTransmitDone(frameInfo, aAckFrame, aError);
 }
 
 void Link::HandleTimer(void)

@@ -311,6 +311,7 @@ private:
     static constexpr bool     kBindUnspecifiedNetif         = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF;
     static constexpr uint32_t kQueryTimeout                 = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT;
     static constexpr uint16_t kMaxConcurrentUpstreamQueries = 32;
+    static constexpr uint16_t kMaxQuestionCount             = 2;
 
     static constexpr uint16_t kRrTypeA     = ResourceRecord::kTypeA;
     static constexpr uint16_t kRrTypeNs    = ResourceRecord::kTypeNs;

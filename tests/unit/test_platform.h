@@ -58,7 +58,7 @@ ot::Instance *testInitAdditionalInstance(uint8_t id);
 #endif
 void testFreeInstance(otInstance *aInstance);
 
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 #include <openthread/tcat.h>
 #ifdef __cplusplus
 extern "C" {
@@ -69,6 +69,6 @@ extern bool     sPlatBleAdvertising;
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 
 #endif // OT_UNIT_TEST_PLATFORM_H_

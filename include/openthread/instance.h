@@ -35,7 +35,6 @@
 #ifndef OPENTHREAD_INSTANCE_H_
 #define OPENTHREAD_INSTANCE_H_
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -52,7 +51,7 @@ extern "C" {
  *
  * @note This number versions both OpenThread platform and user APIs.
  */
-#define OPENTHREAD_API_VERSION (619)
+#define OPENTHREAD_API_VERSION (636)
 
 /**
  * @addtogroup api-instance
@@ -156,19 +155,6 @@ uint8_t otInstanceGetIndex(otInstance *aInstance);
  * @returns The instance identifier.
  */
 uint32_t otInstanceGetId(otInstance *aInstance);
-
-/**
- * Indicates whether or not the instance is valid/initialized.
- *
- * The instance is considered valid if it is acquired and initialized using either `otInstanceInitSingle()` (in single
- * instance case) or `otInstanceInit()` (in multi instance case). A subsequent call to `otInstanceFinalize()` causes
- * the instance to be considered as uninitialized.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- * @returns TRUE if the given instance is valid/initialized, FALSE otherwise.
- */
-bool otInstanceIsInitialized(otInstance *aInstance);
 
 /**
  * Disables the OpenThread library.

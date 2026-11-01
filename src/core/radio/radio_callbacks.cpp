@@ -56,6 +56,14 @@ void Callbacks::HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame
     Get<Mac::SubMac>().HandleTransmitDone(aFrame, aAckFrame, aError);
 }
 
+void Callbacks::HandleScheduledTxDone(Mac::RxFrame *aAckFrame, Error aError)
+{
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+    Get<Statistics>().RecordTxDone(aError, Get<Radio>().GetScheduledTxFrame().GetLength());
+#endif
+    Get<Mac::SubMac>().HandleScheduledTxDone(aAckFrame, aError);
+}
+
 void Callbacks::HandleEnergyScanDone(int8_t aMaxRssi) { Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi); }
 
 void Callbacks::HandleBusLatencyChanged(void)
@@ -63,8 +71,12 @@ void Callbacks::HandleBusLatencyChanged(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
     Get<CslTxScheduler>().HandleRadioBusLatencyChanged();
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    Get<WakeupTxScheduler>().HandleRadioBusLatencyChanged();
+}
+
+void Callbacks::HandleRadioAvailabilityUpdated(void)
+{
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    Get<Mac::LinkRaw>().HandleRadioAvailabilityUpdated();
 #endif
 }
 

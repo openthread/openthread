@@ -89,6 +89,7 @@ install_wpantund()
     sudo apt-get update
     sudo apt-get --no-install-recommends install -y libboost-all-dev python2
 
+    rm -rf wpantund
     git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git || die "wpandtund clone"
     cd wpantund || die "cd wpantund failed"
     ./bootstrap.sh
@@ -107,7 +108,9 @@ if [ "$TORANJ_NCP" = 1 ]; then
     if [ "$TORANJ_EVENT_NAME" = "pull_request" ]; then
         cd ../..
         OT_SHA_OLD="$(git cat-file -p HEAD | grep 'parent ' | head -n1 | cut -d' ' -f2)"
-        git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
+        if [ -n "${OT_SHA_OLD}" ] && ! git cat-file -e "${OT_SHA_OLD}^{commit}" 2>/dev/null; then
+            git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}" || die "git fetch failed"
+        fi
         if git diff --name-only --exit-code "${OT_SHA_OLD}" -- src/ncp; then
             echo "No changes to any of src/ncp files - skip running tests."
             echo "========================================================================"
@@ -118,7 +121,11 @@ if [ "$TORANJ_NCP" = 1 ]; then
     fi
 
     echo "========================================================================"
-    install_wpantund
+    command -v wpantund >/dev/null 2>&1 || install_wpantund
+fi
+
+if [ "${1:-}" = "bootstrap" ]; then
+    exit 0
 fi
 
 if [ -z "${top_builddir}" ]; then

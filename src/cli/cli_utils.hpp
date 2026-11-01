@@ -68,7 +68,7 @@ typedef uint64_t CommandId;
  *
  * @returns The associated `CommandId` with @p aString.
  */
-constexpr static CommandId Cmd(const char *aString)
+static constexpr CommandId Cmd(const char *aString)
 {
     return (aString[0] == '\0') ? 0 : (static_cast<uint8_t>(aString[0]) + Cmd(aString + 1) * 255u);
 }
@@ -143,7 +143,7 @@ public:
          * @retval TRUE  if @p aFirst and @p aSecond are in order, i.e. `aFirst < aSecond`.
          * @retval FALSE if @p aFirst and @p aSecond are not in order, i.e. `aFirst >= aSecond`.
          */
-        constexpr static bool AreInOrder(const CommandEntry &aFirst, const CommandEntry &aSecond)
+        static constexpr bool AreInOrder(const CommandEntry &aFirst, const CommandEntry &aSecond)
         {
             return AreStringsInOrder(aFirst.mName, aSecond.mName);
         }

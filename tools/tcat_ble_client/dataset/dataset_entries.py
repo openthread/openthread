@@ -492,30 +492,6 @@ class ChannelMaskEntry(DatasetEntry):
         return TLV.from_bytes(tlv)
 
 
-class WakeupChannel(DatasetEntry):
-
-    def __init__(self):
-        super().__init__(MeshcopTlvType.WAKEUP_CHANNEL)
-        self.length = 3  # spec defined
-        self.channel_page = 0
-        self.channel = 0
-
-    def set(self, args: List[str]):
-        if len(args) == 0:
-            raise ValueError('No argument for WakeupChannel')
-        channel = int(args[0])
-        self.channel = channel
-
-    def set_from_tlv(self, tlv: TLV):
-        self.channel = int.from_bytes(tlv.value[1:3], byteorder='big')
-        self.channel_page = tlv.value[0]
-
-    def to_tlv(self):
-        tlv = struct.pack('>BBB', self.type.value, self.length, self.channel_page)
-        tlv += struct.pack('>H', self.channel)
-        return TLV.from_bytes(tlv)
-
-
 ENTRY_CLASSES = {
     MeshcopTlvType.ACTIVETIMESTAMP: ActiveTimestamp,
     MeshcopTlvType.PENDINGTIMESTAMP: PendingTimestamp,
@@ -529,7 +505,6 @@ ENTRY_CLASSES = {
     MeshcopTlvType.PSKC: Pskc,
     MeshcopTlvType.SECURITYPOLICY: SecurityPolicy,
     MeshcopTlvType.CHANNELMASK: ChannelMask,
-    MeshcopTlvType.WAKEUP_CHANNEL: WakeupChannel
 }
 
 

@@ -31,6 +31,7 @@ if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
 fi
 
 if [[ -n ${OT_ISOLATED_REEXEC:-} ]]; then
+    export PATH="${PATH}:/usr/sbin:/sbin"
     ip link set lo up
 
     if [[ -d /run ]]; then

@@ -94,12 +94,14 @@ struct Radio
     bool                                    mPromiscuous : 1;
     bool                                    mSrcMatchEnabled : 1;
     bool                                    mMacFrameCounterReset : 1;
+    bool                                    mScheduledTxPending : 1;
     uint8_t                                 mChannel;
     Mac::PanId                              mPanId;
-    Mac::ShortAddress                       mShortAddress;
-    Mac::ExtAddress                         mExtAddress;
+    uint64_t                                mScheduledTxTime;
     Frame                                   mTxFrame;
+    Frame                                   mScheduledTxFrame;
     otRadioIeInfo                           mTxIeInfo;
+    otRadioIeInfo                           mScheduledTxIeInfo;
     otRadioContext                          mRadioContext;
     Array<uint16_t, kMaxSrcMatchShort>      mSrcMatchShortEntries;
     Array<Mac::ExtAddress, kMaxSrcMatchExt> mSrcMatchExtEntries;

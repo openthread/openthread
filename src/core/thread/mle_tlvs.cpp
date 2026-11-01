@@ -278,18 +278,18 @@ void ChannelTlvValue::SetChannelAndPage(uint16_t aChannel)
 
 bool ChannelTlvValue::IsValid(void) const
 {
-    bool     isValid = false;
-    uint16_t channel;
+    return Radio::SupportsChannelPage(mChannelPage) && Radio::IsChannelValid(GetChannel());
+}
 
-    VerifyOrExit(Radio::SupportsChannelPage(mChannelPage));
+//---------------------------------------------------------------------------------------------------------------------
+// CslChannelTlvValue
 
-    channel = GetChannel();
-    VerifyOrExit((Radio::kChannelMin <= channel) && (channel <= Radio::kChannelMax));
+bool CslChannelTlvValue::IsValid(void) const
+{
+    // Special value of zero is used to indicate that
+    // CSL channel is not specified.
 
-    isValid = true;
-
-exit:
-    return isValid;
+    return (GetChannel() == 0) || ChannelTlvValue::IsValid();
 }
 
 //---------------------------------------------------------------------------------------------------------------------

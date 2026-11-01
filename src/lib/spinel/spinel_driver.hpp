@@ -210,7 +210,7 @@ public:
      *
      * @returns the spinel interface id.
      */
-    spinel_iid_t GetIid(void) { return mIid; }
+    spinel_iid_t GetIid(void) const { return mIid; }
 
 #if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
     /**

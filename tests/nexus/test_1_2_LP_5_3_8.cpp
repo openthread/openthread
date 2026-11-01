@@ -162,7 +162,7 @@ void Test5_3_8(void)
      * - Pass Criteria: N/A.
      */
 
-    ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout);
+    SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
     ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
 
     Log("---------------------------------------------------------------------------------------");

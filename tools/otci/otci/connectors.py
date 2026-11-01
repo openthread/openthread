@@ -30,7 +30,7 @@ import logging
 import subprocess
 import time
 from abc import abstractmethod, ABC
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 
 class OtCliHandler(ABC):
@@ -77,6 +77,9 @@ class OtCliPopen(OtCliHandler):
         self.__nodeid = nodeid
         self.__simulator = simulator
 
+        if self.__simulator is not None:
+            self.wait(0)
+
     def __repr__(self):
         return 'OTCli<%d>' % self.__nodeid
 
@@ -91,7 +94,7 @@ class OtCliPopen(OtCliHandler):
 
     def wait(self, duration: float, **kwargs):
         if self.__simulator is not None:
-            if kwargs.get('maybeoff', False):
+            if duration == 0 or kwargs.get('maybeoff', False):
                 kwargs['nodeid'] = self.__nodeid
 
             # Virtual time simulation
@@ -104,8 +107,14 @@ class OtCliPopen(OtCliHandler):
         assert self.__otcli_proc.stdin is not None
         assert self.__otcli_proc.stdout is not None
         self.__otcli_proc.stdin.close()
-        self.__otcli_proc.stdout.close()
-        self.__otcli_proc.wait()
+        try:
+            self.__otcli_proc.terminate()
+            self.__otcli_proc.wait(timeout=2)
+        except (subprocess.TimeoutExpired, OSError):
+            self.__otcli_proc.kill()
+            self.__otcli_proc.wait()
+        finally:
+            self.__otcli_proc.stdout.close()
 
 
 class OtCliSim(OtCliPopen):
@@ -121,6 +130,62 @@ class OtCliSim(OtCliPopen):
                                 encoding='utf-8',
                                 bufsize=1024)
         super().__init__(proc, nodeid, simulator)
+
+
+class OtCliPosix(OtCliPopen):
+    """Connector for host POSIX OT CLI instances using Radio URL."""
+
+    def __init__(self,
+                 radio_url: str,
+                 executable: str = 'ot-cli',
+                 extra_args: Optional[List[str]] = None,
+                 nodeid: int = 1,
+                 simulator: Optional[Simulator] = None):
+        logging.info('%s: executable=%s radio_url=%s', self.__class__.__name__, executable, radio_url)
+        self._radio_url = radio_url
+
+        args = [executable]
+        if extra_args:
+            args.extend(extra_args)
+        args.append(radio_url)
+
+        proc = subprocess.Popen(args=args,
+                                executable=executable,
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8',
+                                bufsize=1024)
+        super().__init__(proc, nodeid, simulator)
+
+    def __repr__(self):
+        return f'OTCliPosix<{self._radio_url}>'
+
+
+class OtCliAdbSpinelProxy(OtCliPosix):
+    """Connector for host POSIX OT CLI over an Android ADB Spinel proxy."""
+
+    def __init__(self,
+                 proxy_manager: Any,
+                 executable: str = 'ot-cli',
+                 extra_args: Optional[List[str]] = None,
+                 nodeid: int = 1,
+                 simulator: Optional[Simulator] = None):
+        self.__proxy_manager = proxy_manager
+        super().__init__(radio_url=proxy_manager.radio_url,
+                         executable=executable,
+                         extra_args=extra_args,
+                         nodeid=nodeid,
+                         simulator=simulator)
+
+    @property
+    def proxy_manager(self) -> Any:
+        return self.__proxy_manager
+
+    def close(self):
+        try:
+            super().close()
+        finally:
+            self.__proxy_manager.close()
 
 
 class OtNcpSim(OtCliPopen):

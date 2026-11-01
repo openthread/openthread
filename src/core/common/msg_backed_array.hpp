@@ -100,7 +100,7 @@ public:
      *
      * @param[in] aInstance  The OpenThread instance.
      */
-    MessageBackedArray(Instance &aInstance)
+    explicit MessageBackedArray(Instance &aInstance)
         : InstanceLocator(aInstance)
         , mMessage(nullptr)
     {

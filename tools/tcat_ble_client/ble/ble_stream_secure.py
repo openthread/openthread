@@ -35,6 +35,13 @@ from typing import Optional, Callable
 from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.primitives.serialization import (Encoding, PublicFormat)
 
+from constants import (
+    POLL_INTERVAL_SEC,
+    TCAT_RESPONSE_TIMEOUT_SEC,
+    TLS_BUFFER_SIZE,
+    TLS_CLOSE_TIMEOUT_SEC,
+    TLS_HANDSHAKE_TIMEOUT_BLE_SEC,
+)
 from tlv.tlv import TLV
 from tlv.tcat_tlv import TcatTLVType
 import utils
@@ -70,8 +77,8 @@ class BleStreamSecure:
             self.ssl_context.load_verify_locations(cafile=cafile)
 
     async def do_handshake(self,
-                           buffersize: int = 4096,
-                           timeout: float = 30.0,
+                           buffersize: int = TLS_BUFFER_SIZE,
+                           timeout: float = TLS_HANDSHAKE_TIMEOUT_BLE_SEC,
                            progress_callback: Optional[Callable[[bool], None]] = None) -> bool:
         """
         Performs a TLS handshake with a TCAT Device, reporting progress via an optional callback.
@@ -114,7 +121,7 @@ class BleStreamSecure:
                     send_data = self.outgoing.read()
                     if send_data:
                         await self.stream.send(send_data)
-                    await asyncio.sleep(0.020)
+                    await asyncio.sleep(POLL_INTERVAL_SEC)
 
                 # SSLWantRead means ssl wants to receive data from the link,
                 # but might need to send first
@@ -125,7 +132,7 @@ class BleStreamSecure:
                     recv_data = await self.stream.recv(buffersize)
                     if recv_data:
                         self.incoming.write(recv_data)
-                    await asyncio.sleep(0.020)
+                    await asyncio.sleep(POLL_INTERVAL_SEC)
 
                 except ssl.SSLCertVerificationError as err:
                     if progress_callback:
@@ -162,7 +169,7 @@ class BleStreamSecure:
         return True
 
     # Precondition: caller must handle all exceptions raised
-    async def _send(self, data: bytes, buffersize: int = 4096) -> None:
+    async def _send(self, data: bytes, buffersize: int = TLS_BUFFER_SIZE) -> None:
         hexdump_str = utils.hexdump_ot("Tx", data) if len(data) > 0 else ''
         logger.debug(f"tx {len(data)} bytes\n{hexdump_str}")
         self.ssl_object.write(data)
@@ -182,15 +189,14 @@ class BleStreamSecure:
 
     # Precondition: caller must acquire _recv_lock before calling this method
     # Precondition: caller must handle all exceptions raised
-    async def _recv(self, buffersize: int = 4096, timeout: float = 0.0) -> bytes:
+    async def _recv(self, buffersize: int = TLS_BUFFER_SIZE, timeout: float = 0.0) -> bytes:
         if self._close_notify_received and self._close_notify_sent:
             return b''
 
-        slp_time = 0.020
         end_time = asyncio.get_running_loop().time() + timeout
         data = await self.stream.recv(buffersize)
         while not data and asyncio.get_running_loop().time() < end_time:
-            await asyncio.sleep(slp_time)
+            await asyncio.sleep(POLL_INTERVAL_SEC)
             data = await self.stream.recv(buffersize)
         if not data:
             return b''
@@ -204,7 +210,7 @@ class BleStreamSecure:
             except ssl.SSLWantReadError:
                 more = await self.stream.recv(buffersize)
                 while not more:
-                    await asyncio.sleep(slp_time)
+                    await asyncio.sleep(POLL_INTERVAL_SEC)
                     more = await self.stream.recv(buffersize)
                 self.incoming.write(more)
 
@@ -217,13 +223,13 @@ class BleStreamSecure:
 
         return decode
 
-    async def send_with_resp(self, data: bytes, timeout: float = 5.0) -> bytes:
+    async def send_with_resp(self, data: bytes, timeout: float = TCAT_RESPONSE_TIMEOUT_SEC) -> bytes:
         """
         Send data to the server over the secure TLS connection and wait for response data.
 
         Args:
             data: The data to send to the server.
-            timeout: The maximum time in seconds to wait for the response data. Defaults to 5.0 seconds.
+            timeout: The maximum time in seconds to wait for the response data. Defaults to TCAT_RESPONSE_TIMEOUT_SEC.
 
         Returns:
             bytes: The received response data as bytes, or empty b'' if no data TLV/line was received
@@ -278,7 +284,7 @@ class BleStreamSecure:
         except asyncio.QueueEmpty:
             return b''
 
-    async def close(self, timeout: float = 5.0):
+    async def close(self, timeout: float = TLS_CLOSE_TIMEOUT_SEC):
         try:
             if self.is_connected:
                 logger.debug('sending Disconnect command TLV')
@@ -301,7 +307,7 @@ class BleStreamSecure:
 
     # Closes the TLS connection by repeated calls to unwrap() until it succeeds or times out.
     # Precondition: must only be called by close() with _recv_lock acquired, or by _closed_by_peer()
-    async def _close_tls_gracefully(self, timeout: float = 5.0, buffersize: int = 4096):
+    async def _close_tls_gracefully(self, timeout: float = TLS_CLOSE_TIMEOUT_SEC, buffersize: int = TLS_BUFFER_SIZE):
         try:
             async with asyncio.timeout(timeout):
                 while True:
@@ -319,7 +325,7 @@ class BleStreamSecure:
                         if recv_data:
                             self.incoming.write(recv_data)
                         else:
-                            await asyncio.sleep(0.020)  # small pause to allow asyncio.timeout to occur
+                            await asyncio.sleep(POLL_INTERVAL_SEC)  # small pause to allow asyncio.timeout to occur
                     except ssl.SSLWantWriteError:
                         send_data = self.outgoing.read()
                         if send_data:
@@ -337,8 +343,19 @@ class BleStreamSecure:
 
     @property
     def is_connected(self):
+        # Also consult the underlying link (self.stream.is_connected): the TLS flags
+        # below are only updated reactively when an inbound close-notify is processed,
+        # so they can still report "connected" after the peer has already dropped the
+        # BLE link. Checking the link makes the pre-command connection check reflect
+        # reality instead of failing later at the actual write.
         return not self._close_notify_sent and not self._close_notify_received and \
-            self._peer_public_key is not None and self.ssl_object is not None
+            self._peer_public_key is not None and self.ssl_object is not None and \
+            self.stream.is_connected
+
+    @property
+    def close_notify_received(self):
+        """True once the peer's close-notify alert has been received, whichever side started the close."""
+        return self._close_notify_received
 
     @property
     def peer_public_key(self):

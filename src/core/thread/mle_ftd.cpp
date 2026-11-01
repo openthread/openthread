@@ -914,6 +914,7 @@ Error Mle::SendLinkAccept(const LinkAcceptInfo &aInfo)
         SuccessOrExit(error = mTxChallengeTable.GenerateFor(router->GetRouterId(), challenge));
         SuccessOrExit(error = message->AppendChallengeTlv(challenge));
         SuccessOrExit(error = message->AppendTlvRequestTlv(kRouterTlvs));
+        router->RestartLinkAcceptTimeout();
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1381,6 +1382,7 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
             router = mRouterTable.FindRouterById(routerId);
             VerifyOrExit(router != nullptr);
 
+            RemoveNeighborIfRloc16Mismatches(aRxInfo, aSourceAddress);
             EstablishRouterLinkOnFtdChild(*router, aRxInfo, linkMargin);
         }
 
@@ -1419,7 +1421,12 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
         // Change the cache entries associated with the former child
         // from using the old RLOC16 to its new RLOC16.
         Get<AddressResolver>().ReplaceEntriesForRloc16(aRxInfo.mNeighbor->GetRloc16(), router->GetRloc16());
+
+        RemoveNeighbor(*aRxInfo.mNeighbor);
+        aRxInfo.mNeighbor = router;
     }
+
+    RemoveNeighborIfRloc16Mismatches(aRxInfo, aSourceAddress);
 
     // Send unicast link request if no link to router and no
     // unicast/multicast link request in progress
@@ -1440,10 +1447,7 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
     mRouterTable.UpdateRoutes(routeTlvData, routerId);
 
 exit:
-    if (aRxInfo.mNeighbor && aRxInfo.mNeighbor->GetRloc16() != aSourceAddress)
-    {
-        RemoveNeighbor(*aRxInfo.mNeighbor);
-    }
+    RemoveNeighborIfRloc16Mismatches(aRxInfo, aSourceAddress);
 
     return error;
 }
@@ -1789,7 +1793,6 @@ void Mle::HandleTimeTick(void)
                 if (age >= kMaxNeighborAgeOnChild)
                 {
                     LogInfo("No Adv from router 0x%04x - removing router", router.GetRloc16());
-                    mDelayedSender.RemoveScheduledLinkRequest(router);
                     RemoveNeighbor(router);
                     continue;
                 }
@@ -1817,7 +1820,7 @@ void Mle::HandleTimeTick(void)
         }
 
         if (router.IsStateLinkRequest() && !mDelayedSender.HasAnyScheduledLinkRequest(router) &&
-            !router.IsWaitingForLinkAccept())
+            !mDelayedSender.HasAnyScheduledLinkAccept(router) && !router.IsWaitingForLinkAccept())
         {
             LogInfo("Router 0x%04x - Failed to schedule/send Link Request", router.GetRloc16());
             RemoveNeighbor(router);
@@ -1939,7 +1942,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
             uint8_t         contextId = AddressRegistrationTlv::GetContextId(controlByte);
             Lowpan::Context context;
 
-            IgnoreError(aRxInfo.mMessage.ReadAndAdvance(offsetRange, address.GetIid()));
+            SuccessOrExit(error = aRxInfo.mMessage.ReadAndAdvance(offsetRange, address.GetIid()));
 
             Get<NetworkData::Leader>().FindContextForId(contextId, context);
 
@@ -1956,7 +1959,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         {
             // Uncompressed entry contains the full IPv6 address.
 
-            IgnoreError(aRxInfo.mMessage.ReadAndAdvance(offsetRange, address));
+            SuccessOrExit(error = aRxInfo.mMessage.ReadAndAdvance(offsetRange, address));
         }
 
         error = aChild.AddIp6Address(address);
@@ -2022,13 +2025,6 @@ exit:
     return error;
 }
 
-bool Mle::IsMessageMleSubType(const Message &aMessage) { return aMessage.IsSubTypeMle(); }
-
-bool Mle::IsMessageChildUpdateRequest(const Message &aMessage)
-{
-    return aMessage.IsMleCommand(kCommandChildUpdateRequest);
-}
-
 void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
 {
     Error              error = kErrorNone;
@@ -2059,7 +2055,7 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadAndMatchResponseTlvWith(child->GetChallenge()));
 
-    Get<MeshForwarder>().RemoveMessagesForChild(*child, IsMessageMleSubType);
+    Get<MeshForwarder>().RemoveMessagesForChild(*child, Message::AcceptAnyMle);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadFrameCounterTlvs(linkFrameCounter, mleFrameCounter));
 
@@ -2152,6 +2148,9 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
     child->SetSupervisionInterval(supervisionInterval);
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     child->ClearLastRxFragmentTag();
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    child->ClearCsl();
 #endif
 
     child->SetNetworkDataVersion(mLeaderData.GetDataVersion(mode.GetNetworkDataType()));
@@ -2342,8 +2341,8 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (child->IsCslSynchronized())
     {
-        ChannelTlvValue cslChannelTlvValue;
-        uint32_t        cslTimeout;
+        CslChannelTlvValue cslChannelTlvValue;
+        uint32_t           cslTimeout;
 
         switch (Tlv::Find<CslTimeoutTlv>(aRxInfo.mMessage, cslTimeout))
         {
@@ -2355,14 +2354,19 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         case kErrorNotFound:
             break;
         default:
-            ExitNow(error = kErrorNone);
+            ExitNow(error = kErrorParse);
         }
 
-        if (Tlv::Find<CslChannelTlv>(aRxInfo.mMessage, cslChannelTlvValue) == kErrorNone)
+        switch (Tlv::Find<CslChannelTlv>(aRxInfo.mMessage, cslChannelTlvValue))
         {
-            // Special value of zero is used to indicate that
-            // CSL channel is not specified.
+        case kErrorNone:
+            VerifyOrExit(cslChannelTlvValue.IsValid(), error = kErrorParse);
             child->SetCslChannel(static_cast<uint8_t>(cslChannelTlvValue.GetChannel()));
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
         }
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -2375,14 +2379,6 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
                 child->GetDeviceMode().Get(), child->GetDeviceMode().ToString().AsCString());
 
         childDidChange = true;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        if (child->IsRxOnWhenIdle())
-        {
-            // Clear CSL synchronization state
-            child->SetCslSynchronized(false);
-        }
-#endif
 
         // The `IndirectSender::HandleChildModeChange()` needs to happen
         // after "Child Update" message is fully parsed to ensure that
@@ -2934,10 +2930,11 @@ Error Mle::SendChildUpdateRequestToChild(Child &aChild)
         // to the sleepy child if there is one already
         // queued.
 
-        VerifyOrExit(!Get<IndirectSender>().HasQueuedMessageForSleepyChild(aChild, IsMessageChildUpdateRequest));
+        VerifyOrExit(!Get<IndirectSender>().HasQueuedMessageForSleepyChild(
+            aChild, Message::AcceptMle<kCommandChildUpdateRequest>));
     }
 
-    Get<MeshForwarder>().RemoveMessagesForChild(aChild, IsMessageChildUpdateRequest);
+    Get<MeshForwarder>().RemoveMessagesForChild(aChild, Message::AcceptMle<kCommandChildUpdateRequest>);
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendSourceAddressAndLeaderDataTlvs());
@@ -3213,12 +3210,18 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
 
         mChildTable.RemoveStoredChild(child);
     }
-    else if (aNeighbor.IsStateValid())
+    else if (mRouterTable.Contains(aNeighbor))
     {
-        OT_ASSERT(mRouterTable.Contains(aNeighbor));
+        Router &router = static_cast<Router &>(aNeighbor);
 
-        mNeighborTable.Signal(NeighborTable::kRouterRemoved, aNeighbor);
-        mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
+        mDelayedSender.RemoveScheduledLinkRequest(router);
+        router.ClearLinkAcceptTimeout();
+
+        if (router.IsStateValid())
+        {
+            mNeighborTable.Signal(NeighborTable::kRouterRemoved, router);
+            mRouterTable.RemoveRouterLink(router);
+        }
     }
 
     aNeighbor.GetLinkInfo().Clear();
@@ -3229,6 +3232,15 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
 
 exit:
     return;
+}
+
+void Mle::RemoveNeighborIfRloc16Mismatches(RxInfo &aRxInfo, uint16_t aRloc16)
+{
+    if ((aRxInfo.mNeighbor != nullptr) && (aRxInfo.mNeighbor->GetRloc16() != aRloc16))
+    {
+        RemoveNeighbor(*aRxInfo.mNeighbor);
+        aRxInfo.mNeighbor = nullptr;
+    }
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

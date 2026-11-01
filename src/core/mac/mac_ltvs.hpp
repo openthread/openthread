@@ -354,7 +354,6 @@ public:
      */
     static void OptimizeListOrder(AppendInfo *aLtvList, uint16_t aNumLtvs);
 
-private:
     Ltv(void) = delete;
 };
 

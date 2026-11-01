@@ -231,9 +231,7 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     {
         mDelayedJoinEnts.DequeueAndFree(*message);
 
-        Get<KeyManager>().SetKek(metadata.mKek);
-
-        if (SendJoinerEntrust(metadata.mMessageInfo) != kErrorNone)
+        if (SendJoinerEntrust(metadata) != kErrorNone)
         {
             mTimer.Start(0);
         }
@@ -243,23 +241,31 @@ exit:
     return;
 }
 
-Error JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
+Error JoinerRouter::SendJoinerEntrust(const JoinerEntrustMetadata &aMetadata)
 {
-    Error          error = kErrorNone;
-    Coap::Message *message;
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
+
+    IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleJoinerEntrustResponse, this));
 
     message = PrepareJoinerEntrustMessage();
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleJoinerEntrustResponse, this));
+    Get<KeyManager>().SetKek(aMetadata.mKek);
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo, HandleJoinerEntrustResponse, this));
+    SuccessOrExit(
+        error = Get<Tmf::Agent>().SendMessage(*message, aMetadata.mMessageInfo, HandleJoinerEntrustResponse, this));
 
     LogInfo("Sent %s (len= %d)", UriToString<kUriJoinerEntrust>(), message->GetLength());
     LogCert("[THCI] direction=send | type=JOIN_ENT.ntf");
 
 exit:
-    FreeMessageOnError(message, error);
+    if (error != kErrorNone)
+    {
+        Get<KeyManager>().ClearKek();
+        FreeMessage(message);
+    }
+
     return error;
 }
 
@@ -299,6 +305,8 @@ exit:
 void JoinerRouter::HandleJoinerEntrustResponse(Coap::Msg *aMsg, Error aResult)
 {
     Get<KeyManager>().ClearKek();
+
+    VerifyOrExit(aResult != kErrorAbort);
 
     SendDelayedJoinerEntrust();
 

@@ -98,6 +98,36 @@ public:
     Radio::Capabilities GetCaps(void) const { return mSubMac.GetCaps(); }
 
     /**
+     * Sets the callback to be notified when the radio availability schedule is updated.
+     *
+     * The callback is not cleared by `Init()`.
+     *
+     * @param[in]  aCallback  A pointer to a function called when the radio availability is updated, or `nullptr`.
+     */
+    void SetRadioAvailabilityUpdated(otLinkRawRadioAvailabilityUpdated aCallback)
+    {
+        mRadioAvailabilityUpdatedCallback = aCallback;
+    }
+
+    /**
+     * Gets the current radio availability schedule.
+     *
+     * @param[out] aAvailability  A reference to an `otRadioAvailability` to populate.
+     *
+     * @retval kErrorNone            Successfully retrieved the radio availability schedule.
+     * @retval kErrorNotImplemented  The radio platform does not support reporting radio availability.
+     */
+    Error GetRadioAvailability(otRadioAvailability &aAvailability)
+    {
+        return Get<Radio::Radio>().GetAvailability(aAvailability);
+    }
+
+    /**
+     * Handles a radio availability update from the radio platform.
+     */
+    void HandleRadioAvailabilityUpdated(void);
+
+    /**
      * Starts a (recurring) Receive on the link-layer.
      *
      * @retval kErrorNone            Successfully transitioned to Receive.
@@ -241,12 +271,15 @@ public:
 private:
     // Callbacks from `SubMac`
     void InvokeReceiveDone(RxFrame *aFrame, Error aError);
-    void InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+    void InvokeTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError);
     void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
+    void RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
+                                   Error                     aError,
+                                   uint8_t                   aRetryCount,
+                                   bool                      aWillRetx);
 #else
-    void RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
+    void RecordFrameTransmitStatus(const TxFrame::ParseInfo &, Error, uint8_t, bool) {}
 #endif
 
     uint8_t                 mReceiveChannel;
@@ -254,6 +287,9 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+
+    // Kept across `Init()`, since `Init()` is also called by `Instance::ResetRadioStack()`.
+    otLinkRawRadioAvailabilityUpdated mRadioAvailabilityUpdatedCallback;
 
 #if OPENTHREAD_RADIO
     SubMac mSubMac;

@@ -1267,7 +1267,7 @@ Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
 
     if (error == kErrorNone)
     {
-        if (aKeyInfo.ImportKeyPair(keyPair) != kErrorNone)
+        if (aKeyInfo.SaveKeyPair(keyPair) != kErrorNone)
         {
             SuccessOrExit(error = aKeyInfo.Generate());
         }

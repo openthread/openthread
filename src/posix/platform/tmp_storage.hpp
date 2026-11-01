@@ -43,6 +43,7 @@ class TmpStorage
 public:
     TmpStorage(void)
         : mStorageFile()
+        , mIsFileInitialized(false)
     {
     }
 
@@ -80,11 +81,13 @@ private:
         kKeyRadioSpinelMetrics = 2,
     };
 
+    void    InitStorageFile(void);
     otError SettingsFileInit(void);
     time_t  GetBootTime(void);
     bool    BootTimeMatch(time_t aBootTimeA, time_t aBootTimeB);
 
     SettingsFile mStorageFile;
+    bool         mIsFileInitialized;
 };
 
 } // namespace Posix

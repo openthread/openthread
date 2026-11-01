@@ -40,8 +40,8 @@
 
 #include <stdint.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
-#include "common/const_cast.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
 
@@ -58,15 +58,15 @@ namespace Mac {
  */
 
 /**
- * Implements Mac Filter on IEEE 802.15.4 frames.
+ * Implements MAC Filter on IEEE 802.15.4 frames.
  */
 class Filter : private NonCopyable
 {
 public:
     /**
-     * Represents a Mac Filter entry (used during iteration).
+     * Represents MAC Filter entry information.
      */
-    typedef otMacFilterEntry Entry;
+    typedef otMacFilterEntry EntryInfo;
 
     /**
      * Represents an iterator used to iterate through filter entries.
@@ -76,7 +76,7 @@ public:
     typedef otMacFilterIterator Iterator;
 
     /**
-     * Type represents the MAC Filter mode.
+     * Represents the MAC Filter mode.
      */
     enum Mode : uint8_t
     {
@@ -85,7 +85,8 @@ public:
         kModeDenylist  = OT_MAC_FILTER_ADDRESS_MODE_DENYLIST,  ///< Enable denylist address filter mode.
     };
 
-    static constexpr int8_t kFixedRssDisabled = OT_MAC_FILTER_FIXED_RSS_DISABLED; ///< Value when no fixed RSS is set.
+    static constexpr int8_t   kFixedRssDisabled = OT_MAC_FILTER_FIXED_RSS_DISABLED; ///< Value when no fixed RSS is set.
+    static constexpr Iterator kIteratorInit     = OT_MAC_FILTER_ITERATOR_INIT;      ///< Initializer for `Iterator`.
 
     /**
      * Initializes the filter.
@@ -95,7 +96,7 @@ public:
     /**
      * Gets the MAC Filter mode.
      *
-     * @returns  the Filter mode.
+     * @returns  The Filter mode.
      */
     Mode GetMode(void) const { return mMode; }
 
@@ -114,7 +115,10 @@ public:
      * @retval kErrorNone          Successfully added @p aExtAddress to the filter.
      * @retval kErrorNoBufs        No available entry exists.
      */
-    Error AddAddress(const ExtAddress &aExtAddress);
+    Error AddAddress(const ExtAddress &aExtAddress)
+    {
+        return AddOrUpdateEntry(kAddrFilter, aExtAddress, kFixedRssDisabled);
+    }
 
     /**
      * Removes an Extended Address from the filter.
@@ -123,33 +127,34 @@ public:
      *
      * @param[in]  aExtAddress  A reference to the Extended Address to remove.
      */
-    void RemoveAddress(const ExtAddress &aExtAddress);
+    void RemoveAddress(const ExtAddress &aExtAddress) { RemoveEntry(kAddrFilter, aExtAddress); }
 
     /**
      * Clears all Extended Addresses from the filter.
      */
-    void ClearAddresses(void);
+    void ClearAddresses(void) { ClearAll(kAddrFilter); }
 
     /**
      * Iterates through filter entries.
      *
      * @param[in,out]  aIterator  A reference to the MAC filter iterator context.
-     *                            To get the first in-use address filter, set it to OT_MAC_FILTER_ITERATOR_INIT.
-     * @param[out]     aEntry     A reference to where the information is placed.
+     *                            To get the first in-use address filter, set it to `kIteratorInit`.
+     * @param[out]     aInfo      A reference to where the entry information is placed.
      *
      * @retval kErrorNone      Successfully retrieved the next address filter entry.
      * @retval kErrorNotFound  No subsequent entry exists.
      */
-    Error GetNextAddress(Iterator &aIterator, Entry &aEntry) const;
+    Error GetNextAddress(Iterator &aIterator, EntryInfo &aInfo) const { return GetNext(kAddrFilter, aIterator, aInfo); }
 
     /**
      * Adds a fixed received signal strength entry for the messages from a given Extended Address.
      *
-     * @param[in]  aExtAddress  An Extended Address
+     * @param[in]  aExtAddress  An Extended Address.
      * @param[in]  aRss         The received signal strength to set.
      *
-     * @retval kErrorNone    Successfully set @p aRss for @p aExtAddress.
-     * @retval kErrorNoBufs  No available entry exists.
+     * @retval kErrorNone         Successfully set @p aRss for @p aExtAddress.
+     * @retval kErrorInvalidArgs  @p aRss is not valid (equal to `kFixedRssDisabled`).
+     * @retval kErrorNoBufs       No available entry exists.
      */
     Error AddRssIn(const ExtAddress &aExtAddress, int8_t aRss);
 
@@ -158,9 +163,9 @@ public:
      *
      * No action is performed if there is no existing entry in the filter list matching the given Extended Address.
      *
-     * @param[in]  aExtAddress   A Extended Address.
+     * @param[in]  aExtAddress   An Extended Address.
      */
-    void RemoveRssIn(const ExtAddress &aExtAddress);
+    void RemoveRssIn(const ExtAddress &aExtAddress) { RemoveEntry(kRssFilter, aExtAddress); }
 
     /**
      * Sets the default received signal strength.
@@ -180,21 +185,21 @@ public:
     /**
      * Clears all the received signal strength settings (including the default RSS-In).
      */
-    void ClearAllRssIn(void);
+    void ClearAllRssIn(void) { ClearAll(kRssFilter); }
 
     /**
      * Iterates through RssIn filter entry.
      *
      * @param[in,out]  aIterator  A reference to the MAC filter iterator context. To get the first in-use RssIn
-     *                            filter entry, it should be set to OT_MAC_FILTER_ITERATOR_INIT.
-     * @param[out]     aEntry     A reference to where the information is placed. The last entry would have the
+     *                            filter entry, it should be set to `kIteratorInit`.
+     * @param[out]     aInfo      A reference to where the entry information is placed. The last entry would have the
      *                            Extended Address as all 0xff to indicate the default received signal strength
      *                            if it was set.
      *
      * @retval kErrorNone      Successfully retrieved the next RssIn filter entry.
      * @retval kErrorNotFound  No subsequent entry exists.
      */
-    Error GetNextRssIn(Iterator &aIterator, Entry &aEntry) const;
+    Error GetNextRssIn(Iterator &aIterator, EntryInfo &aInfo) const { return GetNext(kRssFilter, aIterator, aInfo); }
 
     /**
      * Applies the filter rules on a given Extended Address.
@@ -224,24 +229,47 @@ public:
     Error ApplyToRxFrame(RxFrame &aRxFrame, const ExtAddress &aExtAddress, Neighbor *aNeighbor = nullptr) const;
 
 private:
-    static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_MAC_FILTER_SIZE;
+    static constexpr uint8_t kMaxEntries = OPENTHREAD_CONFIG_MAC_FILTER_SIZE;
 
-    struct FilterEntry
+    enum Type : bool
     {
-        bool       mFiltered;   // Indicates whether or not this entry is filtered (allowlist/denylist modes).
-        int8_t     mRssIn;      // The RssIn value for this entry or `kFixedRssDisabled`.
-        ExtAddress mExtAddress; // IEEE 802.15.4 Extended Address.
-
-        bool IsInUse(void) const { return mFiltered || (mRssIn != kFixedRssDisabled); }
+        kRssFilter,
+        kAddrFilter,
     };
 
-    FilterEntry       *FindAvailableEntry(void);
-    const FilterEntry *FindEntry(const ExtAddress &aExtAddress) const;
-    FilterEntry *FindEntry(const ExtAddress &aExtAddress) { return AsNonConst(AsConst(this)->FindEntry(aExtAddress)); }
+    class Entry
+    {
+    public:
+        enum NotInUseMatcher : uint8_t
+        {
+            kNotInUse,
+        };
 
-    Mode        mMode;
-    int8_t      mDefaultRssIn;
-    FilterEntry mFilterEntries[kMaxEntries];
+        void              Init(const ExtAddress &aExtAddress);
+        const ExtAddress &GetExtAddress(void) const { return mExtAddress; }
+        bool              IsInAddrFilter(void) const { return mInAddrFilter; }
+        void              SetInAddrFilter(bool aInAddrFilter) { mInAddrFilter = aInAddrFilter; }
+        bool              IsInRssFilter(void) const { return (mRssIn != kFixedRssDisabled); }
+        int8_t            GetRssIn(void) const { return mRssIn; }
+        void              SetRssIn(int8_t aRss) { mRssIn = aRss; }
+        void              ClearRssIn(void) { mRssIn = kFixedRssDisabled; }
+        bool              Matches(const ExtAddress &aExtAddress) const { return mExtAddress == aExtAddress; }
+        bool              Matches(NotInUseMatcher) const { return !IsInAddrFilter() && !IsInRssFilter(); }
+
+    private:
+        ExtAddress mExtAddress;
+        bool       mInAddrFilter;
+        int8_t     mRssIn;
+    };
+
+    Error AddOrUpdateEntry(Type aType, const ExtAddress &aExtAddress, int8_t aRss);
+    void  RemoveEntry(Type aType, const ExtAddress &aExtAddress);
+    Error GetNext(Type aType, Iterator &aIterator, EntryInfo &aInfo) const;
+    void  ClearAll(Type aType);
+
+    Array<Entry, kMaxEntries> mEntries;
+    Mode                      mMode;
+    int8_t                    mDefaultRssIn;
 };
 
 /**

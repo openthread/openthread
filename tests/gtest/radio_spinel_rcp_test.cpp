@@ -29,6 +29,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <map>
+#include <vector>
+
 #include <openthread/platform/radio.h>
 
 #include "common/error.hpp"
@@ -105,7 +108,7 @@ TEST(RadioSpinelTransmit, shouldCauseSwitchingToRxChannelAfterTxDone)
     constexpr int8_t     kTxPower   = 100;
 
     uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
-    Mac::TxFrame txFrame;
+    Mac::TxFrame txFrame{};
 
     txFrame.mPsdu = frameBuffer;
 
@@ -235,10 +238,13 @@ TEST(RadioSpinelTransmit, shouldPerformCsmaCaWhenEnabled)
                 })))
         .Times(1);
 
-    // Receive(11) will be called exactly twice:
-    // 1. one time to prepare for TX because the fake platform doesn't support sleep-to-tx capability.
-    // 2. one time in CSMA backoff because rx-on-when-idle is true.
+    // The fake platform needs one Receive(11) call to prepare for TX (no sleep-to-tx support).
+    // The normal radio build requires another call for software CSMA backoff. Multi-PAN RCP disables this backoff.
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    EXPECT_CALL(platform, Receive(11)).Times(1);
+#else
     EXPECT_CALL(platform, Receive(11)).Times(2);
+#endif
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
@@ -257,7 +263,7 @@ TEST(RadioSpinelTransmit, shouldNotCauseSwitchingToRxAfterTxDoneIfNotRxOnWhenIdl
     constexpr int8_t     kTxPower   = 100;
 
     uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
-    Mac::TxFrame txFrame;
+    Mac::TxFrame txFrame{};
 
     txFrame.mPsdu = frameBuffer;
 
@@ -492,6 +498,187 @@ TEST(RadioSpinelSrcMatch, shouldBeAbleToClearAllRadioSrcMatchExtEntres)
 }
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+TEST(RadioSpinelMaxPowerTable, shouldRestoreEachChannelWithItsOwnPower)
+{
+    constexpr uint8_t kChannelA = 11;
+    constexpr uint8_t kChannelB = 15;
+    constexpr uint8_t kChannelC = 26;
+    constexpr int16_t kPowerA   = 500;
+    constexpr int16_t kPowerB   = 1400;
+    constexpr int16_t kPowerC   = 2000;
+
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannelA, kPowerA), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannelB, kPowerB), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannelC, kPowerC), kErrorNone);
+
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    {
+        const uint8_t kRawPowerSetting[] = {0x01};
+        int16_t       targetPower        = 0;
+        int16_t       actualPower        = 0;
+        uint8_t       rawPowerSetting[sizeof(kRawPowerSetting)];
+        uint16_t      rawPowerSettingLength;
+
+        for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
+        {
+            ASSERT_EQ(platform.mRadioSpinel.AddCalibratedPower(channel, 0, kRawPowerSetting, sizeof(kRawPowerSetting)),
+                      kErrorNone);
+        }
+
+        // Forget what the RCP was told, so what follows can only come from the
+        // restore itself.
+        ASSERT_EQ(
+            otPlatRadioSetChannelTargetPower(FakePlatform::CurrentInstance(), kChannelA, OT_RADIO_POWER_INVALID_IN_MBM),
+            kErrorNone);
+        ASSERT_EQ(
+            otPlatRadioSetChannelTargetPower(FakePlatform::CurrentInstance(), kChannelB, OT_RADIO_POWER_INVALID_IN_MBM),
+            kErrorNone);
+        ASSERT_EQ(
+            otPlatRadioSetChannelTargetPower(FakePlatform::CurrentInstance(), kChannelC, OT_RADIO_POWER_INVALID_IN_MBM),
+            kErrorNone);
+
+        platform.mRadioSpinel.RestoreProperties();
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelA, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerA);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelB, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerB);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelC, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerC);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), 12, &targetPower, &actualPower,
+                                                  rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        constexpr int16_t kDefaultPower = MaxPowerTable::kPowerDefault;
+        EXPECT_EQ(targetPower, kDefaultPower);
+    }
+#else
+    ASSERT_EQ(platform.ChannelTargetPowerGet(kChannelA), kPowerA);
+    ASSERT_EQ(platform.ChannelTargetPowerGet(kChannelB), kPowerB);
+    ASSERT_EQ(platform.ChannelTargetPowerGet(kChannelC), kPowerC);
+
+    // Forget what the RCP was told, so what follows can only come from the
+    // restore itself.
+    platform.ChannelTargetPowerClear();
+    ASSERT_EQ(platform.ChannelTargetPowerCount(), 0u);
+
+    platform.mRadioSpinel.RestoreProperties();
+
+    // Each configured channel comes back with its own power, not with a
+    // neighbour's and not with the table default.
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelA), kPowerA);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelB), kPowerB);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelC), kPowerC);
+
+    // Channels never configured keep the table default, which is what the
+    // restore sends for them. Copied into a local first: `kPowerDefault` is a
+    // `static constexpr` with no out-of-line definition, and EXPECT_EQ binds
+    // its arguments by reference, which would odr-use it.
+    constexpr int16_t kDefaultPower = MaxPowerTable::kPowerDefault;
+    EXPECT_EQ(platform.ChannelTargetPowerGet(12), kDefaultPower);
+#endif
+}
+
+TEST(RadioSpinelMaxPowerTable, shouldNotTouchTheRcpWhenNoChannelWasConfigured)
+{
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    platform.ChannelMaxTxPowerClear();
+    platform.ChannelTargetPowerClear();
+    platform.mRadioSpinel.RestoreProperties();
+
+    // Nothing was configured, so the restore must not send the table's
+    // defaults to the RCP -- 16 blocking transactions on every recovery for a
+    // feature nobody asked for.
+    EXPECT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
+}
+
+#if !(OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE)
+TEST(RadioSpinelMaxPowerTable, shouldSurviveAnRcpThatDoesNotImplementIt)
+{
+    constexpr uint8_t kChannel = 11;
+    constexpr int16_t kPower   = 500;
+
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannel, kPower), kErrorNone);
+
+    // From here the RCP refuses the property. A firmware that lacks it answers
+    // `SPINEL_STATUS_PROP_NOT_FOUND` while this returns
+    // `SPINEL_STATUS_UNIMPLEMENTED`, but both reach the host as
+    // `OT_ERROR_NOT_IMPLEMENTED`, which is the path under test.
+    platform.ChannelMaxTxPowerFailWith(OT_ERROR_NOT_IMPLEMENTED);
+    platform.ChannelTargetPowerFailWith(OT_ERROR_NOT_IMPLEMENTED);
+    platform.ChannelMaxTxPowerClear();
+    platform.ChannelTargetPowerClear();
+
+    // Must not abort: this used to be a `DieNow()`, so a regression takes the
+    // whole test binary down rather than failing an assertion.
+    platform.mRadioSpinel.RestoreProperties();
+
+    EXPECT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
+
+    // And it must give up rather than ask again on every later recovery, even
+    // once the RCP would accept it.
+    platform.ChannelMaxTxPowerFailWith(OT_ERROR_NONE);
+    platform.ChannelTargetPowerFailWith(OT_ERROR_NONE);
+    platform.mRadioSpinel.RestoreProperties();
+
+    EXPECT_EQ(platform.ChannelMaxTxPowerCount(), 0u);
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
+}
+
+TEST(RadioSpinelMaxPowerTable, shouldFallbackToLegacyMaxPowerWhenTargetPowerNotSupported)
+{
+    constexpr uint8_t kChannel     = 11;
+    constexpr uint8_t kNegChannel  = 12;
+    constexpr int16_t kPower       = 1234;
+    constexpr int16_t kNegPowerMbm = -550;
+
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    platform.ChannelTargetPowerFailWith(OT_ERROR_NOT_IMPLEMENTED);
+
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kChannel, kPower), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelMaxTransmitPower(kNegChannel, kNegPowerMbm), kErrorNone);
+
+    // Fallback sends SPINEL_PROP_PHY_CHAN_MAX_POWER in 1 dBm (1234 -> 12, -550 -> -6).
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannel), 12);
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kNegChannel), -6);
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
+
+    // Restore should also use legacy max power table.
+    platform.ChannelMaxTxPowerClear();
+    platform.mRadioSpinel.RestoreProperties();
+
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kChannel), 12);
+    EXPECT_EQ(platform.ChannelMaxTxPowerGet(kNegChannel), -6);
+}
+#endif
+
 TEST(RadioSpinelSrcMatch, shouldNotDuplicateSrcMatchEntriesOnRestoreProperties)
 {
     constexpr uint16_t      kTestShortAddr = 0x1234;
@@ -520,3 +707,488 @@ TEST(RadioSpinelSrcMatch, shouldNotDuplicateSrcMatchEntriesOnRestoreProperties)
     ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 1);
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+TEST(RadioSpinelProperty, shouldSetEmptyPropertyValue)
+{
+    constexpr uint16_t      kTestShortAddr = 0x1234;
+    const uint8_t          *empty          = nullptr;
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(true);
+    platform.SrcMatchAddShortEntry(kTestShortAddr);
+    ASSERT_EQ(platform.SrcMatchCountShortEntries(), 1);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    EXPECT_EQ(platform.mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_DATA_S, empty, 0),
+              kErrorNone);
+    EXPECT_EQ(platform.SrcMatchCountShortEntries(), 0);
+}
+
+TEST(RadioSpinelTargetPower, shouldSetChannelTargetPowerAndRejectInvalidChannel)
+{
+    constexpr uint8_t kChannelA        = 11;
+    constexpr uint8_t kChannelB        = 18;
+    constexpr uint8_t kChannelDisabled = 26;
+    constexpr int16_t kPowerA          = 1234;
+    constexpr int16_t kPowerB          = -550;
+    constexpr int16_t kPowerDisabled   = INT16_MAX;
+
+    FakeCoprocessorPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    EXPECT_EQ(platform.mRadioSpinel.SetChannelTargetPower(10, kPowerA), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.SetChannelTargetPower(27, kPowerA), kErrorInvalidArgs);
+#if !(OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE)
+    EXPECT_EQ(platform.ChannelTargetPowerCount(), 0u);
+#endif
+
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelTargetPower(kChannelA, kPowerA), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelTargetPower(kChannelB, kPowerB), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetChannelTargetPower(kChannelDisabled, kPowerDisabled), kErrorNone);
+
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    {
+        const uint8_t kRawPowerSetting[] = {0x01};
+        int16_t       targetPower        = 0;
+        int16_t       actualPower        = 0;
+        uint8_t       rawPowerSetting[sizeof(kRawPowerSetting)];
+        uint16_t      rawPowerSettingLength;
+
+        ASSERT_EQ(platform.mRadioSpinel.AddCalibratedPower(kChannelA, 0, kRawPowerSetting, sizeof(kRawPowerSetting)),
+                  kErrorNone);
+        ASSERT_EQ(platform.mRadioSpinel.AddCalibratedPower(kChannelB, 0, kRawPowerSetting, sizeof(kRawPowerSetting)),
+                  kErrorNone);
+        ASSERT_EQ(
+            platform.mRadioSpinel.AddCalibratedPower(kChannelDisabled, 0, kRawPowerSetting, sizeof(kRawPowerSetting)),
+            kErrorNone);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelA, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerA);
+
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        ASSERT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelB, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNone);
+        EXPECT_EQ(targetPower, kPowerB);
+
+        // `kPowerDisabled` (`INT16_MAX`) disables the channel, so no power settings are available.
+        rawPowerSettingLength = sizeof(rawPowerSetting);
+        EXPECT_EQ(otPlatDiagRadioGetPowerSettings(FakePlatform::CurrentInstance(), kChannelDisabled, &targetPower,
+                                                  &actualPower, rawPowerSetting, &rawPowerSettingLength),
+                  kErrorNotFound);
+    }
+#else
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelA), kPowerA);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelB), kPowerB);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(kChannelDisabled), kPowerDisabled);
+    EXPECT_EQ(platform.ChannelTargetPowerGet(12), FakePlatform::kNoTargetPower);
+
+    platform.ChannelTargetPowerFailWith(OT_ERROR_NOT_IMPLEMENTED);
+    EXPECT_EQ(platform.mRadioSpinel.SetChannelTargetPower(kChannelA, kPowerA), kErrorNotImplemented);
+#endif
+}
+
+TEST(RadioSpinelProperty, shouldGetEmptyPropertyValue)
+{
+    FakeCoprocessorPlatform platform;
+    uint8_t                 buffer[32];
+    spinel_size_t           length = sizeof(buffer);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    ASSERT_EQ(platform.mRadioSpinel.Get(SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, buffer, &length),
+              kErrorNone);
+    ASSERT_GT(length, 0u);
+
+    ASSERT_EQ(platform.mRadioSpinel.Set(SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, nullptr, 0), kErrorNone);
+
+    length = sizeof(buffer);
+    EXPECT_EQ(platform.mRadioSpinel.Get(SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, buffer, &length),
+              kErrorNone);
+    EXPECT_EQ(length, 0u);
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mSpinelParseErrorCount, 0u);
+}
+
+TEST(RadioSpinelRadioAvailability, shouldSendRadioAvailabilityPropertyWhenUpdated)
+{
+    struct FrameCapture
+    {
+        bool                 mReceived       = false;
+        spinel_status_t      mLastStatus     = SPINEL_STATUS_OK;
+        uint64_t             mStartTime      = 0;
+        uint8_t              mSlotDuration   = 0;
+        uint8_t              mNumSlots       = 0;
+        std::vector<uint8_t> mAvailableSlots = {};
+        std::vector<uint8_t> mPreferredSlots = {};
+    };
+
+    FakeCoprocessorPlatform platform;
+    FrameCapture            capture;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    platform.mSpinelDriver.SetFrameHandler(
+        [](const uint8_t *aFrame, uint16_t aLength, uint8_t aHeader, bool &aSave, void *aContext) {
+            OT_UNUSED_VARIABLE(aHeader);
+
+            FrameCapture     *ctx          = static_cast<FrameCapture *>(aContext);
+            uint8_t           header       = 0;
+            unsigned int      cmd          = 0;
+            spinel_prop_key_t key          = 0;
+            const uint8_t    *valuePtr     = nullptr;
+            spinel_size_t     valueLen     = 0;
+            const uint8_t    *availPtr     = nullptr;
+            spinel_size_t     availLen     = 0;
+            const uint8_t    *preferredPtr = nullptr;
+            spinel_size_t     preferredLen = 0;
+
+            aSave = false;
+
+            ASSERT_GT(spinel_datatype_unpack(aFrame, aLength, "CiiD", &header, &cmd, &key, &valuePtr, &valueLen), 0);
+
+            if ((cmd == SPINEL_CMD_PROP_VALUE_IS) && (key == SPINEL_PROP_LAST_STATUS))
+            {
+                ASSERT_GT(spinel_datatype_unpack(valuePtr, valueLen, "i", &ctx->mLastStatus), 0);
+            }
+
+            if ((cmd == SPINEL_CMD_PROP_VALUE_IS) && (key == SPINEL_PROP_RCP_RADIO_AVAILABILITY))
+            {
+                ctx->mReceived = true;
+                ASSERT_GT(spinel_datatype_unpack(valuePtr, valueLen, "XCCdD", &ctx->mStartTime, &ctx->mSlotDuration,
+                                                 &ctx->mNumSlots, &availPtr, &availLen, &preferredPtr, &preferredLen),
+                          0);
+                ctx->mAvailableSlots.assign(availPtr, availPtr + availLen);
+
+                if (preferredLen > 0)
+                {
+                    const uint8_t *prefDataPtr = nullptr;
+                    spinel_size_t  prefDataLen = 0;
+
+                    ASSERT_GT(spinel_datatype_unpack(preferredPtr, preferredLen, "d", &prefDataPtr, &prefDataLen), 0);
+                    ctx->mPreferredSlots.assign(prefDataPtr, prefDataPtr + prefDataLen);
+                }
+                else
+                {
+                    ctx->mPreferredSlots.clear();
+                }
+            }
+        },
+        nullptr, &capture);
+
+    // 1. Update with both available slots and preferred slots (12 slots -> 2 bytes)
+    {
+        const uint8_t kAvailSlots[]     = {0xa5, 0xf0};
+        const uint8_t kPreferredSlots[] = {0x05, 0x30};
+
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(123456789ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US, kAvailSlots,
+                                         kPreferredSlots, 12);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mStartTime, 123456789ULL);
+        EXPECT_EQ(capture.mSlotDuration, OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US);
+        EXPECT_EQ(capture.mNumSlots, 12);
+        EXPECT_EQ(capture.mAvailableSlots, std::vector<uint8_t>({0xa5, 0xf0}));
+        EXPECT_EQ(capture.mPreferredSlots, std::vector<uint8_t>({0x05, 0x30}));
+    }
+
+    // 2. Update without preferred slots (nullptr) (8 slots -> 1 byte)
+    {
+        const uint8_t kAvailSlots[] = {0x5a};
+
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(987654321ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US, kAvailSlots,
+                                         nullptr, 8);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mStartTime, 987654321ULL);
+        EXPECT_EQ(capture.mSlotDuration, OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US);
+        EXPECT_EQ(capture.mNumSlots, 8);
+        EXPECT_EQ(capture.mAvailableSlots, std::vector<uint8_t>({0x5a}));
+        EXPECT_TRUE(capture.mPreferredSlots.empty());
+    }
+
+    // 3. Update with 0 slots (radio always available)
+    {
+        const uint8_t kPreferredSlots[] = {0x05};
+
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(555666777ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US, nullptr,
+                                         kPreferredSlots, 0);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mStartTime, 555666777ULL);
+        EXPECT_EQ(capture.mNumSlots, 0);
+        EXPECT_TRUE(capture.mAvailableSlots.empty());
+        EXPECT_TRUE(capture.mPreferredSlots.empty());
+    }
+
+    // 4. Multiple updates before the tasklet runs are coalesced and the latest schedule is sent.
+    {
+        const uint8_t kOldAvailSlots[] = {0x11};
+        const uint8_t kNewAvailSlots[] = {0x22};
+
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(1000ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US, kOldAvailSlots, nullptr,
+                                         8);
+        platform.UpdateRadioAvailability(2000ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US, kNewAvailSlots, nullptr,
+                                         8);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mStartTime, 2000ULL);
+        EXPECT_EQ(capture.mSlotDuration, OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US);
+        EXPECT_EQ(capture.mNumSlots, 8);
+        EXPECT_EQ(capture.mAvailableSlots, std::vector<uint8_t>({0x22}));
+        EXPECT_TRUE(capture.mPreferredSlots.empty());
+
+        capture = FrameCapture{};
+        platform.GoInMs(1);
+
+        EXPECT_FALSE(capture.mReceived);
+    }
+
+    // 5. The preferred slots bitmap is omitted if it equals the available slots bitmap.
+    {
+        const uint8_t kSlots[] = {0x3c, 0xf0};
+
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(3000ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US, kSlots, kSlots, 12);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mNumSlots, 12);
+        EXPECT_EQ(capture.mAvailableSlots, std::vector<uint8_t>({0x3c, 0xf0}));
+        EXPECT_TRUE(capture.mPreferredSlots.empty());
+    }
+
+    // 6. A schedule longer than `OT_RADIO_AVAILABILITY_MAX_DURATION_US` is reported as an error.
+    {
+        uint8_t availSlots[OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE];
+
+        memset(availSlots, 0xff, sizeof(availSlots));
+
+        // 97 slots of 625 us (60.625 ms), which would not fit into the bitmap arrays.
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(4000ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US, availSlots, nullptr, 97);
+        platform.GoInMs(1);
+
+        EXPECT_FALSE(capture.mReceived);
+        EXPECT_EQ(capture.mLastStatus, SPINEL_STATUS_INTERNAL_ERROR);
+
+        // 49 slots of 1.25 ms (61.25 ms), which would fit into the bitmap arrays.
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(5000ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US, availSlots, nullptr, 49);
+        platform.GoInMs(1);
+
+        EXPECT_FALSE(capture.mReceived);
+        EXPECT_EQ(capture.mLastStatus, SPINEL_STATUS_INTERNAL_ERROR);
+
+        // 96 slots of 625 us (60 ms) is the maximum.
+        capture = FrameCapture{};
+        platform.UpdateRadioAvailability(6000ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US, availSlots, nullptr, 96);
+        platform.GoInMs(1);
+
+        EXPECT_TRUE(capture.mReceived);
+        EXPECT_EQ(capture.mNumSlots, 96);
+        EXPECT_EQ(capture.mAvailableSlots.size(), static_cast<size_t>(OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE));
+    }
+}
+
+TEST(RadioSpinelRadioAvailability, shouldGetRadioAvailabilityProperty)
+{
+    FakeCoprocessorPlatform platform;
+    uint64_t                startTime    = 0;
+    uint8_t                 slotDuration = 0;
+    uint8_t                 numSlots     = 0;
+    uint8_t                 availSlots[OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE];
+    spinel_size_t           availLen = sizeof(availSlots);
+    uint8_t                 preferredSlots[OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE];
+    spinel_size_t           preferredLen = sizeof(preferredSlots);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    // 1. The radio driver has not reported radio availability.
+    EXPECT_EQ(
+        platform.mRadioSpinel.Get(SPINEL_PROP_RCP_RADIO_AVAILABILITY, SPINEL_DATATYPE_DATA_S, availSlots, &availLen),
+        kErrorNotImplemented);
+    availLen = sizeof(availSlots);
+
+    // 2. The radio driver has reported radio availability. The unused bits in the last byte are cleared.
+    {
+        const uint8_t kAvailSlots[]     = {0xa5, 0x0f};
+        const uint8_t kPreferredSlots[] = {0x05, 0x03};
+
+        platform.UpdateRadioAvailability(123456789ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US, kAvailSlots,
+                                         kPreferredSlots, 12);
+        platform.GoInMs(1);
+
+        ASSERT_EQ(platform.mRadioSpinel.Get(SPINEL_PROP_RCP_RADIO_AVAILABILITY,
+                                            SPINEL_DATATYPE_UINT64_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S
+                                                SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
+                                            &startTime, &slotDuration, &numSlots, availSlots, &availLen, preferredSlots,
+                                            &preferredLen),
+                  kErrorNone);
+
+        EXPECT_EQ(startTime, 123456789ULL);
+        EXPECT_EQ(slotDuration, OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US);
+        EXPECT_EQ(numSlots, 12);
+        EXPECT_EQ(std::vector<uint8_t>(availSlots, availSlots + availLen), std::vector<uint8_t>({0xa5, 0x00}));
+        EXPECT_EQ(std::vector<uint8_t>(preferredSlots, preferredSlots + preferredLen),
+                  std::vector<uint8_t>({0x05, 0x00}));
+    }
+}
+
+TEST(RadioSpinelRadioAvailability, shouldSendRadioAvailabilityPropertyAfterRadioStackReset)
+{
+    FakeCoprocessorPlatform platform;
+    bool                    received = false;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    platform.mSpinelDriver.SetFrameHandler(
+        [](const uint8_t *aFrame, uint16_t aLength, uint8_t aHeader, bool &aSave, void *aContext) {
+            unsigned int      cmd = 0;
+            spinel_prop_key_t key = 0;
+
+            OT_UNUSED_VARIABLE(aHeader);
+            aSave = false;
+
+            if ((spinel_datatype_unpack(aFrame, aLength, "Cii", nullptr, &cmd, &key) > 0) &&
+                (cmd == SPINEL_CMD_PROP_VALUE_IS) && (key == SPINEL_PROP_RCP_RADIO_AVAILABILITY))
+            {
+                *static_cast<bool *>(aContext) = true;
+            }
+        },
+        nullptr, &received);
+
+    // The radio availability callback is kept across `otInstanceResetRadioStack()`.
+    otInstanceResetRadioStack(FakePlatform::CurrentInstance());
+
+    {
+        const uint8_t kAvailSlots[] = {0x5a};
+
+        platform.UpdateRadioAvailability(1000ULL, OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US, kAvailSlots, nullptr, 8);
+        platform.GoInMs(1);
+    }
+
+    EXPECT_TRUE(received);
+}
+
+namespace {
+
+otError SendCommand(FakeCoprocessorPlatform &aPlatform,
+                    uint32_t                 aCommand,
+                    spinel_prop_key_t        aKey,
+                    spinel_tid_t             aTid,
+                    const char              *aFormat,
+                    ...)
+{
+    va_list args;
+    otError error;
+
+    va_start(args, aFormat);
+    error = aPlatform.mSpinelDriver.SendCommand(aCommand, aKey, aTid, aFormat, args);
+    va_end(args);
+
+    return error;
+}
+
+} // namespace
+
+TEST(RadioSpinelTransmit, shouldRejectReceiveDuringPendingTransmit)
+{
+    class TxDonePlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        otError Transmit(otRadioFrame *aFrame) override
+        {
+            mTransmitCount++;
+            otPlatRadioTxStarted(FakePlatform::CurrentInstance(), aFrame);
+            otPlatRadioTxDone(FakePlatform::CurrentInstance(), aFrame, nullptr, OT_ERROR_NONE);
+            return OT_ERROR_NONE;
+        }
+
+        uint32_t mTransmitCount = 0;
+    };
+
+    TxDonePlatform                                    platform;
+    uint8_t                                           frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame                                      txFrame{};
+    std::map<spinel_tid_t, std::vector<unsigned int>> lastStatuses;
+
+    constexpr spinel_tid_t kTxTid      = 13;
+    constexpr spinel_tid_t kReceiveTid = 14;
+    constexpr uint8_t      kChannel    = 11;
+
+    txFrame.mPsdu = frameBuffer;
+
+    {
+        Mac::TxFrame::BuildInfo buildInfo;
+        constexpr uint8_t       kDstAddr[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(0xac00);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(0x1234);
+        buildInfo.mPanIds.SetDestination(0x4321);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
+    }
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    platform.mSpinelInterface.mFrameObserver = [&lastStatuses](const uint8_t *aFrame, uint16_t aLength) {
+        uint8_t      header;
+        unsigned int command;
+        unsigned int key;
+        unsigned int status;
+
+        if ((spinel_datatype_unpack(aFrame, aLength,
+                                    SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S
+                                        SPINEL_DATATYPE_UINT_PACKED_S,
+                                    &header, &command, &key, &status) > 0) &&
+            (key == SPINEL_PROP_LAST_STATUS))
+        {
+            lastStatuses[SPINEL_HEADER_GET_TID(header)].push_back(status);
+        }
+    };
+
+    // A frame waiting in `SubMac` for its target TX time, 5 ms from now.
+    ASSERT_EQ(
+        SendCommand(platform, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW, kTxTid,
+                    SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S
+                        SPINEL_DATATYPE_BOOL_S SPINEL_DATATYPE_BOOL_S SPINEL_DATATYPE_BOOL_S SPINEL_DATATYPE_BOOL_S
+                            SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_UINT32_S,
+                    txFrame.mPsdu, txFrame.mLength, kChannel, /* aMaxCsmaBackoffs */ 0,
+                    /* aMaxFrameRetries */ 0, /* aCsmaCaEnabled */ false, /* aIsHeaderUpdated */ false,
+                    /* aIsARetx */ false, /* aIsSecurityProcessed */ false, /* aTxDelay */ 5000,
+                    static_cast<uint32_t>(platform.GetNow())),
+        kErrorNone);
+    platform.GoInUs(1000);
+    EXPECT_EQ(platform.mTransmitCount, 0u);
+    EXPECT_EQ(lastStatuses.count(kTxTid), 0u);
+
+    // A receive request is rejected, and the frame is not dropped.
+    ASSERT_EQ(SendCommand(platform, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_MAC_RAW_STREAM_ENABLED, kReceiveTid,
+                          SPINEL_DATATYPE_BOOL_S, true),
+              kErrorNone);
+    platform.GoInUs(1);
+    EXPECT_EQ(lastStatuses[kReceiveTid], std::vector<unsigned int>{SPINEL_STATUS_INVALID_STATE});
+    EXPECT_EQ(lastStatuses.count(kTxTid), 0u);
+    EXPECT_EQ(platform.mTransmitCount, 0u);
+
+    // The frame is transmitted at its target time and completed exactly once.
+    platform.GoInMs(10);
+    EXPECT_EQ(platform.mTransmitCount, 1u);
+    EXPECT_EQ(lastStatuses[kTxTid], std::vector<unsigned int>{SPINEL_STATUS_OK});
+}

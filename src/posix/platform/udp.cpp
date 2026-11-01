@@ -176,6 +176,7 @@ exit:
 
 otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageInfo &aMessageInfo)
 {
+    uint32_t            ifindex = gNetifIndex;
     struct sockaddr_in6 peerAddr;
     uint8_t             control[kMaxUdpSize];
     struct iovec        iov;
@@ -213,8 +214,7 @@ otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageIn
                 struct in6_pktinfo pktinfo;
 
                 memcpy(&pktinfo, CMSG_DATA(cmsg), sizeof(pktinfo));
-
-                aMessageInfo.mIsHostInterface = (pktinfo.ipi6_ifindex != gNetifIndex);
+                ifindex = pktinfo.ipi6_ifindex;
                 ReadIp6AddressFrom(&pktinfo.ipi6_addr, aMessageInfo.mSockAddr);
             }
         }
@@ -222,6 +222,13 @@ otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageIn
 
     aMessageInfo.mPeerPort = ntohs(peerAddr.sin6_port);
     ReadIp6AddressFrom(&peerAddr.sin6_addr, aMessageInfo.mPeerAddr);
+
+    if (IsIp6AddressLinkLocal(aMessageInfo.mPeerAddr) && peerAddr.sin6_scope_id != 0)
+    {
+        ifindex = peerAddr.sin6_scope_id;
+    }
+
+    aMessageInfo.mIsHostInterface = (ifindex != gNetifIndex);
 
 exit:
     return rval > 0 ? OT_ERROR_NONE : OT_ERROR_FAILED;

@@ -239,6 +239,7 @@ DEFAULT_TESTS=(
     "router_reboot_multiple_link_request"
     "pbbr_aloc"
     "retransmission_security"
+    "neighbor_info_by_rloc16"
 )
 
 # Use provided arguments or the default test list

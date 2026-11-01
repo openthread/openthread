@@ -105,7 +105,7 @@ private:
     void           Start(void);
     void           DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek);
     void           SendDelayedJoinerEntrust(void);
-    Error          SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
+    Error          SendJoinerEntrust(const JoinerEntrustMetadata &aMetadata);
     Coap::Message *PrepareJoinerEntrustMessage(void);
 
     using JoinerRouterTimer = TimerMilliIn<JoinerRouter, &JoinerRouter::HandleTimer>;

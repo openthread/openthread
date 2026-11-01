@@ -31,6 +31,12 @@ source "tests/scripts/expect/_common.exp"
 
 skip_on_macos
 
+set socat_pid [exec socat UDP6-RECVFROM:123,fork,reuseaddr,bind=\[::1\] \
+    {SYSTEM:t=$(tail -c 8 | od -An -tx1 | tr -d " \n"); printf "2401%044d%s%s%s" 0 "$t" "$t" "$t" | xxd -r -p} &]
+exit -onexit {
+    catch {exec kill $socat_pid}
+}
+
 spawn_node 1
 setup_default_network
 
@@ -41,3 +47,4 @@ expect -re {SNTP response - Unix time: \d+ \(era: \d+\)}
 expect_line "Done"
 
 dispose_all
+exec kill $socat_pid

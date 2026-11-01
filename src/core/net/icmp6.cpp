@@ -138,7 +138,7 @@ Error Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 
     if (icmp6Header.GetType() == Header::kTypeEchoRequest)
     {
-        SuccessOrExit(error = HandleEchoRequest(aMessage, aMessageInfo));
+        SuccessOrExit(error = HandleEchoRequest(aMessage, aMessageInfo, icmp6Header));
     }
 
     aMessage.MoveOffset(sizeof(icmp6Header));
@@ -178,10 +178,12 @@ bool Icmp::ShouldHandleEchoRequest(const Address &aAddress)
     return rval;
 }
 
-Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo)
+Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo, const Header &aRequestHeader)
 {
+    OT_UNUSED_VARIABLE(aRequestHeader);
+
     Error       error = kErrorNone;
-    Header      icmp6Header;
+    Header      replyHeader;
     Message    *replyMessage = nullptr;
     MessageInfo replyMessageInfo;
     uint16_t    dataOffset;
@@ -190,8 +192,8 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
 
     LogInfo("Received Echo Request");
 
-    icmp6Header.Clear();
-    icmp6Header.SetType(Header::kTypeEchoReply);
+    replyHeader.Clear();
+    replyHeader.SetType(Header::kTypeEchoReply);
 
     if ((replyMessage = Get<Ip6>().NewMessage()) == nullptr)
     {
@@ -201,7 +203,7 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
 
     dataOffset = aRequestMessage.GetOffset() + Header::kDataFieldOffset;
 
-    SuccessOrExit(error = replyMessage->AppendBytes(&icmp6Header, Header::kDataFieldOffset));
+    SuccessOrExit(error = replyMessage->AppendBytes(&replyHeader, Header::kDataFieldOffset));
     SuccessOrExit(error = replyMessage->AppendBytesFromMessage(aRequestMessage, dataOffset,
                                                                aRequestMessage.GetLength() - dataOffset));
 
@@ -214,8 +216,7 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
 
     SuccessOrExit(error = Get<Ip6>().SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
-    IgnoreError(replyMessage->Read(replyMessage->GetOffset(), icmp6Header));
-    LogInfo("Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
+    LogInfo("Sent Echo Reply (seq = %d)", aRequestHeader.GetSequence());
 
 exit:
     FreeMessageOnError(replyMessage, error);

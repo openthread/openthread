@@ -35,6 +35,12 @@ readonly OT_TMP_DIR
 OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
 readonly OT_SHA_NEW
 
+build_setup()
+{
+    rm -rf "${OT_TMP_DIR}"
+    script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}"
+}
+
 build_nrf52840()
 {
     local options=(
@@ -78,9 +84,10 @@ build_nrf52840()
         "-DOT_UPTIME=ON"
     )
 
-    rm -rf "${OT_TMP_DIR}"
+    if [[ ! -d "${OT_TMP_DIR}/.git" ]]; then
+        build_setup
+    fi
 
-    script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}"
     rm -rf "${OT_TMP_DIR}/openthread/*"
     git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/openthread"
 

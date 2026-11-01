@@ -57,13 +57,14 @@ jobs:
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # main
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
         persist-credentials: false
 
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo add-apt-repository -y ppa:wireshark-dev/stable
         sudo apt-get update
@@ -91,13 +92,14 @@ jobs:
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # main
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
         persist-credentials: false
 
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
@@ -129,13 +131,14 @@ jobs:
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # main
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
         persist-credentials: false
 
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
@@ -163,13 +166,14 @@ jobs:
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # main
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
         persist-credentials: false
 
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc
@@ -195,19 +199,20 @@ jobs:
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # main
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
         persist-credentials: false
 
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
 
     - name: Set up Emscripten
-      uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+      uses: mymindstorm/setup-emsdk@4528d102f7230f0e7b276855c01ea1159be0e984 # v16
 
     - name: Build Nexus WASM
       run: |

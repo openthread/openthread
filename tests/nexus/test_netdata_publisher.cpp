@@ -40,9 +40,10 @@
 namespace ot {
 namespace Nexus {
 
-static constexpr uint32_t kFormNetworkTime   = 20 * 1000;
-static constexpr uint32_t kJoinNetworkTime   = 10 * 1000;
-static constexpr uint32_t kNetDataUpdateTime = 55 * 1000;
+static constexpr uint32_t kFormNetworkTime    = 20 * 1000;
+static constexpr uint32_t kJoinNetworkTime    = 10 * 1000;
+static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
+static constexpr uint32_t kNetDataUpdateTime  = 55 * 1000;
 
 static constexpr char kOnMeshPrefix[]  = "fd00:1234::/64";
 static constexpr char kExternalRoute[] = "fd00:abce::/64";
@@ -915,12 +916,96 @@ void Test_NetDataPublisher(void)
     Log("All steps completed.");
 }
 
+void Test_NetDataPublisherCoalesceUpdates(void)
+{
+    static constexpr uint8_t kNumPrefixes = 3;
+
+    static const char *const kPrefixStrings[kNumPrefixes] = {
+        "fd00:1111::/64",
+        "fd00:2222::/64",
+        "fd00:3333::/64",
+    };
+
+    Core                            nexus;
+    Node                           &leader = nexus.CreateNode();
+    Node                           &router = nexus.CreateNode();
+    Ip6::Prefix                     prefixes[kNumPrefixes];
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+    uint8_t                         initVersion;
+
+    Log("=======================================================================================");
+    Log("Test_NetDataPublisherCoalesceUpdates");
+
+    leader.SetName("LEADER");
+    router.SetName("ROUTER1");
+
+    for (uint8_t i = 0; i < kNumPrefixes; i++)
+    {
+        SuccessOrQuit(prefixes[i].FromString(kPrefixStrings[i]));
+    }
+
+    nexus.AdvanceTime(0);
+
+    leader.Form();
+    nexus.AdvanceTime(kFormNetworkTime);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    router.Join(leader);
+    nexus.AdvanceTime(kAttachToRouterTime);
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+
+    Log("Simultaneous added entries on `router` coalesce into a single update");
+
+    initVersion = leader.Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet);
+
+    router.Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(kDnsSrpPort, 0);
+
+    prefixConfig.Clear();
+    prefixConfig.mPreference = NetworkData::kRoutePreferenceMedium;
+    prefixConfig.mSlaac      = true;
+    prefixConfig.mOnMesh     = true;
+    prefixConfig.mStable     = true;
+    prefixConfig.mPreferred  = true;
+
+    for (const Ip6::Prefix &prefix : prefixes)
+    {
+        prefixConfig.GetPrefix() = prefix;
+        SuccessOrQuit(
+            router.Get<NetworkData::Publisher>().PublishOnMeshPrefix(prefixConfig, NetworkData::Publisher::kFromUser));
+    }
+
+    for (uint32_t t = 0; t < 4000; t++)
+    {
+        nexus.AdvanceTime(1);
+
+        if (router.Get<NetworkData::Publisher>().IsDnsSrpServiceAdded())
+        {
+            break;
+        }
+    }
+
+    // All entries must be added at the exact same millisecond.
+    VerifyOrQuit(router.Get<NetworkData::Publisher>().IsDnsSrpServiceAdded());
+
+    for (const Ip6::Prefix &prefix : prefixes)
+    {
+        VerifyOrQuit(router.Get<NetworkData::Publisher>().IsPrefixAdded(prefix));
+    }
+
+    nexus.AdvanceTime(5000);
+
+    // Leader's Network Data version must have incremented by only 1.
+    VerifyOrQuit(leader.Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet) ==
+                 static_cast<uint8_t>(initVersion + 1));
+}
+
 } // namespace Nexus
 } // namespace ot
 
 int main(void)
 {
     ot::Nexus::Test_NetDataPublisher();
+    ot::Nexus::Test_NetDataPublisherCoalesceUpdates();
     printf("All tests passed\n");
     return 0;
 }

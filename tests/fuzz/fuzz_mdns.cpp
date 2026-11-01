@@ -54,12 +54,15 @@ public:
         mSize -= aLength;
     }
 
-    otError ConsumeRemainingBytes(Message &aMessage)
+    otError ConsumeBytes(Message &aMessage, uint16_t aLength)
     {
+        assert(aLength <= mSize);
+
         otError error;
 
-        SuccessOrExit(error = aMessage.AppendBytes(mData, static_cast<uint16_t>(mSize)));
-        mSize = 0;
+        SuccessOrExit(error = aMessage.AppendBytes(mData, aLength));
+        mData += aLength;
+        mSize -= aLength;
 
     exit:
         return error;
@@ -76,6 +79,20 @@ public:
         return result & 1;
     }
 
+    template <typename IntType> IntType ConsumeIntegralInRange(IntType aMin, IntType aMax)
+    {
+        assert(aMin <= aMax);
+
+        uint64_t range = static_cast<uint64_t>(aMax) - aMin;
+        IntType  result;
+
+        ConsumeData(&result, sizeof(result));
+
+        return (range == 0) ? aMin : static_cast<IntType>(aMin + (result % (range + 1)));
+    }
+
+    size_t RemainingBytes(void) { return mSize; }
+
 private:
     const uint8_t *mData;
     size_t         mSize;
@@ -83,7 +100,9 @@ private:
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    const uint16_t kMaxIterations  = 8;
     const uint16_t kMaxMessageSize = 2048;
+    const uint32_t kMaxAdvanceTime = 10000;
 
     FuzzDataProvider fdp(data, size);
 
@@ -91,13 +110,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     Message              *message;
     bool                  isUnicast;
     otPlatMdnsAddressInfo addressInfo;
+    uint16_t              messageLength;
+    uint32_t              advanceTime;
 
-    if (size < sizeof(seed) + sizeof(isUnicast) + sizeof(addressInfo))
+    if (size < sizeof(seed) + sizeof(isUnicast) + sizeof(addressInfo) + sizeof(advanceTime) + sizeof(messageLength))
     {
         return 0;
     }
 
-    if (size > sizeof(seed) + sizeof(isUnicast) + sizeof(addressInfo) + kMaxMessageSize)
+    if (size > sizeof(seed) + kMaxIterations * (sizeof(isUnicast) + sizeof(addressInfo) + sizeof(advanceTime) +
+                                                sizeof(messageLength) + kMaxMessageSize))
     {
         return 0;
     }
@@ -129,19 +151,32 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     Log("---------------------------------------------------------------------------------------");
     Log("Fuzz");
 
-    isUnicast = fdp.ConsumeBool();
-    fdp.ConsumeData(&addressInfo, sizeof(addressInfo));
+    for (uint16_t i = 0; i < kMaxIterations; i++)
+    {
+        if (fdp.RemainingBytes() <
+            sizeof(isUnicast) + sizeof(addressInfo) + sizeof(advanceTime) + sizeof(messageLength))
+        {
+            break;
+        }
 
-    message = node.GetInstance().Get<MessagePool>().Allocate(Message::kTypeOther);
-    VerifyOrQuit(message != nullptr);
+        isUnicast = fdp.ConsumeBool();
+        fdp.ConsumeData(&addressInfo, sizeof(addressInfo));
+        advanceTime   = fdp.ConsumeIntegralInRange(0u, kMaxAdvanceTime);
+        messageLength = fdp.ConsumeIntegralInRange<uint16_t>(
+            0, Min<size_t>(fdp.RemainingBytes() - sizeof(messageLength), kMaxMessageSize));
 
-    SuccessOrQuit(fdp.ConsumeRemainingBytes(*message));
+        message = node.GetInstance().Get<MessagePool>().Allocate(Message::kTypeOther);
+        VerifyOrQuit(message != nullptr);
 
-    otPlatMdnsHandleReceive(&node.GetInstance(), message, isUnicast, &addressInfo);
+        SuccessOrQuit(fdp.ConsumeBytes(*message, messageLength));
+
+        otPlatMdnsHandleReceive(&node.GetInstance(), message, isUnicast, &addressInfo);
+
+        nexus.AdvanceTime(advanceTime);
+    }
 
     nexus.AdvanceTime(10 * 1000);
 
-exit:
     return 0;
 }
 

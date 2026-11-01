@@ -74,11 +74,6 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearch(aInstance)
 #endif
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    , mWakeupTxScheduler(aInstance)
-    , mWedAttachState(kWedDetached)
-    , mWedAttachTimer(aInstance)
-#endif
 #if OPENTHREAD_FTD
     , mAddressSolicitPending(false)
     , mAddressSolicitRejected(false)
@@ -102,9 +97,6 @@ Mle::Mle(Instance &aInstance)
     , mRoleTransitioner(aInstance)
     , mTxChallengeTable(aInstance)
 #endif // OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-    , mP2p(aInstance)
-#endif
 {
     mParent.Init(aInstance);
 
@@ -345,7 +337,7 @@ void Mle::SetRole(DeviceRole aRole)
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    Get<Mac::Mac>().SetCslCapable(IsCslSupported() && !IsRxOnWhenIdle());
+    UpdateCslState();
 #endif
 
 exit:
@@ -588,6 +580,9 @@ void Mle::SetStateDetached(void)
 #endif
 
     SetRole(kRoleDetached);
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
+    Get<Mlr::Manager>().UpdateState();
+#endif
     mAttacher.CancelAttachOnRoleChange();
     mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
     mRetxTracker.Stop();
@@ -759,6 +754,9 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
     else if (IsChild())
     {
         SetStateChild(GetRloc16());
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        UpdateCslState();
+#endif
         IgnoreError(SendChildUpdateRequestToParent());
     }
 
@@ -956,10 +954,14 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-void Mle::SetCslTimeout(uint32_t aTimeout)
-{
-    VerifyOrExit(mCslTimeout != aTimeout);
 
+Error Mle::SetCslTimeout(uint32_t aTimeout)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aTimeout <= kMaxCslTimeout, error = kErrorInvalidArgs);
+
+    VerifyOrExit(mCslTimeout != aTimeout);
     mCslTimeout = aTimeout;
 
     Get<DataPollSender>().RecalculatePollPeriod();
@@ -970,11 +972,14 @@ void Mle::SetCslTimeout(uint32_t aTimeout)
     }
 
 exit:
-    return;
+    return error;
 }
 
 bool Mle::IsCslSupported(void) const { return IsChild() && GetParent().IsThreadVersion1p2OrHigher(); }
-#endif
+
+void Mle::UpdateCslState(void) { Get<Mac::Mac>().SetCslCapable(IsCslSupported() && !IsRxOnWhenIdle()); }
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 void Mle::InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo)
 {
@@ -1808,28 +1813,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         HandleLinkProbe(rxInfo);
         break;
 #endif
-
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    case kCommandP2pLinkRequest:
-        mP2p.HandleP2pLinkRequest(rxInfo);
-        break;
-
-    case kCommandP2pLinkAccept:
-        mP2p.HandleP2pLinkAccept(rxInfo);
-        break;
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    case kCommandP2pLinkAcceptAndRequest:
-        mP2p.HandleP2pLinkAcceptAndRequest(rxInfo);
-        break;
-#endif
-
-    case kCommandP2pLinkTearDown:
-        mP2p.HandleP2pLinkTearDown(rxInfo);
-        break;
-#endif // OPENTHREAD_CONFIG_P2P_ENABLE
 
     default:
         ExitNow(error = kErrorDrop);
@@ -2931,7 +2914,7 @@ const char *Mle::MessageTypeToString(MessageType aType)
     _(kTypeParentRequestToRouters, "Parent Request")            \
     _(kTypeParentRequestToRoutersReeds, "Parent Request")       \
     _(kTypeParentResponse, "Parent Response")                   \
-    FtdMessageTypeMapList(_) LinkMetricsMessageTypeMapList(_) TimeSyncMessageTypeMapList(_) P2pMessageTypeMapList(_)
+    FtdMessageTypeMapList(_) LinkMetricsMessageTypeMapList(_) TimeSyncMessageTypeMapList(_)
 
 #if OPENTHREAD_FTD
 #define FtdMessageTypeMapList(_)                                       \
@@ -2964,16 +2947,6 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #define TimeSyncMessageTypeMapList(_) _(kTypeTimeSync, "Time Sync")
 #else
 #define TimeSyncMessageTypeMapList(_)
-#endif
-
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-#define P2pMessageTypeMapList(_)                                   \
-    _(kTypeP2pLinkRequest, "P2P Link Request")                     \
-    _(kTypeP2pLinkAcceptAndRequest, "P2P Link Accept and Request") \
-    _(kTypeP2pLinkAccept, "P2P Link Accept")                       \
-    _(kTypeP2pLinkTearDown, "P2P Link Tear Down")
-#else
-#define P2pMessageTypeMapList(_)
 #endif
 
     DefineEnumStringArray(MessageTypeMapList);
@@ -3042,78 +3015,35 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 {
-    // This function calculates the overall time that device will operate
-    // on battery by summing sequence of "ON quants" over a period of time.
+    // This method calculates a metric estimating the average CSL sample window
+    // expansion per CSL sample period over a CSL timeout interval with no
+    // synchronizations. Candidate-invariant terms (the receiver's own crystal
+    // accuracy and uncertainty, and fixed receive-on margins) are omitted.
+    //
+    // At sample period `i` (from 1 to `k`), the elapsed time since last sync is
+    // `i * P`, where `P` is the CSL period. The sample window expands on each
+    // side (ahead and after) by the clock drift `(i * P * accuracy / 10^6)`,
+    // totaling `2 * (i * P * accuracy / 10^6)` per sample period.
+    // Summing over all `k` periods yields:
+    //   Total Drift = 2 * (P * accuracy / 10^6) * sum(i from 1 to k)
+    //               = 2 * (P * accuracy / 10^6) * (k * (k + 1) / 2)
+    //               = k * (k + 1) * P * accuracy / 10^6
+    //
+    // Similarly, parent uncertainty (in microseconds) expands both sides at
+    // each of the `k` periods:
+    //   Total Uncertainty = 2 * uncertainty * k
+    //
+    // To simplify and avoid large numbers, the total metric is divided by `k`
+    // (which is constant across all parent candidates), representing the average
+    // window expansion per period (scaled by 10^6 to avoid integer division):
+    //   Metric = (k + 1) * P * accuracy + 2 * uncertainty * 10^6
 
-    static constexpr uint64_t usInSecond = 1000000;
+    static constexpr uint64_t kPpmScale = 1000000u;
 
-    uint64_t cslPeriodUs  = Radio::kMinCslPeriod * Radio::kUsPerTenSymbols;
-    uint64_t cslTimeoutUs = GetCslTimeout() * usInSecond;
-    uint64_t k            = cslTimeoutUs / cslPeriodUs;
+    uint64_t k = static_cast<uint64_t>(GetCslTimeout()) * Time::kOneSecondInUsec / Mac::kMinCslPeriodInUsec;
 
-    return k * (k + 1) * cslPeriodUs / usInSecond * aCslAccuracy.GetClockAccuracy() +
-           Radio::ConvertUncertaintyToUsec(aCslAccuracy.GetUncertainty()) * k;
-}
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-void Mle::HandleWedAttachTimer(void)
-{
-    switch (mWedAttachState)
-    {
-    case kWedAttaching:
-        // Connection timeout
-        if (!IsRxOnWhenIdle())
-        {
-            Get<MeshForwarder>().SetRxOnWhenIdle(false);
-        }
-
-        LogInfo("Connection window closed");
-
-        mWedAttachState = kWedDetached;
-        mWakeupCallback.InvokeAndClearIfSet(kErrorFailed);
-        break;
-    default:
-        break;
-    }
-}
-
-Error Mle::Wakeup(const Mac::ExtAddress &aWedAddress,
-                  uint16_t               aIntervalUs,
-                  uint16_t               aDurationMs,
-                  WakeupCallback         aCallback,
-                  void                  *aCallbackContext)
-{
-    Error              error = kErrorNone;
-    Mac::WakeupRequest wakeupRequest;
-
-    VerifyOrExit((aIntervalUs > 0) && (aDurationMs > 0), error = kErrorInvalidArgs);
-    VerifyOrExit(aIntervalUs < aDurationMs * Time::kOneMsecInUsec, error = kErrorInvalidArgs);
-    VerifyOrExit(mWedAttachState == kWedDetached, error = kErrorInvalidState);
-
-    wakeupRequest.SetExtAddress(aWedAddress);
-    SuccessOrExit(error = mWakeupTxScheduler.WakeUp(wakeupRequest, aIntervalUs, aDurationMs));
-
-    mWedAttachState = kWedAttaching;
-    mWakeupCallback.Set(aCallback, aCallbackContext);
-    Get<MeshForwarder>().SetRxOnWhenIdle(true);
-    mWedAttachTimer.FireAt(mWakeupTxScheduler.GetTxEndTime() + mWakeupTxScheduler.GetConnectionWindowUs());
-
-    LogInfo("Connection window open");
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-void Mle::HandleWakeupFrame(const Mac::WakeupInfo &aWakeupInfo)
-{
-    OT_UNUSED_VARIABLE(aWakeupInfo);
-
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-    mP2p.HandleP2pWakeup(aWakeupInfo);
-#endif
+    return (k + 1) * Mac::kMinCslPeriodInUsec * aCslAccuracy.GetClockAccuracy() +
+           2 * static_cast<uint64_t>(Radio::ConvertUncertaintyToUsec(aCslAccuracy.GetUncertainty())) * kPpmScale;
 }
 #endif
 
@@ -3294,6 +3224,15 @@ void Mle::DelayedSender::ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint32_
     AddSchedule(kTypeLinkAccept, destination, aDelay, &aInfo, sizeof(aInfo));
 }
 
+bool Mle::DelayedSender::HasAnyScheduledLinkAccept(const Router &aRouter) const
+{
+    Ip6::Address destination;
+
+    destination.InitAsLinkLocalAddress(aRouter.GetExtAddress());
+
+    return HasMatchingSchedule(kTypeLinkAccept, destination);
+}
+
 void Mle::DelayedSender::ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
                                                    const DiscoveryResponseInfo &aInfo,
                                                    uint32_t                     aDelay)
@@ -3442,7 +3381,7 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
         IgnoreError(aSchedule.Read(sizeof(Header), rloc16));
         router = Get<RouterTable>().FindRouterByRloc16(rloc16);
 
-        if (router != nullptr)
+        if ((router != nullptr) && (router->IsStateLinkRequest() || router->IsStateValid()))
         {
             Get<Mle>().SendLinkRequest(router);
         }
@@ -3847,7 +3786,7 @@ Error Mle::TxMessage::AppendCslChannelTlv(void)
     // CSL channel value of zero indicates that the CSL channel is not
     // specified. We can use this value in the TLV as well.
 
-    return Tlv::Append<CslChannelTlv>(*this, ChannelTlvValue(Get<Mac::Mac>().GetCslChannel()));
+    return Tlv::Append<CslChannelTlv>(*this, CslChannelTlvValue(Get<Mac::Mac>().GetCslChannel()));
 }
 
 Error Mle::TxMessage::AppendCslTimeoutTlv(void)

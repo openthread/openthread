@@ -2024,7 +2024,25 @@ void TestHostReg(void)
 
     dnsMsg = sDnsMessages.GetHead();
     VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
     dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 1);
+    VerifyOrQuit(dnsMsg->mAdditionalRecords.ContainsNsec(hostFullName, ResourceRecord::kTypeAaaa));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a QU query for non-existing record and validate the unicast response with NSEC");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(hostFullName.AsCString(), ResourceRecord::kTypeA,
+              ResourceRecord::kClassInternet | kClassQueryUnicastFlag);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    dnsMsg->ValidateHeader(kUnicastResponse, /* Q */ 0, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 1);
     VerifyOrQuit(dnsMsg->mAdditionalRecords.ContainsNsec(hostFullName, ResourceRecord::kTypeAaaa));
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
@@ -4351,6 +4369,15 @@ void TestQuery(void)
     dnsMsg->Validate(host2, kInAdditionalSection);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Resend the same unicast-response (QU) query and validate that response is not emitted (rate limit)");
+
+    sDnsMessages.Clear();
+    SendQuery("_srv._udp.local.", ResourceRecord::kTypePtr, ResourceRecord::kClassInternet | kClassQueryUnicastFlag);
+
+    AdvanceTime(200);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Resend the same multicast query and validate that response is not emitted (rate limit)");
 
     sDnsMessages.Clear();
@@ -4363,6 +4390,51 @@ void TestQuery(void)
     Log("Wait for > 1 second and resend the query and validate that now a response is emitted");
 
     SendQuery("_srv._udp.local.", ResourceRecord::kTypePtr);
+
+    AdvanceTime(200);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 9);
+
+    dnsMsg->Validate(service1, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(service3, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(service1, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(service3, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(host1, kInAdditionalSection);
+    dnsMsg->Validate(host2, kInAdditionalSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Resend the unicast-response (QU) query after > 1 second and validate the response");
+
+    sDnsMessages.Clear();
+    SendQuery("_srv._udp.local.", ResourceRecord::kTypePtr, ResourceRecord::kClassInternet | kClassQueryUnicastFlag);
+
+    AdvanceTime(200);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    dnsMsg->ValidateHeader(kUnicastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 9);
+
+    dnsMsg->Validate(service1, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(service3, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(service1, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(service3, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(host1, kInAdditionalSection);
+    dnsMsg->Validate(host2, kInAdditionalSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Resend the QU query before 1s unicast interval (when > 1s since last multicast) and validate multicast "
+        "response");
+
+    AdvanceTime(750);
+
+    sDnsMessages.Clear();
+    SendQuery("_srv._udp.local.", ResourceRecord::kTypePtr, ResourceRecord::kClassInternet | kClassQueryUnicastFlag);
 
     AdvanceTime(200);
 
@@ -8199,6 +8271,124 @@ void TestRecordQuerier(void)
     testFreeInstance(sInstance);
 }
 
+void TestRecordQuerierNullNextLabels(void)
+{
+    static constexpr uint8_t kMaxResponseRecords = 1;
+
+    // Two record queriers sharing a first label, where the second one has a
+    // `nullptr` `mNextLabels`. The public API documents `mNextLabels` as
+    // optional ("`mFirstLabel` MUST be non-NULL but `mNextLabels` can be
+    // `NULL` if there are no other labels"), and `ValidateNamesIn()` accepts
+    // `nullptr`, so such a querier reaches `RecordCache::Matches()` and is
+    // compared against the already cached entry, whose `mNextLabels` is set.
+
+    Core                 *mdns = InitTest();
+    Core::RecordQuerier   querier;
+    Core::RecordQuerier   querier2;
+    const RecordCallback *recordCallback;
+    RecordData            records[kMaxResponseRecords];
+    uint16_t              heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestRecordQuerierNullNextLabels");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a record querier with non-null `mNextLabels`");
+
+    ClearAllBytes(querier);
+
+    querier.mFirstLabel   = "mysrv";
+    querier.mNextLabels   = "_srv._udp";
+    querier.mRecordType   = ResourceRecord::kTypeKey;
+    querier.mInfraIfIndex = kInfraIfIndex;
+    querier.mCallback     = HandleRecordResult;
+
+    SuccessOrQuit(mdns->StartRecordQuerier(querier));
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a second querier, same first label and record type, null `mNextLabels`");
+
+    ClearAllBytes(querier2);
+
+    querier2.mFirstLabel   = "mysrv";
+    querier2.mNextLabels   = nullptr;
+    querier2.mRecordType   = ResourceRecord::kTypeKey;
+    querier2.mInfraIfIndex = kInfraIfIndex;
+    querier2.mCallback     = HandleRecordResultAlternate;
+
+    SuccessOrQuit(mdns->StartRecordQuerier(querier2));
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response for `mysrv.local.` and validate that only the null `mNextLabels`");
+    Log("querier is matched (exercises the `mNextLabels == nullptr` paths).");
+
+    records[0].mType       = ResourceRecord::kTypeKey;
+    records[0].mData       = kKey1;
+    records[0].mLength     = sizeof(kKey1);
+    records[0].mTtl        = 120;
+    records[0].mCacheFlush = false;
+
+    sRecordCallbacks.Clear();
+    SendRecordResponse("mysrv.local.", 1, records);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+    VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+    VerifyOrQuit(recordCallback->mNextLabels.Matches(""));
+    VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(recordCallback->MatchesData(kKey1));
+    VerifyOrQuit(recordCallback->mTtl == 120);
+    VerifyOrQuit(recordCallback->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop both queriers in the same order");
+
+    SuccessOrQuit(mdns->StopRecordQuerier(querier));
+    SuccessOrQuit(mdns->StopRecordQuerier(querier2));
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Clear the cache list so the next ordering starts from an empty `mRecordCacheList`");
+
+    // `StopRecordQuerier()` only marks the `RecordCache` entries passive; they are retained for
+    // `kNonActiveDeleteTimeout`. Toggling disables and re-enables to drop them, so the ordering
+    // below genuinely starts from an empty cache list.
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start the null-`mNextLabels` querier first, then the non-null one");
+
+    SuccessOrQuit(mdns->StartRecordQuerier(querier2));
+    AdvanceTime(1);
+    SuccessOrQuit(mdns->StartRecordQuerier(querier));
+    AdvanceTime(1);
+
+    SuccessOrQuit(mdns->StopRecordQuerier(querier));
+    SuccessOrQuit(mdns->StopRecordQuerier(querier2));
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of TestRecordQuerierNullNextLabels");
+
+    testFreeInstance(sInstance);
+}
+
 void TestRecordQuerierForAny(void)
 {
     static constexpr uint8_t kMaxResponseRecords = 6;
@@ -8989,6 +9179,7 @@ void TestLegacyUnicastResponse(void)
 
     dnsMsg = sDnsMessages.GetHead();
     VerifyOrQuit(dnsMsg != nullptr);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
     dnsMsg->ValidateHeader(kLegacyUnicastResponse, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 1);
     VerifyOrQuit(dnsMsg->mAdditionalRecords.ContainsNsec(hostFullName, ResourceRecord::kTypeAaaa));
 
@@ -9038,6 +9229,7 @@ int main(void)
     ot::Dns::Multicast::TestTxtResolver();
     ot::Dns::Multicast::TestIp6AddrResolver();
     ot::Dns::Multicast::TestRecordQuerier();
+    ot::Dns::Multicast::TestRecordQuerierNullNextLabels();
     ot::Dns::Multicast::TestRecordQuerierForAny();
     ot::Dns::Multicast::TestPassiveCache();
     ot::Dns::Multicast::TestLegacyUnicastResponse();

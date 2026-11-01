@@ -613,14 +613,6 @@ void Core::UpdateCacheFlushFlagIn(ResourceRecord &aResourceRecord, Section aSect
     }
 }
 
-void Core::UpdateCompressOffset(uint16_t &aOffset, uint16_t aNewOffset)
-{
-    if ((aOffset == kUnspecifiedOffset) && (aNewOffset != kUnspecifiedOffset))
-    {
-        aOffset = aNewOffset;
-    }
-}
-
 bool Core::QuestionMatches(uint16_t aQuestionRrType, uint16_t aRrType)
 {
     return (aQuestionRrType == aRrType) || (aQuestionRrType == ResourceRecord::kTypeAny);
@@ -738,6 +730,35 @@ bool Core::RecordCounts::IsEmpty(void) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+// Core::CompressOffset
+
+void Core::CompressOffset::Save(const Message &aMessage, Section aSection)
+{
+    // Saves the current message offset for name compression, but only
+    // when appending to the question or answer sections.
+    //
+    // This is necessary because other sections use separate message,
+    // and their offsets can shift when records are added to the main
+    // message.
+    //
+    // While current record types guarantee name inclusion in
+    // question/answer sections before their use in other sections,
+    // this check allows future extensions.
+
+    switch (aSection)
+    {
+    case kQuestionSection:
+    case kAnswerSection:
+        mOffset = aMessage.GetLength();
+        break;
+
+    case kAuthoritySection:
+    case kAdditionalDataSection:
+        break;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // Core::AddressArray
 
 bool Core::AddressArray::Matches(const Ip6::Address *aAddresses, uint16_t aNumAddresses) const
@@ -851,8 +872,19 @@ void Core::RecordInfo::ScheduleAnswer(const AnswerInfo &aInfo)
 
     if (aInfo.mUnicastResponse || aInfo.mLegacyUnicastResponse)
     {
-        mUnicastAnswerPending = true;
-        ExitNow();
+        VerifyOrExit(!mUnicastAnswerPending);
+
+        if (aInfo.mIsProbe || aInfo.mLegacyUnicastResponse ||
+            (GetDurationSinceLastUnicast(aInfo.mQueryRxTime) >= kMinIntervalBetweenUnicast))
+        {
+            mUnicastAnswerPending = true;
+            ExitNow();
+        }
+
+        // If the unicast rate limit (`kMinIntervalBetweenUnicast`) is
+        // reached on a `QU` query, fall through to schedule a multicast
+        // response instead (which has its own rate-limiting logic) so
+        // other queriers on the network can still receive the answer.
     }
 
     if (!aInfo.mIsProbe)
@@ -1052,6 +1084,20 @@ void Core::RecordInfo::UpdateFireTimeOn(FireTime &aFireTime)
         }
     }
 
+    if (mIsLastUnicastValid)
+    {
+        TimeMilli lastUnicastAgeTime = mLastUnicastTime + kLastUnicastTimeAge;
+
+        if (lastUnicastAgeTime <= TimerMilli::GetNow())
+        {
+            mIsLastUnicastValid = false;
+        }
+        else
+        {
+            aFireTime.SetFireTime(lastUnicastAgeTime);
+        }
+    }
+
 exit:
     return;
 }
@@ -1094,6 +1140,11 @@ void Core::RecordInfo::MarkAsAppended(TxMessage &aTxMessage, Section aSection)
         break;
 
     case TxMessage::kUnicastResponse:
+        mAppendState        = kAppendedInUnicastMsg;
+        mLastUnicastTime    = TimerMilli::GetNow();
+        mIsLastUnicastValid = true;
+        break;
+
     case TxMessage::kLegacyUnicastResponse:
         mAppendState = kAppendedInUnicastMsg;
         break;
@@ -1151,6 +1202,20 @@ uint32_t Core::RecordInfo::GetDurationSinceLastMulticast(TimeMilli aTime) const
     VerifyOrExit(mIsPresent && mIsLastMulticastValid);
     VerifyOrExit(aTime > mLastMulticastTime, duration = 0);
     duration = aTime - mLastMulticastTime;
+
+exit:
+    return duration;
+}
+
+uint32_t Core::RecordInfo::GetDurationSinceLastUnicast(TimeMilli aTime) const
+{
+    uint32_t duration;
+
+    SetToUintMax(duration);
+
+    VerifyOrExit(mIsPresent && mIsLastUnicastValid);
+    VerifyOrExit(aTime > mLastUnicastTime, duration = 0);
+    duration = aTime - mLastUnicastTime;
 
 exit:
     return duration;
@@ -1397,6 +1462,7 @@ void Core::Entry::UpdateRecordsState(const TxMessage &aResponse)
             mMulticastNsecPending = false;
             break;
         case TxMessage::kUnicastResponse:
+        case TxMessage::kLegacyUnicastResponse:
             mUnicastNsecPending = false;
             break;
         default:
@@ -1412,7 +1478,7 @@ void Core::Entry::ScheduleNsecAnswer(const AnswerInfo &aInfo)
 
     VerifyOrExit(GetState() == kRegistered);
 
-    if (aInfo.mUnicastResponse)
+    if (aInfo.mUnicastResponse || aInfo.mLegacyUnicastResponse)
     {
         mUnicastNsecPending = true;
     }
@@ -1437,9 +1503,24 @@ exit:
     return;
 }
 
-bool Core::Entry::ShouldAnswerNsec(TimeMilli aNow) const
+bool Core::Entry::ShouldAnswerNsec(const EntryContext &aContext) const
 {
-    return mMulticastNsecPending && (GetNsecAnswerTime() <= aNow);
+    bool shouldAnswer = false;
+
+    switch (aContext.mResponseMessage.GetType())
+    {
+    case TxMessage::kMulticastResponse:
+        shouldAnswer = mMulticastNsecPending && (GetNsecAnswerTime() <= aContext.GetNow());
+        break;
+    case TxMessage::kUnicastResponse:
+    case TxMessage::kLegacyUnicastResponse:
+        shouldAnswer = mUnicastNsecPending;
+        break;
+    default:
+        break;
+    }
+
+    return shouldAnswer;
 }
 
 void Core::Entry::AnswerNonProbe(const AnswerInfo &aInfo, RecordAndTypeArray &aRecordAndTypes)
@@ -1938,7 +2019,6 @@ bool Core::LocalHost::AddrEvent::Matches(AddrType aType) const
 
 Core::HostEntry::HostEntry(void)
     : mNext(nullptr)
-    , mNameOffset(kUnspecifiedOffset)
 {
 }
 
@@ -2174,7 +2254,7 @@ void Core::HostEntry::ClearAppendState(void)
         mIp4AddrRecord->MarkAsNotAppended();
     }
 
-    mNameOffset = kUnspecifiedOffset;
+    mNameOffset.Clear();
 }
 
 void Core::HostEntry::PrepareProbe(TxMessage &aProbe)
@@ -2248,7 +2328,7 @@ void Core::HostEntry::PrepareResponseRecords(EntryContext &aContext)
         appendNsec = true;
     }
 
-    if (appendNsec || ShouldAnswerNsec(aContext.GetNow()))
+    if (appendNsec || ShouldAnswerNsec(aContext))
     {
         AppendNsecRecordTo(response, kAdditionalDataSection);
     }
@@ -2488,10 +2568,7 @@ Core::ServiceEntry::ServiceEntry(void)
     , mPriority(0)
     , mWeight(0)
     , mPort(0)
-    , mServiceNameOffset(kUnspecifiedOffset)
-    , mServiceTypeOffset(kUnspecifiedOffset)
-    , mSubServiceTypeOffset(kUnspecifiedOffset)
-    , mHostNameOffset(kUnspecifiedOffset)
+    , mHostEntry(nullptr)
     , mIsAddedInServiceTypes(false)
 {
 }
@@ -2814,15 +2891,16 @@ void Core::ServiceEntry::ClearAppendState(void)
     mSrvRecord.MarkAsNotAppended();
     mTxtRecord.MarkAsNotAppended();
 
-    mServiceNameOffset    = kUnspecifiedOffset;
-    mServiceTypeOffset    = kUnspecifiedOffset;
-    mSubServiceTypeOffset = kUnspecifiedOffset;
-    mHostNameOffset       = kUnspecifiedOffset;
+    mServiceNameOffset.Clear();
+    mServiceTypeOffset.Clear();
+    mSubServiceTypeOffset.Clear();
+    mHostNameOffset.Clear();
+    mHostEntry = nullptr;
 
     for (SubType &subType : mSubTypes)
     {
         subType.mPtrRecord.MarkAsNotAppended();
-        subType.mSubServiceNameOffset = kUnspecifiedOffset;
+        subType.mSubServiceNameOffset.Clear();
     }
 }
 
@@ -2832,11 +2910,7 @@ void Core::ServiceEntry::PrepareProbe(TxMessage &aProbe)
 
     do
     {
-        HostEntry *hostEntry = nullptr;
-
         aProbe.SaveCurrentState();
-
-        DiscoverOffsetsAndHost(hostEntry);
 
         AppendServiceNameTo(aProbe, kQuestionSection);
         AppendQuestionTo(aProbe);
@@ -2887,10 +2961,7 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
 {
     bool       appendNsec                    = false;
     bool       appendAdditionalRecordsForPtr = false;
-    HostEntry *hostEntry                     = nullptr;
     TxMessage &response                      = aContext.mResponseMessage;
-
-    DiscoverOffsetsAndHost(hostEntry);
 
     // We determine records to include in Additional Data section
     // per RFC 6763 section 12:
@@ -2934,11 +3005,7 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
     {
         mSrvRecord.MarkToAppendInAdditionalData();
         mTxtRecord.MarkToAppendInAdditionalData();
-
-        if (hostEntry != nullptr)
-        {
-            hostEntry->MarkToAppendAddrRecordsInAdditionalData();
-        }
+        MarkToAppendHostAddrRecordsInAdditionalData();
     }
 
     if (mSrvRecord.ShouldAppendTo(aContext))
@@ -2946,9 +3013,9 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
         AppendSrvRecordTo(response, kAnswerSection);
         appendNsec = true;
 
-        if ((mSrvRecord.GetTtl() > 0) && (hostEntry != nullptr))
+        if (mSrvRecord.GetTtl() > 0)
         {
-            hostEntry->MarkToAppendAddrRecordsInAdditionalData();
+            MarkToAppendHostAddrRecordsInAdditionalData();
         }
     }
 
@@ -2976,20 +3043,21 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
         AppendTxtRecordTo(response, kAdditionalDataSection);
     }
 
-    if (hostEntry != nullptr)
+    if (mHostEntry != nullptr)
     {
-        if (hostEntry->mIp6AddrRecord.ShouldAppendInAdditionalDataSection())
+        if (mHostEntry->mIp6AddrRecord.ShouldAppendInAdditionalDataSection())
         {
-            hostEntry->AppendIp6AddressRecordsTo(response, kAdditionalDataSection);
+            mHostEntry->AppendIp6AddressRecordsTo(response, kAdditionalDataSection);
         }
 
-        if ((hostEntry->mIp4AddrRecord != nullptr) && hostEntry->mIp4AddrRecord->ShouldAppendInAdditionalDataSection())
+        if ((mHostEntry->mIp4AddrRecord != nullptr) &&
+            mHostEntry->mIp4AddrRecord->ShouldAppendInAdditionalDataSection())
         {
-            hostEntry->AppendIp4AddressRecordsTo(response, kAdditionalDataSection);
+            mHostEntry->AppendIp4AddressRecordsTo(response, kAdditionalDataSection);
         }
     }
 
-    if (appendNsec || ShouldAnswerNsec(aContext.GetNow()))
+    if (appendNsec || ShouldAnswerNsec(aContext))
     {
         AppendNsecRecordTo(response, kAdditionalDataSection);
     }
@@ -3054,26 +3122,36 @@ exit:
     return;
 }
 
-void Core::ServiceEntry::DiscoverOffsetsAndHost(HostEntry *&aHostEntry)
+void Core::ServiceEntry::MarkToAppendHostAddrRecordsInAdditionalData(void)
 {
-    // Discovers the `HostEntry` associated with this `ServiceEntry`
-    // and name compression offsets from the previously appended
-    // entries.
+    DiscoverHost();
 
-    // TODO: Need to handle name matching host name
-
-    aHostEntry = Get<Core>().mHostEntries.FindMatching(mHostName);
-
-    if ((aHostEntry != nullptr) && (aHostEntry->GetState() != GetState()))
+    if (mHostEntry != nullptr)
     {
-        aHostEntry = nullptr;
+        mHostEntry->MarkToAppendAddrRecordsInAdditionalData();
+    }
+}
+
+void Core::ServiceEntry::DiscoverHost(void)
+{
+    if (mHostEntry == nullptr)
+    {
+        mHostEntry = Get<Core>().mHostEntries.FindMatching(mHostName);
+
+        if ((mHostEntry != nullptr) && (mHostEntry->GetState() != GetState()))
+        {
+            mHostEntry = nullptr;
+        }
     }
 
-    if (aHostEntry != nullptr)
+    if (mHostEntry != nullptr)
     {
-        UpdateCompressOffset(mHostNameOffset, aHostEntry->mNameOffset);
+        mHostNameOffset.UpdateFrom(mHostEntry->mNameOffset);
     }
+}
 
+void Core::ServiceEntry::DiscoverCompressOffset(OffsetDiscoverer aDiscoverer, void *aContext)
+{
     for (ServiceEntry &other : Get<Core>().mServiceEntries)
     {
         // We only need to search up to `this` entry in the list,
@@ -3094,36 +3172,91 @@ void Core::ServiceEntry::DiscoverOffsetsAndHost(HostEntry *&aHostEntry)
             continue;
         }
 
-        if (NameMatch(mHostName, other.mHostName))
+        if ((this->*aDiscoverer)(other, aContext))
         {
-            UpdateCompressOffset(mHostNameOffset, other.mHostNameOffset);
-        }
-
-        if (NameMatch(mServiceType, other.mServiceType))
-        {
-            UpdateCompressOffset(mServiceTypeOffset, other.mServiceTypeOffset);
-
-            if (GetState() == kProbing)
-            {
-                // No need to search for sub-type service offsets when
-                // we are still probing.
-
-                continue;
-            }
-
-            UpdateCompressOffset(mSubServiceTypeOffset, other.mSubServiceTypeOffset);
-
-            for (SubType &subType : mSubTypes)
-            {
-                const SubType *otherSubType = other.mSubTypes.FindMatching(subType.mLabel.AsCString());
-
-                if (otherSubType != nullptr)
-                {
-                    UpdateCompressOffset(subType.mSubServiceNameOffset, otherSubType->mSubServiceNameOffset);
-                }
-            }
+            break;
         }
     }
+}
+
+void Core::ServiceEntry::DiscoverServiceTypeCompressOffset(void)
+{
+    if (!mServiceTypeOffset.IsKnown())
+    {
+        DiscoverCompressOffset(&ServiceEntry::DiscoverServiceTypeOffsetFrom);
+    }
+}
+
+bool Core::ServiceEntry::DiscoverServiceTypeOffsetFrom(const ServiceEntry &aOther, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    if (NameMatch(mServiceType, aOther.mServiceType))
+    {
+        mServiceTypeOffset.UpdateFrom(aOther.mServiceTypeOffset);
+        mSubServiceTypeOffset.UpdateFrom(aOther.mSubServiceTypeOffset);
+    }
+
+    return mServiceTypeOffset.IsKnown();
+}
+
+void Core::ServiceEntry::DiscoverHostNameCompressOffset(void)
+{
+    VerifyOrExit(!mHostNameOffset.IsKnown());
+
+    DiscoverHost();
+    VerifyOrExit(!mHostNameOffset.IsKnown());
+
+    DiscoverCompressOffset(&ServiceEntry::DiscoverHostNameOffsetFrom);
+
+    if (mHostEntry != nullptr)
+    {
+        mHostEntry->mNameOffset.UpdateFrom(mHostNameOffset);
+    }
+
+exit:
+    return;
+}
+
+bool Core::ServiceEntry::DiscoverHostNameOffsetFrom(const ServiceEntry &aOther, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    if (NameMatch(mHostName, aOther.mHostName))
+    {
+        mHostNameOffset.UpdateFrom(aOther.mHostNameOffset);
+    }
+
+    return mHostNameOffset.IsKnown();
+}
+
+void Core::ServiceEntry::DiscoverSubServiceNameCompressOffsetFor(SubType &aSubType)
+{
+    if (!aSubType.mSubServiceNameOffset.IsKnown())
+    {
+        DiscoverCompressOffset(&ServiceEntry::DiscoverSubServiceNameOffsetFrom, &aSubType);
+    }
+}
+
+bool Core::ServiceEntry::DiscoverSubServiceNameOffsetFrom(const ServiceEntry &aOther, void *aContext)
+{
+    SubType       *subType = static_cast<SubType *>(aContext);
+    const SubType *otherSubType;
+
+    VerifyOrExit(NameMatch(mServiceType, aOther.mServiceType));
+
+    mServiceTypeOffset.UpdateFrom(aOther.mServiceTypeOffset);
+    mSubServiceTypeOffset.UpdateFrom(aOther.mSubServiceTypeOffset);
+
+    VerifyOrExit(aOther.mSubServiceTypeOffset.IsKnown());
+
+    otherSubType = aOther.mSubTypes.FindMatching(subType->mLabel.AsCString());
+
+    VerifyOrExit(otherSubType != nullptr);
+    subType->mSubServiceNameOffset.UpdateFrom(otherSubType->mSubServiceNameOffset);
+
+exit:
+    return subType->mSubServiceNameOffset.IsKnown();
 }
 
 void Core::ServiceEntry::UpdateServiceTypes(void)
@@ -3316,18 +3449,14 @@ void Core::ServiceEntry::AppendEntryName(Entry &aEntry, TxMessage &aTxMessage, S
 
 void Core::ServiceEntry::AppendServiceNameTo(TxMessage &aTxMessage, Section aSection, bool aPerformNameCompression)
 {
-    AppendOutcome outcome;
-
     if (!aPerformNameCompression)
     {
-        uint16_t compressOffset = kUnspecifiedOffset;
-
-        outcome = aTxMessage.AppendLabel(aSection, mServiceInstance.AsCString(), compressOffset);
-        VerifyOrExit(outcome == kAppendedLabels);
+        aTxMessage.AppendLabel(aSection, mServiceInstance.AsCString());
     }
     else
     {
-        outcome = aTxMessage.AppendLabel(aSection, mServiceInstance.AsCString(), mServiceNameOffset);
+        AppendOutcome outcome = aTxMessage.AppendLabel(aSection, mServiceInstance.AsCString(), mServiceNameOffset);
+
         VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
     }
 
@@ -3339,30 +3468,22 @@ exit:
 
 void Core::ServiceEntry::AppendServiceTypeTo(TxMessage &aTxMessage, Section aSection)
 {
+    DiscoverServiceTypeCompressOffset();
     aTxMessage.AppendServiceType(aSection, mServiceType.AsCString(), mServiceTypeOffset);
-}
-
-void Core::ServiceEntry::AppendSubServiceTypeTo(TxMessage &aTxMessage, Section aSection)
-{
-    AppendOutcome outcome;
-
-    outcome = aTxMessage.AppendLabel(aSection, kSubServiceLabel, mSubServiceTypeOffset);
-    VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
-
-    AppendServiceTypeTo(aTxMessage, aSection);
-
-exit:
-    return;
 }
 
 void Core::ServiceEntry::AppendSubServiceNameTo(TxMessage &aTxMessage, Section aSection, SubType &aSubType)
 {
     AppendOutcome outcome;
 
+    DiscoverSubServiceNameCompressOffsetFor(aSubType);
     outcome = aTxMessage.AppendLabel(aSection, aSubType.mLabel.AsCString(), aSubType.mSubServiceNameOffset);
     VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
 
-    AppendSubServiceTypeTo(aTxMessage, aSection);
+    outcome = aTxMessage.AppendLabel(aSection, kSubServiceLabel, mSubServiceTypeOffset);
+    VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
+
+    aTxMessage.AppendServiceType(aSection, mServiceType.AsCString(), mServiceTypeOffset);
 
 exit:
     return;
@@ -3372,8 +3493,14 @@ void Core::ServiceEntry::AppendHostNameTo(TxMessage &aTxMessage, Section aSectio
 {
     AppendOutcome outcome;
 
+    DiscoverHostNameCompressOffset();
     outcome = aTxMessage.AppendMultipleLabels(aSection, mHostName.AsCString(), mHostNameOffset);
     VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
+
+    if (mHostEntry != nullptr)
+    {
+        mHostEntry->mNameOffset.UpdateFrom(mHostNameOffset);
+    }
 
     aTxMessage.AppendDomainName(aSection);
 
@@ -3432,12 +3559,7 @@ exit:
 //----------------------------------------------------------------------------------------------------------------------
 // Core::ServiceEntry::SubType
 
-Error Core::ServiceEntry::SubType::Init(const char *aLabel)
-{
-    mSubServiceNameOffset = kUnspecifiedOffset;
-
-    return mLabel.Set(aLabel);
-}
+Error Core::ServiceEntry::SubType::Init(const char *aLabel) { return mLabel.Set(aLabel); }
 
 bool Core::ServiceEntry::SubType::Matches(const EmptyChecker &aChecker) const
 {
@@ -3551,7 +3673,7 @@ void Core::ServiceType::PrepareResponse(EntryContext &aContext)
 
 void Core::ServiceType::PrepareResponseRecords(EntryContext &aContext)
 {
-    uint16_t serviceTypeOffset = kUnspecifiedOffset;
+    CompressOffset serviceTypeOffset;
 
     VerifyOrExit(mServicesPtr.ShouldAppendTo(aContext));
 
@@ -3567,9 +3689,9 @@ void Core::ServiceType::PrepareResponseRecords(EntryContext &aContext)
 
         if (NameMatch(mServiceType, serviceEntry.mServiceType))
         {
-            UpdateCompressOffset(serviceTypeOffset, serviceEntry.mServiceTypeOffset);
+            serviceTypeOffset.UpdateFrom(serviceEntry.mServiceTypeOffset);
 
-            if (serviceTypeOffset != kUnspecifiedOffset)
+            if (serviceTypeOffset.IsKnown())
             {
                 break;
             }
@@ -3582,7 +3704,7 @@ exit:
     return;
 }
 
-void Core::ServiceType::AppendPtrRecordTo(TxMessage &aResponse, uint16_t aServiceTypeOffset)
+void Core::ServiceType::AppendPtrRecordTo(TxMessage &aResponse, CompressOffset &aServiceTypeOffset)
 {
     Message  *message;
     PtrRecord ptr;
@@ -3644,11 +3766,11 @@ void Core::TxMessage::Init(Type aType, uint16_t aMessageId)
     mSavedRecordCounts.Clear();
     mSavedMsgLength      = 0;
     mSavedExtraMsgLength = 0;
-    mDomainOffset        = kUnspecifiedOffset;
-    mUdpOffset           = kUnspecifiedOffset;
-    mTcpOffset           = kUnspecifiedOffset;
-    mServicesDnssdOffset = kUnspecifiedOffset;
-    mType                = aType;
+    mDomainOffset.Clear();
+    mUdpOffset.Clear();
+    mTcpOffset.Clear();
+    mServicesDnssdOffset.Clear();
+    mType = aType;
 
     // Allocate messages. The main `mMsgPtr` is always allocated.
     // The Authority and Addition section messages are allocated
@@ -3724,22 +3846,32 @@ Message &Core::TxMessage::SelectMessageFor(Section aSection)
     return *message;
 }
 
-Core::AppendOutcome Core::TxMessage::AppendLabel(Section aSection, const char *aLabel, uint16_t &aCompressOffset)
+void Core::TxMessage::AppendLabel(Section aSection, const char *aLabel)
+{
+    SuccessOrAssert(Name::AppendLabel(aLabel, SelectMessageFor(aSection)));
+}
+
+Core::AppendOutcome Core::TxMessage::AppendLabel(Section aSection, const char *aLabel, CompressOffset &aCompressOffset)
 {
     return AppendLabels(aSection, aLabel, kIsSingleLabel, aCompressOffset);
 }
 
-Core::AppendOutcome Core::TxMessage::AppendMultipleLabels(Section     aSection,
-                                                          const char *aLabels,
-                                                          uint16_t   &aCompressOffset)
+void Core::TxMessage::AppendMultipleLabels(Section aSection, const char *aLabels)
+{
+    SuccessOrAssert(Name::AppendMultipleLabels(aLabels, SelectMessageFor(aSection)));
+}
+
+Core::AppendOutcome Core::TxMessage::AppendMultipleLabels(Section         aSection,
+                                                          const char     *aLabels,
+                                                          CompressOffset &aCompressOffset)
 {
     return AppendLabels(aSection, aLabels, !kIsSingleLabel, aCompressOffset);
 }
 
-Core::AppendOutcome Core::TxMessage::AppendLabels(Section     aSection,
-                                                  const char *aLabels,
-                                                  bool        aIsSingleLabel,
-                                                  uint16_t   &aCompressOffset)
+Core::AppendOutcome Core::TxMessage::AppendLabels(Section         aSection,
+                                                  const char     *aLabels,
+                                                  bool            aIsSingleLabel,
+                                                  CompressOffset &aCompressOffset)
 {
     // Appends DNS name label(s) to the message in the specified section,
     // using compression if possible.
@@ -3757,14 +3889,14 @@ Core::AppendOutcome Core::TxMessage::AppendLabels(Section     aSection,
     AppendOutcome outcome = kAppendedLabels;
     Message      &message = SelectMessageFor(aSection);
 
-    if (aCompressOffset != kUnspecifiedOffset)
+    if (aCompressOffset.IsKnown())
     {
-        SuccessOrAssert(Name::AppendPointerLabel(aCompressOffset, message));
+        SuccessOrAssert(Name::AppendPointerLabel(aCompressOffset.GetOffset(), message));
         outcome = kAppendedFullNameAsCompressed;
         ExitNow();
     }
 
-    SaveOffset(aCompressOffset, message, aSection);
+    aCompressOffset.Save(message, aSection);
 
     if (aIsSingleLabel)
     {
@@ -3779,7 +3911,7 @@ exit:
     return outcome;
 }
 
-void Core::TxMessage::AppendServiceType(Section aSection, const char *aServiceType, uint16_t &aCompressOffset)
+void Core::TxMessage::AppendServiceType(Section aSection, const char *aServiceType, CompressOffset &aCompressOffset)
 {
     // Appends DNS service type name to the message in the specified
     // section, using compression if possible.
@@ -3825,13 +3957,13 @@ void Core::TxMessage::AppendDomainName(Section aSection)
 {
     Message &message = SelectMessageFor(aSection);
 
-    if (mDomainOffset != kUnspecifiedOffset)
+    if (mDomainOffset.IsKnown())
     {
-        SuccessOrAssert(Name::AppendPointerLabel(mDomainOffset, message));
+        SuccessOrAssert(Name::AppendPointerLabel(mDomainOffset.GetOffset(), message));
         ExitNow();
     }
 
-    SaveOffset(mDomainOffset, message, aSection);
+    mDomainOffset.Save(message, aSection);
     SuccessOrAssert(Name::AppendName(kLocalDomain, message));
 
 exit:
@@ -3840,20 +3972,7 @@ exit:
 
 void Core::TxMessage::AppendServicesDnssdName(Section aSection)
 {
-    Message &message = SelectMessageFor(aSection);
-
-    if (mServicesDnssdOffset != kUnspecifiedOffset)
-    {
-        SuccessOrAssert(Name::AppendPointerLabel(mServicesDnssdOffset, message));
-        ExitNow();
-    }
-
-    SaveOffset(mServicesDnssdOffset, message, aSection);
-    SuccessOrAssert(Name::AppendMultipleLabels(kServicesDnssdLabels, message));
-    AppendDomainName(aSection);
-
-exit:
-    return;
+    AppendServiceType(aSection, kServicesDnssdLabels, mServicesDnssdOffset);
 }
 
 void Core::TxMessage::AddQuestionFrom(const Message &aMessage)
@@ -3864,33 +3983,6 @@ void Core::TxMessage::AddQuestionFrom(const Message &aMessage)
     offset += sizeof(ot::Dns::Question);
     SuccessOrAssert(mMsgPtr->AppendBytesFromMessage(aMessage, sizeof(Header), offset - sizeof(Header)));
     IncrementRecordCount(kQuestionSection);
-}
-
-void Core::TxMessage::SaveOffset(uint16_t &aCompressOffset, const Message &aMessage, Section aSection)
-{
-    // Saves the current message offset in `aCompressOffset` for name
-    // compression, but only when appending to the question or answer
-    // sections.
-    //
-    // This is necessary because other sections use separate message,
-    // and their offsets can shift when records are added to the main
-    // message.
-    //
-    // While current record types guarantee name inclusion in
-    // question/answer sections before their use in other sections,
-    // this check allows future extensions.
-
-    switch (aSection)
-    {
-    case kQuestionSection:
-    case kAnswerSection:
-        aCompressOffset = aMessage.GetLength();
-        break;
-
-    case kAuthoritySection:
-    case kAdditionalDataSection:
-        break;
-    }
 }
 
 bool Core::TxMessage::IsOverSizeLimit(void) const
@@ -6053,9 +6145,9 @@ Error Core::BrowseCache::Init(Instance &aInstance, const Browser &aBrowser)
 
 void Core::BrowseCache::ClearCompressOffsets(void)
 {
-    mServiceTypeOffset    = kUnspecifiedOffset;
-    mSubServiceTypeOffset = kUnspecifiedOffset;
-    mSubServiceNameOffset = kUnspecifiedOffset;
+    mServiceTypeOffset.Clear();
+    mSubServiceTypeOffset.Clear();
+    mSubServiceNameOffset.Clear();
 }
 
 bool Core::BrowseCache::Matches(const Name &aFullName) const
@@ -6207,20 +6299,20 @@ void Core::BrowseCache::DiscoverCompressOffsets(void)
 
         if (NameMatch(browseCache.mServiceType, mServiceType))
         {
-            UpdateCompressOffset(mServiceTypeOffset, browseCache.mServiceTypeOffset);
-            UpdateCompressOffset(mSubServiceTypeOffset, browseCache.mSubServiceTypeOffset);
-            VerifyOrExit(mSubServiceTypeOffset == kUnspecifiedOffset);
+            mServiceTypeOffset.UpdateFrom(browseCache.mServiceTypeOffset);
+            mSubServiceTypeOffset.UpdateFrom(browseCache.mSubServiceTypeOffset);
+            VerifyOrExit(!mSubServiceTypeOffset.IsKnown());
         }
     }
 
-    VerifyOrExit(mServiceTypeOffset == kUnspecifiedOffset);
+    VerifyOrExit(!mServiceTypeOffset.IsKnown());
 
     for (const SrvCache &srvCache : Get<Core>().mSrvCacheList)
     {
         if (NameMatch(srvCache.mServiceType, mServiceType))
         {
-            UpdateCompressOffset(mServiceTypeOffset, srvCache.mServiceTypeOffset);
-            VerifyOrExit(mServiceTypeOffset == kUnspecifiedOffset);
+            mServiceTypeOffset.UpdateFrom(srvCache.mServiceTypeOffset);
+            VerifyOrExit(!mServiceTypeOffset.IsKnown());
         }
     }
 
@@ -6228,8 +6320,8 @@ void Core::BrowseCache::DiscoverCompressOffsets(void)
     {
         if (NameMatch(txtCache.mServiceType, mServiceType))
         {
-            UpdateCompressOffset(mServiceTypeOffset, txtCache.mServiceTypeOffset);
-            VerifyOrExit(mServiceTypeOffset == kUnspecifiedOffset);
+            mServiceTypeOffset.UpdateFrom(txtCache.mServiceTypeOffset);
+            VerifyOrExit(!mServiceTypeOffset.IsKnown());
         }
     }
 
@@ -6270,7 +6362,7 @@ void Core::BrowseCache::AppendKnownAnswer(TxMessage &aTxMessage, const PtrEntry 
     offset = message.GetLength();
     SuccessOrAssert(message.Append(ptr));
 
-    SuccessOrAssert(Name::AppendLabel(aPtrEntry.mServiceInstance.AsCString(), message));
+    aTxMessage.AppendLabel(kAnswerSection, aPtrEntry.mServiceInstance.AsCString());
     aTxMessage.AppendServiceType(kAnswerSection, mServiceType.AsCString(), mServiceTypeOffset);
 
     ResourceRecord::UpdateRecordLengthInMessage(message, offset);
@@ -6383,8 +6475,8 @@ exit:
 
 void Core::ServiceCache::ClearCompressOffsets(void)
 {
-    mServiceNameOffset = kUnspecifiedOffset;
-    mServiceTypeOffset = kUnspecifiedOffset;
+    mServiceNameOffset.Clear();
+    mServiceTypeOffset.Clear();
 }
 
 bool Core::ServiceCache::Matches(const Name &aFullName) const
@@ -6579,10 +6671,10 @@ void Core::SrvCache::DiscoverCompressOffsets(void)
 
         if (NameMatch(srvCache.mServiceType, mServiceType))
         {
-            UpdateCompressOffset(mServiceTypeOffset, srvCache.mServiceTypeOffset);
+            mServiceTypeOffset.UpdateFrom(srvCache.mServiceTypeOffset);
         }
 
-        if (mServiceTypeOffset != kUnspecifiedOffset)
+        if (mServiceTypeOffset.IsKnown())
         {
             break;
         }
@@ -6747,14 +6839,14 @@ void Core::TxtCache::DiscoverCompressOffsets(void)
             continue;
         }
 
-        UpdateCompressOffset(mServiceTypeOffset, srvCache.mServiceTypeOffset);
+        mServiceTypeOffset.UpdateFrom(srvCache.mServiceTypeOffset);
 
         if (NameMatch(srvCache.mServiceInstance, mServiceInstance))
         {
-            UpdateCompressOffset(mServiceNameOffset, srvCache.mServiceNameOffset);
+            mServiceNameOffset.UpdateFrom(srvCache.mServiceNameOffset);
         }
 
-        VerifyOrExit(mServiceNameOffset == kUnspecifiedOffset);
+        VerifyOrExit(!mServiceNameOffset.IsKnown());
     }
 
     for (const TxtCache &txtCache : Get<Core>().mTxtCacheList)
@@ -6766,10 +6858,10 @@ void Core::TxtCache::DiscoverCompressOffsets(void)
 
         if (NameMatch(txtCache.mServiceType, mServiceType))
         {
-            UpdateCompressOffset(mServiceTypeOffset, txtCache.mServiceTypeOffset);
+            mServiceTypeOffset.UpdateFrom(txtCache.mServiceTypeOffset);
         }
 
-        VerifyOrExit(mServiceTypeOffset == kUnspecifiedOffset);
+        VerifyOrExit(!mServiceTypeOffset.IsKnown());
     }
 
 exit:
@@ -6880,17 +6972,8 @@ void Core::AddrCache::PrepareQueryQuestion(TxMessage &aQuery, uint16_t aRrType)
 
 void Core::AddrCache::AppendNameTo(TxMessage &aTxMessage, Section aSection)
 {
-    uint16_t compressOffset = kUnspecifiedOffset;
-
-    AppendOutcome outcome;
-
-    outcome = aTxMessage.AppendMultipleLabels(aSection, mName.AsCString(), compressOffset);
-    VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
-
+    aTxMessage.AppendMultipleLabels(aSection, mName.AsCString());
     aTxMessage.AppendDomainName(aSection);
-
-exit:
-    return;
 }
 
 void Core::AddrCache::UpdateRecordStateAfterQuery(TimeMilli aNow)
@@ -7290,6 +7373,7 @@ bool Core::RecordCache::Matches(const RecordQuerier &aQuerier) const
     }
     else
     {
+        VerifyOrExit(aQuerier.mNextLabels != nullptr);
         VerifyOrExit(NameMatch(mNextLabels, aQuerier.mNextLabels));
     }
 
@@ -7326,23 +7410,14 @@ void Core::RecordCache::PrepareQueryQuestion(TxMessage &aQuery)
 
 void Core::RecordCache::AppendNameTo(TxMessage &aTxMessage, Section aSection)
 {
-    uint16_t      compressOffset = kUnspecifiedOffset;
-    AppendOutcome outcome;
-
-    outcome = aTxMessage.AppendLabel(aSection, mFirstLabel.AsCString(), compressOffset);
-    VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
+    aTxMessage.AppendLabel(aSection, mFirstLabel.AsCString());
 
     if (!mNextLabels.IsNull())
     {
-        compressOffset = kUnspecifiedOffset;
-        outcome        = aTxMessage.AppendMultipleLabels(aSection, mNextLabels.AsCString(), compressOffset);
-        VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
+        aTxMessage.AppendMultipleLabels(aSection, mNextLabels.AsCString());
     }
 
     aTxMessage.AppendDomainName(aSection);
-
-exit:
-    return;
 }
 
 void Core::RecordCache::UpdateRecordStateAfterQuery(TimeMilli aNow)

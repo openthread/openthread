@@ -2083,7 +2083,6 @@ class OTCI(object):
         #
         # Active Timestamp: 1
         # Channel: 22
-        # Wake-up Channel: 11
         # Channel Mask: 0x07fff800
         # Ext PAN ID: 5c93ae980ff22d35
         # Mesh Local Prefix: fdc7:55fe:6363:bd01::/64
@@ -2103,8 +2102,6 @@ class OTCI(object):
                 dataset['active_timestamp'] = int(val)
             elif key == 'Channel':
                 dataset['channel'] = int(val)
-            elif key == 'Wake-up Channel':
-                dataset['wakeupchannel'] = int(val)
             elif key == 'Channel Mask':
                 dataset['channel_mask'] = int(val, 16)
             elif key == 'Ext PAN ID':
@@ -2153,7 +2150,6 @@ class OTCI(object):
     def dataset_set_buffer(self,
                            active_timestamp: Optional[int] = None,
                            channel: Optional[int] = None,
-                           wakeupchannel: Optional[int] = None,
                            channel_mask: Optional[int] = None,
                            extpanid: Optional[str] = None,
                            mesh_local_prefix: Optional[str] = None,
@@ -2168,9 +2164,6 @@ class OTCI(object):
 
         if channel is not None:
             self.execute_command(f'dataset channel {channel}')
-
-        if wakeupchannel is not None:
-            self.execute_command(f'dataset wakeupchannel {wakeupchannel}')
 
         if channel_mask is not None:
             self.execute_command(f'dataset channelmask {channel_mask:#08x}')
@@ -3037,8 +3030,8 @@ class OTCI(object):
         """Transmit a fixed number of packets."""
         command = 'diag send '
         command += 'async ' if is_async else ''
-        command += f'{packets} '
-        command += f'{length}' if length is not None else ''
+        command += f'{packets}'
+        command += f' {length}' if length is not None else ''
 
         self.execute_command(command)
 
@@ -3289,13 +3282,12 @@ class OTCI(object):
                        panid: Optional[int] = None,
                        pskc: Optional[str] = None,
                        security_policy: Optional[tuple[int, str]] = None,
-                       pending_timestamp: Optional[int] = None,
-                       wakeup_channel: Optional[int] = None) -> bytes:
+                       pending_timestamp: Optional[int] = None) -> bytes:
         """Creates a new Operational Dataset with given parameters."""
         self.dataset_clear_buffer()
         self.dataset_init_buffer()
-        self.dataset_set_buffer(active_timestamp, channel, wakeup_channel, channel_mask, extpanid, mesh_local_prefix,
-                                network_key, network_name, panid, pskc, security_policy, pending_timestamp)
+        self.dataset_set_buffer(active_timestamp, channel, channel_mask, extpanid, mesh_local_prefix, network_key,
+                                network_name, panid, pskc, security_policy, pending_timestamp)
         return self.get_dataset_tlvs_bytes()
 
     def join(self, dataset: bytes) -> None:
@@ -3680,6 +3672,54 @@ class OTCI(object):
 
 def connect_cli_sim(executable: str, nodeid: int, simulator: Optional[Simulator]) -> OTCI:
     cli_handler = connectors.OtCliSim(executable, nodeid, simulator=simulator)
+    cmd_handler = OtCliCommandRunner(cli_handler)
+    return OTCI(cmd_handler)
+
+
+def connect_cli_posix(radio_url: str,
+                      executable: str = 'ot-cli',
+                      extra_args: Optional[List[str]] = None,
+                      nodeid: int = 1,
+                      simulator: Optional[Simulator] = None) -> OTCI:
+    cli_handler = connectors.OtCliPosix(radio_url=radio_url,
+                                        executable=executable,
+                                        extra_args=extra_args,
+                                        nodeid=nodeid,
+                                        simulator=simulator)
+    cmd_handler = OtCliCommandRunner(cli_handler)
+    return OTCI(cmd_handler)
+
+
+def connect_cli_adb_spinel_proxy(device_serial: Optional[str] = None,
+                                 host: Optional[str] = None,
+                                 port: Optional[int] = 5555,
+                                 socket_path: Optional[str] = None,
+                                 executable: str = 'ot-cli',
+                                 extra_args: Optional[List[str]] = None,
+                                 nodeid: int = 1,
+                                 auto_setup: bool = True,
+                                 adb_key: Optional[str] = None) -> OTCI:
+    from .adb_spinel_proxy import AdbSpinelProxyManager
+
+    proxy_manager = AdbSpinelProxyManager(
+        device_serial=device_serial,
+        host=host,
+        port=port,
+        socket_path=socket_path,
+        auto_setup=auto_setup,
+        adb_key=adb_key,
+    )
+    try:
+        proxy_manager.setup()
+        cli_handler = connectors.OtCliAdbSpinelProxy(
+            proxy_manager=proxy_manager,
+            executable=executable,
+            extra_args=extra_args,
+            nodeid=nodeid,
+        )
+    except Exception:
+        proxy_manager.close()
+        raise
     cmd_handler = OtCliCommandRunner(cli_handler)
     return OTCI(cmd_handler)
 

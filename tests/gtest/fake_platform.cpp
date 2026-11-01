@@ -28,6 +28,8 @@
 
 #include "fake_platform.hpp"
 
+#include <algorithm>
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -337,6 +339,48 @@ void FakePlatform::FlashWrite(uint8_t aSwapIndex, uint32_t aOffset, const void *
     }
 }
 
+void FakePlatform::UpdateRadioAvailability(otRadioTime64                   aStartTime,
+                                           otRadioAvailabilitySlotDuration aSlotDuration,
+                                           const uint8_t                  *aAvailableSlots,
+                                           const uint8_t                  *aPreferredSlots,
+                                           uint8_t                         aNumSlots)
+{
+    size_t numBytes = std::min<size_t>((aNumSlots + 7) / 8, OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE);
+
+    mHasRadioAvailability   = true;
+    mRadioAvailStartTime    = aStartTime;
+    mRadioAvailSlotDuration = aSlotDuration;
+    mRadioAvailNumSlots     = aNumSlots;
+    mRadioAvailAvailableSlots.assign(aAvailableSlots, aAvailableSlots + (aAvailableSlots ? numBytes : 0));
+
+    // Without a preference, all available slots are preferred.
+    if (aPreferredSlots == nullptr)
+    {
+        aPreferredSlots = aAvailableSlots;
+    }
+
+    mRadioAvailPreferredSlots.assign(aPreferredSlots, aPreferredSlots + (aPreferredSlots ? numBytes : 0));
+
+    otPlatRadioAvailabilityUpdated(mInstance);
+}
+
+otError FakePlatform::GetRadioAvailability(otRadioAvailability &aAvailability) const
+{
+    if (!mHasRadioAvailability)
+    {
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
+
+    memset(&aAvailability, 0, sizeof(aAvailability));
+    aAvailability.mStartTime    = mRadioAvailStartTime;
+    aAvailability.mSlotDuration = mRadioAvailSlotDuration;
+    aAvailability.mNumSlots     = mRadioAvailNumSlots;
+    std::copy(mRadioAvailAvailableSlots.begin(), mRadioAvailAvailableSlots.end(), aAvailability.mAvailableSlots);
+    std::copy(mRadioAvailPreferredSlots.begin(), mRadioAvailPreferredSlots.end(), aAvailability.mPreferredSlots);
+
+    return OT_ERROR_NONE;
+}
+
 } // namespace ot
 
 extern "C" {
@@ -414,6 +458,14 @@ void otPlatRadioEnableSrcMatch(otInstance *, bool aEnabled)
     FakePlatform::CurrentPlatform().SrcMatchEnable(aEnabled);
 }
 
+// Overrides the weak default in radio_platform.cpp, which reports
+// `kErrorNotImplemented`. Without this the fake RCP cannot accept a max power
+// table at all, so a test could not tell a correct restore from a missing one.
+otError otPlatRadioSetChannelMaxTransmitPower(otInstance *, uint8_t aChannel, int8_t aMaxPower)
+{
+    return FakePlatform::CurrentPlatform().ChannelMaxTxPowerSet(aChannel, aMaxPower);
+}
+
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *, uint16_t aShortAddr)
 {
     FakePlatform::CurrentPlatform().SrcMatchAddShortEntry(aShortAddr);
@@ -465,8 +517,17 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance *, otLinkMetrics, otShortAd
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-// Add WEAK here because in some unit test there is an implementation for `otPlatRadioSetChannelTargetPower`
-OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t, int16_t) { return OT_ERROR_NONE; }
+otError otPlatRadioGetAvailability(otInstance *, otRadioAvailability *aAvailability)
+{
+    return FakePlatform::CurrentPlatform().GetRadioAvailability(*aAvailability);
+}
+
+#if !(OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE)
+otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t aChannel, int16_t aTargetPower)
+{
+    return FakePlatform::CurrentPlatform().ChannelTargetPowerSet(aChannel, aTargetPower);
+}
+#endif
 
 void otPlatReset(otInstance *) {}
 

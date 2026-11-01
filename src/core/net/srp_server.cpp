@@ -1486,6 +1486,11 @@ Error Server::VerifySignature(const Host::Key  &aKey,
     signatureOffset = aSigRdataOffset + aSigRdataLength - Crypto::Ecdsa::P256::Signature::kSize;
     SuccessOrExit(error = aMessage.Read(signatureOffset, signature));
 
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    OT_UNUSED_VARIABLE(aKey);
+    ExitNow(error = kErrorNone);
+#endif
+
     error = aKey.Verify(hash, signature);
 
 exit:

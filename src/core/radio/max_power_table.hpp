@@ -36,26 +36,33 @@ namespace ot {
 class MaxPowerTable
 {
 public:
-    static constexpr int8_t kPowerDefault = 30; ///< Default power 1 watt (30 dBm).
+    static constexpr int16_t kPowerDefault = 3000; ///< Default power 1 watt (30 dBm in 0.01 dBm).
+    static constexpr int16_t kPowerInvalid = OT_RADIO_POWER_INVALID_IN_MBM; ///< Invalid power.
 
-    MaxPowerTable(void) { memset(mPowerTable, kPowerDefault, sizeof(mPowerTable)); }
+    MaxPowerTable(void)
+    {
+        for (int16_t &power : mPowerTable)
+        {
+            power = kPowerDefault;
+        }
+    }
 
     /**
      * Gets the max allowed transmit power of channel @p aChannel.
      *
      * @param[in]  aChannel    The radio channel number.
      *
-     * @returns The max supported transmit power in dBm.
+     * @returns The max supported transmit power in 0.01 dBm.
      */
-    int8_t GetTransmitPower(uint8_t aChannel) const { return mPowerTable[aChannel - Radio::kChannelMin]; }
+    int16_t GetTransmitPower(uint8_t aChannel) const { return mPowerTable[aChannel - Radio::kChannelMin]; }
 
     /**
      * Sets the max allowed transmit power of channel @p aChannel.
      *
      * @param[in]  aChannel    The radio channel number.
-     * @param[in]  aPower      The max supported transmit power in dBm.
+     * @param[in]  aPower      The max supported transmit power in 0.01 dBm.
      */
-    void SetTransmitPower(uint8_t aChannel, int8_t aPower) { mPowerTable[aChannel - Radio::kChannelMin] = aPower; }
+    void SetTransmitPower(uint8_t aChannel, int16_t aPower) { mPowerTable[aChannel - Radio::kChannelMin] = aPower; }
 
     /**
      * Gets the supported channel masks.
@@ -66,7 +73,7 @@ public:
 
         for (uint8_t i = Radio::kChannelMin; i <= Radio::kChannelMax; ++i)
         {
-            if (mPowerTable[i - Radio::kChannelMin] != OT_RADIO_POWER_INVALID)
+            if (mPowerTable[i - Radio::kChannelMin] != kPowerInvalid)
             {
                 SetBit<uint32_t>(channelMask, i);
             }
@@ -76,7 +83,7 @@ public:
     }
 
 private:
-    int8_t mPowerTable[Radio::kChannelMax - Radio::kChannelMin + 1];
+    int16_t mPowerTable[Radio::kChannelMax - Radio::kChannelMin + 1];
 };
 
 } // namespace ot

@@ -89,7 +89,6 @@ public:
         kDelay,            ///< Delay
         kPanId,            ///< PAN Identifier
         kChannel,          ///< Channel
-        kWakeupChannel,    ///< Wakeup Channel
         kPskc,             ///< PSKc
         kSecurityPolicy,   ///< Security Policy
         kChannelMask,      ///< Channel Mask
@@ -733,7 +732,6 @@ DefineIsPresentAndMarkAsPresent(MeshLocalPrefix)
 DefineIsPresentAndMarkAsPresent(Delay)
 DefineIsPresentAndMarkAsPresent(PanId)
 DefineIsPresentAndMarkAsPresent(Channel)
-DefineIsPresentAndMarkAsPresent(WakeupChannel)
 DefineIsPresentAndMarkAsPresent(Pskc)
 DefineIsPresentAndMarkAsPresent(SecurityPolicy)
 DefineIsPresentAndMarkAsPresent(ChannelMask)
@@ -752,7 +750,6 @@ template <> struct Dataset::TypeFor<Dataset::kMeshLocalPrefix>  { using Type = I
 template <> struct Dataset::TypeFor<Dataset::kDelay>            { using Type = uint32_t; };
 template <> struct Dataset::TypeFor<Dataset::kPanId>            { using Type = Mac::PanId; };
 template <> struct Dataset::TypeFor<Dataset::kChannel>          { using Type = uint16_t; };
-template <> struct Dataset::TypeFor<Dataset::kWakeupChannel>    { using Type = uint16_t; };
 template <> struct Dataset::TypeFor<Dataset::kPskc>             { using Type = Pskc; };
 template <> struct Dataset::TypeFor<Dataset::kSecurityPolicy>   { using Type = SecurityPolicy; };
 template <> struct Dataset::TypeFor<Dataset::kChannelMask>      { using Type = uint32_t; };
@@ -788,8 +785,6 @@ template <> inline const Mac::PanId &Dataset::Info::Get<Dataset::kPanId>(void) c
 
 template <> inline const uint16_t &Dataset::Info::Get<Dataset::kChannel>(void) const { return mChannel; }
 
-template <> inline const uint16_t &Dataset::Info::Get<Dataset::kWakeupChannel>(void) const { return mWakeupChannel; }
-
 template <> inline const Pskc &Dataset::Info::Get<Dataset::kPskc>(void) const { return AsCoreType(&mPskc); }
 
 template <> inline const SecurityPolicy &Dataset::Info::Get<Dataset::kSecurityPolicy>(void) const
@@ -802,26 +797,26 @@ template <> inline const uint32_t &Dataset::Info::Get<Dataset::kChannelMask>(voi
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Active and Pending Timestamp
 
-template <> inline void Dataset::Info::Get<Dataset::kActiveTimestamp>(Timestamp &aTimestamp) const
+template <> inline void Dataset::Info::Get<Dataset::kActiveTimestamp>(Timestamp &aComponent) const
 {
-    aTimestamp.SetFrom(mActiveTimestamp);
+    aComponent.SetFrom(mActiveTimestamp);
 }
 
-template <> inline void Dataset::Info::Get<Dataset::kPendingTimestamp>(Timestamp &aTimestamp) const
+template <> inline void Dataset::Info::Get<Dataset::kPendingTimestamp>(Timestamp &aComponent) const
 {
-    aTimestamp.SetFrom(mPendingTimestamp);
+    aComponent.SetFrom(mPendingTimestamp);
 }
 
-template <> inline void Dataset::Info::Set<Dataset::kActiveTimestamp>(const Timestamp &aTimestamp)
+template <> inline void Dataset::Info::Set<Dataset::kActiveTimestamp>(const Timestamp &aComponent)
 {
     GetComponents().MarkAsPresent<kActiveTimestamp>();
-    aTimestamp.ConvertTo(mActiveTimestamp);
+    aComponent.ConvertTo(mActiveTimestamp);
 }
 
-template <> inline void Dataset::Info::Set<Dataset::kPendingTimestamp>(const Timestamp &aTimestamp)
+template <> inline void Dataset::Info::Set<Dataset::kPendingTimestamp>(const Timestamp &aComponent)
 {
     GetComponents().MarkAsPresent<kPendingTimestamp>();
-    aTimestamp.ConvertTo(mPendingTimestamp);
+    aComponent.ConvertTo(mPendingTimestamp);
 }
 
 } // namespace MeshCoP

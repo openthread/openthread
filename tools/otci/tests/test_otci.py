@@ -600,6 +600,7 @@ class TestOTCI(unittest.TestCase):
 
         self.assertEqual('rdn', leader.get_mode())
 
+        leader.set_router_selection_jitter(1)
         leader.thread_start()
         leader.wait(10)
         self.assertEqual('leader', leader.get_state())
@@ -777,6 +778,86 @@ class TestOTCI(unittest.TestCase):
         self.assertFalse(leader.get_ifconfig_state())
 
         leader.close()
+
+    def testCliPosixUnixSocket(self):
+        import time
+        root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
+        posix_cli = os.path.join(root_dir, 'build/posix/src/posix/ot-cli')
+        sim_rcp = os.path.join(root_dir, 'build/simulation/examples/apps/ncp/ot-rcp')
+
+        if not os.path.isfile(posix_cli) or not os.path.isfile(sim_rcp):
+            self.skipTest('ot-cli or ot-rcp binary not built')
+
+        sock_path = f'/tmp/test_otci_rcp_{os.getpid()}.sock'
+        if os.path.exists(sock_path):
+            os.remove(sock_path)
+
+        try:
+            socat_proc = subprocess.Popen([
+                'socat',
+                f'UNIX-LISTEN:{sock_path},fork',
+                f'EXEC:{sim_rcp} 1',
+            ])
+        except FileNotFoundError:
+            self.skipTest('socat is not installed')
+
+        try:
+            for _ in range(50):
+                if os.path.exists(sock_path):
+                    break
+                time.sleep(0.05)
+
+            self.assertTrue(os.path.exists(sock_path))
+
+            node = otci.connect_cli_posix(f'spinel+hdlc+unix://{sock_path}', executable=posix_cli)
+            try:
+                self.assertIn('POSIX', node.version)
+                self.assertIn('SIMULATION', node.get_rcp_version())
+                node.diag_start()
+                node.diag_set_channel(15)
+                self.assertEqual(15, node.diag_get_channel())
+                node.diag_stop()
+            finally:
+                node.close()
+        finally:
+            socat_proc.terminate()
+            socat_proc.wait()
+            if os.path.exists(sock_path):
+                os.remove(sock_path)
+
+    def testAdbSpinelProxyManagerMock(self):
+        from unittest.mock import patch, MagicMock
+        from otci.adb_spinel_proxy import AdbSpinelProxyManager
+
+        fake_sock = f'/tmp/test_adb_spinel_proxy_mock_{os.getpid()}.sock'
+
+        def fake_run(cmd, *args, **kwargs):
+            if 'forward' in cmd and '--remove' not in cmd:
+                with open(fake_sock, 'w') as f:
+                    f.write('')
+            return MagicMock(returncode=0, stdout='', stderr='')
+
+        with patch('subprocess.run', side_effect=fake_run) as mock_run:
+            with AdbSpinelProxyManager(device_serial='TEST_SERIAL_123',
+                                       socket_path=fake_sock,
+                                       auto_setup=True,
+                                       adb_key='/fake/adb/key') as proxy:
+                self.assertEqual(proxy.radio_url, f'spinel+hdlc+unix://{fake_sock}')
+                self.assertTrue(proxy.is_active)
+
+                # Check commands sent
+                cmds = [call.args[0] for call in mock_run.call_args_list]
+                self.assertTrue(any('root' in c for c in cmds))
+                self.assertTrue(
+                    any('setprop' in c and 'debug.thread_network.spinel_proxy' in c and '1' in c for c in cmds))
+                self.assertTrue(any('forward' in c and f'localfilesystem:{fake_sock}' in c for c in cmds))
+
+            self.assertFalse(proxy.is_active)
+            self.assertFalse(os.path.exists(fake_sock))
+            close_cmds = [call.args[0] for call in mock_run.call_args_list]
+            self.assertTrue(any('forward' in c and '--remove' in c for c in close_cmds))
+            self.assertTrue(
+                any('setprop' in c and 'debug.thread_network.spinel_proxy' in c and '0' in c for c in close_cmds))
 
 
 def _setup_default_network(node: OTCI):

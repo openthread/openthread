@@ -131,6 +131,7 @@
  * @defgroup api-seeker                  Seeker
  * @defgroup api-server                  Server
  * @defgroup api-steering-data           Steering Data
+ * @defgroup api-thread-direct           Thread Direct
  *
  * @}
  *
@@ -172,18 +173,6 @@
  *
  * @defgroup api-sntp                    SNTP
  * @defgroup api-verhoeff-checksum       Verhoeff Checksum
- *
- * @}
- *
- * @defgroup api-provisional             Provisional
- * @brief
- *   This module includes the OpenThread provisional APIs. These APIs are not stable and users should use them with
- *   caution.
- *
- * @{
- *
- * @defgroup api-provisional-link        Link
- * @defgroup api-provisional-p2p         Peer-to-Peer
  *
  * @}
  *

@@ -286,7 +286,7 @@ void KeyMaterial::Clear(void)
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     DestroyKey();
-    SetKeyRef(kInvalidKeyRef);
+    SetKeyRefToInvalid();
 #else
     GetKey().Clear();
 #endif
@@ -300,11 +300,11 @@ void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
 
         DestroyKey();
 
-        SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeAes,
-                                                   Crypto::Storage::kKeyAlgorithmAesEcb,
-                                                   (aIsExportable ? Crypto::Storage::kUsageExport : 0) |
-                                                       Crypto::Storage::kUsageEncrypt | Crypto::Storage::kUsageDecrypt,
-                                                   Crypto::Storage::kTypeVolatile, aKey.GetBytes(), Key::kSize));
+        SuccessOrAssert(Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeAes,
+                                                 Crypto::Storage::kKeyAlgorithmAesEcb,
+                                                 (aIsExportable ? Crypto::Storage::kUsageExport : 0) |
+                                                     Crypto::Storage::kUsageEncrypt | Crypto::Storage::kUsageDecrypt,
+                                                 Crypto::Storage::kTypeVolatile, aKey.GetBytes(), Key::kSize));
 
         SetKeyRef(keyRef);
     }
@@ -323,7 +323,7 @@ void KeyMaterial::ExtractKey(Key &aKey) const
     {
         size_t keySize;
 
-        SuccessOrAssert(Crypto::Storage::ExportKey(GetKeyRef(), aKey.m8, Key::kSize, keySize));
+        SuccessOrAssert(Crypto::Storage::ReadKey(GetKeyRef(), aKey.m8, Key::kSize, keySize));
     }
 #else
     aKey = GetKey();
@@ -343,7 +343,7 @@ void KeyMaterial::ConvertToCryptoKey(Crypto::Key &aCryptoKey) const
 void KeyMaterial::DestroyKey(void)
 {
     Crypto::Storage::DestroyKey(GetKeyRef());
-    SetKeyRef(kInvalidKeyRef);
+    SetKeyRefToInvalid();
 }
 #endif
 
@@ -429,45 +429,5 @@ uint8_t DeterminePrevKeyIndex(uint8_t aKeyIndex)
     return prevIndex;
 }
 
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-uint8_t GetWakeupIdLength(WakeupId aWakeupId)
-{
-    uint8_t zeroBytesCount = 0;
-
-    for (int i = static_cast<int>(sizeof(WakeupId)) - 1; i >= 1; --i)
-    {
-        if (((aWakeupId >> (i * kBitsPerByte)) & 0xFF) == 0)
-        {
-            zeroBytesCount++;
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    return sizeof(WakeupId) - zeroBytesCount;
-}
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-void WakeupRequest::SetExtAddress(const ExtAddress &aExtAddress)
-{
-    SetType(kTypeExtAddress);
-    aExtAddress.CopyTo(mShared.mExtAddress.m8);
-}
-
-const ExtAddress &WakeupRequest::GetExtAddress(void) const { return AsCoreType(&mShared.mExtAddress); }
-
-ExtAddress &WakeupRequest::GetExtAddress(void) { return AsCoreType(&mShared.mExtAddress); }
-
-void WakeupRequest::SetType(Type aType) { mType = MapEnum(aType); }
-
-bool WakeupRequest::IsWakeupByExtAddress(void) const { return MapEnum(mType) == kTypeExtAddress; }
-
-bool WakeupRequest::IsWakeupById(void) const { return MapEnum(mType) == kTypeWakeupId; }
-
-bool WakeupRequest::IsWakeupByGroupId(void) const { return MapEnum(mType) == kTypeGroupWakeupId; }
-#endif
 } // namespace Mac
 } // namespace ot

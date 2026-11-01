@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024-2025, The OpenThread Authors.
+  Copyright (c) 2024-2026, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,15 @@ import logging
 
 from bleak import BLEDevice
 
+from ble.ble_stream import BleConnectionClosed
 from ble.ble_stream_secure import BleStreamSecure
 from ble.udp_stream import UdpStream
 from ble import ble_scanner
 from cli.cli import CLI
+from cli.base_commands import connection_closed_helper, disconnect_helper
 from dataset.dataset import ThreadDataset
 from cli.command import CommandResult
+from constants import EVENT_POLL_INTERVAL_SEC, SIMULATION_HOST
 from tlv.tcat_tlv import TcatTLVType
 from tlv.tlv import TLV
 from utils import hexdump_ot, select_device_by_user_input, quit_with_reason
@@ -92,6 +95,8 @@ async def main():
         try:
             result: CommandResult = await cli.evaluate_input(user_input)
             result.pretty_print()
+        except BleConnectionClosed:
+            await connection_closed_helper(cli.context)
         except Exception as e:
             logger.error(e)
             logger.debug(e, exc_info=True)
@@ -112,13 +117,32 @@ async def receive_loop(cli_context: dict):
     while True:
         bless: BleStreamSecure = cli_context['ble_sstream']
         if bless is not None:
-            data = await bless.recv_unsolicited_event()
+            try:
+                data = await bless.recv_unsolicited_event()
+            except BleConnectionClosed:
+                await connection_closed_helper(cli_context)
+                continue
+
             if data:
                 logger.info('Received event data from TCAT Device:\n' + hexdump_ot("Event", data))
                 tlv = TLV.from_bytes(data)
                 validate_unsolicited_tlv(tlv)
                 continue
-        await asyncio.sleep(0.100)
+
+            # The connection can also end without BleConnectionClosed being raised: either the peer
+            # closed TLS gracefully (close-notify), or the BLE link itself dropped.
+            if not bless.is_connected:
+                # Ignore a stream that was already torn down locally (e.g. by the 'disconnect' command)
+                if cli_context['ble_sstream'] is not bless:
+                    continue
+                if bless.close_notify_received:
+                    print('TCAT Device disconnected: the TLS connection was closed by the device.')
+                    await disconnect_helper(cli_context)
+                else:
+                    await connection_closed_helper(cli_context)
+                continue
+
+        await asyncio.sleep(EVENT_POLL_INTERVAL_SEC)
 
 
 def validate_unsolicited_tlv(tlv: TLV):
@@ -144,7 +168,7 @@ async def get_device_by_args(args) -> BLEDevice | UdpStream | None:
         tcat_devices = await ble_scanner.scan_tcat_devices(adapter=args.adapter)
         device = select_device_by_user_input(tcat_devices)
     elif args.simulation:
-        device = UdpStream("127.0.0.1", int(args.simulation))
+        device = UdpStream(SIMULATION_HOST, int(args.simulation))
 
     return device
 

@@ -791,6 +791,7 @@ private:
         kUnspecifiedCipherSuite,
     };
 
+    bool HasCipherSuite(void) const { return mCipherSuite != kUnspecifiedCipherSuite; }
     void RemoveDisconnectedSessions(void);
     void DecremenetRemainingConnectionAttempts(void);
     bool HasNoRemainingConnectionAttempts(void) const;
@@ -922,7 +923,7 @@ public:
          *
          * @param[in] aTransport  The DTLS transport to use for this session.
          */
-        Session(Transport &aTransport)
+        explicit Session(Transport &aTransport)
             : SecureSession(aTransport)
         {
         }

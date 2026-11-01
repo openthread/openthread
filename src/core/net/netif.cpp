@@ -280,6 +280,7 @@ void Netif::SignalMulticastAddressChange(AddressEvent aEvent, const MulticastAdd
         info.mScope        = aAddress.GetAddress().GetScope();
         info.mPreferred    = false;
         info.mMeshLocal    = false;
+        info.mIsLocator    = false;
 
         mAddressCallback.Invoke(&info, aEvent);
     }
@@ -453,6 +454,7 @@ void Netif::SignalUnicastAddressChange(AddressEvent aEvent, const UnicastAddress
         info.mScope        = aAddress.GetScope();
         info.mPreferred    = aAddress.mPreferred;
         info.mMeshLocal    = aAddress.mMeshLocal;
+        info.mIsLocator    = aAddress.mMeshLocal && aAddress.GetAddress().GetIid().IsLocator();
 
         mAddressCallback.Invoke(&info, aEvent);
     }

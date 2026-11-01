@@ -81,9 +81,10 @@ enum
     OT_RADIO_SYMBOL_TIME = 1000000 * 1 / OT_RADIO_SYMBOL_RATE, ///< Symbol duration time in unit of microseconds
     OT_RADIO_TEN_SYMBOLS_TIME = 10 * OT_RADIO_SYMBOL_TIME,     ///< Time for 10 symbols in unit of microseconds
 
-    OT_RADIO_LQI_NONE      = 0,   ///< LQI measurement not supported
-    OT_RADIO_RSSI_INVALID  = 127, ///< Invalid or unknown RSSI value
-    OT_RADIO_POWER_INVALID = 127, ///< Invalid or unknown power value
+    OT_RADIO_LQI_NONE             = 0,         ///< LQI measurement not supported
+    OT_RADIO_RSSI_INVALID         = 127,       ///< Invalid or unknown RSSI value
+    OT_RADIO_POWER_INVALID        = 127,       ///< Invalid or unknown power value in dBm
+    OT_RADIO_POWER_INVALID_IN_MBM = INT16_MAX, ///< Invalid or unknown power value in mBm (0.01 dBm)
 
     OT_RADIO_INVALID_SHORT_ADDR   = 0xfffe, ///< Invalid short address.
     OT_RADIO_BROADCAST_SHORT_ADDR = 0xffff, ///< Broadcast short address.
@@ -132,11 +133,12 @@ enum
     OT_RADIO_CAPS_CSMA_BACKOFF         = 1 << 3,  ///< Radio supports CSMA backoff for frame tx (but no retry).
     OT_RADIO_CAPS_SLEEP_TO_TX          = 1 << 4,  ///< Radio supports direct transition from sleep to TX with CSMA.
     OT_RADIO_CAPS_TRANSMIT_SEC         = 1 << 5,  ///< Radio supports tx security.
-    OT_RADIO_CAPS_TRANSMIT_TIMING      = 1 << 6,  ///< Radio supports tx at specific time.
+    OT_RADIO_CAPS_TRANSMIT_TIMING      = 1 << 6,  ///< Radio supports tx at specific time (using `mTxDelay`).
     OT_RADIO_CAPS_RECEIVE_TIMING       = 1 << 7,  ///< Radio supports rx at specific time.
     OT_RADIO_CAPS_RX_ON_WHEN_IDLE      = 1 << 8,  ///< Radio supports RxOnWhenIdle handling.
     OT_RADIO_CAPS_TRANSMIT_FRAME_POWER = 1 << 9,  ///< Radio supports setting per-frame transmit power.
     OT_RADIO_CAPS_ALT_SHORT_ADDR       = 1 << 10, ///< Radio supports setting alternate short address.
+    OT_RADIO_CAPS_SCHEDULED_TX         = 1 << 11, ///< Radio supports scheduling frame TX (`otPlatRadioScheduleTx()`).
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -186,8 +188,8 @@ typedef struct otExtAddress otExtAddress;
 /**
  * Represents a 64-bit radio time in microseconds referenced to a continuous monotonic local radio clock.
  *
- * This type is returned by `otPlatRadioGetNow()` and is used as the timestamp field (`mTimestamp`) in radio frames
- * (`otRadioFrame`).
+ * This type is returned by `otPlatRadioGetNow()`, used as the target transmission time in `otPlatRadioScheduleTx()`,
+ * and used as the timestamp field (`mTimestamp`) in radio frames (`otRadioFrame`).
  */
 typedef uint64_t otRadioTime64;
 
@@ -249,12 +251,15 @@ typedef enum
 } otRadioKeyType;
 
 /**
- * Represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
+ * Represents the Time IE (Information Element) related information of a radio frame.
+ *
+ * This structure is only used by the experimental Time Synchronization service feature (enabled via
+ * `OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`).
  */
 typedef struct otRadioIeInfo
 {
-    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time.
-    uint8_t mTimeIeOffset;      ///< The Time IE offset from the start of PSDU.
+    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+    uint8_t mTimeIeOffset;      ///< The Time IE offset from the start of PSDU (`0` indicates no Time IE).
     uint8_t mTimeSyncSeq;       ///< The Time sync sequence.
 } otRadioIeInfo;
 
@@ -281,12 +286,31 @@ typedef struct otRadioFrame
         struct
         {
             const otMacKeyMaterial *mAesKey; ///< The key material used for AES-CCM frame security.
-            otRadioIeInfo          *mIeInfo; ///< The pointer to the Header IE(s) related information.
 
             /**
-             * The base time in microseconds for scheduled transmissions
-             * relative to the local radio clock, see `otPlatRadioGetNow` and
-             * `mTxDelay`.
+             * The pointer to the Time IE related information.
+             *
+             * This field is only used when the experimental Time Synchronization feature is enabled via
+             * `OPENTHREAD_CONFIG_TIME_SYNC_ENABLE` and is ignored otherwise.
+             *
+             * When `OPENTHREAD_CONFIG_TIME_SYNC_ENABLE` is enabled, the radio platform MUST provide an
+             * `otRadioIeInfo` structure and set this pointer on the transmit `otRadioFrame` buffer returned to the
+             * OpenThread stack (e.g., via `otPlatRadioGetTransmitBuffer()`). The OpenThread stack populates `*mIeInfo`
+             * when preparing a transmit frame, and the radio platform uses it (when `mTimeIeOffset != 0`) to update
+             * the Time IE in `mPsdu` before transmission.
+             *
+             * When this feature is disabled, this pointer will not be used and may be set to `NULL`.
+             */
+            otRadioIeInfo *mIeInfo;
+
+            /**
+             * The base time in microseconds for timed transmissions relative to the local radio clock (see
+             * `otPlatRadioGetNow()` and `mTxDelay`).
+             *
+             * This field is only applicable when the radio platform supports the `OT_RADIO_CAPS_TRANSMIT_TIMING`
+             * capability and the frame is transmitted via `otPlatRadioTransmit()`. It MUST be ignored when
+             * `OT_RADIO_CAPS_TRANSMIT_TIMING` is not supported or when the frame is scheduled for transmission via
+             * `otPlatRadioScheduleTx()`.
              *
              * If this field is non-zero, `mMaxCsmaBackoffs` should be ignored.
              *
@@ -295,12 +319,15 @@ typedef struct otRadioFrame
             otRadioTime32 mTxDelayBaseTime;
 
             /**
-             * The delay time in microseconds for this transmission referenced
-             * to `mTxDelayBaseTime`.
+             * The delay time in microseconds for a timed transmission referenced to `mTxDelayBaseTime`.
              *
-             * Note: `mTxDelayBaseTime` + `mTxDelay` SHALL point to the point in
-             * time when the end of the SFD will be present at the local
-             * antenna, relative to the local radio clock.
+             * This field is only applicable when the radio platform supports the `OT_RADIO_CAPS_TRANSMIT_TIMING`
+             * capability and the frame is transmitted via `otPlatRadioTransmit()`. It MUST be ignored when
+             * `OT_RADIO_CAPS_TRANSMIT_TIMING` is not supported or when the frame is scheduled for transmission via
+             * `otPlatRadioScheduleTx()`.
+             *
+             * Note: `mTxDelayBaseTime` + `mTxDelay` SHALL point to the point in time when the end of the SFD will be
+             * present at the local antenna, relative to the local radio clock.
              *
              * If this field is non-zero, `mMaxCsmaBackoffs` should be ignored.
              *
@@ -314,22 +341,31 @@ typedef struct otRadioFrame
              * This is applicable and MUST be used when radio platform provides the `OT_RADIO_CAPS_CSMA_BACKOFF` and/or
              * `OT_RADIO_CAPS_TRANSMIT_RETRIES`.
              *
-             * This field MUST be ignored if `mCsmaCaEnabled` is set to `false` (CCA is disabled) or
-             * either `mTxDelayBaseTime` or `mTxDelay` is non-zero (frame transmission is expected at a specific time).
+             * This field MUST be ignored if `mCsmaCaEnabled` is set to `false` (CCA is disabled), if either
+             * `mTxDelayBaseTime` or `mTxDelay` is non-zero (frame transmission is expected at a specific time), or
+             * when the frame is scheduled for transmission via `otPlatRadioScheduleTx()`.
              *
              * It can be set to `0` to skip backoff mechanism (note that CCA MUST still be performed assuming
              * `mCsmaCaEnabled` is `true`).
              */
             uint8_t mMaxCsmaBackoffs;
 
-            uint8_t mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
+            /**
+             * Maximum number of retries allowed after a transmission failure.
+             *
+             * This is applicable when the radio platform provides `OT_RADIO_CAPS_TRANSMIT_RETRIES` and the frame is
+             * transmitted via `otPlatRadioTransmit()`. It MUST be ignored when the frame is scheduled for transmission
+             * via `otPlatRadioScheduleTx()`.
+             */
+            uint8_t mMaxFrameRetries;
 
             /**
              * The RX channel after frame TX is done (after all frame retries - ack received, or timeout, or abort).
              *
              * Radio platforms can choose to fully ignore this. OT stack will make sure to call `otPlatRadioReceive()`
              * with the desired RX channel after a frame TX is done and signaled in `otPlatRadioTxDone()` callback.
-             * Radio platforms that don't provide `OT_RADIO_CAPS_TRANSMIT_RETRIES` must always ignore this.
+             * Radio platforms that don't provide `OT_RADIO_CAPS_TRANSMIT_RETRIES` must always ignore this. This field
+             * MUST also be ignored when the frame is scheduled for transmission via `otPlatRadioScheduleTx()`.
              *
              * This is intended for situations where there may be delay in interactions between OT stack and radio, as
              * an example this is used in RCP/host architecture to make sure RCP switches to PAN channel more quickly.
@@ -380,7 +416,8 @@ typedef struct otRadioFrame
              * must update the frame header (assign counter and CSL IE values) before sending the frame over the air,
              * however if the transmission gets aborted and the frame is never sent over the air (e.g., channel
              * access error) the platform may choose to not update the header. If the platform updates the header,
-             * it must also set this flag before passing the frame back from the `otPlatRadioTxDone()` callback.
+             * it must also set this flag in the frame before invoking the `otPlatRadioTxDone()` or
+             * `otPlatRadioScheduledTxDone()` callback.
              */
             bool mIsHeaderUpdated : 1;
             bool mIsARetx : 1; ///< Indicates whether the frame is a retransmission or not.
@@ -398,7 +435,8 @@ typedef struct otRadioFrame
              * The time of the local radio clock in microseconds when the end of
              * the SFD was present at the local antenna.
              *
-             * The platform should update this field before otPlatRadioTxStarted() is fired for each transmit attempt.
+             * The platform should update this field before `otPlatRadioTxStarted()` is fired for each transmit attempt,
+             * or before `otPlatRadioScheduledTxDone()` is invoked for a scheduled transmission.
              */
             otRadioTime64 mTimestamp;
         } mTxInfo;
@@ -495,6 +533,59 @@ typedef struct otLinkMetrics
 } otLinkMetrics;
 
 /**
+ * Defines the slot durations of the radio availability schedule.
+ */
+typedef enum otRadioAvailabilitySlotDuration
+{
+    OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US  = 0, ///< 625 microseconds.
+    OT_RADIO_AVAILABILITY_SLOT_DURATION_1250_US = 1, ///< 1.25 milliseconds.
+} otRadioAvailabilitySlotDuration;
+
+/**
+ * Defines constants for the radio availability schedule.
+ */
+enum
+{
+    OT_RADIO_AVAILABILITY_MAX_DURATION_US = 60000, ///< The maximum duration of a radio availability schedule (us).
+
+    /**
+     * The maximum size (in bytes) of a radio availability slots bitmap.
+     *
+     * Derived from `OT_RADIO_AVAILABILITY_MAX_DURATION_US` and the shortest slot duration (625 us), i.e., 96 slots.
+     */
+    OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE = (OT_RADIO_AVAILABILITY_MAX_DURATION_US / 625 + 7) / 8,
+};
+
+/**
+ * Represents the radio availability schedule.
+ *
+ * The radio availability schedule is a periodic map of @p mNumSlots slots, each lasting @p mSlotDuration. The schedule
+ * starts at @p mStartTime and repeats every @p mNumSlots slots. The schedule duration (@p mNumSlots multiplied by
+ * @p mSlotDuration) MUST NOT be longer than `OT_RADIO_AVAILABILITY_MAX_DURATION_US`.
+ *
+ * The bitmaps are MSB-first: slot `i` corresponds to bit `7 - (i % 8)` of byte `i / 8`, i.e.,
+ * `(bitmap[i / 8] >> (7 - (i % 8))) & 1`. Only the first @p mNumSlots bits of each bitmap are used. The remaining bits
+ * SHOULD be set to 0 and are ignored by OpenThread.
+ *
+ * In @p mAvailableSlots, a bit value of 1 indicates that the slot is available for Thread, and 0 indicates that it is
+ * unavailable (e.g., occupied by BT or 2.4GHz WiFi).
+ *
+ * In @p mPreferredSlots, a bit value of 1 indicates that the slot is preferred for Thread, and 0 indicates that it is
+ * not preferred. The preferred slots MUST be a subset of the available slots, i.e., a bit MUST be 0 in
+ * @p mPreferredSlots if the corresponding bit is 0 in @p mAvailableSlots. OpenThread treats a slot as preferred only
+ * if it is set in both bitmaps. If there is no preference among the available slots, @p mPreferredSlots MUST be set
+ * to the same value as @p mAvailableSlots.
+ */
+typedef struct otRadioAvailability
+{
+    otRadioTime64                   mStartTime;    ///< Local radio clock time in microseconds when the schedule starts.
+    otRadioAvailabilitySlotDuration mSlotDuration; ///< The duration of each slot.
+    uint8_t                         mNumSlots;     ///< The number of slots. Value 0 indicates always available.
+    uint8_t mAvailableSlots[OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE]; ///< The available radio slots bitmap.
+    uint8_t mPreferredSlots[OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE]; ///< The preferred radio slots bitmap.
+} otRadioAvailability;
+
+/**
  * @}
  */
 
@@ -548,6 +639,9 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
 /**
  * Set the PAN ID for address filtering.
  *
+ * @sa otPlatRadioEnable()
+ * @sa otPlatRadioSetPromiscuous()
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPanId     The IEEE 802.15.4 PAN ID.
  */
@@ -556,6 +650,9 @@ void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanId);
 /**
  * Set the Extended Address for address filtering.
  *
+ * @sa otPlatRadioEnable()
+ * @sa otPlatRadioSetPromiscuous()
+ *
  * @param[in] aInstance    The OpenThread instance structure.
  * @param[in] aExtAddress  A pointer to the IEEE 802.15.4 Extended Address stored in little-endian byte order.
  */
@@ -563,6 +660,9 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 
 /**
  * Set the Short Address for address filtering.
+ *
+ * @sa otPlatRadioEnable()
+ * @sa otPlatRadioSetPromiscuous()
  *
  * @param[in] aInstance      The OpenThread instance structure.
  * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
@@ -846,6 +946,39 @@ otRadioState otPlatRadioGetState(otInstance *aInstance);
 /**
  * Enable the radio.
  *
+ * When the radio is enabled and address filtering is active (i.e., promiscuous mode is disabled; see
+ * `otPlatRadioSetPromiscuous()`), the radio platform is expected to perform the following address filtering behaviors:
+ *
+ * - Accept received Data and MAC Command frames that have no destination address (Destination Addressing Mode =
+ *   `0b00`), in addition to Beacon frames and frames addressed to the broadcast address (`0xffff`) or matching the
+ *   short address (or alternate short address) or extended address configured via `otPlatRadioSetShortAddress()`,
+ *   `otPlatRadioSetAlternateShortAddress()`, and `otPlatRadioSetExtendedAddress()`.
+ * - Check a received frame's Destination PAN ID against the PAN ID configured via `otPlatRadioSetPanId()` (or the
+ *   broadcast PAN ID `0xffff`) only when a Destination PAN ID field is present in the frame. Frames that omit the
+ *   Destination PAN ID field MUST NOT be rejected due to PAN ID mismatch, and the Source PAN ID (if present) MUST NOT
+ *   be checked against the configured PAN ID.
+ * - Thread frames that omit the destination address (Destination Addressing Mode = `0b00`) always have the
+ *   Acknowledgment Request (`AR`) bit set to `0`. Received frames with no destination address (Destination Addressing
+ *   Mode = `0b00`) SHOULD NOT be acknowledged, even if the `AR` bit is set to `1`.
+ *
+ * Address filtering is required by the radio platform for auto-ACK generation. While filtering received frames in the
+ * radio platform before calling `otPlatRadioReceiveDone()` is not strictly required (as the OpenThread `Mac` layer
+ * also performs address filtering on received frames), it is recommended (especially on RCP platforms to avoid
+ * forwarding unaddressed frames over Spinel to the host), and whenever performed by the radio platform, it MUST follow
+ * the rules above.
+ *
+ * @note On some IEEE 802.15.4 radio hardware or drivers (e.g., `nrf_802154`), accepting Data and MAC Command frames
+ * with no destination address (Destination Addressing Mode = `0b00`) requires enabling PAN Coordinator mode
+ * (`macPanCoord = true`). When using such a hardware filter, platform implementations should ensure that it does not
+ * reject frames whose Source PAN ID differs from the configured PAN ID when the Destination PAN ID is omitted, and
+ * should suppress auto-ACK generation for frames with Destination Addressing Mode = `0b00` even when `AR = 1`.
+ *
+ * @sa otPlatRadioSetPanId()
+ * @sa otPlatRadioSetExtendedAddress()
+ * @sa otPlatRadioSetShortAddress()
+ * @sa otPlatRadioSetAlternateShortAddress()
+ * @sa otPlatRadioSetPromiscuous()
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  *
  * @retval OT_ERROR_NONE     Successfully enabled.
@@ -912,34 +1045,107 @@ otError otPlatRadioSleep(otInstance *aInstance);
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
 
 /**
- * Schedule a radio reception window at a specific time and duration.
+ * Schedules a radio reception window at a specific time and duration.
  *
- * After a radio reception is successfully scheduled for a future time and duration, a subsequent call to this
- * function MUST be handled as follows:
+ * This function is an optional platform API used to schedule a future reception window on a specific channel for
+ * features such as Coordinated Sampled Listening (CSL) or Thread Direct.
  *
- * - If the start time of the previously scheduled reception window has not yet been reached, the new call to
- *   `otPlatRadioReceiveAt()` MUST cancel the previous schedule, effectively replacing it.
+ * OpenThread supports two approaches for timed reception:
  *
- * - If the start of the previous window has already passed, the previous receive schedule is already being executed
- *   by the radio and MUST NOT be replaced or impacted. The new call to `otPlatRadioReceiveAt()` would then schedule
- *   a new future receive window. In particular, if the new `otPlatRadioReceiveAt()` call occurs after the start
- *   but while still within the previous reception window, the ongoing reception window MUST NOT be impacted.
+ * - Software-driven (default and recommended):
+ *   OpenThread's `SubMac` layer manages all timed RX internally using software timers and standard
+ *   `otPlatRadioReceive()` and `otPlatRadioSleep()` calls. In this mode, the radio platform does NOT need to implement
+ *   `otPlatRadioReceiveAt()`, and MUST omit the `OT_RADIO_CAPS_RECEIVE_TIMING` capability from `otPlatRadioGetCaps()`.
  *
+ * - Platform-offloaded (optional):
+ *   The radio platform explicitly declares `OT_RADIO_CAPS_RECEIVE_TIMING` via `otPlatRadioGetCaps()` and implements
+ *   `otPlatRadioReceiveAt()` to handle window timing directly in the platform layer or hardware.
+ *
+ * Because OpenThread's built-in `SubMac` software implementation is comprehensive, robust, and fully tested, it is
+ * strongly recommended that radio platform implementers rely on the default software-driven mode and do NOT implement
+ * `otPlatRadioReceiveAt()`, unless there is a clear justification for offloading timed reception to the radio platform.
+ *
+ * If the radio platform implements this function, the following rules and behaviors are expected:
+ *
+ * If this function is called while the radio is disabled (`OT_RADIO_STATE_DISABLED`), the radio platform MUST return
+ * `OT_ERROR_INVALID_STATE`.
+ *
+ * When the radio is enabled, this function can be called from any radio state (`OT_RADIO_STATE_SLEEP`,
+ * `OT_RADIO_STATE_RECEIVE`, or `OT_RADIO_STATE_TRANSMIT`). The radio platform driver MUST handle the scheduling
+ * internally: calling this function merely registers a (future) time window for the radio to sample/receive and MUST
+ * NOT immediately force the radio into Receive mode at the time of the call (unless the window is already active).
+ *
+ * The radio platform MUST execute the scheduled reception as follows:
+ *
+ * - Operational Precedence and Radio Sleep:
+ *   - Timed reception scheduled by this function is only applicable when the radio is in the Sleep state (whether
+ *     the radio is put to sleep explicitly via `otPlatRadioSleep()` or manages sleep state automatically on its own).
+ *   - Any active radio operation, such as transmission (`otPlatRadioTransmit()` or an active scheduled transmission
+ *     from `otPlatRadioScheduleTx()`) or continuous reception (`otPlatRadioReceive()`), takes precedence over timed
+ *     reception.
+ *
+ * - Starting the Reception Window:
+ *   - At the scheduled start time @p aStart, the radio receiver MUST enter Receive mode on channel @p aChannel,
+ *     provided the radio is not busy with another operation. This MUST behave the same as if `otPlatRadioReceive()`
+ *     were called at that time.
+ *   - The OpenThread stack already accounts for and includes any necessary radio ramp-up and receiver settling time
+ *     when computing @p aStart. Therefore, the radio platform driver does not need to adjust @p aStart or schedule
+ *     ramp-up ahead of time.
+ *
+ * - Ending the Reception Window:
+ *   - At the end of the duration (@p aStart + @p aDuration), the radio MUST automatically transition back to
+ *     Sleep unless it is actively receiving a frame.
+ *   - If frame reception has started (e.g., SHR detected) before the duration expires, the radio receiver
+ *     MUST remain on until the frame reception completes (either successfully or with an error) and any
+ *     subsequent acknowledgment transmission is finished, after which the radio transitions to Sleep.
+ *
+ * - Subsequent Schedules and Overlapping Windows:
+ *   - If the start time of a previously scheduled reception window has not yet arrived, a subsequent call to
+ *     `otPlatRadioReceiveAt()` MUST cancel and replace the previous schedule.
+ *   - If a previous reception window has already started and is currently active:
+ *     - A subsequent call to `otPlatRadioReceiveAt()` with a future start time MUST NOT abort or interrupt the
+ *       ongoing reception. The new window is scheduled to start at its specified time.
+ *     - At the start time of the new window (or immediately if its start time has already arrived), the radio
+ *       MUST honor the new window:
+ *       - Channel: If the new window specifies the same channel, reception SHOULD continue seamlessly without
+ *         toggling the receiver state off and on. If the new window specifies a different channel, the radio
+ *         MUST switch to the new channel. However, if the radio has started receiving a frame on the previous
+ *         channel (e.g., SHR detected) or is transmitting an acknowledgment, it MUST complete the frame reception
+ *         and any acknowledgment transmission before switching to the new channel (or transitioning to Sleep
+ *         if the new window has already expired).
+ *       - End time: The reception window MUST end according to the new window (@p aStart + @p aDuration). The
+ *         new window always dictates when reception ends, replacing any previous end time. Note that this
+ *         behavior is common and often used to shrink an ongoing sample window.
+ *   - If a new window starts immediately upon the end of the previous window (back-to-back), the transition
+ *     SHOULD occur seamlessly without cycling the radio through Sleep.
+ *
+ * - Interactions with Sleep and Other Operations:
+ *   - If the radio is busy executing another operation (such as transmission or continuous reception) when the
+ *     scheduled window starts or while it is active, that operation takes precedence. Once that operation completes
+ *     and the radio returns to Sleep, if the scheduled window is still ongoing (before @p aStart + @p aDuration),
+ *     the radio SHOULD start or resume the scheduled timed reception by entering Receive mode on @p aChannel for the
+ *     remaining duration of the window.
+ *   - Calls to `otPlatRadioSleep()` MUST NOT cancel a scheduled reception window, nor abort an ongoing active timed
+ *     reception window. If the radio is already in the Sleep state and performing an active scheduled timed reception,
+ *     subsequent calls to `otPlatRadioSleep()` MUST NOT interrupt or alter its operation.
+ *   - Calls to `otPlatRadioDisable()` MUST immediately abort and cancel any pending (scheduled) or ongoing active
+ *     timed reception window.
+ *
+ * @note While `otPlatRadioGetNow()` returns a 64-bit timestamp (`otRadioTime64`), @p aStart is a 32-bit value
+ * (`otRadioTime32`) representing the lower 32 bits of the radio clock. Radio platform drivers MUST account for
+ * 32-bit roll-over when scheduling and evaluating reception window timing (e.g., determining whether @p aStart has
+ * arrived or @p aStart + @p aDuration has elapsed).
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aChannel   The radio channel on which to receive.
- * @param[in]  aStart     The receive window start time relative to the local
- *                        radio clock, see `otPlatRadioGetNow`. The radio
- *                        receiver SHALL be on and ready to receive the first
- *                        symbol of a frame's SHR at the window start time.
- * @param[in]  aDuration  The receive window duration, in microseconds, as
- *                        measured by the local radio clock. The radio SHOULD be
- *                        turned off (or switched to TX mode if an ACK frame
- *                        needs to be sent) after that duration unless it is
- *                        still actively receiving a frame. In the latter case
- *                        the radio SHALL be kept in reception mode until frame
- *                        reception has either succeeded or failed.
+ * @param[in]  aStart     The receive window start time relative to the local radio clock (see `otPlatRadioGetNow()`),
+ *                        representing the lower 32 bits of the radio clock.
+ * @param[in]  aDuration  The receive window duration in microseconds.
  *
- * @retval OT_ERROR_NONE    Successfully scheduled receive window.
- * @retval OT_ERROR_FAILED  The receive window could not be scheduled. For example, if @p aStart is in the past.
+ * @retval OT_ERROR_NONE           Successfully scheduled receive window.
+ * @retval OT_ERROR_FAILED         The receive window could not be scheduled.
+ * @retval OT_ERROR_INVALID_STATE  The radio is disabled.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid arguments provided (e.g., invalid channel).
  */
 otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration);
 
@@ -1044,6 +1250,292 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
  *                            OT_ERROR_ABORT when transmission was aborted for other reasons.
  */
 extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+/**
+ * Get the radio transmit frame buffer dedicated for scheduled transmissions (`otPlatRadioScheduleTx()`).
+ *
+ * This API requires the radio platform to support the `OT_RADIO_CAPS_SCHEDULED_TX` capability.
+ *
+ * Similar to how `otPlatRadioGetTransmitBuffer()` provides the `otRadioFrame` buffer used for regular transmissions via
+ * `otPlatRadioTransmit()`, this function provides a separate, single `otRadioFrame` buffer used exclusively for
+ * scheduled transmissions via `otPlatRadioScheduleTx()`. Having a dedicated frame buffer allows the OpenThread stack
+ * to prepare and schedule a future timed transmission independently of ongoing or regular transmissions via
+ * `otPlatRadioTransmit()`.
+ *
+ * Frame buffer ownership and lifecycle:
+ * - The OpenThread stack forms the IEEE 802.15.4 frame in this buffer and then calls `otPlatRadioScheduleTx()` to
+ *   schedule its transmission.
+ * - Upon a successful call to `otPlatRadioScheduleTx()` (returning `OT_ERROR_NONE`), the radio platform takes
+ *   ownership of this frame buffer. The OpenThread stack guarantees that it will not modify or access the frame
+ *   buffer or its PSDU content while it is owned by the radio platform.
+ * - Ownership of the frame buffer is released back to the OpenThread stack when:
+ *   1. The radio platform invokes the `otPlatRadioScheduledTxDone()` callback,
+ *   2. A call to `otPlatRadioCancelScheduledTx()` succeeds (returning `OT_ERROR_NONE`), or
+ *   3. The radio is disabled via `otPlatRadioDisable()`.
+ * - Once ownership is released back to OpenThread, the stack may immediately modify the buffer to prepare and
+ *   schedule a new transmission (including directly from within the `otPlatRadioScheduledTxDone()` callback).
+ * - The returned `otRadioFrame` pointer (and its `mPsdu` buffer of at least `OT_RADIO_FRAME_MAX_SIZE` bytes) MUST
+ *   remain valid and constant for the lifetime of @p aInstance (including before `otPlatRadioEnable()` is called).
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @returns A pointer to the scheduled transmit frame buffer.
+ */
+otRadioFrame *otPlatRadioGetScheduledTxFrame(otInstance *aInstance);
+
+/**
+ * Schedule a radio frame transmission at a specific target time.
+ *
+ * This API requires the radio platform to support the `OT_RADIO_CAPS_SCHEDULED_TX` capability. Its primary purpose is
+ * to support Thread Direct, though it may also be used for other time-sensitive transmission use cases in the future.
+ *
+ * The caller forms the IEEE 802.15.4 frame in the buffer provided by `otPlatRadioGetScheduledTxFrame()` before calling
+ * this function to schedule the transmission at @p aTxTime.
+ *
+ * The radio platform MUST execute the scheduled transmission according to the following rules:
+ *
+ * - Target Transmission Time and Strict On-Time Requirement:
+ *   - The radio platform MUST transmit the requested frame at the exact specified time @p aTxTime.
+ *   - @p aTxTime is an `otRadioTime64` value in microseconds relative to the local radio clock (see
+ *     `otPlatRadioGetNow()`).
+ *   - @p aTxTime SHALL point to the exact point in time when the end of the Start of Frame Delimiter (SFD) will be
+ *     present at the local antenna. The radio platform driver MUST account for any necessary radio ramp-up, channel
+ *     switching, Clear Channel Assessment (CCA, if enabled), and SHR (preamble and SFD) transmission durations so that
+ *     the end of the SFD aligns with @p aTxTime.
+ *   - Strict on-time execution (no early or late transmission): It is critical that the frame is transmitted at
+ *     @p aTxTime. If at the target transmission time the radio driver determines that it cannot transmit the frame at
+ *     @p aTxTime (for example, due to Coex denial or hardware unavailability), it MUST NOT transmit the frame earlier
+ *     or later. Instead, it MUST abort the transmission and invoke `otPlatRadioScheduledTxDone()` with
+ *     `OT_ERROR_ABORT` to indicate that the frame was not sent.
+ *   - Past or missed @p aTxTime at schedule time: The OpenThread stack calls `otPlatRadioScheduleTx()` as early as
+ *     possible (as soon as it knows a scheduled transmission is needed), providing the radio platform with ample lead
+ *     time ahead of @p aTxTime (for example, to account for radio ramp-up, Coex requests, etc.).
+ *     However, @p aTxTime may still occasionally be in the past or too close to the current radio time
+ *     `otPlatRadioGetNow()` (for example, if a frame is queued very close to the target slot, or if a blocking
+ *     operation such as a flash re-write stalls execution). In this case, the radio platform MUST NOT transmit the
+ *     frame. `otPlatRadioScheduleTx()` MUST still return `OT_ERROR_NONE` and asynchronously report the failure by
+ *     invoking `otPlatRadioScheduledTxDone()` with `OT_ERROR_ABORT`. The radio platform MUST NOT invoke
+ *     `otPlatRadioScheduledTxDone()` synchronously from within `otPlatRadioScheduleTx()`. If
+ *     `otPlatRadioCancelScheduledTx()` is called before this deferred `OT_ERROR_ABORT` callback is invoked, the radio
+ *     platform MAY either cancel the pending callback and return `OT_ERROR_NONE`, or return `OT_ERROR_BUSY` and
+ *     proceed with invoking the `otPlatRadioScheduledTxDone()` callback.
+ *
+ * - Operational Precedence, Preemption, and State Restoration:
+ *   - A scheduled transmission SHOULD be prioritized over other radio operations when @p aTxTime arrives:
+ *     - Ongoing Receive or Acknowledgment TX: If the radio is in Receive mode and is in the middle of receiving a
+ *       frame (e.g., after SHR detection) or transmitting an acknowledgment for a received frame when the radio needs
+ *       to prepare/transmit for @p aTxTime, the scheduled transmission SHOULD take precedence—the active reception or
+ *       acknowledgment transmission SHOULD be stopped/aborted so that the scheduled transmission goes out on time at
+ *       @p aTxTime. When an ongoing reception or acknowledgment transmission is aborted, the radio platform MAY either
+ *       invoke `otPlatRadioReceiveDone()` with `OT_ERROR_ABORT` or not invoke `otPlatRadioReceiveDone()` at all (if the
+ *       radio platform still delivers a received frame whose acknowledgment transmission was aborted via
+ *       `otPlatRadioReceiveDone()` with `OT_ERROR_NONE`, `mAckedWithFramePending` and `mAckedWithSecEnhAck` MUST be set
+ *       to `false`).
+ *     - Concurrent `otPlatRadioTransmit()`: If the radio is instructed to transmit a frame via `otPlatRadioTransmit()`
+ *       close to or overlapping with a previously scheduled transmission, the scheduled transmission SHOULD take
+ *       precedence and be performed at @p aTxTime. For the conflicting `otPlatRadioTransmit()` operation, the radio
+ *       platform MAY either:
+ *       - Abort the `otPlatRadioTransmit()` operation and invoke `otPlatRadioTxDone()` with `OT_ERROR_ABORT` (so the
+ *         OpenThread stack does not remain blocked waiting for `otPlatRadioTxDone()` and can handle any retries), or
+ *       - Defer the `otPlatRadioTransmit()` operation until after the scheduled transmission completes, provided that
+ *         the `otPlatRadioTransmit()` has not yet started on the air (`otPlatRadioTxStarted()` has not been invoked)
+ *         and is not a timed transmission (`mTxDelay != 0`) whose target time would be missed. If the
+ *         `otPlatRadioTransmit()` has already started on the air or is a timed transmission whose target time would be
+ *         missed, it MUST be aborted via `otPlatRadioTxDone()` with `OT_ERROR_ABORT`.
+ *   - Radio State and Post-Transmission Restoration:
+ *     - If this function is called while the radio is disabled (`OT_RADIO_STATE_DISABLED`), it MUST return
+ *       `OT_ERROR_INVALID_STATE`. Calling `otPlatRadioDisable()` while a scheduled TX is pending or active MUST
+ *       immediately abort and cancel it without invoking `otPlatRadioScheduledTxDone()` (and MUST NOT fail with
+ *       `OT_ERROR_INVALID_STATE` due to the active scheduled TX when the underlying state is `Sleep`).
+ *     - When the radio is enabled, `otPlatRadioScheduleTx()` can be called from any radio state (`Sleep`, `Receive`,
+ *       or `Transmit`). Conversely, subsequent calls to `otPlatRadioSleep()`, `otPlatRadioReceive()`,
+ *       `otPlatRadioReceiveAt()`, or `otPlatRadioTransmit()` while a scheduled TX is pending MUST NOT cancel or alter
+ *       the pending scheduled transmission (only `otPlatRadioCancelScheduledTx()` or `otPlatRadioDisable()` cancels
+ *       it).
+ *     - If `otPlatRadioSleep()` or `otPlatRadioReceive()` is called while the scheduled transmission is actively in
+ *       progress on the air (or waiting for its acknowledgment) at @p aTxTime, the radio platform MUST NOT abort the
+ *       ongoing scheduled transmission and MUST NOT fail the call with `OT_ERROR_BUSY` or `OT_ERROR_INVALID_STATE`.
+ *       Instead, it MUST return `OT_ERROR_NONE`, complete the scheduled transmission, and then transition to the newly
+ *       requested state (`Sleep` or `Receive` on the requested channel).
+ *     - Once the scheduled transmission completes (after transmitting the frame and receiving the acknowledgment or
+ *       timing out when an acknowledgment is requested, or if CCA fails or the transmission is aborted), the radio
+ *       platform MUST automatically return to its target state (the state prior to the scheduled transmission, or any
+ *       updated state requested via `otPlatRadioSleep()` or `otPlatRadioReceive()` while the scheduled transmission
+ *       was pending/active) and resume what it was doing:
+ *       - If the target state is `Receive` on a channel (from `otPlatRadioReceive()`), it MUST return to `Receive` on
+ *         that receive channel (`mRxChannelAfterTxDone` in `otRadioFrame` MUST be ignored).
+ *       - If the target state is `Sleep` with an active timed reception window (from `otPlatRadioReceiveAt()` whose
+ *         window has not yet expired), it MUST return to `Receive` on that window's channel for the remaining duration
+ *         of the window before transitioning back to `Sleep`.
+ *       - If the target state is `Sleep` (and not in an active timed reception window), it MUST return to `Sleep`.
+ *       - If a transmission requested via `otPlatRadioTransmit()` was deferred for the scheduled transmission, the
+ *         radio platform SHOULD proceed with that transmission.
+ *
+ * - Single Active Schedule and Frame Buffer Ownership:
+ *   - At most one scheduled transmission request can be active at any time, using the single `otRadioFrame` provided
+ *     by `otPlatRadioGetScheduledTxFrame()`.
+ *   - After a successful `otPlatRadioScheduleTx()` call (and before it is canceled via `otPlatRadioCancelScheduledTx()`
+ *     or `otPlatRadioDisable()`, or completed via `otPlatRadioScheduledTxDone()`), any new call to
+ *     `otPlatRadioScheduleTx()` MUST be rejected by returning `OT_ERROR_BUSY` without affecting the active schedule.
+ *     The OpenThread stack will generally not call `otPlatRadioScheduleTx()` again until the previous schedule is
+ *     canceled or completed via `otPlatRadioScheduledTxDone()`.
+ *   - Upon a successful `otPlatRadioScheduleTx()` call, the radio platform takes ownership of the frame buffer from
+ *     `otPlatRadioGetScheduledTxFrame()`. The OpenThread stack guarantees that it will not touch or modify the frame
+ *     buffer or its contents while owned by the radio platform.
+ *   - Invoking the `otPlatRadioScheduledTxDone()` callback, a successful `otPlatRadioCancelScheduledTx()` call
+ *     (returning `OT_ERROR_NONE`), or `otPlatRadioDisable()` releases ownership of the frame buffer back to the
+ *     OpenThread stack, allowing the stack to modify the frame again.
+ *
+ * - Handling of `otRadioFrame` (`mTxInfo`) fields:
+ *   - `mTxDelayBaseTime` and `mTxDelay`: MUST be ignored. The target transmission time is specified solely by the
+ *     @p aTxTime parameter.
+ *   - `mCsmaCaEnabled`: Indicates whether CCA MUST be performed before transmitting the frame:
+ *     - When set to `false`, the frame MUST be transmitted at @p aTxTime without performing CCA.
+ *     - When set to `true`, CCA MUST be performed prior to transmission (timed so that the end of the SFD still
+ *       occurs at @p aTxTime). If CCA fails, the radio platform MUST NOT transmit the frame and MUST report
+ *       `OT_ERROR_CHANNEL_ACCESS_FAILURE` via `otPlatRadioScheduledTxDone()`.
+ *   - `mMaxCsmaBackoffs`: MUST always be ignored (treated as `0`). The radio platform MUST NOT perform any CSMA
+ *     backoff for a scheduled transmission.
+ *   - `mMaxFrameRetries`: MUST always be ignored (treated as `0`). A scheduled transmission is a single transmission
+ *     attempt with no retries by the radio platform (the OpenThread stack manages any retransmissions in subsequent
+ *     time slots).
+ *   - `mRxChannelAfterTxDone`: MUST be ignored. Upon completing the scheduled transmission, the radio MUST return to
+ *     its previous state and receive channel (if it was receiving).
+ *   - `mIsARetx` and `mCslPresent`: MUST be ignored.
+ *   - `mTimestamp`: When the frame is transmitted, the radio platform MUST update this field with the local radio
+ *     clock timestamp (in microseconds) when the end of the SFD was present at the local antenna before invoking
+ *     `otPlatRadioScheduledTxDone()`.
+ *   - `mIsHeaderUpdated` and `mIsSecurityProcessed`: Follow their existing behavior as defined for
+ *     `otPlatRadioTransmit()` when `OT_RADIO_CAPS_TRANSMIT_SEC` is supported. When `mIsHeaderUpdated` is `false`, the
+ *     radio platform MUST assign the MAC frame counter and perform security processing when preparing the frame for
+ *     transmission at @p aTxTime (rather than when `otPlatRadioScheduleTx()` is called), ensuring that frame counters
+ *     are used in order on the air if other transmissions or enhanced acknowledgments occur before @p aTxTime and that
+ *     no frame counter is wasted if the scheduled transmission is canceled or aborted before the frame is prepared at
+ *     @p aTxTime.
+ *   - All other fields (`mChannel`, `mAesKey`, `mIeInfo`, `mTxPower`) MUST follow their existing behavior as defined
+ *     for `otPlatRadioTransmit()`.
+ *
+ * - Completion and Callbacks:
+ *   - The radio platform MUST report the outcome of the scheduled transmission using the `otPlatRadioScheduledTxDone()`
+ *     callback.
+ *   - Aside from `OT_ERROR_INVALID_STATE` (when the radio is disabled) and `OT_ERROR_BUSY` (when a previously
+ *     scheduled transmission is still active), `otPlatRadioScheduleTx()` MUST NOT return any other error
+ *     synchronously. Any other runtime failure to schedule or transmit the frame (for example, if `mChannel` on the
+ *     scheduled TX frame is invalid or unsupported) MUST still return `OT_ERROR_NONE` from `otPlatRadioScheduleTx()`
+ *     and be reported asynchronously by invoking `otPlatRadioScheduledTxDone()` with `OT_ERROR_ABORT`.
+ *   - A scheduled transmission MUST NOT invoke `otPlatRadioTxStarted()` or `otPlatRadioTxDone()`. Those callbacks are
+ *     used exclusively for transmissions initiated via `otPlatRadioTransmit()`.
+ *
+ * Why a dedicated scheduled TX API is used (and comparison with `OT_RADIO_CAPS_TRANSMIT_TIMING`):
+ *
+ * - Coexistence (Coex) and Radio Arbitration:
+ *   While the OpenThread stack can track time and schedule radio operations in software, it does not have visibility
+ *   into platform-level radio coexistence (Coex) with other radios sharing the same device or antenna (such as Wi-Fi
+ *   or Bluetooth/BLE). The radio platform driver is responsible for managing Coex arbitration and is therefore in a
+ *   much better position to request appropriate Coex priority ahead of time and ensure the scheduled transmission goes
+ *   out at the exact specified target time @p aTxTime. Similarly, the radio platform can directly preempt ongoing
+ *   radio activity (such as an active frame reception, acknowledgment transmission, or a regular
+ *   `otPlatRadioTransmit()` operation) when @p aTxTime arrives.
+ *
+ * - Differences from `OT_RADIO_CAPS_TRANSMIT_TIMING` (`mTxDelayBaseTime` and `mTxDelay`):
+ *   `OT_RADIO_CAPS_TRANSMIT_TIMING` was originally introduced to support CSL in Thread 1.2 by extending the existing
+ *   `otPlatRadioTransmit()` API using `mTxDelayBaseTime` and `mTxDelay`. That model has several limitations for
+ *   more strict protocols like Thread Direct:
+ *   - Existing vendor implementations of `OT_RADIO_CAPS_TRANSMIT_TIMING` vary in their behavior when the target
+ *     transmission time is missed (for example, some implementations still transmit the frame after a delay even if
+ *     the target time has passed). While a slightly delayed transmission may still fall within a peer's CSL sample
+ *     window, transmitting late or outside the designated time slot in Thread Direct could result in unpredictable
+ *     failures. `otPlatRadioScheduleTx()` defines strict, explicit requirements on timing accuracy, operational
+ *     precedence, and missed-target handling.
+ *   - `otPlatRadioTransmit()` is a blocking state-transition operation: once called, the OpenThread stack must wait
+ *     for `otPlatRadioTxDone()` before it can issue any other transmit, receive, or sleep commands to the radio (which
+ *     also forces the stack to wait until just before the target time to issue a timed `otPlatRadioTransmit()` so the
+ *     radio is not tied up prematurely). In contrast, `otPlatRadioScheduleTx()` schedules a future transmission using a
+ *     dedicated frame buffer as soon as the stack knows a scheduled transmission is needed—allowing the radio to
+ *     continue other operations in the meantime and supporting explicit cancellation via
+ *     `otPlatRadioCancelScheduledTx()`.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aTxTime    The target transmission time (end of SFD at the local antenna) in microseconds relative to the
+ *                       local radio clock (see `otPlatRadioGetNow()`).
+ *
+ * @retval OT_ERROR_NONE           Successfully scheduled the frame transmission.
+ * @retval OT_ERROR_BUSY           A previously scheduled transmission is still active.
+ * @retval OT_ERROR_INVALID_STATE  The radio is disabled.
+ */
+otError otPlatRadioScheduleTx(otInstance *aInstance, otRadioTime64 aTxTime);
+
+/**
+ * Cancel a previously scheduled transmission.
+ *
+ * This API requires the radio platform to support the `OT_RADIO_CAPS_SCHEDULED_TX` capability.
+ *
+ * - If there is no pending scheduled transmission (e.g., none was scheduled, or a previous schedule was already
+ *   canceled or completed), calling this function MUST take no action and return `OT_ERROR_NONE`.
+ * - If a scheduled transmission is pending and can still be aborted before transmission starts on the air, the radio
+ *   platform MUST cancel it, release ownership of the scheduled TX frame buffer (`otPlatRadioGetScheduledTxFrame()`)
+ *   back to the OpenThread stack, and return `OT_ERROR_NONE`. The radio platform MUST NOT invoke
+ *   `otPlatRadioScheduledTxDone()` for a canceled transmission.
+ * - When `otPlatRadioCancelScheduledTx()` returns `OT_ERROR_NONE`, the OpenThread stack immediately reclaims
+ *   ownership of the scheduled TX frame buffer and may immediately prepare a new frame in that buffer and call
+ *   `otPlatRadioScheduleTx()` to schedule a new transmission.
+ * - If the radio platform cannot cancel the scheduled transmission (for example, because the transmission has already
+ *   started and is currently in progress on the air or waiting for an acknowledgment, or because an `OT_ERROR_ABORT`
+ *   completion is already queued to be reported), it MUST return `OT_ERROR_BUSY`. In this case:
+ *   - The scheduled transmission is NOT canceled, and the radio platform retains ownership of the scheduled TX frame
+ *     buffer.
+ *   - The radio platform MUST subsequently report the outcome of the transmission via the
+ *     `otPlatRadioScheduledTxDone()` callback.
+ *   - The OpenThread stack will wait until `otPlatRadioScheduledTxDone()` is invoked before modifying the scheduled TX
+ *     frame buffer or scheduling a new transmission.
+ * - Note that if a deferred `OT_ERROR_ABORT` callback is pending (e.g., due to a past/missed target time or Coex
+ *   denial), the radio platform MAY handle `otPlatRadioCancelScheduledTx()` in whichever way it prefers: it may either
+ *   cancel the pending callback and return `OT_ERROR_NONE`, or return `OT_ERROR_BUSY` and let the
+ *   `otPlatRadioScheduledTxDone()` callback be invoked.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @retval OT_ERROR_NONE  Successfully canceled the scheduled transmission (or no scheduled transmission was pending).
+ * @retval OT_ERROR_BUSY  The scheduled transmission has already started and could not be canceled.
+ */
+otError otPlatRadioCancelScheduledTx(otInstance *aInstance);
+
+/**
+ * The radio driver calls this function to notify OpenThread that a scheduled transmission (initiated via
+ * `otPlatRadioScheduleTx()`) has completed, providing both the transmission outcome and, if applicable, the received
+ * acknowledgment frame.
+ *
+ * This callback is used when the radio platform provides the `OT_RADIO_CAPS_SCHEDULED_TX` capability.
+ *
+ * When the radio provides the `OT_RADIO_CAPS_TRANSMIT_SEC` capability, the radio platform layer updates the scheduled
+ * TX frame (`otPlatRadioGetScheduledTxFrame()`) with the security frame counter and key index values maintained by the
+ * radio (following the same rules as `otPlatRadioTxDone()`).
+ *
+ * Frame buffer ownership and re-entrancy:
+ * - Invoking this callback transfers ownership of the scheduled TX frame buffer (`otPlatRadioGetScheduledTxFrame()`)
+ *   from the radio platform back to the OpenThread stack.
+ * - Importantly, from within the `otPlatRadioScheduledTxDone()` callback itself, the OpenThread stack may immediately
+ *   modify the scheduled TX frame buffer and call `otPlatRadioScheduleTx()` to schedule a new transmission. The radio
+ *   platform implementation MUST support `otPlatRadioScheduleTx()` being called directly from within this callback.
+ *
+ * @note This function should be called by the same thread that executes all of the other OpenThread code. It should
+ *       not be called by an ISR or any other task.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aAckFrame  A pointer to the received ACK frame, or `NULL` if no ACK was received.
+ * @param[in] aError     `OT_ERROR_NONE` when the frame was transmitted at the target time (and an Ack was received if
+ *                       Ack was requested in the MAC header),
+ *                       `OT_ERROR_NO_ACK` when the frame was transmitted at the target time but no Ack was received,
+ *                       `OT_ERROR_CHANNEL_ACCESS_FAILURE` when transmission at the target time could not take place
+ *                       due to activity on the channel (CCA failure when `mCsmaCaEnabled` is `true`),
+ *                       `OT_ERROR_ABORT` when the frame could not be transmitted at the exact target time (e.g., due
+ *                       to Coex denial or missed target time) or the transmission was aborted for other reasons.
+ */
+extern void otPlatRadioScheduledTxDone(otInstance *aInstance, otRadioFrame *aAckFrame, otError aError);
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 /**
  * Return a recent RSSI measurement when the radio is in receive state.
@@ -1445,8 +1937,8 @@ otError otPlatRadioClearCalibratedPowers(otInstance *aInstance);
  * as possible to the @p aTargetPower. If the @p aTargetPower is lower than the minimum output power supported
  * by the platform, the output power should be set to the minimum output power supported by the platform.  If the
  * @p aTargetPower is higher than the maximum output power supported by the platform, the output power should be
- * set to the maximum output power supported by the platform. If the @p aTargetPower is set to `INT16_MAX`, the
- * corresponding channel is disabled.
+ * set to the maximum output power supported by the platform. If the @p aTargetPower is set to
+ * `OT_RADIO_POWER_INVALID_IN_MBM`, the corresponding channel is disabled.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aChannel      The radio channel.
@@ -1484,6 +1976,41 @@ extern otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
                                              uint8_t     aChannel,
                                              uint8_t    *aRawPowerSetting,
                                              uint16_t   *aRawPowerSettingLength);
+
+/**
+ * The radio driver calls this function to notify OpenThread that the radio availability has changed.
+ *
+ * When Thread shares the same radio chip with BT or 2.4GHz WiFi, the radio driver knows when BT or WiFi will occupy
+ * the radio. The radio driver calls this function to notify OpenThread, which then retrieves the current schedule via
+ * `otPlatRadioGetAvailability()`. The radio availability schedule is intended to be used for Thread Direct
+ * scheduling. OpenThread does not use it to perform general radio coexistence.
+ *
+ * The radio driver should call this function once the radio is enabled (see `otPlatRadioEnable()`) to report the
+ * initial radio availability schedule, and whenever the radio availability schedule changes thereafter.
+ *
+ * A radio driver that calls this function MUST implement `otPlatRadioGetAvailability()`.
+ *
+ * @note This function should be called by the same thread that executes all of the other OpenThread code. It should
+ *       not be called by ISR or any other task.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ */
+extern void otPlatRadioAvailabilityUpdated(otInstance *aInstance);
+
+/**
+ * Gets the current radio availability schedule.
+ *
+ * OpenThread (the caller) provides the `otRadioAvailability` structure pointed to by @p aAvailability, and the radio
+ * driver populates all of its fields, including copying the bitmaps into it. OpenThread owns the structure, so the
+ * radio driver does not need to keep any buffer valid after this function returns.
+ *
+ * @param[in]   aInstance      The OpenThread instance structure.
+ * @param[out]  aAvailability  A pointer to an `otRadioAvailability` structure to populate.
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the radio availability schedule.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  The radio driver does not support reporting radio availability.
+ */
+otError otPlatRadioGetAvailability(otInstance *aInstance, otRadioAvailability *aAvailability);
 
 /**
  * @}

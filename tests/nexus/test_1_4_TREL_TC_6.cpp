@@ -65,14 +65,11 @@ static char sTrelInstanceName[Dns::Name::kMaxNameSize];
  */
 static void HandleBrowseResult(otInstance *aInstance, const otPlatDnssdBrowseResult *aResult)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     if (aResult->mTtl > 0)
     {
-        // Save the instance name if it is not from Eth_1 itself.
-        if (!StringEndsWith(aResult->mServiceInstance,
-                            Node::From(aInstance).Get<Mac::Mac>().GetExtAddress().ToString().AsCString()))
-        {
-            IgnoreError(StringCopy(sTrelInstanceName, aResult->mServiceInstance));
-        }
+        IgnoreError(StringCopy(sTrelInstanceName, aResult->mServiceInstance));
     }
 }
 
@@ -102,7 +99,7 @@ void Test_1_4_TREL_TC_6(void)
     br.SetName("BR_DUT");
     eth1.SetName("Eth_1");
 
-    eth1.mTrel.Disable();
+    eth1.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
 
     nexus.AdvanceTime(0);
 

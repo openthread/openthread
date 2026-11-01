@@ -41,6 +41,7 @@
 #include "common/array.hpp"
 #include "common/owning_list.hpp"
 #include "instance/instance.hpp"
+#include "net/ip6_address.hpp"
 #include "thread/key_manager.hpp"
 
 namespace ot {
@@ -117,6 +118,7 @@ public:
 
     void UpdateNextAlarmMilli(const Alarm &aAlarm);
     void UpdateNextAlarmMicro(const Alarm &aAlarm);
+    void UpdateNextScheduledTx(const Radio &aRadio);
     void MarkPendingAction(void) { mPendingAction = true; }
 
     Node *FindNodeByAddress(const Ip6::Address &aAddress);
@@ -138,6 +140,12 @@ private:
         kSendAckFramePending,
     };
 
+    enum TxType : uint8_t
+    {
+        kRegularTx,
+        kScheduledTx,
+    };
+
     struct IcmpEchoResponseContext
     {
         IcmpEchoResponseContext(Node &aNode, uint16_t aIdentifier);
@@ -156,9 +164,11 @@ private:
     };
 
     TestVar &NewTestVar(const char *aName);
+    void     UpdateLowpanContexts(Node &aNode);
 
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);
+    void ProcessRadioTx(Node &aNode, Radio::Frame &aTxFrame, TxType aTxType);
     void ProcessInfraIf(Node &aNode);
 
     static void HandleIcmpResponse(void                *aContext,
@@ -173,6 +183,7 @@ private:
     Pcap                  mPcap;
     Array<NetworkKey, 16> mNetworkKeys;
     Array<TestVar, 128>   mTestVars;
+    Ip6::Prefix           mLowpanContexts[16];
     uint16_t              mCurNodeId;
     bool                  mPendingAction;
     bool                  mSaveNodeLogs;

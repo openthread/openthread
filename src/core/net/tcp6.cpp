@@ -807,8 +807,6 @@ exit:
     {
         StopProcessingSignals(aEndpoint);
     }
-
-    return;
 }
 
 Error Tcp::BsdErrorToOtError(int aBsdError)

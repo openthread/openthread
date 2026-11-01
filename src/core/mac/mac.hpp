@@ -77,12 +77,6 @@ namespace Mac {
 constexpr uint16_t kScanDurationDefault = OPENTHREAD_CONFIG_MAC_SCAN_DURATION; ///< Duration per channel (in msec).
 
 /**
- * Specifies the number of microseconds ahead of time that the MAC layer should deliver a CSL frame to the sub-MAC
- * layer.
- */
-constexpr uint16_t kCslRequestAhead = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US;
-
-/**
  * Defines the function pointer which is called during an Energy Scan when the scan result for a channel is
  * ready or when the scan completes.
  */
@@ -200,13 +194,6 @@ public:
      * Requests `Mac` to start a CSL TX operation.
      */
     void RequestCslFrameTransmission(void);
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    /**
-     * Requests `Mac` to start a wake-up frame transmission.
-     */
-    void RequestWakeupFrameTransmission(void);
 #endif
 
     /**
@@ -549,15 +536,6 @@ public:
     void SetCslPeriod(uint16_t aPeriod);
 
     /**
-     * This method converts a given CSL period in units of 10 symbols to microseconds.
-     *
-     * @param[in] aPeriodInTenSymbols   The CSL period in unit of 10 symbols.
-     *
-     * @returns The converted CSL period value in microseconds corresponding to @p aPeriodInTenSymbols.
-     */
-    static uint32_t CslPeriodToUsec(uint16_t aPeriodInTenSymbols);
-
-    /**
      * Indicates whether CSL is started at the moment.
      *
      * @retval TRUE   If CSL is enabled.
@@ -632,68 +610,6 @@ public:
      */
     Error GetRegion(uint16_t &aRegionCode) const;
 
-    /**
-     * Gets the wake-up channel.
-     *
-     * @returns wake-up channel.
-     */
-    uint8_t GetWakeupChannel(void) const { return mWakeupChannel; }
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    /**
-     * Sets the wake-up channel.
-     *
-     * @param[in]  aChannel  The wake-up channel.
-     *
-     * @retval kErrorNone          Successfully set the wake-up channel.
-     * @retval kErrorInvalidArgs   The @p aChannel is not in the supported channel mask.
-     */
-    Error SetWakeupChannel(uint8_t aChannel);
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    /**
-     * Gets the wake-up listen parameters.
-     *
-     * @param[out]  aInterval  A reference to return the wake-up listen interval in microseconds.
-     * @param[out]  aDuration  A reference to return the wake-up listen duration in microseconds.
-     */
-    void GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const;
-
-    /**
-     * Sets the wake-up listen parameters.
-     *
-     * The listen interval must be greater than the listen duration.
-     * The listen duration must be greater or equal than `Radio::kMinWakeupListenDuration`.
-     *
-     * @param[in]  aInterval  The wake-up listen interval in microseconds.
-     * @param[in]  aDuration  The wake-up listen duration in microseconds.
-     *
-     * @retval kErrorNone          Successfully set the wake-up listen parameters.
-     * @retval kErrorInvalidArgs   Configured listen interval is not greater than listen duration.
-     */
-    Error SetWakeupListenParameters(uint32_t aInterval, uint32_t aDuration);
-
-    /**
-     * Enables/disables listening for wake-up frames.
-     *
-     * @param[in]  aEnable  TRUE to enable listening for wake-up frames, FALSE otherwise
-     *
-     * @retval kErrorNone          Successfully enabled/disabled listening for wake-up frames.
-     * @retval kErrorInvalidArgs   Configured listen interval is not greater than listen duration.
-     * @retval kErrorInvalidState  Could not enable/disable listening for wake-up frames.
-     */
-    Error SetWakeupListenEnabled(bool aEnable);
-
-    /**
-     * Returns whether listening for wake-up frames is enabled.
-     *
-     * @retval TRUE   If listening for wake-up frames is enabled.
-     * @retval FALSE  If listening for wake-up frames is not enabled.
-     */
-    bool IsWakeupListenEnabled(void) const { return mWakeupListenEnabled; }
-#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 
@@ -707,11 +623,6 @@ private:
     static constexpr uint8_t kDefaultMaxFrameRetriesIndirect = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT;
     static constexpr uint8_t kMaxFrameRetriesCsl             = 0;
     static constexpr uint8_t kTxNumBcast                     = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST;
-
-    static constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
-
-    static constexpr uint32_t kDefaultWedListenInterval = 1000000;
-    static constexpr uint32_t kDefaultWedListenDuration = 8000;
 
     enum Operation : uint8_t
     {
@@ -727,9 +638,6 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
-#endif
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-        kOperationTransmitWakeup,
 #endif
     };
 
@@ -763,17 +671,21 @@ private:
     // Callbacks from `SubMac` or `Trel::Link`
     void HandleReceivedFrame(RxFrame *aFrame, Error aError);
     void RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel);
-    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
-    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+    void RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
+                                   Error                     aError,
+                                   uint8_t                   aRetryCount,
+                                   bool                      aWillRetx);
+    void HandleTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError);
     void EnergyScanDone(int8_t aEnergyScanMaxRssi);
 
-    Error ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    Error ProcessReceiveSecurity(RxFrame::ParseInfo &aFrameInfo, const Address &aSrcAddr, Neighbor *aNeighbor);
     void  ProcessTransmitSecurity(TxFrame &aFrame);
+    void  ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    Error ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
+    Error ProcessEnhAckSecurity(TxFrame::ParseInfo &aTxFrameInfo, RxFrame::ParseInfo &aAckFrameInfo);
 #endif
-    const KeyMaterial *DetermineMode1Key(const Frame &aFrame) const;
-    const KeyMaterial *DetermineMode1KeyAndSequence(const Frame &aFrame, uint32_t &aKeySequence) const;
+    const KeyMaterial *DetermineMode1Key(const Frame::ParseInfo &aFrameInfo) const;
+    const KeyMaterial *DetermineMode1KeyAndSequence(const Frame::ParseInfo &aFrameInfo, uint32_t &aKeySequence) const;
 
     void     UpdateIdleMode(void);
     bool     IsPending(Operation aOperation) const { return mPendingOperations & (1U << aOperation); }
@@ -788,27 +700,31 @@ private:
     bool     ShouldSendBeacon(void) const;
     bool     IsJoinable(void) const;
     void     BeginTransmit(void);
+    void     HandleTxFramePrepFailed(TxFrames &aTxFrames);
     Error    FilterDestShortAddress(ShortAddress aDestAddress) const;
-    void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame);
-    bool     HandleMacCommand(RxFrame &aFrame);
+    void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame::ParseInfo &aRxFrameInfo);
+    void     HandleMacCommand(RxFrame::ParseInfo &aFrameInfo);
     void     HandleTimer(void);
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    Error ProcessTxDone(TxFrame &aFrame, RxFrame *aAckFrame, Error &aError);
+    Error ProcessTxDone(TxFrame::ParseInfo &aFrameInfo, RxFrame::ParseInfo &aAckFrameInfo, Error &aError);
 #endif
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    Error ProcessMultiRadioTxDone(TxFrame &aFrame, Error &aError);
+    Error ProcessMultiRadioTxDone(TxFrame::ParseInfo &aFrameInfo, Error &aError);
 #endif
 
     Error CanScan(void) const;
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
     void  PerformActiveScan(void);
-    void  ReportActiveScanResult(const RxFrame *aBeaconFrame);
+    void  ReportActiveScanResult(const RxFrame::ParseInfo *aBeaconFrameInfo);
     void  PerformEnergyScan(void);
     void  ReportEnergyScanResult(int8_t aRssi);
 
-    void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
-    void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
+    void LogFrameRxFailure(const RxFrame::ParseInfo &aFrameInfo, Error aError) const;
+    void LogFrameTxFailure(const TxFrame::ParseInfo &aFrameInfo,
+                           Error                     aError,
+                           uint8_t                   aRetryCount,
+                           bool                      aWillRetx) const;
     void LogBeacon(const char *aActionText) const;
     void LogOperation(OperationAction aAction, Operation aOperation) const;
 
@@ -816,17 +732,14 @@ private:
     static const char *OperationActionToString(OperationAction aAction);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
+    void ProcessCsl(const RxFrame::ParseInfo &aFrameInfo, const Address &aSrcAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     void UpdateCslParameters(void);
     void UpdateCslState(void);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
-#endif
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    void UpdateWakeupListening(void);
+    void ProcessEnhAckProbing(const RxFrame::ParseInfo &aFrameInfo, const Neighbor &aNeighbor);
 #endif
 
     using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
@@ -845,9 +758,6 @@ private:
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     bool mShouldDelaySleep : 1;
     bool mDelayingSleep : 1;
-#endif
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    bool mWakeupListenEnabled : 1;
 #endif
     Operation   mOperation;
     uint16_t    mPendingOperations;
@@ -871,11 +781,6 @@ private:
     // When Mac::mCslChannel is 0, it indicates that CSL channel has not been specified by the upper layer.
     uint8_t  mCslChannel;
     uint16_t mCslPeriod;
-#endif
-    uint8_t mWakeupChannel;
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    uint32_t mWakeupListenInterval;
-    uint32_t mWakeupListenDuration;
 #endif
     union
     {

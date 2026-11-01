@@ -224,16 +224,6 @@ typedef struct otThreadParentResponseInfo
 typedef void (*otDetachGracefullyCallback)(void *aContext);
 
 /**
- * Informs the application about the result of waking a Wake-up End Device.
- *
- * @param[in] aError   OT_ERROR_NONE    Indicates that the Wake-up End Device has been added as a neighbor.
- *                     OT_ERROR_FAILED  Indicates that the Wake-up End Device has not received a wake-up frame, or it
- *                                      has failed the MLE procedure.
- * @param[in] aContext A pointer to application-specific context.
- */
-typedef void (*otWakeupCallback)(otError aError, void *aContext);
-
-/**
  * Starts Thread protocol operation.
  *
  * The interface must be up when calling this function.
@@ -715,6 +705,25 @@ otError otThreadBecomeChild(otInstance *aInstance);
 otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo);
 
 /**
+ * Gets the neighbor information for a neighbor with a given RLOC16.
+ *
+ * This is a direct lookup alternative to iterating the whole neighbor table with `otThreadGetNextNeighborInfo()`
+ * when the RLOC16 of the neighbor is already known (e.g., from the router table).
+ *
+ * Only neighbors in a valid state are considered. On a router or leader, the lookup covers children and neighboring
+ * routers. On a child, it covers the parent. On an FTD child, it also covers neighboring routers with which the child
+ * has established a link.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aRloc16    The RLOC16 of the neighbor.
+ * @param[out] aInfo      A pointer to output the neighbor information.
+ *
+ * @retval OT_ERROR_NONE        Successfully found the neighbor and retrieved its information in @p aInfo.
+ * @retval OT_ERROR_NOT_FOUND   No valid neighbor with @p aRloc16 exists in the neighbor table.
+ */
+otError otThreadGetNeighborInfoByRloc16(otInstance *aInstance, uint16_t aRloc16, otNeighborInfo *aInfo);
+
+/**
  * Get the device role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -1099,36 +1108,6 @@ void otThreadSetStoreFrameCounterAhead(otInstance *aInstance, uint32_t aStoreFra
  * @returns The current store frame counter ahead.
  */
 uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance);
-
-/**
- * Attempts to wake a Wake-up End Device.
- *
- * Requires `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` to be enabled.
- *
- * The wake-up starts with transmitting a wake-up frame sequence to the Wake-up End Device.
- * During the wake-up sequence, and for a short time after the last wake-up frame is sent, the Wake-up Coordinator keeps
- * its receiver on to be able to receive an initial mesh link establishment message from the WED.
- *
- * @warning The functionality implemented by this function is still in the design phase.
- *          Consequently, the prototype and semantics of this function are subject to change.
- *
- * @param[in] aInstance         A pointer to an OpenThread instance.
- * @param[in] aWedAddress       The extended address of the Wake-up End Device.
- * @param[in] aWakeupIntervalUs An interval between consecutive wake-up frames (in microseconds).
- * @param[in] aWakeupDurationMs Duration of the wake-up sequence (in milliseconds).
- * @param[in] aCallback         A pointer to function that is called when the wake-up succeeds or fails.
- * @param[in] aCallbackContext  A pointer to callback application-specific context.
- *
- * @retval OT_ERROR_NONE          Successfully started the wake-up.
- * @retval OT_ERROR_INVALID_STATE Another attachment request is still in progress.
- * @retval OT_ERROR_INVALID_ARGS  The wake-up interval or duration are invalid.
- */
-otError otThreadWakeup(otInstance         *aInstance,
-                       const otExtAddress *aWedAddress,
-                       uint16_t            aWakeupIntervalUs,
-                       uint16_t            aWakeupDurationMs,
-                       otWakeupCallback    aCallback,
-                       void               *aCallbackContext);
 
 /**
  * @}

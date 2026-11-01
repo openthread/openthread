@@ -37,6 +37,7 @@
 #include "nexus_radio_model.hpp"
 #include "thread/child_table.hpp"
 #include "thread/mle.hpp"
+#include "thread/network_data_leader.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -57,6 +58,7 @@ Core::Core(void)
     sCore  = this;
     sInUse = true;
 
+    ClearAllBytes(mLowpanContexts);
     mNextAlarmTime = NumericLimits<uint64_t>::kMax;
 
     pcapFile = getenv("OT_NEXUS_PCAP_FILE");
@@ -271,6 +273,35 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
     }
     fprintf(file, "  },\n");
 
+    for (Node &node : mNodes)
+    {
+        UpdateLowpanContexts(node);
+    }
+
+    fprintf(file, "  \"lowpan_contexts\": {\n");
+    {
+        bool first = true;
+
+        for (uint8_t cid = 1; cid < GetArrayLength(mLowpanContexts); cid++)
+        {
+            const Ip6::Prefix &prefix = mLowpanContexts[cid];
+
+            if (prefix.GetLength() == 0)
+            {
+                continue;
+            }
+
+            fprintf(file, "%s    \"%u\": \"%s\"", first ? "" : ",\n", cid, prefix.ToString().AsCString());
+            first = false;
+        }
+
+        if (!first)
+        {
+            fprintf(file, "\n");
+        }
+    }
+    fprintf(file, "  },\n");
+
     fprintf(file, "  \"extra_vars\": {\n");
     if (leaderNode != nullptr)
     {
@@ -297,6 +328,20 @@ exit:
 }
 
 void Core::AddNetworkKey(const NetworkKey &aKey) { SuccessOrQuit(mNetworkKeys.PushBack(aKey)); }
+
+void Core::UpdateLowpanContexts(Node &aNode)
+{
+    NetworkData::Iterator          iterator = NetworkData::kIteratorInit;
+    NetworkData::LowpanContextInfo contextInfo;
+
+    while (aNode.Get<NetworkData::Leader>().GetNext(iterator, contextInfo) == kErrorNone)
+    {
+        if ((contextInfo.mContextId >= 1) && (contextInfo.mContextId < GetArrayLength(mLowpanContexts)))
+        {
+            mLowpanContexts[contextInfo.mContextId] = AsConst(contextInfo).GetPrefix();
+        }
+    }
+}
 
 Core::TestVar &Core::NewTestVar(const char *aName)
 {
@@ -513,10 +558,13 @@ exit:
 
 void Core::HandleStateChanged(otChangedFlags aFlags, void *aContext)
 {
-    OT_UNUSED_VARIABLE(aFlags);
-
     Core &core = Core::Get();
     Node *node = static_cast<Node *>(aContext);
+
+    if ((node != nullptr) && ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0))
+    {
+        core.UpdateLowpanContexts(*node);
+    }
 
     VerifyOrExit(!core.mObservers.IsEmpty() && node != nullptr);
 
@@ -646,6 +694,16 @@ void Core::UpdateNextAlarmMicro(const Alarm &aAlarm)
     }
 }
 
+void Core::UpdateNextScheduledTx(const Radio &aRadio)
+{
+    if (aRadio.mScheduledTxPending)
+    {
+        uint64_t txTime = Max(aRadio.mScheduledTxTime, mNow);
+
+        mNextAlarmTime = Min(mNextAlarmTime, txTime);
+    }
+}
+
 bool Core::IsUiConnected(void) const
 {
     bool connected = false;
@@ -665,6 +723,7 @@ bool Core::IsUiConnected(void) const
 void Core::Reset(void)
 {
     mNodes.Clear();
+    ClearAllBytes(mLowpanContexts);
     mCurNodeId     = 0;
     mNow           = 0;
     mNextAlarmTime = NumericLimits<uint64_t>::kMax;
@@ -689,6 +748,7 @@ void Core::AdvanceTime(uint32_t aDuration)
             Process(node);
             UpdateNextAlarmMilli(node.mAlarmMilli);
             UpdateNextAlarmMicro(node.mAlarmMicro);
+            UpdateNextScheduledTx(node.mRadio);
         }
 
         if (!mPendingAction)
@@ -722,30 +782,49 @@ void Core::Process(Node &aNode)
 
 void Core::ProcessRadio(Node &aNode)
 {
-    Mac::Address dstAddr;
-    uint16_t     dstPanId;
-    bool         ackRequested;
-    AckMode      ackMode = kNoAck;
-    Node        *ackNode = nullptr;
-
-    VerifyOrExit(aNode.mRadio.mState == Radio::kStateTransmit);
-
-    if (aNode.mRadio.mTxFrame.GetDstAddr(dstAddr) != kErrorNone)
+    if (aNode.mRadio.mScheduledTxPending && (mNow >= aNode.mRadio.mScheduledTxTime))
     {
-        dstAddr.SetNone();
+        aNode.mRadio.mScheduledTxPending = false;
+
+        if (mNow > aNode.mRadio.mScheduledTxTime)
+        {
+            otPlatRadioScheduledTxDone(&aNode.GetInstance(), nullptr, kErrorAbort);
+        }
+        else
+        {
+            ProcessRadioTx(aNode, aNode.mRadio.mScheduledTxFrame, kScheduledTx);
+        }
     }
 
-    if (aNode.mRadio.mTxFrame.GetDstPanId(dstPanId) != kErrorNone)
+    if (aNode.mRadio.mState == Radio::kStateTransmit)
     {
-        dstPanId = Mac::kPanIdBroadcast;
+        ProcessRadioTx(aNode, aNode.mRadio.mTxFrame, kRegularTx);
     }
+}
 
-    ackRequested = aNode.mRadio.mTxFrame.GetAckRequest();
+void Core::ProcessRadioTx(Node &aNode, Radio::Frame &aTxFrame, TxType aTxType)
+{
+    Mac::TxFrame::ParseInfo txFrameInfo;
+    Mac::Address            dstAddr;
+    uint16_t                dstPanId;
+    bool                    ackRequested;
+    AckMode                 ackMode = kNoAck;
+    Node                   *ackNode = nullptr;
+    Radio::Frame            ackFrame;
+    Radio::Frame           *ackFramePtr = nullptr;
+    Error                   txError;
 
-    SuccessOrQuit(otMacFrameProcessTxSfd(&aNode.mRadio.mTxFrame, mNow, &aNode.mRadio.mRadioContext));
-    static_cast<Radio::Frame &>(aNode.mRadio.mTxFrame).UpdateFcs();
+    IgnoreError(txFrameInfo.ParseFrom(aTxFrame, Mac::Frame::kParseFully));
 
-    mPcap.WriteFrame(aNode.mRadio.mTxFrame, mNow);
+    dstAddr  = txFrameInfo.mAddrs.mDestination;
+    dstPanId = txFrameInfo.mPanIds.IsDestinationPresent() ? txFrameInfo.mPanIds.GetDestination() : Mac::kPanIdBroadcast;
+    ackRequested = txFrameInfo.mIsAckRequest;
+    txError      = ackRequested ? kErrorNoAck : kErrorNone;
+
+    SuccessOrQuit(otMacFrameProcessTxSfd(&aTxFrame, mNow, &aNode.mRadio.mRadioContext));
+    aTxFrame.UpdateFcs();
+
+    mPcap.WriteFrame(aTxFrame, mNow);
 
     if (!mObservers.IsEmpty())
     {
@@ -776,18 +855,20 @@ void Core::ProcessRadio(Node &aNode)
 
         for (Observer &observer : mObservers)
         {
-            observer.OnPacketEvent(aNode.GetInstance().GetId(), dstNodeId, aNode.mRadio.mTxFrame.GetPsdu(),
-                                   aNode.mRadio.mTxFrame.GetLength());
+            observer.OnPacketEvent(aNode.GetInstance().GetId(), dstNodeId, aTxFrame.GetPsdu(), aTxFrame.GetLength());
         }
     }
 
-    otPlatRadioTxStarted(&aNode.GetInstance(), &aNode.mRadio.mTxFrame);
+    if (aTxType == kRegularTx)
+    {
+        otPlatRadioTxStarted(&aNode.GetInstance(), &aTxFrame);
+    }
 
     for (Node &rxNode : mNodes)
     {
         bool matchesDst;
 
-        if ((&rxNode == &aNode) || !rxNode.mRadio.CanReceiveOnChannel(aNode.mRadio.mTxFrame.GetChannel()))
+        if ((&rxNode == &aNode) || !rxNode.mRadio.CanReceiveOnChannel(aTxFrame.GetChannel()))
         {
             continue;
         }
@@ -798,11 +879,10 @@ void Core::ProcessRadio(Node &aNode)
         {
             // `rxNode` should receive this frame.
 
-            Radio::Frame rxFrame(aNode.mRadio.mTxFrame);
+            Radio::Frame rxFrame(aTxFrame);
+            int16_t      localRssi = RadioModel::CalculateRssi(aNode, rxNode);
 
             rxFrame.mInfo.mRxInfo.mTimestamp = mNow;
-
-            int16_t localRssi = RadioModel::CalculateRssi(aNode, rxNode);
 
             // Completely intercept and drop packets that dip below target receiver sensitivity
             if (RadioModel::ShouldDropPacket(localRssi))
@@ -816,13 +896,10 @@ void Core::ProcessRadio(Node &aNode)
 
             if (matchesDst && !dstAddr.IsNone() && !dstAddr.IsBroadcast() && ackRequested)
             {
-                Mac::Address srcAddr;
-
                 ackMode = kSendAckNoFramePending;
                 ackNode = &rxNode;
 
-                if ((aNode.mRadio.mTxFrame.GetSrcAddr(srcAddr) == kErrorNone) &&
-                    rxNode.mRadio.HasFramePendingFor(srcAddr))
+                if (rxNode.mRadio.HasFramePendingFor(txFrameInfo.mAddrs.mSource))
                 {
                     ackMode                                      = kSendAckFramePending;
                     rxFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
@@ -840,23 +917,25 @@ void Core::ProcessRadio(Node &aNode)
         }
     }
 
-    aNode.mRadio.mChannel = aNode.mRadio.mTxFrame.mChannel;
-    aNode.mRadio.mState   = Radio::kStateReceive;
+    if (aTxType == kRegularTx)
+    {
+        aNode.mRadio.mChannel = aTxFrame.mChannel;
+        aNode.mRadio.mState   = Radio::kStateReceive;
+    }
 
     if (ackNode != nullptr)
     {
-        Radio::Frame        ackFrame;
-        const Mac::RxFrame &rxFrame =
-            static_cast<const Mac::RxFrame &>(static_cast<const Mac::Frame &>(aNode.mRadio.mTxFrame));
+        const Mac::RxFrame &rxFrame = static_cast<const Mac::RxFrame &>(static_cast<const Mac::Frame &>(aTxFrame));
+        int16_t             ackRssi;
 
-        if (rxFrame.IsVersion2015())
+        if (txFrameInfo.mVersion == Mac::Frame::kVersion2015)
         {
             uint8_t ackIeData[OT_ACK_IE_MAX_SIZE];
             uint8_t ackIeDataLength = 0;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
             if ((ackNode->mRadio.mRadioContext.mCslPeriod > 0) &&
-                otMacFrameSrcAddrMatchCslReceiverPeer(&aNode.mRadio.mTxFrame, &ackNode->mRadio.mRadioContext))
+                otMacFrameSrcAddrMatchCslReceiverPeer(&aTxFrame, &ackNode->mRadio.mRadioContext))
             {
                 ackIeDataLength = otMacFrameGenerateCslIeTemplate(ackIeData);
             }
@@ -864,14 +943,13 @@ void Core::ProcessRadio(Node &aNode)
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
             {
-                uint8_t      linkMetricsData[OT_ENH_PROBING_IE_DATA_MAX_SIZE];
-                uint8_t      linkMetricsDataLen;
-                Mac::Address srcAddr;
+                uint8_t linkMetricsData[OT_ENH_PROBING_IE_DATA_MAX_SIZE];
+                uint8_t linkMetricsDataLen;
 
-                if (aNode.mRadio.mTxFrame.GetSrcAddr(srcAddr) == kErrorNone)
+                if (!txFrameInfo.mAddrs.mSource.IsNone())
                 {
-                    linkMetricsDataLen = ackNode->mRadio.GenerateEnhAckProbingData(srcAddr, kDefaultRxLqi,
-                                                                                   kDefaultRxRssi, linkMetricsData);
+                    linkMetricsDataLen = ackNode->mRadio.GenerateEnhAckProbingData(
+                        txFrameInfo.mAddrs.mSource, kDefaultRxLqi, kDefaultRxRssi, linkMetricsData);
 
                     if (linkMetricsDataLen > 0)
                     {
@@ -892,29 +970,29 @@ void Core::ProcessRadio(Node &aNode)
 
         ackFrame.UpdateFcs();
 
+        ackRssi = RadioModel::CalculateRssi(*ackNode, aNode);
+
+        ackFrame.mInfo.mRxInfo.mRssi      = ClampToInt8(ackRssi);
+        ackFrame.mInfo.mRxInfo.mLqi       = kDefaultRxLqi;
+        ackFrame.mInfo.mRxInfo.mTimestamp = mNow;
+
+        mPcap.WriteFrame(ackFrame, mNow);
+
+        if (!RadioModel::ShouldDropPacket(ackRssi))
         {
-            int16_t ackRssi = RadioModel::CalculateRssi(*ackNode, aNode);
-
-            ackFrame.mInfo.mRxInfo.mRssi      = ClampToInt8(ackRssi);
-            ackFrame.mInfo.mRxInfo.mLqi       = kDefaultRxLqi;
-            ackFrame.mInfo.mRxInfo.mTimestamp = mNow;
-
-            mPcap.WriteFrame(ackFrame, mNow);
-
-            if (RadioModel::ShouldDropPacket(ackRssi))
-            {
-                otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, nullptr, kErrorNoAck);
-            }
-            else
-            {
-                otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, &ackFrame, kErrorNone);
-            }
+            ackFramePtr = &ackFrame;
+            txError     = kErrorNone;
         }
     }
-    else
+
+    switch (aTxType)
     {
-        otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, nullptr,
-                          ackRequested ? kErrorNoAck : kErrorNone);
+    case kRegularTx:
+        otPlatRadioTxDone(&aNode.GetInstance(), &aTxFrame, ackFramePtr, txError);
+        break;
+    case kScheduledTx:
+        otPlatRadioScheduledTxDone(&aNode.GetInstance(), ackFramePtr, txError);
+        break;
     }
 
 exit:

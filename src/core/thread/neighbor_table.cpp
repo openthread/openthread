@@ -59,19 +59,9 @@ Neighbor *NeighborTable::FindParent(const Neighbor::AddressMatcher &aMatcher)
     return neighbor;
 }
 
-Neighbor *NeighborTable::FindParent(Mac::ShortAddress aShortAddress, Neighbor::StateFilter aFilter)
+Neighbor *NeighborTable::FindParent(const Mac::ExtAddress &aExtAddress)
 {
-    return FindParent(Neighbor::AddressMatcher(aShortAddress, aFilter));
-}
-
-Neighbor *NeighborTable::FindParent(const Mac::ExtAddress &aExtAddress, Neighbor::StateFilter aFilter)
-{
-    return FindParent(Neighbor::AddressMatcher(aExtAddress, aFilter));
-}
-
-Neighbor *NeighborTable::FindParent(const Mac::Address &aMacAddress, Neighbor::StateFilter aFilter)
-{
-    return FindParent(Neighbor::AddressMatcher(aMacAddress, aFilter));
+    return FindParent(Neighbor::AddressMatcher(aExtAddress, Neighbor::kInStateValidOrRestoring));
 }
 
 Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
@@ -89,13 +79,6 @@ Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
     {
         neighbor = FindParent(aMatcher);
     }
-
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-    if (neighbor == nullptr)
-    {
-        neighbor = FindPeer(aMatcher);
-    }
-#endif
 
     return neighbor;
 }
@@ -120,13 +103,6 @@ Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor:
 {
     return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
-
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-Neighbor *NeighborTable::FindPeer(const Neighbor::AddressMatcher &aMatcher)
-{
-    return Get<PeerTable>().FindPeer(aMatcher);
-}
-#endif
 
 #if OPENTHREAD_FTD
 
@@ -273,6 +249,48 @@ exit:
 }
 
 #endif
+
+Error NeighborTable::GetNeighborInfo(uint16_t aRloc16, Neighbor::Info &aNeighInfo)
+{
+    Error     error    = kErrorNone;
+    Neighbor *neighbor = nullptr;
+
+    // `kShortAddrInvalid` acts as a wildcard in `AddressMatcher`, so it
+    // must be rejected before the child table lookup.
+    VerifyOrExit((aRloc16 != Mac::kShortAddrBroadcast) && (aRloc16 != Mac::kShortAddrInvalid), error = kErrorNotFound);
+
+    if (Get<Mle::Mle>().IsChild() && Get<Mle::Mle>().GetParent().IsStateValid() &&
+        (Get<Mle::Mle>().GetParent().GetRloc16() == aRloc16))
+    {
+        neighbor = &Get<Mle::Mle>().GetParent();
+    }
+#if OPENTHREAD_FTD
+    else if (Get<Mle::Mle>().IsRouterOrLeader() && Mle::IsChildRloc16(aRloc16))
+    {
+        neighbor = Get<ChildTable>().FindChild(aRloc16, Child::kInStateValid);
+    }
+    else if (Get<Mle::Mle>().IsAttached() && Mle::IsRouterRloc16(aRloc16))
+    {
+        // Neighboring routers on a router or leader, or router links
+        // on an FTD child. The router table is indexed by Router ID
+        // only, so the full RLOC16 is also checked.
+        Router *router = Get<RouterTable>().FindRouterByRloc16(aRloc16);
+
+        if ((router != nullptr) && router->IsStateValid() && (router->GetRloc16() == aRloc16))
+        {
+            neighbor = router;
+        }
+    }
+#endif
+
+    VerifyOrExit(neighbor != nullptr, error = kErrorNotFound);
+
+    aNeighInfo.SetFrom(*neighbor);
+    aNeighInfo.mIsChild = Mle::IsChildRloc16(aRloc16);
+
+exit:
+    return error;
+}
 
 void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 {

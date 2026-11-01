@@ -35,6 +35,7 @@
 
 #include "common/code_utils.hpp"
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/openthread-spinel-config.h"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
 
@@ -86,14 +87,24 @@ FakeCoprocessorPlatform::FakeCoprocessorPlatform()
 {
     spinel_iid_t iids[]{
         0,
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+        SPINEL_HEADER_GET_IID(OPENTHREAD_SPINEL_CONFIG_BROADCAST_IID),
+#endif
     };
 
-    otNcpHdlcInit(mInstance, [](const uint8_t *aBuf, uint16_t aLength) -> int {
+    auto sendCallback = [](const uint8_t *aBuf, uint16_t aLength) -> int {
         int rval = static_cast<FakeCoprocessorPlatform &>(FakePlatform::CurrentPlatform())
                        .mSpinelInterface.Receive(aBuf, aLength);
         otNcpHdlcSendDone();
         return rval;
-    });
+    };
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    otInstance *instances[]{mInstance};
+    otNcpHdlcInitMulti(instances, OT_ARRAY_LENGTH(instances), sendCallback);
+#else
+    otNcpHdlcInit(mInstance, sendCallback);
+#endif
 
     mSpinelDriver.Init(mSpinelInterface, false, iids, OT_ARRAY_LENGTH(iids));
 

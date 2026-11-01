@@ -42,6 +42,28 @@ RegisterLogModule("Settings");
 //---------------------------------------------------------------------------------------------------------------------
 // SettingsBase
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+
+bool SettingsBase::ThreadDirectKeyInfo::Matches(const ThreadDirect::Key &aKey) const
+{
+    bool matches = false;
+
+#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    VerifyOrExit(GetKey() == aKey.GetKeyMaterial().GetKey());
+#else
+    VerifyOrExit(GetKeyRef() == aKey.GetKeyMaterial().GetKeyRef());
+#endif
+
+    VerifyOrExit(aKey.HasId(GetKeyId()));
+
+    matches = true;
+
+exit:
+    return matches;
+}
+
+#endif
+
 // LCOV_EXCL_START
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -105,6 +127,14 @@ void SettingsBase::BorderAgentId::Log(Action aAction, const MeshCoP::BorderAgent
 }
 #endif
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+void SettingsBase::ThreadDirectKeyInfo::Log(Action aAction) const
+{
+    LogInfo("%s ThreadDirectKeyInfo {id:%s, cntr:0x%lx}", ActionToString(aAction), GetKeyId().ToString().AsCString(),
+            ToUlong(GetFrameCounter()));
+}
+#endif
+
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -117,7 +147,7 @@ const char *SettingsBase::ActionToString(Action aAction)
     _(kActionDelete, "Deleted")  \
     FtdActionMapList(_)
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OT_CONFIG_THREAD_DIRECT_ENABLE
 #define FtdActionMapList(_)     \
     _(kActionAdd, "Added")      \
     _(kActionRemove, "Removed") \
@@ -154,11 +184,13 @@ const char *SettingsBase::KeyToString(Key aKey)
     _(kKeyBrUlaPrefix, "BrUlaPrefix")             \
     _(kKeyBrOnLinkPrefixes, "BrOnLinkPrefixes")   \
     _(kKeyBorderAgentId, "BorderAgentId")         \
-    _(kKeyTcatCommrCert, "TcatCommrCert")
+    _(kKeyTcatCommrCert, "TcatCommrCert")         \
+    _(kKeyThreadDirectKeys, "ThreadDirectKeys")   \
+    _(kKeyThreadDirectKeyRefs, "ThreadDirectKeyRefs")
 
     DefineEnumStringArray(KeyMapList);
 
-    static_assert(kLastKey == kKeyTcatCommrCert, "kLastKey is not valid");
+    static_assert(kLastKey == kKeyThreadDirectKeyRefs, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
@@ -176,6 +208,7 @@ const uint16_t Settings::kSensitiveKeys[] = {
     SettingsBase::kKeyActiveDataset,
     SettingsBase::kKeyPendingDataset,
     SettingsBase::kKeySrpEcdsaKey,
+    SettingsBase::kKeyThreadDirectKeys,
 };
 
 void Settings::Init(void) { Get<SettingsDriver>().Init(kSensitiveKeys, GetArrayLength(kSensitiveKeys)); }
@@ -226,13 +259,18 @@ void Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
 }
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-void Settings::SaveTcatCommissionerCertificate(uint8_t *aCert, uint16_t aCertLen)
+void Settings::SaveTcatCommissionerCertificate(const uint8_t *aCert, uint16_t aCertLen)
 {
     Error error = Get<SettingsDriver>().Set(kKeyTcatCommrCert, aCert, aCertLen);
 
     Log(kActionSave, error, kKeyTcatCommrCert);
 
     SuccessOrAssert(error);
+}
+
+Error Settings::ReadTcatCommissionerCertificate(uint8_t *aCert, uint16_t &aCertLen) const
+{
+    return Get<SettingsDriver>().Get(kKeyTcatCommrCert, aCert, &aCertLen);
 }
 #endif
 
@@ -367,6 +405,102 @@ void Settings::BrOnLinkPrefix::Log(const char *aActionText) const
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+
+void Settings::SaveThreadDirectKey(ThreadDirect::Key &aKey)
+{
+    ThreadDirectKeyInfo keyInfo;
+
+    keyInfo.Init();
+
+#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    keyInfo.SetKey(aKey.GetKeyMaterial().GetKey());
+#else
+    keyInfo.SetKeyRef(aKey.GetKeyMaterial().GetKeyRef());
+#endif
+    keyInfo.SetKeyId(aKey.GetId());
+    keyInfo.SetFrameCounter(aKey.UpdateSavedFrameCounter());
+
+    // Add the new entry with the updated frame counter first before
+    // removing any previously saved entries for the same key. This
+    // ensures that the key entry is never lost if a power loss or
+    // reset occurs mid-operation.
+
+    SuccessOrAssert(Get<SettingsDriver>().Add(ThreadDirectKeyInfo::kKey, &keyInfo, sizeof(ThreadDirectKeyInfo)));
+    keyInfo.Log(kActionSave);
+
+    RemoveMatchingThreadDirectKeys(aKey, /* aKeepEntryMatchingFrameCounter */ true);
+}
+
+void Settings::DeleteThreadDirectKey(const ThreadDirect::Key &aKey)
+{
+    RemoveMatchingThreadDirectKeys(aKey, /* aKeepEntryMatchingFrameCounter */ false);
+}
+
+void Settings::RemoveMatchingThreadDirectKeys(const ThreadDirect::Key &aKey, bool aKeepEntryMatchingFrameCounter)
+{
+    // Removes all saved `ThreadDirectKeyInfo` entries matching
+    // `aKey`. When `aKeepEntryMatchingFrameCounter` is true (used
+    // after saving an updated entry in `SaveThreadDirectKey()`), any
+    // entry whose frame counter matches `aKey.GetSavedFrameCounter()`
+    // is kept and only older entries with stale frame counters are
+    // removed.
+
+    ThreadDirectKeyInfo keyInfo;
+
+    while (true)
+    {
+        for (int index = 0; true; index++)
+        {
+            SuccessOrExit(ReadThreadDirectKey(index, keyInfo));
+
+            if (!keyInfo.Matches(aKey))
+            {
+                continue;
+            }
+
+            if (aKeepEntryMatchingFrameCounter && (keyInfo.GetFrameCounter() == aKey.GetSavedFrameCounter()))
+            {
+                continue;
+            }
+
+            IgnoreError(Get<SettingsDriver>().Delete(ThreadDirectKeyInfo::kKey, index));
+
+            if (!aKeepEntryMatchingFrameCounter)
+            {
+                keyInfo.Log(kActionDelete);
+            }
+
+            // Deleting an entry from the settings list can shift or
+            // reorder the remaining entries' indices, so we restart
+            // the inner scan from index 0 after each deletion.
+
+            break;
+        }
+    }
+
+exit:
+    return;
+}
+
+void Settings::DeleteAllThreadDirectKeys(void)
+{
+    Error error = Get<SettingsDriver>().Delete(ThreadDirectKeyInfo::kKey);
+
+    Log(kActionDeleteAll, error, ThreadDirectKeyInfo::kKey);
+}
+
+Error Settings::ReadThreadDirectKey(int aIndex, ThreadDirectKeyInfo &aKeyInfo) const
+{
+    uint16_t length = sizeof(aKeyInfo);
+
+    aKeyInfo.Init();
+
+    return Get<SettingsDriver>().Get(ThreadDirectKeyInfo::kKey, aIndex, &aKeyInfo, &length);
+}
+
+#endif // OT_CONFIG_THREAD_DIRECT_ENABLE
+
 Error Settings::ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const
 {
     Error    error;
@@ -432,7 +566,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
             actionText = "deleting";
             break;
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OT_CONFIG_THREAD_DIRECT_ENABLE
         case kActionAdd:
             actionText = "adding";
             break;

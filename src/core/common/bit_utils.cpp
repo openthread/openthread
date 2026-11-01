@@ -34,6 +34,7 @@
 #include "bit_utils.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/encoding.hpp"
 #include "common/num_utils.hpp"
 
 namespace ot {
@@ -103,6 +104,102 @@ uint8_t DetermineMinBitSizeFor(uint32_t aValue)
     } while (aValue != 0);
 
     return bitSize;
+}
+
+static void ReverseBytes(uint8_t *aBytes, uint16_t aLength)
+{
+    for (uint16_t i = 0; i < aLength / 2; i++)
+    {
+        uint8_t temp = aBytes[i];
+
+        aBytes[i]               = aBytes[aLength - 1 - i];
+        aBytes[aLength - 1 - i] = temp;
+    }
+}
+
+static void ShiftBitmask(uint8_t *aMask, uint16_t aNumBytes, uint8_t aShift, uint8_t aStartBits)
+{
+    // Shifts `aNumBytes` bytes in `aMask` forward (to the right) by
+    // `aShift` bits (`0 < aShift < 8`), inserting the lowest `aShift`
+    // bits of `aStartBits` at the start of `aMask[0]`.
+
+    for (uint16_t i = 0; i < aNumBytes; i++)
+    {
+        uint8_t byte = aMask[i];
+
+        aMask[i]   = (byte >> aShift) | static_cast<uint8_t>(aStartBits << (kBitsPerByte - aShift));
+        aStartBits = byte;
+    }
+}
+
+void RotateBitmask(uint8_t *aMask, uint16_t aBitLength, uint16_t aBitShift)
+{
+    uint16_t numBytes;
+    uint8_t  numExtraBits;
+    uint16_t byteShift;
+    uint8_t  extraBitShift;
+
+    VerifyOrExit(aBitLength > 0);
+
+    numBytes     = BytesForBitSize(aBitLength);
+    numExtraBits = static_cast<uint8_t>(aBitLength % kBitsPerByte);
+
+    aBitShift %= aBitLength;
+
+    byteShift     = aBitShift / kBitsPerByte;
+    extraBitShift = static_cast<uint8_t>(aBitShift % kBitsPerByte);
+
+    if (byteShift > 0)
+    {
+        // Rotate `numBytes` bytes to the right by `byteShift` in place
+        // by reversing the first `numBytes - byteShift` bytes, reversing
+        // the trailing `byteShift` bytes, and then reversing the entire
+        // array (e.g., `[A B C D E | F G H]` -> `[E D C B A | H G F]`
+        // -> `[F G H | A B C D E]`).
+
+        ReverseBytes(aMask, numBytes - byteShift);
+        ReverseBytes(aMask + numBytes - byteShift, byteShift);
+        ReverseBytes(aMask, numBytes);
+
+        if (numExtraBits != 0)
+        {
+            // When `aBitLength` is not a multiple of 8, the last byte
+            // originally had `8 - numExtraBits` unused trailing bits.
+            // Rotating whole bytes moved those unused bits into the end
+            // of the wrapped prefix `aMask[0 .. byteShift - 1]`. We shift
+            // only those `byteShift` prefix bytes right by `8 - numExtraBits`,
+            // pulling in the low `8 - numExtraBits` bits from the new last
+            // byte `aMask[numBytes - 1]` to close the gap.
+
+            ShiftBitmask(aMask, byteShift, kBitsPerByte - numExtraBits, aMask[numBytes - 1]);
+        }
+    }
+
+    if (extraBitShift != 0)
+    {
+        // Extract the trailing `extraBitShift` valid bits from the end
+        // of the mask to wrap around into the start of `aMask[0]`. These
+        // bits may span across the last two bytes when `numExtraBits != 0`.
+
+        uint16_t bits;
+
+        bits = (numBytes < sizeof(uint16_t)) ? aMask[numBytes - 1] : BigEndian::Read<uint16_t>(&aMask[numBytes - 2]);
+
+        if (numExtraBits != 0)
+        {
+            bits >>= (kBitsPerByte - numExtraBits);
+        }
+
+        ShiftBitmask(aMask, numBytes, extraBitShift, static_cast<uint8_t>(bits));
+    }
+
+    if (numExtraBits != 0)
+    {
+        aMask[numBytes - 1] &= ~MaskForBitSize<uint8_t>(kBitsPerByte - numExtraBits);
+    }
+
+exit:
+    return;
 }
 
 } // namespace ot

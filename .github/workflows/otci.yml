@@ -62,21 +62,23 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
         persist-credentials: false
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
         python-version: '3.12'
         cache: pip
     - name: Bootstrap
       timeout-minutes: 10
+      shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         python3 -m pip install pytype adb-shell
+        (cd tools/otci && python3 -m pip install . && rm -rf build ./*.egg-info)
     - name: Style check
       run: |
         PYTHONPATH=./tests/scripts/thread-cert pytype tools/otci
@@ -84,9 +86,6 @@ jobs:
       run: |
         ./script/cmake-build simulation -DOT_THREAD_VERSION=1.4 -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON \
         -DOT_CSL_RECEIVER=ON -DOT_SIMULATION_VIRTUAL_TIME=${VIRTUAL_TIME}
-    - name: Install OTCI Python Library
-      run: |
-        (cd tools/otci && python3 -m pip install .)
     - name: Run
       run: |
         export PYTHONPATH=./tests/scripts/thread-cert/

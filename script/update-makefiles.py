@@ -27,10 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-# This script updates different make/build files (CMakeLists.txt, BUILD.gn,
-# Android.mk, Android.bp, auto-make) in OpenThread repo based on the
-# current files present in `./src/core/` & `./include/openthread/`
-# folders. This script MUST be called from openthread root folder.
+# This script updates different make/build files (CMakeLists.txt, BUILD.gn)
+# in OpenThread repo based on the current files present in `./src/core/`,
+# `./src/cli/`, and `./include/openthread/` folders. This script MUST be
+# called from openthread root folder.
 
 import os
 
@@ -112,6 +112,11 @@ core_cpp_files = [item for item in core_cpp_files if not item.endswith("extensio
 core_hpp_cpp_files = sorted(core_hpp_files + core_cpp_files)
 core_h_hpp_files = sorted(core_h_files + core_hpp_files)
 
+src_cli_path = "./src/cli"
+cli_hpp_files = get_file_list(src_cli_path, '.hpp')
+cli_cpp_files = get_file_list(src_cli_path, '.cpp')
+cli_hpp_cpp_files = sorted(cli_hpp_files + cli_cpp_files)
+
 include_path = "./include/openthread"
 include_h_files = get_file_list(include_path, '.h')
 include_ot_h_files = [name[8:] for name in include_h_files if not name.startswith("include/openthread/platform")]
@@ -127,6 +132,13 @@ update_build_file(core_cmakelist_txt_file, "set(COMMON_SOURCES\n", ")\n", format
 
 print("Updated " + core_cmakelist_txt_file)
 
+cli_cmakelist_txt_file = "./src/cli/CMakeLists.txt"
+
+formatted_list = ["    {}\n".format(file_name[8:]) for file_name in cli_cpp_files]
+update_build_file(cli_cmakelist_txt_file, "set(COMMON_SOURCES\n", ")\n", formatted_list)
+
+print("Updated " + cli_cmakelist_txt_file)
+
 #----------------------------------------------------------------------------------------------
 # Update Build.gn files
 
@@ -139,6 +151,13 @@ formatted_list = ["    \"{}\",\n".format(file_name[9:]) for file_name in core_h_
 update_build_file(core_build_gn_file, "  public = [\n", "  ]\n", formatted_list)
 
 print("Updated " + core_build_gn_file)
+
+cli_build_gn_file = "./src/cli/BUILD.gn"
+
+formatted_list = ["  \"{}\",\n".format(file_name[8:]) for file_name in cli_hpp_cpp_files]
+update_build_file(cli_build_gn_file, "openthread_cli_sources = [\n", "]\n", formatted_list)
+
+print("Updated " + cli_build_gn_file)
 
 include_build_gn_file = "./include/openthread/BUILD.gn"
 

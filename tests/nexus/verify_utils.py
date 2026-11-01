@@ -708,6 +708,10 @@ def run_main(verify_func):
             all_thread_nodes_mcast_addr[4:12] = prefix[0:8]
             consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr(all_thread_nodes_mcast_addr)
 
+        wireshark_prefs.pop('6lowpan.context1', None)
+        for cid, prefix in data.get('lowpan_contexts', {}).items():
+            wireshark_prefs[f'6lowpan.context{cid}'] = prefix
+
         # Add TREL UDP port variables before creating PacketVerifier (so PcapReader uses them)
         # We only do this for TREL tests to avoid interference with other tests
         # using similar UDP ports for regular Thread traffic.

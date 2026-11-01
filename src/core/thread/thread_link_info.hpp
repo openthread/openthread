@@ -115,7 +115,7 @@ public:
      *
      * @param[in] aFrame  A received frame.
      */
-    void SetFrom(const Mac::RxFrame &aFrame);
+    void SetFrom(const Mac::RxFrame::ParseInfo &aFrameInfo);
 };
 
 DefineCoreType(otThreadLinkInfo, ThreadLinkInfo);

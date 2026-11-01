@@ -70,7 +70,7 @@ jobs:
       with:
         oss-fuzz-project-name: 'openthread'
         language: 'c++'
-        fuzz-seconds: 1800
+        fuzz-seconds: 900
         sanitizer: ${{ matrix.sanitizer }}
         output-sarif: true
 
@@ -83,7 +83,7 @@ jobs:
 
     - name: Upload Sarif
       if: always() && steps.build.outcome == 'success'
-      uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
+      uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
       with:
         sarif_file: cifuzz-sarif/results.sarif
         checkout_path: cifuzz-sarif

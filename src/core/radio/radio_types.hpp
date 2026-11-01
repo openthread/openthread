@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/clearable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "common/time.hpp"
 
@@ -57,6 +58,8 @@ namespace Radio {
 
 class Radio;
 
+constexpr uint32_t kTenSymbolsDuration = OT_US_PER_TEN_SYMBOLS; ///< 10 symbols duration in microseconds
+
 constexpr uint32_t kUncertaintyUnit = 10; ///< Clock uncertainty unit in microseconds.
 
 /**
@@ -68,6 +71,11 @@ typedef otRadioTime64 Time64;
  * Represents a 32-bit radio time in microseconds (holds the lower 32 bits of a `Radio::Time64`).
  */
 typedef otRadioTime32 Time32;
+
+/**
+ * Represents the maximum value of a 64-bit radio time.
+ */
+constexpr Time64 kMaxTime64 = NumericLimits<Time64>::kMax;
 
 /**
  * Converts a 64-bit radio time to a 32-bit radio time.

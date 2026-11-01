@@ -216,7 +216,7 @@ public:
 private:
     typedef Icmp6Header Header;
 
-    Error HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
+    Error HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo, const Header &aRequestHeader);
 
     LinkedList<Handler> mHandlers;
 

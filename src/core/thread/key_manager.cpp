@@ -75,6 +75,9 @@ void SecurityPolicy::SetToDefaultFlags(void)
     mTobleLinkEnabled               = true;
     mNonCcmRoutersEnabled           = false;
     mVersionThresholdForRouting     = 0;
+    mReservedBit10Cleared           = false;
+    mReservedBit11Cleared           = false;
+    mReservedBit12Cleared           = false;
 }
 
 void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
@@ -95,6 +98,12 @@ void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
     mTobleLinkEnabled           = aFlags[1] & kTobleLinkMask;
     mNonCcmRoutersEnabled       = (aFlags[1] & kNonCcmRoutersMask) == 0;
     mVersionThresholdForRouting = aFlags[1] & kVersionThresholdForRoutingMask;
+
+    // Track which reserved bits are cleared in the received
+    // flags so that they are preserved when the flags are encoded.
+    mReservedBit10Cleared = (aFlags[1] & kReservedBit10Mask) == 0;
+    mReservedBit11Cleared = (aFlags[1] & kReservedBit11Mask) == 0;
+    mReservedBit12Cleared = (aFlags[1] & kReservedBit12Mask) == 0;
 
 exit:
     return;
@@ -153,7 +162,21 @@ void SecurityPolicy::GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const
         aFlags[1] |= kNonCcmRoutersMask;
     }
 
-    aFlags[1] |= kReservedMask;
+    if (!mReservedBit10Cleared)
+    {
+        aFlags[1] |= kReservedBit10Mask;
+    }
+
+    if (!mReservedBit11Cleared)
+    {
+        aFlags[1] |= kReservedBit11Mask;
+    }
+
+    if (!mReservedBit12Cleared)
+    {
+        aFlags[1] |= kReservedBit12Mask;
+    }
+
     aFlags[1] |= mVersionThresholdForRouting;
 
 exit:
@@ -568,7 +591,7 @@ void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
     {
         size_t keyLen;
 
-        SuccessOrAssert(Crypto::Storage::ExportKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen));
+        SuccessOrAssert(Crypto::Storage::ReadKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen));
         OT_ASSERT(keyLen == NetworkKey::kSize);
     }
     else
@@ -587,7 +610,7 @@ void KeyManager::GetPskc(Pskc &aPskc) const
     {
         size_t keyLen;
 
-        SuccessOrAssert(Crypto::Storage::ExportKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen));
+        SuccessOrAssert(Crypto::Storage::ReadKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen));
         OT_ASSERT(keyLen == Pskc::kSize);
     }
     else
@@ -609,9 +632,10 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 
     if (!aOverWriteExisting)
     {
-        // Check if there is already a network key stored in ITS. If
-        // stored, and we are not overwriting the existing key,
-        // return without doing anything.
+        // Check if there is already a network key stored in secure
+        // storage. If stored, and we are not overwriting the existing
+        // key, return without doing anything.
+
         if (Crypto::Storage::HasKey(keyRef))
         {
             ExitNow();
@@ -620,10 +644,10 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 
     Crypto::Storage::DestroyKey(keyRef);
 
-    SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
-                                               Crypto::Storage::kKeyAlgorithmHmacSha256,
-                                               Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
-                                               Crypto::Storage::kTypePersistent, aNetworkKey.m8, NetworkKey::kSize));
+    SuccessOrAssert(Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeHmac,
+                                             Crypto::Storage::kKeyAlgorithmHmacSha256,
+                                             Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
+                                             Crypto::Storage::kTypePersistent, aNetworkKey.m8, NetworkKey::kSize));
 
 exit:
     if (mNetworkKeyRef != keyRef)
@@ -640,9 +664,9 @@ void KeyManager::StorePskc(const Pskc &aPskc)
 
     Crypto::Storage::DestroyKey(keyRef);
 
-    SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeRaw,
-                                               Crypto::Storage::kKeyAlgorithmVendor, Crypto::Storage::kUsageExport,
-                                               Crypto::Storage::kTypePersistent, aPskc.m8, Pskc::kSize));
+    SuccessOrAssert(Crypto::Storage::SaveKey(keyRef, Crypto::Storage::kKeyTypeRaw, Crypto::Storage::kKeyAlgorithmVendor,
+                                             Crypto::Storage::kUsageExport, Crypto::Storage::kTypePersistent, aPskc.m8,
+                                             Pskc::kSize));
 
     if (mPskcRef != keyRef)
     {

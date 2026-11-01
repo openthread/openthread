@@ -182,6 +182,12 @@ class TestFrameFormats(unittest.TestCase):
                       dst_address='0xaaaa')
         self.__test_frame_format(22, frame)
 
+    def test_frame_format_23(self):
+        frame = Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,keyid:2,ie:no,plen:0',
+                      tx_frame='09ec00dddd1020304050607080010203040506070815000000007265616401112233440000',
+                      dst_address='8070605040302010')
+        self.__test_frame_format(23, frame)
+
     def __test_frame_format(self, number: int, frame: Frame):
         ret = self.__device_manager.send_formatted_frames_retries(self.__dut, self.__ref, frame)
         self.__device_manager.output_test_result_bool(f'{number} TX {frame.name}', ret, align_length=100)

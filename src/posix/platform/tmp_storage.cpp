@@ -55,14 +55,18 @@
 namespace ot {
 namespace Posix {
 
-void TmpStorage::Init(void)
+void TmpStorage::Init(void) { mIsFileInitialized = false; }
+
+void TmpStorage::InitStorageFile(void)
 {
     otError  error = OT_ERROR_NONE;
     time_t   storedBootTime;
     time_t   currentBootTime;
     uint16_t valueLength = sizeof(time_t);
 
+    VerifyOrExit(!mIsFileInitialized);
     VerifyOrDie(SettingsFileInit() == OT_ERROR_NONE, OT_EXIT_FAILURE);
+    mIsFileInitialized = true;
 
     currentBootTime = GetBootTime();
 
@@ -76,12 +80,20 @@ void TmpStorage::Init(void)
         mStorageFile.Set(kKeyBootTime, reinterpret_cast<const uint8_t *>(&currentBootTime),
                          static_cast<uint16_t>(sizeof(currentBootTime)));
     }
+
+exit:
+    return;
 }
 
-void TmpStorage::Deinit(void) { mStorageFile.Deinit(); }
+void TmpStorage::Deinit(void)
+{
+    mStorageFile.Deinit();
+    mIsFileInitialized = false;
+}
 
 void TmpStorage::SaveRadioSpinelMetrics(const otRadioSpinelMetrics &aMetrics)
 {
+    InitStorageFile();
     mStorageFile.Set(kKeyRadioSpinelMetrics, reinterpret_cast<const uint8_t *>(&aMetrics),
                      static_cast<uint16_t>(sizeof(aMetrics)));
 }
@@ -90,6 +102,7 @@ otError TmpStorage::RestoreRadioSpinelMetrics(otRadioSpinelMetrics &aMetrics)
 {
     uint16_t valueLength = sizeof(aMetrics);
 
+    InitStorageFile();
     return mStorageFile.Get(kKeyRadioSpinelMetrics, 0, reinterpret_cast<uint8_t *>(&aMetrics), &valueLength);
 }
 

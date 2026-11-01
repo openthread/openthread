@@ -584,9 +584,10 @@ void TestBorderAgentEphemeralKey(void)
 
         SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
-        nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+        nexus.AdvanceTime(6 * Time::kOneSecondInMsec);
 
         VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+        VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnectionActive());
         VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
     }
 
@@ -594,7 +595,7 @@ void TestBorderAgentEphemeralKey(void)
 
     sEphemeralKeyCallbackCalled = false;
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
-    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(6 * Time::kOneSecondInMsec);
 
     VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
@@ -912,16 +913,17 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
 
         SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
-        nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+        nexus.AdvanceTime(6 * Time::kOneSecondInMsec);
 
         VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+        VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnectionActive());
         VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
     }
 
     Log("  Attempt 10 (final attempt) to connect with the wrong key, check that ephemeral key use is stopped");
 
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
-    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(6 * Time::kOneSecondInMsec);
 
     VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);

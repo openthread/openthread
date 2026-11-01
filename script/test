@@ -137,7 +137,6 @@ build_simulation()
         options+=("-DOT_LINK_METRICS_INITIATOR=ON")
         options+=("-DOT_LINK_METRICS_SUBJECT=ON")
         options+=("-DOT_LINK_METRICS_MANAGER=ON")
-        options+=("-DOT_P2P=ON")
         options+=("-DOT_WAKE_INITIATOR=ON")
         options+=("-DOT_WAKE_LISTENER=ON")
     fi
@@ -187,7 +186,6 @@ build_posix()
         options+=("-DOT_LINK_METRICS_INITIATOR=ON")
         options+=("-DOT_LINK_METRICS_SUBJECT=ON")
         options+=("-DOT_LINK_METRICS_MANAGER=ON")
-        options+=("-DOT_P2P=ON")
         options+=("-DOT_WAKE_INITIATOR=ON")
         options+=("-DOT_WAKE_LISTENER=ON")
     fi
@@ -202,6 +200,8 @@ build_posix()
 
     if [[ ${OT_NATIVE_IP} == 1 ]]; then
         options+=("-DOT_PLATFORM_UDP=ON" "-DOT_PLATFORM_NETIF=ON")
+    else
+        options+=("-DOT_PLATFORM_UDP=OFF" "-DOT_PLATFORM_NETIF=OFF")
     fi
 
     if [[ ${ot_extra_options[*]+x} ]]; then
@@ -351,6 +351,7 @@ do_build_otbr_docker()
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
         "-DOTBR_DHCP6_PD=ON"
+        "-DOT_POSIX_INSTALL_EXTERNAL_ROUTES=ON"
     )
     local args=(
         "BORDER_ROUTING=${BORDER_ROUTING}"
@@ -464,9 +465,39 @@ ot_exec_expect_script()
 
 do_expect()
 {
+    # shellcheck source=script/_maybe_isolate
+    source "$(dirname "${BASH_SOURCE[0]}")/_maybe_isolate" expect "$@"
+
     local test_patterns
 
-    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
+    if [[ -n ${OT_EXPECT_CATEGORY:-} ]]; then
+        case "${OT_EXPECT_CATEGORY}" in
+            cli)
+                test_patterns=(-name 'cli-*.exp')
+                ;;
+            non-cli)
+                if [[ ${OT_NODE_TYPE} == rcp* ]]; then
+                    test_patterns=(-name 'posix-*.exp')
+                    if [[ ${THREAD_VERSION} != "1.1" ]]; then
+                        test_patterns+=(-o -name 'v1_2-*.exp')
+                        test_patterns+=(-o -name 'v1_5-*.exp')
+                    fi
+                else
+                    test_patterns=(-name 'simulation-*.exp' -o -name 'cli_non_rcp-*.exp')
+                    if [[ ${THREAD_VERSION} != "1.1" ]]; then
+                        test_patterns+=(-o -name 'v1_5-*.exp')
+                    fi
+                fi
+                ;;
+            tun)
+                test_patterns=(-name 'tun-*.exp')
+                ;;
+            *)
+                echo "Unknown OT_EXPECT_CATEGORY: ${OT_EXPECT_CATEGORY}" >&2
+                exit 1
+                ;;
+        esac
+    elif [[ ${OT_NODE_TYPE} == rcp* ]]; then
         if [[ ${OT_NATIVE_IP} == 1 ]]; then
             test_patterns=(-name 'tun-*.exp')
         else

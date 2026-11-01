@@ -96,6 +96,11 @@ public:
      */
     void HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent aEvent);
 
+    /**
+     * Evaluates whether the MLR manager should be running or not and handles starting or stopping the manager.
+     */
+    void UpdateState(void);
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
      * Updates the MLR registration status of a given child's addresses.
@@ -168,7 +173,6 @@ private:
     State GetState(void) const { return mState; }
     bool  IsRunning(void) const { return mState != kStateStopped; }
     void  EnterState(State aState);
-    void  UpdateState(void);
     void  HandleNotifierEvents(Events aEvents);
     void  DetermineAddressesToRegister(AddressArray &aAddresses) const;
     void  SendNextRequest(void);

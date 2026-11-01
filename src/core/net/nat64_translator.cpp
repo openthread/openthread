@@ -760,6 +760,11 @@ void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
     mNat64Prefix = aNat64Prefix;
     UpdateState();
 
+    // `UpdateState()` only signals when the state itself changes. Signal here
+    // as well (similar to `SetIp4Cidr()`), so that a prefix change while the
+    // translator is already active gets reported too.
+    Get<Notifier>().Signal(kEventNat64TranslatorStateChanged);
+
 exit:
     return;
 }

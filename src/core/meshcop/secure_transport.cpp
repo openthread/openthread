@@ -108,6 +108,7 @@ Error SecureSession::Connect(const Ip6::SockAddr &aSockAddr)
     Error error;
 
     VerifyOrExit(mTransport.mIsOpen, error = kErrorInvalidState);
+    VerifyOrExit(mTransport.HasCipherSuite(), error = kErrorInvalidState);
     VerifyOrExit(!IsSessionInUse(), error = kErrorInvalidState);
 
     Init();
@@ -162,7 +163,7 @@ Error SecureSession::Setup(void)
     Error error = kErrorNone;
     int   rval  = 0;
 
-    OT_ASSERT(mTransport.mCipherSuite != SecureTransport::kUnspecifiedCipherSuite);
+    OT_ASSERT(mTransport.HasCipherSuite());
 
     SetState(kStateInitializing);
 
@@ -739,6 +740,7 @@ void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &a
     SecureSession *session;
 
     VerifyOrExit(mIsOpen);
+    VerifyOrExit(HasCipherSuite());
 
     session = mSessions.FindMatching(aMessageInfo);
 
@@ -1127,7 +1129,7 @@ int SecureTransport::Extension::EcdheEcdsaInfo::SetSecureKeys(mbedtls_ssl_config
                                       static_cast<size_t>(mOwnCertLength));
         VerifyOrExit(rval == 0);
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000) && (MBEDTLS_VERSION_NUMBER < 0x04000000)
         rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
                                     static_cast<size_t>(mPrivateKeyLength), nullptr, 0,
                                     Crypto::MbedTls::CryptoSecurePrng, nullptr);

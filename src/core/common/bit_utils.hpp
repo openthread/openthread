@@ -54,11 +54,18 @@ static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
 /**
  * Determines number of bytes to represent a given number of bits.
  *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
  * @param[in] aBitSize    The bit-size (number of bits).
  *
  * @returns Number of bytes to represent @p aBitSize.
  */
-#define BytesForBitSize(aBitSize) static_cast<uint8_t>(((aBitSize) + (kBitsPerByte - 1)) / kBitsPerByte)
+template <typename UintType> constexpr UintType BytesForBitSize(UintType aBitSize)
+{
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
+
+    return ((aBitSize + (kBitsPerByte - 1)) / kBitsPerByte);
+}
 
 /**
  * Counts the number of `1` bits in the binary representation of a given `uint32_t` bit-mask value.
@@ -97,6 +104,19 @@ uint16_t CountMatchingBits(const uint8_t *aFirst, const uint8_t *aSecond, uint16
  * @returns The minimum number of bits required to represent @p aValue.
  */
 uint8_t DetermineMinBitSizeFor(uint32_t aValue);
+
+/**
+ * Rotates a bitmask pattern forward (to the right) in place by a given number of bits.
+ *
+ * Bits are numbered starting from the most significant bit (MSB) of the first byte (`aMask[0]`). Shifting forward
+ * rotates the bit pattern so the bit at index `i` moves to `(i + aBitShift) % aBitLength`, wrapping the trailing bits
+ * back to the start of the mask. Any unused trailing bits in the last byte beyond @p aBitLength are cleared to `0`.
+ *
+ * @param[in,out] aMask       A pointer to the bitmask byte array to rotate in place.
+ * @param[in]     aBitLength  The length of the bitmask in bits.
+ * @param[in]     aBitShift   The number of bits to rotate forward.
+ */
+void RotateBitmask(uint8_t *aMask, uint16_t aBitLength, uint16_t aBitShift);
 
 /**
  * Generates an unsigned integer bit-mask with a specified number of lowest bits set to 1.

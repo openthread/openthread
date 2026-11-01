@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 11
+#define SPINEL_RCP_API_VERSION 12
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -3304,8 +3304,12 @@ enum
      */
     SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 62,
 
-    /// Wake-up Channel
-    /** Format: `C`
+    /// Wake-up Channel - Deprecated
+    /**
+     * This property is deprecated and is no longer supported. Since it has already been allocated,
+     * the property ID and name remain reserved and MUST NOT be reused for other purposes.
+     *
+     * Format: `C`
      *
      * The Wake-up sample channel. Channel value should be `0` (Set Wake-up Channel unspecified,
      * which means the device will use the PAN channel) or within the range [1, 10] (if 915-MHz
@@ -4751,6 +4755,45 @@ enum
      * The current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
      */
     SPINEL_PROP_RCP_CSL_UNCERTAINTY = SPINEL_PROP_RCP_EXT__BEGIN + 5,
+
+    /// Radio Availability
+    /** Format: `XCCd[d]`
+     * Type: Read-Only (also sent as unsolicited notifications)
+     *
+     * `X`: The start time of the radio availability schedule, in microseconds of the local radio clock.
+     * `C`: The duration of each slot: 0 = 625 microseconds, 1 = 1.25 milliseconds.
+     * `C`: The number of slots (`num_slots`) in the radio availability schedule. Value 0 indicates that the radio is
+     *      always available for Thread. The schedule duration (`num_slots` multiplied by the slot duration) MUST NOT
+     *      be longer than 60000 microseconds.
+     * `d`: The available radio slots MSB-first bitmap (`ceil(num_slots / 8)` bytes, 1 = available, 0 = unavailable).
+     * `d`: The optional preferred radio slots MSB-first bitmap (`ceil(num_slots / 8)` bytes, 1 = preferred,
+     *      0 = not preferred). It is empty if all available slots are preferred. The preferred slots MUST be a subset
+     *      of the available slots.
+     *
+     * The host can read the current radio availability schedule. The RCP also sends this property as an unsolicited
+     * notification whenever the radio availability is updated. If the radio driver reports an invalid schedule (an
+     * unknown slot duration, or a schedule duration longer than 60000 microseconds), the RCP sends `LAST_STATUS` with
+     * `SPINEL_STATUS_INTERNAL_ERROR` instead.
+     *
+     * On reception:
+     *  - If the slot duration is unknown, the property is invalid.
+     *  - If the schedule duration is longer than 60000 microseconds, the property is invalid.
+     *  - If a bitmap is longer than `ceil(num_slots / 8)` bytes, the extra bytes are ignored.
+     *  - If the available slots bitmap is shorter than `ceil(num_slots / 8)` bytes, the property is invalid.
+     *  - If the preferred slots bitmap is empty or omitted, all available slots are preferred. If it is non-empty but
+     *    shorter than `ceil(num_slots / 8)` bytes, the property is invalid.
+     *  - A slot is preferred only if it is set in both bitmaps.
+     */
+    SPINEL_PROP_RCP_RADIO_AVAILABILITY = SPINEL_PROP_RCP_EXT__BEGIN + 6,
+
+    /// Reserved RCP extension properties
+    /**
+     * Properties in the range [`SPINEL_PROP_RCP_EXT_RESERVED__BEGIN`, `SPINEL_PROP_RCP_EXT_RESERVED__END`) are reserved
+     * for RCP extensions under development out of tree, which may be merged back later. They MUST NOT be assigned to
+     * other properties.
+     */
+    SPINEL_PROP_RCP_EXT_RESERVED__BEGIN = SPINEL_PROP_RCP_EXT__BEGIN + 0xf0,
+    SPINEL_PROP_RCP_EXT_RESERVED__END   = SPINEL_PROP_RCP_EXT__BEGIN + 0x100,
 
     SPINEL_PROP_RCP_EXT__END = 0x900,
 

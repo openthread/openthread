@@ -44,7 +44,7 @@ namespace TypeTraits {
  */
 struct TrueValue
 {
-    constexpr static bool kValue = true; ///< true value.
+    static constexpr bool kValue = true; ///< true value.
 };
 
 /**
@@ -52,7 +52,7 @@ struct TrueValue
  */
 struct FalseValue
 {
-    constexpr static bool kValue = false; ///< false value.
+    static constexpr bool kValue = false; ///< false value.
 };
 
 /**

@@ -55,7 +55,7 @@ void Node::Reset(void)
     mAlarmMicro.Reset();
     mMdns.Reset();
     mUpstreamDns.Reset();
-    mInfraIf.mPendingTxQueue.DequeueAndFreeAll();
+    mInfraIf.Reset();
     mPendingTasklet = false;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

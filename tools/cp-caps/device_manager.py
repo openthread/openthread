@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import atexit
 import logging
 import os
 import sys
@@ -39,6 +40,7 @@ from typing import Optional
 import otci
 from otci import OTCI
 from otci.errors import ExpectLineTimeoutError, InvalidArgumentsError
+from sniffer import Sniffer
 
 CP_CAPABILITY_VERSION = "0.1.1-dev"
 
@@ -77,12 +79,48 @@ class DeviceManager(object):
     DEFAULT_FORMAT_ALIGN_LENGTH = 58  # The default formatted string alignment length
 
     def __init__(self):
-        self.__dut = self.__connect_dut()
-        self.__ref = self.__connect_reference_device()
+        self.__dut = None
+        self.__ref = None
+        self.__sniffer = None
+        atexit.register(self.close)
+        try:
+            self.__dut = self.__connect_dut()
+            self.__ref = self.__connect_reference_device()
+            self.__sniffer = self.__create_sniffer()
+        except Exception:
+            self.close()
+            raise
 
         if self.__get_debug_enabled():
             logger = logging.getLogger()
             logger.setLevel(logging.DEBUG)
+
+    def close(self):
+        """Closes connected devices and tears down active proxies/processes."""
+        try:
+            atexit.unregister(self.close)
+        except Exception:
+            pass
+
+        if getattr(self, '_DeviceManager__dut', None) is not None:
+            try:
+                self.__dut.close()
+            except Exception:
+                pass
+            self.__dut = None
+
+        if getattr(self, '_DeviceManager__ref', None) is not None:
+            try:
+                self.__ref.close()
+            except Exception:
+                pass
+            self.__ref = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     @property
     def dut(self) -> OTCI:
@@ -91,6 +129,11 @@ class DeviceManager(object):
     @property
     def ref(self) -> OTCI:
         return self.__ref
+
+    @property
+    def sniffer(self) -> Optional[Sniffer]:
+        """The sniffer, or None if no sniffer is configured (`SNIFFER_SERIAL` or `SNIFFER_RADIO_URL`)."""
+        return self.__sniffer
 
     def output_test_result_string(self, name: str, value: str, align_length: int = DEFAULT_FORMAT_ALIGN_LENGTH):
         prefix = (name + ' ').ljust(align_length, '-')
@@ -119,31 +162,129 @@ class DeviceManager(object):
     def __get_adb_key(self) -> Optional[str]:
         return os.getenv('ADB_KEY', None)
 
+    def __get_ot_cli(self) -> str:
+        if os.getenv('OT_CLI'):
+            return os.getenv('OT_CLI')
+        if os.getenv('OT_POSIX_CLI'):
+            return os.getenv('OT_POSIX_CLI')
+        if os.getenv('OT_POSIX_APPS'):
+            candidate = os.path.join(os.getenv('OT_POSIX_APPS'), 'ot-cli')
+            if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                return candidate
+        default_posix = os.path.join(os.path.dirname(__file__), '../../build/posix/src/posix/ot-cli')
+        if os.path.isfile(default_posix) and os.access(default_posix, os.X_OK):
+            return os.path.abspath(default_posix)
+        return 'ot-cli'
+
+    def __is_spinel_proxy_enabled(self, prefix: str = 'DUT') -> bool:
+        val = os.getenv(
+            f'{prefix}_SPINEL_PROXY',
+            os.getenv(f'{prefix}_USE_SPINEL_PROXY', os.getenv('SPINEL_PROXY', os.getenv('USE_SPINEL_PROXY', ''))))
+        return val.lower() in ('1', 'true', 'on', 'yes')
+
+    def __create_sniffer(self) -> Optional[Sniffer]:
+        if os.getenv('SNIFFER_RADIO_URL'):
+            radio_url = os.getenv('SNIFFER_RADIO_URL')
+        elif os.getenv('SNIFFER_SERIAL'):
+            radio_url = f'spinel+hdlc+uart://{os.getenv("SNIFFER_SERIAL")}?uart-baudrate=115200'
+        else:
+            return None
+
+        return Sniffer(os.getenv('OT_EXTCAP', 'ot-extcap'), radio_url)
+
     def __connect_dut(self) -> OTCI:
-        if os.getenv('DUT_ADB_TCP'):
-            node = otci.connect_otbr_adb_tcp(os.getenv('DUT_ADB_TCP'), adb_key=self.__get_adb_key())
+        if os.getenv('DUT_RADIO_URL'):
+            node = otci.connect_cli_posix(os.getenv('DUT_RADIO_URL'), executable=self.__get_ot_cli())
+        elif os.getenv('DUT_ADB_SPINEL_PROXY'):
+            node = otci.connect_cli_adb_spinel_proxy(
+                device_serial=os.getenv('DUT_ADB_SPINEL_PROXY'),
+                socket_path=os.getenv('DUT_SPINEL_PROXY_SOCKET'),
+                executable=self.__get_ot_cli(),
+                adb_key=self.__get_adb_key(),
+            )
+        elif os.getenv('DUT_ADB_TCP'):
+            if self.__is_spinel_proxy_enabled('DUT'):
+                addr = os.getenv('DUT_ADB_TCP')
+                if ':' in addr:
+                    host, port_str = addr.split(':', 1)
+                    port = int(port_str)
+                else:
+                    host, port = addr, 5555
+                node = otci.connect_cli_adb_spinel_proxy(
+                    host=host,
+                    port=port,
+                    socket_path=os.getenv('DUT_SPINEL_PROXY_SOCKET'),
+                    executable=self.__get_ot_cli(),
+                    adb_key=self.__get_adb_key(),
+                )
+            else:
+                node = otci.connect_otbr_adb_tcp(os.getenv('DUT_ADB_TCP'), adb_key=self.__get_adb_key())
         elif os.getenv('DUT_ADB_USB'):
-            node = otci.connect_otbr_adb_usb(os.getenv('DUT_ADB_USB'), adb_key=self.__get_adb_key())
+            if self.__is_spinel_proxy_enabled('DUT'):
+                node = otci.connect_cli_adb_spinel_proxy(
+                    device_serial=os.getenv('DUT_ADB_USB'),
+                    socket_path=os.getenv('DUT_SPINEL_PROXY_SOCKET'),
+                    executable=self.__get_ot_cli(),
+                    adb_key=self.__get_adb_key(),
+                )
+            else:
+                node = otci.connect_otbr_adb_usb(os.getenv('DUT_ADB_USB'), adb_key=self.__get_adb_key())
         elif os.getenv('DUT_CLI_SERIAL'):
             node = otci.connect_cli_serial(os.getenv('DUT_CLI_SERIAL'))
         elif os.getenv('DUT_SSH'):
             node = otci.connect_otbr_ssh(os.getenv('DUT_SSH'))
         else:
             raise InvalidArgumentsError(
-                "Please set DUT_ADB_TCP, DUT_ADB_USB, DUT_CLI_SERIAL or DUT_SSH to connect to the DUT device.")
+                "Please set DUT_RADIO_URL, DUT_ADB_SPINEL_PROXY, DUT_ADB_TCP, DUT_ADB_USB, DUT_CLI_SERIAL or DUT_SSH to connect to the DUT device."
+            )
 
         return node
 
     def __connect_reference_device(self) -> OTCI:
-        if os.getenv('REF_CLI_SERIAL'):
+        if os.getenv('REF_RADIO_URL'):
+            node = otci.connect_cli_posix(os.getenv('REF_RADIO_URL'), executable=self.__get_ot_cli())
+        elif os.getenv('REF_ADB_SPINEL_PROXY'):
+            node = otci.connect_cli_adb_spinel_proxy(
+                device_serial=os.getenv('REF_ADB_SPINEL_PROXY'),
+                socket_path=os.getenv('REF_SPINEL_PROXY_SOCKET'),
+                executable=self.__get_ot_cli(),
+                adb_key=self.__get_adb_key(),
+            )
+        elif os.getenv('REF_ADB_TCP'):
+            if self.__is_spinel_proxy_enabled('REF'):
+                addr = os.getenv('REF_ADB_TCP')
+                if ':' in addr:
+                    host, port_str = addr.split(':', 1)
+                    port = int(port_str)
+                else:
+                    host, port = addr, 5555
+                node = otci.connect_cli_adb_spinel_proxy(
+                    host=host,
+                    port=port,
+                    socket_path=os.getenv('REF_SPINEL_PROXY_SOCKET'),
+                    executable=self.__get_ot_cli(),
+                    adb_key=self.__get_adb_key(),
+                )
+            else:
+                node = otci.connect_otbr_adb_tcp(os.getenv('REF_ADB_TCP'), adb_key=self.__get_adb_key())
+        elif os.getenv('REF_ADB_USB'):
+            if self.__is_spinel_proxy_enabled('REF'):
+                node = otci.connect_cli_adb_spinel_proxy(
+                    device_serial=os.getenv('REF_ADB_USB'),
+                    socket_path=os.getenv('REF_SPINEL_PROXY_SOCKET'),
+                    executable=self.__get_ot_cli(),
+                    adb_key=self.__get_adb_key(),
+                )
+            else:
+                node = otci.connect_otbr_adb_usb(os.getenv('REF_ADB_USB'), adb_key=self.__get_adb_key())
+        elif os.getenv('REF_CLI_SERIAL'):
             node = otci.connect_cli_serial(os.getenv('REF_CLI_SERIAL'))
         elif os.getenv('REF_SSH'):
             node = otci.connect_otbr_ssh(os.getenv('REF_SSH'))
-        elif os.getenv('REF_ADB_USB'):
-            node = otci.connect_otbr_adb_usb(os.getenv('REF_ADB_USB'), adb_key=self.__get_adb_key())
         else:
             raise InvalidArgumentsError(
-                "Please set REF_CLI_SERIAL, REF_SSH or REF_ADB_USB to connect to the reference device.")
+                "Please set REF_RADIO_URL, REF_ADB_SPINEL_PROXY, REF_ADB_TCP, REF_ADB_USB, REF_CLI_SERIAL or REF_SSH to connect to the reference device."
+            )
 
         return node
 

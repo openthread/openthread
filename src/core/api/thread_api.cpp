@@ -272,6 +272,11 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
     return AsCoreType(aInstance).Get<NeighborTable>().GetNextNeighborInfo(*aIterator, AsCoreType(aInfo));
 }
 
+otError otThreadGetNeighborInfoByRloc16(otInstance *aInstance, uint16_t aRloc16, otNeighborInfo *aInfo)
+{
+    return AsCoreType(aInstance).Get<NeighborTable>().GetNeighborInfo(aRloc16, AsCoreType(aInfo));
+}
+
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
 {
     return MapEnum(AsCoreType(aInstance).Get<Mle::Mle>().GetRole());
@@ -480,19 +485,6 @@ void otThreadSetStoreFrameCounterAhead(otInstance *aInstance, uint32_t aStoreFra
 uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mle::Mle>().GetStoreFrameCounterAhead();
-}
-#endif
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-otError otThreadWakeup(otInstance         *aInstance,
-                       const otExtAddress *aWedAddress,
-                       uint16_t            aWakeupIntervalUs,
-                       uint16_t            aWakeupDurationMs,
-                       otWakeupCallback    aCallback,
-                       void               *aCallbackContext)
-{
-    return AsCoreType(aInstance).Get<Mle::Mle>().Wakeup(AsCoreType(aWedAddress), aWakeupIntervalUs, aWakeupDurationMs,
-                                                        aCallback, aCallbackContext);
 }
 #endif
 

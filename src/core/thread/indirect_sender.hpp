@@ -100,6 +100,20 @@ public:
          */
         uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
 
+        /**
+         * Indicates whether a given message is currently selected as the indirect message for the child and has been
+         * partially sent.
+         *
+         * @param[in] aMessage  The message to check.
+         *
+         * @retval TRUE   If @p aMessage is the current indirect message for the child and is partially sent.
+         * @retval FALSE  If @p aMessage is not the current indirect message for the child or no fragment has been sent.
+         */
+        bool IsSendingIndirectMsg(const Message &aMessage) const
+        {
+            return (mIndirectMessage == &aMessage) && (mIndirectFragmentOffset > 0);
+        }
+
     private:
         Message *GetIndirectMessage(void) { return mIndirectMessage; }
         void     SetIndirectMessage(Message *aMessage) { mIndirectMessage = aMessage; }
@@ -136,16 +150,6 @@ public:
         static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < (1UL << 14),
                       "mQueuedMessageCount cannot fit max required!");
     };
-
-    /**
-     * Represents a predicate function for checking if a given `Message` meets specific criteria.
-     *
-     * @param[in] aMessage The message to evaluate.
-     *
-     * @retval TRUE   If the @p aMessage satisfies the predicate condition.
-     * @retval FALSE  If the @p aMessage does not satisfy the predicate condition.
-     */
-    typedef bool (&MessageChecker)(const Message &aMessage);
 
     /**
      * Initializes the object.
@@ -195,7 +199,7 @@ public:
 
     /**
      * Finds the first queued message for a given sleepy child that also satisfies the conditions of a given
-     * `MessageChecker`.
+     * `Message::Checker`.
      *
      * The caller MUST ensure that @p aChild is sleepy.
      *
@@ -204,14 +208,14 @@ public:
      *
      * @returns A pointer to the matching queued message, or `nullptr` if none is found.
      */
-    Message *FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker)
+    Message *FindQueuedMessageForSleepyChild(const Child &aChild, Message::Checker aChecker)
     {
         return AsNonConst(AsConst(this)->FindQueuedMessageForSleepyChild(aChild, aChecker));
     }
 
     /**
      * Finds the first queued message for a given sleepy child that also satisfies the conditions of a given
-     * `MessageChecker`.
+     * `Message::Checker`.
      *
      * The caller MUST ensure that @p aChild is sleepy.
      *
@@ -220,11 +224,11 @@ public:
      *
      * @returns A pointer to the matching queued message, or `nullptr` if none is found.
      */
-    const Message *FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const;
+    const Message *FindQueuedMessageForSleepyChild(const Child &aChild, Message::Checker aChecker) const;
 
     /**
      * Indicates whether there is any queued message for a given sleepy child that also satisfies the conditions of a
-     * given `MessageChecker`.
+     * given `Message::Checker`.
      *
      * The caller MUST ensure that @p aChild is sleepy.
      *
@@ -234,7 +238,7 @@ public:
      * @retval TRUE   There is a queued message satisfying @p aChecker for sleepy child @p aChild.
      * @retval FALSE  There is no queued message satisfying @p aChecker for sleepy child @p aChild.
      */
-    bool HasQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const
+    bool HasQueuedMessageForSleepyChild(const Child &aChild, Message::Checker aChecker) const
     {
         return (FindQueuedMessageForSleepyChild(aChild, aChecker) != nullptr);
     }
@@ -261,24 +265,24 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     // Callbacks from `CslTxScheduler`
     Error PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aCslNeighbor);
-    void  HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
-                                       const FrameContext &aContext,
-                                       Error               aError,
-                                       CslNeighbor        &aCslNeighbor);
+    void  HandleFrameTxToCslNeighborDone(const Mac::TxFrame::ParseInfo &aFrameInfo,
+                                         const FrameContext            &aContext,
+                                         Error                          aError,
+                                         CslNeighbor                   &aCslNeighbor);
 #endif
 
 #if OPENTHREAD_FTD
     // Callbacks from `DataPollHandler`
     Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
-    void  HandleSentFrameToChild(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, Child &aChild);
+    void  HandleFrameTxToChildDone(const Mac::TxFrame::ParseInfo &aFrameInfo,
+                                   const FrameContext            &aContext,
+                                   Error                          aError,
+                                   Child                         &aChild);
     void  HandleFrameChangeDone(Child &aChild);
 
     void UpdateIndirectMessage(Child &aChild);
     void RequestMessageUpdate(Child &aChild);
     void ClearMessagesForRemovedChildren(void);
-
-    static bool AcceptAnyMessage(const Message &aMessage);
-    static bool AcceptSupervisionMessage(const Message &aMessage);
 #endif // OPENTHREAD_FTD
 
     bool mEnabled;

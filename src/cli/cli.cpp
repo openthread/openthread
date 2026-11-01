@@ -175,7 +175,11 @@ void Interpreter::OutputResult(otError aError)
         ExitNow();
     }
 
+#if OPENTHREAD_PLATFORM_NEXUS
+    VerifyOrExit(mCommandIsPending);
+#else
     OT_ASSERT(mCommandIsPending);
+#endif
 
     VerifyOrExit(aError != OT_ERROR_PENDING);
 
@@ -1816,11 +1820,13 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
      * Ext Addr: e2b3540590b0fd87
      * Mode: rn
      * CSL Synchronized: 1
+     * CSL Period: 3125
      * Net Data: 184
      * Timeout: 100
      * Age: 0
      * Link Quality In: 3
      * RSSI: -20
+     * Supervision Interval: 129
      * Done
      * @endcode
      * @cparam child @ca{child-id}
@@ -1836,6 +1842,7 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
     linkMode.mNetworkData  = childInfo.mFullThreadDevice;
     OutputLine("Mode: %s", LinkModeToString(linkMode, linkModeString));
     OutputLine("CSL Synchronized: %d ", childInfo.mIsCslSynced);
+    OutputLine("CSL Period: %u", childInfo.mCslPeriod);
     OutputLine("Net Data: %u", childInfo.mNetworkDataVersion);
     OutputLine("Timeout: %lu", ToUlong(childInfo.mTimeout));
     OutputLine("Age: %lu", ToUlong(childInfo.mAge));
@@ -4676,11 +4683,62 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
             }
         }
     }
+    /**
+     * @cli neighbor (rloc16)
+     * @code
+     * neighbor 0xc800
+     * Role: R
+     * Rloc16: 0xc800
+     * Ext Addr: 9a91556102c39ddb
+     * Age: 2
+     * Connection Time: 644
+     * Avg RSSI: -29
+     * Last RSSI: -29
+     * Link Quality In: 3
+     * Frame Error: 0.00 %
+     * Msg Error: 0.00 %
+     * Mode: rdn
+     * Version: 5
+     * Done
+     * @endcode
+     * @cparam neighbor @ca{rloc16}
+     * @par api_copy
+     * #otThreadGetNeighborInfoByRloc16
+     * @par
+     * Prints information about the neighbor with the given RLOC16.
+     * @par
+     * For `Role`, the possible values are `C` (Child) or `R` (Router). `Age` and `Connection Time` are in seconds.
+     */
     else
     {
-        error = OT_ERROR_INVALID_ARGS;
+        uint16_t               rloc16;
+        PercentageStringBuffer stringBuffer;
+        otLinkModeConfig       linkMode;
+        char                   linkModeString[kLinkModeStringSize];
+
+        SuccessOrExit(error = aArgs[0].ParseAsUint16(rloc16));
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = otThreadGetNeighborInfoByRloc16(GetInstancePtr(), rloc16, &neighborInfo));
+
+        OutputLine("Role: %c", neighborInfo.mIsChild ? 'C' : 'R');
+        OutputLine("Rloc16: 0x%04x", neighborInfo.mRloc16);
+        OutputFormat("Ext Addr: ");
+        OutputExtAddressLine(neighborInfo.mExtAddress);
+        OutputLine("Age: %lu", ToUlong(neighborInfo.mAge));
+        OutputLine("Connection Time: %lu", ToUlong(neighborInfo.mConnectionTime));
+        OutputLine("Avg RSSI: %d", neighborInfo.mAverageRssi);
+        OutputLine("Last RSSI: %d", neighborInfo.mLastRssi);
+        OutputLine("Link Quality In: %u", neighborInfo.mLinkQualityIn);
+        OutputLine("Frame Error: %s %%", PercentageToString(neighborInfo.mFrameErrorRate, stringBuffer));
+        OutputLine("Msg Error: %s %%", PercentageToString(neighborInfo.mMessageErrorRate, stringBuffer));
+        linkMode.mRxOnWhenIdle = neighborInfo.mRxOnWhenIdle;
+        linkMode.mDeviceType   = neighborInfo.mFullThreadDevice;
+        linkMode.mNetworkData  = neighborInfo.mFullNetworkData;
+        OutputLine("Mode: %s", LinkModeToString(linkMode, linkModeString));
+        OutputLine("Version: %u", neighborInfo.mVersion);
     }
 
+exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
@@ -8218,220 +8276,6 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-template <> otError Interpreter::Process<Cmd("p2p")>(Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArgs[0] == "unlink")
-    {
-        otExtAddress extAddress;
-
-        /**
-         * @cli p2p unlink
-         * @code
-         * p2p unlink dead00beef00cafe
-         * Done
-         * @endcode
-         * @cparam p2p unlink @ca{extended-address}
-         * @par
-         * `OPENTHREAD_CONFIG_P2P_ENABLE` is required.
-         * @par
-         * Tears down the P2P link identified by the extended address.
-         */
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddress.m8));
-        SuccessOrExit(error = otP2pUnlink(GetInstancePtr(), &extAddress, HandleP2pUnlinkDone, this));
-        error = OT_ERROR_PENDING;
-    }
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    else if (aArgs[0] == "link")
-    {
-        otP2pRequest p2pRequest;
-
-        /**
-         * @cli p2p link
-         * @code
-         * p2p link extaddr dead00beef00cafe
-         * Done
-         * @endcode
-         * @cparam p2p link extaddr @ca{extended-address}
-         * @par
-         * `OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE` are required.
-         * @par
-         * Wakes up the Wake-up Listener identified by the extended address and establishes a peer-to-peer link with the
-         * peer.
-         */
-        if (aArgs[1] == "extaddr")
-        {
-            SuccessOrExit(error = aArgs[2].ParseAsHexString(p2pRequest.mWakeupRequest.mShared.mExtAddress.m8));
-            p2pRequest.mWakeupRequest.mType = OT_WAKEUP_TYPE_EXT_ADDRESS;
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
-
-        SuccessOrExit(error = otP2pWakeupAndLink(GetInstancePtr(), &p2pRequest, HandleP2pLinkDone, this));
-        error = OT_ERROR_PENDING;
-    }
-#endif
-    else
-    {
-        error = OT_ERROR_INVALID_ARGS;
-    }
-
-exit:
-    return error;
-}
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-void Interpreter::HandleP2pLinkDone(void *aContext) { static_cast<Interpreter *>(aContext)->HandleP2pLinkDone(); }
-
-void Interpreter::HandleP2pLinkDone(void) { OutputResult(OT_ERROR_NONE); }
-#endif
-
-void Interpreter::HandleP2pUnlinkDone(void *aContext) { static_cast<Interpreter *>(aContext)->HandleP2pUnlinkDone(); }
-
-void Interpreter::HandleP2pUnlinkDone(void) { OutputResult(OT_ERROR_NONE); }
-#endif //  OPENTHREAD_CONFIG_P2P_ENABLE
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-
-    /**
-     * @cli wakeup channel (get,set)
-     * @code
-     * wakeup channel
-     * 12
-     * Done
-     * @endcode
-     * @code
-     * wakeup channel 12
-     * Done
-     * @endcode
-     * @cparam wakeup channel [@ca{channel}]
-     * Use `channel` to set the wake-up channel.
-     * @par
-     * Gets or sets the wake-up channel value.
-     * @sa otLinkGetWakeupChannel
-     * @sa otLinkSetWakeupChannel
-     */
-    if (aArgs[0] == "channel")
-    {
-        error = ProcessGetSet(aArgs + 1, otLinkGetWakeupChannel, otLinkSetWakeupChannel);
-    }
-#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-    /**
-     * @cli wakeup parameters (get,set)
-     * @code
-     * wakeup parameters
-     * interval: 1000000us
-     * duration: 8000us
-     * Done
-     * @endcode
-     * @code
-     * wakeup parameters 1000000 8000
-     * Done
-     * @endcode
-     * @cparam wakeup parameters @ca{interval} @ca{duration}
-     * @par
-     * Gets or sets the wake-up listen interval and wake-up listen duration values.
-     * @sa otLinkGetWakeUpListenParameters
-     * @sa otLinkSetWakeUpListenParameters
-     */
-    else if (aArgs[0] == "parameters")
-    {
-        uint32_t interval;
-        uint32_t duration;
-
-        if (aArgs[1].IsEmpty())
-        {
-            otLinkGetWakeupListenParameters(GetInstancePtr(), &interval, &duration);
-            OutputLine("interval: %luus", ToUlong(interval));
-            OutputLine("duration: %luus", ToUlong(duration));
-        }
-        else
-        {
-            SuccessOrExit(error = aArgs[1].ParseAsUint32(interval));
-            SuccessOrExit(error = aArgs[2].ParseAsUint32(duration));
-            error = otLinkSetWakeupListenParameters(GetInstancePtr(), interval, duration);
-        }
-    }
-    /**
-     * @cli wakeup listen (enable,disable)
-     * @code
-     * wakeup listen
-     * disabled
-     * Done
-     * @endcode
-     * @code
-     * wakeup listen enable
-     * Done
-     * @endcode
-     * @code
-     * wakeup listen
-     * enabled
-     * Done
-     * @endcode
-     * @cparam wakeup listen @ca{enable}
-     * @par
-     * Gets or sets current wake-up listening link state.
-     * @sa otLinkIsWakeupListenEnabled
-     * @sa otLinkSetWakeUpListenEnabled
-     */
-    else if (aArgs[0] == "listen")
-    {
-        error = ProcessEnableDisable(aArgs + 1, otLinkIsWakeupListenEnabled, otLinkSetWakeUpListenEnabled);
-    }
-#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    /**
-     * @cli wakeup wake
-     * @code
-     * wakeup wake 1ece0a6c4653a7c1 7500 1090
-     * Done
-     * @endcode
-     * @cparam wakeup wake @ca{extaddr} @ca{wakeup-interval} @ca{wakeup-duration}
-     * @par
-     * Wakes a Wake-up End Device identified by its MAC extended address, using the provided wake-up interval (in the
-     * units of microseconds), and wake-up duration (in the units of milliseconds).
-     */
-    else if (aArgs[0] == "wake")
-    {
-        otExtAddress extAddress;
-        uint16_t     wakeupIntervalUs;
-        uint16_t     wakeupDurationMs;
-
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddress.m8));
-        SuccessOrExit(error = aArgs[2].ParseAsUint16(wakeupIntervalUs));
-        SuccessOrExit(error = aArgs[3].ParseAsUint16(wakeupDurationMs));
-
-        SuccessOrExit(error = otThreadWakeup(GetInstancePtr(), &extAddress, wakeupIntervalUs, wakeupDurationMs,
-                                             HandleWakeupResult, this));
-        error = OT_ERROR_PENDING;
-    }
-#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
-    }
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-void Interpreter::HandleWakeupResult(otError aError, void *aContext)
-{
-    static_cast<Interpreter *>(aContext)->HandleWakeupResult(aError);
-}
-
-void Interpreter::HandleWakeupResult(otError aError) { OutputResult(aError); }
-#endif
-
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 size_t Interpreter::GetSize(void) { return sizeof(Interpreter); }
@@ -8687,9 +8531,6 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_FTD
         CmdEntry("nexthop"),
 #endif
-#if OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE
-        CmdEntry("p2p"),
-#endif
         CmdEntry("panid"),
         CmdEntry("parent"),
 #if OPENTHREAD_FTD
@@ -8789,11 +8630,6 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         CmdEntry("version"),
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_TD_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
-        CmdEntry("wakeup"),
-#endif
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
     };
 
 #undef CmdEntry

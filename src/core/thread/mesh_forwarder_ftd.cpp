@@ -41,23 +41,16 @@ namespace ot {
 
 RegisterLogModule("MeshForwarder");
 
-void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
+void MeshForwarder::DetermineDirectOrIndirectTx(Message &aMessage)
 {
-    Message &message = *aMessagePtr.Release();
-
-    message.SetOffset(0);
-    message.SetDatagramTag(0);
-    message.SetTimestampToNow();
-    mSendQueue.Enqueue(message);
-
-    switch (message.GetType())
+    switch (aMessage.GetType())
     {
     case Message::kTypeIp6:
     {
         Ip6::Header         ip6Header;
         const Ip6::Address &destination = ip6Header.GetDestination();
 
-        IgnoreError(message.Read(0, ip6Header));
+        IgnoreError(aMessage.Read(0, ip6Header));
 
         if (destination.IsMulticast())
         {
@@ -66,10 +59,10 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
             // children using indirect transmissions.
             if (destination.IsLinkLocalMulticast() || ip6Header.GetNextHeader() == Ip6::kProtoHopOpts)
             {
-                message.SetDirectTransmission();
+                aMessage.SetDirectTransmission();
             }
 
-            if (message.GetSubType() != Message::kSubTypeMplRetransmission)
+            if (aMessage.GetSubType() != Message::kSubTypeMplRetransmission)
             {
                 // Check if we need to forward the multicast message
                 // to any sleepy child. This is skipped for MPL retx
@@ -84,7 +77,7 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
                     if (!child.IsRxOnWhenIdle() && (destinedForAll || child.HasIp6Address(destination)) &&
                         !child.HasIp6Address(ip6Header.GetSource()))
                     {
-                        mIndirectSender.AddMessageForSleepyChild(message, child);
+                        mIndirectSender.AddMessageForSleepyChild(aMessage, child);
                     }
                 }
             }
@@ -93,14 +86,14 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
         {
             Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(destination);
 
-            if ((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle() && !message.IsDirectTransmission() &&
+            if ((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle() && !aMessage.IsDirectTransmission() &&
                 Get<ChildTable>().Contains(*neighbor))
             {
-                mIndirectSender.AddMessageForSleepyChild(message, *static_cast<Child *>(neighbor));
+                mIndirectSender.AddMessageForSleepyChild(aMessage, *static_cast<Child *>(neighbor));
             }
             else
             {
-                message.SetDirectTransmission();
+                aMessage.SetDirectTransmission();
             }
         }
 
@@ -109,33 +102,17 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 
     case Message::kTypeSupervision:
     {
-        Child *child = Get<ChildSupervisor>().GetDestination(message);
+        Child *child = Get<ChildSupervisor>().GetDestination(aMessage);
+
         OT_ASSERT((child != nullptr) && !child->IsRxOnWhenIdle());
-        mIndirectSender.AddMessageForSleepyChild(message, *child);
+        mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
         break;
     }
 
     default:
-        message.SetDirectTransmission();
+        aMessage.SetDirectTransmission();
         break;
     }
-
-    // Ensure that the message is marked for direct tx and/or for indirect tx
-    // to a sleepy child. Otherwise, remove the message.
-
-    if (RemoveMessageIfNoPendingTx(message))
-    {
-        ExitNow();
-    }
-
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    ApplyDirectTxQueueLimit(message);
-#endif
-
-    mScheduleTransmissionTask.Post();
-
-exit:
-    return;
 }
 
 void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
@@ -159,9 +136,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
 
         if (aError != kErrorNone)
         {
-            LogMessage(kMessageDrop, message, kErrorAddressQuery);
-            FinalizeMessageDirectTx(message, kErrorAddressQuery);
-            RemoveMessageIfNoPendingTx(message);
+            FinalizeDirectTxAndRemoveMessageIfNoPendingTx(message, kErrorAddressQuery, kMessageDrop);
             continue;
         }
 
@@ -175,140 +150,73 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
     }
 }
 
-Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvictReason)
-{
-    Error    error = kErrorNotFound;
-    Message *evict = nullptr;
-
-    error = RemoveUnsecureReassemblyMessage(aEvictReason);
-    VerifyOrExit(error == kErrorNotFound);
-
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    error = RemoveAgedMessages();
-    VerifyOrExit(error == kErrorNotFound);
-#endif
-
-    // Search for a lower priority message to evict
-    for (uint8_t priority = 0; priority < aPriority; priority++)
-    {
-        for (Message *message = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority)); message;
-             message          = message->GetNext())
-        {
-            if (message->GetPriority() != priority)
-            {
-                break;
-            }
-
-            if (message->GetDoNotEvict())
-            {
-                continue;
-            }
-
-            if ((aEvictReason == kEvictReasonDirectTxQueueAtLimit) && !message->IsDirectTransmission())
-            {
-                continue;
-            }
-
-            evict = message;
-            error = kErrorNone;
-            ExitNow();
-        }
-    }
-
-    VerifyOrExit(aEvictReason == kEvictReasonNoMessageBuffer);
-
-    for (uint8_t priority = aPriority; priority < Message::kNumPriorities; priority++)
-    {
-        // search for an equal or higher priority indirect message to evict
-        for (Message *message = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority)); message;
-             message          = message->GetNext())
-        {
-            if (message->GetPriority() != priority)
-            {
-                break;
-            }
-
-            if (message->GetDoNotEvict())
-            {
-                continue;
-            }
-
-            if (!message->GetIndirectTxChildMask().IsEmpty())
-            {
-                evict = message;
-                ExitNow(error = kErrorNone);
-            }
-        }
-    }
-
-exit:
-    if ((error == kErrorNone) && (evict != nullptr))
-    {
-        switch (aEvictReason)
-        {
-        case kEvictReasonDirectTxQueueAtLimit:
-            FinalizeAndRemoveMessage(*evict, kErrorDrop, kMessageFullQueueEvict);
-            break;
-
-        case kEvictReasonNoMessageBuffer:
-            FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
-            break;
-        }
-    }
-
-    return error;
-}
-
-void MeshForwarder::RemoveMessagesForChild(Child &aChild, MessageChecker &aMessageChecker)
+void MeshForwarder::RemoveMessagesForChild(Child &aChild, Message::Checker aChecker)
 {
     for (Message &message : mSendQueue)
     {
-        if (!aMessageChecker(message))
+        if (!aChecker(message))
         {
             continue;
         }
 
-        if (mIndirectSender.RemoveMessageFromSleepyChild(message, aChild) != kErrorNone)
+        if (mIndirectSender.RemoveMessageFromSleepyChild(message, aChild) == kErrorNone)
         {
-            const Neighbor *neighbor = nullptr;
+            RemoveMessageIfNoPendingTx(message);
+            continue;
+        }
+
+        if (message.IsDirectTransmission())
+        {
+            bool matches = false;
 
             if (message.GetType() == Message::kTypeIp6)
             {
                 Ip6::Header ip6header;
 
                 IgnoreError(message.Read(0, ip6header));
-                neighbor = Get<NeighborTable>().FindNeighbor(ip6header.GetDestination());
+
+                matches = (&aChild == Get<NeighborTable>().FindNeighbor(ip6header.GetDestination(),
+                                                                        Neighbor::kInStateAnyExceptInvalid));
             }
             else if (message.GetType() == Message::kType6lowpan)
             {
                 Lowpan::MeshHeader meshHeader;
 
                 IgnoreError(meshHeader.ParseFrom(message));
-                neighbor = Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination());
+                matches = (meshHeader.GetDestination() == aChild.GetRloc16());
             }
 
-            if (&aChild == neighbor)
+            if (matches)
             {
-                message.ClearDirectTransmission();
+                FinalizeDirectTxAndRemoveMessageIfNoPendingTx(message, kErrorDrop, kMessageDrop);
             }
         }
-
-        RemoveMessageIfNoPendingTx(message);
     }
 }
 
 void MeshForwarder::FinalizeMessageIndirectTxs(Message &aMessage)
 {
-    VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
+    VerifyOrExit(aMessage.IsIndirectTransmission());
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
         IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
-        VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
+        VerifyOrExit(aMessage.IsIndirectTransmission());
     }
 
 exit:
     return;
+}
+
+void MeshForwarder::FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction)
+{
+    if (!aMessage.IsDirectTransmission())
+    {
+        LogMessage(aAction, aMessage, aError);
+    }
+
+    FinalizeMessageIndirectTxs(aMessage);
+    FinalizeDirectTxAndRemoveMessageIfNoPendingTx(aMessage, aError, aAction);
 }
 
 void MeshForwarder::RemoveDataResponseMessages(void)

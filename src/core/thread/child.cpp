@@ -65,8 +65,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mSupervisionInterval = aChild.GetSupervisionInterval();
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();
-#else
-    mIsCslSynced = false;
+    mCslPeriod   = aChild.GetCslPeriod();
 #endif
     mConnectionTime = aChild.GetConnectionTime();
 }
@@ -96,6 +95,13 @@ void Child::SetDeviceMode(Mle::DeviceMode aMode)
     VerifyOrExit(aMode != GetDeviceMode());
 
     Neighbor::SetDeviceMode(aMode);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    if (IsRxOnWhenIdle())
+    {
+        ClearCsl();
+    }
+#endif
 
     VerifyOrExit(IsStateValid());
     Get<NeighborTable>().Signal(NeighborTable::kChildModeChanged, *this);

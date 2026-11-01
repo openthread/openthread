@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+#    Description:
+#      Retry a command or GitHub Actions step script on failure.
+#
+
+set -euo pipefail
+
+main()
+{
+    local max_attempts="${OT_RETRY_ATTEMPTS:-3}"
+    local delay_seconds="${OT_RETRY_DELAY:-10}"
+    local attempt=1
+    local exit_code=0
+    local -a cmd
+
+    if [[ $# -eq 0 ]]; then
+        echo "Usage: $0 <command> [args...]" >&2
+        return 1
+    fi
+
+    if [[ $# -ge 1 && -f $1 && ! -x $1 ]]; then
+        cmd=(bash --noprofile --norc -e -o pipefail "$@")
+    else
+        cmd=("$@")
+    fi
+
+    if [[ -n ${GITHUB_ACTIONS:-} && -d /etc/apt/apt.conf.d ]] && command -v sudo >/dev/null 2>&1; then
+        sudo tee /etc/apt/apt.conf.d/zzz-ot-timeout >/dev/null <<'EOF' || true
+Acquire::Retries "1";
+Acquire::http::Timeout "10";
+Acquire::https::Timeout "10";
+EOF
+        if [[ -f /etc/apt/apt-mirrors.txt ]]; then
+            sudo sed -i 's|^\(http://azure\.archive\.ubuntu\.com/.*\)\tpriority:1$|\1\tpriority:4|' /etc/apt/apt-mirrors.txt || true
+        fi
+    fi
+
+    while true; do
+        exit_code=0
+        "${cmd[@]}" || exit_code=$?
+
+        if [[ ${exit_code} -eq 0 ]]; then
+            return 0
+        fi
+
+        if [[ ${attempt} -ge ${max_attempts} ]]; then
+            echo "Command failed after ${attempt} attempts (exit code ${exit_code}): ${cmd[*]}" >&2
+            return "${exit_code}"
+        fi
+
+        echo "Attempt ${attempt}/${max_attempts} failed (exit code ${exit_code}). Retrying in ${delay_seconds}s..." >&2
+        sleep "${delay_seconds}"
+        attempt=$((attempt + 1))
+    done
+}
+
+main "$@"

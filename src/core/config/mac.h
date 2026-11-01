@@ -283,6 +283,27 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_ALLOW_INCOMPLETE_RX_FRAME_WHEN_GEN_ENH_ACK
+ *
+ * Define as 1 to have `TxFrame::GenerateEnhAck()` require only fields through the Auxiliary Security Header to be
+ * parseable in the received frame, rather than the full frame (Header IEs and MAC Command ID).
+ *
+ * This is intended for radio platforms that construct Enhanced ACKs mid-RX from a partially received PSDU (e.g.,
+ * inside an early frame-pending callback), where the Header IE and MAC Command ID bytes may not yet be in RAM.
+ * Those bytes are not required for Enh-ACK construction.
+ *
+ * @note `aRxFrame.mLength` must still reflect the full PSDU length, including the MIC and FCS footers.
+ * `ParseInfo::ParseFrom()` strips those footers via `RemoveFooter()`, so a length that counts only the bytes
+ * received into RAM so far will cause `GenerateEnhAck()` to return `kErrorParse`.
+ *
+ * @note The platform remains responsible for suppressing Enh-ACK transmission for frames not successfully received per
+ * IEEE 802.15.4.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_ALLOW_INCOMPLETE_RX_FRAME_WHEN_GEN_ENH_ACK
+#define OPENTHREAD_CONFIG_MAC_ALLOW_INCOMPLETE_RX_FRAME_WHEN_GEN_ENH_ACK 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_ATTACH_DATA_POLL_PERIOD
  *
  * The Data Poll period during attach in milliseconds.

@@ -50,6 +50,11 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
  */
 static constexpr uint32_t kStabilizationTime = 130 * 1000;
 
+/**
+ * Poll period for SED, in milliseconds.
+ */
+static constexpr uint32_t kPollPeriod = 500;
+
 static bool HasAddressWithPrefix(Node &aNode, const char *aPrefixString)
 {
     Ip6::Prefix prefix;
@@ -112,8 +117,8 @@ void TestOnMeshPrefix(void)
     med.Join(router, Node::kAsMed);
     sed.Join(router, Node::kAsSed);
 
-    SuccessOrQuit(med.Get<DataPollSender>().SetExternalPollPeriod(1000));
-    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(1000));
+    SuccessOrQuit(med.Get<DataPollSender>().SetExternalPollPeriod(kPollPeriod));
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(kPollPeriod));
 
     nexus.AdvanceTime(kAttachToRouterTime);
 

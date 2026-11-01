@@ -247,7 +247,9 @@ NcpBase::NcpBase(Instance **aInstances, uint8_t aCount)
     : NcpBase(aInstances[0])
 {
     OT_ASSERT(aCount > 0);
-    OT_ASSERT(aCount < SPINEL_HEADER_IID_MAX); // One IID reserved for broadcast
+    OT_ASSERT(aCount <= SPINEL_HEADER_IID_MAX); // One IID reserved for broadcast
+
+    memset(mInstances, 0, sizeof(mInstances));
 
     uint8_t skipped = 0;
 
@@ -261,6 +263,9 @@ NcpBase::NcpBase(Instance **aInstances, uint8_t aCount)
 
         OT_ASSERT(i + skipped <= SPINEL_HEADER_IID_MAX);
         mInstances[i + skipped] = aInstances[i];
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+        otLinkRawSetRadioAvailabilityUpdated(mInstances[i + skipped], &NcpBase::LinkRawRadioAvailabilityUpdated);
+#endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         otDiagSetOutputCallback(mInstances[i + skipped], &NcpBase::HandleDiagOutput_Jump, this);
 #endif
@@ -342,6 +347,7 @@ NcpBase::NcpBase(Instance *aInstance)
 
     memset(&mResponseQueue, 0, sizeof(mResponseQueue));
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    otLinkRawSetRadioAvailabilityUpdated(mInstance, &NcpBase::LinkRawRadioAvailabilityUpdated);
     memset(mCurTransmitTID, 0, sizeof(mCurTransmitTID));
     memset(mSrcMatchEnabled, 0, sizeof(mSrcMatchEnabled));
     memset(mCurScanChannel, kInvalidScanChannel, sizeof(mCurScanChannel));
@@ -2767,7 +2773,6 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_TARGET_POWER>(void)
 {
     otError error;
@@ -2782,6 +2787,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_PHY_CALIBRATED_POWER>(void)
 {
     otError        error;

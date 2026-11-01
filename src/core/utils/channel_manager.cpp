@@ -124,7 +124,10 @@ void ChannelManager::ChangeCslChannel(uint8_t aChannel)
         ExitNow();
     }
 
-    VerifyOrExit(Radio::IsCslChannelValid(aChannel));
+    if (aChannel != 0)
+    {
+        VerifyOrExit(Radio::IsChannelValid(aChannel));
+    }
 
     LogInfo("Change to Csl channel %d now.", aChannel);
 
