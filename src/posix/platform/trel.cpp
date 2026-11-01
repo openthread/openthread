@@ -31,6 +31,10 @@
  *   This file implements platform for TREL using IPv6/UDP socket under POSIX.
  */
 
+#ifdef __APPLE__
+#define __APPLE_USE_RFC_3542
+#endif
+
 #include "openthread-posix-config.h"
 
 #include "platform-posix.h"
@@ -38,6 +42,7 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <fcntl.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -72,10 +77,11 @@ static TxPacket          *sFreeTxPacketHead;  // A singly linked list of free/av
 static TxPacket          *sTxPacketQueueTail; // A circular linked list for queued tx packets.
 static otPlatTrelCounters sCounters;
 
-static char sInterfaceName[IFNAMSIZ + 1];
-static bool sInitialized = false;
-static bool sEnabled     = false;
-static int  sSocket      = -1;
+static char         sInterfaceName[IFNAMSIZ + 1];
+static unsigned int sInterfaceIndex = 0;
+static bool         sInitialized    = false;
+static bool         sEnabled        = false;
+static int          sSocket         = -1;
 
 static const char kLogModuleName[] = "Trel";
 
@@ -175,6 +181,7 @@ exit:
 static void PrepareSocket(uint16_t &aUdpPort)
 {
     int                 val;
+    int                 rval;
     struct sockaddr_in6 sockAddr;
     socklen_t           sockLen;
 
@@ -194,14 +201,36 @@ static void PrepareSocket(uint16_t &aUdpPort)
     setsockopt(sSocket, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &val, sizeof(val));
 #endif
 
-#ifdef __linux__
     // Bind to the TREL interface.
-    if (setsockopt(sSocket, SOL_SOCKET, SO_BINDTODEVICE, sInterfaceName, strlen(sInterfaceName)) < 0)
+    sInterfaceIndex = if_nametoindex(sInterfaceName);
+
+    if (sInterfaceIndex == 0)
+    {
+        LogCrit("Unknown TREL interface %s", sInterfaceName);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+
+#ifdef __linux__
+    rval = setsockopt(sSocket, SOL_SOCKET, SO_BINDTODEVICE, sInterfaceName, strlen(sInterfaceName));
+#elif defined(IPV6_BOUND_IF)
+    // Apple: IPV6_BOUND_IF takes an interface index. It confines what the socket sends, not what it
+    // receives; ReceivePacket() drops what arrived on another interface.
+    rval = setsockopt(sSocket, IPPROTO_IPV6, IPV6_BOUND_IF, &sInterfaceIndex, sizeof(sInterfaceIndex));
+#else
+    // No per-socket interface binding on this platform; the scope id of the destination and the receive
+    // filter below do the work.
+    rval = 0;
+#endif
+
+    if (rval < 0)
     {
         LogCrit("Failed to bind socket to the interface %s: %s", sInterfaceName, strerror(errno));
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
-#endif
+
+    // The interface a datagram arrived on, for ReceivePacket().
+    val = 1;
+    VerifyOrDie(setsockopt(sSocket, IPPROTO_IPV6, IPV6_RECVPKTINFO, &val, sizeof(val)) == 0, OT_EXIT_ERROR_ERRNO);
 
     // Bind the socket.
 
@@ -239,6 +268,13 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
     sockAddr.sin6_family = AF_INET6;
     sockAddr.sin6_port   = htons(aDestSockAddr->mPort);
     memcpy(&sockAddr.sin6_addr, &aDestSockAddr->mAddress, sizeof(otIp6Address));
+
+    // A link-local peer is reached through the TREL interface. Linux takes that from the bound device; the
+    // BSDs route a link-local destination by its scope and fail with EHOSTUNREACH without one.
+    if (IN6_IS_ADDR_LINKLOCAL(&sockAddr.sin6_addr))
+    {
+        sockAddr.sin6_scope_id = sInterfaceIndex;
+    }
 
     ret = sendto(sSocket, aBuffer, aLength, 0, (struct sockaddr *)&sockAddr, sizeof(sockAddr));
 
@@ -285,13 +321,31 @@ static void ReceivePacket(int aSocket, otInstance *aInstance)
     for (uint16_t i = 0; i < kMaxRxPacketsPerIteration;)
     {
         struct sockaddr_in6 sockAddr;
-        socklen_t           sockAddrLen = sizeof(sockAddr);
         ssize_t             ret;
+        struct iovec        iov;
+        struct msghdr       msg;
+        union
+        {
+            struct cmsghdr mAlign; // for the alignment of `mBuffer`
+            uint8_t        mBuffer[CMSG_SPACE(sizeof(struct in6_pktinfo))];
+        } cmsgBuffer;
+        unsigned int    rxInterfaceIndex = 0;
+        struct cmsghdr *cmsg;
 
         memset(&sockAddr, 0, sizeof(sockAddr));
 
-        ret = recvfrom(aSocket, (char *)sRxPacketBuffer, sizeof(sRxPacketBuffer), 0, (struct sockaddr *)&sockAddr,
-                       &sockAddrLen);
+        iov.iov_base = sRxPacketBuffer;
+        iov.iov_len  = sizeof(sRxPacketBuffer);
+        memset(&msg, 0, sizeof(msg));
+        msg.msg_name       = &sockAddr;
+        msg.msg_namelen    = sizeof(sockAddr);
+        msg.msg_iov        = &iov;
+        msg.msg_iovlen     = 1;
+        msg.msg_control    = cmsgBuffer.mBuffer;
+        msg.msg_controllen = sizeof(cmsgBuffer.mBuffer);
+
+        ret = recvmsg(aSocket, &msg, 0);
+
         if (ret < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -303,6 +357,29 @@ static void ReceivePacket(int aSocket, otInstance *aInstance)
                 continue;
             }
             VerifyOrDie(false, OT_EXIT_ERROR_ERRNO);
+        }
+
+        for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg))
+        {
+            if ((cmsg->cmsg_level == IPPROTO_IPV6) && (cmsg->cmsg_type == IPV6_PKTINFO) &&
+                (cmsg->cmsg_len == CMSG_LEN(sizeof(struct in6_pktinfo))))
+            {
+                struct in6_pktinfo pktinfo;
+
+                memcpy(&pktinfo, CMSG_DATA(cmsg), sizeof(pktinfo));
+                rxInterfaceIndex = pktinfo.ipi6_ifindex;
+                break;
+            }
+        }
+
+        // Only the TREL interface's datagrams: a socket bound to the device (Linux) never sees others, a
+        // socket bound with IPV6_BOUND_IF (Apple) does.
+        if (rxInterfaceIndex != sInterfaceIndex)
+        {
+            LogDebg("ReceivePacket() -- dropped a datagram from interface %u, TREL is on %u", rxInterfaceIndex,
+                    sInterfaceIndex);
+            i++;
+            continue;
         }
 
         sRxPacketLength = (uint16_t)(ret);
@@ -558,7 +635,8 @@ void otPlatTrelDisable(otInstance *aInstance)
     VerifyOrExit(sInitialized && sEnabled);
 
     close(sSocket);
-    sSocket = -1;
+    sInterfaceIndex = 0;
+    sSocket         = -1;
     trelDnssdStopBrowse();
     trelDnssdRemoveService();
     sEnabled = false;
@@ -692,6 +770,7 @@ void platformTrelDeinit(void)
     VerifyOrExit(sInitialized && !sEnabled);
 
     sInterfaceName[0] = '\0';
+    sInterfaceIndex   = 0;
     sInitialized      = false;
     LogDebg("platformTrelDeinit()");
 
