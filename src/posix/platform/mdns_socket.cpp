@@ -767,7 +767,7 @@ void MdnsSocket::ProcessNetlink(const Mainloop::Context &aContext) const
 
     NetlinkMessage rcvMsg;
     ssize_t        rval;
-    size_t         len;
+    int            len;
 
     VerifyOrExit(mNetlinkFd >= 0);
 
@@ -783,9 +783,10 @@ void MdnsSocket::ProcessNetlink(const Mainloop::Context &aContext) const
 
     VerifyOrExit(static_cast<size_t>(rval) <= sizeof(rcvMsg.mBuffer));
 
-    len = static_cast<size_t>(rval);
+    // Use a signed remaining length as required by NLMSG_OK / NLMSG_NEXT.
+    len = static_cast<int>(rval);
 
-    VerifyOrExit(len >= sizeof(nlmsghdr));
+    VerifyOrExit(len >= static_cast<int>(sizeof(nlmsghdr)));
 
     for (struct nlmsghdr *msg = &rcvMsg.mHeader; NLMSG_OK(msg, len); msg = NLMSG_NEXT(msg, len))
     {
@@ -812,10 +813,14 @@ void MdnsSocket::ProcessNetlinkAddrEvent(void *aNetlinkMsg) const
     struct nlmsghdr  *msg     = static_cast<struct nlmsghdr *>(aNetlinkMsg);
     struct ifaddrmsg *addrmsg = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(msg));
     bool              added   = (msg->nlmsg_type == RTM_NEWADDR);
-    size_t            len;
+    int               len;
     struct rtattr    *rta;
     otIp6Address      ip6Addr;
     otIp4Address      ip4Addr;
+
+    // verify that the message length (msg->nlmsg_len) is at least large enough to contain the ifaddrmsg header before
+    // accessing its fields or calculating the payload length.
+    VerifyOrExit(msg->nlmsg_len >= NLMSG_LENGTH(sizeof(struct ifaddrmsg)));
 
     VerifyOrExit(addrmsg->ifa_index == mInfraIfIndex);
 
@@ -828,7 +833,8 @@ void MdnsSocket::ProcessNetlinkAddrEvent(void *aNetlinkMsg) const
         ExitNow();
     }
 
-    len = IFA_PAYLOAD(msg);
+    // Use a signed remaining length as required by RTA_OK / RTA_NEXT.
+    len = static_cast<int>(IFA_PAYLOAD(msg));
 
     for (rta = reinterpret_cast<struct rtattr *>(IFA_RTA(addrmsg)); RTA_OK(rta, len); rta = RTA_NEXT(rta, len))
     {

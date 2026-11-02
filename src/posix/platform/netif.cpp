@@ -2419,13 +2419,18 @@ static void logAddrEvent(bool isAdd, const otIp6Address &aAddress, otError error
 static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetlinkMessage)
 {
     struct ifaddrmsg   *ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
-    size_t              rtaLength;
+    int                 rtaLength;
     otError             error = OT_ERROR_NONE;
     struct sockaddr_in6 addr6;
 
+    // verify that the message length (aNetlinkMessage->nlmsg_len) is at least large enough to contain the ifaddrmsg
+    // header before accessing its fields or calculating the payload length.
+    VerifyOrExit(aNetlinkMessage->nlmsg_len >= NLMSG_LENGTH(sizeof(struct ifaddrmsg)));
+
     VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(gNetifIndex) && ifaddr->ifa_family == AF_INET6);
 
-    rtaLength = IFA_PAYLOAD(aNetlinkMessage);
+    // Use a signed remaining length as required by RTA_OK / RTA_NEXT.
+    rtaLength = static_cast<int>(IFA_PAYLOAD(aNetlinkMessage));
 
     for (struct rtattr *rta = reinterpret_cast<struct rtattr *>(IFA_RTA(ifaddr)); RTA_OK(rta, rtaLength);
          rta                = RTA_NEXT(rta, rtaLength))
@@ -3050,8 +3055,7 @@ static void processNetlinkEvent(otInstance *aInstance)
     }
 
 #ifdef __linux__
-    for (struct nlmsghdr *msg = &msgBuffer.nlMsg; NLMSG_OK(msg, static_cast<size_t>(length));
-         msg                  = NLMSG_NEXT(msg, length))
+    for (struct nlmsghdr *msg = &msgBuffer.nlMsg; NLMSG_OK(msg, length); msg = NLMSG_NEXT(msg, length))
     {
 #else
     {
