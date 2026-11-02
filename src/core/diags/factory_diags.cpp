@@ -407,7 +407,16 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
     if (StringMatch(aArgs[0], "stop"))
     {
         otPlatAlarmMilliStop(&GetInstance());
-        mCurTxCmd = kTxCmdNone;
+
+        if ((mCurTxCmd == kTxCmdRepeat) && mDiagSendOn)
+        {
+            mCurTxCmd = kTxCmdRepeatStop;
+            error     = kErrorPending;
+        }
+        else
+        {
+            mCurTxCmd = kTxCmdNone;
+        }
     }
     else
     {
@@ -575,6 +584,8 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgs);
 
     otPlatAlarmMilliStop(&GetInstance());
+    mCurTxCmd   = kTxCmdNone;
+    mDiagSendOn = false;
     Get<Radio::Radio>().SetDiagMode(false);
     Get<Radio::Radio>().SetPromiscuous(false);
     Get<Mac::SubMac>().SetRxOnWhenIdle(false);
@@ -1029,6 +1040,14 @@ void Diags::TransmitDone(Error aError)
     }
 
     UpdateTxStats(aError);
+
+    if (mCurTxCmd == kTxCmdRepeatStop)
+    {
+        mCurTxCmd = kTxCmdNone;
+        Output("OT_ERROR_NONE");
+        ExitNow();
+    }
+
     VerifyOrExit(((mCurTxCmd == kTxCmdSend) && (mTxPackets > 0)) || (mCurTxCmd == kTxCmdSweep));
 
     if (mCurTxCmd == kTxCmdSweep)

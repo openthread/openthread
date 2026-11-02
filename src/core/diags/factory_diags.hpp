@@ -253,6 +253,7 @@ private:
     {
         kTxCmdNone,
         kTxCmdRepeat,
+        kTxCmdRepeatStop,
         kTxCmdSend,
         kTxCmdSweep,
     };
