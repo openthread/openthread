@@ -132,14 +132,19 @@ class OtCliCommandRunner(OTCommandHandler):
             self.execute_command('extaddr', timeout=timeout)
             return []
 
-        self.__otcli.wait(0)
-
         if self.__expect_command_echoback:
             self.__expect_line(timeout, cmd)
 
+        asynchronous = any(cmd.strip().startswith(x) for x in OtCliCommandRunner.__ASYNC_COMMANDS)
+        if asynchronous:
+            self.__otcli.wait(0)
+
         output = self.__expect_line(timeout,
                                     OtCliCommandRunner.__PATTERN_COMMAND_DONE_OR_ERROR,
-                                    asynchronous=any(cmd.startswith(x) for x in OtCliCommandRunner.__ASYNC_COMMANDS))
+                                    asynchronous=asynchronous)
+
+        if not asynchronous:
+            self.__otcli.wait(0)
 
         return output
 
