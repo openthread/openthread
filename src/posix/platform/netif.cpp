@@ -2461,18 +2461,20 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                 {
                     otNetifAddress netAddr;
 
-                    netAddr.mAddress      = addr;
-                    netAddr.mPrefixLength = ifaddr->ifa_prefixlen;
+                    // An address the host added is usable, as one added with `ipaddr add` is, and preferred
+                    // unless the kernel reports it tentative or deprecated (it reports again when that changes).
+                    memset(&netAddr, 0, sizeof(netAddr));
+                    netAddr.mAddress       = addr;
+                    netAddr.mPrefixLength  = ifaddr->ifa_prefixlen;
+                    netAddr.mPreferred     = ((ifaddr->ifa_flags & (IFA_F_TENTATIVE | IFA_F_DEPRECATED)) == 0);
+                    netAddr.mValid         = true;
+                    netAddr.mAddressOrigin = OT_ADDRESS_ORIGIN_MANUAL;
 
                     error = otIp6AddUnicastAddress(aInstance, &netAddr);
                     error = (error == OT_ERROR_INVALID_ARGS) ? OT_ERROR_NONE : error;
                 }
                 else
                 {
-                    otNetifMulticastAddress netAddr;
-
-                    netAddr.mAddress = addr;
-
                     error = otIp6SubscribeMulticastAddress(aInstance, &addr);
                 }
 
@@ -2597,6 +2599,21 @@ exit:
 #define SA_SIZE(sa) RT_ROUNDUP(sa->sa_len)
 #endif
 
+// The multicast groups a BSD kernel joins on its own for every IPv6 interface and address: the node-local
+// all-nodes group, the solicited-node group of each unicast address and the node information group
+// (RFC 4620). The host's applications did not ask for them, and each would take one of OpenThread's
+// external multicast slots. Linux never reports them for a tun interface: without ARP it joins no
+// solicited-node group, and MLD does not report ff01::/16.
+static bool IsKernelJoinedMulticastGroup(const struct in6_addr &aAddress)
+{
+    static const uint8_t kSolicitedNodePrefix[] = {0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0xff};
+    static const uint8_t kNodeInfoPrefix[]      = {0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x02, 0xff};
+
+    return IN6_IS_ADDR_MC_NODELOCAL(&aAddress) ||
+           (memcmp(aAddress.s6_addr, kSolicitedNodePrefix, sizeof(kSolicitedNodePrefix)) == 0) ||
+           (memcmp(aAddress.s6_addr, kNodeInfoPrefix, sizeof(kNodeInfoPrefix)) == 0);
+}
+
 static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 {
     otError            error;
@@ -2610,10 +2627,10 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
     unsigned int        addrmask = 0;
     unsigned int        i;
     struct sockaddr    *sa;
-    bool                is_link_local;
+    bool                isLinkLocal;
 
-    addr6.sin6_family   = 0;
-    netmask.sin6_family = 0;
+    memset(&addr6, 0, sizeof(addr6));
+    memset(&netmask, 0, sizeof(netmask));
 
     if ((rtm->rtm_type == RTM_NEWADDR) || (rtm->rtm_type == RTM_DELADDR))
     {
@@ -2621,8 +2638,8 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 
         VerifyOrExit(ifam->ifam_index == static_cast<unsigned int>(gNetifIndex));
 
-        addrbuf  = (uint8_t *)&ifam[1];
-        addrmask = (unsigned int)ifam->ifam_addrs;
+        addrbuf  = reinterpret_cast<uint8_t *>(&ifam[1]);
+        addrmask = static_cast<unsigned int>(ifam->ifam_addrs);
     }
 #ifdef RTM_NEWMADDR
     else if ((rtm->rtm_type == RTM_NEWMADDR) || (rtm->rtm_type == RTM_DELMADDR))
@@ -2631,26 +2648,43 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 
         VerifyOrExit(ifmam->ifmam_index == static_cast<unsigned int>(gNetifIndex));
 
-        addrbuf  = (uint8_t *)&ifmam[1];
-        addrmask = (unsigned int)ifmam->ifmam_addrs;
+        addrbuf  = reinterpret_cast<uint8_t *>(&ifmam[1]);
+        addrmask = static_cast<unsigned int>(ifmam->ifmam_addrs);
     }
 #endif
 
     if (addrmask != 0)
     {
+        // The addresses end with the message; `rtm_msglen` was checked against the bytes received.
+        const uint8_t *end = reinterpret_cast<const uint8_t *>(rtm) + rtm->rtm_msglen;
+
         for (i = 0; i < RTAX_MAX; i++)
         {
             unsigned int mask = (addrmask & (1 << i));
             if (mask)
             {
-                sa = (struct sockaddr *)addrbuf;
-
-                if (sa->sa_family == AF_INET6)
+                // XNU does not pad the last address into `rtm_msglen`, and the zero-length broadcast
+                // address of a point-to-point interface can end the message exactly here.
+                if (addrbuf >= end)
                 {
+                    break;
+                }
+
+                sa = reinterpret_cast<struct sockaddr *>(addrbuf);
+                VerifyOrExit(sa->sa_len <= end - addrbuf);
+
+                // A `/0` netmask is trimmed to a `sa_len` of 0, which leaves no family to read.
+                if ((sa->sa_len >= sizeof(sa->sa_len) + sizeof(sa->sa_family)) && (sa->sa_family == AF_INET6))
+                {
+                    // The kernel sends a netmask trimmed to its last non-zero byte.
                     if (i == RTAX_IFA)
-                        memcpy(&addr6, sa, sizeof(sockaddr_in6));
+                    {
+                        memcpy(&addr6, sa, OT_MIN(static_cast<size_t>(sa->sa_len), sizeof(addr6)));
+                    }
                     if (i == RTAX_NETMASK)
-                        memcpy(&netmask, sa, sizeof(sockaddr_in6));
+                    {
+                        memcpy(&netmask, sa, OT_MIN(static_cast<size_t>(sa->sa_len), sizeof(netmask)));
+                    }
                 }
                 addrbuf += SA_SIZE(sa);
             }
@@ -2661,18 +2695,18 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
     {
         otIp6Address addr;
 
-        is_link_local = false;
+        isLinkLocal = IN6_IS_ADDR_LINKLOCAL(&addr6.sin6_addr);
 
-        if (IN6_IS_ADDR_LINKLOCAL(&addr6.sin6_addr))
+        // The kernel embeds the interface index in bytes 2 and 3 of link-local addresses and of
+        // link-local multicast addresses.
+        if (isLinkLocal || IN6_IS_ADDR_MC_LINKLOCAL(&addr6.sin6_addr))
         {
-            is_link_local = true;
-            // clear the scope -- Mac OS X sends this to us (bozos!)
+            addr6.sin6_addr.s6_addr[2] = 0;
             addr6.sin6_addr.s6_addr[3] = 0;
         }
-        else if (IN6_IS_ADDR_MC_LINKLOCAL(&addr6.sin6_addr))
-        {
-            addr6.sin6_addr.s6_addr[3] = 0;
-        }
+
+        // The groups the kernel joins by itself are not memberships of the host's applications.
+        VerifyOrExit(!IsKernelJoinedMulticastGroup(addr6.sin6_addr));
 
         ReadIp6AddressFrom(&addr6.sin6_addr, addr);
 
@@ -2686,8 +2720,14 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             {
                 otNetifAddress netAddr;
 
-                netAddr.mAddress      = addr;
-                netAddr.mPrefixLength = NetmaskToPrefixLength(&netmask);
+                // An address the host added is usable, as one added with `ipaddr add` is; the message
+                // carries no address flags, so it is preferred.
+                memset(&netAddr, 0, sizeof(netAddr));
+                netAddr.mAddress       = addr;
+                netAddr.mPrefixLength  = NetmaskToPrefixLength(&netmask);
+                netAddr.mPreferred     = true;
+                netAddr.mValid         = true;
+                netAddr.mAddressOrigin = OT_ADDRESS_ORIGIN_MANUAL;
 
                 if (otIp6HasUnicastAddress(aInstance, &addr))
                 {
@@ -2696,7 +2736,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                 }
                 else
                 {
-                    if (is_link_local)
+                    if (isLinkLocal)
                     {
                         // remove the stack-added link-local address
 
@@ -2725,7 +2765,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                         err = ioctl(sIpFd, SIOCDIFADDR_IN6, &ifr6);
                         if (err != 0)
                         {
-                            LogWarn("Error (%d) removing stack-addded link-local address %s", errno,
+                            LogWarn("Error (%d) removing stack-added link-local address %s", errno,
                                     inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)));
                             error = OT_ERROR_FAILED;
                         }
@@ -2751,9 +2791,6 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             }
             else
             {
-                otNetifMulticastAddress netAddr;
-                netAddr.mAddress = addr;
-
                 error = otIp6SubscribeMulticastAddress(aInstance, &addr);
                 logAddrEvent(/* isAdd */ true, addr, error);
 
@@ -2795,7 +2832,8 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
         }
     }
 
-exit:;
+exit:
+    return;
 }
 
 static void processNetifInfoEvent(otInstance *aInstance, struct rt_msghdr *rtm)
@@ -2812,6 +2850,38 @@ exit:
     {
         LogWarn("Failed to process info event: %s", otThreadErrorToString(error));
     }
+}
+
+// The header of a routing socket message depends on its type; the address and
+// membership headers are shorter than `struct rt_msghdr`.
+static size_t RouteMessageHeaderSize(uint8_t aType)
+{
+    size_t size;
+
+    switch (aType)
+    {
+    case RTM_NEWADDR:
+    case RTM_DELADDR:
+        size = sizeof(struct ifa_msghdr);
+        break;
+
+#ifdef RTM_NEWMADDR
+    case RTM_NEWMADDR:
+    case RTM_DELMADDR:
+        size = sizeof(struct ifma_msghdr);
+        break;
+#endif
+
+    case RTM_IFINFO:
+        size = sizeof(struct if_msghdr);
+        break;
+
+    default:
+        size = sizeof(struct rt_msghdr);
+        break;
+    }
+
+    return size;
 }
 
 #endif
@@ -3037,13 +3107,16 @@ static void processNetlinkEvent(otInstance *aInstance)
     length = recv(sNetlinkFd, msgBuffer.buffer, sizeof(msgBuffer.buffer), 0);
 
 #ifdef __linux__
-#define HEADER_SIZE sizeof(nlmsghdr)
+    constexpr size_t kHeaderSize = sizeof(nlmsghdr);
 #else
-#define HEADER_SIZE sizeof(rt_msghdr)
+    // Every routing message begins with rtm_msglen, rtm_version and rtm_type; the rest of
+    // the header depends on the type and is checked once the type is known.
+    constexpr size_t kHeaderSize =
+        sizeof(rt_msghdr::rtm_msglen) + sizeof(rt_msghdr::rtm_version) + sizeof(rt_msghdr::rtm_type);
 #endif
 
-    // Ensures full netlink header is received
-    if (length < static_cast<ssize_t>(HEADER_SIZE))
+    // Ensures the fixed part of the header is received: the netlink header, or the prelude of a routing message.
+    if (length < static_cast<ssize_t>(kHeaderSize))
     {
         LogWarn("Unexpected netlink recv() result: %ld", static_cast<long>(length));
         ExitNow();
@@ -3059,6 +3132,14 @@ static void processNetlinkEvent(otInstance *aInstance)
         struct rt_msghdr *msg;
 
         msg = &msgBuffer.rtMsg;
+
+        // The message's own length must hold the header of its type and fit in what was received.
+        if ((msg->rtm_msglen < RouteMessageHeaderSize(msg->rtm_type)) || (msg->rtm_msglen > length))
+        {
+            LogWarn("Unexpected routing message length %u for type %u (%ld bytes received)",
+                    static_cast<unsigned int>(msg->rtm_msglen), msg->rtm_type, static_cast<long>(length));
+            ExitNow();
+        }
 
 #define nlmsg_type rtm_type
 
