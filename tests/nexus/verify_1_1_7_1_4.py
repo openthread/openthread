@@ -78,6 +78,7 @@ def verify(pv):
 
         # Verify Child Update Response from parent
         pkts_copy.filter_wpan_src64(parent_node).\
+            filter_wpan_dst64(child_node).\
             filter_mle_cmd(consts.MLE_CHILD_UPDATE_RESPONSE).\
             filter(lambda p: {
                               consts.SOURCE_ADDRESS_TLV,
@@ -118,10 +119,11 @@ def verify(pv):
         filter(lambda p: consts.NL_THREAD_NETWORK_DATA_TLV in p.coap.tlv.type).\
         must_next()
 
-    # Save the cursor after Step 3 to search from here in Step 5.
-    # ROUTER_1's multicast MLE Data Response (Step 5) can arrive before or after
-    # the Leader's MLE Data Response or CoAP ACK (Step 4).
-    pkts_after_step3 = pkts.copy()
+    # Keep `pkts` positioned after Step 3 and verify Steps 4-9 on copies of
+    # this cursor, since the Leader's MLE Data Response and CoAP ACK (Step 4),
+    # ROUTER_1's multicast MLE Data Response (Step 5), and the child update
+    # exchanges with MED_1 and SED_1 (Steps 6-9) can occur in varying relative
+    # orders depending on timing.
 
     # Step 4: Leader
     # - Description: Automatically transmits a 2.04 Changed CoAP response to the DUT. Automatically multicasts a MLE
@@ -129,11 +131,8 @@ def verify(pv):
     # - Pass Criteria: N/A
     print("Step 4: Leader")
 
-    # The MLE Data Response and CoAP ACK from Leader might be out of order.
-    # We find both and update the cursor to the later one.
-    _pkts = pkts.copy()
-
-    _mle_data_rsp = _pkts.filter_wpan_src64(LEADER).\
+    pkts.copy().\
+        filter_wpan_src64(LEADER).\
         filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: p.thread_nwd.tlv.prefix is not nullField and\
@@ -141,11 +140,10 @@ def verify(pv):
                          '2002::' in p.thread_nwd.tlv.prefix).\
         must_next()
 
-    _coap_ack = pkts.filter_wpan_src64(LEADER).\
+    pkts.copy().\
+        filter_wpan_src64(LEADER).\
         filter_coap_ack(consts.SVR_DATA_URI).\
         must_next()
-
-    pkts.index = (max(pkts.index[0], _pkts.index[0]), max(pkts.index[1], _pkts.index[1]))
 
     # Step 5: Router_1 (DUT)
     # - Description: Automatically sends new network data to MED_1
@@ -154,7 +152,7 @@ def verify(pv):
     #     - 6LowPAN ID TLV
     #     - Border Router TLV
     print("Step 5: Router_1 (DUT)")
-    pkts_after_step3.\
+    pkts.copy().\
         filter_wpan_src64(ROUTER_1).\
         filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
