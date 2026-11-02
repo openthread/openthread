@@ -47,9 +47,9 @@ RegisterLogModule("TdKeyManager");
 
 void KeyIterator::Init(Instance &aInstance) { mPtr = aInstance.Get<KeyManager>().GetKeyList().GetHead(); }
 
-const Key *KeyIterator::GetNext(void)
+Key *KeyIterator::GetNext(void)
 {
-    const Key *key = static_cast<const Key *>(mPtr);
+    Key *key = static_cast<Key *>(mPtr);
 
     VerifyOrExit(key != nullptr);
     mPtr = key->GetNext();

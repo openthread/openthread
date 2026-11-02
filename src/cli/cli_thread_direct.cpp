@@ -45,9 +45,9 @@ ThreadDirect::ThreadDirect(otInstance *aInstance, OutputImplementer &aOutputImpl
 {
 }
 
-const otThreadDirectKey *ThreadDirect::FindKeyAtIndex(uint16_t aIndex)
+otThreadDirectKey *ThreadDirect::FindKeyAtIndex(uint16_t aIndex)
 {
-    const otThreadDirectKey  *key;
+    otThreadDirectKey        *key;
     otThreadDirectKeyIterator iterator;
 
     otThreadDirectInitKeyIterator(GetInstancePtr(), &iterator);
@@ -138,8 +138,8 @@ template <> otError ThreadDirect::Process<Cmd("key")>(Arg aArgs[])
      */
     else if (aArgs[0] == "unregister")
     {
-        uint16_t                 index;
-        const otThreadDirectKey *key;
+        uint16_t           index;
+        otThreadDirectKey *key;
 
         SuccessOrExit(error = aArgs[1].ParseAsUint16(index));
         VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -183,7 +183,7 @@ void ThreadDirect::OutputKeyTable(void)
     static const uint8_t     kTableColumnWidths[] = {7, 12, 12, 12};
 #endif
 
-    const otThreadDirectKey  *key;
+    otThreadDirectKey        *key;
     otThreadDirectKeyIterator iterator;
 
     OutputTableHeader(kTableTitles, kTableColumnWidths);

@@ -69,7 +69,7 @@ public:
      *
      * @returns A pointer to the next `Key` entry, or `nullptr` if the end of the list is reached.
      */
-    const Key *GetNext(void);
+    Key *GetNext(void);
 };
 
 /**
