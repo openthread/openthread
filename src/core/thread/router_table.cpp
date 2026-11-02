@@ -335,9 +335,9 @@ const Router *RouterTable::FindNextHopTowards(const Router &aRouter) const
     return FindRouterById(aRouter.GetNextHop());
 }
 
-Router *RouterTable::FindRouter(const Mac::ExtAddress &aExtAddress)
+Router *RouterTable::FindRouter(const Mac::ExtAddress &aExtAddress, Router::StateFilter aFilter)
 {
-    return FindRouter(Router::AddressMatcher(aExtAddress, Router::kInStateAny));
+    return FindRouter(Router::AddressMatcher(aExtAddress, aFilter));
 }
 
 Error RouterTable::GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo)
