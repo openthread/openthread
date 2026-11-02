@@ -48,6 +48,7 @@
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/owned_ptr.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -192,7 +193,6 @@ private:
                                                         const char *aVendorModel,
                                                         const char *aVendorSwVersion,
                                                         const char *aVendorData);
-    void                   FreeJoinerFinalizeMessage(void);
     void                   SendJoinerFinalize(void);
     void                   SendJoinerEntrustResponse(const Coap::Msg &aMsg);
     static Seeker::Verdict EvaluateScanResult(void *aContext, const otSeekerScanResult *aResult);
@@ -212,7 +212,7 @@ private:
     State                        mState;
     bool                         mFinalizeRejected;
     Callback<CompletionCallback> mCompletionCallback;
-    Coap::Message               *mFinalizeMessage;
+    OwnedPtr<Coap::Message>      mFinalizeMessage;
     JoinerTimer                  mTimer;
 };
 
