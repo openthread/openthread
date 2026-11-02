@@ -60,6 +60,10 @@ namespace ot {
  * @{
  */
 
+namespace ThreadDirect {
+class Listener;
+} // namespace ThreadDirect
+
 namespace Mac {
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -123,6 +127,7 @@ class SubMac : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
     friend class LinkRaw;
+    friend class ThreadDirect::Listener;
 
 public:
     using Capability   = Radio::Capability;   ///< A radio capability.
@@ -648,6 +653,7 @@ private:
         uint8_t       GetChannel(void) const { return mChannel; }
         bool          HasStarted(const Radio::SyncedTime &aNow) const { return mStartTime <= aNow.GetAsTime64(); }
         bool          HasEnded(const Radio::SyncedTime &aNow) const { return GetEndTime() <= aNow.GetAsTime64(); }
+        void          AdvanceStartTime(uint32_t aInterval) { mStartTime += aInterval; }
         void          ScheduleOnRadio(Radio::Radio &aRadio) const;
         bool          operator==(const TimedRx &aOther) const;
 
@@ -674,9 +680,15 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         void UpdateOnCslChange(void) { Schedule(); }
 #endif
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+        void UpdateOnTdListenerChange(void) { Schedule(); }
+#endif
 
     private:
         static constexpr uint32_t kCslTransitionToNextAheadTime = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+
+        static constexpr uint8_t kTdListenerPriority = 0;
+        static constexpr uint8_t kCslPriority        = 127;
 
         class SchedInfo
         {
@@ -686,18 +698,24 @@ private:
             const Radio::SyncedTime &GetNow(void) const { return mNextFireTime.GetNow(); }
 
             const TimedRx &GetTimedRx(void) const { return mTimedRx; }
-            void           UpdateTimedRxIfEarlier(const TimedRx &aTimedRx);
-            void           UpdateNextFireTime(Radio::Time64 aTime) { mNextFireTime.UpdateIfEarlier(aTime); }
-            void           ScheduleNextFireTimeOn(TimerMicro &aTimer) { mNextFireTime.ScheduleTimer(aTimer); }
+
+            void Init(const TimedRx &aTimedRx, uint8_t aPriority);
+            void Update(const TimedRx &aTimedRx, uint8_t aPriority);
+            void UpdateNextFireTime(Radio::Time64 aTime) { mNextFireTime.UpdateIfEarlier(aTime); }
+            void ScheduleNextFireTimeOn(TimerMicro &aTimer) { mNextFireTime.ScheduleTimer(aTimer); }
 
         private:
             NextRadioFireTime mNextFireTime;
             TimedRx           mTimedRx;
+            uint8_t           mPriority;
         };
 
         void Schedule(void);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         void ScheduleCsl(SchedInfo &aInfo);
+#endif
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+        void ScheduleTdListener(SchedInfo &aInfo);
 #endif
 
         using ListenTimer = TimerMicroIn<SubMac, &SubMac::HandleListenSchedulerTimer>;

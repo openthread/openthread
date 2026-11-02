@@ -27,6 +27,10 @@
  */
 
 #include <openthread/config.h>
+#include <openthread/thread_direct_listener.h>
+#include <openthread/platform/alarm-micro.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
 
 #include "test_platform.h"
 #include "test_util.hpp"
@@ -34,6 +38,9 @@
 #include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
 #include "common/num_utils.hpp"
+#include "instance/instance.hpp"
+#include "mac/sub_mac.hpp"
+#include "thread_direct/td_listener.hpp"
 #include "thread_direct/td_types.hpp"
 
 namespace ot {
@@ -497,6 +504,911 @@ void TestRadioAvailabilityFindNextAvailableWindow(void)
 
 #endif // OT_CONFIG_THREAD_DIRECT_ENABLE
 
+//----------------------------------------------------------------------------------------------------------------------
+
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+
+static constexpr uint64_t kRadioTimeOffsets[] = {0, 1000, 1000000};
+
+static uint64_t     sRadioTimeOffset    = 0;
+static uint64_t     sNow                = 0;
+static uint32_t     sMicroAlarmTime     = 0;
+static bool         sMicroTimerStarted  = false;
+static uint32_t     sMilliAlarmTime     = 0;
+static bool         sMilliTimerStarted  = false;
+static otRadioState sRadioState         = OT_RADIO_STATE_DISABLED;
+static uint8_t      sChannel            = 0;
+static uint32_t     sReceiveChangeCount = 0;
+static uint32_t     sSleepChangeCount   = 0;
+
+extern "C" {
+
+uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return sNow + sRadioTimeOffset;
+}
+
+otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    if ((sRadioState != OT_RADIO_STATE_RECEIVE) || (sChannel != aChannel))
+    {
+        sReceiveChangeCount++;
+    }
+
+    sRadioState = OT_RADIO_STATE_RECEIVE;
+    sChannel    = aChannel;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatRadioSleep(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    if (sRadioState != OT_RADIO_STATE_SLEEP)
+    {
+        sSleepChangeCount++;
+    }
+
+    sRadioState = OT_RADIO_STATE_SLEEP;
+
+    return OT_ERROR_NONE;
+}
+
+otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return OT_RADIO_CAPS_NONE;
+}
+
+uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return 0;
+}
+
+uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return 0;
+}
+
+void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sMicroTimerStarted = true;
+    sMicroAlarmTime    = aT0 + aDt;
+}
+
+void otPlatAlarmMicroStop(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sMicroTimerStarted = false;
+}
+
+uint32_t otPlatAlarmMicroGetNow(void) { return static_cast<uint32_t>(sNow); }
+
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sMilliTimerStarted = true;
+    sMilliAlarmTime    = aT0 + aDt;
+}
+
+void otPlatAlarmMilliStop(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sMilliTimerStarted = false;
+}
+
+uint32_t otPlatAlarmMilliGetNow(void) { return static_cast<uint32_t>(sNow / 1000); }
+
+} // extern "C"
+
+static void ResetPlatformState(uint64_t aRadioTimeOffset = 0)
+{
+    sRadioTimeOffset    = aRadioTimeOffset;
+    sNow                = 0;
+    sMicroAlarmTime     = 0;
+    sMicroTimerStarted  = false;
+    sMilliAlarmTime     = 0;
+    sMilliTimerStarted  = false;
+    sRadioState         = OT_RADIO_STATE_DISABLED;
+    sChannel            = 0;
+    sReceiveChangeCount = 0;
+    sSleepChangeCount   = 0;
+}
+
+static void AdvanceTime(Instance &aInstance, uint32_t aDurationUs)
+{
+    uint64_t endTime = sNow + aDurationUs;
+
+    while (sNow < endTime)
+    {
+        sNow++;
+
+        while (sMicroTimerStarted && (static_cast<int32_t>(static_cast<uint32_t>(sNow) - sMicroAlarmTime) >= 0))
+        {
+            sMicroTimerStarted = false;
+            otPlatAlarmMicroFired(&aInstance);
+        }
+
+        if ((sNow % 1000) == 0)
+        {
+            while (sMilliTimerStarted &&
+                   (static_cast<int32_t>(static_cast<uint32_t>(sNow / 1000) - sMilliAlarmTime) >= 0))
+            {
+                sMilliTimerStarted = false;
+                otPlatAlarmMilliFired(&aInstance);
+            }
+        }
+
+        while (otTaskletsArePending(&aInstance))
+        {
+            otTaskletsProcess(&aInstance);
+        }
+    }
+}
+
+static void AdvanceTo(Instance &aInstance, uint64_t aTargetTimeUs)
+{
+    VerifyOrQuit(aTargetTimeUs >= sNow);
+    AdvanceTime(aInstance, static_cast<uint32_t>(aTargetTimeUs - sNow));
+}
+
+void TestListenerConfigAndApi(void)
+{
+    Instance          *instance;
+    Listener          *listener;
+    Listener::Config   config;
+    Listener::Config   invalidConfig;
+    Listener::WakeInfo wakeInfo;
+
+    ResetPlatformState();
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+
+    listener = &instance->Get<Listener>();
+
+    // Verify `Config` defaults when cleared (`mChannel == 0`, `mInterval == 0`, `mDuration == 0`).
+    config.Clear();
+    VerifyOrQuit(config.GetChannel() == Listener::Config::kDefaultChannel);
+    VerifyOrQuit(config.GetInterval() == Listener::Config::kDefaultInterval);
+    VerifyOrQuit(config.GetDuration() == Listener::Config::kDefaultDuration);
+    VerifyOrQuit(config.IsValid());
+
+    // Verify `Config` getters with explicit values.
+    config.mChannel  = 15;
+    config.mInterval = 50000;
+    config.mDuration = 4000;
+    VerifyOrQuit(config.GetChannel() == 15);
+    VerifyOrQuit(config.GetInterval() == 50000);
+    VerifyOrQuit(config.GetDuration() == 4000);
+    VerifyOrQuit(config.IsValid());
+
+    // Verify valid channel boundaries (11 and 26).
+    config.mChannel = 11;
+    VerifyOrQuit(config.IsValid());
+    config.mChannel = 26;
+    VerifyOrQuit(config.IsValid());
+
+    // Verify invalid channels (below 11 or above 26).
+    invalidConfig          = config;
+    invalidConfig.mChannel = 10;
+    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
+
+    invalidConfig.mChannel = 27;
+    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
+
+    // Verify interval vs duration validation (`GetInterval() >= GetDuration()`).
+    config.Clear();
+    config.mChannel  = 15;
+    config.mDuration = 8000;
+    config.mInterval = 8000;
+    VerifyOrQuit(config.IsValid());
+
+    invalidConfig           = config;
+    invalidConfig.mInterval = 7999;
+    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
+
+    // Explicit interval smaller than default duration (`kDefaultDuration` is 8000).
+    invalidConfig.Clear();
+    invalidConfig.mInterval = Listener::Config::kDefaultDuration - 1;
+    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
+
+    // Explicit duration larger than default interval (`kDefaultInterval` is 1000000).
+    invalidConfig.Clear();
+    invalidConfig.mDuration = Listener::Config::kDefaultInterval + 1;
+    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
+
+    // Verify `TimerMicro::kMaxDelay` boundary on interval.
+    config.Clear();
+    config.mInterval = TimerMicro::kMaxDelay;
+    VerifyOrQuit(config.IsValid());
+
+    invalidConfig.Clear();
+    invalidConfig.mInterval = TimerMicro::kMaxDelay + 1;
+    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
+
+    // Verify initial stopped state and public C API behavior.
+    VerifyOrQuit(!listener->IsRunning());
+    VerifyOrQuit(!otThreadDirectListenerIsRunning(instance));
+    VerifyOrQuit(listener->GetWakeInfo(wakeInfo) == kErrorInvalidState);
+    VerifyOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo) == OT_ERROR_INVALID_STATE);
+
+    // Calling `Stop()` when already stopped is a safe no-op.
+    otThreadDirectListenerStop(instance);
+    VerifyOrQuit(!otThreadDirectListenerIsRunning(instance));
+
+    // Start listener with valid configuration.
+    config.Clear();
+    config.mChannel  = 18;
+    config.mInterval = 20000;
+    config.mDuration = 2000;
+    SuccessOrQuit(otThreadDirectListenerStart(instance, &config));
+    VerifyOrQuit(listener->IsRunning());
+    VerifyOrQuit(otThreadDirectListenerIsRunning(instance));
+
+    // Starting again while already running must return `OT_ERROR_BUSY`.
+    VerifyOrQuit(otThreadDirectListenerStart(instance, &config) == OT_ERROR_BUSY);
+    VerifyOrQuit(otThreadDirectListenerStart(instance, &invalidConfig) == OT_ERROR_BUSY);
+
+    // Querying `GetWakeInfo()` while running with no wake received returns `OT_ERROR_NOT_FOUND`.
+    VerifyOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo) == OT_ERROR_NOT_FOUND);
+
+    // Stop listener and verify state transitions back to stopped.
+    otThreadDirectListenerStop(instance);
+    VerifyOrQuit(!otThreadDirectListenerIsRunning(instance));
+    VerifyOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo) == OT_ERROR_INVALID_STATE);
+
+    // Restart with all-zero default config.
+    config.Clear();
+    SuccessOrQuit(otThreadDirectListenerStart(instance, &config));
+    VerifyOrQuit(otThreadDirectListenerIsRunning(instance));
+
+    otThreadDirectListenerStop(instance);
+    VerifyOrQuit(!otThreadDirectListenerIsRunning(instance));
+
+    testFreeInstance(instance);
+
+    printf("TestListenerConfigAndApi() passed\n");
+}
+
+void TestListenerPeriodicWindows(void)
+{
+    static constexpr uint8_t  kChannel  = 17;
+    static constexpr uint32_t kDuration = 1500;
+    static constexpr uint32_t kInterval = 6000;
+    static constexpr uint32_t kPeriods  = 4;
+
+    for (uint64_t timeOffset : kRadioTimeOffsets)
+    {
+        Instance        *instance;
+        Mac::SubMac     *subMac;
+        Listener        *listener;
+        Listener::Config config;
+
+        ResetPlatformState(timeOffset);
+
+        instance = static_cast<Instance *>(testInitInstance());
+        VerifyOrQuit(instance != nullptr);
+
+        subMac   = &instance->Get<Mac::SubMac>();
+        listener = &instance->Get<Listener>();
+
+        SuccessOrQuit(subMac->Enable());
+        SuccessOrQuit(subMac->Sleep());
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        sReceiveChangeCount = 0;
+        sSleepChangeCount   = 0;
+
+        AdvanceTime(*instance, 1234);
+
+        // 1. Start listener and verify periodic receive and sleep windows across multiple intervals.
+        config.Clear();
+        config.mChannel  = kChannel;
+        config.mDuration = kDuration;
+        config.mInterval = kInterval;
+
+        SuccessOrQuit(listener->Start(config));
+
+        // First receive window starts immediately at `now`.
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kChannel);
+        VerifyOrQuit(sReceiveChangeCount == 1);
+        VerifyOrQuit(sSleepChangeCount == 0);
+
+        for (uint32_t period = 0; period < kPeriods; period++)
+        {
+            // Stay in receive for `kDuration - 1` microseconds.
+            AdvanceTime(*instance, kDuration - 1);
+            VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+            VerifyOrQuit(sChannel == kChannel);
+            VerifyOrQuit(sReceiveChangeCount == period + 1);
+            VerifyOrQuit(sSleepChangeCount == period);
+
+            // At `kDuration`, the window ends and the radio transitions to sleep.
+            AdvanceTime(*instance, 1);
+            VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+            VerifyOrQuit(sReceiveChangeCount == period + 1);
+            VerifyOrQuit(sSleepChangeCount == period + 1);
+
+            // Stay in sleep for `(kInterval - kDuration) - 1` microseconds.
+            AdvanceTime(*instance, (kInterval - kDuration) - 1);
+            VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+            VerifyOrQuit(sReceiveChangeCount == period + 1);
+            VerifyOrQuit(sSleepChangeCount == period + 1);
+
+            // At `kInterval`, the next periodic window starts on `kChannel`.
+            AdvanceTime(*instance, 1);
+            VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+            VerifyOrQuit(sChannel == kChannel);
+            VerifyOrQuit(sReceiveChangeCount == period + 2);
+            VerifyOrQuit(sSleepChangeCount == period + 1);
+        }
+
+        // 2. Stop listener while in the middle of an active receive window.
+        AdvanceTime(*instance, 500);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+
+        listener->Stop();
+        VerifyOrQuit(!listener->IsRunning());
+
+        // The already-active timed receive window finishes its remaining duration (`kDuration - 500`)
+        // and then sleeps, with no further periodic windows scheduled afterward.
+        AdvanceTime(*instance, (kDuration - 500) - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sReceiveChangeCount == kPeriods + 1);
+        VerifyOrQuit(sSleepChangeCount == kPeriods + 1);
+
+        AdvanceTime(*instance, kInterval * 3);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sReceiveChangeCount == kPeriods + 1);
+        VerifyOrQuit(sSleepChangeCount == kPeriods + 1);
+
+        // 3. Restart with a different configuration and stop during the sleep phase between windows.
+        sReceiveChangeCount = 0;
+        sSleepChangeCount   = 0;
+
+        config.Clear();
+        config.mChannel  = 22;
+        config.mDuration = 1000;
+        config.mInterval = 5000;
+
+        SuccessOrQuit(listener->Start(config));
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == 22);
+        VerifyOrQuit(sReceiveChangeCount == 1);
+
+        AdvanceTime(*instance, 1000);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sSleepChangeCount == 1);
+
+        // Advance partway through the sleep phase and stop the listener.
+        AdvanceTime(*instance, 1500);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        listener->Stop();
+        VerifyOrQuit(!listener->IsRunning());
+
+        // Verify no further windows start across multiple intervals.
+        AdvanceTime(*instance, 15000);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sReceiveChangeCount == 1);
+        VerifyOrQuit(sSleepChangeCount == 1);
+
+        // 4. Start with default configuration (`mChannel = 0`, `mDuration = 0`, `mInterval = 0`).
+        sReceiveChangeCount = 0;
+        sSleepChangeCount   = 0;
+
+        config.Clear();
+        SuccessOrQuit(listener->Start(config));
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == Listener::Config::kDefaultChannel);
+        VerifyOrQuit(sReceiveChangeCount == 1);
+
+        AdvanceTime(*instance, Listener::Config::kDefaultDuration - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == Listener::Config::kDefaultChannel);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sSleepChangeCount == 1);
+
+        AdvanceTime(*instance, (Listener::Config::kDefaultInterval - Listener::Config::kDefaultDuration) - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sReceiveChangeCount == 1);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == Listener::Config::kDefaultChannel);
+        VerifyOrQuit(sReceiveChangeCount == 2);
+
+        listener->Stop();
+
+        // 5. Start with `mDuration == mInterval` (100% duty cycle) and verify back-to-back receive windows.
+        AdvanceTime(*instance, Listener::Config::kDefaultDuration);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        config.Clear();
+        config.mChannel  = 19;
+        config.mDuration = 4000;
+        config.mInterval = 4000;
+        SuccessOrQuit(listener->Start(config));
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == 19);
+
+        for (uint32_t period = 0; period < kPeriods; period++)
+        {
+            AdvanceTime(*instance, 4000 - 1);
+            VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+            VerifyOrQuit(sChannel == 19);
+
+            AdvanceTime(*instance, 1);
+            VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+            VerifyOrQuit(sChannel == 19);
+        }
+
+        listener->Stop();
+        AdvanceTime(*instance, 4000);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        // 6. Toggle `subMac->Disable()` and `subMac->Enable()` across multiple elapsed intervals while listener runs.
+        config.Clear();
+        config.mChannel  = 21;
+        config.mDuration = 1000;
+        config.mInterval = 5000;
+        SuccessOrQuit(listener->Start(config));
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == 21);
+
+        // Finish first window `[T0, T0 + 1000)` and advance 1000 us into sleep (`T0 + 2000`).
+        AdvanceTime(*instance, 2000);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        // Disable `SubMac` and advance 11000 us (`T0 + 13000`), skipping windows at `T0 + 5000` and `T0 + 10000`.
+        SuccessOrQuit(subMac->Disable());
+        sReceiveChangeCount = 0;
+
+        AdvanceTime(*instance, 11000);
+        VerifyOrQuit(sReceiveChangeCount == 0);
+
+        // Re-enable `SubMac` at `T0 + 13000`; next window `[T0 + 15000, T0 + 16000)` is 2000 us away.
+        SuccessOrQuit(subMac->Enable());
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sReceiveChangeCount == 0);
+
+        AdvanceTime(*instance, 2000 - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == 21);
+        VerifyOrQuit(sReceiveChangeCount == 1);
+
+        AdvanceTime(*instance, 1000 - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        listener->Stop();
+
+        testFreeInstance(instance);
+    }
+
+    printf("TestListenerPeriodicWindows() passed\n");
+}
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+void TestListenerAndCslScheduling(void)
+{
+    static constexpr uint8_t  kCslChannel          = 15;
+    static constexpr uint8_t  kTdChannel           = 20;
+    static constexpr uint16_t kCslPeriodTenSymbols = 250;
+    static constexpr uint32_t kCslPeriodUs         = Mac::CslPeriodToUsec(kCslPeriodTenSymbols); // 40000 us
+    static constexpr uint32_t kCslAhead            = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD;
+    static constexpr uint32_t kCslAfter            = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
+    static constexpr uint32_t kCslDuration         = kCslAhead + kCslAfter;
+    static constexpr uint64_t kCslSyncTime         = 10000;
+
+    for (uint64_t timeOffset : kRadioTimeOffsets)
+    {
+        Instance        *instance;
+        Mac::SubMac     *subMac;
+        Listener        *listener;
+        Mac::CslAccuracy cslAccuracy;
+        Mac::ExtAddress  extAddr;
+        Listener::Config config;
+        uint64_t         cslStart;
+        uint64_t         cslEnd;
+        uint64_t         tdStart;
+        uint64_t         tdEnd;
+        uint32_t         rxCountBefore;
+
+        ResetPlatformState(timeOffset);
+
+        instance = static_cast<Instance *>(testInitInstance());
+        VerifyOrQuit(instance != nullptr);
+
+        subMac   = &instance->Get<Mac::SubMac>();
+        listener = &instance->Get<Listener>();
+
+        SuccessOrQuit(subMac->Enable());
+        SuccessOrQuit(subMac->Sleep());
+
+        // Set parent clock accuracy and uncertainty to 0 so each CSL window around sample time
+        // `T_k = kCslSyncTime + k * kCslPeriodUs` is `[T_k - kCslAhead, T_k + kCslAfter)`.
+        cslAccuracy.SetClockAccuracy(0);
+        cslAccuracy.SetUncertainty(0);
+        subMac->SetCslParentAccuracy(cslAccuracy);
+        extAddr.Clear();
+
+        AdvanceTo(*instance, kCslSyncTime);
+        subMac->SetCslParams(kCslPeriodTenSymbols, kCslChannel, Mac::kShortAddrBroadcast, extAddr);
+
+        // CSL Window 0 (`[kCslSyncTime - kCslAhead, kCslSyncTime + kCslAfter)`) is immediately active.
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        AdvanceTo(*instance, kCslSyncTime + kCslAfter - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        AdvanceTo(*instance, kCslSyncTime + kCslAfter);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        //--------------------------------------------------------------------------------------------------------------
+        // Scenario 1: Non-overlapping TD and CSL windows (TD window before CSL Window 1, and TD window after it).
+        // CSL Window 1 is `[cslStart, cslEnd)` around `kCslSyncTime + 1 * kCslPeriodUs` (50000 us).
+
+        cslStart = kCslSyncTime + 1 * kCslPeriodUs - kCslAhead;
+        cslEnd   = cslStart + kCslDuration;
+
+        tdStart = 20000;
+        tdEnd   = tdStart + 4000;
+
+        AdvanceTo(*instance, tdStart);
+
+        config.Clear();
+        config.mChannel  = kTdChannel;
+        config.mDuration = 4000;
+        config.mInterval = 40000;
+        SuccessOrQuit(listener->Start(config));
+
+        // TD window `[20000, 24000)` is active on `kTdChannel`.
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        // CSL Window 1 `[cslStart, cslEnd)` runs on `kCslChannel`.
+        AdvanceTo(*instance, cslStart - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTo(*instance, cslStart);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        AdvanceTo(*instance, cslEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        AdvanceTo(*instance, cslEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        // Second TD window `[60000, 64000)` runs after CSL Window 1 on `kTdChannel`.
+        tdStart = 60000;
+        tdEnd   = tdStart + 4000;
+
+        AdvanceTo(*instance, tdStart - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTo(*instance, tdStart);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        listener->Stop();
+
+        //--------------------------------------------------------------------------------------------------------------
+        // Scenario 2: TD window starts before CSL Window 2 and ends inside it (CSL preempts TD at `cslStart`).
+        // CSL Window 2 is around `kCslSyncTime + 2 * kCslPeriodUs` (90000 us).
+
+        cslStart = kCslSyncTime + 2 * kCslPeriodUs - kCslAhead;
+        cslEnd   = cslStart + kCslDuration;
+
+        tdStart = cslStart - 2000;
+        tdEnd   = cslStart + 2000;
+
+        AdvanceTo(*instance, tdStart);
+
+        config.Clear();
+        config.mChannel  = kTdChannel;
+        config.mDuration = static_cast<uint32_t>(tdEnd - tdStart);
+        config.mInterval = 200000;
+        SuccessOrQuit(listener->Start(config));
+
+        // Radio receives on `kTdChannel` during `[tdStart, cslStart)`.
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, cslStart - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        // At `cslStart`, higher-priority CSL preempts TD and switches the radio to `kCslChannel`.
+        AdvanceTo(*instance, cslStart);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        // Radio remains on `kCslChannel` past `tdEnd` until `cslEnd`.
+        AdvanceTo(*instance, tdEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        AdvanceTo(*instance, cslEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        AdvanceTo(*instance, cslEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        listener->Stop();
+
+        //--------------------------------------------------------------------------------------------------------------
+        // Scenario 3: TD window starts before CSL Window 3 and ends after it (TD runs, CSL preempts, then TD resumes).
+        // CSL Window 3 is around `kCslSyncTime + 3 * kCslPeriodUs` (130000 us).
+
+        cslStart = kCslSyncTime + 3 * kCslPeriodUs - kCslAhead;
+        cslEnd   = cslStart + kCslDuration;
+
+        tdStart = cslStart - 2000;
+        tdEnd   = cslEnd + 2500;
+
+        AdvanceTo(*instance, tdStart);
+
+        config.Clear();
+        config.mChannel  = kTdChannel;
+        config.mDuration = static_cast<uint32_t>(tdEnd - tdStart);
+        config.mInterval = 200000;
+        SuccessOrQuit(listener->Start(config));
+
+        // Phase 1 (`[tdStart, cslStart)`): radio receives on `kTdChannel`.
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, cslStart - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        // Phase 2 (`[cslStart, cslEnd)`): CSL preempts TD on `kCslChannel`.
+        AdvanceTo(*instance, cslStart);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        AdvanceTo(*instance, cslEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        // Phase 3 (`[cslEnd, tdEnd)`): CSL ends and TD resumes on `kTdChannel` for its remaining tail.
+        AdvanceTo(*instance, cslEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        listener->Stop();
+
+        //--------------------------------------------------------------------------------------------------------------
+        // Scenario 4: CSL Window 4 starts before TD window, and TD window ends after CSL Window 4
+        // (CSL blocks TD start; TD runs its remaining tail after CSL ends).
+        // CSL Window 4 is around `kCslSyncTime + 4 * kCslPeriodUs` (170000 us).
+        // Start TD one interval (20000 us) before `cslStart + 2000` so its second window lands at
+        // `[cslStart + 2000, cslEnd + 3000)`.
+
+        cslStart = kCslSyncTime + 4 * kCslPeriodUs - kCslAhead;
+        cslEnd   = cslStart + kCslDuration;
+
+        tdStart = (cslStart + 2000) - 20000;
+        tdEnd   = cslEnd + 3000;
+
+        AdvanceTo(*instance, tdStart);
+
+        config.Clear();
+        config.mChannel  = kTdChannel;
+        config.mDuration = (kCslDuration - 2000) + 3000;
+        config.mInterval = 20000;
+        SuccessOrQuit(listener->Start(config));
+
+        // First TD window `[tdStart, tdStart + config.mDuration)` runs before CSL Window 4.
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdStart + config.mDuration);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        // Second TD window is `[cslStart + 2000, cslEnd + 3000)`.
+        // CSL Window 4 starts at `cslStart` on `kCslChannel` and is not interrupted at `cslStart + 2000`.
+        AdvanceTo(*instance, cslStart - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTo(*instance, cslStart);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+        rxCountBefore = sReceiveChangeCount;
+
+        AdvanceTo(*instance, cslStart + 2000);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+        VerifyOrQuit(sReceiveChangeCount == rxCountBefore);
+
+        AdvanceTo(*instance, cslEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+        VerifyOrQuit(sReceiveChangeCount == rxCountBefore);
+
+        // At `cslEnd`, CSL finishes and TD runs its remaining tail `[cslEnd, tdEnd)` on `kTdChannel`.
+        AdvanceTo(*instance, cslEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        listener->Stop();
+
+        //--------------------------------------------------------------------------------------------------------------
+        // Scenario 5: CSL Window 5 completely encloses TD window (CSL eclipses TD completely).
+        // CSL Window 5 is around `kCslSyncTime + 5 * kCslPeriodUs` (210000 us).
+        // Start TD one interval (20000 us) before `cslStart + 1000` with duration 2000 us so its second window
+        // `[cslStart + 1000, cslStart + 3000)` lies strictly inside `[cslStart, cslEnd)`.
+
+        cslStart = kCslSyncTime + 5 * kCslPeriodUs - kCslAhead;
+        cslEnd   = cslStart + kCslDuration;
+
+        tdStart = (cslStart + 1000) - 20000;
+
+        AdvanceTo(*instance, tdStart);
+
+        config.Clear();
+        config.mChannel  = kTdChannel;
+        config.mDuration = 2000;
+        config.mInterval = 20000;
+        SuccessOrQuit(listener->Start(config));
+
+        AdvanceTo(*instance, tdStart + config.mDuration);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTo(*instance, cslStart);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+        rxCountBefore = sReceiveChangeCount;
+
+        // Throughout `[cslStart, cslEnd)`, the radio remains on `kCslChannel` without switching to `kTdChannel`.
+        AdvanceTo(*instance, cslStart + 1000);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+        VerifyOrQuit(sReceiveChangeCount == rxCountBefore);
+
+        AdvanceTo(*instance, cslStart + 3000);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+        VerifyOrQuit(sReceiveChangeCount == rxCountBefore);
+
+        AdvanceTo(*instance, cslEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+        VerifyOrQuit(sReceiveChangeCount == rxCountBefore);
+
+        // At `cslEnd`, both CSL and the enclosed TD window have ended, so the radio sleeps.
+        AdvanceTo(*instance, cslEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        listener->Stop();
+
+        //--------------------------------------------------------------------------------------------------------------
+        // Scenario 6: TD window and CSL Window 6 start at the exact same timestamp `cslStart`
+        // (priority tie-breaking selects CSL first, then TD runs its remaining tail after `cslEnd`).
+        // CSL Window 6 is around `kCslSyncTime + 6 * kCslPeriodUs` (250000 us).
+
+        cslStart = kCslSyncTime + 6 * kCslPeriodUs - kCslAhead;
+        cslEnd   = cslStart + kCslDuration;
+
+        tdStart = cslStart - 20000;
+        tdEnd   = cslEnd + 2000;
+
+        AdvanceTo(*instance, tdStart);
+
+        config.Clear();
+        config.mChannel  = kTdChannel;
+        config.mDuration = kCslDuration + 2000;
+        config.mInterval = 20000;
+        SuccessOrQuit(listener->Start(config));
+
+        AdvanceTo(*instance, tdStart + config.mDuration);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        // Both CSL Window 6 and the second TD window start at `cslStart`. Higher-priority CSL wins.
+        AdvanceTo(*instance, cslStart - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTo(*instance, cslStart);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        AdvanceTo(*instance, cslEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kCslChannel);
+
+        // At `cslEnd`, CSL ends and TD runs its remaining 2000 us tail `[cslEnd, tdEnd)` on `kTdChannel`.
+        AdvanceTo(*instance, cslEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == kTdChannel);
+
+        AdvanceTo(*instance, tdEnd);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        listener->Stop();
+        subMac->SetCslParams(0, kCslChannel, Mac::kShortAddrBroadcast, extAddr);
+
+        testFreeInstance(instance);
+    }
+
+    printf("TestListenerAndCslScheduling() passed\n");
+}
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+
 } // namespace ThreadDirect
 } // namespace ot
 
@@ -507,6 +1419,14 @@ int main(void)
     ot::ThreadDirect::TestRadioAvailabilityIsAvailableAt();
     ot::ThreadDirect::TestRadioAvailabilityIsAvailableIn();
     ot::ThreadDirect::TestRadioAvailabilityFindNextAvailableWindow();
+
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+    ot::ThreadDirect::TestListenerConfigAndApi();
+    ot::ThreadDirect::TestListenerPeriodicWindows();
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    ot::ThreadDirect::TestListenerAndCslScheduling();
+#endif
+#endif
 
     printf("All tests passed\n");
 #else

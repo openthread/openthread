@@ -225,6 +225,44 @@ const otThreadDirectKeyId *otThreadDirectKeyGetId(const otThreadDirectKey *aKey)
  */
 uint32_t otThreadDirectKeyGetFrameCounter(const otThreadDirectKey *aKey);
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Thread Direct Wake
+
+/**
+ * Represents the Thread Direct Wake type.
+ *
+ * Currently, only `OT_THREAD_DIRECT_WAKE_TYPE_TD_LINK` is supported. `OT_THREAD_DIRECT_WAKE_TYPE_REATTACH` and
+ * `OT_THREAD_DIRECT_WAKE_TYPE_CONNECTIONLESS` are defined for future use.
+ */
+typedef enum otThreadDirectWakeType
+{
+    OT_THREAD_DIRECT_WAKE_TYPE_TD_LINK        = 0x00, ///< Establish Thread Direct Link.
+    OT_THREAD_DIRECT_WAKE_TYPE_REATTACH       = 0x01, ///< Reattach to Thread Network (for future use).
+    OT_THREAD_DIRECT_WAKE_TYPE_CONNECTIONLESS = 0x02, ///< Connectionless control (for future use).
+} otThreadDirectWakeType;
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Thread Direct Link
+
+/**
+ * An opaque type representing a Thread Direct Link between two peers.
+ *
+ * @note The Thread Direct Link APIs and definition are provisional and work in progress. Not all functions are fully
+ *       implemented yet, and the API definitions may change in future revisions.
+ *
+ */
+typedef struct otThreadDirectLink otThreadDirectLink;
+
+/**
+ * Represents the configuration for an `otThreadDirectLink`.
+ *
+ * @note This structure is a placeholder and will be updated in future revisions as link establishment support is added.
+ */
+typedef struct otThreadDirectLinkConfig
+{
+    void *mContext; ///< (placeholder for future use).
+} otThreadDirectLinkConfig;
+
 /**
  * @}
  */

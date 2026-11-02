@@ -148,6 +148,7 @@
 #include "thread/tmf.hpp"
 #include "thread/vendor_info.hpp"
 #include "thread_direct/td_key_manager.hpp"
+#include "thread_direct/td_listener.hpp"
 #include "utils/channel_manager.hpp"
 #include "utils/channel_monitor.hpp"
 #include "utils/heap.hpp"
@@ -732,6 +733,9 @@ private:
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
     ThreadDirect::KeyManager mThreadDirectKeyManager;
 #endif
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+    ThreadDirect::Listener mThreadDirectListener;
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     MeshCoP::BorderAgent::TxtData mBorderAgentTxtData;
@@ -1143,6 +1147,10 @@ template <> inline NetDiag::Client &Instance::Get(void) { return mNetDiagClient;
 
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
 template <> inline ThreadDirect::KeyManager &Instance::Get(void) { return mThreadDirectKeyManager; }
+#endif
+
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+template <> inline ThreadDirect::Listener &Instance::Get(void) { return mThreadDirectListener; }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
