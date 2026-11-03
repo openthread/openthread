@@ -460,6 +460,91 @@ void TestSrpRegisterServicesDiffLease(void)
         }
         VerifyOrQuit(count == 4);
     }
+
+    // Remove existing host and services, then test clearing a short-lease
+    // service while a default-lease service remains registered to verify that
+    // the client still renews the host lease before it expires on the server.
+
+    SuccessOrQuit(client.Get<Srp::Client>().RemoveHostAndServices(/* aRemoveKeyLease */ true));
+    nexus.AdvanceTime(5000);
+    VerifyOrQuit(server.Get<Srp::Server>().GetNextHost(nullptr) == nullptr);
+
+    client.Get<Srp::Client>().SetLeaseInterval(7200);
+    client.Get<Srp::Client>().SetKeyLeaseInterval(14 * 24 * 3600);
+    client.Get<Srp::Client>().SetTtl(0);
+
+    SuccessOrQuit(client.Get<Srp::Client>().SetHostName("host"));
+    SuccessOrQuit(client.Get<Srp::Client>().EnableAutoHostAddress());
+
+    ClearAllBytes(ins1);
+    ins1.mName         = "_test._udp";
+    ins1.mInstanceName = "long-svc";
+    ins1.mPort         = 1111;
+    SuccessOrQuit(client.Get<Srp::Client>().AddService(ins1));
+
+    nexus.AdvanceTime(5000);
+
+    ClearAllBytes(ins2);
+    ins2.mName         = "_test._udp";
+    ins2.mInstanceName = "short-svc";
+    ins2.mPort         = 2222;
+    ins2.mLease        = 60;
+    SuccessOrQuit(client.Get<Srp::Client>().AddService(ins2));
+
+    nexus.AdvanceTime(5000);
+
+    VerifyOrQuit(client.Get<Srp::Client>().GetHostInfo().GetState() == Srp::Client::kRegistered);
+    VerifyOrQuit(ins1.GetState() == Srp::Client::kRegistered);
+    VerifyOrQuit(ins2.GetState() == Srp::Client::kRegistered);
+
+    {
+        const Srp::Server::Host *host = server.Get<Srp::Server>().GetNextHost(nullptr);
+        Srp::Server::LeaseInfo   leaseInfo;
+
+        VerifyOrQuit(host != nullptr);
+        host->GetLeaseInfo(leaseInfo);
+        VerifyOrQuit(leaseInfo.mLease == 60000);
+    }
+
+    // Locally clear `short-svc` without notifying the server, then advance past its 60s lease.
+    SuccessOrQuit(client.Get<Srp::Client>().ClearService(ins2));
+
+    for (uint16_t step = 0; step < 5; step++)
+    {
+        const Srp::Server::Host    *host;
+        const Srp::Server::Service *service = nullptr;
+        bool                        found   = false;
+
+        nexus.AdvanceTime(20000);
+
+        VerifyOrQuit(client.Get<Srp::Client>().GetHostInfo().GetState() == Srp::Client::kRegistered);
+        VerifyOrQuit(ins1.GetState() == Srp::Client::kRegistered);
+
+        host = server.Get<Srp::Server>().GetNextHost(nullptr);
+        VerifyOrQuit(host != nullptr);
+        VerifyOrQuit(!host->IsDeleted());
+
+        while ((service = host->GetNextService(service)) != nullptr)
+        {
+            if (StringMatch(service->GetInstanceName(), "long-svc._test._udp.default.service.arpa.",
+                            kStringCaseInsensitiveMatch))
+            {
+                VerifyOrQuit(!service->IsDeleted());
+                found = true;
+            }
+        }
+
+        VerifyOrQuit(found);
+    }
+
+    {
+        const Srp::Server::Host *host = server.Get<Srp::Server>().GetNextHost(nullptr);
+        Srp::Server::LeaseInfo   leaseInfo;
+
+        VerifyOrQuit(host != nullptr);
+        host->GetLeaseInfo(leaseInfo);
+        VerifyOrQuit(leaseInfo.mLease == 7200000);
+    }
 }
 
 } // namespace Nexus

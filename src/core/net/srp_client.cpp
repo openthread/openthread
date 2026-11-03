@@ -1392,7 +1392,7 @@ Error Client::AppendServiceInstructions(MsgInfo &aInfo)
     {
         for (Service &service : mServices)
         {
-            if ((service.GetState() == kRegistered) && CanAppendService(service) && ShouldRenewEarly(service))
+            if ((service.GetState() == kRegistered) && ShouldRenewEarly(service) && CanAppendService(service))
             {
                 // If the lease needs to be renewed or if we are close to the
                 // renewal time of a registered service, we refresh the service
@@ -2144,9 +2144,9 @@ void Client::UpdateState(void)
     // Go through the host info and all the services to check if there
     // are any new changes (i.e., anything new to add or remove). This
     // is used to determine whether to send an SRP update message or
-    // not. Also keep track of the earliest renew time among the
-    // previously registered services. This is used to schedule the
-    // timer for next refresh.
+    // not. Also keep track of the earliest renew time among the host
+    // info and previously registered services. This is used to schedule
+    // the timer for next refresh.
 
     switch (mHostInfo.GetState())
     {
@@ -2158,6 +2158,7 @@ void Client::UpdateState(void)
     case kRegistered:
         if (nextRenewTime.GetNow() < mLeaseRenewTime)
         {
+            nextRenewTime.UpdateIfEarlier(mLeaseRenewTime);
             break;
         }
 
