@@ -129,6 +129,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     , mSrpServer(aInstance, *this)
 #endif
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+    , mThreadDirect(aInstance, *this)
+#endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     , mHistory(aInstance, *this)
 #endif
@@ -6542,6 +6545,10 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
     return error;
 }
 
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+template <> otError Interpreter::Process<Cmd("td")>(Arg aArgs[]) { return mThreadDirect.Process(aArgs); }
+#endif
+
 template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -8604,6 +8611,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
         CmdEntry("tcp"),
+#endif
+#if OT_CONFIG_THREAD_DIRECT_ENABLE
+        CmdEntry("td"),
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("test"),
