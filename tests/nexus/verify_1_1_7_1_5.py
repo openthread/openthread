@@ -108,9 +108,15 @@ def verify(pv):
     #   from the DUT.
     # - Pass Criteria: N/A
     print("Step 4: Leader")
-    pkts.filter_wpan_src64(LEADER).\
+    pkts.copy().\
+      filter_wpan_src64(LEADER).\
       filter_wpan_dst16(ROUTER_1_RLOC16).\
       filter_coap_ack(consts.SVR_DATA_URI).\
+      must_next()
+
+    pkts.filter_wpan_src64(LEADER).\
+      filter_LLANMA().\
+      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
       must_next()
 
     index_after_ack = pkts.index

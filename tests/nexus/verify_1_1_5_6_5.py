@@ -87,7 +87,8 @@ def verify(pv):
     # - Description: Automatically sends a CoAP Response to Router_1.
     # - Pass Criteria: The DUT MUST transmit a 2.04 Changed CoAP response to Router_1.
     print("Step 3: Leader (DUT) transmits a 2.04 Changed CoAP response to Router_1.")
-    pkts.filter_wpan_src64(LEADER).\
+    pkts.copy().\
+        filter_wpan_src64(LEADER).\
         filter_coap_ack(consts.SVR_DATA_URI).\
         must_next()
 
@@ -101,7 +102,7 @@ def verify(pv):
     #     - Data Version field <incremented>
     #     - Stable Data Version field <incremented>
     print("Step 4: Leader (DUT) multicasts MLE Data Response with the new network information.")
-    pkts.copy().\
+    pkts.filter_wpan_src64(LEADER).\
         filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: {

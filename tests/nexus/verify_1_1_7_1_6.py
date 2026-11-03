@@ -110,17 +110,18 @@ def verify(pv):
     print("Step 4: DUT MUST send a CoAP ACK frame (2.04 Changed) to Router_1 and Router_2.")
 
     # We find the ACKs which might be out of order with respect to Step 3's request.
-    pkts.index = index_after_req1
-    pkts.filter_ipv6_src(str(req1.ipv6.dst)).\
-        filter_ipv6_dst(str(req1.ipv6.src)).\
-        filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
-        must_next()
+    with pkts.save_index():
+        pkts.index = index_after_req1
+        pkts.filter_ipv6_src(str(req1.ipv6.dst)).\
+            filter_ipv6_dst(str(req1.ipv6.src)).\
+            filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
+            must_next()
 
-    pkts.index = index_after_req2
-    pkts.filter_ipv6_src(str(req2.ipv6.dst)).\
-        filter_ipv6_dst(str(req2.ipv6.src)).\
-        filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
-        must_next()
+        pkts.index = index_after_req2
+        pkts.filter_ipv6_src(str(req2.ipv6.dst)).\
+            filter_ipv6_dst(str(req2.ipv6.src)).\
+            filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
+            must_next()
 
     # Step 5: Leader (DUT)
     # - Description: Automatically sends new network data to neighbors and rx-on-when idle Children (MED_1) via a multicast MLE Data Response to address FF02::1.
@@ -134,7 +135,8 @@ def verify(pv):
     #       - Two Border Router sub-TLVs
     #       - 6LoWPAN ID sub-TLV
     print("Step 5: DUT MUST multicast MLE Data Response with new information.")
-    pkts.filter_LLANMA().\
+    pkts.filter_wpan_src64(DUT).\
+        filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: {
                           consts.SOURCE_ADDRESS_TLV,
@@ -158,17 +160,19 @@ def verify(pv):
     #       - P_border_router_16 <0xFFFE>
     #   - Active Timestamp TLV
     print("Step 6: DUT MUST send MLE Child Update Request, Response or Data Response to SED_1.")
-    pkts.filter_wpan_dst64(SED_1).\
-        filter(lambda p: p.mle.cmd in (consts.MLE_CHILD_UPDATE_REQUEST,
-                                      consts.MLE_CHILD_UPDATE_RESPONSE,
-                                      consts.MLE_DATA_RESPONSE)).\
-        filter(lambda p: {
-                          consts.SOURCE_ADDRESS_TLV,
-                          consts.LEADER_DATA_TLV,
-                          consts.NETWORK_DATA_TLV,
-                          consts.ACTIVE_TIMESTAMP_TLV
-                          } <= set(p.mle.tlv.type)).\
-        must_next()
+    with pkts.save_index():
+        pkts.filter_wpan_src64(DUT).\
+            filter_wpan_dst64(SED_1).\
+            filter(lambda p: p.mle.cmd in (consts.MLE_CHILD_UPDATE_REQUEST,
+                                          consts.MLE_CHILD_UPDATE_RESPONSE,
+                                          consts.MLE_DATA_RESPONSE)).\
+            filter(lambda p: {
+                              consts.SOURCE_ADDRESS_TLV,
+                              consts.LEADER_DATA_TLV,
+                              consts.NETWORK_DATA_TLV,
+                              consts.ACTIVE_TIMESTAMP_TLV
+                              } <= set(p.mle.tlv.type)).\
+            must_next()
 
     # Step 7: Router_1
     # - Description: Harness silently powers-off Router_1 and waits 720 seconds to allow Leader (DUT) to detect the change.
@@ -192,7 +196,8 @@ def verify(pv):
     #   - Network Data TLV
     #     - Router_1’s Network Data section MUST be removed
     print("Step 9: DUT MUST multicast MLE Data Response with Router_1 data removed.")
-    pkts.filter_LLANMA().\
+    pkts.filter_wpan_src64(DUT).\
+        filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: {
                           consts.SOURCE_ADDRESS_TLV,
@@ -210,17 +215,19 @@ def verify(pv):
     #   - Network Data TLV
     #   - Active Timestamp TLV
     print("Step 10: DUT MUST unicast MLE Child Update Request, Response or Data Response to SED_1.")
-    pkts.filter_wpan_dst64(SED_1).\
-        filter(lambda p: p.mle.cmd in (consts.MLE_CHILD_UPDATE_REQUEST,
-                                      consts.MLE_CHILD_UPDATE_RESPONSE,
-                                      consts.MLE_DATA_RESPONSE)).\
-        filter(lambda p: {
-                          consts.SOURCE_ADDRESS_TLV,
-                          consts.LEADER_DATA_TLV,
-                          consts.NETWORK_DATA_TLV,
-                          consts.ACTIVE_TIMESTAMP_TLV
-                          } <= set(p.mle.tlv.type)).\
-        must_next()
+    with pkts.save_index():
+        pkts.filter_wpan_src64(DUT).\
+            filter_wpan_dst64(SED_1).\
+            filter(lambda p: p.mle.cmd in (consts.MLE_CHILD_UPDATE_REQUEST,
+                                          consts.MLE_CHILD_UPDATE_RESPONSE,
+                                          consts.MLE_DATA_RESPONSE)).\
+            filter(lambda p: {
+                              consts.SOURCE_ADDRESS_TLV,
+                              consts.LEADER_DATA_TLV,
+                              consts.NETWORK_DATA_TLV,
+                              consts.ACTIVE_TIMESTAMP_TLV
+                              } <= set(p.mle.tlv.type)).\
+            must_next()
 
     # Step 11: Router_1
     # - Description: Harness silently powers-up Router_1; it automatically begins the attach procedure.
@@ -267,11 +274,12 @@ def verify(pv):
     # - Description: Automatically sends a CoAP ACK frame to Router_1.
     # - Pass Criteria: The DUT MUST send a CoAP ACK frame (2.04 Changed) to Router_1.
     print("Step 14: DUT MUST send a CoAP ACK frame (2.04 Changed) to Router_1.")
-    pkts.index = index_after_req3
-    pkts.filter_ipv6_src(str(req3.ipv6.dst)).\
-        filter_ipv6_dst(str(req3.ipv6.src)).\
-        filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
-        must_next()
+    with pkts.save_index():
+        pkts.index = index_after_req3
+        pkts.filter_ipv6_src(str(req3.ipv6.dst)).\
+            filter_ipv6_dst(str(req3.ipv6.src)).\
+            filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
+            must_next()
 
     # Step 15: Leader (DUT)
     # - Description: Automatically sends new updated network data to neighbors and rx-on-when idle Children (MED_1).
@@ -285,7 +293,8 @@ def verify(pv):
     #       - Two Border Router sub-TLVs – corresponding to Router_1 and Router_2
     #       - 6LoWPAN ID sub-TLV
     print("Step 15: DUT MUST multicast MLE Data Response with updated information.")
-    pkts.filter_LLANMA().\
+    pkts.filter_wpan_src64(DUT).\
+        filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: {
                           consts.SOURCE_ADDRESS_TLV,
@@ -309,17 +318,19 @@ def verify(pv):
     #       - P_border_router_16 <0xFFFE>
     #   - Active Timestamp TLV
     print("Step 16: DUT MUST send a unicast MLE Child Update Request, Response or Data Response to SED_1.")
-    pkts.filter_wpan_dst64(SED_1).\
-        filter(lambda p: p.mle.cmd in (consts.MLE_CHILD_UPDATE_REQUEST,
-                                      consts.MLE_CHILD_UPDATE_RESPONSE,
-                                      consts.MLE_DATA_RESPONSE)).\
-        filter(lambda p: {
-                          consts.SOURCE_ADDRESS_TLV,
-                          consts.LEADER_DATA_TLV,
-                          consts.NETWORK_DATA_TLV,
-                          consts.ACTIVE_TIMESTAMP_TLV
-                          } <= set(p.mle.tlv.type)).\
-        must_next()
+    with pkts.save_index():
+        pkts.filter_wpan_src64(DUT).\
+            filter_wpan_dst64(SED_1).\
+            filter(lambda p: p.mle.cmd in (consts.MLE_CHILD_UPDATE_REQUEST,
+                                          consts.MLE_CHILD_UPDATE_RESPONSE,
+                                          consts.MLE_DATA_RESPONSE)).\
+            filter(lambda p: {
+                              consts.SOURCE_ADDRESS_TLV,
+                              consts.LEADER_DATA_TLV,
+                              consts.NETWORK_DATA_TLV,
+                              consts.ACTIVE_TIMESTAMP_TLV
+                              } <= set(p.mle.tlv.type)).\
+            must_next()
 
     # Step 17: Router_1, SED_1
     # - Description: Harness verifies connectivity by sending ICMPv6 Echo Requests from Router_1 and SED_1 to the DUT Prefix_1 based address.
