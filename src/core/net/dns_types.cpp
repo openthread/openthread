@@ -1355,9 +1355,9 @@ Error TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
             if (index >= sizeof(mChar) - 1)
             {
                 // The key is larger than supported key string length.
-                // In this case, we return the full encoded string in
-                // `mValue` and `mValueLength` and set `mKey` to
-                // `nullptr`.
+                // In this case, we return the full unsplit entry string
+                // (excluding the length byte) in `mValue` and
+                // `mValueLength` and set `mKey` to `nullptr`.
 
                 aEntry.mKey         = nullptr;
                 aEntry.mValue       = reinterpret_cast<const uint8_t *>(cur);
