@@ -57,7 +57,7 @@ void MeshForwarder::DetermineDirectOrIndirectTx(Message &aMessage)
             // A non-link-local multicast message that does not
             // contain an MPL Option should only be forwarded to
             // children using indirect transmissions.
-            if (destination.IsLinkLocalMulticast() || ip6Header.GetNextHeader() == Ip6::kProtoHopOpts)
+            if (destination.IsLinkLocalMulticast() || Get<Ip6::Ip6>().HasMplOption(aMessage, ip6Header))
             {
                 aMessage.SetDirectTransmission();
             }
