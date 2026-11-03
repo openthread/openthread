@@ -630,6 +630,33 @@ static void AddNodeIdToFilter(uint16_t aNodeId)
 
 #endif // !OPENTHREAD_SIMULATION_VIRTUAL_TIME
 
+static int8_t ConvertMbmToDbm(int16_t aPowerMbm)
+{
+    int8_t powerDbm;
+
+    if (aPowerMbm == OT_RADIO_POWER_INVALID_IN_MBM)
+    {
+        powerDbm = (int8_t)OT_RADIO_POWER_INVALID;
+    }
+    else
+    {
+        int16_t dbm = aPowerMbm / 100 - ((aPowerMbm < 0 && aPowerMbm % 100 != 0) ? 1 : 0);
+
+        if (dbm < INT8_MIN)
+        {
+            dbm = INT8_MIN;
+        }
+        else if (dbm > OT_RADIO_POWER_INVALID - 1)
+        {
+            dbm = OT_RADIO_POWER_INVALID - 1;
+        }
+
+        powerDbm = (int8_t)dbm;
+    }
+
+    return powerDbm;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // `otPlatRadio` functions
 
@@ -922,10 +949,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
                                                          rawPowerSetting, &rawPowerSettingLength);
         OT_UNUSED_VARIABLE(error);
 
-        if (targetPower != OT_RADIO_POWER_INVALID_IN_MBM)
-        {
-            maxPower = (int8_t)(targetPower / 100 - ((targetPower < 0 && targetPower % 100 != 0) ? 1 : 0));
-        }
+        maxPower = ConvertMbmToDbm(targetPower);
     }
 #endif
 
@@ -1165,9 +1189,7 @@ exit:
 #if !(OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE)
 otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower)
 {
-    int16_t powerDbm = aTargetPower / 100 - ((aTargetPower < 0 && aTargetPower % 100 != 0) ? 1 : 0);
-    int8_t  maxPower =
-        (aTargetPower == OT_RADIO_POWER_INVALID_IN_MBM) ? (int8_t)OT_RADIO_POWER_INVALID : (int8_t)powerDbm;
+    int8_t maxPower = ConvertMbmToDbm(aTargetPower);
 
     return otPlatRadioSetChannelMaxTransmitPower(aInstance, aChannel, maxPower);
 }
