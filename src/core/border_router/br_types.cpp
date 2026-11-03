@@ -110,7 +110,13 @@ void OnLinkPrefix::AdoptFlagsAndValidAndPreferredLifetimesFrom(const OnLinkPrefi
     {
         mValidLifetime = aPrefix.mValidLifetime;
     }
-    else if (GetExpireTime() > TimerMilli::GetNow() + Time::SecToMsec(kTwoHoursLifetime))
+    else if (GetExpireTime() <= TimerMilli::GetNow() + Time::SecToMsec(kTwoHoursLifetime))
+    {
+        // Retain the current expire time by adjusting `mValidLifetime`
+        // relative to the new `mLastUpdateTime`.
+        mValidLifetime = Time::MsecToSec(GetExpireTime().DetermineRemainingDurationFrom(aPrefix.GetLastUpdateTime()));
+    }
+    else
     {
         mValidLifetime = kTwoHoursLifetime;
     }
