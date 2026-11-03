@@ -359,9 +359,9 @@ void Test5_3_8(void)
         leader.Get<MeshCoP::PendingDatasetManager>().SaveLocal(datasetInfo);
     }
 
-    nexus.AdvanceTime(2 * kChildUpdateResponseWaitTime);
+    nexus.AdvanceTime(kDelayTimerTime + 2 * kChildUpdateResponseWaitTime);
     ssed1.Get<DataPollSender>().StopPolling();
-    nexus.AdvanceTime(kWaitPendingDatasetTime - 2 * kChildUpdateResponseWaitTime);
+    nexus.AdvanceTime(kWaitPendingDatasetTime - kDelayTimerTime - 2 * kChildUpdateResponseWaitTime);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 13: Leader");
