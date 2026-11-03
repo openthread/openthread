@@ -791,6 +791,7 @@ void Mle::HandleLinkRequest(RxInfo &aRxInfo)
             neighbor = router;
         }
 
+        RemoveNeighborIfRloc16Mismatches(aRxInfo, info.mRloc16);
         break;
 
     case kErrorNotFound:
@@ -853,15 +854,17 @@ Error Mle::SendLinkAccept(const LinkAcceptInfo &aInfo)
     Error        error   = kErrorNone;
     TxMessage   *message = nullptr;
     Command      command = kCommandLinkAccept;
-    Router      *router;
+    Router      *router  = nullptr;
     Ip6::Address destination;
 
     VerifyOrExit(IsAttached());
 
-    router = mRouterTable.FindRouter(aInfo.mExtAddress);
-
-    if (router != nullptr)
+    if (IsRouterRloc16(aInfo.mRloc16))
     {
+        router = mRouterTable.FindRouterByRloc16(aInfo.mRloc16);
+        VerifyOrExit(router != nullptr);
+        VerifyOrExit(router->GetExtAddress() == aInfo.mExtAddress);
+
         if (router->IsStateLinkRequest())
         {
             command = kCommandLinkAcceptAndRequest;
@@ -987,11 +990,7 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         ExitNow(error = kErrorSecurity);
     }
 
-    // Remove stale neighbors
-    if (aRxInfo.mNeighbor && aRxInfo.mNeighbor->GetRloc16() != sourceAddress)
-    {
-        RemoveNeighbor(*aRxInfo.mNeighbor);
-    }
+    RemoveNeighborIfRloc16Mismatches(aRxInfo, sourceAddress);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadVersionTlv(version));
 
@@ -2120,7 +2119,7 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
         SuccessOrExit(error = ProcessAddressRegistrationTlv(aRxInfo, *child));
     }
 
-    router = mRouterTable.FindRouter(extAddr);
+    router = mRouterTable.FindRouter(extAddr, Router::kInStateAnyExceptInvalid);
 
     if (router != nullptr)
     {
@@ -3533,7 +3532,7 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
     VerifyOrExit(aInfo.mXtalAccuracy <= Get<TimeSync>().GetXtalThreshold());
 #endif
 
-    aInfo.mRouter = mRouterTable.FindRouter(aInfo.mExtAddress);
+    aInfo.mRouter = mRouterTable.FindRouter(aInfo.mExtAddress, Router::kInStateAny);
 
     if (aInfo.mRouter != nullptr)
     {
