@@ -1168,9 +1168,9 @@ public:
          * The `Iterator` instance MUST be initialized using `Init()` before calling this method and the TXT data
          * buffer used to initialize the iterator MUST persist and remain unchanged.
          *
-         * If the parsed key string length is smaller than or equal to `kMaxIterKeyLength` the key string is returned
-         * in `mKey` in @p aEntry. But if the key is longer, then `mKey` is set to `nullptr` the entire encoded TXT
-         * entry is returned in `mValue` and `mValueLength`.
+         * If the parsed key string length is smaller than or equal to `kMaxIterKeyLength`, the key string is returned
+         * in `mKey` in @p aEntry. If the key is longer, `mKey` is set to `nullptr` and the unsplit `"key=value"` (or
+         * `"key"`) entry string (excluding the leading length byte) is returned in `mValue` and `mValueLength`.
          *
          * @param[out] aEntry          A reference to a `TxtEntry` to output the parsed/read entry.
          *
