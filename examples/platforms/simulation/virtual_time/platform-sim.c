@@ -309,7 +309,8 @@ void otSysProcessDrivers(otInstance *aInstance)
 
     platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
 
-    if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0 && !platformRadioIsTransmitPending())
+    if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0 && !platformRadioIsTransmitPending() &&
+        !platformUartIsTransmitPending())
     {
         platformSendSleepEvent();
 

@@ -204,6 +204,8 @@ exit:
     return error;
 }
 
+bool platformUartIsTransmitPending(void) { return s_write_length > 0; }
+
 void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME

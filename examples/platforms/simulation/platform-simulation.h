@@ -206,6 +206,13 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 void platformUartProcess(void);
 
 /**
+ * Checks if UART transmitting is pending.
+ *
+ * @returns Whether UART transmitting is pending.
+ */
+bool platformUartIsTransmitPending(void);
+
+/**
  * Restores the Uart.
  */
 void platformUartRestore(void);

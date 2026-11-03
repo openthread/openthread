@@ -309,7 +309,7 @@ class VirtualTime(BaseSimulator):
 
                 port = int(addr.split('.')[1])
                 data = types.SimpleNamespace(port=port, inb=b"", outb=b"")
-                self.sel.register(sock, selectors.EVENT_READ | selectors.EVENT_WRITE, data=data)
+                self.sel.register(sock, selectors.EVENT_READ, data=data)
 
                 if addr == self._spinel_cli_addr:
                     continue
