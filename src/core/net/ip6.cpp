@@ -584,6 +584,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
 
         VerifyOrExit((fragment = NewMessage()) != nullptr, error = kErrorNoBufs);
         IgnoreError(fragment->SetPriority(aMessage.GetPriority()));
+        fragment->SetLoopbackToHostAllowed(aMessage.IsLoopbackToHostAllowed());
         SuccessOrExit(error = fragment->SetLength(aMessage.GetOffset() + sizeof(fragmentHeader) + payloadFragment));
 
         header.SetPayloadLength(payloadFragment + sizeof(fragmentHeader));
