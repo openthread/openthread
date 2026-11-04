@@ -1122,9 +1122,15 @@ bool Mle::ShouldRegisterMulticastAddrsWithParent(void) const
     }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    if (!IsFullThreadDevice() && GetParent().IsThreadVersion1p2OrHigher())
+    if (!IsFullThreadDevice())
     {
-        ExitNow(shouldRegister = true);
+        const Parent &parent =
+            !mAttacher.GetParentCandidate().IsStateInvalid() ? mAttacher.GetParentCandidate() : mParent;
+
+        if (parent.IsThreadVersion1p2OrHigher())
+        {
+            ExitNow(shouldRegister = true);
+        }
     }
 #endif
 
