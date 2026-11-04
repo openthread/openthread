@@ -1254,7 +1254,8 @@ Error ResourceRecord::AppendTranslatedRecordDataTo(Message                      
 
             if (error == kErrorNotFound)
             {
-                // Reached end of the label
+                // Reached end of the name
+                SuccessOrExit(error = Name::AppendTerminator(aMessage));
                 break;
             }
 
