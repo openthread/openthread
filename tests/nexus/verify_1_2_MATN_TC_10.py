@@ -130,7 +130,8 @@ def verify(pv):
     # - Pass Criteria:
     #   - N/A
     print("Step 6: BR_1 automatically forwards the ping request packet to its Thread Network.")
-    pkts.filter_wpan_src64(vars['BR_1']).\
+    step6_pkts = pkts.copy()
+    step6_pkts.filter_wpan_src64(vars['BR_1']).\
         filter_ping_request(identifier=ECHO_ID1).\
         filter_AMPLFMA().\
         must_next()
@@ -155,10 +156,15 @@ def verify(pv):
     # - Pass Criteria:
     #   - N/A
     print("Step 8: ROUTER receives the MPL packet and unicasts an ICMPv6 Echo (ping) Reply.")
-    # Router may reply over backbone directly in Nexus if it sees the destination GUA as on-link.
-    pkts.filter(lambda p: p.wpan.src64 == vars['ROUTER'] or p.eth.src == vars['ROUTER_ETH']).\
+    # Router may reply over backbone directly in Nexus if it sees the destination GUA as on-link, or may receive the
+    # MPL packet forwarded by BR_2 (over 802.15.4 after receiving BR_1's MPL frame via TREL) and reply before BR_1's
+    # 802.15.4 CSMA backoff completes.
+    step8_pkts = pkts.copy()
+    step8_pkts.filter(lambda p: p.wpan.src64 == vars['ROUTER'] or p.eth.src == vars['ROUTER_ETH']).\
         filter_ping_reply(identifier=ECHO_ID1).\
         must_next()
+
+    pkts.index = pv.max_index(step6_pkts.index, step8_pkts.index)
 
     # Step 8a
     # - Device: BR_1
