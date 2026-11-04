@@ -76,16 +76,36 @@ def verify(pv):
     HOST_1_ETH = '02:00:00:00:00:02'
     HOST_2_ETH = '02:00:00:00:00:03'
 
+    def is_mdns_query(p):
+        if not (hasattr(p, 'udp') and p.udp.dstport == MDNS_UDP_PORT):
+            return False
+
+        layer = None
+        if hasattr(p, 'mdns') and p.mdns:
+            layer = p.mdns
+        elif hasattr(p, 'dns') and p.dns:
+            layer = p.dns
+
+        if not layer or layer.flags.response != 0:
+            return False
+
+        names = verify_utils.as_list(layer.qry.name)
+        return any(isinstance(name, str) and name == MESHCOP_SERVICE for name in names)
+
     def is_mdns_response(p):
         if not (hasattr(p, 'udp') and p.udp.srcport == MDNS_UDP_PORT):
             return False
 
-        names = []
+        layer = None
         if hasattr(p, 'mdns') and p.mdns:
-            names = verify_utils.as_list(p.mdns.resp.name)
+            layer = p.mdns
         elif hasattr(p, 'dns') and p.dns:
-            names = verify_utils.as_list(p.dns.resp.name)
+            layer = p.dns
 
+        if not layer or layer.flags.response != 1:
+            return False
+
+        names = verify_utils.as_list(layer.resp.name)
         for name in names:
             if not isinstance(name, str):
                 continue
@@ -255,14 +275,16 @@ def verify(pv):
     print("Step 1: Host sends an mDNS query.")
     pkts.filter_eth_src(HOST_1_ETH).\
         filter_ipv6_dst(MDNS_IPV6_ADDR).\
-        filter(lambda p: p.udp.dstport == MDNS_UDP_PORT).\
+        filter(is_mdns_query).\
         must_next()
+    q_number = pkts.last().number
 
     # Step 2 & 3: BR_1 and BR_2 automatically respond.
     print("Step 2: BR_1 automatically responds to the mDNS query.")
     p1 = pkts.copy().\
         filter_eth_src(BR_1_ETH).\
         filter(is_mdns_response).\
+        filter(lambda p: p.number > q_number).\
         must_next()
     verify_mdns_response(p1, {
         'ifstate': [1, 2],
@@ -275,6 +297,7 @@ def verify(pv):
     p2 = pkts.copy().\
         filter_eth_src(BR_2_ETH).\
         filter(is_mdns_response).\
+        filter(lambda p: p.number > q_number).\
         must_next()
     verify_mdns_response(p2, {'ifstate': 2, 'active': 1, 'primary': 0}, expected_omr_var='OMR_PREFIX_STEP_0')
 
@@ -286,7 +309,7 @@ def verify(pv):
     # Skip all packets until the next query which should be around Step 5
     pkts.filter_eth_src(HOST_1_ETH).\
         filter_ipv6_dst(MDNS_IPV6_ADDR).\
-        filter(lambda p: p.udp.dstport == MDNS_UDP_PORT).\
+        filter(is_mdns_query).\
         filter(lambda p: p.number > max(p1.number, p2.number)).\
         must_next()
     q_number = pkts.last().number
@@ -322,7 +345,7 @@ def verify(pv):
     print("Step 9: Host sends an mDNS query.")
     pkts.filter_eth_src(HOST_2_ETH).\
         filter_ipv6_dst(MDNS_IPV6_ADDR).\
-        filter(lambda p: p.udp.dstport == MDNS_UDP_PORT).\
+        filter(is_mdns_query).\
         filter(lambda p: p.number > max(p1.number, p2.number)).\
         must_next()
     q_number = pkts.last().number
@@ -367,7 +390,7 @@ def verify(pv):
     print("Step 12: Host sends an mDNS query.")
     pkts.filter_eth_src(HOST_1_ETH).\
         filter_ipv6_dst(MDNS_IPV6_ADDR).\
-        filter(lambda p: p.udp.dstport == MDNS_UDP_PORT).\
+        filter(is_mdns_query).\
         filter(lambda p: p.number > p2.number).\
         must_next()
     q_number = pkts.last().number
