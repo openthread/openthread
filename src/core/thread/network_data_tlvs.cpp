@@ -120,6 +120,8 @@ const NetworkDataTlv *PrefixTlv::FindSubTlv(Type aType, bool aStable) const
 
 void ServiceTlv::Init(uint8_t aServiceId, uint32_t aEnterpriseNumber, const ServiceData &aServiceData)
 {
+    uint8_t *location = GetValue() + sizeof(mFlagsServiceId);
+
     NetworkDataTlv::Init();
     SetType(kTypeService);
 
@@ -128,17 +130,15 @@ void ServiceTlv::Init(uint8_t aServiceId, uint32_t aEnterpriseNumber, const Serv
 
     if (aEnterpriseNumber != kThreadEnterpriseNumber)
     {
-        mShared.mEnterpriseNumber = BigEndian::HostSwap32(aEnterpriseNumber);
-        mServiceDataLength        = aServiceData.GetLength();
-        aServiceData.CopyBytesTo(&mServiceDataLength + sizeof(uint8_t));
-    }
-    else
-    {
-        mShared.mServiceDataLengthThreadEnterprise = aServiceData.GetLength();
-        aServiceData.CopyBytesTo(&mShared.mServiceDataLengthThreadEnterprise + sizeof(uint8_t));
+        BigEndian::WriteUint32(aEnterpriseNumber, location);
+        location += sizeof(uint32_t);
     }
 
-    SetLength(GetFieldsLength());
+    *location = aServiceData.GetLength();
+    location += sizeof(uint8_t);
+    aServiceData.CopyBytesTo(location);
+
+    SetLength(static_cast<uint8_t>(GetFieldsLength()));
 }
 
 //---------------------------------------------------------------------------------------------------------------------
