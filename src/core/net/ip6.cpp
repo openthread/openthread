@@ -488,6 +488,32 @@ exit:
     return error;
 }
 
+bool Ip6::HasMplOption(const Message &aMessage, const Header &aHeader) const
+{
+    bool           hasMpl = false;
+    HopByHopHeader hbhHeader;
+    OffsetRange    offsetRange;
+    Option         option;
+
+    VerifyOrExit(aHeader.GetNextHeader() == kProtoHopOpts);
+
+    offsetRange.InitFromRange(sizeof(Header), aMessage.GetLength());
+    SuccessOrExit(ReadHopByHopHeader(aMessage, offsetRange, hbhHeader));
+
+    for (; !offsetRange.IsEmpty(); offsetRange.AdvanceOffset(option.GetSize()))
+    {
+        SuccessOrExit(option.ParseFrom(aMessage, offsetRange));
+
+        if (option.GetType() == MplOption::kType)
+        {
+            ExitNow(hasMpl = true);
+        }
+    }
+
+exit:
+    return hasMpl;
+}
+
 Error Ip6::HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive, bool aIsHopByHop)
 {
     Error          error        = kErrorNone;
@@ -1192,18 +1218,19 @@ void Ip6::DetermineAction(const Message &aMessage,
     {
         // Destination is multicast
 
-        if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
+        if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() && !HasMplOption(aMessage, aHeader))
         {
             // Multicast messages with scope larger than realm-local
-            // use IP-in-IP encapsulation destined to the "All MPL
+            // may use IP-in-IP encapsulation destined to the "All MPL
             // Forwarders" multicast address. Both the encapsulated
             // (outer) and embedded (inner) messages are processed.
             //
-            // For the inner message, we set `aForwardThread` if the
-            // device has a sleepy child that is subscribed to the
-            // destination address. `MeshForwarder::SendMessage()` on
-            // an FTD will then check for this and schedules the
-            // indirect tx to such children. This is skipped on an MTD
+            // For the inner message (which does not contain an MPL
+            // Option), we set `aForwardThread` if the device has a
+            // sleepy child that is subscribed to the destination
+            // address. `MeshForwarder::SendMessage()` on an FTD will
+            // then check for this and schedules the indirect tx to
+            // such children. This is skipped on an MTD
             // (`aForwardThread` remains `false`) since an MTD cannot
             // have children.
 

@@ -278,6 +278,17 @@ public:
      */
     bool IsOnLink(const Address &aAddress) const;
 
+    /**
+     * Indicates whether a given IPv6 message contains an MPL Option in its Hop-by-Hop Options header.
+     *
+     * @param[in] aMessage  The IPv6 message to check.
+     * @param[in] aHeader   The parsed IPv6 header of @p aMessage.
+     *
+     * @retval TRUE   The message contains an MPL Option in its Hop-by-Hop Options header.
+     * @retval FALSE  The message does not contain an MPL Option in its Hop-by-Hop Options header.
+     */
+    bool HasMplOption(const Message &aMessage, const Header &aHeader) const;
+
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 
     typedef otBorderRoutingCounters BrCounters; ///< Border Routing counters.
