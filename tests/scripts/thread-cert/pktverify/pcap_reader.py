@@ -32,6 +32,7 @@ import subprocess
 from typing import Optional
 
 import pyshark
+from pyshark.packet.fields import LayerField, LayerFieldsContainer
 
 from pktverify import consts, utils
 from pktverify.packet import Packet
@@ -69,7 +70,53 @@ class PcapReader(object):
                                       override_prefs=override_prefs,
                                       decode_as=consts.WIRESHARK_DECODE_AS_ENTRIES)
         filecap.load_packets()
+        cls._fix_coap_uri_path_recon(filecap._packets)
         return PacketFilter(tuple(map(Packet, filecap._packets)))
+
+    @staticmethod
+    def _fix_coap_uri_path_recon(packets) -> None:
+        """
+        Fix `coap.opt.uri_path_recon` on CoAP responses when a CoAP token is
+        reused across multiple requests in the same conversation.
+
+        Wireshark's CoAP dissector keys its per-conversation transaction state
+        by token and only records `uri_path` when a token is first seen, so a
+        later request reusing the same token causes its response to inherit the
+        earlier request's `coap.opt.uri_path_recon`.
+        """
+        uri_by_frame = {}
+        uri_by_token = {}
+
+        for idx, raw_pkt in enumerate(packets, 1):
+            if not hasattr(raw_pkt, 'coap'):
+                continue
+
+            frame_num = int(getattr(raw_pkt, 'number', idx))
+
+            for coap_layer in raw_pkt.get_multiple_layers('coap'):
+                token_field = coap_layer.get_field('coap.token')
+                token = token_field.get_default_value() if token_field is not None else None
+
+                if coap_layer.get_field('coap.opt.uri_path') is not None:
+                    uri_field = coap_layer.get_field('coap.opt.uri_path_recon')
+                    if uri_field is not None:
+                        uri = uri_field.get_default_value()
+                        uri_by_frame[frame_num] = uri
+                        if token is not None:
+                            uri_by_token[token] = uri
+                else:
+                    req_uri = None
+                    resp_to_field = coap_layer.get_field('coap.response_to')
+                    if resp_to_field is not None:
+                        try:
+                            req_uri = uri_by_frame.get(int(resp_to_field.get_default_value()))
+                        except (ValueError, TypeError):
+                            pass
+                    if req_uri is None and token is not None:
+                        req_uri = uri_by_token.get(token)
+                    if req_uri is not None:
+                        coap_layer._all_fields['coap.opt.uri_path_recon'] = LayerFieldsContainer(
+                            main_field=LayerField(name='coap.opt.uri_path_recon', value=req_uri))
 
 
 if __name__ == '__main__':
