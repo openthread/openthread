@@ -1805,6 +1805,7 @@ void Server::HandleLeaseTimer(void)
             {
                 // Don't need to notify the service handler as `RemoveHost` at below will do.
                 host->RemoveService(&service, kRetainName, kDoNotNotifyServiceHandler);
+                nextExpireTime.UpdateIfEarlier(service.GetKeyExpireTime());
             }
 
             RemoveHost(host, kRetainName);
