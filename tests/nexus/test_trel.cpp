@@ -854,6 +854,83 @@ void TestMultiServiceSameHost(void)
     }
 }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+void TestMultiRadioRxFragmentTag(void)
+{
+    Core      nexus;
+    Node     &node1 = nexus.CreateNode();
+    Node     &node2 = nexus.CreateNode();
+    Neighbor *neighbor;
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("TestMultiRadioRxFragmentTag()");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
+    node1.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(node1.Get<Mle::Mle>().IsLeader());
+
+    node2.Join(node1, Node::kAsFed);
+    nexus.AdvanceTime(10 * 1000);
+    VerifyOrQuit(node2.Get<Mle::Mle>().IsChild());
+
+    neighbor = node1.Get<NeighborTable>().FindNeighbor(node2.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(neighbor != nullptr);
+
+    neighbor->ClearLastRxFragmentTag();
+
+    // Exact sequence from TREL-TC-4 out-of-order multi-radio delivery:
+    // Tag 8826 received on TREL, then duplicate 8826 and new 8829 on 15.4,
+    // followed by 8827, 8828 (TREL-only unicasts) and duplicate 8829 on TREL.
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(8826));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8826));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(8829));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(8827));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(8828));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8829));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8826));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8827));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8828));
+
+    // Test bitmap boundary (delta == 32 and delta > 32)
+    neighbor->ClearLastRxFragmentTag();
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(99));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(100));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(132)); // delta == 32 with non-zero bitmap
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(100));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(101)); // delta == 31
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(101));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(131)); // delta == 1
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(131));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(99)); // delta == 33 (> 32)
+
+    // Test large advance (> 32) clearing bitmap
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(200)); // delta == 68 (> 32)
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(199));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(199));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(200));
+
+    // Test 16-bit tag wrap-around (0xfffe, 0xffff, 0x0001, 0x0002)
+    neighbor->ClearLastRxFragmentTag();
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0xfffe));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0x0002));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0xfffe));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0xffff));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0x0001));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0xffff));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0x0001));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0x0002));
+
+    // Test tag timeout expiration
+    nexus.AdvanceTime(OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT + 1);
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0x0002));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0x0002));
+}
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 } // namespace Nexus
@@ -868,6 +945,9 @@ int main(void)
     ot::Nexus::TestServiceNameConflict();
     ot::Nexus::TestHostAddressChange();
     ot::Nexus::TestMultiServiceSameHost();
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    ot::Nexus::TestMultiRadioRxFragmentTag();
+#endif
     printf("All tests passed\n");
 #else
     printf("TREL is not enabled - test skipped\n");

@@ -466,43 +466,15 @@ public:
     void ClearLastRxFragmentTag(void) { mLastRxFragmentTag = 0; }
 
     /**
-     * Gets the last received fragment tag.
+     * Checks whether a received fragment tag from a first fragment (at offset zero) is a duplicate and updates the
+     * tracked received fragment tags.
      *
-     * MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
+     * @param[in] aTag   The received fragment tag.
      *
-     * @returns The last received fragment tag.
+     * @retval TRUE   The @p aTag is a duplicate (already received earlier).
+     * @retval FALSE  The @p aTag is not a duplicate.
      */
-    uint16_t GetLastRxFragmentTag(void) const { return mLastRxFragmentTag; }
-
-    /**
-     * Set the last received fragment tag.
-     *
-     * @param[in] aTag   The new tag value.
-     */
-    void SetLastRxFragmentTag(uint16_t aTag);
-
-    /**
-     * Indicates whether or not the last received fragment tag is set and valid (i.e., not yet timed out).
-     *
-     * @returns TRUE if the last received fragment tag is set and valid, FALSE otherwise.
-     */
-    bool IsLastRxFragmentTagSet(void) const;
-
-    /**
-     * Indicates whether the last received fragment tag is strictly after a given tag value.
-     *
-     * MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
-     *
-     * The tag value compassion follows the Serial Number Arithmetic logic from RFC-1982. It is semantically equivalent
-     * to `LastRxFragmentTag > aTag`.
-     *
-     * @param[in] aTag   A tag value to compare against.
-     *
-     * @returns TRUE if the current last rx fragment tag is strictly after @p aTag, FALSE if they are equal or it is
-     * before @p aTag.
-     */
-    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return SerialNumber::IsGreater(mLastRxFragmentTag, aTag); }
-
+    bool IsRxFragmentTagDuplicate(uint16_t aTag);
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
@@ -701,7 +673,12 @@ protected:
     void Init(Instance &aInstance);
 
 private:
-    static constexpr uint32_t kLastRxFragmentTagTimeout = OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT; // in msec
+    static constexpr uint32_t kLastRxFragmentTagTimeout     = OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT; // msec
+    static constexpr uint16_t kPrevRxFragmentTagsBitmapBits = BitSizeOf(uint32_t);
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    bool IsLastRxFragmentTagSet(TimeMilli aNow) const;
+#endif
 
     Mac::ExtAddress        mMacAddr;
     TimeMilli              mLastHeard;
@@ -713,6 +690,7 @@ private:
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     uint16_t  mLastRxFragmentTag;
+    uint32_t  mPrevRxFragmentTagsBitmap;
     TimeMilli mLastRxFragmentTagTime;
 #endif
 
