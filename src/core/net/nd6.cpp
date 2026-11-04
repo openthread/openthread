@@ -137,7 +137,7 @@ bool RouteInfoOption::IsValid(void) const
 {
     return (GetSize() >= kMinSize) && (mPrefixLength <= Prefix::kMaxLength) &&
            (GetLength() >= OptionLengthForPrefix(mPrefixLength)) &&
-           NetworkData::IsRoutePreferenceValid(GetPreference());
+           Preference::Is2BitUintValid((mResvdPrf & kPreferenceMask) >> kPreferenceOffset);
 }
 
 uint8_t RouteInfoOption::OptionLengthForPrefix(uint8_t aPrefixLength)
