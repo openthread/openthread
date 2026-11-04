@@ -122,24 +122,30 @@ def verify(pv):
         # Use range from initial_reg's position
         pkts = pv.pkts.range((initial_reg.number, 0), cascade=False)
 
-        # Helper to filter for re-registration packets
-        def find_re_reg_pkts(start_time):
+        # Helper to filter for re-registration packets, excluding MAC/CoAP
+        # retransmissions of previously matched requests.
+        def find_re_reg_pkts(start_time, prev_mids):
             return pkts.filter_coap_request('/n/mr').\
                 filter(lambda p: p.ipv6.src == rloc).\
                 filter(lambda p: p.ipv6.dst == BR_RLOC).\
                 filter(lambda p: MA1 in p.coap.tlv.ipv6_address).\
+                filter(lambda p: p.coap.mid not in prev_mids).\
                 filter(lambda p: p.sniff_timestamp > start_time).\
                 filter(lambda p: p.sniff_timestamp <= initial_reg.sniff_timestamp + MLR_TIMEOUT_MIN)
 
+        seen_mids = {initial_reg.coap.mid}
+
         # The DUT MUST re-register.
-        first_re_reg = find_re_reg_pkts(initial_reg.sniff_timestamp).must_next()
+        first_re_reg = find_re_reg_pkts(initial_reg.sniff_timestamp, seen_mids).must_next()
+        seen_mids.add(first_re_reg.coap.mid)
 
         # A second re-registration is allowed.
-        second_re_reg = find_re_reg_pkts(first_re_reg.sniff_timestamp).next()
+        second_re_reg = find_re_reg_pkts(first_re_reg.sniff_timestamp, seen_mids).next()
 
         # But no more than 2 re-registrations MUST occur.
         if second_re_reg:
-            find_re_reg_pkts(second_re_reg.sniff_timestamp).must_not_next()
+            seen_mids.add(second_re_reg.coap.mid)
+            find_re_reg_pkts(second_re_reg.sniff_timestamp, seen_mids).must_not_next()
 
 
 if __name__ == '__main__':
