@@ -2167,6 +2167,76 @@ void TestDefaultRoute(void)
     VerifyPrefixTable({RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceLow, routerAddressA)});
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate `RouteInfoOption::IsValid()` with valid and reserved
+    // 2-bit preference values, and verify that `RxRaTracker` ignores
+    // an RIO with reserved preference (0b10) while still processing
+    // the RA header.
+
+    {
+        static constexpr uint8_t kPrfOffset       = 3;
+        static constexpr uint8_t kResvdPrfByteIdx = 3;
+
+        uint8_t                          rioBytes[sizeof(Ip6::Nd::RouteInfoOption) + sizeof(Ip6::Address)];
+        Ip6::Nd::RouteInfoOption        &rio         = *reinterpret_cast<Ip6::Nd::RouteInfoOption *>(rioBytes);
+        Ip6::Prefix                      routePrefix = PrefixFromString("2000:1234:5678::", 64);
+        Ip6::Nd::RouterAdvert::TxMessage raMsg;
+        Ip6::Nd::RouterAdvert::Header    header;
+        Icmp6Packet                      packet;
+        uint8_t                          rawRa[kMaxRaSize];
+
+        memset(rioBytes, 0, sizeof(rioBytes));
+        rio.Init();
+        rio.SetPrefix(routePrefix);
+        rio.SetRouteLifetime(kValidLitime);
+
+        rioBytes[kResvdPrfByteIdx] = (0 << kPrfOffset); // 0b00 (Medium)
+        VerifyOrQuit(rio.IsValid());
+        VerifyOrQuit(rio.GetPreference() == NetworkData::kRoutePreferenceMedium);
+
+        rioBytes[kResvdPrfByteIdx] = (1 << kPrfOffset); // 0b01 (High)
+        VerifyOrQuit(rio.IsValid());
+        VerifyOrQuit(rio.GetPreference() == NetworkData::kRoutePreferenceHigh);
+
+        rioBytes[kResvdPrfByteIdx] = (3 << kPrfOffset); // 0b11 (Low)
+        VerifyOrQuit(rio.IsValid());
+        VerifyOrQuit(rio.GetPreference() == NetworkData::kRoutePreferenceLow);
+
+        rioBytes[kResvdPrfByteIdx] = (2 << kPrfOffset); // 0b10 (Reserved)
+        VerifyOrQuit(!rio.IsValid());
+
+        rioBytes[kResvdPrfByteIdx] = (2 << kPrfOffset) | 0xe7; // 0b10 with other reserved bits set
+        VerifyOrQuit(!rio.IsValid());
+
+        // Build an RA with a valid header (High preference) and an RIO
+        // whose preference field is set to the reserved value 0b10.
+        header.SetRouterLifetime(kValidLitime);
+        header.SetDefaultRouterPreference(NetworkData::kRoutePreferenceHigh);
+        SuccessOrQuit(raMsg.Append(header));
+        SuccessOrQuit(raMsg.AppendRouteInfoOption(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium));
+        raMsg.GetAsPacket(packet);
+
+        VerifyOrQuit(packet.GetLength() <= sizeof(rawRa));
+        memcpy(rawRa, packet.GetBytes(), packet.GetLength());
+
+        // Set the RIO's 2-bit preference field to reserved (0b10).
+        rawRa[sizeof(Ip6::Nd::RouterAdvert::Header) + kResvdPrfByteIdx] = (2 << kPrfOffset);
+        VerifyOrQuit(!reinterpret_cast<const Ip6::Nd::RouteInfoOption *>(rawRa + sizeof(Ip6::Nd::RouterAdvert::Header))
+                          ->IsValid());
+
+        SendRouterAdvert(routerAddressA, rawRa, packet.GetLength());
+        AdvanceTime(10000);
+
+        // The RIO with reserved preference must be ignored, while the
+        // RA header update (to High preference) is still processed.
+        VerifyPrefixTable({RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceHigh, routerAddressA)});
+
+        // Restore router A's default route preference to Low.
+        SendRouterAdvert(routerAddressA, DefaultRoute(kValidLitime, NetworkData::kRoutePreferenceLow));
+        AdvanceTime(10000);
+        VerifyPrefixTable({RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceLow, routerAddressA)});
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data. We should not see default route in
     // Network Data yet since there is no infrastructure-derived
     // OMR prefix (with preference medium or higher).
