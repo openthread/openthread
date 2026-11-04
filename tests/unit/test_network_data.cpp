@@ -1234,6 +1234,195 @@ void TestNetworkDataCommissioningData(void)
     testFreeInstance(instance);
 }
 
+void TestNetworkDataServiceTlvValidation(void)
+{
+    struct ValidTestCase
+    {
+        const uint8_t *mTlvs;
+        uint8_t        mTlvsLength;
+        uint8_t        mServiceId;
+        uint32_t       mEnterpriseNumber;
+        const uint8_t *mServiceData;
+        uint8_t        mServiceDataLength;
+        uint8_t        mSubTlvsLength;
+        const char    *mName;
+    };
+
+    struct InvalidTestCase
+    {
+        const uint8_t *mTlvs;
+        uint8_t        mTlvsLength;
+        const char    *mName;
+    };
+
+    static const uint8_t kThreadServiceEmpty[]         = {0x0a, 0x02, 0x80, 0x00};
+    static const uint8_t kThreadServiceWithSubTlv[]    = {0x0a, 0x04, 0x80, 0x00, 0x33, 0x00};
+    static const uint8_t kThreadServiceWithData[]      = {0x0b, 0x03, 0x82, 0x01, 0x5c};
+    static const uint8_t kThreadServiceDataBytes[]     = {0x5c};
+    static const uint8_t kEnterpriseServiceWithData[]  = {0x0b, 0x07, 0x03, 0x00, 0x00, 0x12, 0x34, 0x01, 0xab};
+    static const uint8_t kEnterpriseServiceDataBytes[] = {0xab};
+
+    static const ValidTestCase kValidCases[] = {
+        {
+            kThreadServiceEmpty,
+            sizeof(kThreadServiceEmpty),
+            0,
+            ServiceTlv::kThreadEnterpriseNumber,
+            nullptr,
+            0,
+            0,
+            "4-byte Thread-enterprise Service TLV with empty data",
+        },
+        {
+            kThreadServiceWithSubTlv,
+            sizeof(kThreadServiceWithSubTlv),
+            0,
+            ServiceTlv::kThreadEnterpriseNumber,
+            nullptr,
+            0,
+            2,
+            "6-byte Thread-enterprise Service TLV with sub-TLV",
+        },
+        {
+            kThreadServiceWithData,
+            sizeof(kThreadServiceWithData),
+            2,
+            ServiceTlv::kThreadEnterpriseNumber,
+            kThreadServiceDataBytes,
+            sizeof(kThreadServiceDataBytes),
+            0,
+            "5-byte Thread-enterprise Service TLV with 1-byte data",
+        },
+        {
+            kEnterpriseServiceWithData,
+            sizeof(kEnterpriseServiceWithData),
+            3,
+            0x00001234,
+            kEnterpriseServiceDataBytes,
+            sizeof(kEnterpriseServiceDataBytes),
+            0,
+            "9-byte enterprise Service TLV with 1-byte data",
+        },
+    };
+
+    static const uint8_t kZeroLength[]               = {0x0a, 0x00};
+    static const uint8_t kThreadMissingDataLen[]     = {0x0a, 0x01, 0x80};
+    static const uint8_t kEnterpriseOneByte[]        = {0x0a, 0x01, 0x00};
+    static const uint8_t kThreadTruncatedData[]      = {0x0a, 0x02, 0x80, 0x01};
+    static const uint8_t kThreadOverflowDataLen[]    = {0x0a, 0x02, 0x80, 0xff};
+    static const uint8_t kEnterpriseTwoBytes[]       = {0x0a, 0x02, 0x00, 0x00};
+    static const uint8_t kEnterpriseMissingDataLen[] = {0x0a, 0x05, 0x00, 0x00, 0x00, 0x12, 0x34};
+    static const uint8_t kEnterpriseTruncatedData[]  = {0x0a, 0x06, 0x00, 0x00, 0x00, 0x12, 0x34, 0x01};
+    static const uint8_t kExplicitThreadEntTrunc[]   = {0x0a, 0x06, 0x00, 0x00, 0x00, 0xaf, 0xaa, 0x01};
+    static const uint8_t kEnterpriseOverflowData[]   = {0x0a, 0x06, 0x00, 0x00, 0x00, 0x12, 0x34, 0xff};
+
+    static const InvalidTestCase kInvalidCases[] = {
+        {kZeroLength, sizeof(kZeroLength), "zero length"},
+        {kThreadMissingDataLen, sizeof(kThreadMissingDataLen), "Thread-enterprise missing data length"},
+        {kEnterpriseOneByte, sizeof(kEnterpriseOneByte), "enterprise 1-byte value"},
+        {kThreadTruncatedData, sizeof(kThreadTruncatedData), "Thread-enterprise truncated service data"},
+        {kThreadOverflowDataLen, sizeof(kThreadOverflowDataLen), "Thread-enterprise max service data length"},
+        {kEnterpriseTwoBytes, sizeof(kEnterpriseTwoBytes), "enterprise 2-byte value"},
+        {kEnterpriseMissingDataLen, sizeof(kEnterpriseMissingDataLen), "enterprise missing data length"},
+        {kEnterpriseTruncatedData, sizeof(kEnterpriseTruncatedData), "enterprise truncated service data"},
+        {kExplicitThreadEntTrunc, sizeof(kExplicitThreadEntTrunc), "explicit Thread enterprise number truncated data"},
+        {kEnterpriseOverflowData, sizeof(kEnterpriseOverflowData), "enterprise max service data length"},
+    };
+
+    static constexpr uint16_t kMaxBufferSize = 32;
+
+    Instance *instance;
+
+    printf("\n\n-------------------------------------------------");
+    printf("\nTestNetworkDataServiceTlvValidation()\n");
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
+
+    for (const ValidTestCase &testCase : kValidCases)
+    {
+        uint8_t           buffer[kMaxBufferSize];
+        const ServiceTlv *tlv;
+        ServiceData       serviceData;
+
+        VerifyOrQuit(testCase.mTlvsLength <= sizeof(buffer));
+        memcpy(buffer, testCase.mTlvs, testCase.mTlvsLength);
+
+        printf("\nValid case: %s", testCase.mName);
+
+        {
+            NetworkData netData(*instance, buffer, testCase.mTlvsLength);
+
+            SuccessOrQuit(netData.ValidateTlvs());
+        }
+
+        tlv = reinterpret_cast<const ServiceTlv *>(buffer);
+        VerifyOrQuit(tlv->IsValid());
+        VerifyOrQuit(tlv->GetServiceId() == testCase.mServiceId);
+        VerifyOrQuit(tlv->GetEnterpriseNumber() == testCase.mEnterpriseNumber);
+        VerifyOrQuit(tlv->GetServiceDataLength() == testCase.mServiceDataLength);
+        VerifyOrQuit(tlv->GetSubTlvsLength() == testCase.mSubTlvsLength);
+        tlv->GetServiceData(serviceData);
+        VerifyOrQuit(serviceData.GetLength() == testCase.mServiceDataLength);
+
+        if (testCase.mServiceDataLength > 0)
+        {
+            VerifyOrQuit(memcmp(serviceData.GetBytes(), testCase.mServiceData, testCase.mServiceDataLength) == 0);
+        }
+    }
+
+    for (const InvalidTestCase &testCase : kInvalidCases)
+    {
+        uint8_t           buffer[kMaxBufferSize];
+        const ServiceTlv *tlv;
+
+        VerifyOrQuit(testCase.mTlvsLength <= sizeof(buffer));
+        memcpy(buffer, testCase.mTlvs, testCase.mTlvsLength);
+
+        printf("\nInvalid case: %s", testCase.mName);
+
+        {
+            NetworkData netData(*instance, buffer, testCase.mTlvsLength);
+
+            VerifyOrQuit(netData.ValidateTlvs() == kErrorParse);
+        }
+
+        tlv = reinterpret_cast<const ServiceTlv *>(buffer);
+        VerifyOrQuit(!tlv->IsValid());
+    }
+
+    {
+        static const uint8_t kServiceBytes[]   = {0x11, 0x22};
+        const uint32_t       kEnterpriseNums[] = {ServiceTlv::kThreadEnterpriseNumber, 0x12345678};
+        ServiceData          serviceData;
+
+        serviceData.InitFrom(kServiceBytes);
+
+        for (uint32_t enterpriseNumber : kEnterpriseNums)
+        {
+            uint8_t     buffer[kMaxBufferSize];
+            uint16_t    size = ServiceTlv::CalculateSize(enterpriseNumber, serviceData.GetLength());
+            ServiceTlv *tlv  = reinterpret_cast<ServiceTlv *>(buffer);
+            ServiceData parsedData;
+
+            VerifyOrQuit(size <= sizeof(buffer));
+
+            tlv->Init(/* aServiceId */ 5, enterpriseNumber, serviceData);
+            VerifyOrQuit(tlv->GetSize() == size);
+            VerifyOrQuit(tlv->IsValid());
+            VerifyOrQuit(tlv->GetServiceId() == 5);
+            VerifyOrQuit(tlv->GetEnterpriseNumber() == enterpriseNumber);
+            VerifyOrQuit(tlv->GetSubTlvsLength() == 0);
+            tlv->GetServiceData(parsedData);
+            VerifyOrQuit(parsedData == serviceData);
+        }
+    }
+
+    printf("\n");
+
+    testFreeInstance(instance);
+}
+
 } // namespace NetworkData
 } // namespace ot
 
@@ -1247,6 +1436,7 @@ int main(void)
     ot::NetworkData::TestNetworkDataDsnSrpAnycastSeqNumSelection();
     ot::NetworkData::TestNetworkDataContextLength();
     ot::NetworkData::TestNetworkDataCommissioningData();
+    ot::NetworkData::TestNetworkDataServiceTlvValidation();
 
     printf("\nAll tests passed\n");
     return 0;

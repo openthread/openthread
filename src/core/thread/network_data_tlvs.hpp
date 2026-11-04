@@ -1216,10 +1216,8 @@ public:
     {
         uint8_t length = GetLength();
 
-        return (length >= sizeof(mFlagsServiceId)) &&
-               (length >= kMinLength + (IsThreadEnterprise() ? 0 : sizeof(uint32_t))) &&
-               (static_cast<uint16_t>(length) + sizeof(NetworkDataTlv) >=
-                CalculateSize(GetEnterpriseNumber(), GetServiceDataLength()));
+        return (length >= kMinLength) && (length >= kMinLength + (IsThreadEnterprise() ? 0 : sizeof(uint32_t))) &&
+               (length >= GetFieldsLength());
     }
 
     /**
@@ -1236,8 +1234,8 @@ public:
      */
     uint32_t GetEnterpriseNumber(void) const
     {
-        return IsThreadEnterprise() ? static_cast<uint32_t>(kThreadEnterpriseNumber)
-                                    : BigEndian::HostSwap32(mShared.mEnterpriseNumber);
+        return IsThreadEnterprise() ? kThreadEnterpriseNumber
+                                    : BigEndian::ReadUint32(GetValue() + sizeof(mFlagsServiceId));
     }
 
     /**
@@ -1255,35 +1253,28 @@ public:
      *
      * @returns A pointer to start of the Service Data bytes.
      */
-    const uint8_t *GetServiceData(void) const
-    {
-        return (IsThreadEnterprise() ? &mShared.mServiceDataLengthThreadEnterprise : &mServiceDataLength) +
-               sizeof(uint8_t);
-    }
+    const uint8_t *GetServiceData(void) const { return GetServiceDataLengthLocation() + sizeof(uint8_t); }
 
     /**
      * Gets Service Data length.
      *
      * @returns length of the Service Data field in bytes.
      */
-    uint8_t GetServiceDataLength(void) const
-    {
-        return IsThreadEnterprise() ? mShared.mServiceDataLengthThreadEnterprise : mServiceDataLength;
-    }
+    uint8_t GetServiceDataLength(void) const { return *GetServiceDataLengthLocation(); }
 
     /**
      * Returns the Sub-TLVs length in bytes.
      *
      * @returns The Sub-TLVs length in bytes.
      */
-    uint8_t GetSubTlvsLength(void) { return GetLength() - GetFieldsLength(); }
+    uint8_t GetSubTlvsLength(void) const { return GetLength() - static_cast<uint8_t>(GetFieldsLength()); }
 
     /**
      * Sets the Sub-TLVs length in bytes.
      *
      * @param[in]  aLength  The Sub-TLVs length in bytes.
      */
-    void SetSubTlvsLength(uint8_t aLength) { SetLength(GetFieldsLength() + aLength); }
+    void SetSubTlvsLength(uint8_t aLength) { SetLength(static_cast<uint8_t>(GetFieldsLength()) + aLength); }
 
     /**
      * Returns a pointer to the Sub-TLVs.
@@ -1323,7 +1314,12 @@ public:
 private:
     bool IsThreadEnterprise(void) const { return (mFlagsServiceId & kThreadEnterpriseFlag) != 0; }
 
-    uint8_t GetFieldsLength(void) const
+    const uint8_t *GetServiceDataLengthLocation(void) const
+    {
+        return GetValue() + sizeof(mFlagsServiceId) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t));
+    }
+
+    uint16_t GetFieldsLength(void) const
     {
         // Returns the length of TLV value's common fields (flags, enterprise
         // number and service data) excluding any sub-TLVs.
@@ -1335,18 +1331,13 @@ private:
     static constexpr uint8_t kServiceIdMask        = 0xf;
     static constexpr uint8_t kMinLength            = sizeof(uint8_t) + sizeof(uint8_t); // Flags & Service Data length.
 
-    // When `kThreadEnterpriseFlag is set in the `mFlagsServiceId`, the
-    // `mEnterpriseNumber` field is elided and `mFlagsServiceId` is
-    // immediately followed by the Service Data length field (which is
-    // represented by `mServiceDataLengthThreadEnterprise`)
+    // When `kThreadEnterpriseFlag` is set in the `mFlagsServiceId`, the
+    // 4-byte Enterprise Number field is elided and `mFlagsServiceId` is
+    // immediately followed by the 1-byte Service Data length field.
+    // Otherwise, `mFlagsServiceId` is followed by the 4-byte Enterprise
+    // Number and then the 1-byte Service Data length field.
 
     uint8_t mFlagsServiceId;
-    union OT_TOOL_PACKED_FIELD
-    {
-        uint32_t mEnterpriseNumber;
-        uint8_t  mServiceDataLengthThreadEnterprise;
-    } mShared;
-    uint8_t mServiceDataLength;
 
 } OT_TOOL_PACKED_END;
 
