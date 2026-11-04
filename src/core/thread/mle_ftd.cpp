@@ -2268,15 +2268,18 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         info.mTlvList.Add(Tlv::kLinkFrameCounter);
     }
 
-    switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
+    if (!mode.IsFullThreadDevice())
     {
-    case kErrorNone:
-        info.mTlvList.Add(Tlv::kAddressRegistration);
-        break;
-    case kErrorNotFound:
-        break;
-    default:
-        ExitNow(error = kErrorParse);
+        switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
+        {
+        case kErrorNone:
+            info.mTlvList.Add(Tlv::kAddressRegistration);
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
+        }
     }
 
     switch (aRxInfo.mMessage.ReadLeaderDataTlv(leaderData))
@@ -2525,13 +2528,16 @@ void Mle::HandleChildUpdateResponseOnParent(RxInfo &aRxInfo)
         }
     }
 
-    switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
+    if (!child->IsFullThreadDevice())
     {
-    case kErrorNone:
-    case kErrorNotFound:
-        break;
-    default:
-        ExitNow(error = kErrorParse);
+        switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
+        {
+        case kErrorNone:
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
+        }
     }
 
     switch (aRxInfo.mMessage.ReadLeaderDataTlv(leaderData))
