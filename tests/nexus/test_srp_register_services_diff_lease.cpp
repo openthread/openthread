@@ -545,6 +545,183 @@ void TestSrpRegisterServicesDiffLease(void)
         host->GetLeaseInfo(leaseInfo);
         VerifyOrQuit(leaseInfo.mLease == 7200000);
     }
+
+    // Verify changing default lease and key-lease while an SRP update is in
+    // progress and waiting for retry (services in `kAdding` / `kRemoving`).
+
+    SuccessOrQuit(client.Get<Srp::Client>().RemoveHostAndServices(/* aRemoveKeyLease */ true));
+    nexus.AdvanceTime(5000);
+    VerifyOrQuit(server.Get<Srp::Server>().GetNextHost(nullptr) == nullptr);
+
+    server.Get<Srp::Server>().SetEnabled(false);
+    SuccessOrQuit(server.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeAnycast));
+    nexus.AdvanceTime(5000);
+
+    client.Get<Srp::Client>().Stop();
+    SuccessOrQuit(client.Get<Srp::Client>().Start(Ip6::SockAddr(server.Get<Mle::Mle>().GetMeshLocalEid(), 53)));
+
+    client.Get<Srp::Client>().SetLeaseInterval(300);
+    client.Get<Srp::Client>().SetKeyLeaseInterval(3000);
+
+    SuccessOrQuit(client.Get<Srp::Client>().SetHostName("host"));
+    SuccessOrQuit(client.Get<Srp::Client>().EnableAutoHostAddress());
+
+    ClearAllBytes(ins1);
+    ins1.mName         = "_test._udp";
+    ins1.mInstanceName = "def-svc";
+    ins1.mPort         = 1111;
+    SuccessOrQuit(client.Get<Srp::Client>().AddService(ins1));
+
+    ClearAllBytes(ins2);
+    ins2.mName         = "_test._udp";
+    ins2.mInstanceName = "exp-svc";
+    ins2.mPort         = 2222;
+    ins2.mLease        = 300;
+    ins2.mKeyLease     = 3000;
+    SuccessOrQuit(client.Get<Srp::Client>().AddService(ins2));
+
+    // Advance time so the first update is transmitted while the server is
+    // disabled and both services enter `kAdding`.
+    nexus.AdvanceTime(1000);
+    VerifyOrQuit(ins1.GetState() == Srp::Client::kAdding);
+    VerifyOrQuit(ins2.GetState() == Srp::Client::kAdding);
+
+    // Change default lease while waiting for retry, then enable the server.
+    client.Get<Srp::Client>().SetLeaseInterval(600);
+    server.Get<Srp::Server>().SetEnabled(true);
+
+    nexus.AdvanceTime(15000);
+
+    VerifyOrQuit(client.Get<Srp::Client>().GetHostInfo().GetState() == Srp::Client::kRegistered);
+    VerifyOrQuit(ins1.GetState() == Srp::Client::kRegistered);
+    VerifyOrQuit(ins2.GetState() == Srp::Client::kRegistered);
+
+    {
+        const Srp::Server::Host    *host    = server.Get<Srp::Server>().GetNextHost(nullptr);
+        const Srp::Server::Service *service = nullptr;
+        uint16_t                    count   = 0;
+
+        VerifyOrQuit(host != nullptr);
+
+        while ((service = host->GetNextService(service)) != nullptr)
+        {
+            Srp::Server::LeaseInfo leaseInfo;
+
+            count++;
+            VerifyOrQuit(!service->IsDeleted());
+            service->GetLeaseInfo(leaseInfo);
+
+            if (StringMatch(service->GetInstanceName(), "def-svc._test._udp.default.service.arpa.",
+                            kStringCaseInsensitiveMatch))
+            {
+                VerifyOrQuit(leaseInfo.mLease == 600000);
+                VerifyOrQuit(leaseInfo.mKeyLease == 3000000);
+            }
+            else if (StringMatch(service->GetInstanceName(), "exp-svc._test._udp.default.service.arpa.",
+                                 kStringCaseInsensitiveMatch))
+            {
+                VerifyOrQuit(leaseInfo.mLease == 300000);
+                VerifyOrQuit(leaseInfo.mKeyLease == 3000000);
+            }
+            else
+            {
+                VerifyOrQuit(false);
+            }
+        }
+
+        VerifyOrQuit(count == 2);
+    }
+
+    // Also test changing default key-lease while services are in `kAdding`
+    // (with reverse add order) and `kRemoving`.
+
+    SuccessOrQuit(client.Get<Srp::Client>().RemoveHostAndServices(/* aRemoveKeyLease */ true));
+    nexus.AdvanceTime(5000);
+    VerifyOrQuit(server.Get<Srp::Server>().GetNextHost(nullptr) == nullptr);
+
+    server.Get<Srp::Server>().SetEnabled(false);
+    nexus.AdvanceTime(5000);
+
+    client.Get<Srp::Client>().SetLeaseInterval(300);
+    client.Get<Srp::Client>().SetKeyLeaseInterval(3000);
+
+    SuccessOrQuit(client.Get<Srp::Client>().SetHostName("host"));
+    SuccessOrQuit(client.Get<Srp::Client>().EnableAutoHostAddress());
+
+    ins1.mLease    = 0;
+    ins1.mKeyLease = 0;
+    ins2.mLease    = 300;
+    ins2.mKeyLease = 3000;
+    SuccessOrQuit(client.Get<Srp::Client>().AddService(ins2));
+    SuccessOrQuit(client.Get<Srp::Client>().AddService(ins1));
+
+    nexus.AdvanceTime(1000);
+    VerifyOrQuit(ins1.GetState() == Srp::Client::kAdding);
+    VerifyOrQuit(ins2.GetState() == Srp::Client::kAdding);
+
+    client.Get<Srp::Client>().SetKeyLeaseInterval(6000);
+    server.Get<Srp::Server>().SetEnabled(true);
+
+    nexus.AdvanceTime(15000);
+
+    VerifyOrQuit(client.Get<Srp::Client>().GetHostInfo().GetState() == Srp::Client::kRegistered);
+    VerifyOrQuit(ins1.GetState() == Srp::Client::kRegistered);
+    VerifyOrQuit(ins2.GetState() == Srp::Client::kRegistered);
+
+    {
+        const Srp::Server::Host    *host    = server.Get<Srp::Server>().GetNextHost(nullptr);
+        const Srp::Server::Service *service = nullptr;
+        uint16_t                    count   = 0;
+
+        VerifyOrQuit(host != nullptr);
+
+        while ((service = host->GetNextService(service)) != nullptr)
+        {
+            Srp::Server::LeaseInfo leaseInfo;
+
+            count++;
+            VerifyOrQuit(!service->IsDeleted());
+            service->GetLeaseInfo(leaseInfo);
+
+            if (StringMatch(service->GetInstanceName(), "def-svc._test._udp.default.service.arpa.",
+                            kStringCaseInsensitiveMatch))
+            {
+                VerifyOrQuit(leaseInfo.mLease == 300000);
+                VerifyOrQuit(leaseInfo.mKeyLease == 6000000);
+            }
+            else if (StringMatch(service->GetInstanceName(), "exp-svc._test._udp.default.service.arpa.",
+                                 kStringCaseInsensitiveMatch))
+            {
+                VerifyOrQuit(leaseInfo.mLease == 300000);
+                VerifyOrQuit(leaseInfo.mKeyLease == 3000000);
+            }
+            else
+            {
+                VerifyOrQuit(false);
+            }
+        }
+
+        VerifyOrQuit(count == 2);
+    }
+
+    server.Get<Srp::Server>().SetEnabled(false);
+    nexus.AdvanceTime(5000);
+
+    client.Get<Srp::Client>().SetKeyLeaseInterval(3000);
+    SuccessOrQuit(client.Get<Srp::Client>().RemoveService(ins1));
+    SuccessOrQuit(client.Get<Srp::Client>().RemoveService(ins2));
+
+    nexus.AdvanceTime(1000);
+    VerifyOrQuit(ins1.GetState() == Srp::Client::kRemoving);
+    VerifyOrQuit(ins2.GetState() == Srp::Client::kRemoving);
+
+    client.Get<Srp::Client>().SetKeyLeaseInterval(6000);
+    server.Get<Srp::Server>().SetEnabled(true);
+
+    nexus.AdvanceTime(15000);
+
+    VerifyOrQuit(ins1.GetState() == Srp::Client::kRemoved);
+    VerifyOrQuit(ins2.GetState() == Srp::Client::kRemoved);
 }
 
 } // namespace Nexus

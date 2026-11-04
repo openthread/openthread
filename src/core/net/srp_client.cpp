@@ -1337,23 +1337,23 @@ Error Client::AppendServiceInstructions(MsgInfo &aInfo)
 
     for (Service &service : mServices)
     {
-        uint32_t lease    = DetermineLeaseInterval(service.GetLease(), mDefaultLease);
-        uint32_t keyLease = Max(DetermineLeaseInterval(service.GetKeyLease(), mDefaultKeyLease), lease);
-
         service.ClearAppendedInMessageFlag();
 
         switch (service.GetState())
         {
         case kAdding:
         case kRefreshing:
-            OT_ASSERT((mLease == kUnspecifiedInterval) || (mLease == lease));
-            mLease = lease;
-
-            OT_FALL_THROUGH;
-
         case kRemoving:
-            OT_ASSERT((mKeyLease == kUnspecifiedInterval) || (mKeyLease == keyLease));
-            mKeyLease = keyLease;
+            if (!CanAppendService(service))
+            {
+                // If default lease or key-lease was changed while an
+                // update was in progress, services in `...ing` states
+                // may no longer share the same lease intervals. Revert
+                // any conflicting service so it is sent in the next
+                // update message.
+                service.SetState((service.GetState() == kRemoving) ? kToRemove : kToRefresh);
+            }
+
             break;
 
         case kToAdd:
