@@ -93,6 +93,12 @@ void TestDataset(void)
     static const uint8_t kValidMaxLenNetworkName[]    = {0x03, 0x10, 'a', 'a', 'a', 'a', 'a', 'a', 'a',
                                                          'a',  'a',  'a', 'a', 'a', 'a', 'a', 'a', 'a'};
 
+    // Channel Mask TLV - must contain at least one supported channel.
+    static const uint8_t kInvalidChannelMaskEmpty[]           = {0x35, 0x00};
+    static const uint8_t kInvalidChannelMaskZero[]            = {0x35, 0x06, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00};
+    static const uint8_t kInvalidChannelMaskUnsupportedPage[] = {0x35, 0x06, 0xff, 0x04, 0x00, 0x1f, 0xff, 0xe0};
+    static const uint8_t kValidChannelMask[]                  = {0x35, 0x06, 0x00, 0x04, 0x00, 0x1f, 0xff, 0xe0};
+
     static const Tlv::Type kDatasetTlvTypes[] = {
         Tlv::kChannel,    Tlv::kPanId,           Tlv::kExtendedPanId,  Tlv::kNetworkName,     Tlv::kPskc,
         Tlv::kNetworkKey, Tlv::kMeshLocalPrefix, Tlv::kSecurityPolicy, Tlv::kActiveTimestamp,
@@ -223,6 +229,9 @@ void TestDataset(void)
 #endif
     VerifyOrQuit(SetFromTlvsAndValidate(kInvalidTooLongNetworkName) == kErrorParse);
     VerifyOrQuit(SetFromTlvsAndValidate(kInvalidUtf8NetworkName) == kErrorParse);
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidChannelMaskEmpty) == kErrorParse);
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidChannelMaskZero) == kErrorParse);
+    VerifyOrQuit(SetFromTlvsAndValidate(kInvalidChannelMaskUnsupportedPage) == kErrorParse);
 
     // Valid variants of the same TLVs
 
@@ -230,6 +239,7 @@ void TestDataset(void)
     SuccessOrQuit(SetFromTlvsAndValidate(kValidExtPanId));
     SuccessOrQuit(SetFromTlvsAndValidate(kValidMeshLocalPrefix));
     SuccessOrQuit(SetFromTlvsAndValidate(kValidMaxLenNetworkName));
+    SuccessOrQuit(SetFromTlvsAndValidate(kValidChannelMask));
 
     // Combining/Merging TLVs from two Datasets.
 
