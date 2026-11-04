@@ -1317,14 +1317,8 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
 
         if ((neighbor != nullptr) && (fragmentHeader.GetDatagramOffset() == 0))
         {
-            uint16_t tag = fragmentHeader.GetDatagramTag();
-
-            if (neighbor->IsLastRxFragmentTagSet())
-            {
-                VerifyOrExit(!neighbor->IsLastRxFragmentTagAfter(tag), error = kErrorDuplicated);
-            }
-
-            neighbor->SetLastRxFragmentTag(tag);
+            VerifyOrExit(!neighbor->IsRxFragmentTagDuplicate(fragmentHeader.GetDatagramTag()),
+                         error = kErrorDuplicated);
         }
 
         // Duplication suppression for a "next fragment" is handled
