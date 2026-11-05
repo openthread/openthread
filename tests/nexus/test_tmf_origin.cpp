@@ -903,6 +903,7 @@ void TestTmfOriginRawFragments(void)
     Message                   *udpDatagram;
     Ip6::ExtensionHeader       dstOptsHeader;
     Ip6::PadOption             padOption;
+    uint16_t                   dstOptsFirstFragmentLength;
     Error                      error;
 
     node.Form();
@@ -927,6 +928,7 @@ void TestTmfOriginRawFragments(void)
     dstOptsHeader.SetNextHeader(Ip6::kProtoUdp);
     dstOptsHeader.SetLength(0);
     padOption.InitForPadSize(6);
+    dstOptsFirstFragmentLength = dstOptsHeader.GetSize() + kFirstFragmentLength;
 
     dstOptsDatagram = node.Get<MessagePool>().Allocate(Message::kTypeOther);
     VerifyOrQuit(dstOptsDatagram != nullptr);
@@ -978,8 +980,8 @@ void TestTmfOriginRawFragments(void)
     nexus.AdvanceTime(kPropagationTime);
     VerifyOrQuit(node.Get<ThreadNetif>().HasUnicastAddress(eid.GetAddress()));
 
-    // With the filter disabled, the same fragments are reassembled and
-    // the TMF message is processed.
+    // With the filter disabled, fragments containing the UDP header
+    // are reassembled and the TMF message is processed.
 
     node.Get<Ip6::Ip6>().SetTmfOriginFilterEnabled(false);
 
@@ -994,11 +996,11 @@ void TestTmfOriginRawFragments(void)
 
     SuccessOrQuit(node.Get<ThreadNetif>().AddExternalUnicastAddress(eid));
 
-    IgnoreError(SendRawFragment(node, rloc, mlEid, Ip6::kProtoDstOpts, *dstOptsDatagram, 0, dstOptsHeader.GetSize(),
+    IgnoreError(SendRawFragment(node, rloc, mlEid, Ip6::kProtoDstOpts, *dstOptsDatagram, 0, dstOptsFirstFragmentLength,
                                 Message::kOriginHostUntrusted, /* aLinkSecurity */ true));
-    IgnoreError(SendRawFragment(node, rloc, mlEid, Ip6::kProtoDstOpts, *dstOptsDatagram, dstOptsHeader.GetSize(),
-                                dstOptsDatagram->GetLength() - dstOptsHeader.GetSize(), Message::kOriginHostUntrusted,
-                                /* aLinkSecurity */ true));
+    IgnoreError(SendRawFragment(node, rloc, mlEid, Ip6::kProtoDstOpts, *dstOptsDatagram, dstOptsFirstFragmentLength,
+                                dstOptsDatagram->GetLength() - dstOptsFirstFragmentLength,
+                                Message::kOriginHostUntrusted, /* aLinkSecurity */ true));
 
     nexus.AdvanceTime(kPropagationTime);
     VerifyOrQuit(!node.Get<ThreadNetif>().HasUnicastAddress(eid.GetAddress()));

@@ -390,7 +390,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     uint8_t  dscp;
     uint16_t payloadLength = aMessage.GetLength();
 
-    SuccessOrExit(error = ApplyTmfOriginFilter(aMessage, aIpProto));
+    SuccessOrExit(error = ApplyTmfAndMdnsFilters(aMessage, aIpProto));
 
     if ((aIpProto == kProtoUdp) &&
         Get<Tmf::Agent>().IsTmfMessage(aMessageInfo.GetSockAddr(), aMessageInfo.GetPeerAddr(),
@@ -970,13 +970,13 @@ exit:
     return hasTunnel;
 }
 
-Error Ip6::ApplyTmfOriginFilter(const Message &aMessage, uint8_t aNextHeader) const
+Error Ip6::ApplyTmfAndMdnsFilters(const Message &aMessage, uint8_t aNextHeader) const
 {
-    // Checks whether a host-untrusted message is a TMF message (a UDP
-    // datagram to the TMF port), which must be dropped. Returns
-    // `kErrorDrop` for such a message, `kErrorParse` if its
-    // upper-layer header cannot be resolved or read, and `kErrorNone`
-    // otherwise (including any message that is not host-untrusted).
+    // Drops mDNS messages (UDP datagrams with source or destination
+    // port 5353) from any origin, and TMF messages (UDP datagrams to
+    // the TMF port) from a host-untrusted origin. Returns `kErrorDrop`
+    // for a dropped message, `kErrorParse` if its upper-layer header
+    // cannot be resolved or read, and `kErrorNone` otherwise.
     //
     // The header at the message offset is the one `aNextHeader`
     // indicates: the one following the IPv6 header in
@@ -986,39 +986,42 @@ Error Ip6::ApplyTmfOriginFilter(const Message &aMessage, uint8_t aNextHeader) co
     // A multicast message to a scope larger than realm-local is
     // encapsulated in IP-in-IP by `PrepareMulticastToLargerThanRealmLocal()`
     // before `HandleDatagram()`, so the embedded message is checked.
-    // `SendRaw()` drops a host-untrusted IP-in-IP message, so this is
-    // the only encapsulation expected; a further one is dropped.
 
     Error       error = kErrorNone;
     OffsetRange offsetRange;
     UdpHeader   udpHeader;
 
-    VerifyOrExit(aMessage.IsOriginHostUntrusted());
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    VerifyOrExit(mTmfOriginFilterEnabled);
-#endif
-
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
     SuccessOrExit(error = ResolveUpperLayerProtocol(aMessage, aNextHeader, offsetRange));
 
-    if (aNextHeader == kProtoIp6)
+    for (uint8_t tunnelDepth = 0; aNextHeader == kProtoIp6; tunnelDepth++)
     {
         Header header;
 
+        VerifyOrExit(tunnelDepth < kMaxRecursionDepth, error = kErrorDrop);
         SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, header));
         aNextHeader = header.GetNextHeader();
         SuccessOrExit(error = ResolveUpperLayerProtocol(aMessage, aNextHeader, offsetRange));
-        VerifyOrExit(aNextHeader != kProtoIp6, error = kErrorDrop);
     }
 
     VerifyOrExit(aNextHeader == kProtoUdp);
     SuccessOrExit(error = aMessage.Read(offsetRange, udpHeader));
 
-    if (udpHeader.GetDestinationPort() == Tmf::kUdpPort)
+    if ((udpHeader.GetDestinationPort() == Dns::kMdnsPort) || (udpHeader.GetSourcePort() == Dns::kMdnsPort))
     {
-        LogInfo("Dropping TMF message from untrusted origin");
-        error = kErrorDrop;
+        LogInfo("Dropping mDNS message");
+        ExitNow(error = kErrorDrop);
+    }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mTmfOriginFilterEnabled)
+#endif
+    {
+        if (aMessage.IsOriginHostUntrusted() && (udpHeader.GetDestinationPort() == Tmf::kUdpPort))
+        {
+            LogInfo("Dropping TMF message from untrusted origin");
+            ExitNow(error = kErrorDrop);
+        }
     }
 
 exit:
@@ -1434,11 +1437,11 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
 
     aMessagePtr->SetOffset(sizeof(header));
 
-    // Drop an untrusted TMF message before processing the extension
-    // headers, where an MPL option would buffer a copy of it for
+    // Drop mDNS messages and untrusted TMF messages before processing
+    // extension headers, where an MPL option would buffer a copy for
     // retransmission.
 
-    SuccessOrExit(error = ApplyTmfOriginFilter(*aMessagePtr, header.GetNextHeader()));
+    SuccessOrExit(error = ApplyTmfAndMdnsFilters(*aMessagePtr, header.GetNextHeader()));
 
     // Process IPv6 Extension Headers
     nextHeader = header.GetNextHeader();

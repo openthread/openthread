@@ -70,7 +70,7 @@ static void SendGapFragment1(Node &aRouter, const Ip6::Address &aLeaderEid, uint
     // 1. Outer IPv6 Header
     Ip6::Header outerHeader;
     outerHeader.InitVersionTrafficClassFlow();
-    outerHeader.SetPayloadLength(48); // 8 bytes (Fragment Header) + 40 bytes (Inner IPv6 Header)
+    outerHeader.SetPayloadLength(56); // 8 bytes (Fragment Header) + 40 bytes (Inner IPv6) + 8 bytes (UDP Header)
     outerHeader.SetNextHeader(Ip6::kProtoFragment);
     outerHeader.SetHopLimit(64);
     outerHeader.SetSource(aRouter.Get<Mle::Mle>().GetMeshLocalEid());
@@ -86,7 +86,7 @@ static void SendGapFragment1(Node &aRouter, const Ip6::Address &aLeaderEid, uint
     fragmentHeader.SetIdentification(aIdentification);
     SuccessOrQuit(message->Append(fragmentHeader));
 
-    // 3. Inner IPv6 Header (Payload of Fragment 1)
+    // 3. Inner IPv6 Header and UDP Header (Payload of Fragment 1)
     Ip6::Header innerHeader;
     innerHeader.InitVersionTrafficClassFlow();
     innerHeader.SetPayloadLength(600); // 600 bytes inner payload to stay under MTU limit
@@ -95,6 +95,13 @@ static void SendGapFragment1(Node &aRouter, const Ip6::Address &aLeaderEid, uint
     innerHeader.SetSource(aLeaderEid);
     innerHeader.SetDestination(aRouter.Get<Mle::Mle>().GetMeshLocalEid());
     SuccessOrQuit(message->Append(innerHeader));
+
+    Ip6::UdpHeader udpHeader;
+    udpHeader.Clear();
+    udpHeader.SetSourcePort(1234);
+    udpHeader.SetDestinationPort(12345);
+    udpHeader.SetLength(600);
+    SuccessOrQuit(message->Append(udpHeader));
 
     // Set message priority/etc
     SuccessOrQuit(message->SetPriority(Message::kPriorityNormal));

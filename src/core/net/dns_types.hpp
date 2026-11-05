@@ -72,6 +72,8 @@ namespace Dns {
  * @{
  */
 
+constexpr uint16_t kMdnsPort = 5353; ///< Multicast DNS (mDNS) UDP port (RFC 6762).
+
 /**
  * Implements DNS header generation and parsing.
  */
