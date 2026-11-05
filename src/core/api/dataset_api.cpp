@@ -229,6 +229,40 @@ exit:
     return error;
 }
 
+otError otDatasetAddTlv(otOperationalDatasetTlvs *aDatasetTlvs,
+                        otMeshcopTlvType          aType,
+                        const void               *aValue,
+                        uint8_t                   aLength)
+{
+    Error            error = kErrorNone;
+    MeshCoP::Dataset dataset;
+
+    AssertPointerIsNotNull(aDatasetTlvs);
+    VerifyOrExit((aLength == 0) || (aValue != nullptr), error = kErrorInvalidArgs);
+
+    SuccessOrExit(error = dataset.SetFrom(*aDatasetTlvs));
+    SuccessOrExit(error = dataset.WriteTlv(MapEnum(aType), aValue, aLength));
+    dataset.ConvertTo(*aDatasetTlvs);
+
+exit:
+    return error;
+}
+
+otError otDatasetRemoveTlv(otOperationalDatasetTlvs *aDatasetTlvs, otMeshcopTlvType aType)
+{
+    Error            error = kErrorNone;
+    MeshCoP::Dataset dataset;
+
+    AssertPointerIsNotNull(aDatasetTlvs);
+
+    SuccessOrExit(error = dataset.SetFrom(*aDatasetTlvs));
+    dataset.RemoveTlv(MapEnum(aType));
+    dataset.ConvertTo(*aDatasetTlvs);
+
+exit:
+    return error;
+}
+
 bool otDatasetAffectsConnectivity(otInstance *aInstance, const otOperationalDatasetTlvs *aDatasetTlvs)
 {
     bool             affects = false;

@@ -578,6 +578,149 @@ void TestSecurityPolicy(void)
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 }
 
+void TestDatasetAddAndRemoveTlv(void)
+{
+    static constexpr otMeshcopTlvType kUnknownTlvType = static_cast<otMeshcopTlvType>(0xde);
+
+    static const uint8_t kPanIdFace[]        = {0xfa, 0xce};
+    static const uint8_t kPanIdCafe[]        = {0xca, 0xfe};
+    static const uint8_t kPanIdBroadcast[]   = {0xff, 0xff};
+    static const uint8_t kChannel15[]        = {0x00, 0x00, 0x0f};
+    static const uint8_t kVendorVal3[]       = {0xaa, 0xbb, 0xcc};
+    static const uint8_t kVendorVal5[]       = {0x01, 0x02, 0x03, 0x04, 0x05};
+    static const uint8_t kVendorVal1[]       = {0x99};
+    static const uint8_t kExpectedAfterAdd[] = {
+        0x01, 0x02, 0xfa, 0xce,       // PAN ID TLV
+        0xde, 0x03, 0xaa, 0xbb, 0xcc, // Unknown/vendor TLV
+        0x00, 0x03, 0x00, 0x00, 0x0f, // Channel TLV
+    };
+    static const uint8_t kExpectedAfterReplacePanId[] = {
+        0xde, 0x03, 0xaa, 0xbb, 0xcc, // Unknown/vendor TLV
+        0x00, 0x03, 0x00, 0x00, 0x0f, // Channel TLV
+        0x01, 0x02, 0xca, 0xfe,       // Replaced PAN ID TLV
+    };
+    static const uint8_t kExpectedAfterGrowVendor[] = {
+        0x00, 0x03, 0x00, 0x00, 0x0f,             // Channel TLV
+        0x01, 0x02, 0xca, 0xfe,                   // PAN ID TLV
+        0xde, 0x05, 0x01, 0x02, 0x03, 0x04, 0x05, // Grown vendor TLV
+    };
+    static const uint8_t kExpectedAfterShrinkVendor[] = {
+        0x00, 0x03, 0x00, 0x00, 0x0f, // Channel TLV
+        0x01, 0x02, 0xca, 0xfe,       // PAN ID TLV
+        0xde, 0x01, 0x99,             // Shrunk vendor TLV
+    };
+    static const uint8_t kExpectedAfterRemovePanId[] = {
+        0x00, 0x03, 0x00, 0x00, 0x0f, // Channel TLV
+        0xde, 0x01, 0x99,             // Vendor TLV
+    };
+
+    otOperationalDatasetTlvs rawTlvs;
+    uint8_t                  maxBuffer[255];
+
+    memset(&rawTlvs, 0, sizeof(rawTlvs));
+    memset(maxBuffer, 0x5a, sizeof(maxBuffer));
+
+    // Removing from an empty dataset is a no-op.
+    SuccessOrQuit(otDatasetRemoveTlv(&rawTlvs, OT_MESHCOP_TLV_PANID));
+    VerifyOrQuit(rawTlvs.mLength == 0);
+
+    // Add known and unknown TLVs.
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_PANID, kPanIdFace, sizeof(kPanIdFace)));
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, kVendorVal3, sizeof(kVendorVal3)));
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_CHANNEL, kChannel15, sizeof(kChannel15)));
+    VerifyOrQuit(rawTlvs.mLength == sizeof(kExpectedAfterAdd));
+    VerifyOrQuit(memcmp(rawTlvs.mTlvs, kExpectedAfterAdd, sizeof(kExpectedAfterAdd)) == 0);
+
+    // Replace existing known and unknown TLVs (same size, larger, smaller).
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_PANID, kPanIdCafe, sizeof(kPanIdCafe)));
+    VerifyOrQuit(rawTlvs.mLength == sizeof(kExpectedAfterReplacePanId));
+    VerifyOrQuit(memcmp(rawTlvs.mTlvs, kExpectedAfterReplacePanId, sizeof(kExpectedAfterReplacePanId)) == 0);
+
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, kVendorVal5, sizeof(kVendorVal5)));
+    VerifyOrQuit(rawTlvs.mLength == sizeof(kExpectedAfterGrowVendor));
+    VerifyOrQuit(memcmp(rawTlvs.mTlvs, kExpectedAfterGrowVendor, sizeof(kExpectedAfterGrowVendor)) == 0);
+
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, kVendorVal1, sizeof(kVendorVal1)));
+    VerifyOrQuit(rawTlvs.mLength == sizeof(kExpectedAfterShrinkVendor));
+    VerifyOrQuit(memcmp(rawTlvs.mTlvs, kExpectedAfterShrinkVendor, sizeof(kExpectedAfterShrinkVendor)) == 0);
+
+    // Missing TLV removal is a no-op.
+    SuccessOrQuit(otDatasetRemoveTlv(&rawTlvs, OT_MESHCOP_TLV_DELAYTIMER));
+    VerifyOrQuit(rawTlvs.mLength == sizeof(kExpectedAfterShrinkVendor));
+    VerifyOrQuit(memcmp(rawTlvs.mTlvs, kExpectedAfterShrinkVendor, sizeof(kExpectedAfterShrinkVendor)) == 0);
+
+    // Remove middle, first, and last TLVs down to empty.
+    SuccessOrQuit(otDatasetRemoveTlv(&rawTlvs, OT_MESHCOP_TLV_PANID));
+    VerifyOrQuit(rawTlvs.mLength == sizeof(kExpectedAfterRemovePanId));
+    VerifyOrQuit(memcmp(rawTlvs.mTlvs, kExpectedAfterRemovePanId, sizeof(kExpectedAfterRemovePanId)) == 0);
+
+    SuccessOrQuit(otDatasetRemoveTlv(&rawTlvs, OT_MESHCOP_TLV_CHANNEL));
+    SuccessOrQuit(otDatasetRemoveTlv(&rawTlvs, kUnknownTlvType));
+    VerifyOrQuit(rawTlvs.mLength == 0);
+
+    // Raw TLV bytes are written without validating type-specific value semantics.
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_PANID, kPanIdBroadcast, sizeof(kPanIdBroadcast)));
+    VerifyOrQuit(rawTlvs.mLength == 4);
+    SuccessOrQuit(otDatasetRemoveTlv(&rawTlvs, OT_MESHCOP_TLV_PANID));
+    VerifyOrQuit(rawTlvs.mLength == 0);
+
+    // Zero-length TLV (with null and non-null `aValue`) is supported.
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, nullptr, 0));
+    VerifyOrQuit(rawTlvs.mLength == 2);
+    VerifyOrQuit((rawTlvs.mTlvs[0] == kUnknownTlvType) && (rawTlvs.mTlvs[1] == 0));
+
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, kVendorVal3, sizeof(kVendorVal3)));
+    VerifyOrQuit(rawTlvs.mLength == 2 + sizeof(kVendorVal3));
+
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, kVendorVal1, 0));
+    VerifyOrQuit(rawTlvs.mLength == 2);
+    VerifyOrQuit((rawTlvs.mTlvs[0] == kUnknownTlvType) && (rawTlvs.mTlvs[1] == 0));
+
+    SuccessOrQuit(otDatasetRemoveTlv(&rawTlvs, kUnknownTlvType));
+    VerifyOrQuit(rawTlvs.mLength == 0);
+
+    // `OT_ERROR_INVALID_ARGS` cases: null value with `aLength > 0`, and `mLength > OT_OPERATIONAL_DATASET_MAX_LENGTH`.
+    VerifyOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_PANID, nullptr, 2) == OT_ERROR_INVALID_ARGS);
+    VerifyOrQuit(rawTlvs.mLength == 0);
+
+    rawTlvs.mLength = OT_OPERATIONAL_DATASET_MAX_LENGTH + 1;
+    VerifyOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_PANID, kPanIdFace, sizeof(kPanIdFace)) ==
+                 OT_ERROR_INVALID_ARGS);
+    VerifyOrQuit(otDatasetRemoveTlv(&rawTlvs, OT_MESHCOP_TLV_PANID) == OT_ERROR_INVALID_ARGS);
+
+    // `OT_ERROR_NO_BUFS` boundaries: `aLength` 253..255 fail on empty dataset; 252 fills
+    // `OT_OPERATIONAL_DATASET_MAX_LENGTH` (254).
+    rawTlvs.mLength = 0;
+    VerifyOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, maxBuffer, 253) == OT_ERROR_NO_BUFS);
+    VerifyOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, maxBuffer, 254) == OT_ERROR_NO_BUFS);
+    VerifyOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, maxBuffer, 255) == OT_ERROR_NO_BUFS);
+    VerifyOrQuit(rawTlvs.mLength == 0);
+
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, maxBuffer, 252));
+    VerifyOrQuit(rawTlvs.mLength == OT_OPERATIONAL_DATASET_MAX_LENGTH);
+
+    // Replacing a TLV at full `OT_OPERATIONAL_DATASET_MAX_LENGTH` capacity.
+    rawTlvs.mLength = 0;
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_PANID, kPanIdFace, sizeof(kPanIdFace))); // 4 bytes
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, kUnknownTlvType, maxBuffer, 248));                      // 250 bytes
+    VerifyOrQuit(rawTlvs.mLength == OT_OPERATIONAL_DATASET_MAX_LENGTH);
+
+    // Adding a new TLV or growing an existing TLV beyond 254 bytes fails without mutating `rawTlvs`.
+    VerifyOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_CHANNEL, kChannel15, sizeof(kChannel15)) == OT_ERROR_NO_BUFS);
+    VerifyOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_PANID, kChannel15, sizeof(kChannel15)) == OT_ERROR_NO_BUFS);
+    VerifyOrQuit(rawTlvs.mLength == OT_OPERATIONAL_DATASET_MAX_LENGTH);
+    VerifyOrQuit(rawTlvs.mTlvs[0] == OT_MESHCOP_TLV_PANID);
+
+    // Replacing an existing TLV at full capacity with an equal-size or smaller value succeeds.
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_PANID, kPanIdCafe, sizeof(kPanIdCafe)));
+    VerifyOrQuit(rawTlvs.mLength == OT_OPERATIONAL_DATASET_MAX_LENGTH);
+    VerifyOrQuit(rawTlvs.mTlvs[0] == kUnknownTlvType);
+    VerifyOrQuit(memcmp(&rawTlvs.mTlvs[OT_OPERATIONAL_DATASET_MAX_LENGTH - 4], "\x01\x02\xca\xfe", 4) == 0);
+
+    SuccessOrQuit(otDatasetAddTlv(&rawTlvs, OT_MESHCOP_TLV_PANID, kVendorVal1, sizeof(kVendorVal1)));
+    VerifyOrQuit(rawTlvs.mLength == OT_OPERATIONAL_DATASET_MAX_LENGTH - 1);
+}
+
 } // namespace MeshCoP
 } // namespace ot
 
@@ -585,6 +728,7 @@ int main(void)
 {
     ot::MeshCoP::TestDataset();
     ot::MeshCoP::TestSecurityPolicy();
+    ot::MeshCoP::TestDatasetAddAndRemoveTlv();
 
     printf("All tests passed\n");
     return 0;

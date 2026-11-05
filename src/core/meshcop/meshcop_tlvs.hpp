@@ -40,6 +40,7 @@
 #include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
 
+#include "common/as_core_type.hpp"
 #include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
@@ -1166,6 +1167,8 @@ public:
 };
 
 } // namespace MeshCoP
+
+DefineMapEnum(otMeshcopTlvType, MeshCoP::Tlv::Type);
 
 } // namespace ot
 
