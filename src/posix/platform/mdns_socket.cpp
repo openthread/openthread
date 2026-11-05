@@ -766,29 +766,24 @@ void MdnsSocket::ProcessNetlink(const Mainloop::Context &aContext) const
     };
 
     NetlinkMessage rcvMsg;
-    ssize_t        rval;
-    int            len;
+    ssize_t        len;
 
     VerifyOrExit(mNetlinkFd >= 0);
 
     VerifyOrExit(Mainloop::IsFdReadable(mNetlinkFd, aContext));
 
-    rval = recv(mNetlinkFd, rcvMsg.mBuffer, sizeof(rcvMsg.mBuffer), 0);
+    len = recv(mNetlinkFd, rcvMsg.mBuffer, sizeof(rcvMsg.mBuffer), 0);
 
-    if (rval < 0)
+    if (len < 0)
     {
         LogCrit("Failed to receive netlink message: %s", strerror(errno));
         ExitNow();
     }
 
-    VerifyOrExit(static_cast<size_t>(rval) <= sizeof(rcvMsg.mBuffer));
+    VerifyOrExit(static_cast<size_t>(len) <= sizeof(rcvMsg.mBuffer));
+    VerifyOrExit(len >= static_cast<ssize_t>(sizeof(nlmsghdr)));
 
-    // Use a signed remaining length as required by NLMSG_OK / NLMSG_NEXT.
-    len = static_cast<int>(rval);
-
-    VerifyOrExit(len >= static_cast<int>(sizeof(nlmsghdr)));
-
-    for (struct nlmsghdr *msg = &rcvMsg.mHeader; NLMSG_OK(msg, len); msg = NLMSG_NEXT(msg, len))
+    for (struct nlmsghdr *msg = &rcvMsg.mHeader; IsNetlinkMessageOk(msg, len); msg = NLMSG_NEXT(msg, len))
     {
         switch (msg->nlmsg_type)
         {

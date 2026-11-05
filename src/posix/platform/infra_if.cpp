@@ -775,7 +775,8 @@ void InfraNetif::ReceiveNetLinkMessage(void)
         ExitNow();
     }
 
-    for (struct nlmsghdr *header = &msgBuffer.mHeader; NLMSG_OK(header, len); header = NLMSG_NEXT(header, len))
+    for (struct nlmsghdr *header = &msgBuffer.mHeader; IsNetlinkMessageOk(header, len);
+         header                  = NLMSG_NEXT(header, len))
     {
         if (header->nlmsg_type == NLMSG_ERROR)
         {

@@ -48,6 +48,7 @@ build()
     "$(dirname "$0")"/cmake-build posix "${options[@]}"
 
     options+=(
+        "-DOT_MDNS=ON"
         "-DOT_TREL=ON"
     )
 
