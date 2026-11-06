@@ -87,13 +87,13 @@ install_wpantund()
 
     sudo add-apt-repository universe
     sudo apt-get update
-    sudo apt-get --no-install-recommends install -y libboost-all-dev python2
+    sudo apt-get --no-install-recommends install -y libboost-all-dev
 
     rm -rf wpantund
     git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git || die "wpandtund clone"
     cd wpantund || die "cd wpantund failed"
-    ./bootstrap.sh
-    ./configure
+    ./bootstrap.sh || die "wpantund bootstrap failed"
+    ./configure || die "wpantund configure failed"
     sudo make -j2 || die "wpantund make failed"
     sudo make install || die "wpantund make install failed"
     cd .. || die "cd .. failed"
@@ -111,13 +111,13 @@ if [ "$TORANJ_NCP" = 1 ]; then
         if [ -n "${OT_SHA_OLD}" ] && ! git cat-file -e "${OT_SHA_OLD}^{commit}" 2>/dev/null; then
             git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}" || die "git fetch failed"
         fi
-        if git diff --name-only --exit-code "${OT_SHA_OLD}" -- src/ncp; then
-            echo "No changes to any of src/ncp files - skip running tests."
+        if git diff --name-only --exit-code "${OT_SHA_OLD}" -- src/ncp tests/toranj/ncp tests/toranj/start.sh; then
+            echo "No changes to any of src/ncp or toranj-ncp files - skip running tests."
             echo "========================================================================"
             exit 0
         fi
         cd tests/toranj || die "cd tests/toranj failed"
-        echo "There are change in src/ncp files, running toranj-ncp tests"
+        echo "There are changes in src/ncp or toranj-ncp files, running toranj-ncp tests"
     fi
 
     echo "========================================================================"
@@ -144,7 +144,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     log_file_name="ot-logs"
 else
     app_name="ncp"
-    python_app="python2"
+    python_app="python3"
     log_file_name="wpantund-logs"
 fi
 
