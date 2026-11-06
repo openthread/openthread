@@ -790,7 +790,7 @@ exit:
     return error;
 }
 
-void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(void *aContext, Coap::Msg *aMsg, otError aResult)
+void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(void *aContext, Coap::Msg *aMsg, Error aResult)
 {
     OwnedPtr<ForwardContext> forwardContext(static_cast<ForwardContext *>(aContext));
 

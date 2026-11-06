@@ -93,13 +93,13 @@
  *
  * @param[in]  aStatus     A scalar status to be evaluated against zero (0).
  */
-#define SuccessOrExit(aStatus) \
-    do                         \
-    {                          \
-        if ((aStatus) != 0)    \
-        {                      \
-            goto exit;         \
-        }                      \
+#define SuccessOrExit(aStatus)              \
+    do                                      \
+    {                                       \
+        if (static_cast<int>(aStatus) != 0) \
+        {                                   \
+            goto exit;                      \
+        }                                   \
     } while (false)
 
 /**
