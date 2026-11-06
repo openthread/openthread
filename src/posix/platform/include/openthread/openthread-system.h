@@ -264,6 +264,88 @@ typedef struct otSysInfraNetIfAddressCounters
 void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCounters);
 
 /**
+ * Represents cumulative IPv6 traffic statistics at the POSIX Thread network interface.
+ *
+ * Thread-to-external traffic is received from the Thread stack for delivery to the host. External-to-Thread traffic
+ * is read from the host's virtual interface for delivery to the Thread stack. These directions can include traffic
+ * to or from the host itself and do not represent all traffic within the Thread network.
+ *
+ * Only IPv6 packets with a complete IPv6 header are counted. IPv4 packets, including the IPv4 side of NAT64 traffic,
+ * are excluded. Byte counts include the IPv6 header and payload, excluding tunnel and link-layer headers. Counters
+ * are updated before delivery succeeds, so they do not indicate successful delivery.
+ *
+ * Counters are initialized when the process starts and are not reset when statistics are read. The last source and
+ * destination addresses are IPv6 address strings, or "-" if no packet has been counted in that direction.
+ */
+typedef struct otSysTrafficStats
+{
+    uint64_t mThreadToExternalPackets;     ///< Number of IPv6 packets received from the Thread stack.
+    uint64_t mThreadToExternalBytes;       ///< Number of IPv6 bytes received from the Thread stack.
+    uint64_t mExternalToThreadPackets;     ///< Number of IPv6 packets read from the host's virtual interface.
+    uint64_t mExternalToThreadBytes;       ///< Number of IPv6 bytes read from the host's virtual interface.
+    char     mLastThreadToExternalSrc[46]; ///< Source address of the last Thread-to-external packet.
+    char     mLastThreadToExternalDst[46]; ///< Destination address of the last Thread-to-external packet.
+    char     mLastExternalToThreadSrc[46]; ///< Source address of the last external-to-Thread packet.
+    char     mLastExternalToThreadDst[46]; ///< Destination address of the last external-to-Thread packet.
+} otSysTrafficStats;
+
+/**
+ * Returns the cumulative IPv6 traffic statistics for the POSIX Thread network interface.
+ *
+ * The returned data is owned by the POSIX platform, remains valid for the lifetime of the process, and continues to
+ * change as packets are counted. The caller must not free it. This function must be called on the OpenThread
+ * mainloop thread; copy the structure on that thread to retain a snapshot. Reading does not reset the counters.
+ *
+ * @returns A pointer to the internal traffic statistics.
+ */
+const otSysTrafficStats *otSysGetTrafficStats(void);
+
+/**
+ * Defines the maximum number of source/destination pairs tracked in each traffic direction.
+ */
+#define OT_SYS_DEST_STATS_MAX 64
+
+/**
+ * Represents cumulative IPv6 traffic counters for one source/destination address pair.
+ */
+typedef struct otSysDestEntry
+{
+    char     mSrcAddr[46]; ///< Source IPv6 address string.
+    char     mDstAddr[46]; ///< Destination IPv6 address string.
+    uint64_t mPackets;     ///< Number of packets for this source/destination pair.
+    uint64_t mBytes;       ///< Number of IPv6 bytes for this source/destination pair.
+} otSysDestEntry;
+
+/**
+ * Represents cumulative IPv6 traffic statistics grouped by source/destination address pair and direction.
+ *
+ * Each direction tracks up to OT_SYS_DEST_STATS_MAX pairs. When a table is full, existing pairs continue to be
+ * updated but new pairs are not added. The global counters returned by otSysGetTrafficStats() still include packets
+ * for untracked pairs, so the sum of the per-pair counters may differ from the global counters.
+ *
+ * Only entries below the corresponding count are valid. The counting points, byte units, and initialization of these
+ * counters are the same as for otSysTrafficStats.
+ */
+typedef struct otSysPerDestStats
+{
+    otSysDestEntry mThreadToExternal[OT_SYS_DEST_STATS_MAX]; ///< Thread-to-external source/destination pairs.
+    uint16_t       mThreadToExternalCount;                   ///< Number of valid Thread-to-external entries.
+    otSysDestEntry mExternalToThread[OT_SYS_DEST_STATS_MAX]; ///< External-to-Thread source/destination pairs.
+    uint16_t       mExternalToThreadCount;                   ///< Number of valid external-to-Thread entries.
+} otSysPerDestStats;
+
+/**
+ * Returns the cumulative IPv6 traffic statistics grouped by source/destination address pair.
+ *
+ * The returned data is owned by the POSIX platform, remains valid for the lifetime of the process, and continues to
+ * change as packets are counted. The caller must not free it. This function must be called on the OpenThread
+ * mainloop thread; copy the structure on that thread to retain a snapshot. Reading does not reset the counters.
+ *
+ * @returns A pointer to the internal per-pair traffic statistics.
+ */
+const otSysPerDestStats *otSysGetPerDestStats(void);
+
+/**
  * Sets the infrastructure network interface and the ICMPv6 socket.
  *
  * This function specifies the network interface name and the ICMPv6 socket on that interface. After calling this
