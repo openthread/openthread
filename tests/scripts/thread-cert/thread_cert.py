@@ -114,6 +114,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         # store all the backbone network names that are used in the test case,
         # it keeps empty when there's no backbone traffic in the test (no otbr or host nodes)
         self._backbone_network_names = []
+        self._dumpcap_proc = None
+        self.nodes = {}
 
     def skipTest(self, reason: Any) -> None:
         self._testSkipped = True
@@ -129,6 +131,10 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self._setUp()
         except:
             traceback.print_exc()
+            try:
+                self._stop_backbone_sniffer()
+            except Exception:
+                traceback.print_exc()
             for node in list(self.nodes.values()):
                 try:
                     node.destroy()
@@ -584,8 +590,21 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         self._dumpcap_proc = subprocess.Popen([dumpcap, '-i', sniffer_interface, '-w', pcap_file],
                                               stdout=sys.stdout,
                                               stderr=sys.stderr)
-        time.sleep(0.2)
-        assert self._dumpcap_proc.poll() is None, 'tshark terminated unexpectedly'
+        deadline = time.monotonic() + 10.0
+        while not os.path.exists(pcap_file):
+            rc = self._dumpcap_proc.poll()
+            if rc is not None:
+                self._dumpcap_proc = None
+                raise RuntimeError(f'dumpcap terminated unexpectedly with exit code {rc}')
+            if time.monotonic() >= deadline:
+                self._stop_backbone_sniffer()
+                raise TimeoutError(f'Timed out waiting for dumpcap to create {pcap_file}')
+            time.sleep(0.1)
+
+        rc = self._dumpcap_proc.poll()
+        if rc is not None:
+            self._dumpcap_proc = None
+            raise RuntimeError(f'dumpcap terminated unexpectedly with exit code {rc}')
         logging.info('Backbone sniffer launched successfully on interface %s, pid=%s', sniffer_interface,
                      self._dumpcap_proc.pid)
         os.chmod(pcap_file, stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
@@ -599,9 +618,22 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         return os.path.abspath(backbone_pcap)
 
     def _stop_backbone_sniffer(self):
-        self._dumpcap_proc.send_signal(signal.SIGTERM)
-        self._dumpcap_proc.__exit__(None, None, None)
-        logging.info('Backbone sniffer terminated successfully: pid=%s' % self._dumpcap_proc.pid)
+        if self._dumpcap_proc is None:
+            return
+
+        proc = self._dumpcap_proc
+        self._dumpcap_proc = None
+
+        if proc.poll() is None:
+            proc.send_signal(signal.SIGTERM)
+
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+
+        logging.info('Backbone sniffer terminated successfully: pid=%s', proc.pid)
 
     def _merge_thread_backbone_pcaps(self):
         thread_pcap = self._get_thread_pcap_filename()
