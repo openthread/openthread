@@ -3103,7 +3103,8 @@ static void processNetlinkEvent(otInstance *aInstance)
     }
 
 #ifdef __linux__
-    for (struct nlmsghdr *msg = &msgBuffer.nlMsg; NLMSG_OK(msg, length); msg = NLMSG_NEXT(msg, length))
+    for (struct nlmsghdr *msg = &msgBuffer.nlMsg; ot::Posix::IsNetlinkMessageOk(msg, length);
+         msg                  = NLMSG_NEXT(msg, length))
     {
 #else
     {
