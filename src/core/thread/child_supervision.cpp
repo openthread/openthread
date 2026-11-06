@@ -187,8 +187,11 @@ void SupervisionListener::Resume(void)
 
     mState = kRunning;
 
-    // If the check timeout expired while paused, `FireAt()` with its past fire time makes it fire right away.
-    mTimer.FireAt(mTimer.GetFireTime());
+    if (mTimeout != 0)
+    {
+        // If the check timeout expired while paused, `FireAt()` with its past fire time makes it fire right away.
+        mTimer.FireAt(mTimer.GetFireTime());
+    }
 
 exit:
     return;
@@ -218,11 +221,7 @@ void SupervisionListener::SetTimeout(uint16_t aTimeout)
         LogInfo("Timeout: %u -> %u", mTimeout, aTimeout);
 
         mTimeout = aTimeout;
-
-        if (mState == kRunning)
-        {
-            RestartTimer();
-        }
+        RestartTimer();
     }
 }
 
@@ -241,7 +240,7 @@ exit:
 
 void SupervisionListener::RestartTimer(void)
 {
-    if ((mTimeout != 0) && !Get<Mle::Mle>().IsDisabled() && !Get<MeshForwarder>().GetRxOnWhenIdle())
+    if ((mState != kStopped) && (mTimeout != 0) && !Get<Mle::Mle>().IsDisabled() && !Get<Mle::Mle>().IsRxOnWhenIdle())
     {
         mTimer.Start(Time::SecToMsec(mTimeout));
     }
@@ -255,8 +254,7 @@ void SupervisionListener::HandleTimer(void)
 {
     VerifyOrExit(mState == kRunning);
 
-    // The timer can still fire with a zero timeout, from a fire time set before the check timeout was disabled.
-    if ((mTimeout != 0) && Get<Mle::Mle>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle())
+    if (Get<Mle::Mle>().IsChild() && !Get<Mle::Mle>().IsRxOnWhenIdle())
     {
         LogWarn("Supervision timeout. No frame from parent in %u sec", mTimeout);
         mCounter++;
