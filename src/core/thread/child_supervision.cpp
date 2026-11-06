@@ -173,8 +173,8 @@ void SupervisionListener::Pause(void)
 {
     VerifyOrExit(mState == kRunning);
 
-    // `mTimer` keeps running while paused, so time spent paused still counts toward the check timeout.
-    // Otherwise, pausing more often than the check timeout would prevent the detection of a lost parent.
+    // `mTimer` keeps running, so time spent paused still counts toward the check timeout. Otherwise, pausing more
+    // often than the check timeout would prevent the detection of a lost parent.
     mState = kPaused;
 
 exit:
@@ -227,7 +227,8 @@ void SupervisionListener::SetTimeout(uint16_t aTimeout)
 
 void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bool aIsSecure)
 {
-    // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
+    // If listener is running (neither stopped nor paused) and device is a child and it received a secure frame from
+    // its parent, restart the timer.
 
     VerifyOrExit((mState == kRunning) && aIsSecure && Get<Mle::Mle>().IsChild() &&
                  (Get<NeighborTable>().FindNeighbor(aSourceAddress) == &Get<Mle::Mle>().GetParent()));
@@ -252,6 +253,7 @@ void SupervisionListener::RestartTimer(void)
 
 void SupervisionListener::HandleTimer(void)
 {
+    // While paused, an expired check timeout is handled on `Resume()`.
     VerifyOrExit(mState == kRunning);
 
     if (Get<Mle::Mle>().IsChild() && !Get<Mle::Mle>().IsRxOnWhenIdle())
