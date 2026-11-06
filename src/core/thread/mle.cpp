@@ -4570,6 +4570,11 @@ void Mle::Attacher::Attach(AttachMode aMode)
 
     if (Get<Mle>().IsDetached())
     {
+        if (mAttachCounter == 0)
+        {
+            mDetachTime = TimerMilli::GetNow();
+        }
+
         mAttachCounter++;
 
         if (mAttachCounter == 0)
@@ -4615,6 +4620,11 @@ uint32_t Mle::Attacher::GetStartDelay(void) const
         else
         {
             delay = Random::NonCrypto::AddJitter(kAttachBackoffMaxInterval, kAttachBackoffJitter);
+        }
+
+        if (TimerMilli::GetNow() - mDetachTime < kAttachBackoffInitialPeriod)
+        {
+            delay = Min(delay, kAttachBackoffInitialMaxInterval);
         }
     }
 #endif // OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
