@@ -75,6 +75,11 @@ public:
 
     void OnReceived(otError aError)
     {
+        if (mDropResponses)
+        {
+            return;
+        }
+
         mReceived = true;
         if (aError == kErrorNone)
         {
@@ -93,6 +98,9 @@ public:
      * Optional observer called with every spinel frame received from the coprocessor.
      */
     std::function<void(const uint8_t *aFrame, uint16_t aLength)> mFrameObserver;
+
+    // Fault injection: simulate an unresponsive RCP after successful initialization.
+    bool mDropResponses = false;
 
 private:
     ReceiveFrameCallback            mReceiveFrameCallback = nullptr;
