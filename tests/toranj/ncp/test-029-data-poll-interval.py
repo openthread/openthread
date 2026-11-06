@@ -114,11 +114,11 @@ verify(int(child.get(wpan.WPAN_POLL_INTERVAL), 0) == default_poll_interval)
 
 # Change "child timeout" and verify that default interval does change
 
-child.set(wpan.WPAN_THREAD_CHILD_TIMEOUT, str(child_timeout / 1000 * 2))
+child.set(wpan.WPAN_THREAD_CHILD_TIMEOUT, str(child_timeout // 1000 * 2))
 new_default_interval = int(child.get(wpan.WPAN_POLL_INTERVAL), 0)
 verify(default_poll_interval < new_default_interval <= child_timeout * 2)
 
-child.set(wpan.WPAN_THREAD_CHILD_TIMEOUT, str(child_timeout / 1000))
+child.set(wpan.WPAN_THREAD_CHILD_TIMEOUT, str(child_timeout // 1000))
 verify(int(child.get(wpan.WPAN_POLL_INTERVAL), 0) == default_poll_interval)
 
 # -----------------------------------------------------------------------------------------------------------------------
