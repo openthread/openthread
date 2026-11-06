@@ -52,6 +52,7 @@
 
 #include "../simul_utils.h"
 #include "lib/platform/exit_code.h"
+#include "utils/code_utils.h"
 #include "utils/uart.h"
 
 uint32_t gNodeId = 1;
@@ -79,6 +80,11 @@ static void handleSignal(int aSignal)
 void otSimSendEvent(const struct Event *aEvent)
 {
     ssize_t rval;
+
+    if ((aEvent == NULL) || (aEvent->mDataLength > sizeof(aEvent->mData)))
+    {
+        DieNow(OT_EXIT_FAILURE);
+    }
 
     if (sUseUnixSocket)
     {
@@ -110,10 +116,16 @@ static void receiveEvent(otInstance *aInstance)
     ssize_t      rval = sUseUnixSocket ? recv(sSockFd, (char *)&event, sizeof(event), 0)
                                        : recvfrom(sSockFd, (char *)&event, sizeof(event), 0, NULL, NULL);
 
-    if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
+    if (rval < 0)
     {
         perror("Receive simulation event");
         DieNow(OT_EXIT_ERROR_ERRNO);
+    }
+
+    if (((size_t)rval < offsetof(struct Event, mData)) || (event.mDataLength > sizeof(event.mData)) ||
+        ((size_t)rval < offsetof(struct Event, mData) + event.mDataLength))
+    {
+        DieNow(OT_EXIT_FAILURE);
     }
 
     platformAlarmAdvanceNow(event.mDelay);
@@ -133,6 +145,7 @@ static void receiveEvent(otInstance *aInstance)
 
     default:
         assert(false);
+        break;
     }
 }
 
@@ -151,19 +164,35 @@ static void platformSendSleepEvent(void)
 
 otError platformUartSendVirtual(const uint8_t *aData, uint16_t aLength)
 {
-    otError      error = OT_ERROR_NONE;
-    struct Event event;
+    otError error  = OT_ERROR_NONE;
+    size_t  offset = 0;
 
-    event.mDelay      = 0;
-    event.mEvent      = OT_SIM_EVENT_UART_WRITE;
-    event.mDataLength = aLength;
+    otEXPECT_ACTION((aData != NULL) || (aLength == 0), error = OT_ERROR_INVALID_ARGS);
 
-    memcpy(event.mData, aData, aLength);
+    while (offset < aLength)
+    {
+        struct Event event;
+        uint16_t     chunkLength = aLength - (uint16_t)offset;
 
-    otSimSendEvent(&event);
+        if (chunkLength > sizeof(event.mData))
+        {
+            chunkLength = sizeof(event.mData);
+        }
+
+        event.mDelay      = 0;
+        event.mEvent      = OT_SIM_EVENT_UART_WRITE;
+        event.mDataLength = chunkLength;
+
+        memcpy(event.mData, aData + offset, chunkLength);
+
+        otSimSendEvent(&event);
+
+        offset += chunkLength;
+    }
 
     otPlatUartSendDone();
 
+exit:
     return error;
 }
 
@@ -338,16 +367,23 @@ void otSysProcessDrivers(otInstance *aInstance)
 void otPlatOtnsStatus(const char *aStatus)
 {
     struct Event event;
-    uint16_t     statusLength = (uint16_t)strlen(aStatus);
+    size_t       statusLength;
 
-    assert(statusLength < sizeof(event.mData));
+    otEXPECT(aStatus != NULL);
+
+    statusLength = strlen(aStatus);
+    assert(statusLength <= sizeof(event.mData));
+    otEXPECT(statusLength <= sizeof(event.mData));
 
     memcpy(event.mData, aStatus, statusLength);
-    event.mDataLength = statusLength;
+    event.mDataLength = (uint16_t)statusLength;
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 
     otSimSendEvent(&event);
+
+exit:
+    return;
 }
 
 #endif // OPENTHREAD_CONFIG_OTNS_ENABLE
