@@ -243,7 +243,7 @@ def verify(pv):
     print("Step 16: ROUTER sends an ICMPv6 Echo Request with global scope and ML-EID as source.")
     pkts.filter_ping_request().\
         filter(lambda p: p.wpan).\
-        filter(lambda p: p.ipv6.src == vars['ROUTER_MLEID'] or p.ipv6inner.src == vars['ROUTER_MLEID']).\
+        filter(lambda p: p.ipv6.src == vars['ROUTER_MLEID']).\
         filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['GLOBAL_MCAST']) or\
                          p.ipv6.dst == 'ff03::fc').\
         must_next()
@@ -255,7 +255,7 @@ def verify(pv):
     pkts.copy().\
         filter_ping_request().\
         filter(lambda p: not p.wpan).\
-        filter(lambda p: p.ipv6.src == vars['ROUTER_MLEID'] or p.ipv6inner.src == vars['ROUTER_MLEID']).\
+        filter(lambda p: p.ipv6.src == vars['ROUTER_MLEID']).\
         filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['GLOBAL_MCAST']) or\
                          p.ipv6.dst == 'ff03::fc').\
         must_not_next()
@@ -269,7 +269,7 @@ def verify(pv):
     print("Step 19: ROUTER sends an ICMPv6 Echo Request with global scope and link-local address as source.")
     pkts.filter_ping_request().\
         filter(lambda p: p.wpan).\
-        filter(lambda p: p.ipv6.src == vars['ROUTER_LLA'] or p.ipv6inner.src == vars['ROUTER_LLA']).\
+        filter(lambda p: p.ipv6.src == vars['ROUTER_LLA']).\
         filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['GLOBAL_MCAST']) or\
                          p.ipv6.dst == 'ff03::fc').\
         must_next()
@@ -281,7 +281,7 @@ def verify(pv):
     pkts.copy().\
         filter_ping_request().\
         filter(lambda p: not p.wpan).\
-        filter(lambda p: p.ipv6.src == vars['ROUTER_LLA'] or p.ipv6inner.src == vars['ROUTER_LLA']).\
+        filter(lambda p: p.ipv6.src == vars['ROUTER_LLA']).\
         filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['GLOBAL_MCAST']) or\
                          p.ipv6.dst == 'ff03::fc').\
         must_not_next()

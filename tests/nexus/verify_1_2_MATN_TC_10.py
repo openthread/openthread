@@ -133,7 +133,7 @@ def verify(pv):
     step6_pkts = pkts.copy()
     step6_pkts.filter_wpan_src64(vars['BR_1']).\
         filter_ping_request(identifier=ECHO_ID1).\
-        filter_AMPLFMA().\
+        filter_MPL().\
         must_next()
 
     # Step 7
