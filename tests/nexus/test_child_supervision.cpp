@@ -159,6 +159,13 @@ void TestChildSupervision(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
+static void StartDiscoverScan(Node &aChild, Node &aParent)
+{
+    SuccessOrQuit(aChild.Get<Mle::DiscoverScanner>().Discover(
+        Mac::ChannelMask(1UL << aParent.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
+        /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+}
+
 void TestChildSupervisionWithDiscoveryScans(void)
 {
     static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
@@ -203,9 +210,7 @@ void TestChildSupervisionWithDiscoveryScans(void)
 
     while (sed.Get<Mle::Mle>().IsChild() && (elapsed < kMaxWaitTime))
     {
-        SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(
-            Mac::ChannelMask(1UL << leader.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
-            /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+        StartDiscoverScan(sed, leader);
 
         nexus.AdvanceTime(kScanPeriod);
         elapsed += kScanPeriod;
@@ -251,9 +256,7 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
     Log("---------------------------------------------------------------------------------------");
     Log("Disable the supervision check during a discovery scan");
 
-    SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(
-        Mac::ChannelMask(1UL << leader.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
-        /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+    StartDiscoverScan(sed, leader);
     sed.Get<SupervisionListener>().SetTimeout(0);
 
     // Wait past the fire time the check timeout had before it was disabled.
@@ -264,9 +267,7 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
     Log("---------------------------------------------------------------------------------------");
     Log("Run a discovery scan with the supervision check disabled");
 
-    SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(
-        Mac::ChannelMask(1UL << leader.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
-        /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+    StartDiscoverScan(sed, leader);
     nexus.AdvanceTime(kScanDuration);
 
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
@@ -276,9 +277,7 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
 
     // The check timeout starts in full when enabled, so the end of the scan must not fire it from a stale fire time.
 
-    SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(
-        Mac::ChannelMask(1UL << leader.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
-        /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+    StartDiscoverScan(sed, leader);
     sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
     nexus.AdvanceTime(kScanDuration);
 
@@ -294,9 +293,7 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
 
     sed.Get<SupervisionListener>().ResetCounter();
 
-    SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(
-        Mac::ChannelMask(1UL << leader.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
-        /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+    StartDiscoverScan(sed, leader);
     SuccessOrQuit(
         sed.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(sedMode.Get() | Mle::DeviceMode::kModeRxOnWhenIdle)));
     nexus.AdvanceTime(1000);
