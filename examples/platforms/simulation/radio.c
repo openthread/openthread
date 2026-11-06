@@ -225,10 +225,19 @@ static uint16_t Crc16Citt(uint16_t aFcs, uint8_t aByte)
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
+static bool IsChannelValid(uint16_t aChannel)
+{
+    return (aChannel >= SIM_RADIO_CHANNEL_MIN) && (aChannel <= SIM_RADIO_CHANNEL_MAX);
+}
+
 static void RadioComputeCrc(RadioMessage *aMessage, uint16_t aLength)
 {
-    uint16_t crc       = 0;
-    uint16_t crcOffset = aLength - sizeof(uint16_t);
+    uint16_t crc = 0;
+    uint16_t crcOffset;
+
+    otEXPECT((aLength >= sizeof(uint16_t)) && (aLength <= OT_RADIO_FRAME_MAX_SIZE));
+
+    crcOffset = aLength - (uint16_t)sizeof(uint16_t);
 
     for (uint16_t i = 0; i < crcOffset; i++)
     {
@@ -237,6 +246,9 @@ static void RadioComputeCrc(RadioMessage *aMessage, uint16_t aLength)
 
     aMessage->mPsdu[crcOffset]     = crc & 0xff;
     aMessage->mPsdu[crcOffset + 1] = crc >> 8;
+
+exit:
+    return;
 }
 
 static int8_t RadioGetRssi(uint16_t aChannel)
@@ -244,7 +256,7 @@ static int8_t RadioGetRssi(uint16_t aChannel)
     int8_t   rssi = SIM_LOW_RSSI_SAMPLE;
     uint32_t probabilityThreshold;
 
-    otEXPECT((SIM_RADIO_CHANNEL_MIN <= aChannel) && aChannel <= (SIM_RADIO_CHANNEL_MAX));
+    otEXPECT(IsChannelValid(aChannel));
 
     // To emulate a simple interference model, we return either a high or
     // a low  RSSI value with a fixed probability per each channel. The
@@ -263,17 +275,24 @@ exit:
 
 static void RadioTransmit(RadioMessage *aMessage, const otRadioFrame *aFrame)
 {
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    struct Event event;
+#endif
+
+    otEXPECT(aFrame->mLength <= OT_RADIO_FRAME_MAX_SIZE);
+
 #if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
     utilsSendOverSocket(&sSocket, aMessage, aFrame->mLength + 1); // + 1 is for `mChannel`
 #else
-    struct Event event;
-
     event.mDelay      = 1; // 1us for now
     event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;
     event.mDataLength = 1 + aFrame->mLength; // include channel in first byte
     memcpy(event.mData, aMessage, event.mDataLength);
     otSimSendEvent(&event);
 #endif
+
+exit:
+    return;
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -479,6 +498,13 @@ exit:
 
 static void RadioSendMessage(otInstance *aInstance)
 {
+    if ((sTransmitFrame.mLength < sizeof(uint16_t)) || (sTransmitFrame.mLength > OT_RADIO_FRAME_MAX_SIZE))
+    {
+        sState = OT_RADIO_STATE_RECEIVE;
+        otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_ABORT);
+        goto exit;
+    }
+
     // This block should be called in SFD ISR
     {
         uint64_t sfdTxTime = otPlatTimeGet();
@@ -511,7 +537,8 @@ exit:
 
 static void RadioSendSchedTx(otInstance *aInstance)
 {
-    if ((sSchedTxFrame.mChannel < SIM_RADIO_CHANNEL_MIN) || (sSchedTxFrame.mChannel > SIM_RADIO_CHANNEL_MAX) ||
+    if (!IsChannelValid(sSchedTxFrame.mChannel) || (sSchedTxFrame.mLength < sizeof(uint16_t)) ||
+        (sSchedTxFrame.mLength > OT_RADIO_FRAME_MAX_SIZE) ||
         (otMacFrameProcessTxSfd(&sSchedTxFrame, sSchedTxTime, &sRadioContext) != OT_ERROR_NONE))
     {
         sSchedTxState = SIM_SCHED_TX_IDLE;
@@ -592,11 +619,20 @@ static void UpdateTimeout(uint64_t aTargetTime, uint64_t aNow, struct timeval *a
     }
 }
 
+static bool IsNodeIdValid(uint16_t aNodeId) { return (aNodeId >= 1) && (aNodeId <= (uint16_t)MAX_NETWORK_SIZE); }
+
 static bool FilterContainsId(uint16_t aNodeId)
 {
-    uint16_t index = aNodeId - 1;
+    bool     contains = false;
+    uint16_t index;
 
-    return (sFilterNodeIdsBitVector[index / 8] & (0x80 >> (index % 8))) != 0;
+    otEXPECT(IsNodeIdValid(aNodeId));
+
+    index    = aNodeId - 1;
+    contains = (sFilterNodeIdsBitVector[index / 8] & (0x80 >> (index % 8))) != 0;
+
+exit:
+    return contains;
 }
 
 static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
@@ -623,9 +659,15 @@ exit:
 
 static void AddNodeIdToFilter(uint16_t aNodeId)
 {
-    uint16_t index = aNodeId - 1;
+    uint16_t index;
 
+    otEXPECT(IsNodeIdValid(aNodeId));
+
+    index = aNodeId - 1;
     sFilterNodeIdsBitVector[index / 8] |= 0x80 >> (index % 8);
+
+exit:
+    return;
 }
 
 #endif // !OPENTHREAD_SIMULATION_VIRTUAL_TIME
@@ -916,7 +958,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     otError error = OT_ERROR_NONE;
 
     assert(aInstance != NULL);
-    assert(aScanChannel >= SIM_RADIO_CHANNEL_MIN && aScanChannel <= SIM_RADIO_CHANNEL_MAX);
+    assert(IsChannelValid(aScanChannel));
     assert(aScanDuration > 0);
 
     otEXPECT_ACTION((gRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN), error = OT_ERROR_NOT_IMPLEMENTED);
@@ -934,28 +976,38 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    int8_t maxPower = sChannelMaxTransmitPower[sCurrentChannel - SIM_RADIO_CHANNEL_MIN];
+    otError error    = OT_ERROR_NONE;
+    int8_t  maxPower = (int8_t)OT_RADIO_POWER_INVALID;
 
     assert(aInstance != NULL);
+    otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    if (IsChannelValid(sCurrentChannel))
+    {
+        maxPower = sChannelMaxTransmitPower[sCurrentChannel - SIM_RADIO_CHANNEL_MIN];
 
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    if (maxPower == OT_RADIO_POWER_INVALID)
-    {
-        int16_t  targetPower           = OT_RADIO_POWER_INVALID_IN_MBM;
-        int16_t  actualPower           = OT_RADIO_POWER_INVALID_IN_MBM;
-        uint8_t  rawPowerSetting[1]    = {0};
-        uint16_t rawPowerSettingLength = sizeof(rawPowerSetting);
-        otError  error = otPlatDiagRadioGetPowerSettings(aInstance, sCurrentChannel, &targetPower, &actualPower,
-                                                         rawPowerSetting, &rawPowerSettingLength);
-        OT_UNUSED_VARIABLE(error);
+        if (maxPower == OT_RADIO_POWER_INVALID)
+        {
+            int16_t  targetPower           = OT_RADIO_POWER_INVALID_IN_MBM;
+            int16_t  actualPower           = OT_RADIO_POWER_INVALID_IN_MBM;
+            uint8_t  rawPowerSetting[1]    = {0};
+            uint16_t rawPowerSettingLength = sizeof(rawPowerSetting);
+            otError  diagError;
 
-        maxPower = ConvertMbmToDbm(targetPower);
-    }
+            diagError = otPlatDiagRadioGetPowerSettings(aInstance, sCurrentChannel, &targetPower, &actualPower,
+                                                        rawPowerSetting, &rawPowerSettingLength);
+            OT_UNUSED_VARIABLE(diagError);
+
+            maxPower = ConvertMbmToDbm(targetPower);
+        }
 #endif
+    }
 
     *aPower = sTxPower < maxPower ? sTxPower : maxPower;
 
-    return OT_ERROR_NONE;
+exit:
+    return error;
 }
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
@@ -1178,8 +1230,7 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
 
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(aChannel >= SIM_RADIO_CHANNEL_MIN && aChannel <= SIM_RADIO_CHANNEL_MAX,
-                    error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(IsChannelValid(aChannel), error = OT_ERROR_INVALID_ARGS);
     sChannelMaxTransmitPower[aChannel - SIM_RADIO_CHANNEL_MIN] = aMaxPower;
 
 exit:
@@ -1284,13 +1335,16 @@ bool platformRadioIsTransmitPending(void)
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength)
 {
-    assert(sizeof(sReceiveMessage) >= aBufLength);
+    otEXPECT((aBuf != NULL) && (aBufLength >= 1 + sizeof(uint16_t)) && (aBufLength <= sizeof(sReceiveMessage)));
 
     memcpy(&sReceiveMessage, aBuf, aBufLength);
 
     sReceiveFrame.mLength = (uint8_t)(aBufLength - 1);
 
     RadioReceive(aInstance);
+
+exit:
+    return;
 }
 #else
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
@@ -1342,14 +1396,15 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 #if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
     if (utilsCanSocketReceive(&sSocket, aReadFdSet))
     {
-        uint16_t senderNodeId;
+        uint16_t senderNodeId = 0;
         uint16_t len;
 
         len = utilsReceiveFromSocket(&sSocket, &sReceiveMessage, sizeof(sReceiveMessage), &senderNodeId);
 
-        if (NodeIdFilterIsConnectable(senderNodeId))
+        if ((len >= 1 + sizeof(uint16_t)) && (len <= sizeof(sReceiveMessage)) &&
+            NodeIdFilterIsConnectable(senderNodeId))
         {
-            sReceiveFrame.mLength = len - 1;
+            sReceiveFrame.mLength = (uint8_t)(len - 1);
             RadioReceive(aInstance);
         }
     }
@@ -1394,7 +1449,7 @@ otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
             break;
         }
 
-        for (uint16_t nodeId = 0; nodeId <= (uint16_t)MAX_NETWORK_SIZE; nodeId++)
+        for (uint16_t nodeId = 1; nodeId <= (uint16_t)MAX_NETWORK_SIZE; nodeId++)
         {
             if (FilterContainsId(nodeId))
             {
@@ -1413,15 +1468,20 @@ otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
     }
     else if ((deny = !strcmp(aArgs[0], "deny")) || !strcmp(aArgs[0], "allow"))
     {
+        long     value;
         uint16_t nodeId;
         char    *endptr;
 
         otEXPECT_ACTION(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
-        nodeId = (uint16_t)strtol(aArgs[1], &endptr, 0);
+        errno = 0;
+        value = strtol(aArgs[1], &endptr, 0);
 
-        otEXPECT_ACTION(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
-        otEXPECT_ACTION(1 <= nodeId && nodeId <= MAX_NETWORK_SIZE, error = OT_ERROR_INVALID_ARGS);
+        otEXPECT_ACTION((errno == 0) && (endptr != aArgs[1]) && (*endptr == '\0'), error = OT_ERROR_INVALID_ARGS);
+        otEXPECT_ACTION((value >= 0) && (value <= UINT16_MAX), error = OT_ERROR_INVALID_ARGS);
+
+        nodeId = (uint16_t)value;
+        otEXPECT_ACTION(IsNodeIdValid(nodeId), error = OT_ERROR_INVALID_ARGS);
 
         otEXPECT_ACTION(sFilterMode != (deny ? SIM_FILTER_ALLOW_LIST : SIM_FILTER_DENY_LIST),
                         error = OT_ERROR_INVALID_STATE);
