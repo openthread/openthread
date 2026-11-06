@@ -38,6 +38,7 @@
 #include "openthread-core-config.h"
 
 #include "common/linked_list.hpp"
+#include "common/non_copyable.hpp"
 #include "common/owned_ptr.hpp"
 
 namespace ot {
@@ -46,11 +47,8 @@ namespace ot {
  * Represents a singly linked list which owns its entries and frees them upon destruction of the
  * list.
  */
-template <typename Type> class OwningList : public LinkedList<Type>
+template <typename Type> class OwningList : public LinkedList<Type>, private NonCopyable
 {
-    class Iterator;
-    class ConstIterator;
-
 public:
     /**
      * This is the default constructor for `OwningList`
@@ -99,6 +97,31 @@ public:
      * @returns An `OwnedPtr` to the entry that was popped (set to null if there is no entry to pop).
      */
     OwnedPtr<Type> PopAfter(Type *aPrevEntry) { return OwnedPtr<Type>(LinkedList<Type>::PopAfter(aPrevEntry)); }
+
+    /**
+     * Removes and frees a given entry from the linked list.
+     *
+     * Searches the list for @p aEntry, and if found, removes and frees it. If @p aEntry is not in the list, no action
+     * is taken.
+     *
+     * @param[in] aEntry  The entry to remove and free.
+     *
+     * @retval TRUE    The @p aEntry was found, removed, and freed.
+     * @retval FALSE   The @p aEntry was not found in the list.
+     */
+    bool RemoveAndFree(const Type &aEntry)
+    {
+        bool  didRemove = false;
+        Type *prev;
+
+        if (LinkedList<Type>::Find(aEntry, prev) == kErrorNone)
+        {
+            PopAfter(prev);
+            didRemove = true;
+        }
+
+        return didRemove;
+    }
 
     /**
      * Removes an entry matching a given set of conditions from the linked list.
@@ -158,6 +181,11 @@ public:
         RemoveAllMatching(removedList, aArgs...);
         return !removedList.IsEmpty();
     }
+
+    // Explicitly prevent certain unsafe inherited methods from `LinkedList` from being used.
+
+    Error Remove(const Type &aEntry) = delete;
+    void  SetHead(Type *aHead)       = delete;
 };
 
 } // namespace ot
