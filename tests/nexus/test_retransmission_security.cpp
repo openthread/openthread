@@ -103,7 +103,7 @@ void TestRetransmissionSecurity(void)
     nexus.AdvanceTime(kAttachAsSsedTime);
     VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
 
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
     nexus.AdvanceTime(kCslSyncTime);
     VerifyOrQuit(ssed1.Get<Mac::Mac>().IsCslEnabled());
 

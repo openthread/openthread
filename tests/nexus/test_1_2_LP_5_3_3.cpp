@@ -169,11 +169,11 @@ void Test1_2_LP_5_3_3(void)
     nexus.AdvanceTime(kAttachAsSsedTime);
     VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
 
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriodMs * 1000 / OT_US_PER_TEN_SYMBOLS);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriodMs * 1000 / OT_US_PER_TEN_SYMBOLS);
     SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
 
     nexus.AdvanceTime(kCslSyncTime);
-    VerifyOrQuit(ssed1.Get<Mac::Mac>().GetCslPeriod() > 0);
+    VerifyOrQuit(ssed1.Get<Mle::Mle>().GetCslPeriod() > 0);
 
     /**
      * Step 3: Router_1

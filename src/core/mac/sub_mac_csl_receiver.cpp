@@ -111,11 +111,7 @@ void SubMac::CslReceiver::SetParams(uint16_t          aPeriod,
 {
     if ((aPeriod == mPeriod) && (aShortAddr == mPeerShort))
     {
-        // Handle a CSL channel change only
-        VerifyOrExit(mChannel != aChannel);
-        mChannel = aChannel;
-        VerifyOrExit(IsEnabled());
-        Schedule();
+        SetChannel(aChannel);
         ExitNow();
     }
 
@@ -136,6 +132,17 @@ void SubMac::CslReceiver::SetParams(uint16_t          aPeriod,
 #endif
     }
 
+    Schedule();
+
+exit:
+    return;
+}
+
+void SubMac::CslReceiver::SetChannel(uint8_t aChannel)
+{
+    VerifyOrExit(mChannel != aChannel);
+    mChannel = aChannel;
+    VerifyOrExit(IsEnabled());
     Schedule();
 
 exit:

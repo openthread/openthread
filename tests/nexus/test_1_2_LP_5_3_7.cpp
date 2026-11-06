@@ -158,7 +158,7 @@ void Test1_2_LP_5_3_7(void)
      */
     ssed1.Join(router1, Node::kAsSed);
     // Set CSL parameters again to override defaults set by Join()
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
     SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout10s));
     ssed1.Get<DataPollSender>().StopPolling();
     nexus.AdvanceTime(kAttachAsSsedTime);

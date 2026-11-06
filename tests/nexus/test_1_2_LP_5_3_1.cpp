@@ -136,7 +136,7 @@ void Test1_2_LP_5_3_1(void)
     nexus.AdvanceTime(kAttachAsSsedTime);
     VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
 
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: Leader (DUT)");

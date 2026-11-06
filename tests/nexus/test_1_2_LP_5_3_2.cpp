@@ -196,7 +196,7 @@ void Test1_2_LP_5_3_2(void)
     Log("Step 0: SSED_1");
 
     // Pre-set CSL parameters on SSED_1 before it joins.
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriodInTenSymbols);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriodInTenSymbols);
     SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
 
     /**
@@ -227,7 +227,7 @@ void Test1_2_LP_5_3_2(void)
     ssed1.Join(router1, Node::kAsSed);
 
     // Override again after Join just in case Join() resets them to defaults.
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriodInTenSymbols);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriodInTenSymbols);
     SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
 
     nexus.AdvanceTime(kAttachAsSsedTime);

@@ -82,10 +82,7 @@ Mac::Mac(Instance &aInstance)
     , mMaxFrameRetriesIndirect(kDefaultMaxFrameRetriesIndirect)
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mIsCslEnabled(false)
-    , mIsCslCapable(false)
     , mCslChannel(0)
-    , mCslPeriod(0)
 #endif
     , mActiveScanCallback()
     , mLinks(aInstance)
@@ -385,9 +382,6 @@ exit:
 Error Mac::SetPanChannel(uint8_t aChannel)
 {
     Error error = kErrorNone;
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    bool isPanChannelChanged = (mPanChannel != aChannel);
-#endif
 
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
 
@@ -400,9 +394,9 @@ Error Mac::SetPanChannel(uint8_t aChannel)
     mRadioChannel = mPanChannel;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if ((mCslChannel == 0) && isPanChannelChanged)
+    if (IsCslEnabled() && (mCslChannel == 0))
     {
-        UpdateCslParameters();
+        mLinks.GetSubMac().SetCslChannel(mPanChannel);
     }
 #endif
 
@@ -2403,101 +2397,48 @@ void Mac::LogFrameTxFailure(const TxFrame::ParseInfo &, Error, uint8_t, bool) co
 // LCOV_EXCL_STOP
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-void Mac::SetCslCapable(bool aIsCslCapable)
+void Mac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
 {
-    VerifyOrExit(mIsCslCapable != aIsCslCapable);
-    mIsCslCapable = aIsCslCapable;
-    UpdateCslState();
+    bool wasEnabled;
 
-exit:
-    return;
-}
+    if (aPeriod == 0)
+    {
+        DisableCsl();
+        ExitNow();
+    }
 
-void Mac::SetCslChannel(uint8_t aChannel)
-{
-    VerifyOrExit(mCslChannel != aChannel);
+    wasEnabled  = IsCslEnabled();
     mCslChannel = aChannel;
-    UpdateCslParameters();
 
-exit:
-    return;
-}
+    mLinks.SetCslParams(aPeriod, aChannel ? aChannel : mPanChannel, aShortAddr, aExtAddr);
 
-void Mac::SetCslPeriod(uint16_t aPeriod)
-{
-    bool shouldUpdateCslState;
-
-    VerifyOrExit(mCslPeriod != aPeriod);
-
-    // A CSL period value of 0 means that the CSL is disabled.
-    shouldUpdateCslState = ((mCslPeriod == 0) != (aPeriod == 0));
-    mCslPeriod           = aPeriod;
-
-    if (shouldUpdateCslState)
+    if (!wasEnabled)
     {
-        UpdateCslState();
-    }
-    else
-    {
-        UpdateCslParameters();
-    }
-
-exit:
-    return;
-}
-
-void Mac::UpdateCslState(void)
-{
-    // This method will enable/disable CSL when the CSL state (enabled/disabled) is changed. Otherwise, nothing to do.
-    bool isCslEnabled = mIsCslCapable && (mCslPeriod > 0);
-
-    VerifyOrExit(mIsCslEnabled != isCslEnabled);
-
-    mIsCslEnabled = isCslEnabled;
-
-    if (mIsCslEnabled)
-    {
-        UpdateCslParameters();
         // Request the Mac to enter sleep state.
         UpdateIdleMode();
+        LogInfo("CSL receiver is enabled");
     }
-    else
-    {
-        // The platform API `otPlatRadioEnableCsl()` description says that disable CSL by setting the CSL period to 0.
-        // However, this description does not say whether the parameter `aExtAddr` can be set to nullptr or how to set
-        // the `aExtAddr` when the CSL is disabled. Here, an empty ExtAddress is set to meet the API requirement.
-        ExtAddress extAddress;
-
-        extAddress.Fill(0);
-        mLinks.SetCslParams(0, 0, kShortAddrInvalid, extAddress);
-    }
-
-    LogInfo("CSL receiver is %s", mIsCslEnabled ? "enabled" : "disabled");
 
 exit:
     return;
 }
 
-void Mac::UpdateCslParameters(void)
+void Mac::DisableCsl(void)
 {
-    // This method will set all CSL parameters when the CSL is enabled. Otherwise, nothing to do.
-    uint8_t cslChannel;
+    ExtAddress extAddress;
 
-    VerifyOrExit(mIsCslEnabled);
+    VerifyOrExit(IsCslEnabled());
 
-    cslChannel = GetCslChannel() ? GetCslChannel() : mPanChannel;
-    mLinks.SetCslParams(GetCslPeriod(), cslChannel, Get<Mle::Mle>().GetParent().GetRloc16(),
-                        Get<Mle::Mle>().GetParent().GetExtAddress());
-    Get<DataPollSender>().RecalculatePollPeriod();
-    Get<Mle::Mle>().ScheduleChildUpdateRequest();
+    // The platform API `otPlatRadioEnableCsl()` description says that disable CSL by setting the CSL period to 0.
+    // However, this description does not say whether the parameter `aExtAddr` can be set to nullptr or how to set
+    // the `aExtAddr` when the CSL is disabled. Here, an empty ExtAddress is set to meet the API requirement.
+    extAddress.Clear();
+    mLinks.SetCslParams(0, 0, kShortAddrInvalid, extAddress);
+
+    LogInfo("CSL receiver is disabled");
 
 exit:
     return;
-}
-
-uint32_t Mac::GetCslPeriodInMsec(void) const
-{
-    return DivideAndRoundToClosest<uint32_t>(CslPeriodToUsec(GetCslPeriod()), 1000u);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
