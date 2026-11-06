@@ -58,6 +58,7 @@ expect_line "Done"
 wait_for "netdata steeringdata check $discerner" "NotFound"
 send "commissioner joiner add $discerner $pskd\n"
 expect_line "Done"
+wait_for "netdata steeringdata check $discerner" "Done"
 
 spawn_node 2
 
@@ -88,9 +89,7 @@ expect_line "Done"
 send "joiner discerner\n"
 expect "$discerner"
 expect_line "Done"
-send "joiner start $pskd\n"
-expect_line "Done"
-wait_for "" "Join success" "Join failed"
+join_network $pskd
 send "thread start\n"
 expect_line "Done"
 wait_for "state" "child"

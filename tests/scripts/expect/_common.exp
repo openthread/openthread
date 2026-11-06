@@ -209,6 +209,30 @@ proc setup_leader {} {
     attach
 }
 
+proc join_network {pskd {max_attempts 5}} {
+    set timeout 40
+    for {set i 0} {$i < $max_attempts} {incr i} {
+        send "joiner start $pskd\n"
+        expect_line "Done"
+
+        expect {
+            -ex "Join success" {
+                return 0
+            }
+            -ex {Join failed [NotFound]} {
+                # An unacknowledged MLE Discovery Request may be missed if the
+                # Joiner Router is briefly off-channel (for example, during a
+                # periodic ChannelMonitor sample) or its response is delayed
+                # past the per-channel scan window under CI load.
+            }
+            -re {Join failed \[([^\]]+)\]} {
+                fail "Failed due to 'Join failed \[$expect_out(1,string)\]' found"
+            }
+        }
+    }
+    fail "Failed due to 'Join success' not found"
+}
+
 proc dispose_node {id} {
     switch_node $id
     send "\x04"
