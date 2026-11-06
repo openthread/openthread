@@ -215,7 +215,7 @@ void TestChildSupervisionWithDiscoveryScans(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
-void TestChildSupervisionDisabledWithDiscoveryScan(void)
+void TestChildSupervisionChangesDuringDiscoveryScan(void)
 {
     static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
     static constexpr uint32_t kScanDuration = 10 * 1000; // (msec)
@@ -283,6 +283,34 @@ void TestChildSupervisionDisabledWithDiscoveryScan(void)
     nexus.AdvanceTime(kScanDuration);
 
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Switch the child to rx-on and back to rx-off during a discovery scan");
+
+    // The rx-on mode change stops the listener while paused, and the rx-off one starts it with a full check timeout,
+    // so the end of the scan must neither fire a stale check nor leave supervision disabled.
+
+    Mle::DeviceMode sedMode = sed.Get<Mle::Mle>().GetDeviceMode();
+
+    sed.Get<SupervisionListener>().ResetCounter();
+
+    SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(
+        Mac::ChannelMask(1UL << leader.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
+        /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+    SuccessOrQuit(
+        sed.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(sedMode.Get() | Mle::DeviceMode::kModeRxOnWhenIdle)));
+    nexus.AdvanceTime(1000);
+    SuccessOrQuit(sed.Get<Mle::Mle>().SetDeviceMode(sedMode));
+    nexus.AdvanceTime(kScanDuration);
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    // Supervision must still detect a lost parent after the sequence.
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + 10 * 1000);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
 } // namespace Nexus
@@ -292,7 +320,7 @@ int main(void)
 {
     ot::Nexus::TestChildSupervision();
     ot::Nexus::TestChildSupervisionWithDiscoveryScans();
-    ot::Nexus::TestChildSupervisionDisabledWithDiscoveryScan();
+    ot::Nexus::TestChildSupervisionChangesDuringDiscoveryScan();
     printf("All tests passed\n");
     return 0;
 }
