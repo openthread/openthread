@@ -281,7 +281,6 @@ jobs:
       with:
         path: coverage/
         pattern: cov-*
-        merge-multiple: true
     - name: Combine Coverage
       run: |
         script/test combine_coverage

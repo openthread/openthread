@@ -310,6 +310,7 @@ jobs:
     needs:
     - expects-linux
     - pty-linux
+    - rcp-stack-reset
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
@@ -331,7 +332,6 @@ jobs:
       with:
         path: coverage/
         pattern: cov-*
-        merge-multiple: true
     - name: Combine Coverage
       run: |
         script/test combine_coverage
