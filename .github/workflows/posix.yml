@@ -47,7 +47,7 @@ jobs:
 
   expects-linux:
     name: expects-posix-${{ matrix.category }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -202,7 +202,7 @@ jobs:
 
   infra-if-index-changed-linux:
     name: infra-if-index-changed-linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -270,7 +270,7 @@ jobs:
         script/check-posix-pty check
 
   rcp-stack-reset:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -290,7 +290,7 @@ jobs:
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov
         sudo bash script/install_socat
-        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+        python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build
       run: |
         script/cmake-build simulation -DOT_CSL_RECEIVER=ON -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED
@@ -310,7 +310,7 @@ jobs:
     needs:
     - expects-linux
     - pty-linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
