@@ -3360,9 +3360,6 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     }
 
     VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_NONE) == 0, OT_EXIT_ERROR_ERRNO);
-
-    ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
-    VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
 }
 #endif
 
@@ -3556,6 +3553,8 @@ static void platformConfigureNetLink(void)
 
 void platformNetifInit(otPlatformConfig *aPlatformConfig)
 {
+    struct ifreq ifr;
+
     // To silence "unused function" warning.
     (void)LogCrit;
     (void)LogWarn;
@@ -3577,6 +3576,13 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
 
     platformConfigureNetLink();
     platformConfigureTunDevice(aPlatformConfig);
+
+    // The interface carries IPv6 datagrams of at most OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH bytes
+    // on every platform; a larger packet from the host would be cut by the tunnel read.
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, gNetifName, sizeof(ifr.ifr_name));
+    ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
+    VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, &ifr) == 0, OT_EXIT_ERROR_ERRNO);
 
     gNetifIndex = if_nametoindex(gNetifName);
     VerifyOrDie(gNetifIndex > 0, OT_EXIT_FAILURE);
