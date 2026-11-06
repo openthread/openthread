@@ -552,6 +552,18 @@ public:
      */
     bool IsInitialized(const Listener &aListener) const { return mListeners.Contains(aListener); }
 
+    /**
+     * Marks signal processing as active on an Endpoint.
+     *
+     * @returns  Whether this call acquired ownership of the active marker.
+     */
+    bool StartProcessingSignals(Endpoint &aEndpoint) const;
+
+    /**
+     * Indicates whether signal processing may continue on an Endpoint.
+     */
+    bool CanProcessSignals(const Endpoint &aEndpoint) const;
+
 private:
     static constexpr uint16_t kDynamicPortMin = 49152;
     static constexpr uint16_t kDynamicPortMax = 65535;
@@ -561,13 +573,17 @@ private:
     static constexpr uint8_t kForwardProgressCallbackFlag  = (1 << 2);
     static constexpr uint8_t kReceiveAvailableCallbackFlag = (1 << 3);
     static constexpr uint8_t kDisconnectedCallbackFlag     = (1 << 4);
+    static constexpr uint8_t kProcessSignalsActiveFlag     = (1 << 5);
 
     typedef TcpHeader Header;
 
     void ProcessSignals(Endpoint             &aEndpoint,
                         otLinkedBuffer       *aPriorHead,
                         size_t                aPriorBacklog,
-                        struct tcplp_signals &aSignals) const;
+                        struct tcplp_signals &aSignals,
+                        bool                  aOwnsProcessSignalsFlag) const;
+
+    void StopProcessingSignals(Endpoint &aEndpoint) const;
 
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);
