@@ -1846,7 +1846,8 @@ private:
         bool     RefreshTtl(uint32_t aTtl);
         bool     ShouldExpire(TimeMilli aNow) const;
         void     UpdateStateAfterQuery(TimeMilli aNow);
-        void     UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry);
+        void     SkipPastQueries(TimeMilli aNow);
+        void     UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry) const;
         bool     LessThanHalfTtlRemains(TimeMilli aNow) const;
         uint32_t GetRemainingTtl(TimeMilli aNow) const;
 
@@ -1857,10 +1858,11 @@ private:
 
         uint32_t  GetClampedTtl(void) const;
         TimeMilli GetExpireTime(void) const;
-        TimeMilli GetQueryTime(uint8_t aAttemptIndex) const;
+        void      DetermineNextQueryTime(void);
 
         uint32_t  mTtl;
         TimeMilli mLastRxTime;
+        TimeMilli mNextQueryTime;
         uint8_t   mQueryCount;
     };
 
@@ -1914,6 +1916,7 @@ private:
         uint32_t DetermineDeleteTimeout(void) const;
         bool     ShouldQuery(TimeMilli aNow);
         void     PrepareQuery(CacheContext &aContext);
+        void     SkipPastRecordQueries(TimeMilli aNow);
         void     ProcessExpiredRecords(TimeMilli aNow);
         void     UpdateQueryRetryInterval(void);
 
@@ -1972,6 +1975,7 @@ private:
         // Called by base class `CacheEntry`
         void PreparePtrQuestion(TxMessage &aQuery, TimeMilli aNow);
         void UpdateRecordStateAfterQuery(TimeMilli aNow);
+        void SkipPastRecordQueries(TimeMilli aNow);
         void DetermineRecordFireTime(void);
         void ProcessExpiredRecords(TimeMilli aNow);
         void ReportResultsTo(ResultCallback &aCallback) const;
@@ -2027,6 +2031,7 @@ private:
         void  PrepareQueryQuestion(TxMessage &aQuery, uint16_t aRrType);
         void  AppendServiceNameTo(TxMessage &aTxMessage, Section aSection);
         void  UpdateRecordStateAfterQuery(TimeMilli aNow);
+        void  SkipPastRecordQueries(TimeMilli aNow);
         void  DetermineRecordFireTime(void);
         bool  ShouldStartInitialQueries(void) const;
 
@@ -2149,6 +2154,7 @@ private:
         // Called by base class `CacheEntry`
         void PrepareQueryQuestion(TxMessage &aQuery, uint16_t aRrType);
         void UpdateRecordStateAfterQuery(TimeMilli aNow);
+        void SkipPastRecordQueries(TimeMilli aNow);
         void DetermineRecordFireTime(void);
         void ProcessExpiredRecords(TimeMilli aNow);
         void ReportResultsTo(ResultCallback &aCallback) const;
@@ -2255,6 +2261,7 @@ private:
         // Called by base class `CacheEntry`
         void PrepareQueryQuestion(TxMessage &aQuery);
         void UpdateRecordStateAfterQuery(TimeMilli aNow);
+        void SkipPastRecordQueries(TimeMilli aNow);
         void DetermineRecordFireTime(void);
         void ProcessExpiredRecords(TimeMilli aNow);
         void ReportResultsTo(ResultCallback &aCallback) const;
