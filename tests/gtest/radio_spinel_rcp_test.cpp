@@ -35,6 +35,8 @@
 #include <openthread/platform/radio.h>
 
 #include "common/error.hpp"
+#include "lib/hdlc/hdlc.hpp"
+#include "lib/platform/exit_code.h"
 #include "lib/spinel/openthread-spinel-config.h"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
@@ -1191,4 +1193,363 @@ TEST(RadioSpinelTransmit, shouldRejectReceiveDuringPendingTransmit)
     platform.GoInMs(10);
     EXPECT_EQ(platform.mTransmitCount, 1u);
     EXPECT_EQ(lastStatuses[kTxTid], std::vector<unsigned int>{SPINEL_STATUS_OK});
+}
+
+class EnergyScanPlatform : public FakeCoprocessorPlatform
+{
+public:
+    EnergyScanPlatform()
+        : FakeCoprocessorPlatform(OT_RADIO_CAPS_ENERGY_SCAN, true)
+    {
+        Spinel::RadioSpinelCallbacks callbacks{};
+
+        callbacks.mReceiveDone    = [](otInstance *, otRadioFrame *, Error) {};
+        callbacks.mTransmitDone   = [](otInstance *, otRadioFrame *, otRadioFrame *, Error) {};
+        callbacks.mTxStarted      = [](otInstance *, otRadioFrame *) {};
+        callbacks.mEnergyScanDone = [](otInstance *, int8_t aRssi) {
+            auto &platform = static_cast<EnergyScanPlatform &>(CurrentPlatform());
+
+            platform.mResults.push_back(aRssi);
+            if (platform.mStartNextScan && platform.mResults.size() == 1)
+            {
+                EXPECT_EQ(platform.mRadioSpinel.EnergyScan(19, 20), kErrorNone);
+            }
+        };
+        mRadioSpinel.SetCallbacks(callbacks);
+    }
+
+    otError EnergyScan(uint8_t aChannel, uint16_t aDuration) override
+    {
+        mScans.emplace_back(aChannel, aDuration);
+        return mScanError;
+    }
+
+    void ReceiveResult(uint8_t aChannel, int8_t aRssi)
+    {
+        uint8_t        frame[16];
+        spinel_ssize_t length =
+            spinel_datatype_pack(frame, sizeof(frame), "CiiCc", SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_IS,
+                                 SPINEL_PROP_MAC_ENERGY_SCAN_RESULT, aChannel, aRssi);
+
+        ASSERT_GT(length, 0);
+        ReceiveFrame(frame, static_cast<uint16_t>(length));
+    }
+
+    void ReceiveFrame(const uint8_t *aFrame, uint16_t aLength)
+    {
+        Spinel::FrameBuffer<64> buffer;
+        Hdlc::Encoder           encoder(buffer);
+
+        ASSERT_EQ(encoder.BeginFrame(), kErrorNone);
+        ASSERT_EQ(encoder.Encode(aFrame, aLength), kErrorNone);
+        ASSERT_EQ(encoder.EndFrame(), kErrorNone);
+        mSpinelInterface.Receive(buffer.GetFrame(), buffer.GetLength());
+        Process();
+    }
+
+    void Process(void)
+    {
+        mSpinelDriver.Process(nullptr);
+        mRadioSpinel.Process(nullptr);
+    }
+
+    std::vector<int8_t>                       mResults;
+    std::vector<std::pair<uint8_t, uint16_t>> mScans;
+    otError                                   mScanError     = kErrorNone;
+    bool                                      mStartNextScan = false;
+};
+
+TEST(RadioSpinelEnergyScan, completesNormally)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    EXPECT_NE(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    platform.GoInMs(100);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -80);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.mResults, std::vector<int8_t>({-80}));
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    platform.GoInMs(3000);
+    platform.Process();
+    EXPECT_EQ(platform.mResults.size(), 1u);
+}
+
+TEST(RadioSpinelEnergyScan, disableCancelsScanTimeout)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Disable(), kErrorNone);
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    platform.GoInMs(100 + OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS * 1000);
+    platform.Process();
+    EXPECT_TRUE(platform.mResults.empty());
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpTimeoutCount, 0u);
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpRestorationCount, 0u);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(19, 20), kErrorNone);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -70);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.mResults, std::vector<int8_t>({-70}));
+}
+
+TEST(RadioSpinelEnergyScan, rejectsScanWhileDisabled)
+{
+    EnergyScanPlatform platform;
+
+    EXPECT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorInvalidState);
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    EXPECT_TRUE(platform.mScans.empty());
+    EXPECT_EQ(platform.mRadioSpinel.Set(SPINEL_PROP_MAC_SCAN_STATE, SPINEL_DATATYPE_UINT8_S, SPINEL_SCAN_STATE_ENERGY),
+              kErrorInvalidState);
+}
+
+TEST(RadioSpinelEnergyScan, rejectsDuplicateWithoutDisruptingActiveScan)
+{
+    EnergyScanPlatform platform;
+    uint64_t           deadline;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    deadline = platform.mRadioSpinel.GetNextRadioOperationDeadline();
+    EXPECT_EQ(platform.mRadioSpinel.EnergyScan(19, 200), kErrorBusy);
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), deadline);
+    EXPECT_EQ(platform.mScans.size(), 1u);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -80);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.mResults, std::vector<int8_t>({-80}));
+}
+
+TEST(RadioSpinelEnergyScan, scanDoesNotChangeReceiveChannel)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Receive(15), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -80);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.GetReceiveChannel(), 15);
+    ASSERT_EQ(platform.mRadioSpinel.Receive(18), kErrorNone);
+    EXPECT_EQ(platform.GetReceiveChannel(), 18);
+}
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT == 0
+TEST(RadioSpinelEnergyScan, missingResultTimesOutAfterScanDuration)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 3000), kErrorNone);
+    platform.GoInMs(3000 + OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS * 1000 - 1);
+    platform.Process();
+    EXPECT_TRUE(platform.mResults.empty());
+    EXPECT_EXIT(
+        {
+            platform.GoInMs(1);
+            platform.Process();
+        },
+        ::testing::ExitedWithCode(OT_EXIT_RADIO_SPINEL_NO_RESPONSE), ".*");
+}
+#endif
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+TEST(RadioSpinelEnergyScan, disabledScanIsNotRestartedAfterRcpRecovery)
+{
+    EnergyScanPlatform platform;
+    uint8_t            frame[16];
+    spinel_ssize_t     length;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Disable(), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    length = spinel_datatype_pack(frame, sizeof(frame), "Ciii", SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_IS,
+                                  SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_RESET_POWER_ON);
+    ASSERT_GT(length, 0);
+    platform.ReceiveFrame(frame, static_cast<uint16_t>(length));
+
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpRestorationCount, 1u);
+    EXPECT_EQ(platform.mScans.size(), 1u);
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    EXPECT_TRUE(platform.mResults.empty());
+}
+
+#if !OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY
+TEST(RadioSpinelEnergyScan, unexpectedResetRestartsPendingScan)
+{
+    EnergyScanPlatform platform;
+    uint8_t            frame[16];
+    spinel_ssize_t     length;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    length = spinel_datatype_pack(frame, sizeof(frame), "Ciii", SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_IS,
+                                  SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_RESET_POWER_ON);
+    ASSERT_GT(length, 0);
+    platform.ReceiveFrame(frame, static_cast<uint16_t>(length));
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpRestorationCount, 1u);
+    ASSERT_EQ(platform.mScans.size(), 2u);
+    EXPECT_EQ(platform.mScans[1], platform.mScans[0]);
+    EXPECT_NE(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -80);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.mResults, std::vector<int8_t>({-80}));
+}
+#endif // !OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY
+
+TEST(RadioSpinelEnergyScan, missingResultRestoresRcpAndRestartsScan)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    ASSERT_EQ(platform.mScans.size(), 1u);
+    EXPECT_EQ(platform.mScans[0].first, 18);
+    EXPECT_EQ(platform.mScans[0].second, 100);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -90);
+    platform.GoInMs(1);
+    platform.mSpinelDriver.ClearRxBuffer();
+    platform.GoInMs(100 + OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS * 1000);
+    platform.Process();
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpTimeoutCount, 1u);
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpRestorationCount, 1u);
+    ASSERT_EQ(platform.mScans.size(), 2u);
+    EXPECT_EQ(platform.mScans[1], platform.mScans[0]);
+    EXPECT_TRUE(platform.mResults.empty());
+    EXPECT_NE(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -80);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.mResults, std::vector<int8_t>({-80}));
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+}
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY
+TEST(RadioSpinelEnergyScan, keepsWaitingWhenSharedRcpIsStillScanning)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    platform.GoInMs(100 + OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS * 1000);
+    platform.Process();
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpTimeoutCount, 1u);
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpRestorationCount, 1u);
+    EXPECT_EQ(platform.mScans.size(), 1u);
+    EXPECT_NE(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    platform.GoInMs(100 + OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS * 1000);
+    platform.Process();
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpTimeoutCount, 2u);
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpRestorationCount, 2u);
+    EXPECT_NE(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -80);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.mResults, std::vector<int8_t>({-80}));
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+}
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY
+
+// Match the TX timeout policy when automatic restoration is disabled at runtime.
+TEST(RadioSpinelEnergyScan, respectsRuntimeRestorationDisableOnTimeout)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    platform.mRadioSpinel.SetRcpRestorationEnabled(false);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    platform.GoInMs(100 + OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS * 1000);
+    platform.Process();
+    EXPECT_TRUE(platform.mResults.empty());
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpTimeoutCount, 1u);
+    EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpRestorationCount, 0u);
+}
+#endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+TEST(RadioSpinelEnergyScan, callbackCanStartNextChannel)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    platform.mStartNextScan = true;
+    platform.GoInMs(100);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -80);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.mResults.size(), 1u);
+    EXPECT_NE(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    platform.GoInMs(20);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -70);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.mResults, std::vector<int8_t>({-80, -70}));
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+}
+
+TEST(RadioSpinelEnergyScan, ignoresResultsForCompletedScans)
+{
+    EnergyScanPlatform platform;
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    uint64_t deadline;
+#endif
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    platform.ReceiveResult(18, -80);
+    EXPECT_TRUE(platform.mResults.empty());
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    deadline = platform.mRadioSpinel.GetNextRadioOperationDeadline();
+    platform.ReceiveResult(19, -70);
+    EXPECT_TRUE(platform.mResults.empty());
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), deadline);
+#endif
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -80);
+    platform.GoInMs(1);
+    platform.Process();
+    platform.ReceiveResult(18, -90);
+    EXPECT_EQ(platform.mResults, std::vector<int8_t>({-80}));
+}
+
+TEST(RadioSpinelEnergyScan, failedStartDoesNotArmTimeout)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    platform.mSpinelInterface.mSendError = kErrorNoBufs;
+    EXPECT_NE(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    platform.GoInMs(3000);
+    platform.Process();
+    EXPECT_TRUE(platform.mResults.empty());
+}
+
+TEST(RadioSpinelEnergyScan, radioRejectingScanDoesNotArmTimeout)
+{
+    EnergyScanPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    platform.mScanError = kErrorFailed;
+    EXPECT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorFailed);
+    EXPECT_EQ(platform.mRadioSpinel.GetNextRadioOperationDeadline(), UINT64_MAX);
+    platform.GoInMs(3000);
+    platform.Process();
+    EXPECT_TRUE(platform.mResults.empty());
+    platform.mScanError = kErrorNone;
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 100), kErrorNone);
+    otPlatRadioEnergyScanDone(FakePlatform::CurrentInstance(), -80);
+    platform.GoInMs(1);
+    platform.Process();
+    EXPECT_EQ(platform.mResults, std::vector<int8_t>({-80}));
 }

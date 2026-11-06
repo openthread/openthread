@@ -177,6 +177,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS
+ *
+ * Defines the additional time, beyond the requested scan duration, to wait for an energy scan result.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS
+#define OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS 2
+#endif
+
+/**
  * @def OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
  *
  * Enables Co-processor reset failure callback in Spinel driver

@@ -51,6 +51,7 @@ otError DirectSpinelInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength
     Spinel::FrameBuffer<kMaxFrameSize> encoderBuffer;
     Hdlc::Encoder                      hdlcEncoder(encoderBuffer);
 
+    VerifyOrExit(mSendError == OT_ERROR_NONE, error = mSendError);
     SuccessOrExit(error = hdlcEncoder.BeginFrame());
     SuccessOrExit(error = hdlcEncoder.Encode(aFrame, aLength));
     SuccessOrExit(error = hdlcEncoder.EndFrame());
@@ -83,7 +84,8 @@ int DirectSpinelInterface::Receive(const uint8_t *aBuffer, uint16_t aLength)
     return aLength;
 }
 
-FakeCoprocessorPlatform::FakeCoprocessorPlatform()
+FakeCoprocessorPlatform::FakeCoprocessorPlatform(otRadioCaps aRadioCaps, bool aSoftwareReset)
+    : FakePlatform(aRadioCaps)
 {
     spinel_iid_t iids[]{
         0,
@@ -108,7 +110,7 @@ FakeCoprocessorPlatform::FakeCoprocessorPlatform()
 
     mSpinelDriver.Init(mSpinelInterface, false, iids, OT_ARRAY_LENGTH(iids));
 
-    mRadioSpinel.Init(true, false, &mSpinelDriver, 0, false);
+    mRadioSpinel.Init(true, aSoftwareReset, &mSpinelDriver, 0, false);
 }
 
 } // namespace ot
