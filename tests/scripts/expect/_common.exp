@@ -36,11 +36,32 @@ proc skip_on_macos {} {
 }
 
 proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
-    set timeout 1
-    for {set i 0} {$i < 40} {incr i} {
-        if {$command != ""} {
-            send "$command\n"
+    set result_prompt {(^|[\r\n]|> )(Done|Error \d+: [^\r\n]*)[\r\n]+> }
+    set deadline [expr {[clock milliseconds] + 40000}]
+
+    if {$command == ""} {
+        set timeout 40
+        expect {
+            -re $success {
+                return 0
+            }
+            -re $failure {
+                fail "Failed due to '$failure' found"
+            }
+            eof {
+                fail "Unexpected EOF while waiting for '$success'"
+            }
+            timeout {
+                fail "Failed due to '$success' not found"
+            }
         }
+    }
+
+    while {[clock milliseconds] < $deadline} {
+        set remaining_sec [expr {($deadline - [clock milliseconds] + 999) / 1000}]
+        set timeout [expr {$remaining_sec < 10 ? ($remaining_sec < 2 ? 2 : $remaining_sec) : 10}]
+
+        send "$command\n"
 
         expect {
             -re $success {
@@ -49,12 +70,32 @@ proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
             -re $failure {
                 fail "Failed due to '$failure' found"
             }
+            -re $result_prompt {
+                sleep 0.25
+            }
+            eof {
+                fail "Unexpected EOF while waiting for '$success'"
+            }
             timeout {
                 # Do nothing
             }
         }
     }
+
     fail "Failed due to '$success' not found"
+}
+
+proc wait_for_prompt {} {
+    set timeout 10
+    expect {
+        -re {(^|[\r\n>])> } {}
+        eof {
+            fail "Unexpected EOF while waiting for prompt"
+        }
+        timeout {
+            fail "Timed out waiting for prompt"
+        }
+    }
 }
 
 proc expect_line {line} {
@@ -118,8 +159,9 @@ proc spawn_node {id {type ""} {args ""}} {
             # avoid the error: "bind(sTxFd): Address already in use"
             sleep 0.2
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_posix_apps/ot-cli $radio_url
-            sleep 0.1
+            wait_for_prompt
             send "factoryreset\n"
+            wait_for_prompt
             wait_for "state" "disabled"
             expect_line "Done"
             send "routerselectionjitter 1\n"
@@ -128,8 +170,9 @@ proc spawn_node {id {type ""} {args ""}} {
         cli {
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_simulation_apps/cli/ot-cli-ftd \
                 -L$ot_simulation_local_host $id
-            sleep 0.1
+            wait_for_prompt
             send "factoryreset\n"
+            wait_for_prompt
             wait_for "state" "disabled"
             expect_line "Done"
             send "routerselectionjitter 1\n"
@@ -138,8 +181,9 @@ proc spawn_node {id {type ""} {args ""}} {
         mtd {
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_simulation_apps/cli/ot-cli-mtd \
                 -L$ot_simulation_local_host $id
-            sleep 0.1
+            wait_for_prompt
             send "factoryreset\n"
+            wait_for_prompt
             wait_for "state" "disabled"
             expect_line "Done"
         }
