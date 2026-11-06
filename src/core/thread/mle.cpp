@@ -61,6 +61,8 @@ Mle::Mle(Instance &aInstance)
     , mStoreFrameCounterAhead(kDefaultStoreFrameCounterAhead)
     , mTimeout(kDefaultChildTimeout)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    , mCslPeriod(0)
+    , mCslChannel(0)
     , mCslTimeout(kDefaultCslTimeout)
 #endif
     , mNeighborTable(aInstance)
@@ -338,7 +340,7 @@ void Mle::SetRole(DeviceRole aRole)
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    UpdateCslState();
+    UpdateCsl();
 #endif
 
 exit:
@@ -749,7 +751,7 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
     {
         SetStateChild(GetRloc16());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        UpdateCslState();
+        UpdateCsl();
 #endif
         IgnoreError(SendChildUpdateRequestToParent());
     }
@@ -949,6 +951,33 @@ exit:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+void Mle::SetCslChannel(uint8_t aChannel)
+{
+    VerifyOrExit(mCslChannel != aChannel);
+    mCslChannel = aChannel;
+    UpdateCsl();
+
+exit:
+    return;
+}
+
+void Mle::SetCslPeriod(uint16_t aPeriod)
+{
+    VerifyOrExit(mCslPeriod != aPeriod);
+    mCslPeriod = aPeriod;
+    UpdateCsl();
+
+exit:
+    return;
+}
+
+uint32_t Mle::GetCslPeriodInMsec(void) const
+{
+    return DivideAndRoundToClosest<uint32_t>(Mac::CslPeriodToUsec(mCslPeriod), 1000u);
+}
+
+bool Mle::IsCslEnabled(void) const { return Get<Mac::Mac>().IsCslEnabled(); }
+
 Error Mle::SetCslTimeout(uint32_t aTimeout)
 {
     Error error = kErrorNone;
@@ -960,7 +989,7 @@ Error Mle::SetCslTimeout(uint32_t aTimeout)
 
     Get<DataPollSender>().RecalculatePollPeriod();
 
-    if (Get<Mac::Mac>().IsCslEnabled())
+    if (IsCslEnabled())
     {
         ScheduleChildUpdateRequest();
     }
@@ -971,7 +1000,20 @@ exit:
 
 bool Mle::IsCslSupported(void) const { return IsChild() && GetParent().IsThreadVersion1p2OrHigher(); }
 
-void Mle::UpdateCslState(void) { Get<Mac::Mac>().SetCslCapable(IsCslSupported() && !IsRxOnWhenIdle()); }
+void Mle::UpdateCsl(void)
+{
+    if (IsCslSupported() && !IsRxOnWhenIdle() && (mCslPeriod > 0))
+    {
+        Get<Mac::Mac>().UpdateCsl(mCslPeriod, mCslChannel, mParent.GetRloc16(), mParent.GetExtAddress());
+        Get<DataPollSender>().RecalculatePollPeriod();
+        ScheduleChildUpdateRequest();
+    }
+    else if (IsCslEnabled())
+    {
+        Get<Mac::Mac>().DisableCsl();
+        Get<DataPollSender>().RecalculatePollPeriod();
+    }
+}
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -1274,7 +1316,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
         SuccessOrExit(error = message->AppendTimeoutTlv((aMode == kAppendZeroTimeout) ? 0 : mTimeout));
         SuccessOrExit(error = message->AppendSupervisionIntervalTlvIfSleepyChild());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (Get<Mac::Mac>().IsCslEnabled())
+        if (IsCslEnabled())
         {
             SuccessOrExit(error = message->AppendCslChannelTlv());
             SuccessOrExit(error = message->AppendCslTimeoutTlv());
@@ -1302,7 +1344,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     {
         Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        Get<DataPollSender>().SetAttachMode(!Get<Mac::Mac>().IsCslEnabled());
+        Get<DataPollSender>().SetAttachMode(!IsCslEnabled());
 #else
         Get<DataPollSender>().SetAttachMode(true);
 #endif
@@ -1412,7 +1454,7 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         case Tlv::kCslTimeout:
-            if (Get<Mac::Mac>().IsCslEnabled())
+            if (IsCslEnabled())
             {
                 SuccessOrExit(error = message->AppendCslTimeoutTlv());
             }
@@ -3801,7 +3843,7 @@ Error Mle::TxMessage::AppendCslChannelTlv(void)
     // CSL channel value of zero indicates that the CSL channel is not
     // specified. We can use this value in the TLV as well.
 
-    return Tlv::Append<CslChannelTlv>(*this, CslChannelTlvValue(Get<Mac::Mac>().GetCslChannel()));
+    return Tlv::Append<CslChannelTlv>(*this, CslChannelTlvValue(Get<Mle>().GetCslChannel()));
 }
 
 Error Mle::TxMessage::AppendCslTimeoutTlv(void)
@@ -5798,9 +5840,9 @@ void Mle::RetxTracker::UpdateOnChildUpdateRequestTx(void)
     mChildUpdate.IncrementAttempts();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (Get<Mac::Mac>().IsCslEnabled())
+    if (Get<Mle>().IsCslEnabled())
     {
-        interval += Get<Mac::Mac>().GetCslPeriodInMsec();
+        interval += Get<Mle>().GetCslPeriodInMsec();
     }
 #endif
 

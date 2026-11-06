@@ -723,6 +723,52 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
+     * Gets the CSL channel.
+     *
+     * @returns The CSL channel (0 if not specified, meaning PAN channel is used).
+     */
+    uint8_t GetCslChannel(void) const { return mCslChannel; }
+
+    /**
+     * Sets the CSL channel.
+     *
+     * @param[in]  aChannel  The CSL channel (0 to use the MAC PAN channel).
+     */
+    void SetCslChannel(uint8_t aChannel);
+
+    /**
+     * Gets the CSL period.
+     *
+     * @returns The CSL period in units of 10 symbols.
+     */
+    uint16_t GetCslPeriod(void) const { return mCslPeriod; }
+
+    /**
+     * Gets the CSL period in milliseconds.
+     *
+     * If the CSL period cannot be represented exactly in milliseconds, returns the value rounded to the nearest
+     * millisecond.
+     *
+     * @returns The CSL period in milliseconds.
+     */
+    uint32_t GetCslPeriodInMsec(void) const;
+
+    /**
+     * Sets the CSL period.
+     *
+     * @param[in]  aPeriod  The CSL period in units of 10 symbols (0 to disable CSL).
+     */
+    void SetCslPeriod(uint16_t aPeriod);
+
+    /**
+     * Indicates whether CSL is currently enabled and started.
+     *
+     * @retval TRUE   If CSL is enabled.
+     * @retval FALSE  If CSL is not enabled.
+     */
+    bool IsCslEnabled(void) const;
+
+    /**
      * Gets the CSL timeout.
      *
      * @returns CSL timeout
@@ -2338,8 +2384,8 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void  UpdateCslState(void);
     Error ProcessCslAccuracyTlv(RxInfo &aRxInfo, bool aCanTrustMessage);
+    void  UpdateCsl(void);
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -2471,6 +2517,8 @@ private:
     uint32_t   mStoreFrameCounterAhead;
     uint32_t   mTimeout;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    uint16_t mCslPeriod;
+    uint8_t  mCslChannel;
     uint32_t mCslTimeout;
 #endif
     UptimeSec        mLastAttachTime;
