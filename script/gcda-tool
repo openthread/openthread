@@ -40,12 +40,15 @@ merge_profiles()
     local profile_current="$1"
     local profile_merged="$2"
 
-    [[ -d ${profile_current} ]] || return 0
+    [[ -d ${profile_current} && -d ${profile_merged} ]] || return 0
 
     local profile_temporary="${profile_merged}.tmp"
 
-    gcov-tool merge "${profile_current}" "${profile_merged}" -o "${profile_temporary}" || return 0
-    cp -r "${profile_temporary}"/* "${profile_merged}"
+    rm -rf "${profile_temporary}"
+    if gcov-tool merge "${profile_current}" "${profile_merged}" -o "${profile_temporary}" \
+        && [[ -d ${profile_temporary} ]]; then
+        cp -r "${profile_temporary}/." "${profile_merged}/"
+    fi
     rm -rf "${profile_temporary}"
 }
 

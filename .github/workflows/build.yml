@@ -73,7 +73,7 @@ jobs:
         script/check-iwyu-public-header
 
   markdown-lint-check:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -95,6 +95,7 @@ jobs:
       env:
         PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
       run: |
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         npm install -g @umbrelladocs/linkspector@0.5.5
         wget --timeout=30 --tries=4 -O /tmp/reviewdog.tar.gz https://github.com/reviewdog/reviewdog/releases/download/v0.21.0/reviewdog_0.21.0_Linux_x86_64.tar.gz
         sudo tar -xzf /tmp/reviewdog.tar.gz -C /usr/local/bin reviewdog

@@ -634,6 +634,17 @@ do_check_crash()
     ) || echo 0
 }
 
+run_lcov()
+{
+    local lcov_args=()
+
+    if [[ $(lcov --version 2>/dev/null) =~ version[[:space:]]+([0-9]+)\. ]] && ((BASH_REMATCH[1] >= 2)); then
+        lcov_args+=("--ignore-errors" "gcov,mismatch,inconsistent,negative,corrupt,empty,unused")
+    fi
+
+    lcov ${lcov_args[@]+"${lcov_args[@]}"} "$@"
+}
+
 do_generate_coverage()
 {
     mkdir -p tmp/
@@ -645,15 +656,15 @@ do_generate_coverage()
         echo '#!/bin/bash' >>"$llvm_gcov"
         echo 'exec llvm-cov gcov "$@"' >>"$llvm_gcov"
         chmod +x "$llvm_gcov"
-        lcov --gcov-tool "$llvm_gcov" --directory . --capture --output-file tmp/coverage.info
+        run_lcov --gcov-tool "$llvm_gcov" --directory . --capture --output-file tmp/coverage.info
     else
         ./script/gcda-tool collect
         ./script/gcda-tool install
 
-        lcov --directory . --capture --output-file tmp/coverage.info
+        run_lcov --directory . --capture --output-file tmp/coverage.info
     fi
-    lcov --list tmp/coverage.info
-    lcov --extract tmp/coverage.info "$PWD/src/core/common/message.cpp" | c++filt
+    run_lcov --list tmp/coverage.info
+    run_lcov --extract tmp/coverage.info "$PWD/src/core/common/message.cpp" | c++filt
 }
 
 do_combine_coverage()
@@ -667,7 +678,7 @@ do_combine_coverage()
         args+=('-a')
         args+=("$i")
     done
-    lcov "${args[@]}" -o final.info
+    run_lcov "${args[@]}" -o final.info
 }
 
 envsetup()
