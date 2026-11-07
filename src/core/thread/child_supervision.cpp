@@ -141,6 +141,7 @@ SupervisionListener::SupervisionListener(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimeout(0)
     , mInterval(kDefaultInterval)
+    , mCounter(0)
     , mState(kStopped)
     , mTimer(aInstance)
 {
