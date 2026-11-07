@@ -42,13 +42,28 @@ namespace Ip6 {
 //---------------------------------------------------------------------------------------------------------------------
 // Header
 
+#if !OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+static constexpr uint32_t kMaxLength = kMaxDatagramLength;
+#else
+static constexpr uint32_t kMaxLength = kMaxAssembledDatagramLength;
+#endif
+
 Error Header::ParseFrom(const Message &aMessage)
 {
+    // Allow up to `kMaxMplEncapSize` (RFC 2473 outer IPv6 tunnel header
+    // plus an 8-byte Hop-by-Hop MPL option) beyond `kMaxDatagramLength`
+    // for on-mesh MPL-encapsulated multicast datagrams. Host ingress,
+    // host egress, and inner IP-in-IP decapsulation enforce strict MTU
+    // limits via `Header::IsValid()` and `kMinimalMtu`.
+    static constexpr uint32_t kMaxMplEncapSize = sizeof(Header) + ExtensionHeader::kLengthUnitSize;
+    static constexpr uint32_t kMaxParseLength  = OT_MAX(kMaxLength, kMaxDatagramLength + kMaxMplEncapSize);
+
     Error error = kErrorParse;
 
     SuccessOrExit(aMessage.Read(0, *this));
-    VerifyOrExit(IsValid());
+    VerifyOrExit(IsVersion6());
     VerifyOrExit(sizeof(Header) + GetPayloadLength() == aMessage.GetLength());
+    VerifyOrExit(aMessage.GetLength() <= kMaxParseLength);
 
     error = kErrorNone;
 
@@ -56,16 +71,7 @@ exit:
     return error;
 }
 
-bool Header::IsValid(void) const
-{
-#if !OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    static constexpr uint32_t kMaxLength = kMaxDatagramLength;
-#else
-    static constexpr uint32_t kMaxLength = kMaxAssembledDatagramLength;
-#endif
-
-    return IsVersion6() && ((sizeof(Header) + GetPayloadLength()) <= kMaxLength);
-}
+bool Header::IsValid(void) const { return IsVersion6() && ((sizeof(Header) + GetPayloadLength()) <= kMaxLength); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // ExtensionHeader
