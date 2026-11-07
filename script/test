@@ -636,10 +636,11 @@ do_check_crash()
 
 run_lcov()
 {
+    local ignore_errors="${OT_LCOV_IGNORE_ERRORS:-gcov,mismatch,inconsistent,negative,corrupt,empty,unused}"
     local lcov_args=()
 
     if [[ $(lcov --version 2>/dev/null) =~ version[[:space:]]+([0-9]+)\. ]] && ((BASH_REMATCH[1] >= 2)); then
-        lcov_args+=("--ignore-errors" "gcov,mismatch,inconsistent,negative,corrupt,empty,unused")
+        lcov_args+=("--ignore-errors" "${ignore_errors}")
     fi
 
     lcov ${lcov_args[@]+"${lcov_args[@]}"} "$@"
@@ -669,16 +670,29 @@ do_generate_coverage()
 
 do_combine_coverage()
 {
+    local files=()
+    local args=()
+
     ls -R coverage/
 
-    readarray -d '' files < <(find coverage/ -type f -name 'coverage*.info' -print0)
+    readarray -d '' files < <(find coverage/ -type f -name 'coverage*.info' -print0 | LC_ALL=C sort -z)
 
-    local args=()
+    if [[ ${#files[@]} -eq 0 ]]; then
+        echo "No coverage files found in coverage/" >&2
+        exit 1
+    fi
+
     for i in "${files[@]}"; do
         args+=('-a')
         args+=("$i")
     done
-    run_lcov "${args[@]}" -o final.info
+
+    OT_LCOV_IGNORE_ERRORS="mismatch,inconsistent,negative,empty" run_lcov "${args[@]}" -o final.info
+
+    if ! grep -q '^SF:' final.info; then
+        echo "Combined coverage file final.info has no source records" >&2
+        exit 1
+    fi
 }
 
 envsetup()
