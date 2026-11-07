@@ -296,7 +296,8 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
     StartDiscoverScan(sed, leader);
     SuccessOrQuit(
         sed.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(sedMode.Get() | Mle::DeviceMode::kModeRxOnWhenIdle)));
-    nexus.AdvanceTime(1000);
+    nexus.AdvanceTime(Mle::DiscoverScanner::kDefaultScanDuration / 2);
+    VerifyOrQuit(sed.Get<Mle::DiscoverScanner>().IsInProgress());
     SuccessOrQuit(sed.Get<Mle::Mle>().SetDeviceMode(sedMode));
     nexus.AdvanceTime(kScanDuration);
 
