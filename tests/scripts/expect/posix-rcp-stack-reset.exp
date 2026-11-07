@@ -65,6 +65,8 @@ try {
     expect "16 bytes from $addr: icmp_seq=1"
     expect_line "Done"
     send "reset\n"
+    expect "reset"
+    wait_for_prompt
     wait_for "state" "disabled"
     expect_line "Done"
     send "ifconfig up\n"
@@ -72,6 +74,7 @@ try {
     send "thread start\n"
     expect_line "Done"
     wait_for "state" "leader"
+    expect_line "Done"
     wait_for "ping $addr" "16 bytes from $addr: icmp_seq=\\d+"
     expect_line "Done"
 } finally {
