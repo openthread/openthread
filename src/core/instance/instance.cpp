@@ -181,6 +181,9 @@ Instance::Instance(void)
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
     , mThreadDirectKeyManager(*this)
 #endif
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+    , mThreadDirectListener(*this)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     , mBorderAgentTxtData(*this)
     , mBorderAgentManager(*this)

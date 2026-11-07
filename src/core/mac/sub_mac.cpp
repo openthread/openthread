@@ -1366,13 +1366,22 @@ void SubMac::ListenScheduler::Schedule(void)
 
     VerifyOrExit(Get<SubMac>().IsEnabled());
 
+    // `ScheduleCsl()` must be called before `ScheduleTdListener()`. It
+    // uses `info.Init()` to set the initial window without scheduling a
+    // timer for the window's end time, avoiding an extra timer wakeup at
+    // the end of each CSL window when only CSL is active.
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     ScheduleCsl(info);
 #endif
 
-    Get<SubMac>().ReceiveAt(info.GetTimedRx());
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+    ScheduleTdListener(info);
+#endif
 
     info.ScheduleNextFireTimeOn(mTimer);
+
+    Get<SubMac>().ReceiveAt(info.GetTimedRx());
 
 exit:
     return;
@@ -1388,19 +1397,23 @@ void SubMac::ListenScheduler::ScheduleCsl(SchedInfo &aInfo)
 
     // Advance the CSL window once within `kCslTransitionToNextAheadTime`
     // of the next window's start time, and set the next timer fire time
-    // to that transition point. Both current and next windows are then
-    // considered for timed RX (selecting the earliest one that has not
-    // yet ended).
+    // to that transition point.
 
     while (cslReceiver.GetNextWindow().GetStartTime() <= aInfo.GetNow().GetAsTime64() + kCslTransitionToNextAheadTime)
     {
         cslReceiver.AdvanceToNextWindow();
     }
 
-    aInfo.UpdateNextFireTime(cslReceiver.GetNextWindow().GetStartTime() - kCslTransitionToNextAheadTime);
+    // Use `aInfo.Init()` with the earliest CSL window that has not yet
+    // ended (instead of `aInfo.Update()`) so that when only CSL is used,
+    // the timer only fires once per period at the transition point
+    // rather than also waking up at the end of `GetCurWindow()`.
 
-    aInfo.UpdateTimedRxIfEarlier(cslReceiver.GetNextWindow());
-    aInfo.UpdateTimedRxIfEarlier(cslReceiver.GetCurWindow());
+    aInfo.Init(cslReceiver.GetCurWindow().HasEnded(aInfo.GetNow()) ? cslReceiver.GetNextWindow()
+                                                                   : cslReceiver.GetCurWindow(),
+               kCslPriority);
+
+    aInfo.UpdateNextFireTime(cslReceiver.GetNextWindow().GetStartTime() - kCslTransitionToNextAheadTime);
 
 exit:
     return;
@@ -1408,28 +1421,89 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+
+void SubMac::ListenScheduler::ScheduleTdListener(SchedInfo &aInfo)
+{
+    VerifyOrExit(Get<ThreadDirect::Listener>().IsRunning());
+    aInfo.Update(Get<ThreadDirect::Listener>().DetermineCurWindow(aInfo.GetNow()), kTdListenerPriority);
+
+exit:
+    return;
+}
+
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // ListenScheduler::SchedInfo
 
 SubMac::ListenScheduler::SchedInfo::SchedInfo(Instance &aInstance)
     : mNextFireTime(aInstance)
+    , mPriority(0)
 {
 }
 
-void SubMac::ListenScheduler::SchedInfo::UpdateTimedRxIfEarlier(const TimedRx &aTimedRx)
+void SubMac::ListenScheduler::SchedInfo::Init(const TimedRx &aTimedRx, uint8_t aPriority)
 {
-    // Updates `mTimedRx` to `aTimedRx` if `aTimedRx` is specified, has
-    // not yet ended, and starts earlier than the current `mTimedRx`.
+    // Initializes `mTimedRx` and `mPriority` directly without updating
+    // `mNextFireTime` (unlike `Update()`, which also schedules the timer
+    // for the selected window's end time).
+
+    mTimedRx  = aTimedRx;
+    mPriority = aPriority;
+}
+
+void SubMac::ListenScheduler::SchedInfo::Update(const TimedRx &aTimedRx, uint8_t aPriority)
+{
+    // Evaluates candidate `aTimedRx` against the current `mTimedRx`
+    // to determine:
+    // - Which window takes precedence right now. Earlier active or
+    //   starting window, breaking ties by higher priority.
+    // - When the scheduler timer needs to fire next. Either when the
+    //   selected window ends, or earlier if a higher priority window
+    //   starts later and may preempt it.
+
+    bool shouldReplace = false;
 
     VerifyOrExit(aTimedRx.IsSpecified());
     VerifyOrExit(!aTimedRx.HasEnded(GetNow()));
 
-    if (mTimedRx.IsSpecified())
+    if (!mTimedRx.IsSpecified() || mTimedRx.HasEnded(GetNow()))
     {
-        VerifyOrExit(aTimedRx.GetStartTime() < mTimedRx.GetStartTime());
+        shouldReplace = true;
+    }
+    else if ((mTimedRx.HasStarted(GetNow()) && aTimedRx.HasStarted(GetNow())) ||
+             (aTimedRx.GetStartTime() == mTimedRx.GetStartTime()))
+    {
+        shouldReplace = (aPriority > mPriority);
+    }
+    else if (aTimedRx.GetStartTime() < mTimedRx.GetStartTime())
+    {
+        shouldReplace = true;
+
+        if (mPriority > aPriority)
+        {
+            // Previous `mTimedRx` has higher priority and starts
+            // later. Schedule timer for when it starts in case it
+            // preempts `aTimedRx`.
+            UpdateNextFireTime(mTimedRx.GetStartTime());
+        }
+    }
+    else if (aPriority > mPriority)
+    {
+        // Candidate `aTimedRx` has higher priority and starts later.
+        // Schedule timer for when it starts in case it preempts
+        // `mTimedRx`.
+        UpdateNextFireTime(aTimedRx.GetStartTime());
     }
 
-    mTimedRx = aTimedRx;
+    if (shouldReplace)
+    {
+        mTimedRx  = aTimedRx;
+        mPriority = aPriority;
+    }
+
+    UpdateNextFireTime(mTimedRx.GetEndTime());
 
 exit:
     return;
