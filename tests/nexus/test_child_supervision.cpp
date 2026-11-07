@@ -365,6 +365,69 @@ void TestChildSupervisionWithBetterParentSearches(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
+void TestChildSupervisionAfterBetterParentFound(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25; // (seconds)
+
+    Core nexus;
+
+    Node &leader = nexus.CreateNode();
+    Node &router = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    router.SetName("ROUTER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network, attach SED to leader and router to leader");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    router.Join(leader);
+    nexus.AdvanceTime(200 * 1000);
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Degrade the link to the leader and search for a better parent");
+
+    // The search succeeds, so the child leaves the temporary rx-on period through the attach instead of the failure
+    // path, and supervision must keep working with the new parent.
+
+    SuccessOrQuit(sed.Get<Mac::Filter>().AddRssIn(leader.Get<Mac::Mac>().GetExtAddress(),
+                                                  GetTypicalRssForLinkQuality(-100, kLinkQuality1)));
+    SuccessOrQuit(leader.Get<Mac::Filter>().AddRssIn(sed.Get<Mac::Mac>().GetExtAddress(),
+                                                     GetTypicalRssForLinkQuality(-100, kLinkQuality1)));
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    nexus.AdvanceTime(10 * 1000);
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<Mle::Mle>().GetParent().GetExtAddress() == router.Get<Mac::Mac>().GetExtAddress());
+    sed.Get<SupervisionListener>().ResetCounter();
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Block traffic from child on the new parent");
+
+    router.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + 10 * 1000);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -374,6 +437,7 @@ int main(void)
     ot::Nexus::TestChildSupervisionWithDiscoveryScans();
     ot::Nexus::TestChildSupervisionChangesDuringDiscoveryScan();
     ot::Nexus::TestChildSupervisionWithBetterParentSearches();
+    ot::Nexus::TestChildSupervisionAfterBetterParentFound();
     printf("All tests passed\n");
     return 0;
 }
