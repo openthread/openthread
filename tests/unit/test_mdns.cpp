@@ -7773,6 +7773,110 @@ void TestIp6AddrResolver(void)
     VerifyOrQuit(dnsMsg == nullptr);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Verify unrelated and zero-TTL responses do not stop initial query retries.");
+
+    SuccessOrQuit(mdns->StopIp6AddressResolver(resolver));
+    AdvanceTime(10);
+    sDnsMessages.Clear();
+    sAddrCallbacks.Clear();
+
+    ClearAllBytes(resolver2);
+    resolver2.mHostName     = "newhost";
+    resolver2.mInfraIfIndex = kInfraIfIndex;
+    resolver2.mCallback     = HandleAddrResultAlternate;
+
+    SuccessOrQuit(addrs[4].mAddress.FromString("fd00::99"));
+    addrs[4].mTtl = 120;
+
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver2));
+
+    AdvanceTime(DetermineQueryWaitTime(0));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    sDnsMessages.Clear();
+
+    SendHostAddrResponse("otherhost.local.", &addrs[4], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    addrs[0].mTtl = 0;
+    SendHostAddrResponse("newhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    AdvanceTime(DetermineQueryWaitTime(1));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver2);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Verify all 4 refresh queries fire despite frequent responses during TTL jitter windows.");
+
+    addrs[0].mTtl = 120;
+    addrs[1].mTtl = 800;
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("newhost.local.", addrs, 2, /* aCacheFlush */ true, kInAnswerSection);
+    AdvanceTime(1);
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    sAddrCallbacks.Clear();
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(96 * 1000 - 2);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    {
+        uint8_t refreshCount = 0;
+
+        for (uint16_t step = 0; step < 110; step++)
+        {
+            SendHostAddrResponse("otherhost.local.", &addrs[4], 1, /* aCacheFlush */ true, kInAnswerSection);
+            SendHostAddrResponse("newhost.local.", &addrs[1], 1, /* aCacheFlush */ false, kInAnswerSection);
+
+            AdvanceTime(200);
+
+            for (dnsMsg = sDnsMessages.GetHead(); dnsMsg != nullptr; dnsMsg = dnsMsg->GetNext())
+            {
+                dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+                dnsMsg->ValidateAsQueryFor(resolver2);
+                refreshCount++;
+            }
+
+            sDnsMessages.Clear();
+        }
+
+        VerifyOrQuit(refreshCount == kNumRefreshQueries);
+    }
+
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Verify restarting passive resolver past 80%% of TTL respects initial query delay.");
+
+    SendHostAddrResponse("newhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+    AdvanceTime(1);
+    sAddrCallbacks.Clear();
+    sDnsMessages.Clear();
+
+    SuccessOrQuit(mdns->StopIp6AddressResolver(resolver2));
+    AdvanceTime(100 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver2));
+    AdvanceTime(1);
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    sAddrCallbacks.Clear();
+
+    AdvanceTime(18);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(200);
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    sDnsMessages.Clear();
+
+    SendHostAddrResponse("newhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+    AdvanceTime(20 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);

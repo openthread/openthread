@@ -5597,6 +5597,7 @@ bool Core::CacheRecordInfo::RefreshTtl(uint32_t aTtl)
     mLastRxTime = TimerMilli::GetNow();
     mTtl        = aTtl;
     mQueryCount = 0;
+    DetermineNextQueryTime();
 
     return changed;
 }
@@ -5607,45 +5608,46 @@ void Core::CacheRecordInfo::UpdateStateAfterQuery(TimeMilli aNow)
 {
     VerifyOrExit(IsPresent());
 
-    // If the less than half TTL remains, then this record would not
-    // be included as "Known-Answer" in the send query, so we can
-    // count it towards queries to refresh this record.
+    // If less than half TTL remains, then this record would not be
+    // included as "Known-Answer" in the sent query, so we can count
+    // it towards queries to refresh this record.
 
     VerifyOrExit(LessThanHalfTtlRemains(aNow));
 
     if (mQueryCount < kNumberOfQueries)
     {
         mQueryCount++;
+        DetermineNextQueryTime();
+        SkipPastQueries(aNow);
     }
 
 exit:
     return;
 }
 
-void Core::CacheRecordInfo::UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry)
+void Core::CacheRecordInfo::SkipPastQueries(TimeMilli aNow)
 {
-    TimeMilli now;
-    TimeMilli expireTime;
-
     VerifyOrExit(IsPresent());
 
-    now        = TimerMilli::GetNow();
-    expireTime = GetExpireTime();
-
-    aCacheEntry.SetFireTime(expireTime);
-
-    // Determine next query time
-
-    for (uint8_t attemptIndex = mQueryCount; attemptIndex < kNumberOfQueries; attemptIndex++)
+    while ((mQueryCount < kNumberOfQueries) && (mNextQueryTime <= aNow))
     {
-        TimeMilli queryTime = GetQueryTime(attemptIndex);
+        mQueryCount++;
+        DetermineNextQueryTime();
+    }
 
-        if (queryTime > now)
-        {
-            queryTime += Random::NonCrypto::GenerateUpToExcluding(GetClampedTtl() * kQueryTtlVariation);
-            aCacheEntry.ScheduleQuery(queryTime);
-            break;
-        }
+exit:
+    return;
+}
+
+void Core::CacheRecordInfo::UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry) const
+{
+    VerifyOrExit(IsPresent());
+
+    aCacheEntry.SetFireTime(GetExpireTime());
+
+    if (mQueryCount < kNumberOfQueries)
+    {
+        aCacheEntry.ScheduleQuery(mNextQueryTime);
     }
 
 exit:
@@ -5686,10 +5688,11 @@ TimeMilli Core::CacheRecordInfo::GetExpireTime(void) const
     return mLastRxTime + TimeMilli::SecToMsec(GetClampedTtl());
 }
 
-TimeMilli Core::CacheRecordInfo::GetQueryTime(uint8_t aAttemptIndex) const
+void Core::CacheRecordInfo::DetermineNextQueryTime(void)
 {
     // Queries are sent at 80%, 85%, 90% and 95% of TTL plus a random
-    // variation of 2% (added when sceduling)
+    // variation of 2%. We pre-calculate the jittered query time to
+    // ensure `DetermineNextFireTime()` uses a consistent value.
 
     static const uint32_t kTtlFactors[kNumberOfQueries] = {
         80 * 1000 / 100,
@@ -5698,9 +5701,16 @@ TimeMilli Core::CacheRecordInfo::GetQueryTime(uint8_t aAttemptIndex) const
         95 * 1000 / 100,
     };
 
-    OT_ASSERT(aAttemptIndex < kNumberOfQueries);
+    uint32_t ttl;
 
-    return mLastRxTime + kTtlFactors[aAttemptIndex] * GetClampedTtl();
+    VerifyOrExit(IsPresent() && (mQueryCount < kNumberOfQueries));
+
+    ttl            = GetClampedTtl();
+    mNextQueryTime = mLastRxTime + kTtlFactors[mQueryCount] * ttl +
+                     Random::NonCrypto::GenerateUpToExcluding(ttl * kQueryTtlVariation);
+
+exit:
+    return;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -5815,6 +5825,7 @@ Error Core::CacheEntry::Add(const ResultCallback &aCallback)
         bool shouldStart = false;
 
         SetIsActive(true);
+        SkipPastRecordQueries(TimerMilli::GetNow());
 
         switch (mType)
         {
@@ -5993,6 +6004,7 @@ Core::ResultCallback *Core::CacheEntry::FindCallbackMatching(const ResultCallbac
 
 void Core::CacheEntry::DetermineNextFireTime(void)
 {
+    ClearFireTime();
     mQueryPending = false;
 
     if (mContinuousRetry)
@@ -6024,6 +6036,27 @@ void Core::CacheEntry::DetermineNextFireTime(void)
         break;
     case kRecordCache:
         As<RecordCache>().DetermineRecordFireTime();
+        break;
+    }
+}
+
+void Core::CacheEntry::SkipPastRecordQueries(TimeMilli aNow)
+{
+    switch (mType)
+    {
+    case kBrowseCache:
+        As<BrowseCache>().SkipPastRecordQueries(aNow);
+        break;
+    case kSrvCache:
+    case kTxtCache:
+        As<ServiceCache>().SkipPastRecordQueries(aNow);
+        break;
+    case kIp6AddrCache:
+    case kIp4AddrCache:
+        As<AddrCache>().SkipPastRecordQueries(aNow);
+        break;
+    case kRecordCache:
+        As<RecordCache>().SkipPastRecordQueries(aNow);
         break;
     }
 }
@@ -6378,6 +6411,14 @@ void Core::BrowseCache::UpdateRecordStateAfterQuery(TimeMilli aNow)
     }
 }
 
+void Core::BrowseCache::SkipPastRecordQueries(TimeMilli aNow)
+{
+    for (PtrEntry &ptrEntry : mPtrEntries)
+    {
+        ptrEntry.mRecord.SkipPastQueries(aNow);
+    }
+}
+
 void Core::BrowseCache::DetermineRecordFireTime(void)
 {
     for (PtrEntry &ptrEntry : mPtrEntries)
@@ -6518,6 +6559,8 @@ exit:
 
 void Core::ServiceCache::UpdateRecordStateAfterQuery(TimeMilli aNow) { mRecord.UpdateStateAfterQuery(aNow); }
 
+void Core::ServiceCache::SkipPastRecordQueries(TimeMilli aNow) { mRecord.SkipPastQueries(aNow); }
+
 void Core::ServiceCache::DetermineRecordFireTime(void) { mRecord.UpdateQueryAndFireTimeOn(*this); }
 
 bool Core::ServiceCache::ShouldStartInitialQueries(void) const
@@ -6633,12 +6676,15 @@ void Core::SrvCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
         }
     }
 
+    if (mRecord.IsPresent())
+    {
+        StopQueryRetries();
+    }
+
     VerifyOrExit(changed);
 
     if (mRecord.IsPresent())
     {
-        StopQueryRetries();
-
         // If not present already, we add a passive `TxtCache` for the
         // same service name, and an `Ip6AddrCache` for the host name.
 
@@ -6809,12 +6855,12 @@ void Core::TxtCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
         }
     }
 
-    VerifyOrExit(changed);
-
     if (mRecord.IsPresent())
     {
         StopQueryRetries();
     }
+
+    VerifyOrExit(changed);
 
     ConvertTo(result);
     InvokeCallbacks(result);
@@ -6984,6 +7030,14 @@ void Core::AddrCache::UpdateRecordStateAfterQuery(TimeMilli aNow)
     }
 }
 
+void Core::AddrCache::SkipPastRecordQueries(TimeMilli aNow)
+{
+    for (AddrEntry &entry : mCommittedEntries)
+    {
+        entry.mRecord.SkipPastQueries(aNow);
+    }
+}
+
 void Core::AddrCache::DetermineRecordFireTime(void)
 {
     for (AddrEntry &entry : mCommittedEntries)
@@ -7134,6 +7188,8 @@ void Core::AddrCache::CommitNewResponseEntries(void)
 {
     bool changed = false;
 
+    VerifyOrExit(!mNewEntries.IsEmpty());
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Determine whether there is any changes to the list of addresses
     // between the `mNewEntries` and `mCommittedEntries` lists.
@@ -7217,7 +7273,10 @@ void Core::AddrCache::CommitNewResponseEntries(void)
         }
     }
 
-    StopQueryRetries();
+    if (!mCommittedEntries.IsEmpty())
+    {
+        StopQueryRetries();
+    }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invoke callbacks if there is any change.
@@ -7233,6 +7292,9 @@ void Core::AddrCache::CommitNewResponseEntries(void)
 
     DetermineNextFireTime();
     ScheduleTimer();
+
+exit:
+    return;
 }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
@@ -7428,6 +7490,14 @@ void Core::RecordCache::UpdateRecordStateAfterQuery(TimeMilli aNow)
     }
 }
 
+void Core::RecordCache::SkipPastRecordQueries(TimeMilli aNow)
+{
+    for (RecordEntry &entry : mCommittedEntries)
+    {
+        entry.mRecord.SkipPastQueries(aNow);
+    }
+}
+
 void Core::RecordCache::ProcessResponseRecord(const Message        &aMessage,
                                               const ResourceRecord &aRecord,
                                               uint16_t              aRecordOffset)
@@ -7489,6 +7559,8 @@ void Core::RecordCache::CommitNewResponseEntries(void)
     // response. We process and commit all the new records matching
     // the same type, together.
 
+    VerifyOrExit(!mNewEntries.IsEmpty());
+
     while (!mNewEntries.IsEmpty())
     {
         uint16_t recordType = mNewEntries.GetHead()->mType;
@@ -7500,6 +7572,9 @@ void Core::RecordCache::CommitNewResponseEntries(void)
 
     DetermineNextFireTime();
     ScheduleTimer();
+
+exit:
+    return;
 }
 
 void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
