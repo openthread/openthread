@@ -223,7 +223,7 @@ void TestChildSupervisionWithDiscoveryScans(void)
 void TestChildSupervisionChangesDuringDiscoveryScan(void)
 {
     static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
-    static constexpr uint32_t kScanDuration = 10 * 1000; // (msec)
+    static constexpr uint32_t kScanWaitTime = 10 * 1000; // (msec)
 
     Core nexus;
 
@@ -260,7 +260,7 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
     sed.Get<SupervisionListener>().SetTimeout(0);
 
     // Wait past the fire time the check timeout had before it was disabled.
-    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + kScanDuration);
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + kScanWaitTime);
 
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
 
@@ -268,7 +268,7 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
     Log("Run a discovery scan with the supervision check disabled");
 
     StartDiscoverScan(sed, leader);
-    nexus.AdvanceTime(kScanDuration);
+    nexus.AdvanceTime(kScanWaitTime);
 
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
 
@@ -279,7 +279,7 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
 
     StartDiscoverScan(sed, leader);
     sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
-    nexus.AdvanceTime(kScanDuration);
+    nexus.AdvanceTime(kScanWaitTime);
 
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
 
