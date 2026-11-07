@@ -299,7 +299,9 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
     nexus.AdvanceTime(Mle::DiscoverScanner::kDefaultScanDuration / 2);
     VerifyOrQuit(sed.Get<Mle::DiscoverScanner>().IsInProgress());
     SuccessOrQuit(sed.Get<Mle::Mle>().SetDeviceMode(sedMode));
-    nexus.AdvanceTime(kScanDuration);
+
+    // Wait just under a full check timeout, past the fire time the check timeout had before the rx-on mode change.
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) - 1000);
 
     VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
