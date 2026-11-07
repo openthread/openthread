@@ -32,6 +32,7 @@
 #include "platform/nexus_node.hpp"
 #include "thread/child_supervision.hpp"
 #include "thread/child_table.hpp"
+#include "thread/discover_scanner.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -158,12 +159,285 @@ void TestChildSupervision(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
+static void StartDiscoverScan(Node &aChild, Node &aParent)
+{
+    SuccessOrQuit(aChild.Get<Mle::DiscoverScanner>().Discover(
+        Mac::ChannelMask(1UL << aParent.Get<Mac::Mac>().GetPanChannel()), Mac::kPanIdBroadcast, /* aJoiner */ false,
+        /* aEnableFiltering */ false, /* aFilterIndexes */ nullptr, nullptr, nullptr));
+}
+
+void TestChildSupervisionWithDiscoveryScans(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
+    static constexpr uint32_t kScanPeriod   = 10 * 1000; // (msec)
+    static constexpr uint32_t kMaxWaitTime  = 60 * 1000; // (msec)
+
+    Core     nexus;
+    uint32_t elapsed = 0;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Block traffic from child on parent while child runs periodic discovery scans");
+
+    // Data polls from the child are still acked by the radio, so only the supervision check can detect the lost
+    // parent. Scans more frequent than the check timeout must not postpone the detection.
+
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+
+    while (sed.Get<Mle::Mle>().IsChild() && (elapsed < kMaxWaitTime))
+    {
+        StartDiscoverScan(sed, leader);
+
+        nexus.AdvanceTime(kScanPeriod);
+        elapsed += kScanPeriod;
+    }
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
+void TestChildSupervisionChangesDuringDiscoveryScan(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
+    static constexpr uint32_t kScanWaitTime = 10 * 1000; // (msec)
+
+    Core nexus;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+    sed.Get<SupervisionListener>().ResetCounter();
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Disable the supervision check during a discovery scan");
+
+    StartDiscoverScan(sed, leader);
+    sed.Get<SupervisionListener>().SetTimeout(0);
+
+    // Wait past the fire time the check timeout had before it was disabled.
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + kScanWaitTime);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Run a discovery scan with the supervision check disabled");
+
+    StartDiscoverScan(sed, leader);
+    nexus.AdvanceTime(kScanWaitTime);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Enable the supervision check during a discovery scan");
+
+    // The check timeout starts in full when enabled, so the end of the scan must not fire it from a stale fire time.
+
+    StartDiscoverScan(sed, leader);
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+    nexus.AdvanceTime(kScanWaitTime);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Switch the child to rx-on and back to rx-off during a discovery scan");
+
+    // The rx-on mode change stops the listener while paused, and the rx-off one starts it with a full check timeout,
+    // so the end of the scan must neither fire a stale check nor leave supervision disabled.
+
+    Mle::DeviceMode sedMode = sed.Get<Mle::Mle>().GetDeviceMode();
+
+    sed.Get<SupervisionListener>().ResetCounter();
+
+    StartDiscoverScan(sed, leader);
+    SuccessOrQuit(
+        sed.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(sedMode.Get() | Mle::DeviceMode::kModeRxOnWhenIdle)));
+    nexus.AdvanceTime(Mle::DiscoverScanner::kDefaultScanDuration / 2);
+    VerifyOrQuit(sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    SuccessOrQuit(sed.Get<Mle::Mle>().SetDeviceMode(sedMode));
+
+    // Wait just under a full check timeout, past the fire time the check timeout had before the rx-on mode change.
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) - 1000);
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    // Supervision must still detect a lost parent after the sequence.
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + 10 * 1000);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
+void TestChildSupervisionWithBetterParentSearches(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
+    static constexpr uint32_t kSearchPeriod = 10 * 1000; // (msec)
+    static constexpr uint32_t kMaxWaitTime  = 60 * 1000; // (msec)
+
+    Core     nexus;
+    uint32_t elapsed = 0;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Block traffic from child on parent while child runs periodic better parent searches");
+
+    // Searches more frequent than the check timeout must not postpone the detection of the lost parent.
+
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+
+    while (sed.Get<Mle::Mle>().IsChild() && (elapsed < kMaxWaitTime))
+    {
+        SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+
+        nexus.AdvanceTime(kSearchPeriod);
+        elapsed += kSearchPeriod;
+    }
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
+void TestChildSupervisionAfterBetterParentFound(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25; // (seconds)
+
+    Core nexus;
+
+    Node &leader = nexus.CreateNode();
+    Node &router = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    router.SetName("ROUTER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network, attach SED to leader and router to leader");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    router.Join(leader);
+    nexus.AdvanceTime(200 * 1000);
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Degrade the link to the leader and search for a better parent");
+
+    // The search succeeds, so the child leaves the temporary rx-on period through the attach instead of the failure
+    // path, and supervision must keep working with the new parent.
+
+    SuccessOrQuit(sed.Get<Mac::Filter>().AddRssIn(leader.Get<Mac::Mac>().GetExtAddress(),
+                                                  GetTypicalRssForLinkQuality(-100, kLinkQuality1)));
+    SuccessOrQuit(leader.Get<Mac::Filter>().AddRssIn(sed.Get<Mac::Mac>().GetExtAddress(),
+                                                     GetTypicalRssForLinkQuality(-100, kLinkQuality1)));
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    nexus.AdvanceTime(10 * 1000);
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<Mle::Mle>().GetParent().GetExtAddress() == router.Get<Mac::Mac>().GetExtAddress());
+    sed.Get<SupervisionListener>().ResetCounter();
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Block traffic from child on the new parent");
+
+    router.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + 10 * 1000);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
 } // namespace Nexus
 } // namespace ot
 
 int main(void)
 {
     ot::Nexus::TestChildSupervision();
+    ot::Nexus::TestChildSupervisionWithDiscoveryScans();
+    ot::Nexus::TestChildSupervisionChangesDuringDiscoveryScan();
+    ot::Nexus::TestChildSupervisionWithBetterParentSearches();
+    ot::Nexus::TestChildSupervisionAfterBetterParentFound();
     printf("All tests passed\n");
     return 0;
 }

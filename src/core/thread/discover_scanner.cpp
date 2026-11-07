@@ -150,7 +150,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     // For rx-off-when-idle device, temporarily enable receiver during discovery procedure.
     if (!Get<Mle>().IsDisabled() && !Get<Mle>().IsRxOnWhenIdle())
     {
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        Get<MeshForwarder>().SuspendSleepyOperation();
     }
 
     Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, Ip6::Address::GetLinkLocalAllRoutersMulticast());
@@ -253,7 +253,7 @@ void DiscoverScanner::HandleDiscoverComplete(void)
     // Restore Data Polling or CSL for rx-off-when-idle device.
     if (!Get<Mle>().IsDisabled() && !Get<Mle>().IsRxOnWhenIdle())
     {
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+        Get<MeshForwarder>().ResumeSleepyOperation();
     }
 
     switch (mState)
