@@ -757,29 +757,24 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
                 mReceiveConfig.mIsFilterEnabled = false;
                 error                           = kErrorNone;
             }
+            else if (StringMatch(aArgs[0], "-"))
+            {
+                mReceiveConfig.mFilterAddress.SetNone();
+                error = kErrorNone;
+            }
+            else if (strlen(aArgs[0]) == 2 * sizeof(Mac::ExtAddress))
+            {
+                Mac::ExtAddress extAddress;
+
+                SuccessOrExit(error = Utils::CmdLineParser::ParseAsHexString(aArgs[0], extAddress.m8));
+                mReceiveConfig.mFilterAddress.SetExtended(extAddress);
+            }
             else
             {
-                Mac::Address dstAddress;
+                Mac::ShortAddress shortAddress;
 
-                if (StringMatch(aArgs[0], "-"))
-                {
-                    dstAddress.SetNone();
-                    error = kErrorNone;
-                }
-                else if (strlen(aArgs[0]) == 2 * sizeof(Mac::ExtAddress))
-                {
-                    Mac::ExtAddress extAddress;
-
-                    SuccessOrExit(error = Utils::CmdLineParser::ParseAsHexString(aArgs[0], extAddress.m8));
-                    mReceiveConfig.mFilterAddress.SetExtended(extAddress);
-                }
-                else
-                {
-                    Mac::ShortAddress shortAddress;
-
-                    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[0], shortAddress));
-                    mReceiveConfig.mFilterAddress.SetShort(shortAddress);
-                }
+                SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[0], shortAddress));
+                mReceiveConfig.mFilterAddress.SetShort(shortAddress);
             }
 
             ExitNow();
