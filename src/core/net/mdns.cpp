@@ -7137,6 +7137,8 @@ void Core::AddrCache::CommitNewResponseEntries(void)
 {
     bool changed = false;
 
+    VerifyOrExit(!mNewEntries.IsEmpty());
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Determine whether there is any changes to the list of addresses
     // between the `mNewEntries` and `mCommittedEntries` lists.
@@ -7236,6 +7238,9 @@ void Core::AddrCache::CommitNewResponseEntries(void)
 
     DetermineNextFireTime();
     ScheduleTimer();
+
+exit:
+    return;
 }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
@@ -7492,6 +7497,8 @@ void Core::RecordCache::CommitNewResponseEntries(void)
     // response. We process and commit all the new records matching
     // the same type, together.
 
+    VerifyOrExit(!mNewEntries.IsEmpty());
+
     while (!mNewEntries.IsEmpty())
     {
         uint16_t recordType = mNewEntries.GetHead()->mType;
@@ -7503,6 +7510,9 @@ void Core::RecordCache::CommitNewResponseEntries(void)
 
     DetermineNextFireTime();
     ScheduleTimer();
+
+exit:
+    return;
 }
 
 void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
