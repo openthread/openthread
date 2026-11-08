@@ -6832,6 +6832,17 @@ void TestSrvResolver(void)
     }
 
     VerifyOrQuit(dnsMsg == nullptr);
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send response with unchanged SRV record and TTL. Ensure query retries stop.");
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 120, kInAnswerSection);
+
+    AdvanceTime(40 * 1000);
+
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
@@ -7258,6 +7269,17 @@ void TestTxtResolver(void)
     }
 
     VerifyOrQuit(dnsMsg == nullptr);
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send response with unchanged TXT record and TTL. Ensure query retries stop.");
+
+    SendTxtResponse("mysrv._srv._udp.local.", kTxtData1, sizeof(kTxtData1), 120, kInAnswerSection);
+
+    AdvanceTime(40 * 1000);
+
+    VerifyOrQuit(sTxtCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 

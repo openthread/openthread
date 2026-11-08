@@ -6633,12 +6633,15 @@ void Core::SrvCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
         }
     }
 
+    if (mRecord.IsPresent())
+    {
+        StopQueryRetries();
+    }
+
     VerifyOrExit(changed);
 
     if (mRecord.IsPresent())
     {
-        StopQueryRetries();
-
         // If not present already, we add a passive `TxtCache` for the
         // same service name, and an `Ip6AddrCache` for the host name.
 
@@ -6809,12 +6812,12 @@ void Core::TxtCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
         }
     }
 
-    VerifyOrExit(changed);
-
     if (mRecord.IsPresent())
     {
         StopQueryRetries();
     }
+
+    VerifyOrExit(changed);
 
     ConvertTo(result);
     InvokeCallbacks(result);
