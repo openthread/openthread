@@ -7795,6 +7795,39 @@ void TestIp6AddrResolver(void)
     VerifyOrQuit(dnsMsg == nullptr);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Verify unrelated responses do not stop initial query retries.");
+
+    SuccessOrQuit(mdns->StopIp6AddressResolver(resolver));
+    AdvanceTime(10);
+    sDnsMessages.Clear();
+    sAddrCallbacks.Clear();
+
+    ClearAllBytes(resolver2);
+    resolver2.mHostName     = "newhost";
+    resolver2.mInfraIfIndex = kInfraIfIndex;
+    resolver2.mCallback     = HandleAddrResultAlternate;
+
+    SuccessOrQuit(addrs[4].mAddress.FromString("fd00::99"));
+    addrs[4].mTtl = 120;
+
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver2));
+
+    AdvanceTime(DetermineQueryWaitTime(0));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    sDnsMessages.Clear();
+
+    SendHostAddrResponse("otherhost.local.", &addrs[4], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    AdvanceTime(DetermineQueryWaitTime(1));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver2);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
