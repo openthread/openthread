@@ -257,6 +257,8 @@ Throughput ----------------------------------------------- 75.6 Kbits/sec
 
 The test case `test_frame_formats` tests whether the RCP supports sending and receiving 802.15.4 frames of all formats.
 
+In the RX direction, the DUT disables promiscuous mode and configures its radio address filter (`diag radio panid`, `diag radio shortaddr` and `diag radio extaddr`) with the destination of each frame, so the RX results also cover the radio address filtering behaviors documented in `otPlatRadioEnable()`. For example, frames without a destination address must be accepted. The reference device stays in promiscuous mode, so the TX results do not depend on its address filter. If the DUT does not support the `diag radio promiscuous` command, the test prints a warning and receives in promiscuous mode, so the RX results do not cover address filtering.
+
 ```bash
 tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_frame_formats
 1 TX ver:2003,Cmd,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0 --------------- OK
