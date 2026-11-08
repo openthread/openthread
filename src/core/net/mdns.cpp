@@ -7222,7 +7222,10 @@ void Core::AddrCache::CommitNewResponseEntries(void)
         }
     }
 
-    StopQueryRetries();
+    if (!mCommittedEntries.IsEmpty())
+    {
+        StopQueryRetries();
+    }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invoke callbacks if there is any change.

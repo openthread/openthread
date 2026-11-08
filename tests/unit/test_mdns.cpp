@@ -7795,7 +7795,7 @@ void TestIp6AddrResolver(void)
     VerifyOrQuit(dnsMsg == nullptr);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Verify unrelated responses do not stop initial query retries.");
+    Log("Verify unrelated and zero-TTL responses do not stop initial query retries.");
 
     SuccessOrQuit(mdns->StopIp6AddressResolver(resolver));
     AdvanceTime(10);
@@ -7817,6 +7817,9 @@ void TestIp6AddrResolver(void)
     sDnsMessages.Clear();
 
     SendHostAddrResponse("otherhost.local.", &addrs[4], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    addrs[0].mTtl = 0;
+    SendHostAddrResponse("newhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
 
     AdvanceTime(DetermineQueryWaitTime(1));
     VerifyOrQuit(!sDnsMessages.IsEmpty());
