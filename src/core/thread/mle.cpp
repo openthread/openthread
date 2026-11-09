@@ -348,6 +348,7 @@ void Mle::Restore(void)
 {
     Settings::NetworkInfo networkInfo;
     Settings::ParentInfo  parentInfo;
+    uint16_t              rloc16;
 
     IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
     IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
@@ -370,35 +371,17 @@ void Mle::Restore(void)
 
     mLastSavedRole = static_cast<DeviceRole>(networkInfo.GetRole());
 
+    Get<Mac::Mac>().SetExtAddress(networkInfo.GetExtAddress());
+    mMeshLocalEid.GetAddress().SetIid(networkInfo.GetMeshLocalIid());
+
+    rloc16 = networkInfo.GetRloc16();
+    VerifyOrExit(IsValidRloc16(rloc16));
+
     switch (mLastSavedRole)
     {
     case kRoleChild:
-    case kRoleRouter:
-    case kRoleLeader:
-        break;
+        VerifyOrExit(IsChildRloc16(rloc16));
 
-    default:
-        ExitNow();
-    }
-
-#if OPENTHREAD_MTD
-    if (IsChildRloc16(networkInfo.GetRloc16()))
-#endif
-    {
-        Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
-        mRloc16 = networkInfo.GetRloc16();
-    }
-    Get<Mac::Mac>().SetExtAddress(networkInfo.GetExtAddress());
-
-    mMeshLocalEid.GetAddress().SetIid(networkInfo.GetMeshLocalIid());
-
-    if (networkInfo.GetRloc16() == kInvalidRloc16)
-    {
-        ExitNow();
-    }
-
-    if (IsChildRloc16(networkInfo.GetRloc16()))
-    {
         if (Get<Settings>().Read(parentInfo) != kErrorNone)
         {
             // If the restored RLOC16 corresponds to an end-device, it
@@ -407,8 +390,7 @@ void Mle::Restore(void)
             // setting by skipping the re-attach ("Child Update Request"
             // exchange) and going through the full attach process.
 
-            LogWarn("Invalid settings - no saved parent info with valid end-device RLOC16 0x%04x",
-                    networkInfo.GetRloc16());
+            LogWarn("Invalid settings - no saved parent info with valid end-device RLOC16 0x%04x", rloc16);
             ExitNow();
         }
 
@@ -417,19 +399,29 @@ void Mle::Restore(void)
         mParent.SetVersion(parentInfo.GetVersion());
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData));
-        mParent.SetRloc16(ParentRloc16ForRloc16(networkInfo.GetRloc16()));
+        mParent.SetRloc16(ParentRloc16ForRloc16(rloc16));
         mParent.SetState(Neighbor::kStateRestored);
 
         mPreviousParentRloc = mParent.GetRloc16();
-    }
+        break;
+
 #if OPENTHREAD_FTD
-    else
-    {
-        SetRouterId(RouterIdFromRloc16(GetRloc16()));
+    case kRoleRouter:
+    case kRoleLeader:
+        VerifyOrExit(IsRouterRloc16(rloc16));
+
+        SetRouterId(RouterIdFromRloc16(rloc16));
         SetPreviousPartitionId(networkInfo.GetPreviousPartitionId());
         Get<ChildTable>().Restore();
-    }
+        break;
 #endif
+
+    default:
+        ExitNow();
+    }
+
+    Get<Mac::Mac>().SetShortAddress(rloc16);
+    mRloc16 = rloc16;
 
     // Successfully restored the network information from
     // non-volatile settings after boot.
@@ -2451,7 +2443,7 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
     case kRoleChild:
         SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-        if (!HasMatchingRouterIdWith(sourceAddress))
+        if (sourceAddress != mParent.GetRloc16())
         {
             IgnoreError(BecomeDetached());
             ExitNow();
@@ -4103,6 +4095,7 @@ Error Mle::RxMessage::ReadLeaderDataTlv(LeaderData &aLeaderData) const
 
     SuccessOrExit(error = Tlv::Find<LeaderDataTlv>(*this, tlvValue));
     tlvValue.Get(aLeaderData);
+    VerifyOrExit(IsRouterIdValid(aLeaderData.GetLeaderRouterId()), error = kErrorParse);
 
 exit:
     return error;
@@ -5235,6 +5228,8 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeParentResponse, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
+    VerifyOrExit(IsValidRloc16(sourceAddress), error = kErrorParse);
+
     VerifyOrExit(mState != kStateChildIdRequest, error = kErrorInvalidState);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadVersionTlv(version));
@@ -5418,7 +5413,8 @@ void Mle::Attacher::HandleChildIdResponse(RxInfo &aRxInfo)
     VerifyOrExit(mState == kStateChildIdRequest);
 
     SuccessOrExit(error = Tlv::Find<Address16Tlv>(aRxInfo.mMessage, shortAddress));
-    VerifyOrExit(RouterIdMatch(sourceAddress, shortAddress), error = kErrorRejected);
+    VerifyOrExit(IsValidRloc16(shortAddress) && IsChildRloc16(shortAddress), error = kErrorRejected);
+    VerifyOrExit(sourceAddress == ParentRloc16ForRloc16(shortAddress), error = kErrorRejected);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
