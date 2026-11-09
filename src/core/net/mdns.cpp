@@ -5993,6 +5993,7 @@ Core::ResultCallback *Core::CacheEntry::FindCallbackMatching(const ResultCallbac
 
 void Core::CacheEntry::DetermineNextFireTime(void)
 {
+    ClearFireTime();
     mQueryPending = false;
 
     if (mContinuousRetry)
