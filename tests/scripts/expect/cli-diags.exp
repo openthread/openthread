@@ -382,4 +382,60 @@ expect_line "Done"
 send "diag stop\n"
 expect_line "Done"
 
+send_user "radio receive filter none test\n"
+spawn_node 2
+switch_node 1
+send "diag start\n"
+expect_line "Done"
+
+send "diag channel 11\n"
+expect_line "Done"
+
+send "diag radio receive filter 0xaaaa\n"
+expect_line "Done"
+
+send "diag radio receive filter -\n"
+expect_line "Done"
+
+send "diag radio receive filter enable\n"
+expect_line "Done"
+
+send "diag radio receive async 1 p\n"
+expect_line "Done"
+
+switch_node 2
+send "diag start\n"
+expect_line "Done"
+
+send "diag channel 11\n"
+expect_line "Done"
+
+send "diag frame 011800ddddaaaa0000\n"
+expect_line "Done"
+
+send "diag send 1\n"
+expect_line "Done"
+
+send "diag frame 0120000000\n"
+expect_line "Done"
+
+send "diag send 1\n"
+expect_line "Done"
+
+send "diag stop\n"
+expect_line "Done"
+
+switch_node 1
+expect_line {0, rssi:-?[0-9]+, lqi:[0-9]+, len:5, psdu:012000[0-9a-f]{4}}
+
+send "diag stats\n"
+expect_line "received packets: 1"
+expect_line "Done"
+
+send "diag radio receive filter disable\n"
+expect_line "Done"
+
+send "diag stop\n"
+expect_line "Done"
+
 dispose_all
