@@ -75,25 +75,23 @@ def verify(pv):
         return False
 
     def _verify_br1_forwards_ping():
-        # The packet is forwarded as MPL-encapsulated ICMPv6 Echo Request to ff03::fc
-        pkts.filter_wpan_src64(vars['BR_1']).\
+        pkts.filter_wpan().\
+            filter_MPL(vars['BR_1_RLOC']).\
             filter_ping_request().\
             filter(lambda p: p.ipv6.dst == 'ff03::fc' or\
                              p.ipv6.dst == Ipv6Addr(vars['MA1'])).\
-            filter(_is_from_br1).\
             must_next()
 
-    def _verify_br1_does_not_forward_ping():
-        # We only check for a limited range of packets to avoid finding the forwarded ping from later steps.
-        start_idx = pkts.index
-        stop_idx = (min(start_idx[0] + 100, len(pkts)), min(start_idx[1] + 100, len(pkts)))
-        pkts.range(start_idx, stop_idx).\
-            filter_wpan_src64(vars['BR_1']).\
+    def _verify_br1_does_not_forward_ping(min_timestamp=None):
+        f = pkts.copy().\
+            filter_wpan().\
+            filter_MPL(vars['BR_1_RLOC']).\
             filter_ping_request().\
             filter(lambda p: p.ipv6.dst == 'ff03::fc' or\
-                             p.ipv6.dst == Ipv6Addr(vars['MA1'])).\
-            filter(_is_from_br1).\
-            must_not_next()
+                             p.ipv6.dst == Ipv6Addr(vars['MA1']))
+        if min_timestamp is not None:
+            f = f.filter(lambda p: min_timestamp <= p.sniff_timestamp <= min_timestamp + 10.0)
+        f.must_not_next()
 
     # Step 0
     # - Device: BR_1 (DUT)
@@ -131,6 +129,7 @@ def verify(pv):
     #   - N/A
     print("Step 2: Host sends an ICMPv6 Echo (ping) Request packet to the multicast address, MA1.")
     pkts.filter_ping_request().\
+        filter_eth().\
         filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['MA1'])).\
         filter(lambda p: p.ipv6.src == Ipv6Addr(vars['HOST_BACKBONE_ULA'])).\
         must_next()
@@ -152,6 +151,7 @@ def verify(pv):
     #   - N/A
     print("Step 4: Router automatically unicasts an ICMPv6 Echo (ping) Reply packet back to Host.")
     pkts.filter_ping_reply().\
+        filter_eth().\
         filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['HOST_BACKBONE_ULA'])).\
         must_next()
 
@@ -183,7 +183,8 @@ def verify(pv):
     # - Pass Criteria:
     #   - N/A
     print("Step 7: Host sends an ICMPv6 Echo (ping) Request packet to the multicast address, MA1.")
-    pkts.filter_ping_request().\
+    host_ping = pkts.filter_ping_request().\
+        filter_eth().\
         filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['MA1'])).\
         filter(lambda p: p.ipv6.src == Ipv6Addr(vars['HOST_BACKBONE_ULA'])).\
         must_next()
@@ -195,7 +196,7 @@ def verify(pv):
     #   - The DUT MUST NOT forward the ICMPv6 Echo (ping) Request packet with multicast address, MA1, to its Thread
     #     Network.
     print("Step 8: BR_1 does not forward the ping request packet to its Thread Network.")
-    _verify_br1_does_not_forward_ping()
+    _verify_br1_does_not_forward_ping(min_timestamp=host_ping.sniff_timestamp)
 
     # Step 9
     # - Device: Router
