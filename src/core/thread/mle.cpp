@@ -2303,15 +2303,17 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
         }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        switch (ProcessCslAccuracyTlv(aRxInfo, canTrustMessage))
         {
-            Mac::CslAccuracy cslAccuracy;
-
-            if (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy) == kErrorNone)
-            {
-                // MUST include CSL timeout TLV when request includes
-                // CSL accuracy
-                info.mTlvList.Add(Tlv::kCslTimeout);
-            }
+        case kErrorNone:
+            // MUST include CSL timeout TLV when request includes
+            // CSL accuracy
+            info.mTlvList.Add(Tlv::kCslTimeout);
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
         }
 #endif
 
@@ -2464,19 +2466,13 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
         }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        switch (ProcessCslAccuracyTlv(aRxInfo, /* aCanTrustMessage */ true))
         {
-            Mac::CslAccuracy cslAccuracy;
-
-            switch (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy))
-            {
-            case kErrorNone:
-                Get<Mac::Mac>().SetCslParentAccuracy(cslAccuracy);
-                break;
-            case kErrorNotFound:
-                break;
-            default:
-                ExitNow(error = kErrorParse);
-            }
+        case kErrorNone:
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
         }
 #endif
 
@@ -3012,6 +3008,24 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+Error Mle::ProcessCslAccuracyTlv(RxInfo &aRxInfo, bool aCanTrustMessage)
+{
+    Error            error;
+    Mac::CslAccuracy cslAccuracy;
+
+    SuccessOrExit(error = aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy));
+
+    if (aCanTrustMessage)
+    {
+        mParent.SetCslAccuracy(cslAccuracy);
+        Get<Mac::Mac>().SetCslParentAccuracy(cslAccuracy);
+    }
+
+exit:
+    return error;
+}
+
 uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 {
     // This method calculates a metric estimating the average CSL sample window
