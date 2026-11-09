@@ -3115,6 +3115,47 @@ class OTCI(object):
         """Get the state of the radio."""
         return self.__parse_str(self.execute_command('diag radio state'))
 
+    def diag_get_radio_promiscuous(self) -> bool:
+        """Get whether the radio promiscuous mode is enabled."""
+        return self.__parse_values(self.execute_command('diag radio promiscuous'), enabled=True, disabled=False)
+
+    def diag_enable_radio_promiscuous(self):
+        """Enable the radio promiscuous mode."""
+        self.execute_command('diag radio promiscuous enable')
+
+    def diag_disable_radio_promiscuous(self):
+        """Disable the radio promiscuous mode so that the radio performs address filtering."""
+        self.execute_command('diag radio promiscuous disable')
+
+    def diag_get_radio_panid(self) -> int:
+        """Get the PAN ID used by the radio address filter."""
+        return self.__parse_int(self.execute_command('diag radio panid'), 16)
+
+    def diag_set_radio_panid(self, panid: int):
+        """Set the PAN ID used by the radio address filter."""
+        if not 0 <= panid <= 0xffff:
+            raise ValueError(panid)
+        self.execute_command(f'diag radio panid {panid:#06x}')
+
+    def diag_get_radio_shortaddr(self) -> int:
+        """Get the short address used by the radio address filter."""
+        return self.__parse_int(self.execute_command('diag radio shortaddr'), 16)
+
+    def diag_set_radio_shortaddr(self, shortaddr: int):
+        """Set the short address used by the radio address filter."""
+        if not 0 <= shortaddr <= 0xffff:
+            raise ValueError(shortaddr)
+        self.execute_command(f'diag radio shortaddr {shortaddr:#06x}')
+
+    def diag_get_radio_extaddr(self) -> str:
+        """Get the extended address used by the radio address filter."""
+        return self.__parse_extaddr(self.execute_command('diag radio extaddr'))
+
+    def diag_set_radio_extaddr(self, extaddr: str):
+        """Set the extended address used by the radio address filter."""
+        self.__validate_extaddr(extaddr)
+        self.execute_command(f'diag radio extaddr {extaddr}')
+
     def diag_get_stats(self) -> Dict[str, int]:
         """Get statistics during diagnostics mode."""
         #
