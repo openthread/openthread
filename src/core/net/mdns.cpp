@@ -5607,13 +5607,7 @@ void Core::CacheRecordInfo::UpdateStateAfterQuery(TimeMilli aNow)
 {
     VerifyOrExit(IsPresent());
 
-    // If the less than half TTL remains, then this record would not
-    // be included as "Known-Answer" in the send query, so we can
-    // count it towards queries to refresh this record.
-
-    VerifyOrExit(LessThanHalfTtlRemains(aNow));
-
-    if (mQueryCount < kNumberOfQueries)
+    while ((mQueryCount < kNumberOfQueries) && (GetQueryTime(mQueryCount) <= aNow))
     {
         mQueryCount++;
     }
@@ -5624,28 +5618,18 @@ exit:
 
 void Core::CacheRecordInfo::UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry)
 {
-    TimeMilli now;
-    TimeMilli expireTime;
-
     VerifyOrExit(IsPresent());
 
-    now        = TimerMilli::GetNow();
-    expireTime = GetExpireTime();
-
-    aCacheEntry.SetFireTime(expireTime);
+    aCacheEntry.SetFireTime(GetExpireTime());
 
     // Determine next query time
 
-    for (uint8_t attemptIndex = mQueryCount; attemptIndex < kNumberOfQueries; attemptIndex++)
+    if (mQueryCount < kNumberOfQueries)
     {
-        TimeMilli queryTime = GetQueryTime(attemptIndex);
+        TimeMilli queryTime = GetQueryTime(mQueryCount);
 
-        if (queryTime > now)
-        {
-            queryTime += Random::NonCrypto::GenerateUpToExcluding(GetClampedTtl() * kQueryTtlVariation);
-            aCacheEntry.ScheduleQuery(queryTime);
-            break;
-        }
+        queryTime += Random::NonCrypto::GenerateUpToExcluding(GetClampedTtl() * kQueryTtlVariation);
+        aCacheEntry.ScheduleQuery(queryTime);
     }
 
 exit:
@@ -5770,14 +5754,18 @@ void Core::CacheEntry::ScheduleQuery(TimeMilli aQueryTime)
 {
     VerifyOrExit(mIsActive);
 
-    if (mQueryPending)
-    {
-        VerifyOrExit(aQueryTime < mNextQueryTime);
-    }
-
     if (mLastQueryTimeValid)
     {
         aQueryTime = Max(aQueryTime, mLastQueryTime + kMinIntervalBetweenQueries);
+    }
+    else if (mContinuousRetry)
+    {
+        aQueryTime = Max(aQueryTime, mLastQueryTime);
+    }
+
+    if (mQueryPending)
+    {
+        VerifyOrExit(aQueryTime < mNextQueryTime);
     }
 
     mQueryPending  = true;
