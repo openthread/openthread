@@ -161,6 +161,21 @@ public:
      */
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
+    /**
+     * Temporarily enables rx-on-when-idle on an rx-off-when-idle device, without changing its device mode.
+     *
+     * Data polling is stopped and the child supervision check is paused. Use `ResumeSleepyOperation()` to restore
+     * sleepy operation.
+     */
+    void SuspendSleepyOperation(void);
+
+    /**
+     * Restores sleepy operation after `SuspendSleepyOperation()`.
+     *
+     * Data polling is restarted and the child supervision check resumes with its pending timeout.
+     */
+    void ResumeSleepyOperation(void);
+
 #if OPENTHREAD_FTD
     /**
      * Removes and frees messages queued for a child, based on a given predicate.
