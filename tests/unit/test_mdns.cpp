@@ -3783,6 +3783,122 @@ void TestServiceSubTypeReg(void)
     testFreeInstance(sInstance);
 }
 
+void TestGoodbyeOnDisable(void)
+{
+    static const char *const kSubTypes[] = {"_s1", "_s2"};
+
+    Core             *mdns = InitTest();
+    Core::Host        host;
+    Core::Service     service;
+    Core::Service     probingService;
+    Core::Key         key;
+    Ip6::Address      hostAddresses[2];
+    const DnsMessage *dnsMsg;
+    uint16_t          heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestGoodbyeOnDisable");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    SuccessOrQuit(hostAddresses[0].FromString("fd00::1"));
+    SuccessOrQuit(hostAddresses[1].FromString("fd00::2"));
+
+    host.mHostName        = "myhost";
+    host.mAddresses       = hostAddresses;
+    host.mAddressesLength = 2;
+    host.mTtl             = 5000;
+
+    service.mHostName            = "myhost";
+    service.mServiceInstance     = "myservice";
+    service.mServiceType         = "_srv._udp";
+    service.mSubTypeLabels       = kSubTypes;
+    service.mSubTypeLabelsLength = 2;
+    service.mTxtData             = kTxtData1;
+    service.mTxtDataLength       = sizeof(kTxtData1);
+    service.mPort                = 1234;
+    service.mPriority            = 1;
+    service.mWeight              = 2;
+    service.mTtl                 = 1000;
+
+    key.mName          = "mykey";
+    key.mServiceType   = nullptr;
+    key.mKeyData       = kKey1;
+    key.mKeyDataLength = sizeof(kKey1);
+    key.mTtl           = 80000;
+
+    probingService                      = service;
+    probingService.mServiceInstance     = "probing";
+    probingService.mSubTypeLabels       = nullptr;
+    probingService.mSubTypeLabelsLength = 0;
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Register a host, a service with sub-types and a key, wait for them to be fully registered");
+
+    sRegCallbacks[0].Reset();
+    sRegCallbacks[1].Reset();
+    sRegCallbacks[2].Reset();
+    SuccessOrQuit(mdns->RegisterHost(host, 0, HandleSuccessCallback));
+    SuccessOrQuit(mdns->RegisterService(service, 1, HandleSuccessCallback));
+    SuccessOrQuit(mdns->RegisterKey(key, 2, HandleSuccessCallback));
+
+    AdvanceTime(15000);
+    VerifyOrQuit(sRegCallbacks[0].mWasCalled);
+    VerifyOrQuit(sRegCallbacks[1].mWasCalled);
+    VerifyOrQuit(sRegCallbacks[2].mWasCalled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Register another service and let it start probing (not yet registered)");
+
+    sRegCallbacks[3].Reset();
+    SuccessOrQuit(mdns->RegisterService(probingService, 3, HandleSuccessCallback));
+
+    AdvanceTime(100);
+    VerifyOrQuit(!sRegCallbacks[3].mWasCalled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Disable mDNS, validate a single goodbye announcement for all registered records");
+
+    sDnsMessages.Clear();
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(!mdns->IsEnabled());
+
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 8, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->Validate(host, kInAnswerSection, kGoodBye);
+    dnsMsg->Validate(service, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr, kGoodBye);
+    dnsMsg->ValidateSubType(kSubTypes[0], service, kGoodBye);
+    dnsMsg->ValidateSubType(kSubTypes[1], service, kGoodBye);
+    dnsMsg->Validate(key, kInAnswerSection, kGoodBye);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate that nothing else is sent afterwards");
+
+    sDnsMessages.Clear();
+    AdvanceTime(15000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Disable mDNS again with no registered entries, validate no goodbye is sent");
+
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+    AdvanceTime(1);
+    sDnsMessages.Clear();
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
 void TestHostOrServiceAndKeyReg(void)
 {
     Core             *mdns = InitTest();
@@ -9215,6 +9331,7 @@ int main(void)
     ot::Dns::Multicast::TestUnregisterBeforeProbeFinished();
     ot::Dns::Multicast::TestServiceSubTypeReg();
     ot::Dns::Multicast::TestHostOrServiceAndKeyReg();
+    ot::Dns::Multicast::TestGoodbyeOnDisable();
     ot::Dns::Multicast::TestQuery();
     ot::Dns::Multicast::TestMultiPacket();
     ot::Dns::Multicast::TestResponseAggregation();

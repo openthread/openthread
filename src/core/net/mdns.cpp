@@ -132,6 +132,20 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequeste
 
     VerifyOrExit(aEnable != mIsEnabled);
 
+    if (!aEnable)
+    {
+        // Send the goodbye announcements while the module is still
+        // enabled and the platform is still listening, so that they
+        // can be transmitted.
+
+        SendGoodbyeAnnouncements();
+
+        // `aInfraIfIndex` is ignored when disabling. The platform is
+        // asked to stop listening on the interface it was enabled on.
+
+        aInfraIfIndex = mInfraIfIndex;
+    }
+
     mIsEnabled    = aEnable;
     mInfraIfIndex = aInfraIfIndex;
 
@@ -545,6 +559,28 @@ void Core::HandleEntryTimer(void)
     RemoveEmptyEntries();
 
     mEntryTimer.FireAtIfEarlier(context.mNextFireTime);
+}
+
+void Core::SendGoodbyeAnnouncements(void)
+{
+    // Marks all records of all registered entries as removed (zero
+    // TTL) and immediately sends a goodbye announcement for them in
+    // a single response (as opposed to the usual repeated announces
+    // from the entry timer). This is used when the module is
+    // disabled, so that listeners flush the records from their
+    // caches instead of waiting for the TTLs to expire.
+
+    for (HostEntry &entry : mHostEntries)
+    {
+        entry.StartGoodbye();
+    }
+
+    for (ServiceEntry &entry : mServiceEntries)
+    {
+        entry.StartGoodbye();
+    }
+
+    HandleEntryTimer();
 }
 
 void Core::RemoveEmptyEntries(void)
@@ -2177,6 +2213,37 @@ void Core::HostEntry::Unregister(const Key &aKey)
     ScheduleToRemoveIfEmpty();
 }
 
+void Core::HostEntry::StartGoodbye(void)
+{
+    // Marks all records of a registered entry as removed (zero TTL)
+    // so they are included in the next goodbye announcement.
+
+    VerifyOrExit(GetState() == kRegistered);
+
+    ClearCallback();
+
+    if (mIp6AddrRecord.IsPresent())
+    {
+        mIp6AddrRecord.UpdateTtl(0);
+    }
+
+    if ((mIp4AddrRecord != nullptr) && mIp4AddrRecord->IsPresent())
+    {
+        mIp4AddrRecord->UpdateTtl(0);
+    }
+
+    if (mKeyRecord.IsPresent())
+    {
+        mKeyRecord.UpdateTtl(0);
+    }
+
+    DetermineNextFireTime();
+    ScheduleTimer();
+
+exit:
+    return;
+}
+
 void Core::HostEntry::ClearHost(void)
 {
     mIp6AddrRecord.Clear();
@@ -2765,6 +2832,41 @@ void Core::ServiceEntry::Unregister(const Key &aKey)
     ScheduleTimer();
 
     ScheduleToRemoveIfEmpty();
+}
+
+void Core::ServiceEntry::StartGoodbye(void)
+{
+    // Marks all records of a registered entry as removed (zero TTL)
+    // so they are included in the next goodbye announcement.
+
+    VerifyOrExit(GetState() == kRegistered);
+
+    ClearCallback();
+
+    for (SubType &subType : mSubTypes)
+    {
+        subType.mPtrRecord.UpdateTtl(0);
+    }
+
+    if (mPtrRecord.IsPresent())
+    {
+        mPtrRecord.UpdateTtl(0);
+        mSrvRecord.UpdateTtl(0);
+        mTxtRecord.UpdateTtl(0);
+    }
+
+    if (mKeyRecord.IsPresent())
+    {
+        mKeyRecord.UpdateTtl(0);
+    }
+
+    DetermineNextFireTime();
+    ScheduleTimer();
+
+    UpdateServiceTypes();
+
+exit:
+    return;
 }
 
 void Core::ServiceEntry::ClearService(void)

@@ -152,6 +152,7 @@ private:
     otError Enable(uint32_t aInfraIfIndex);
     void    Disable(uint32_t aInfraIfIndex);
     void    ClearTxQueue(void);
+    void    FlushTxQueue(void);
     void    SendQueuedMessages(MsgType aMsgType);
     void    ReceiveMessage(MsgType aMsgType);
     void    StartAddressMonitoring(void);
