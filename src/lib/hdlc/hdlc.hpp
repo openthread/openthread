@@ -127,7 +127,8 @@ public:
      * @param[in] aContext A pointer to arbitrary context information.
      * @param[in] aError   OT_ERROR_NONE    if the frame was decoded successfully,
      *                     OT_ERROR_PARSE   if the Frame Check Sequence (FCS) was incorrect in decoded frame,
-     *                     OT_ERROR_NO_BUFS insufficient buffer space available to save the decoded frame.
+     *                     OT_ERROR_NO_BUFS insufficient buffer space available to save the decoded frame,
+     *                     OT_ERROR_ABORT   if `Reset()` was called while the frame was being decoded.
      */
     typedef void (*FrameHandler)(void *aContext, otError aError);
 
@@ -160,6 +161,10 @@ public:
 
     /**
      * Resets internal states of the decoder.
+     *
+     * If a frame is being decoded when this method is called, the frame is abandoned and the `FrameHandler` callback
+     * is invoked with `OT_ERROR_ABORT`, so that the `Decoder` user can discard the partially decoded frame from the
+     * `aFrameWritePointer` buffer. The callback is not invoked if no frame is in progress.
      */
     void Reset(void);
 

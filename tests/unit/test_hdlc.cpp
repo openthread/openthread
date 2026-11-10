@@ -619,6 +619,355 @@ void TestEncoderDecoder(void)
     printf(" -- PASS\n");
 }
 
+// Mirrors how the host (`Posix::HdlcInterface::HandleHdlcFrame()`) owns the receive buffer: a frame reported with an
+// error is discarded, a good frame is recorded and then saved.
+struct ResetTestContext
+{
+    Spinel::MultiFrameBuffer<kBufferSize> *mBuffer;
+    Hdlc::Decoder                         *mDecoder;
+    bool                                   mResetInHandler;
+    uint16_t                               mCallCount;
+    uint16_t                               mDeliveredCount;
+    otError                                mLastError;
+    uint16_t                               mLength;
+    uint8_t                                mData[kBufferSize];
+};
+
+static const uint8_t sInterruptedFrameText[] = "The RCP was reset in the middle of this frame";
+static const uint8_t sNextFrameText[]        = "ok";
+static const uint8_t sSavedFrameText[]       = "A frame that was saved before the reset";
+
+void ProcessFrameLikeHost(void *aContext, otError aError)
+{
+    ResetTestContext &context = *static_cast<ResetTestContext *>(aContext);
+
+    context.mCallCount++;
+    context.mLastError = aError;
+
+    if (aError != OT_ERROR_NONE)
+    {
+        if (context.mResetInHandler)
+        {
+            context.mDecoder->Reset();
+        }
+
+        context.mBuffer->DiscardFrame();
+        ExitNow();
+    }
+
+    context.mLength = context.mBuffer->GetLength();
+    memcpy(context.mData, context.mBuffer->GetFrame(), context.mLength);
+    context.mDeliveredCount++;
+
+    if (context.mResetInHandler)
+    {
+        context.mDecoder->Reset();
+    }
+
+    IgnoreError(context.mBuffer->SaveFrame());
+
+exit:
+    return;
+}
+
+void InitResetTest(ResetTestContext &aContext, Spinel::MultiFrameBuffer<kBufferSize> &aBuffer, Hdlc::Decoder &aDecoder)
+{
+    aBuffer.Clear();
+    memset(&aContext, 0, sizeof(aContext));
+    aContext.mBuffer  = &aBuffer;
+    aContext.mDecoder = &aDecoder;
+    aDecoder.Init(aBuffer, ProcessFrameLikeHost, &aContext);
+}
+
+uint16_t EncodeFrame(const uint8_t *aText, uint16_t aTextLength, uint8_t *aEncoded)
+{
+    Spinel::MultiFrameBuffer<kBufferSize> encoderBuffer;
+    Hdlc::Encoder                         encoder(encoderBuffer);
+    uint16_t                              length;
+
+    SuccessOrQuit(encoder.BeginFrame());
+    SuccessOrQuit(encoder.Encode(aText, aTextLength));
+    SuccessOrQuit(encoder.EndFrame());
+
+    length = encoderBuffer.GetLength();
+    memcpy(aEncoded, encoderBuffer.GetFrame(), length);
+
+    return length;
+}
+
+// Returns the number of leading bytes of the encoded frame, up to and including its `aEscapeNumber`-th escape byte.
+uint16_t LengthUpToEscape(const uint8_t *aFrame, uint16_t aLength, uint8_t aEscapeNumber)
+{
+    uint16_t length = 0;
+    uint8_t  count  = 0;
+
+    for (uint16_t index = 0; index < aLength; index++)
+    {
+        if (aFrame[index] == kEscapeSequence)
+        {
+            count++;
+
+            if (count == aEscapeNumber)
+            {
+                length = index + 1;
+                break;
+            }
+        }
+    }
+
+    VerifyOrQuit(length > 0, "Encoded test frame has too few escape bytes");
+
+    return length;
+}
+
+void VerifyFrame(const uint8_t *aFrame, uint16_t aLength, const uint8_t *aText, uint16_t aTextLength)
+{
+    VerifyOrQuit(aLength == aTextLength, "Frame length differs (stale bytes kept across Reset()?)");
+    VerifyOrQuit(memcmp(aFrame, aText, aTextLength) == 0, "Frame content differs");
+}
+
+void VerifyDeliveredFrame(const ResetTestContext &aContext, const uint8_t *aText, uint16_t aTextLength)
+{
+    VerifyOrQuit(aContext.mDeliveredCount == 1, "Expected exactly one frame to be delivered");
+    VerifyFrame(aContext.mData, aContext.mLength, aText, aTextLength);
+}
+
+void VerifyNextSavedFrame(Spinel::MultiFrameBuffer<kBufferSize> &aBuffer,
+                          uint8_t                              *&aFrame,
+                          uint16_t                              &aLength,
+                          const uint8_t                         *aText,
+                          uint16_t                               aTextLength)
+{
+    SuccessOrQuit(aBuffer.GetNextSavedFrame(aFrame, aLength));
+    VerifyFrame(aFrame, aLength, aText, aTextLength);
+}
+
+void TestResetMidFrame(void)
+{
+    Spinel::MultiFrameBuffer<kBufferSize> buffer;
+    Hdlc::Decoder                         decoder;
+    ResetTestContext                      context;
+    uint8_t                               interruptedFrame[kBufferSize];
+    uint8_t                               nextFrame[kBufferSize];
+    uint16_t                              interruptedLength;
+    uint16_t                              nextLength;
+    uint16_t                              cut;
+
+    interruptedLength = EncodeFrame(sInterruptedFrameText, sizeof(sInterruptedFrameText) - 1, interruptedFrame);
+    nextLength        = EncodeFrame(sNextFrameText, sizeof(sNextFrameText) - 1, nextFrame);
+    cut               = interruptedLength / 2;
+
+    InitResetTest(context, buffer, decoder);
+
+    decoder.Decode(interruptedFrame, cut);
+    VerifyOrQuit(context.mCallCount == 0, "Handler called for an incomplete frame");
+    VerifyOrQuit(buffer.HasFrame(), "No bytes of the frame in progress were written");
+
+    decoder.Reset();
+    VerifyOrQuit(context.mCallCount == 1, "Reset() did not report the interrupted frame");
+    VerifyOrQuit(context.mLastError == OT_ERROR_ABORT, "Reset() did not report OT_ERROR_ABORT");
+    VerifyOrQuit(!buffer.HasFrame(), "The interrupted frame was not discarded");
+
+    decoder.Decode(interruptedFrame + cut, interruptedLength - cut);
+    decoder.Decode(nextFrame, nextLength);
+
+    VerifyDeliveredFrame(context, sNextFrameText, sizeof(sNextFrameText) - 1);
+}
+
+void TestResetInEscapedStateWithNoBytesWritten(void)
+{
+    Spinel::MultiFrameBuffer<kBufferSize> buffer;
+    Hdlc::Decoder                         decoder;
+    ResetTestContext                      context;
+    uint8_t                               interruptedFrame[kBufferSize];
+    uint8_t                               nextFrame[kBufferSize];
+    uint16_t                              interruptedLength;
+    uint16_t                              nextLength;
+    uint16_t                              cut;
+
+    interruptedLength = EncodeFrame(sHdlcSpecials, sizeof(sHdlcSpecials), interruptedFrame);
+    nextLength        = EncodeFrame(sNextFrameText, sizeof(sNextFrameText) - 1, nextFrame);
+    cut               = LengthUpToEscape(interruptedFrame, interruptedLength, 1);
+
+    InitResetTest(context, buffer, decoder);
+
+    decoder.Decode(interruptedFrame, cut);
+    VerifyOrQuit(!buffer.HasFrame(), "A byte was written before the first escape byte");
+
+    decoder.Reset();
+    VerifyOrQuit(context.mCallCount == 0, "Reset() reported a frame that has no decoded bytes");
+
+    decoder.Decode(interruptedFrame + cut, interruptedLength - cut);
+    decoder.Decode(nextFrame, nextLength);
+
+    VerifyDeliveredFrame(context, sNextFrameText, sizeof(sNextFrameText) - 1);
+}
+
+void TestResetInEscapedStateWithBytesWritten(void)
+{
+    Spinel::MultiFrameBuffer<kBufferSize> buffer;
+    Hdlc::Decoder                         decoder;
+    ResetTestContext                      context;
+    uint8_t                               interruptedFrame[kBufferSize];
+    uint8_t                               nextFrame[kBufferSize];
+    uint16_t                              interruptedLength;
+    uint16_t                              nextLength;
+    uint16_t                              cut;
+
+    interruptedLength = EncodeFrame(sHdlcSpecials, sizeof(sHdlcSpecials), interruptedFrame);
+    nextLength        = EncodeFrame(sNextFrameText, sizeof(sNextFrameText) - 1, nextFrame);
+    cut               = LengthUpToEscape(interruptedFrame, interruptedLength, 2);
+
+    InitResetTest(context, buffer, decoder);
+
+    decoder.Decode(interruptedFrame, cut);
+    VerifyOrQuit(buffer.HasFrame(), "No byte was written before the second escape byte");
+    VerifyOrQuit(context.mCallCount == 0, "Handler called for an incomplete frame");
+
+    decoder.Reset();
+    VerifyOrQuit(context.mCallCount == 1, "Reset() did not report the interrupted frame");
+    VerifyOrQuit(context.mLastError == OT_ERROR_ABORT, "Reset() did not report OT_ERROR_ABORT");
+
+    decoder.Decode(interruptedFrame + cut, interruptedLength - cut);
+    decoder.Decode(nextFrame, nextLength);
+
+    VerifyDeliveredFrame(context, sNextFrameText, sizeof(sNextFrameText) - 1);
+}
+
+void TestResetWithSavedFrame(void)
+{
+    Spinel::MultiFrameBuffer<kBufferSize> buffer;
+    Hdlc::Decoder                         decoder;
+    ResetTestContext                      context;
+    uint8_t                               savedFrame[kBufferSize];
+    uint8_t                               interruptedFrame[kBufferSize];
+    uint8_t                               nextFrame[kBufferSize];
+    uint16_t                              savedLength;
+    uint16_t                              interruptedLength;
+    uint16_t                              nextLength;
+    uint16_t                              cut;
+    uint8_t                              *frame = nullptr;
+    uint16_t                              length;
+
+    savedLength       = EncodeFrame(sSavedFrameText, sizeof(sSavedFrameText) - 1, savedFrame);
+    interruptedLength = EncodeFrame(sInterruptedFrameText, sizeof(sInterruptedFrameText) - 1, interruptedFrame);
+    nextLength        = EncodeFrame(sNextFrameText, sizeof(sNextFrameText) - 1, nextFrame);
+    cut               = interruptedLength / 2;
+
+    InitResetTest(context, buffer, decoder);
+
+    decoder.Decode(savedFrame, savedLength);
+    VerifyOrQuit(context.mDeliveredCount == 1, "The first frame was not delivered");
+    VerifyOrQuit(buffer.HasSavedFrame(), "The first frame was not saved");
+
+    decoder.Decode(interruptedFrame, cut);
+    VerifyOrQuit(buffer.HasFrame(), "No bytes of the frame in progress were written");
+
+    decoder.Reset();
+    VerifyOrQuit(context.mCallCount == 2, "Reset() did not report the interrupted frame");
+    VerifyOrQuit(context.mLastError == OT_ERROR_ABORT, "Reset() did not report OT_ERROR_ABORT");
+
+    decoder.Decode(interruptedFrame + cut, interruptedLength - cut);
+    decoder.Decode(nextFrame, nextLength);
+    VerifyOrQuit(context.mDeliveredCount == 2, "The frame after the reset was not delivered");
+
+    VerifyNextSavedFrame(buffer, frame, length, sSavedFrameText, sizeof(sSavedFrameText) - 1);
+    VerifyNextSavedFrame(buffer, frame, length, sNextFrameText, sizeof(sNextFrameText) - 1);
+    VerifyOrQuit(buffer.GetNextSavedFrame(frame, length) == OT_ERROR_NOT_FOUND, "Unexpected extra saved frame");
+}
+
+void TestResetWhileIdle(void)
+{
+    Spinel::MultiFrameBuffer<kBufferSize> buffer;
+    Hdlc::Decoder                         decoder;
+    ResetTestContext                      context;
+    uint8_t                               nextFrame[kBufferSize];
+    uint16_t                              nextLength;
+    uint8_t                              *frame = nullptr;
+    uint16_t                              length;
+
+    nextLength = EncodeFrame(sNextFrameText, sizeof(sNextFrameText) - 1, nextFrame);
+
+    InitResetTest(context, buffer, decoder);
+
+    decoder.Decode(nextFrame, nextLength);
+    VerifyDeliveredFrame(context, sNextFrameText, sizeof(sNextFrameText) - 1);
+    VerifyOrQuit(context.mCallCount == 1);
+
+    decoder.Reset();
+    VerifyOrQuit(context.mCallCount == 1, "Reset() while idle called the frame handler");
+
+    VerifyNextSavedFrame(buffer, frame, length, sNextFrameText, sizeof(sNextFrameText) - 1);
+}
+
+void TestResetFromHandlerOfCompletedFrame(void)
+{
+    Spinel::MultiFrameBuffer<kBufferSize> buffer;
+    Hdlc::Decoder                         decoder;
+    ResetTestContext                      context;
+    uint8_t                               nextFrame[kBufferSize];
+    uint16_t                              nextLength;
+    uint8_t                              *frame = nullptr;
+    uint16_t                              length;
+
+    nextLength = EncodeFrame(sNextFrameText, sizeof(sNextFrameText) - 1, nextFrame);
+
+    InitResetTest(context, buffer, decoder);
+    context.mResetInHandler = true;
+
+    decoder.Decode(nextFrame, nextLength);
+    VerifyDeliveredFrame(context, sNextFrameText, sizeof(sNextFrameText) - 1);
+    VerifyOrQuit(context.mCallCount == 1, "Reset() from the handler produced an extra callback");
+
+    VerifyNextSavedFrame(buffer, frame, length, sNextFrameText, sizeof(sNextFrameText) - 1);
+}
+
+void TestResetFromNoBufsHandler(void)
+{
+    static const uint16_t                 kFillTextLength = 400;
+    Spinel::MultiFrameBuffer<kBufferSize> buffer;
+    Hdlc::Decoder                         decoder;
+    ResetTestContext                      context;
+    uint8_t                               fillText[kFillTextLength];
+    uint8_t                               fillFrame[kBufferSize];
+    uint16_t                              fillLength;
+
+    memset(fillText, 'a', sizeof(fillText));
+    fillLength = EncodeFrame(fillText, kFillTextLength, fillFrame);
+
+    InitResetTest(context, buffer, decoder);
+
+    // Fill most of the buffer with saved frames, so that the next one does not fit.
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        decoder.Decode(fillFrame, fillLength);
+    }
+
+    VerifyOrQuit(context.mDeliveredCount == 3, "The frames filling the buffer were not delivered");
+    VerifyOrQuit(context.mCallCount == 3);
+
+    context.mResetInHandler = true;
+    decoder.Decode(fillFrame, fillLength);
+
+    VerifyOrQuit(context.mCallCount == 4, "Reset() from the NO_BUFS handler produced a nested callback");
+    VerifyOrQuit(context.mLastError == OT_ERROR_NO_BUFS, "The frame that does not fit was not reported as NO_BUFS");
+}
+
+void TestDecoderReset(void)
+{
+    printf("Testing Hdlc::Decoder::Reset()");
+
+    TestResetMidFrame();
+    TestResetInEscapedStateWithNoBytesWritten();
+    TestResetInEscapedStateWithBytesWritten();
+    TestResetWithSavedFrame();
+    TestResetWhileIdle();
+    TestResetFromHandlerOfCompletedFrame();
+    TestResetFromNoBufsHandler();
+
+    printf(" -- PASS\n");
+}
+
 uint32_t GetRandom(uint32_t max) { return static_cast<uint32_t>(rand()) % max; }
 
 void TestFuzzEncoderDecoder(void)
@@ -678,6 +1027,7 @@ int main(void)
     ot::Ncp::TestHdlcFrameBuffer();
     ot::Ncp::TestSpinelMultiFrameBuffer();
     ot::Ncp::TestEncoderDecoder();
+    ot::Ncp::TestDecoderReset();
     ot::Ncp::TestFuzzEncoderDecoder();
     printf("\nAll tests passed.\n");
     return 0;
