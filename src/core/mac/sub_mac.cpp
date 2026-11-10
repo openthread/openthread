@@ -345,28 +345,34 @@ exit:
 
 void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
 {
-    if (mPcapCallback.IsSet() && (aFrame != nullptr) && (aError == kErrorNone))
-    {
-        mPcapCallback.Invoke(aFrame, false);
-    }
+    RxFrame::ParseInfo frameInfo;
 
-    if (!ShouldHandle(kCapTransmitSec) && aFrame != nullptr && aFrame->IsAckedWithSecEnhAck())
-    {
-        SignalFrameCounterUsed(aFrame->GetAckFrameCounter(), aFrame->GetAckKeyIndex());
-    }
+    frameInfo.mFrame = aFrame;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if ((aFrame != nullptr) && (aError == kErrorNone))
     {
-        mCslReceiver.ProcessRxFrame(*aFrame);
-    }
+        IgnoreError(frameInfo.ParseFrom(*aFrame, Frame::kParseFully));
+
+        if (mPcapCallback.IsSet())
+        {
+            mPcapCallback.Invoke(aFrame, false);
+        }
+
+        if (!ShouldHandle(kCapTransmitSec) && aFrame->IsAckedWithSecEnhAck())
+        {
+            SignalFrameCounterUsed(aFrame->GetAckFrameCounter(), aFrame->GetAckKeyIndex());
+        }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        mCslReceiver.ProcessRxFrame(frameInfo);
 #endif
+    }
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     if (!mRadioFilterEnabled)
 #endif
     {
-        mCallbacks.ReceiveDone(aFrame, aError);
+        mCallbacks.ReceiveDone(frameInfo, aError);
     }
 }
 

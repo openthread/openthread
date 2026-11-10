@@ -144,12 +144,12 @@ public:
         /**
          * Notifies user of `SubMac` of a received frame.
          *
-         * @param[in]  aFrame    A pointer to the received frame or `nullptr` if the receive operation failed.
-         * @param[in]  aError    kErrorNone when successfully received a frame,
-         *                       kErrorAbort when reception was aborted and a frame was not received,
-         *                       kErrorNoBufs when a frame could not be received due to lack of rx buffer space.
+         * @param[in]  aFrameInfo  The received frame information.
+         * @param[in]  aError      kErrorNone when successfully received a frame,
+         *                         kErrorAbort when reception was aborted and a frame was not received,
+         *                         kErrorNoBufs when a frame could not be received due to lack of rx buffer space.
          */
-        void ReceiveDone(RxFrame *aFrame, Error aError);
+        void ReceiveDone(RxFrame::ParseInfo &aFrameInfo, Error aError);
 
         /**
          * Notifies user of `SubMac` of CCA status (success/failure) for a frame transmission attempt.
@@ -719,7 +719,7 @@ private:
         bool IsEnabled(void) const { return mPeriod > 0; }
         void SetParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
         void ProcessTxDone(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame);
-        void ProcessRxFrame(const RxFrame &aFrame);
+        void ProcessRxFrame(const RxFrame::ParseInfo &aFrameInfo);
         void AdvanceToNextWindow(void);
 
         const TimedRx     &GetCurWindow(void) const { return mCurWindow; }
@@ -736,7 +736,7 @@ private:
         void     UpdateCurAndNextWindows(void);
         void     DetermineWindow(const Radio::SyncedTime &aSampleTime, TimedRx &aTimedRx) const;
         uint32_t DetermineClockDrift(uint32_t aIntervalUs) const;
-        void     LogReceived(const RxFrame &aFrame);
+        void     LogReceived(const RxFrame::ParseInfo &aFrameInfo);
 
         uint16_t          mPeriod;
         uint8_t           mChannel;

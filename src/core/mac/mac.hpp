@@ -669,7 +669,7 @@ private:
     };
 
     // Callbacks from `SubMac` or `Trel::Link`
-    void HandleReceivedFrame(RxFrame *aFrame, Error aError);
+    void HandleReceivedFrame(RxFrame::ParseInfo &aFrameInfo, Error aError);
     void RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel);
     void RecordFrameTransmitStatus(const TxFrame::ParseInfo &aFrameInfo,
                                    Error                     aError,
