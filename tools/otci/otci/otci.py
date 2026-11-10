@@ -1771,11 +1771,12 @@ class OTCI(object):
         ch_count = len(list(bits_set(channel_mask)))
         self.execute_command(f'commissioner energy {channel_mask} {count} {period} {duration} {destination}')
         output = self.__otcmd.wait(ch_count * count * (period + duration + 999) / 1000 + 1)
+        energy_lines = [line for line in output if line.startswith('Energy: ')]
 
-        if len(output) > 1:
+        if len(energy_lines) != 1:
             raise UnexpectedCommandOutput(output)
 
-        _mask, _energies = output[0].split(": ")[1].split(" ", 1)
+        _mask, _energies = energy_lines[0].split(": ")[1].split(" ", 1)
         channels = [b for b in bits_set(int(_mask, 16))]
         energies = [int(e) for e in _energies.split(" ")]
         return {ch: energies[idx::len(channels)] for (idx, ch) in enumerate(channels)}
@@ -1815,8 +1816,9 @@ class OTCI(object):
         """Perform a PAN ID query on the specified channels."""
         self.execute_command(f'commissioner panid {panid} {channel_mask} {destination}')
         output = self.__otcmd.wait(len(list(bits_set(channel_mask))))
-        if output:
-            masks = [int(line.split(": ")[1].split(", ", 1)[1], 16) for line in output]
+        conflict_lines = [line for line in output if line.startswith('Conflict: ')]
+        if conflict_lines:
+            masks = [int(line.split(": ")[1].split(", ", 1)[1], 16) for line in conflict_lines]
             conflict_mask = functools.reduce(lambda x, y: x | y, masks)
             return [b for b in bits_set(conflict_mask)]
         else:

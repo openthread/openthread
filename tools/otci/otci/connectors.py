@@ -27,7 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 import logging
+import os
+import select
 import subprocess
+import threading
 import time
 from abc import abstractmethod, ABC
 from typing import Any, List, Optional
@@ -59,6 +62,17 @@ class OtCliHandler(ABC):
     def close(self) -> None:
         """Method close should close the OT CLI Handler."""
 
+    def wait_for_line(self) -> bool:
+        """Block until a complete line (or EOF) is ready for `readline()` without blocking.
+
+        Returns False if pre-waiting is not supported by this handler.
+        """
+        return False
+
+    def has_pending_lines(self) -> bool:
+        """Return True if a complete line or unread output bytes are pending."""
+        return False
+
 
 class Simulator(ABC):
     """This abstract class defines interfaces for a Virtual Time Simulator."""
@@ -73,9 +87,22 @@ class OtCliPopen(OtCliHandler):
     """Connector for OT CLI process (a Popen instance)."""
 
     def __init__(self, proc: subprocess.Popen[Any], nodeid: int, simulator: Optional[Simulator]):
+        assert proc.stdout is not None
         self.__otcli_proc = proc
         self.__nodeid = nodeid
         self.__simulator = simulator
+        self.__read_lock = threading.Lock()
+        self.__select_cond = threading.Condition(self.__read_lock)
+        self.__selecting = 0
+        self.__read_buf = bytearray()
+        self.__eof = False
+        self.__closed = False
+        self.__fds_closed = False
+        self.__wake_r, self.__wake_w = os.pipe()
+        os.set_blocking(self.__wake_r, False)
+        os.set_blocking(self.__wake_w, False)
+        self.__stdout_fd = proc.stdout.fileno()
+        os.set_blocking(self.__stdout_fd, False)
 
         if self.__simulator is not None:
             self.wait(0)
@@ -83,14 +110,88 @@ class OtCliPopen(OtCliHandler):
     def __repr__(self):
         return 'OTCli<%d>' % self.__nodeid
 
+    def __fill_read_buf_locked(self) -> None:
+        if self.__eof or self.__closed:
+            return
+        while True:
+            try:
+                chunk = os.read(self.__stdout_fd, 4096)
+                break
+            except BlockingIOError:
+                return
+            except InterruptedError:
+                continue
+            except OSError:
+                self.__eof = True
+                return
+
+        if not chunk:
+            self.__eof = True
+            return
+
+        self.__read_buf.extend(chunk)
+
+    def wait_for_line(self) -> bool:
+        while True:
+            with self.__read_lock:
+                if b'\n' in self.__read_buf or self.__eof or self.__closed:
+                    return True
+                self.__fill_read_buf_locked()
+                if b'\n' in self.__read_buf or self.__eof or self.__closed:
+                    return True
+                stdout_fd = self.__stdout_fd
+                wake_r = self.__wake_r
+                self.__selecting += 1
+
+            try:
+                select.select([stdout_fd, wake_r], [], [])
+            except InterruptedError:
+                continue
+            except (OSError, ValueError):
+                return True
+            finally:
+                with self.__read_lock:
+                    self.__selecting -= 1
+                    if self.__selecting == 0:
+                        self.__select_cond.notify_all()
+
     def readline(self) -> Optional[str]:
-        assert self.__otcli_proc.stdout is not None
-        return self.__otcli_proc.stdout.readline().rstrip('\r\n')
+        self.wait_for_line()
+        with self.__read_lock:
+            if self.__closed:
+                return None
+
+            newline_idx = self.__read_buf.find(b'\n')
+            if newline_idx != -1:
+                raw_line = bytes(self.__read_buf[:newline_idx + 1])
+                del self.__read_buf[:newline_idx + 1]
+                return raw_line.decode('utf-8', errors='replace').rstrip('\r\n')
+
+            if self.__read_buf:
+                raw_line = bytes(self.__read_buf)
+                self.__read_buf.clear()
+                return raw_line.decode('utf-8', errors='replace').rstrip('\r\n')
+
+            return None
 
     def writeline(self, s: str):
         assert self.__otcli_proc.stdin is not None
         self.__otcli_proc.stdin.write(s + '\n')
         self.__otcli_proc.stdin.flush()
+
+    def has_pending_lines(self) -> bool:
+        with self.__read_lock:
+            if self.__closed:
+                return False
+            if b'\n' in self.__read_buf:
+                return True
+            if self.__eof:
+                return bool(self.__read_buf)
+            try:
+                readable, _, _ = select.select([self.__stdout_fd], [], [], 0)
+                return bool(readable)
+            except (OSError, ValueError):
+                return False
 
     def wait(self, duration: float, **kwargs):
         if self.__simulator is not None:
@@ -106,7 +207,13 @@ class OtCliPopen(OtCliHandler):
     def close(self):
         assert self.__otcli_proc.stdin is not None
         assert self.__otcli_proc.stdout is not None
-        self.__otcli_proc.stdin.close()
+        with self.__read_lock:
+            self.__closed = True
+            if not self.__fds_closed:
+                try:
+                    os.write(self.__wake_w, b'\x00')
+                except OSError:
+                    pass
         try:
             self.__otcli_proc.terminate()
             self.__otcli_proc.wait(timeout=2)
@@ -114,7 +221,17 @@ class OtCliPopen(OtCliHandler):
             self.__otcli_proc.kill()
             self.__otcli_proc.wait()
         finally:
-            self.__otcli_proc.stdout.close()
+            with self.__select_cond:
+                while self.__selecting > 0:
+                    self.__select_cond.wait()
+                if not self.__otcli_proc.stdin.closed:
+                    self.__otcli_proc.stdin.close()
+                if not self.__otcli_proc.stdout.closed:
+                    self.__otcli_proc.stdout.close()
+                if not self.__fds_closed:
+                    self.__fds_closed = True
+                    os.close(self.__wake_r)
+                    os.close(self.__wake_w)
 
 
 class OtCliSim(OtCliPopen):
