@@ -8411,6 +8411,71 @@ void TestRecordQuerier(void)
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Verify unrelated and zero-TTL responses do not stop initial query retries.");
+
+    IgnoreError(mdns->StopRecordQuerier(querier));
+    AdvanceTime(10);
+    sDnsMessages.Clear();
+    sRecordCallbacks.Clear();
+
+    ClearAllBytes(querier2);
+    querier2.mFirstLabel   = "newsrv";
+    querier2.mNextLabels   = "_srv._udp";
+    querier2.mRecordType   = ResourceRecord::kTypeKey;
+    querier2.mInfraIfIndex = kInfraIfIndex;
+    querier2.mCallback     = HandleRecordResultAlternate;
+
+    SuccessOrQuit(mdns->StartRecordQuerier(querier2));
+
+    AdvanceTime(DetermineQueryWaitTime(0));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    sDnsMessages.Clear();
+
+    records[0].mType       = ResourceRecord::kTypeKey;
+    records[0].mData       = kKey1;
+    records[0].mLength     = sizeof(kKey1);
+    records[0].mTtl        = 120;
+    records[0].mCacheFlush = true;
+    SendRecordResponse("othersrv._srv._udp.local.", 1, records);
+
+    records[0].mTtl = 0;
+    SendRecordResponse("newsrv._srv._udp.local.", 1, records);
+
+    AdvanceTime(DetermineQueryWaitTime(1));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(querier2);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    VerifyOrQuit(sRecordCallbacks.IsEmpty());
+    sDnsMessages.Clear();
+
+    Log("Verify non-cache-flush response does not stop query retries.");
+
+    records[0].mTtl        = 120;
+    records[0].mCacheFlush = false;
+    SendRecordResponse("newsrv._srv._udp.local.", 1, records);
+
+    AdvanceTime(DetermineQueryWaitTime(2));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(querier2);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    sDnsMessages.Clear();
+    sRecordCallbacks.Clear();
+
+    Log("Verify cache-flush response with non-zero TTL stops query retries.");
+
+    records[0].mCacheFlush = true;
+    SendRecordResponse("newsrv._srv._udp.local.", 1, records);
+
+    AdvanceTime(20 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+    VerifyOrQuit(sRecordCallbacks.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);

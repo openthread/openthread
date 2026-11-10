@@ -7583,11 +7583,6 @@ void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
     if (shouldFlush)
     {
         mCommittedEntries.RemoveAndFreeAllMatching(aRecordType);
-
-        if (mRecordType != ResourceRecord::kTypeAny)
-        {
-            StopQueryRetries();
-        }
     }
 
     while (!newMatchingEntries.IsEmpty())
@@ -7601,13 +7596,18 @@ void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
         {
             entry->mRecord.RefreshTtl(newEntry->mTtl);
         }
-        else
+        else if (newEntry->mTtl > 0)
         {
             entry = RecordEntry::Allocate(*newEntry);
             OT_ASSERT(entry != nullptr);
 
             mCommittedEntries.Push(*entry);
         }
+    }
+
+    if (shouldFlush && (mRecordType != ResourceRecord::kTypeAny) && !mCommittedEntries.IsEmpty())
+    {
+        StopQueryRetries();
     }
 }
 
