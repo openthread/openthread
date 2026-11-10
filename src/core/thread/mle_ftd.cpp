@@ -3368,11 +3368,13 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     }
 
     SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMsg->mMessage, rloc16));
+    VerifyOrExit(IsValidRloc16(rloc16) && IsRouterRloc16(rloc16));
     routerId = RouterIdFromRloc16(rloc16);
 
     SuccessOrExit(Tlv::Find<ThreadRouterMaskTlv>(aMsg->mMessage, routerIdMask));
     VerifyOrExit(routerIdMask.IsValid());
     VerifyOrExit(routerIdMask.IsAllocated(GetLeaderId()));
+    VerifyOrExit(routerIdMask.IsAllocated(routerId));
 
     SetAlternateRloc16(GetRloc16());
 

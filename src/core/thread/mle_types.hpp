@@ -967,6 +967,23 @@ inline uint16_t Rloc16FromRouterId(uint8_t aRouterId) { return static_cast<uint1
 inline uint16_t ParentRloc16ForRloc16(uint16_t aRloc16) { return Rloc16FromRouterId(RouterIdFromRloc16(aRloc16)); }
 
 /**
+ * Indicates whether or not @p aRloc16 is a valid RLOC16.
+ *
+ * A valid RLOC16 has a Router ID in `[0..62]` and its reserved bit cleared.
+ *
+ * @param[in]  aRloc16  The RLOC16 value to check.
+ *
+ * @retval TRUE   If @p aRloc16 is a valid RLOC16.
+ * @retval FALSE  If @p aRloc16 is not a valid RLOC16.
+ */
+inline bool IsValidRloc16(uint16_t aRloc16)
+{
+    static constexpr uint16_t kReservedBitMask = 1 << (kRouterIdOffset - 1);
+
+    return IsRouterIdValid(RouterIdFromRloc16(aRloc16)) && ((aRloc16 & kReservedBitMask) == 0);
+}
+
+/**
  * Indicates whether or not @p aRloc16 refers to a router.
  *
  * @param[in]  aRloc16  The RLOC16 value.

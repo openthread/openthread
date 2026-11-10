@@ -32,6 +32,9 @@
 #include "test_util.hpp"
 
 #include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
+#include "common/settings.hpp"
+#include "net/ip6_address.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"
@@ -262,8 +265,157 @@ public:
         TestValidNetworkDataControl();
         TestMissingNetworkDataControl();
         TestMalformedNetworkDataControl();
+        TestChildIdResponseRloc16Validation();
 
         printf("TestChildIdResponseNetworkDataHandling passed\n");
+    }
+
+    static void TestRestoreRloc16Validation(void)
+    {
+        struct InvalidCase
+        {
+            Mle::DeviceRole mRole;
+            uint16_t        mRloc16;
+        };
+
+        static const InvalidCase kInvalidCases[] = {
+            {Mle::kRoleChild, Mle::kInvalidRloc16},
+            {Mle::kRoleChild, Mac::kShortAddrBroadcast},
+            {Mle::kRoleChild, 0xfc00},
+            {Mle::kRoleChild, 0xfc01},
+            {Mle::kRoleChild, 0xfe00},
+            {Mle::kRoleChild, 0xfe01},
+            {Mle::kRoleChild, 0x0200},
+            {Mle::kRoleChild, 0x0201},
+            {Mle::kRoleChild, 0x0400}, // Router RLOC16 with child role
+            {Mle::kRoleRouter, Mle::kInvalidRloc16},
+            {Mle::kRoleRouter, Mac::kShortAddrBroadcast},
+            {Mle::kRoleRouter, 0xfc00},
+            {Mle::kRoleRouter, 0xfe00},
+            {Mle::kRoleRouter, 0x0200},
+            {Mle::kRoleRouter, 0x0401}, // Child RLOC16 with router role
+            {Mle::kRoleLeader, 0xfc00},
+            {Mle::kRoleLeader, 0xffff},
+            {Mle::kRoleLeader, 0x0200},
+            {Mle::kRoleLeader, 0x0401}, // Child RLOC16 with leader role
+            {Mle::kRoleDetached, 0x0401},
+            {Mle::kRoleDisabled, 0x0400},
+#if OPENTHREAD_MTD
+            {Mle::kRoleRouter, 0x0400}, // Valid router RLOC16 on MTD
+            {Mle::kRoleLeader, 0x0400}, // Valid leader RLOC16 on MTD
+#endif
+        };
+
+        const Mac::ExtAddress    savedExtAddr  = ExtAddressFromSeed(0x61);
+        const Mac::ExtAddress    parentExtAddr = ExtAddressFromSeed(0x71);
+        Ip6::InterfaceIdentifier savedMeshIid;
+
+        savedMeshIid.InitFromExtAddress(ExtAddressFromSeed(0x81));
+
+        for (const InvalidCase &testCase : kInvalidCases)
+        {
+            Instance             *instance = static_cast<Instance *>(testInitInstance());
+            Mle::Mle             &mle      = instance->Get<Mle::Mle>();
+            Settings::NetworkInfo netInfo;
+            Settings::ParentInfo  parentInfo;
+
+            VerifyOrQuit(instance != nullptr);
+
+            netInfo.Init();
+            netInfo.SetRole(testCase.mRole);
+            netInfo.SetRloc16(testCase.mRloc16);
+            netInfo.SetExtAddress(savedExtAddr);
+            netInfo.SetMeshLocalIid(savedMeshIid);
+            netInfo.SetVersion(kThreadVersion);
+            netInfo.SetDeviceMode(Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullNetworkData |
+                                  Mle::DeviceMode::kModeFullThreadDevice);
+            instance->Get<Settings>().Save(netInfo);
+
+            parentInfo.Init();
+            parentInfo.SetExtAddress(parentExtAddr);
+            parentInfo.SetVersion(kThreadVersion);
+            instance->Get<Settings>().Save(parentInfo);
+
+            mle.Restore();
+
+            VerifyOrQuit(!mle.HasRestored());
+            VerifyOrQuit(mle.GetRloc16() == Mle::kInvalidRloc16);
+            VerifyOrQuit(instance->Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid);
+            VerifyOrQuit(instance->Get<Mac::Mac>().GetExtAddress() == savedExtAddr);
+            VerifyOrQuit(mle.GetMeshLocalEid().GetIid() == savedMeshIid);
+            VerifyOrQuit(!mle.GetParent().IsStateValidOrRestoring());
+#if OPENTHREAD_FTD
+            VerifyOrQuit(mle.mRouterId == Mle::kInvalidRouterId);
+#endif
+
+            testFreeInstance(instance);
+        }
+
+        // Valid child RLOC16 restores properly.
+        {
+            Instance             *instance = static_cast<Instance *>(testInitInstance());
+            Mle::Mle             &mle      = instance->Get<Mle::Mle>();
+            Settings::NetworkInfo netInfo;
+            Settings::ParentInfo  parentInfo;
+
+            VerifyOrQuit(instance != nullptr);
+
+            netInfo.Init();
+            netInfo.SetRole(Mle::kRoleChild);
+            netInfo.SetRloc16(kNewChildRloc16);
+            netInfo.SetExtAddress(savedExtAddr);
+            netInfo.SetMeshLocalIid(savedMeshIid);
+            netInfo.SetVersion(kThreadVersion);
+            netInfo.SetDeviceMode(Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullNetworkData);
+            instance->Get<Settings>().Save(netInfo);
+
+            parentInfo.Init();
+            parentInfo.SetExtAddress(parentExtAddr);
+            parentInfo.SetVersion(kThreadVersion);
+            instance->Get<Settings>().Save(parentInfo);
+
+            mle.Restore();
+
+            VerifyOrQuit(mle.HasRestored());
+            VerifyOrQuit(mle.GetRloc16() == kNewChildRloc16);
+            VerifyOrQuit(instance->Get<Mac::Mac>().GetShortAddress() == kNewChildRloc16);
+            VerifyOrQuit(mle.GetParent().IsStateRestored());
+            VerifyOrQuit(mle.GetParent().GetRloc16() == kNewParentRloc16);
+
+            testFreeInstance(instance);
+        }
+
+#if OPENTHREAD_FTD
+        // Valid router RLOC16 restores properly on FTD.
+        {
+            Instance             *instance = static_cast<Instance *>(testInitInstance());
+            Mle::Mle             &mle      = instance->Get<Mle::Mle>();
+            Settings::NetworkInfo netInfo;
+
+            VerifyOrQuit(instance != nullptr);
+
+            netInfo.Init();
+            netInfo.SetRole(Mle::kRoleRouter);
+            netInfo.SetRloc16(kNewParentRloc16);
+            netInfo.SetExtAddress(savedExtAddr);
+            netInfo.SetMeshLocalIid(savedMeshIid);
+            netInfo.SetVersion(kThreadVersion);
+            netInfo.SetDeviceMode(Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullNetworkData |
+                                  Mle::DeviceMode::kModeFullThreadDevice);
+            instance->Get<Settings>().Save(netInfo);
+
+            mle.Restore();
+
+            VerifyOrQuit(mle.HasRestored());
+            VerifyOrQuit(mle.GetRloc16() == kNewParentRloc16);
+            VerifyOrQuit(instance->Get<Mac::Mac>().GetShortAddress() == kNewParentRloc16);
+            VerifyOrQuit(mle.mRouterId == Mle::RouterIdFromRloc16(kNewParentRloc16));
+
+            testFreeInstance(instance);
+        }
+#endif
+
+        printf("TestRestoreRloc16Validation passed\n");
     }
 
 #if OPENTHREAD_FTD
@@ -792,6 +944,61 @@ private:
         testFreeInstance(instance);
     }
 
+    static void TestChildIdResponseRloc16Validation(void)
+    {
+        struct InvalidCase
+        {
+            uint16_t mSourceRloc16;
+            uint16_t mChildRloc16;
+            uint8_t  mLeaderRouterId;
+        };
+
+        static const InvalidCase kInvalidCases[] = {
+            {0xffff, 0xfc00, 0},
+            {0xffff, 0xfc01, 0},
+            {0xfc00, 0xfc01, 0},
+            {0xfc00, 0xffff, 0},
+            {0xfe00, 0xfe01, 0},
+            {0xfe00, 0xfffe, 0},
+            {0x0200, 0x0201, 0},
+            {0x0200, 0x0001, 0},
+            {0x0000, 0x0201, 0},
+            {0x0000, 0x0000, 0},
+            {0x0400, 0x0400, 1},
+            {0x0401, 0x0402, 1},
+            {0x0400, 0x0601, 1},
+            {0x0400, 0x0801, 1},
+            {kNewParentRloc16, kNewChildRloc16, Mle::kInvalidRouterId},
+            {kNewParentRloc16, kNewChildRloc16, 255},
+        };
+
+        printf("child-id-response-rloc16-validation\n");
+
+        for (const InvalidCase &testCase : kInvalidCases)
+        {
+            Instance             *instance         = static_cast<Instance *>(testInitInstance());
+            Mle::Mle             &mle              = instance->Get<Mle::Mle>();
+            const Mac::ExtAddress parentExtAddress = ExtAddressFromSeed(0x55);
+            Mle::LeaderData       leaderData =
+                NewLeaderData(0x44444444, 64, testCase.mLeaderRouterId, kNewDataVersion, kNewStableVersion);
+            Message *message;
+
+            PrepareChildIdResponse(mle, parentExtAddress, testCase.mSourceRloc16);
+
+            message = NewChildIdResponseMessage(*instance, testCase.mSourceRloc16, testCase.mChildRloc16, leaderData,
+                                                kNewNetworkData, sizeof(kNewNetworkData), true);
+
+            HandleChildIdResponse(mle, *message, parentExtAddress);
+
+            VerifyOrQuit(!mle.IsChild());
+            VerifyOrQuit(mle.GetRloc16() == Mle::kInvalidRloc16);
+            VerifyOrQuit(instance->Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid);
+
+            message->Free();
+            testFreeInstance(instance);
+        }
+    }
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     static void HandleChildUpdateRequest(Mle::Mle &aMle, Message &aMessage, const Mac::ExtAddress &aChildExtAddress)
     {
@@ -980,6 +1187,104 @@ void TestRouterIdMask(void)
     printf("TestRouterIdMask passed\n");
 }
 
+void TestRloc16Helpers(void)
+{
+    struct TestCase
+    {
+        uint16_t mRloc16;
+        bool     mIsValid;
+        bool     mIsRouter;
+        bool     mIsChild;
+    };
+
+    static const TestCase kTestCases[] = {
+        // Valid router RLOC16s (Router ID in [0..62], reserved bit 9 = 0, Child ID = 0).
+        {0x0000, true, true, false},
+        {0x0400, true, true, false},
+        {0x5400, true, true, false},
+        {0xf800, true, true, false},
+
+        // Valid child RLOC16s (Router ID in [0..62], reserved bit 9 = 0, Child ID in [1..511]).
+        {0x0001, true, false, true},
+        {0x01ff, true, false, true},
+        {0x0401, true, false, true},
+        {0x05ff, true, false, true},
+        {0xf801, true, false, true},
+        {0xf9ff, true, false, true},
+
+        // Reserved bit 9 set (invalid RLOC16).
+        {0x0200, false, true, false},
+        {0x0201, false, false, true},
+        {0x03ff, false, false, true},
+        {0x0600, false, true, false},
+        {0xfa00, false, true, false},
+        {0xfa01, false, false, true},
+        {0xfbff, false, false, true},
+
+        // ALOCs (0xfc00..0xfcff, invalid as RLOC16).
+        {0xfc00, false, true, false},
+        {0xfc01, false, false, true},
+        {0xfc38, false, false, true},
+        {0xfcff, false, false, true},
+
+        // Router ID 63 / kInvalidRloc16 / broadcast (invalid as RLOC16).
+        {0xfd00, false, false, true}, // Child ID = 0x0100
+        {0xfe00, false, true, false}, // Reserved bit 9 set, Child ID = 0
+        {0xfe01, false, false, true},
+        {Mle::kInvalidRloc16, false, false, true},
+        {Mac::kShortAddrBroadcast, false, false, true},
+    };
+
+    Ip6::Prefix prefix = PrefixFromString("fdde:ad00:beef:0::", 64);
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        Ip6::Address address;
+
+        VerifyOrQuit(Mle::IsValidRloc16(testCase.mRloc16) == testCase.mIsValid);
+        VerifyOrQuit(Mle::IsRouterRloc16(testCase.mRloc16) == testCase.mIsRouter);
+        VerifyOrQuit(Mle::IsChildRloc16(testCase.mRloc16) == testCase.mIsChild);
+
+        address.InitAsLocator(AsCoreType(&prefix.mPrefix).GetPrefix(), testCase.mRloc16);
+        VerifyOrQuit(address.GetIid().IsRoutingLocator() == testCase.mIsValid);
+    }
+
+    // Exhaustively verify all 16-bit values against Thread RLOC16 bit layout
+    // and Ip6::InterfaceIdentifier::IsRoutingLocator().
+    for (uint32_t loc = 0; loc <= NumericLimits<uint16_t>::kMax; loc++)
+    {
+        uint16_t                 rloc16         = static_cast<uint16_t>(loc);
+        uint8_t                  routerId       = static_cast<uint8_t>(rloc16 >> 10);
+        bool                     reservedZero   = ((rloc16 & 0x0200) == 0);
+        uint16_t                 childId        = (rloc16 & 0x01ff);
+        bool                     expectedValid  = (routerId <= Mle::kMaxRouterId) && reservedZero;
+        bool                     expectedRouter = (childId == 0);
+        bool                     expectedChild  = (childId != 0);
+        bool                     isValidRouter  = Mle::IsValidRloc16(rloc16) && Mle::IsRouterRloc16(rloc16);
+        bool                     isValidChild   = Mle::IsValidRloc16(rloc16) && Mle::IsChildRloc16(rloc16);
+        Ip6::InterfaceIdentifier iid;
+        Ip6::Address             address;
+
+        VerifyOrQuit(Mle::IsValidRloc16(rloc16) == expectedValid);
+        VerifyOrQuit(Mle::IsRouterRloc16(rloc16) == expectedRouter);
+        VerifyOrQuit(Mle::IsChildRloc16(rloc16) == expectedChild);
+        VerifyOrQuit(Mle::IsRouterRloc16(rloc16) != Mle::IsChildRloc16(rloc16));
+        VerifyOrQuit(Mle::IsValidRloc16(rloc16) == (isValidRouter || isValidChild));
+        VerifyOrQuit(!(isValidRouter && isValidChild));
+        VerifyOrQuit(isValidRouter == (expectedValid && expectedRouter));
+        VerifyOrQuit(isValidChild == (expectedValid && expectedChild));
+
+        iid.InitAsLocator(rloc16);
+        VerifyOrQuit(iid.IsRoutingLocator() == Mle::IsValidRloc16(rloc16));
+
+        address.SetPrefix(prefix);
+        address.SetIid(iid);
+        VerifyOrQuit(address.GetIid().IsRoutingLocator() == Mle::IsValidRloc16(rloc16));
+    }
+
+    printf("TestRloc16Helpers passed\n");
+}
+
 #if OPENTHREAD_FTD
 void TestRouterTableRouterIdBounds(void)
 {
@@ -1001,8 +1306,10 @@ void TestRouterTableRouterIdBounds(void)
 int main(void)
 {
     ot::TestDeviceMode();
+    ot::TestRloc16Helpers();
     ot::TestRouterIdMask();
     ot::UnitTester::TestChildIdResponseNetworkDataHandling();
+    ot::UnitTester::TestRestoreRloc16Validation();
 
 #if OPENTHREAD_FTD
     ot::UnitTester::TestTxChallengeTable();
