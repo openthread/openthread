@@ -81,21 +81,21 @@ exit:
     return;
 }
 
-void SubMac::CslReceiver::ProcessRxFrame(const RxFrame &aFrame)
+void SubMac::CslReceiver::ProcessRxFrame(const RxFrame::ParseInfo &aFrameInfo)
 {
     VerifyOrExit(IsEnabled());
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-    LogReceived(aFrame);
+    LogReceived(aFrameInfo);
 #endif
 
     // Assuming the risk of the parent missing the Enh-ACK in favor of smaller CSL receive window
-    if (aFrame.IsAckedWithSecEnhAck())
+    if (aFrameInfo.IsAckedWithSecEnhAck())
     {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
         SetLastSyncToNow();
 #else
-        mLastSync = aFrame.GetTimestamp();
+        mLastSync = aFrameInfo.GetTimestamp();
 #endif
         Schedule();
     }
@@ -246,21 +246,20 @@ void SubMac::CslReceiver::SetLastSyncToNow(void)
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-void SubMac::CslReceiver::LogReceived(const RxFrame &aFrame)
+void SubMac::CslReceiver::LogReceived(const RxFrame::ParseInfo &aFrameInfo)
 {
-    RxFrame::ParseInfo frameInfo;
-    uint32_t           margin;
-    Radio::Time64      timestamp;
-    uint32_t           deviation;
-    char               signChar;
-    LogLevel           logLevel;
+    uint32_t      margin;
+    Radio::Time64 timestamp;
+    uint32_t      deviation;
+    char          signChar;
+    LogLevel      logLevel;
 
-    SuccessOrExit(frameInfo.ParseFrom(aFrame, Frame::kParseAddrFields));
+    VerifyOrExit(aFrameInfo.mParsedAddrFields);
 
-    VerifyOrExit(Get<SubMac>().HasAddress(frameInfo.mAddrs.mDestination));
+    VerifyOrExit(Get<SubMac>().HasAddress(aFrameInfo.mAddrs.mDestination));
 
     LogDebg("Received frame in state %s, timestamp %lu", StateToString(Get<SubMac>().mState),
-            ToUlong(Radio::ConvertTime64To32(aFrame.GetTimestamp())));
+            ToUlong(Radio::ConvertTime64To32(aFrameInfo.GetTimestamp())));
 
     VerifyOrExit((Get<SubMac>().mState == kStateTimedReceive) || (Get<SubMac>().mState == kStateSleep));
 
@@ -271,7 +270,7 @@ void SubMac::CslReceiver::LogReceived(const RxFrame &aFrame)
     margin = mSampleTime.GetAsTime32() - Radio::ConvertTime64To32(mCurWindow.GetStartTime());
     margin -= Min(margin, kMinReceiveOnAhead);
 
-    timestamp = aFrame.GetTimestamp() + Radio::kHeaderPhrDuration;
+    timestamp = aFrameInfo.GetTimestamp() + Radio::kHeaderPhrDuration;
 
     if (timestamp >= mSampleTime.GetAsTime64())
     {
