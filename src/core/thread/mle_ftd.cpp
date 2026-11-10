@@ -458,6 +458,11 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
 
     if (aRole == kRoleLeader)
     {
+        if (aStartMode == kStartingAsLeader)
+        {
+            mRetrieveNewNetworkData = false;
+        }
+
         ComposeLeaderAloc(mLeaderAloc.GetAddress());
         Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
         Get<NetworkData::Leader>().Start(aStartMode);
