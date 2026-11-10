@@ -90,7 +90,7 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // `HeaderInfo`
 
-bool HeaderInfo::IsRequest(void) const { return IsValueInRange<uint8_t>(mCode, kCodeGet, kCodeDelete); }
+bool HeaderInfo::IsRequest(void) const { return IsValueInRange<uint8_t>(mCode, kCodeGet, kCodeFetch); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // `Message`
@@ -720,6 +720,7 @@ const char *Message::CodeToString(void) const
         {kCodePost, "Post"},
         {kCodePut, "Put"},
         {kCodeDelete, "Delete"},
+        {kCodeFetch, "Fetch"},
         {kCodeCreated, "Created"},
         {kCodeDeleted, "Deleted"},
         {kCodeValid, "Valid"},
