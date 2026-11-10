@@ -149,6 +149,8 @@ public:
 
     /**
      * Stops the supervision listener operation.
+     *
+     * Does nothing if the listener is already stopped.
      */
     void Stop(void);
 
@@ -156,7 +158,9 @@ public:
      * Pauses the supervision listener operation.
      *
      * The pending check timeout keeps running while paused. Received frames do not restart it, and a check timeout
-     * that expires is handled on `Resume()`. Does nothing if the listener is not running.
+     * that expires is handled on `Resume()`.
+     *
+     * Does nothing if the listener is not running or already paused.
      */
     void Pause(void);
 

@@ -88,6 +88,25 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
 
 public:
     /**
+     * Represents the configured sleep mode of the device.
+     */
+    enum SleepMode : uint8_t
+    {
+        kNonSleepy,      ///< Non-sleepy operation (rx-on when idle, no data polling or supervision).
+        kDetachedSleepy, ///< Detached sleepy operation (rx-off when idle, no data polling or supervision).
+        kSleepy,         ///< Sleepy child operation (rx-off when idle, data polling, child supervision).
+    };
+
+    /**
+     * Represents a requester that temporarily suspends sleepy operation.
+     */
+    enum SuspendRequester : uint8_t
+    {
+        kRequesterDiscoverScanner = 1 << 0, ///< `DiscoverScanner`.
+        kRequesterMleAttacher     = 1 << 1, ///< MLE Attacher (including ParentSearch).
+    };
+
+    /**
      * Represents the IPv6 message counters, tracking the number IPv6 message TX and RX that succeeded or failed.
      */
     class Counters : public otIpCounters, public Clearable<Counters>
@@ -147,7 +166,10 @@ public:
     void HandleResolved(const Ip6::Address &aEid, Error aError);
 
     /**
-     * Indicates whether or not rx-on-when-idle mode is enabled.
+     * Indicates whether or not rx-on-when-idle mode is enabled at the MAC layer.
+     *
+     * This is determined and controlled by the current `SleepMode` and whether sleepy operation is currently
+     * suspended (see `SuspendSleepyOperation()`).
      *
      * @retval TRUE   The rx-on-when-idle mode is enabled.
      * @retval FALSE  The rx-on-when-idle-mode is disabled.
@@ -155,26 +177,43 @@ public:
     bool GetRxOnWhenIdle(void) const;
 
     /**
-     * Sets the rx-on-when-idle mode
+     * Gets the sleep mode of the device.
      *
-     * @param[in]  aRxOnWhenIdle  TRUE to enable, FALSE otherwise.
+     * @returns The current sleep mode.
      */
-    void SetRxOnWhenIdle(bool aRxOnWhenIdle);
+    SleepMode GetSleepMode(void) const { return mSleepMode; }
 
     /**
-     * Temporarily enables rx-on-when-idle on an rx-off-when-idle device, without changing its device mode.
+     * Sets the sleep mode of the device.
      *
-     * Data polling is stopped and the child supervision check is paused. Use `ResumeSleepyOperation()` to restore
-     * sleepy operation.
+     * @param[in]  aMode  The sleep mode to set.
      */
-    void SuspendSleepyOperation(void);
+    void SetSleepMode(SleepMode aMode);
 
     /**
-     * Restores sleepy operation after `SuspendSleepyOperation()`.
+     * Suspends sleepy operation temporarily by a given requester, enabling rx-on-when-idle without changing the
+     * configured sleep mode.
      *
-     * Data polling is restarted and the child supervision check resumes with its pending timeout.
+     * If currently in `kSleepy`, data polling is stopped and child supervision checks are paused. If in
+     * `kDetachedSleepy`, the MAC receiver stays on while idle. The requester is tracked even when in `kNonSleepy` so
+     * that the suspension is applied if the sleep mode changes while still suspended.
+     *
+     * Use `ResumeSleepyOperation()` with the same requester to lift the suspension.
+     *
+     * @param[in]  aRequester  The requester initiating the suspension.
      */
-    void ResumeSleepyOperation(void);
+    void SuspendSleepyOperation(SuspendRequester aRequester);
+
+    /**
+     * Resumes sleepy operation after a prior `SuspendSleepyOperation()` call by the given requester.
+     *
+     * Once all active requesters have resumed, restores the operation corresponding to the configured sleep mode
+     * (restarting data polling and resuming child supervision if in `kSleepy`, or returning to detached
+     * sleep if in `kDetachedSleepy`). Calling this when the requester bit is already cleared is a no-op.
+     *
+     * @param[in]  aRequester  The requester ending its suspension.
+     */
+    void ResumeSleepyOperation(SuspendRequester aRequester);
 
 #if OPENTHREAD_FTD
     /**
@@ -445,6 +484,13 @@ private:
     };
 #endif
 
+    void UpdateSleepState(void);
+    void ClearAllSleepSuspendRequesters(void) { mSleepSuspendRequesters = 0; }
+    void AddSleepSuspendRequester(SuspendRequester aRequester) { mSleepSuspendRequesters |= aRequester; }
+    void RemoveSleepSuspendRequester(SuspendRequester aRequester) { mSleepSuspendRequesters &= ~aRequester; }
+    bool IsSleepModeSuspendedBy(SuspendRequester aRequester) const { return (mSleepSuspendRequesters & aRequester); }
+    bool IsSleepModeSuspended(void) const { return mSleepSuspendRequesters != 0; }
+
 #if OPENTHREAD_FTD
     bool  IsReachable(uint16_t aMeshDest, const Ip6::Header &aIp6Header) const;
     void  CheckReachabilityToSendIcmpError(const Message &aMessage, const Mac::Addresses &aMacAddrs);
@@ -589,6 +635,8 @@ private:
     Mac::Addresses mMacAddrs;
     uint16_t       mMeshSource;
     uint16_t       mMeshDest;
+    SleepMode      mSleepMode;
+    uint8_t        mSleepSuspendRequesters;
     bool           mAddMeshHeader : 1;
     bool           mEnabled : 1;
     bool           mTxPaused : 1;

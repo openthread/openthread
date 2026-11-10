@@ -240,7 +240,7 @@ Error Mle::BecomeRouter(RouterUpgradeReason aReason)
 
     LogInfo("Attempt to become router, reason:%s", RouterUpgradeReasonToString(aReason));
 
-    Get<MeshForwarder>().SetRxOnWhenIdle(true);
+    Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
     mRoleTransitioner.StopTimeout();
 
     error = SendAddressSolicit(aReason);
