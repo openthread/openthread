@@ -1633,6 +1633,22 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
         SuccessOrExit(error = ParseRadioFrame(mAckRadioFrame, aBuffer, aLength, unpacked));
         aBuffer += unpacked;
         aLength -= static_cast<uint16_t>(unpacked);
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_IMM_ACK_FCS_COMPATIBILITY_WORKAROUND_ENABLE
+        {
+            static constexpr uint8_t k154FcsSize        = sizeof(uint16_t);
+            static constexpr uint8_t kImmAckLengthNoFcs = Mac::Frame::GetImmAckLength() - k154FcsSize;
+
+            // The ACK length must include the 2-byte 802.15.4 FCS (whose bytes
+            // need not be valid), but some RCPs report an Imm-Ack without it.
+
+            if (mAckRadioFrame.mLength == kImmAckLengthNoFcs)
+            {
+                memset(&mAckRadioFrame.mPsdu[kImmAckLengthNoFcs], 0, k154FcsSize);
+                mAckRadioFrame.mLength = Mac::Frame::GetImmAckLength();
+            }
+        }
+#endif
     }
     else
     {

@@ -293,6 +293,127 @@ TEST(RadioSpinelTransmit, shouldNotCauseSwitchingToRxAfterTxDoneIfNotRxOnWhenIdl
     EXPECT_EQ(platform.GetReceiveChannel(), 11);
 }
 
+#if OPENTHREAD_SPINEL_CONFIG_RCP_IMM_ACK_FCS_COMPATIBILITY_WORKAROUND_ENABLE
+TEST(RadioSpinelTransmit, shouldIncludeFcsInImmAckReportedWithoutFcs)
+{
+    class ImmAckPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        otError Transmit(otRadioFrame *aFrame) override
+        {
+            mTxFrame = aFrame;
+            otPlatRadioTxStarted(FakePlatform::CurrentInstance(), aFrame);
+
+            return OT_ERROR_NONE;
+        }
+
+        void ReportTxDoneWithImmAck(uint16_t aAckLength)
+        {
+            uint8_t      ackPsdu[OT_RADIO_FRAME_MAX_SIZE] = {0x02, 0x00, mTxFrame->mPsdu[2]};
+            otRadioFrame ackFrame{};
+
+            ackFrame.mPsdu    = ackPsdu;
+            ackFrame.mLength  = aAckLength;
+            ackFrame.mChannel = mTxFrame->mChannel;
+
+            otPlatRadioTxDone(FakePlatform::CurrentInstance(), mTxFrame, &ackFrame, OT_ERROR_NONE);
+        }
+
+        otRadioFrame *mTxFrame = nullptr;
+    };
+
+    struct TxDoneResult
+    {
+        Error    mTxError;
+        uint16_t mAckLength;
+        Error    mAckParseError;
+        bool     mAckParsedFully;
+        uint8_t  mAckType;
+        uint8_t  mAckSequenceNum;
+    };
+
+    static constexpr uint8_t  kSequenceNum  = 0x5a;
+    static constexpr uint16_t kAckLengths[] = {Mac::Frame::GetImmAckLength() - sizeof(uint16_t),
+                                               Mac::Frame::GetImmAckLength()};
+
+    static TxDoneResult sResult;
+
+    ImmAckPlatform               platform;
+    Spinel::RadioSpinelCallbacks callbacks{};
+    uint8_t                      frameBuffer[OT_RADIO_FRAME_MAX_SIZE]{};
+    Mac::TxFrame                 txFrame{};
+
+    callbacks.mReceiveDone    = [](otInstance *, otRadioFrame *, Error) {};
+    callbacks.mEnergyScanDone = [](otInstance *, int8_t) {};
+    callbacks.mTxStarted      = [](otInstance *, otRadioFrame *) {};
+    callbacks.mTransmitDone   = [](otInstance *, otRadioFrame *, otRadioFrame *aAckFrame, Error aError) {
+        Mac::RxFrame::ParseInfo ackFrameInfo;
+
+        sResult.mTxError = aError;
+
+        if (aAckFrame != nullptr)
+        {
+            sResult.mAckLength = aAckFrame->mLength;
+            sResult.mAckParseError =
+                ackFrameInfo.ParseFrom(*static_cast<Mac::RxFrame *>(aAckFrame), Mac::Frame::kParseFully);
+            sResult.mAckParsedFully = ackFrameInfo.mParsedFully;
+            sResult.mAckType        = ackFrameInfo.mType;
+            sResult.mAckSequenceNum = ackFrameInfo.mSequenceNum;
+        }
+    };
+
+    txFrame.mPsdu = frameBuffer;
+
+    {
+        Mac::TxFrame::BuildInfo buildInfo;
+        Mac::TxFrame::ParseInfo frameInfo;
+        constexpr uint8_t       kDstAddr[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(0xac00);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(0x1234);
+        buildInfo.mPanIds.SetDestination(0x4321);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
+
+        ASSERT_EQ(frameInfo.ParseFrom(txFrame, Mac::Frame::kParseFully), kErrorNone);
+        frameInfo.WriteSequenceNum(kSequenceNum);
+    }
+
+    txFrame.mChannel = 11;
+
+    platform.mRadioSpinel.SetCallbacks(callbacks);
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    // An Imm-Ack reported without the FCS, then a compliant Imm-Ack.
+
+    for (uint16_t ackLength : kAckLengths)
+    {
+        sResult           = {};
+        sResult.mTxError  = kErrorFailed;
+        platform.mTxFrame = nullptr;
+
+        ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+        platform.GoInMs(1);
+        ASSERT_NE(platform.mTxFrame, nullptr);
+
+        platform.ReportTxDoneWithImmAck(ackLength);
+        platform.GoInMs(1);
+        platform.mRadioSpinel.Process(nullptr);
+
+        EXPECT_EQ(sResult.mTxError, kErrorNone);
+        EXPECT_EQ(sResult.mAckLength, Mac::Frame::GetImmAckLength());
+        EXPECT_EQ(sResult.mAckParseError, kErrorNone);
+        EXPECT_TRUE(sResult.mAckParsedFully);
+        EXPECT_EQ(sResult.mAckType, Mac::Frame::kTypeAck);
+        EXPECT_EQ(sResult.mAckSequenceNum, kSequenceNum);
+    }
+}
+#endif
+
 TEST(RadioSpinelReceiveAt, shouldReceiveAtGiveRadioTime)
 {
     class MockPlatform : public FakeCoprocessorPlatform

@@ -102,6 +102,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_SPINEL_CONFIG_RCP_IMM_ACK_FCS_COMPATIBILITY_WORKAROUND_ENABLE
+ *
+ * Define to 1 to enable a compatibility workaround for RCPs that report an Imm-Ack in the transmit-done response
+ * without the FCS.
+ *
+ * The length of a radio frame (`otRadioFrame::mLength`) must include the FCS, even when the radio verifies and strips
+ * it (the FCS bytes need not be valid). When enabled, `RadioSpinel` restores the length of an Imm-Ack reported without
+ * the FCS so that the ACK can be parsed.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_IMM_ACK_FCS_COMPATIBILITY_WORKAROUND_ENABLE
+#define OPENTHREAD_SPINEL_CONFIG_RCP_IMM_ACK_FCS_COMPATIBILITY_WORKAROUND_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES
  *
  * Defines size of the local source match table used by RadioSpinel
