@@ -290,10 +290,10 @@ private:
     DeclareTmfResponseHandlerIn(DatasetManager, HandleMgmtSetResponse);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    void  MoveKeysToSecureStorage(Dataset &aDataset) const;
+    Error MoveKeysToSecureStorage(Dataset &aDataset) const;
     void  DestroySecurelyStoredKeys(void) const;
-    void  EmplaceSecurelyStoredKeys(Dataset &aDataset) const;
-    void  SaveTlvInSecureStorageAndClearValue(Dataset &aDataset, Tlv::Type aTlvType, KeyRef aKeyRef) const;
+    Error EmplaceSecurelyStoredKeys(Dataset &aDataset) const;
+    Error SaveTlvInSecureStorageAndClearValue(Dataset &aDataset, Tlv::Type aTlvType, KeyRef aKeyRef) const;
     Error ReadTlvFromSecureStorage(Dataset &aDataset, Tlv::Type aTlvType, KeyRef aKeyRef) const;
 #endif
 
