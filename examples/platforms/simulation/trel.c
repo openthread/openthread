@@ -187,7 +187,7 @@ static void processMessage(otInstance *aInstance, Message *aMessage, uint16_t aL
     switch (aMessage->mType)
     {
     case TREL_DATA_MESSAGE:
-        otEXPECT(aMessage->mSockAddr.mPort == sSocket.mPort);
+        otEXPECT(aMessage->mSockAddr.mPort == sSockAddr.mPort);
         otEXPECT(otIp6IsAddressEqual(&aMessage->mSockAddr.mAddress, &sSockAddr.mAddress));
         otPlatTrelHandleReceived(aInstance, aMessage->mData, aMessage->mDataLength, &aMessage->mSourceAddr);
         break;
@@ -218,7 +218,7 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    *aUdpPort = sSocket.mPort;
+    *aUdpPort = sSockAddr.mPort;
 
 #if DEBUG_LOG
     fprintf(stderr, "\r\n[trel-sim] otPlatTrelEnable() *aUdpPort=%u\r\n", *aUdpPort);
