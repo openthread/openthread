@@ -4454,6 +4454,7 @@ void Mle::PrevRoleRestorer::SendMulticastLinkRequest(void)
 Mle::Attacher::Attacher(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mReceivedResponseFromParent(false)
+    , mSleepyOperationSuspended(false)
     , mState(kStateIdle)
     , mMode(kAnyPartition)
     , mReattachMode(kReattachModeStop)
@@ -4525,6 +4526,14 @@ void Mle::Attacher::CancelAttachOnRoleChange(void)
 
 void Mle::Attacher::SetState(State aState)
 {
+    // Every path that ends a search goes through `kStateIdle`, so
+    // ending the sleepy operation suspension here covers all of them.
+
+    if (aState == kStateIdle)
+    {
+        EndSleepyOperationSuspension();
+    }
+
     VerifyOrExit(aState != mState);
     LogInfo("AttachState %s -> %s", StateToString(mState), StateToString(aState));
     mState = aState;
@@ -4795,6 +4804,7 @@ void Mle::Attacher::HandleTimer(void)
         if (Get<Mle>().IsChild() && !Get<Mle>().IsRxOnWhenIdle())
         {
             Get<MeshForwarder>().SuspendSleepyOperation();
+            mSleepyOperationSuspended = true;
         }
         else
         {
@@ -4931,14 +4941,8 @@ uint32_t Mle::Attacher::Reattach(void)
         if (Get<Mle>().IsChild())
         {
             // If already attached (e.g., trying to find a better
-            // parent or partition), and attach fails, we revert to
-            // sleepy operation if needed and stop the attach process.
-
-            if (!Get<Mle>().IsRxOnWhenIdle())
-            {
-                Get<DataPollSender>().SetAttachMode(false);
-                Get<MeshForwarder>().ResumeSleepyOperation();
-            }
+            // parent or partition), and attach fails, we stop the
+            // attach process.
 
             ExitNow();
         }
@@ -4971,6 +4975,34 @@ uint32_t Mle::Attacher::Reattach(void)
 
 exit:
     return delay;
+}
+
+void Mle::Attacher::EndSleepyOperationSuspension(void)
+{
+    // Applies the current device mode once the search that
+    // suspended sleepy operation on `kStateStart` ends. When the
+    // device is no longer a child, the role change handles the
+    // receiver and the supervision listener. When the device mode
+    // switched to rx-on during the search, the listener is stopped
+    // so that a later switch back to sleepy restarts it.
+
+    VerifyOrExit(mSleepyOperationSuspended);
+    mSleepyOperationSuspended = false;
+
+    VerifyOrExit(Get<Mle>().IsChild());
+
+    if (Get<Mle>().IsRxOnWhenIdle())
+    {
+        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+    }
+    else
+    {
+        Get<DataPollSender>().SetAttachMode(false);
+        Get<MeshForwarder>().ResumeSleepyOperation();
+    }
+
+exit:
+    return;
 }
 
 void Mle::Attacher::SendParentRequest(ParentRequestType aType)

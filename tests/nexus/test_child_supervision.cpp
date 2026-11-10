@@ -439,6 +439,88 @@ void TestChildSupervisionAfterBetterParentFound(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
+void TestChildSupervisionChangesDuringBetterParentSearch(void)
+{
+    static constexpr uint16_t kCheckTimeout        = 25; // (seconds)
+    static constexpr uint16_t kSupervisionInterval = 10; // (seconds)
+
+    Core nexus;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    // A parent sending supervision messages more often than the check timeout keeps the check from firing, so only
+    // losing the parent fires it.
+    sed.Get<SupervisionListener>().SetInterval(kSupervisionInterval);
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    Mle::DeviceMode sedMode = sed.Get<Mle::Mle>().GetDeviceMode();
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Switch the child to rx-on and back to rx-off during a better parent search");
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    nexus.AdvanceTime(100);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsAttaching());
+
+    SuccessOrQuit(
+        sed.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(sedMode.Get() | Mle::DeviceMode::kModeRxOnWhenIdle)));
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsAttaching());
+    nexus.AdvanceTime(1000);
+    SuccessOrQuit(sed.Get<Mle::Mle>().SetDeviceMode(sedMode));
+    nexus.AdvanceTime(10 * 1000);
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(!sed.Get<Mac::Mac>().GetRxOnWhenIdle());
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Change the child mode, staying sleepy, during a better parent search");
+
+    // The mode change cancels the search without a re-attach, so sleepy operation and supervision must resume. The
+    // rx-on mode change above restarts the listener, so this step runs last to keep a stuck listener detectable.
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    nexus.AdvanceTime(100);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsAttaching());
+
+    SuccessOrQuit(
+        sed.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(sedMode.Get() ^ Mle::DeviceMode::kModeFullNetworkData)));
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsAttaching());
+    nexus.AdvanceTime(10 * 1000);
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(!sed.Get<Mac::Mac>().GetRxOnWhenIdle());
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Block traffic from child on parent");
+
+    sed.Get<SupervisionListener>().ResetCounter();
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + 10 * 1000);
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -449,6 +531,7 @@ int main(void)
     ot::Nexus::TestChildSupervisionChangesDuringDiscoveryScan();
     ot::Nexus::TestChildSupervisionWithBetterParentSearches();
     ot::Nexus::TestChildSupervisionAfterBetterParentFound();
+    ot::Nexus::TestChildSupervisionChangesDuringBetterParentSearch();
     printf("All tests passed\n");
     return 0;
 }

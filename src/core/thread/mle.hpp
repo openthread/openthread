@@ -1932,6 +1932,7 @@ private:
         uint32_t GetStartDelay(void) const;
         bool     HasAcceptableParentCandidate(void) const;
         uint32_t Reattach(void);
+        void     EndSleepyOperationSuspension(void);
 
         Error DetermineParentRequestType(ParentRequestType &aType) const;
         Error GetNextAnnounceChannel(uint8_t &aChannel) const;
@@ -1956,6 +1957,7 @@ private:
         using AttachTimer = TimerMilliIn<Mle, &Mle::HandleAttacherTimer>;
 
         bool                    mReceivedResponseFromParent : 1;
+        bool                    mSleepyOperationSuspended : 1;
         State                   mState;
         AttachMode              mMode;
         ReattachMode            mReattachMode;
