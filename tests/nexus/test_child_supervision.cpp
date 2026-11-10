@@ -317,7 +317,7 @@ void TestChildSupervisionWithBetterParentSearches(void)
 {
     static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
     static constexpr uint32_t kSearchPeriod = 10 * 1000; // (msec)
-    static constexpr uint32_t kMaxWaitTime  = 60 * 1000; // (msec)
+    static constexpr uint32_t kMaxWaitTime  = 40 * 1000; // (msec)
 
     Core     nexus;
     uint32_t elapsed = 0;
@@ -367,7 +367,8 @@ void TestChildSupervisionWithBetterParentSearches(void)
 
 void TestChildSupervisionAfterBetterParentFound(void)
 {
-    static constexpr uint16_t kCheckTimeout = 25; // (seconds)
+    static constexpr uint16_t kCheckTimeout        = 25; // (seconds)
+    static constexpr uint16_t kSupervisionInterval = 10; // (seconds)
 
     Core nexus;
 
@@ -390,6 +391,10 @@ void TestChildSupervisionAfterBetterParentFound(void)
     nexus.AdvanceTime(15 * 1000);
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
 
+    // A parent sending supervision messages more often than the check timeout keeps the check from firing, so only
+    // losing the parent fires it.
+    sed.Get<SupervisionListener>().SetInterval(kSupervisionInterval);
+
     sed.Join(leader, Node::kAsSed);
     nexus.AdvanceTime(5 * 1000);
     VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
@@ -400,12 +405,18 @@ void TestChildSupervisionAfterBetterParentFound(void)
 
     SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
     sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+    sed.Get<SupervisionListener>().ResetCounter();
+
+    // Advance partway through `kCheckTimeout` before searching, so the wait for the attach below passes the check
+    // deadline set while attached to the previous parent.
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) - 5 * 1000);
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Degrade the link to the leader and search for a better parent");
 
     // The search succeeds, so the child leaves the temporary rx-on period through the attach instead of the failure
-    // path, and supervision must keep working with the new parent.
+    // path, and supervision must restart with the full timeout for the new parent.
 
     SuccessOrQuit(sed.Get<Mac::Filter>().AddRssIn(leader.Get<Mac::Mac>().GetExtAddress(),
                                                   GetTypicalRssForLinkQuality(-100, kLinkQuality1)));
@@ -417,7 +428,7 @@ void TestChildSupervisionAfterBetterParentFound(void)
 
     VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(sed.Get<Mle::Mle>().GetParent().GetExtAddress() == router.Get<Mac::Mac>().GetExtAddress());
-    sed.Get<SupervisionListener>().ResetCounter();
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Block traffic from child on the new parent");
