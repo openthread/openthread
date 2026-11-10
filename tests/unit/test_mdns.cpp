@@ -7793,6 +7793,61 @@ void TestIp6AddrResolver(void)
     }
 
     VerifyOrQuit(dnsMsg == nullptr);
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Receive a second address during the 80%% TTL jitter window and verify the 80%% query is not skipped.");
+
+    addrs[0].mTtl = 200;
+    SendHostAddrResponse("myhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+    AdvanceTime(15 * 1000);
+    sDnsMessages.Clear();
+
+    addrs[0].mTtl = 100;
+    SendHostAddrResponse("myhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    AdvanceTime(80 * 1000 + 1);
+
+    addrs[1].mTtl = 200;
+    SendHostAddrResponse("myhost.local.", &addrs[1], 1, /* aCacheFlush */ false, kInAnswerSection);
+
+    AdvanceTime(3 * 1000);
+
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    sDnsMessages.Clear();
+    sAddrCallbacks.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop and restart the resolver after 80%% of TTL has passed.");
+    Log("Ensure the initial query waits for at least the minimum initial delay (20 ms).");
+
+    addrs[0].mTtl = 100;
+    SendHostAddrResponse("myhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    SuccessOrQuit(mdns->StopIp6AddressResolver(resolver));
+
+    AdvanceTime(85 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+    sAddrCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver));
+
+    AdvanceTime(19);
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    sAddrCallbacks.Clear();
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(120);
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    sDnsMessages.Clear();
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Verify unrelated and zero-TTL responses do not stop initial query retries.");
