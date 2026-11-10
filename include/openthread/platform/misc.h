@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_PLATFORM_MISC_H_
 #define OPENTHREAD_PLATFORM_MISC_H_
 
+#include <stdint.h>
+
 #include <openthread/error.h>
 #include <openthread/instance.h>
 
@@ -202,6 +204,40 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance);
  * @retval OT_ERROR_NOT_CAPABLE     Platform is not capable of logging a crash dump
  */
 otError otPlatLogCrashDump(void);
+
+/**
+ * Gets the current battery level (percentage of remaining capacity).
+ *
+ * This is an optional platform API. If the platform does not support reporting battery level (for example, if the
+ * device is mains-powered), it can return `OT_ERROR_NOT_IMPLEMENTED`.
+ *
+ * The Thread specification defines the Battery Level TLV as the percentage of remaining battery capacity in the range
+ * `[0, 100]`. The OpenThread stack does not apply any checks on the returned value from this API and includes it
+ * as-is in the Battery Level TLV in Network Diagnostic responses.
+ *
+ * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[out] aBatteryLevel  A pointer to a variable to output the battery level.
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the battery level.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  Platform does not support reporting battery level.
+ * @retval OT_ERROR_FAILED           Failed to get the battery level.
+ */
+otError otPlatGetBatteryLevel(otInstance *aInstance, uint8_t *aBatteryLevel);
+
+/**
+ * Gets the current supply voltage in millivolts (mV).
+ *
+ * This is an optional platform API. If the platform does not support reporting supply voltage, it can return
+ * `OT_ERROR_NOT_IMPLEMENTED`.
+ *
+ * @param[in]  aInstance       The OpenThread instance structure.
+ * @param[out] aSupplyVoltage  A pointer to a variable to output the supply voltage in millivolts (mV).
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the supply voltage.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  Platform does not support reporting supply voltage.
+ * @retval OT_ERROR_FAILED           Failed to get the supply voltage.
+ */
+otError otPlatGetSupplyVoltage(otInstance *aInstance, uint16_t *aSupplyVoltage);
 
 /**
  * @}
