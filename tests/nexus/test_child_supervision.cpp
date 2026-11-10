@@ -521,6 +521,85 @@ void TestChildSupervisionChangesDuringBetterParentSearch(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
+void TestChildSupervisionTimeoutChangesDuringBetterParentSearch(void)
+{
+    static constexpr uint16_t kCheckTimeout   = 25;        // (seconds)
+    static constexpr uint32_t kSearchWaitTime = 10 * 1000; // (msec)
+
+    Core nexus;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    // With the default supervision interval, much longer than `kCheckTimeout`, the parent sends no frame to the child
+    // during the steps below, so an armed check timeout fires.
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+    sed.Get<SupervisionListener>().ResetCounter();
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Disable the supervision check during a better parent search");
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    nexus.AdvanceTime(100);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsAttaching());
+    sed.Get<SupervisionListener>().SetTimeout(0);
+
+    // Wait past the fire time the check timeout had before it was disabled.
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) + kSearchWaitTime);
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsAttaching());
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Run a better parent search with the supervision check disabled");
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    nexus.AdvanceTime(kSearchWaitTime);
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsAttaching());
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Enable the supervision check during a better parent search");
+
+    // The check timeout starts in full when enabled, so the end of the search must not fire it from a stale fire time,
+    // and the check must then fire once the full timeout passes.
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    nexus.AdvanceTime(100);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsAttaching());
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+    nexus.AdvanceTime(kSearchWaitTime);
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsAttaching());
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() == 0);
+
+    nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout));
+
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -532,6 +611,7 @@ int main(void)
     ot::Nexus::TestChildSupervisionWithBetterParentSearches();
     ot::Nexus::TestChildSupervisionAfterBetterParentFound();
     ot::Nexus::TestChildSupervisionChangesDuringBetterParentSearch();
+    ot::Nexus::TestChildSupervisionTimeoutChangesDuringBetterParentSearch();
     printf("All tests passed\n");
     return 0;
 }
