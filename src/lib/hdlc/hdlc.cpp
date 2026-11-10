@@ -216,9 +216,19 @@ void Decoder::Init(Spinel::FrameWritePointer &aFrameWritePointer, FrameHandler a
 
 void Decoder::Reset(void)
 {
+    // A frame is in progress if the decoder is synced and has already written bytes of it into the frame buffer.
+    bool frameInProgress = (mState != kStateNoSync) && (mDecodedLength > 0);
+
     mState         = kStateNoSync;
     mFcs           = 0;
     mDecodedLength = 0;
+
+    // The bytes of the interrupted frame are still in the frame buffer. Report it as aborted so that the owner
+    // discards them; otherwise they would be prepended to the next frame that gets decoded.
+    if (frameInProgress && (mFrameHandler != nullptr))
+    {
+        mFrameHandler(mContext, OT_ERROR_ABORT);
+    }
 }
 
 void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
@@ -263,6 +273,9 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
                         error = OT_ERROR_NONE;
                     }
 
+                    // The frame is complete. Clear the length first so that `Reset()` called from within the handler
+                    // does not mistake this frame for one still in progress.
+                    mDecodedLength = 0;
                     mFrameHandler(mContext, error);
                 }
 
