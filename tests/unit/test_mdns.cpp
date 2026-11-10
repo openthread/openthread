@@ -6845,6 +6845,42 @@ void TestSrvResolver(void)
     VerifyOrQuit(sDnsMessages.IsEmpty());
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Receive multiple responses and verify the 80%% TTL refresh query is sent.");
+
+    // First send a response with `TTL = 1` and advance 2 seconds so the
+    // cached record expires and any leftover `mFireTime` from preceding
+    // test steps is cleared.
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 1, kInAnswerSection);
+    AdvanceTime(2 * 1000);
+    sDnsMessages.Clear();
+
+    // Send 20 back-to-back responses with `TTL = 100`. Each response
+    // recalculates a random jittered refresh time in `[80s, 82s)`.
+    // This verifies that `DetermineNextFireTime()` clears `mFireTime`
+    // on each update (rather than keeping the earliest jitter roll in
+    // `mFireTime` while `mNextQueryTime` holds the latest roll, which
+    // would cause the timer to fire early in `[80s, 82s)` and skip the
+    // 80% TTL refresh query).
+
+    for (uint8_t count = 0; count < 20; count++)
+    {
+        SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 100, kInAnswerSection);
+    }
+
+    sSrvCallbacks.Clear();
+
+    AdvanceTime(83 * 1000);
+
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
