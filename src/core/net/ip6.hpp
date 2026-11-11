@@ -370,13 +370,13 @@ private:
     Error ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHeader, OffsetRange &aOffsetRange) const;
     bool  HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const;
     Error ApplyTmfAndMdnsFilters(const Message &aMessage, uint8_t aNextHeader) const;
-    Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
     Error HandleFragment(Message &aMessage);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    void CleanupFragmentationBuffer(void);
-    void HandleTimeTick(void);
-    void UpdateReassemblyList(void);
-    void SendIcmpError(Message &aMessage, Icmp6Header::Type aIcmpType, Icmp6Header::Code aIcmpCode);
+    Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
+    void  CleanupFragmentationBuffer(void);
+    void  HandleTimeTick(void);
+    void  UpdateReassemblyList(void);
+    void  SendIcmpError(Message &aMessage, Icmp6Header::Type aIcmpType, Icmp6Header::Code aIcmpCode);
 #endif
     Error ReadHopByHopHeader(const Message &aMessage, OffsetRange &aOffsetRange, HopByHopHeader &aHbhHeader) const;
     Error AddMplOption(Message &aMessage, Header &aHeader);

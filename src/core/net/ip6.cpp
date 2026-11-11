@@ -432,6 +432,10 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     header.SetDestination(aMessageInfo.GetPeerAddr());
 
+#if !OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    VerifyOrExit(sizeof(Header) + payloadLength <= kMaxDatagramLength, aMessage.Free());
+#endif
+
     if (aMessageInfo.GetPeerAddr().IsRealmLocalMulticast())
     {
         SuccessOrExit(error = AddMplOption(aMessage, header));
@@ -448,11 +452,13 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     aMessage.SetMulticastLoop(aMessageInfo.GetMulticastLoop());
 
-    if (aMessage.GetLength() > kMaxDatagramLength)
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    if (sizeof(Header) + payloadLength > kMaxDatagramLength)
     {
         error = FragmentDatagram(aMessage, aIpProto);
     }
     else
+#endif
     {
         EnqueueDatagram(aMessage);
     }
@@ -827,15 +833,6 @@ exit:
 }
 
 #else
-Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
-{
-    OT_UNUSED_VARIABLE(aIpProto);
-
-    EnqueueDatagram(aMessage);
-
-    return kErrorNone;
-}
-
 Error Ip6::HandleFragment(Message &aMessage)
 {
     Error          error;
@@ -1126,8 +1123,13 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
 
     VerifyOrExit(mReceiveCallback.IsSet(), error = kErrorNoRoute);
 
-    // Do not pass IPv6 packets that exceed kMinimalMtu.
-    VerifyOrExit(aMessagePtr->GetLength() <= kMinimalMtu, error = kErrorDrop);
+    // Do not pass IPv6 packets that exceed kMinimalMtu. For multicast,
+    // an MPL option may make the on-mesh packet temporarily larger than
+    // kMinimalMtu before `RemoveMplOption()` strips it below.
+    if (!aHeader.GetDestination().IsMulticast())
+    {
+        VerifyOrExit(aMessagePtr->GetLength() <= kMinimalMtu, error = kErrorDrop);
+    }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
     if (!aReceive)
@@ -1183,6 +1185,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
     SuccessOrExit(error = TakeOrCopyMessagePtr(messagePtr, aMessagePtr, aMessageOwnership));
 
     IgnoreError(RemoveMplOption(*messagePtr));
+    VerifyOrExit(messagePtr->GetLength() <= kMinimalMtu, error = kErrorDrop);
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     error = Get<Nat64::Translator>().TranslateIp6ToIp4(*messagePtr);
@@ -1232,6 +1235,7 @@ Error Ip6::SendRaw(OwnedPtr<Message> aMessagePtr)
 
     VerifyOrExit(!aMessagePtr->IsOriginThreadNetif(), error = kErrorInvalidArgs);
     SuccessOrExit(error = header.ParseFrom(*aMessagePtr));
+    VerifyOrExit(header.IsValid(), error = kErrorParse);
     VerifyOrExit(!header.GetSource().IsMulticast(), error = kErrorInvalidSourceAddress);
 
     aMessagePtr->SetOffset(sizeof(header));
@@ -1427,6 +1431,11 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
     VerifyOrExit(aRecursionDepth <= kMaxRecursionDepth, error = kErrorDrop);
 
     SuccessOrExit(error = header.ParseFrom(*aMessagePtr));
+
+    if (aRecursionDepth > 0)
+    {
+        VerifyOrExit(header.IsValid(), error = kErrorParse);
+    }
 
     if (!aMessagePtr->IsOriginHostTrusted())
     {
