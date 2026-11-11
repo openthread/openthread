@@ -38,29 +38,28 @@
 #include <openthread/thread_direct.h>
 
 #include "common/as_core_type.hpp"
-#include "common/const_cast.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;
 
-const otThreadDirectKey *otThreadDirectRegisterKey(otInstance                      *aInstance,
-                                                   const otThreadDirectKeyMaterial *aKeyMaterial,
-                                                   const otThreadDirectKeyId       *aKeyId)
+otThreadDirectKey *otThreadDirectRegisterKey(otInstance                      *aInstance,
+                                             const otThreadDirectKeyMaterial *aKeyMaterial,
+                                             const otThreadDirectKeyId       *aKeyId)
 {
     return AsCoreType(aInstance).Get<ThreadDirect::KeyManager>().RegisterKey(AsCoreType(aKeyMaterial),
                                                                              AsCoreType(aKeyId));
 }
 
-const otThreadDirectKey *otThreadDirectFindKey(otInstance                      *aInstance,
-                                               const otThreadDirectKeyMaterial *aKeyMaterial,
-                                               const otThreadDirectKeyId       *aKeyId)
+otThreadDirectKey *otThreadDirectFindKey(otInstance                      *aInstance,
+                                         const otThreadDirectKeyMaterial *aKeyMaterial,
+                                         const otThreadDirectKeyId       *aKeyId)
 {
     return AsCoreType(aInstance).Get<ThreadDirect::KeyManager>().FindKey(AsCoreType(aKeyMaterial), AsCoreType(aKeyId));
 }
 
-void otThreadDirectUnregisterKey(otInstance *aInstance, const otThreadDirectKey *aKey)
+void otThreadDirectUnregisterKey(otInstance *aInstance, otThreadDirectKey *aKey)
 {
-    AsCoreType(aInstance).Get<ThreadDirect::KeyManager>().UnregisterKey(AsNonConst(AsCoreType(aKey)));
+    AsCoreType(aInstance).Get<ThreadDirect::KeyManager>().UnregisterKey(AsCoreType(aKey));
 }
 
 void otThreadDirectUnregisterAllKeys(otInstance *aInstance)
@@ -73,18 +72,18 @@ void otThreadDirectInitKeyIterator(otInstance *aInstance, otThreadDirectKeyItera
     AsCoreType(aIterator).Init(AsCoreType(aInstance));
 }
 
-const otThreadDirectKey *otThreadDirectGetNextKey(otThreadDirectKeyIterator *aIterator)
+otThreadDirectKey *otThreadDirectGetNextKey(otThreadDirectKeyIterator *aIterator)
 {
     return AsCoreType(aIterator).GetNext();
 }
 
-const otThreadDirectKeyMaterial *otThreadDirectKeyGetMaterial(const otThreadDirectKey *aKey)
+const otThreadDirectKeyMaterial *otThreadDirectKeyGetMaterial(otThreadDirectKey *aKey)
 {
     return &AsCoreType(aKey).GetKeyMaterial();
 }
 
-const otThreadDirectKeyId *otThreadDirectKeyGetId(const otThreadDirectKey *aKey) { return &AsCoreType(aKey).GetId(); }
+const otThreadDirectKeyId *otThreadDirectKeyGetId(otThreadDirectKey *aKey) { return &AsCoreType(aKey).GetId(); }
 
-uint32_t otThreadDirectKeyGetFrameCounter(const otThreadDirectKey *aKey) { return AsCoreType(aKey).GetFrameCounter(); }
+uint32_t otThreadDirectKeyGetFrameCounter(otThreadDirectKey *aKey) { return AsCoreType(aKey).GetFrameCounter(); }
 
 #endif // OT_CONFIG_THREAD_DIRECT_ENABLE

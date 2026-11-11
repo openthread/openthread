@@ -75,8 +75,8 @@ public:
 private:
     using Command = CommandEntry<ThreadDirect>;
 
-    const otThreadDirectKey *FindKeyAtIndex(uint16_t aIndex);
-    void                     OutputKeyTable(void);
+    otThreadDirectKey *FindKeyAtIndex(uint16_t aIndex);
+    void               OutputKeyTable(void);
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 };

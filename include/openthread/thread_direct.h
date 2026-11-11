@@ -113,7 +113,7 @@ typedef struct otThreadDirectKeyId otThreadDirectKeyId;
  */
 typedef struct otThreadDirectKeyIterator
 {
-    const void *mPtr;
+    void *mPtr;
 } otThreadDirectKeyIterator;
 
 /**
@@ -137,9 +137,9 @@ typedef struct otThreadDirectKeyIterator
  *
  * @returns A pointer to the registered `otThreadDirectKey` entry, or `NULL` if it could not be registered.
  */
-const otThreadDirectKey *otThreadDirectRegisterKey(otInstance                      *aInstance,
-                                                   const otThreadDirectKeyMaterial *aKeyMaterial,
-                                                   const otThreadDirectKeyId       *aKeyId);
+otThreadDirectKey *otThreadDirectRegisterKey(otInstance                      *aInstance,
+                                             const otThreadDirectKeyMaterial *aKeyMaterial,
+                                             const otThreadDirectKeyId       *aKeyId);
 
 /**
  * Finds a registered Thread Direct key matching the given key material and Key ID.
@@ -150,9 +150,9 @@ const otThreadDirectKey *otThreadDirectRegisterKey(otInstance                   
  *
  * @returns A pointer to the matching registered `otThreadDirectKey`, or `NULL` if no match was found.
  */
-const otThreadDirectKey *otThreadDirectFindKey(otInstance                      *aInstance,
-                                               const otThreadDirectKeyMaterial *aKeyMaterial,
-                                               const otThreadDirectKeyId       *aKeyId);
+otThreadDirectKey *otThreadDirectFindKey(otInstance                      *aInstance,
+                                         const otThreadDirectKeyMaterial *aKeyMaterial,
+                                         const otThreadDirectKeyId       *aKeyId);
 
 /**
  * Unregisters a previously registered Thread Direct key from OpenThread.
@@ -166,7 +166,7 @@ const otThreadDirectKey *otThreadDirectFindKey(otInstance                      *
  * @param[in] aInstance  The OpenThread instance.
  * @param[in] aKey       The registered `otThreadDirectKey` to unregister.
  */
-void otThreadDirectUnregisterKey(otInstance *aInstance, const otThreadDirectKey *aKey);
+void otThreadDirectUnregisterKey(otInstance *aInstance, otThreadDirectKey *aKey);
 
 /**
  * Unregisters all previously registered Thread Direct keys from OpenThread.
@@ -196,7 +196,7 @@ void otThreadDirectInitKeyIterator(otInstance *aInstance, otThreadDirectKeyItera
  *
  * @returns A pointer to the next registered `otThreadDirectKey`, or `NULL` if the end of the list is reached.
  */
-const otThreadDirectKey *otThreadDirectGetNextKey(otThreadDirectKeyIterator *aIterator);
+otThreadDirectKey *otThreadDirectGetNextKey(otThreadDirectKeyIterator *aIterator);
 
 /**
  * Gets the key material associated with a registered Thread Direct key.
@@ -205,7 +205,7 @@ const otThreadDirectKey *otThreadDirectGetNextKey(otThreadDirectKeyIterator *aIt
  *
  * @returns The `otThreadDirectKeyMaterial` associated with @p aKey.
  */
-const otThreadDirectKeyMaterial *otThreadDirectKeyGetMaterial(const otThreadDirectKey *aKey);
+const otThreadDirectKeyMaterial *otThreadDirectKeyGetMaterial(otThreadDirectKey *aKey);
 
 /**
  * Gets the Key ID associated with a registered Thread Direct key.
@@ -214,7 +214,7 @@ const otThreadDirectKeyMaterial *otThreadDirectKeyGetMaterial(const otThreadDire
  *
  * @returns The `otThreadDirectKeyId` associated with @p aKey.
  */
-const otThreadDirectKeyId *otThreadDirectKeyGetId(const otThreadDirectKey *aKey);
+const otThreadDirectKeyId *otThreadDirectKeyGetId(otThreadDirectKey *aKey);
 
 /**
  * Gets the current MAC security frame counter associated with a registered Thread Direct key.
@@ -223,7 +223,7 @@ const otThreadDirectKeyId *otThreadDirectKeyGetId(const otThreadDirectKey *aKey)
  *
  * @returns The MAC security frame counter associated with @p aKey.
  */
-uint32_t otThreadDirectKeyGetFrameCounter(const otThreadDirectKey *aKey);
+uint32_t otThreadDirectKeyGetFrameCounter(otThreadDirectKey *aKey);
 
 /**
  * @}

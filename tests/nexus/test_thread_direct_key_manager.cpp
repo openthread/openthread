@@ -78,7 +78,7 @@ static uint16_t CountKeysViaIterator(otInstance *aInstance)
     return count;
 }
 
-static void VerifyKeyProperties(const otThreadDirectKey         *aKey,
+static void VerifyKeyProperties(otThreadDirectKey               *aKey,
                                 const otThreadDirectKeyMaterial &aExpectedMaterial,
                                 const otThreadDirectKeyId       &aExpectedId,
                                 uint32_t                         aExpectedFrameCounter)
@@ -110,8 +110,8 @@ void TestThreadDirectKeyManager(void)
     otInstance               *instance;
     otThreadDirectKeyMaterial materials[kMaxKeys + 1];
     otThreadDirectKeyId       ids[kMaxKeys + 1];
-    const otThreadDirectKey  *keys[kMaxKeys + 1];
-    const otThreadDirectKey  *key;
+    otThreadDirectKey        *keys[kMaxKeys + 1];
+    otThreadDirectKey        *key;
     otThreadDirectKeyIterator iter;
 
     Log("------------------------------------------------------------------------------------------------------");
@@ -183,7 +183,7 @@ void TestThreadDirectKeyManager(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check re-registering an already registered key returns the existing entry");
 
-    AsNonConst(AsCoreType(keys[0])).IncrementFrameCounter();
+    AsCoreType(keys[0]).IncrementFrameCounter();
     VerifyOrQuit(otThreadDirectKeyGetFrameCounter(keys[0]) == 1);
 
     key = otThreadDirectRegisterKey(instance, &materials[0], &ids[0]);
@@ -286,7 +286,7 @@ void TestThreadDirectKeyManager(void)
     // Key 1: increment frame counter 500 times (< kStoredCounterAhead, so saved counter remains 1000)
     for (uint32_t i = 0; i < kStoredCounterAhead / 2; i++)
     {
-        AsNonConst(AsCoreType(keys[1])).IncrementFrameCounter();
+        AsCoreType(keys[1]).IncrementFrameCounter();
     }
     VerifyOrQuit(otThreadDirectKeyGetFrameCounter(keys[1]) == kStoredCounterAhead / 2);
 
@@ -294,13 +294,13 @@ void TestThreadDirectKeyManager(void)
     // Saved counter in settings should be updated to 2 * kStoredCounterAhead (2000).
     for (uint32_t i = 0; i < kStoredCounterAhead; i++)
     {
-        AsNonConst(AsCoreType(keys[2])).IncrementFrameCounter();
+        AsCoreType(keys[2]).IncrementFrameCounter();
     }
     nexus.AdvanceTime(0);
 
     for (uint32_t i = 0; i < 25; i++)
     {
-        AsNonConst(AsCoreType(keys[2])).IncrementFrameCounter();
+        AsCoreType(keys[2]).IncrementFrameCounter();
     }
     VerifyOrQuit(otThreadDirectKeyGetFrameCounter(keys[2]) == kStoredCounterAhead + 25);
 
@@ -308,7 +308,7 @@ void TestThreadDirectKeyManager(void)
     // Saved counter in settings should advance to 2000 at 1000, and to 3000 at 2000.
     for (uint32_t i = 0; i < 2 * kStoredCounterAhead + 500; i++)
     {
-        AsNonConst(AsCoreType(keys[4])).IncrementFrameCounter();
+        AsCoreType(keys[4]).IncrementFrameCounter();
         nexus.AdvanceTime(0);
     }
     VerifyOrQuit(otThreadDirectKeyGetFrameCounter(keys[4]) == 2 * kStoredCounterAhead + 500);
@@ -340,7 +340,7 @@ void TestThreadDirectKeyManager(void)
     // After `RestoreKeys()`, `mSavedFrameCounter == mFrameCounter` (1000 for keys[0]).
     // Incrementing `keys[0]` once makes `mFrameCounter == 1001 >= mSavedFrameCounter`, posting `mStoreTask`.
     // When `mStoreTask` runs, `SaveThreadDirectKey()` saves `1001 + kStoredCounterAhead` (2001).
-    AsNonConst(AsCoreType(keys[0])).IncrementFrameCounter();
+    AsCoreType(keys[0]).IncrementFrameCounter();
     VerifyOrQuit(otThreadDirectKeyGetFrameCounter(keys[0]) == kStoredCounterAhead + 1);
     nexus.AdvanceTime(0);
 
@@ -381,7 +381,7 @@ void TestThreadDirectKeyManager(void)
     VerifyKeyProperties(keys[0], materials[0], ids[0], 50000);
 
     // Incrementing keys[0] triggers `SaveThreadDirectKey()`, which removes all stale duplicate entries in settings
-    AsNonConst(AsCoreType(keys[0])).IncrementFrameCounter();
+    AsCoreType(keys[0]).IncrementFrameCounter();
     nexus.AdvanceTime(0);
 
     node0.Reset();
