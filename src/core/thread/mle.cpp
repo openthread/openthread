@@ -4504,6 +4504,11 @@ void Mle::Attacher::CancelAttachOnRoleChange(void)
 
     if (Get<Mle>().IsChild())
     {
+        // A child keeps its parent when a search is cancelled. A
+        // valid candidate would take over data polls from it, see
+        // `DataPollSender::GetParent()`.
+        mParentCandidate.Clear();
+
         mTimer.Start(kAttachBackoffDelayToResetCounter);
         mReattachMode = kReattachModeStop;
 
@@ -5089,13 +5094,16 @@ void Mle::Attacher::HandleChildIdRequestTxDone(const otMessage *aMessage, otErro
 
 void Mle::Attacher::HandleChildIdRequestTxDone(const Message &aMessage)
 {
+    // The attach can be cancelled while the message is still queued.
+    VerifyOrExit(mState == kStateChildIdRequest);
+
     if (aMessage.GetTxSuccess() && !Get<Mle>().IsRxOnWhenIdle())
     {
         Get<DataPollSender>().SetAttachMode(true);
         Get<MeshForwarder>().SetRxOnWhenIdle(false);
     }
 
-    if (aMessage.IsLinkSecurityEnabled() && (mState == kStateChildIdRequest))
+    if (aMessage.IsLinkSecurityEnabled())
     {
         // If the Child ID Request requires fragmentation and therefore
         // link layer security, the frame transmission will be aborted.
@@ -5108,6 +5116,9 @@ void Mle::Attacher::HandleChildIdRequestTxDone(const Message &aMessage)
         mAddressRegistrationMode = kAppendMeshLocalOnly;
         IgnoreError(SendChildIdRequest());
     }
+
+exit:
+    return;
 }
 
 Error Mle::Attacher::SendChildIdRequest(void)
