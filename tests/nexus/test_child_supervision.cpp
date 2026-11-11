@@ -602,8 +602,8 @@ void TestChildSupervisionTimeoutChangesDuringBetterParentSearch(void)
 
 void TestChildSupervisionModeChangeDuringChildIdRequest(void)
 {
-    static constexpr uint16_t kSupervisionInterval = 10;  // (seconds)
-    static constexpr uint32_t kPollPeriod          = 500; // (msec)
+    static constexpr uint16_t kSupervisionInterval = 10;   // (seconds)
+    static constexpr uint32_t kPollPeriod          = 500;  // (msec)
     static constexpr uint32_t kPollWindow          = 5000; // (msec)
 
     Core nexus;
