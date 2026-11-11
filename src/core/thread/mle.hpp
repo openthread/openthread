@@ -2338,7 +2338,8 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void UpdateCslState(void);
+    void  UpdateCslState(void);
+    Error ProcessCslAccuracyTlv(RxInfo &aRxInfo, bool aCanTrustMessage);
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
