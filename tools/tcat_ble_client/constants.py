@@ -35,6 +35,7 @@ TLS_HANDSHAKE_TIMEOUT_SIMULATION_SEC = 5.0  # TLS handshake with a simulated TCA
 TLS_CLOSE_TIMEOUT_SEC = 5.0  # graceful TLS close (close-notify exchange)
 TCAT_RESPONSE_TIMEOUT_SEC = 5.0  # waiting for the response to a TCAT command
 BLE_RX_QUIET_TIME_SEC = 0.200  # BLE data counts as complete after no new notification for this long
+BLE_RX_MAX_WAIT_SEC = 1.0  # maximum time to coalesce BLE notifications per recv() call
 
 # Polling intervals (seconds)
 POLL_INTERVAL_SEC = 0.020  # sleep between link reads while waiting for data
