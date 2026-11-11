@@ -366,11 +366,12 @@ private:
     Error HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
                                  const Header      &aHeader,
                                  uint8_t           &aNextHeader,
-                                 bool              &aReceive);
+                                 bool              &aReceive,
+                                 bool              &aForwardHost);
     Error ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHeader, OffsetRange &aOffsetRange) const;
     bool  HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const;
     Error ApplyTmfAndMdnsFilters(const Message &aMessage, uint8_t aNextHeader) const;
-    Error HandleFragment(Message &aMessage);
+    Error HandleFragment(Message &aMessage, bool &aReceive, bool &aForwardHost);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
     void  CleanupFragmentationBuffer(void);
@@ -381,7 +382,7 @@ private:
     Error ReadHopByHopHeader(const Message &aMessage, OffsetRange &aOffsetRange, HopByHopHeader &aHbhHeader) const;
     Error AddMplOption(Message &aMessage, Header &aHeader);
     Error PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader);
-    Error InsertMplOption(Message &aMessage, Header &aHeader);
+    Error InsertMplOption(Message &aMessage, const Header &aHeader);
     Error RemoveMplOption(Message &aMessage);
     Error HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive, bool aIsHopByHop);
     Error Receive(Header            &aIp6Header,
