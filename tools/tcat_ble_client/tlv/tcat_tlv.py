@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024-2025, The OpenThread Authors.
+  Copyright (c) 2024-2026, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -61,6 +61,16 @@ class TcatTLVType(Enum):
     @classmethod
     def from_value(cls, value: int):
         return cls._value2member_map_.get(value)
+
+    @classmethod
+    def is_unsolicited(cls, tlv_type: int) -> bool:
+        return tlv_type in (
+            cls.RESPONSE_EVENT.value,
+            cls.APPLICATION_DATA_1.value,
+            cls.APPLICATION_DATA_2.value,
+            cls.APPLICATION_DATA_3.value,
+            cls.APPLICATION_DATA_4.value,
+        )
 
     def to_bytes(self):
         return bytes([self.value])

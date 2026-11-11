@@ -64,6 +64,7 @@ class BleStreamSecure:
         self._close_notify_sent = False
         self._close_notify_received = False
         self._async_events_queue = asyncio.Queue()
+        self._rx_tlv_buf = bytearray()
 
     def load_cert(self, certfile='', keyfile='', cafile=''):
         if certfile and keyfile:
@@ -96,6 +97,7 @@ class BleStreamSecure:
         self._close_notify_sent = False
         self._close_notify_received = False
         self._peer_public_key = None
+        self._rx_tlv_buf.clear()
         self.ssl_object = self.ssl_context.wrap_bio(
             incoming=self.incoming,
             outgoing=self.outgoing,
@@ -227,6 +229,9 @@ class BleStreamSecure:
         """
         Send data to the server over the secure TLS connection and wait for response data.
 
+        Any unsolicited event TLVs received while waiting for the command response are placed
+        in the asynchronous events queue instead of being returned as the command response.
+
         Args:
             data: The data to send to the server.
             timeout: The maximum time in seconds to wait for the response data. Defaults to TCAT_RESPONSE_TIMEOUT_SEC.
@@ -241,14 +246,45 @@ class BleStreamSecure:
                 pend_data = await self._recv(timeout=0.0)
                 if len(pend_data) == 0:
                     break
-                await self._async_events_queue.put(pend_data)
+                self._rx_tlv_buf.extend(pend_data)
+                await self._queue_complete_tlvs_locked()
 
-            # then send the data (command) and wait for the response (1 TLV or line)
+            # then send the data (command) and wait for a non-unsolicited response TLV
             await self._send(data)
-            res = await self._recv(timeout=timeout)
-            if len(res) == 0:
+            loop = asyncio.get_running_loop()
+            end_time = loop.time() + timeout
+            response = None
+
+            while response is None:
+                chunk = await self._recv(timeout=max(0.0, end_time - loop.time()))
+                if len(chunk) == 0:
+                    break
+
+                self._rx_tlv_buf.extend(chunk)
+                while self._rx_tlv_buf:
+                    tlv = TLV()
+                    try:
+                        consumed = tlv.set_from_bytes(self._rx_tlv_buf)
+                    except ValueError:
+                        break
+                    tlv_bytes = bytes(self._rx_tlv_buf[:consumed])
+                    del self._rx_tlv_buf[:consumed]
+                    if TcatTLVType.is_unsolicited(tlv.type) or response is not None:
+                        await self._async_events_queue.put(tlv_bytes)
+                    else:
+                        response = tlv_bytes
+
+                if response is None and loop.time() >= end_time:
+                    break
+
+            if response is None:
+                if self._rx_tlv_buf:
+                    logger.warning(f'Discarding incomplete or malformed TLV data ({len(self._rx_tlv_buf)} bytes).')
+                    self._rx_tlv_buf.clear()
                 logger.error(f'No response when response TLV/line expected (timeout={timeout}s).')
-            return res
+                return b''
+
+            return response
 
     async def recv_unsolicited_event(self) -> bytes:
         """
@@ -269,13 +305,15 @@ class BleStreamSecure:
         except asyncio.QueueEmpty:
             pass
 
-        # when connected, receive any pending unsolicited events incoming from the peer (and queue these)
-        while self.is_connected:
+        # when connected, receive any pending unsolicited events incoming from the peer (and queue complete TLVs)
+        if self.is_connected:
             async with self._recv_lock:
-                data = await self._recv(timeout=0.0)
-            if len(data) == 0:
-                break
-            await self._async_events_queue.put(data)
+                while self.is_connected:
+                    data = await self._recv(timeout=0.0)
+                    if len(data) == 0:
+                        break
+                    self._rx_tlv_buf.extend(data)
+                    await self._queue_complete_tlvs_locked()
 
         # dequeue the next event, if any
         try:
@@ -283,6 +321,18 @@ class BleStreamSecure:
             return data
         except asyncio.QueueEmpty:
             return b''
+
+    # Precondition: caller must acquire _recv_lock before calling this method
+    async def _queue_complete_tlvs_locked(self) -> None:
+        while self._rx_tlv_buf:
+            tlv = TLV()
+            try:
+                consumed = tlv.set_from_bytes(self._rx_tlv_buf)
+            except ValueError:
+                break
+            tlv_bytes = bytes(self._rx_tlv_buf[:consumed])
+            del self._rx_tlv_buf[:consumed]
+            await self._async_events_queue.put(tlv_bytes)
 
     async def close(self, timeout: float = TLS_CLOSE_TIMEOUT_SEC):
         try:
@@ -304,6 +354,7 @@ class BleStreamSecure:
             self._peer_public_key = None
             self.peer_challenge = None
             self.ssl_object = None
+            self._rx_tlv_buf.clear()
 
     # Closes the TLS connection by repeated calls to unwrap() until it succeeds or times out.
     # Precondition: must only be called by close() with _recv_lock acquired, or by _closed_by_peer()
