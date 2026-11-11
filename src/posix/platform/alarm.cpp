@@ -37,6 +37,8 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/time.h>
+#include <openthread/platform/toolchain.h>
 
 #include "mainloop.hpp"
 #include "common/code_utils.hpp"
@@ -104,6 +106,8 @@ uint64_t otPlatTimeGet(void)
     return static_cast<uint64_t>(now.tv_sec) * OT_US_PER_S + static_cast<uint64_t>(now.tv_nsec) / OT_NS_PER_US;
 }
 #endif // !OPENTHREAD_POSIX_VIRTUAL_TIME
+
+OT_TOOL_WEAK uint16_t otPlatTimeGetXtalAccuracy(void) { return 0; }
 
 static uint64_t platformAlarmGetNow(void) { return otPlatTimeGet() * sSpeedUpFactor; }
 

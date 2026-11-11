@@ -279,6 +279,11 @@ build_multi_radio_links()
     reset_source
     ./script/cmake-build simulation -DOT_LOG_LEVEL=DEBG \
         -DOT_TREL=ON -DOT_15_4=ON
+
+    # Multi radio link with Time Sync - 15.4 and TREL.
+    reset_source
+    ./script/cmake-build simulation -DOT_LOG_LEVEL=DEBG \
+        -DOT_TREL=ON -DOT_15_4=ON -DOT_TIME_SYNC=ON
 }
 main()
 {

@@ -303,6 +303,8 @@ public:
         HeaderIe::Init(kId, sizeof(TimeIe) - sizeof(HeaderIe));
         SetVendorOui(kVendorOuiNest);
         SetSubType(kSubType);
+        mSequence = 0;
+        mTime     = 0;
     }
 
     /**

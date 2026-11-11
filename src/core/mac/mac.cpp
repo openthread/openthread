@@ -865,8 +865,13 @@ void Mac::ProcessTransmitSecurity(TxFrame::ParseInfo &aFrameInfo)
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(!aFrameInfo.Has<TimeIe>());
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (aFrameInfo.GetRadioType() == Radio::kTypeIeee802154)
+#endif
+    {
+        // Transmit security will be processed after time IE content is updated.
+        VerifyOrExit(!aFrameInfo.Has<TimeIe>());
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
