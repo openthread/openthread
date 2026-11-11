@@ -137,7 +137,7 @@ tcp_timer_keep(struct tcpcb* tp)
 		 * because I rewrote this part of the code to allocate t_template on
 		 * the stack.
 		 */
-		tcp_respond(tp, tp->instance, (struct ip6_hdr*) t_template.tt_ipgen,
+		tcp_respond(tp, tp->instance, &t_template.tt_ipgen,
 			    &t_template.tt_t,
 			    tp->rcv_nxt, tp->snd_una - 1, 0);
 		/*
