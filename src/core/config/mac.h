@@ -569,6 +569,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_DATA_POLL_MAX_PENDING_TIME
+ *
+ * Specifies the maximum time (in msec) a received Data Poll from a sleepy child can remain pending on an FTD
+ * parent before it is considered expired and skipped in `DataPollHandler::ProcessPendingPolls()`.
+ *
+ * Defaults to `OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT`. Platforms with noticeable host-to-radio latency can
+ * configure a smaller value to account for transmission turnaround, or set this to `0` to disable pending Data
+ * Poll expiration.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_DATA_POLL_MAX_PENDING_TIME
+#define OPENTHREAD_CONFIG_MAC_DATA_POLL_MAX_PENDING_TIME OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT
+#endif
+
+/**
  * @}
  */
 

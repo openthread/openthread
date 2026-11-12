@@ -262,12 +262,29 @@ exit:
 
 void DataPollHandler::ProcessPendingPolls(void)
 {
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_MAX_PENDING_TIME > 0
+    TimeMilli now = TimerMilli::GetNow();
+#endif
+
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
         if (!child.IsDataPollPending())
         {
             continue;
         }
+
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_MAX_PENDING_TIME > 0
+        if (now - child.GetLastHeard() >= kMaxPendingPollTime)
+        {
+            // Skip pending polls whose post-poll receive window has
+            // elapsed so stale polls do not block awake children or
+            // waste indirect transmission attempts. `GetLastHeard()`
+            // is reused instead of a separate poll timestamp to avoid
+            // per-child RAM overhead.
+            child.SetDataPollPending(false);
+            continue;
+        }
+#endif
 
         // Find the child with earliest poll receive time.
 

@@ -182,6 +182,8 @@ public:
     void RequestFrameChange(FrameChange aChange, Child &aChild);
 
 private:
+    static constexpr uint32_t kMaxPendingPollTime = OPENTHREAD_CONFIG_MAC_DATA_POLL_MAX_PENDING_TIME; // in msec
+
     typedef IndirectSenderBase::FrameContext FrameContext;
 
     // Callbacks from MAC
