@@ -2637,6 +2637,15 @@ void Mle::HandleNetworkDataUpdateRouter(void)
         mDelayedSender.ScheduleMulticastDataResponse(GenerateRandomDelay(kUnsolicitedDataResponseJitter));
     }
 
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    {
+        if (!child.IsRxOnWhenIdle() &&
+            (child.GetNetworkDataVersion() != Get<NetworkData::Leader>().GetVersion(child.GetNetworkDataType())))
+        {
+            Get<MeshForwarder>().RemoveMessagesForChild(child, Message::AcceptMle<kCommandChildUpdateRequest>);
+        }
+    }
+
     SynchronizeChildNetworkData();
 
 exit:
@@ -2934,11 +2943,11 @@ Error Mle::SendChildUpdateRequestToChild(Child &aChild)
 
     VerifyOrExit(IsRouterOrLeader());
 
-    if (!aChild.IsRxOnWhenIdle() && aChild.IsStateRestoring())
+    if (!aChild.IsRxOnWhenIdle())
     {
-        // No need to send the resync "Child Update Request"
-        // to the sleepy child if there is one already
-        // queued.
+        // Do not replace an already queued "Child Update Request"
+        // for a sleepy child. Callers that need to replace an
+        // outdated request remove it explicitly beforehand.
 
         VerifyOrExit(!Get<IndirectSender>().HasQueuedMessageForSleepyChild(
             aChild, Message::AcceptMle<kCommandChildUpdateRequest>));

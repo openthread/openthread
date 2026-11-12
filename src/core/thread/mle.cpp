@@ -1943,6 +1943,7 @@ void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
         Child &child = static_cast<Child &>(aNeighbor);
 
         child.SetState(Child::kStateChildUpdateRequest);
+        Get<MeshForwarder>().RemoveMessagesForChild(child, Message::AcceptMle<kCommandChildUpdateRequest>);
         IgnoreError(SendChildUpdateRequestToChild(child));
     }
 #endif
