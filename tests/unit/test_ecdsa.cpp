@@ -89,8 +89,13 @@ void TestEcdsaVector(void)
     printf("Test ECDA with test vector from RFC 6979 (A.2.5)\n");
 
     printf("\nLoading key-pair ----------------------------------------------------------\n");
+    VerifyOrQuit(keyPair.GetPublicKey(publicKey) == kErrorParse, "GetPublicKey() passed for empty key-pair");
+
     memcpy(keyPair.GetDerBytes(), kKeyPairInfo, sizeof(kKeyPairInfo));
     keyPair.SetDerLength(sizeof(kKeyPairInfo));
+    keyPair.GetDerBytes()[0] ^= 0xff;
+    VerifyOrQuit(keyPair.GetPublicKey(publicKey) == kErrorParse, "GetPublicKey() passed for invalid DER key-pair");
+    keyPair.GetDerBytes()[0] ^= 0xff;
 
     DumpBuffer("KeyPair", keyPair.GetDerBytes(), keyPair.GetDerLength());
 
