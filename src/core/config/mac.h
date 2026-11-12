@@ -195,6 +195,21 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT
+ *
+ * Specifies the maximum number of consecutive times a pending direct transmission can be deferred in favor of
+ * indirect transmissions on an FTD.
+ *
+ * Setting this configuration to `0` disables this limit, so pending indirect transmissions are always prioritized
+ * ahead of direct transmissions.
+ *
+ * Value MUST be less than 255. Default value is 4.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT
+#define OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT 4
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US
  *
  * Define how many microseconds ahead should MAC deliver CSL frame to SubMac.

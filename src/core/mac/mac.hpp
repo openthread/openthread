@@ -44,6 +44,7 @@
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
 #include "common/timer.hpp"
@@ -623,6 +624,10 @@ private:
     static constexpr uint8_t kDefaultMaxFrameRetriesIndirect = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT;
     static constexpr uint8_t kMaxFrameRetriesCsl             = 0;
     static constexpr uint8_t kTxNumBcast                     = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST;
+    static constexpr uint8_t kMaxDeferredDirectTxCount       = OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT;
+
+    static_assert(kMaxDeferredDirectTxCount < NumericLimits<uint8_t>::kMax,
+                  "OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT must be less than 255");
 
     enum Operation : uint8_t
     {
@@ -774,6 +779,9 @@ private:
     uint8_t     mMaxFrameRetriesDirect;
 #if OPENTHREAD_FTD
     uint8_t mMaxFrameRetriesIndirect;
+#endif
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT > 0)
+    uint8_t mDeferredDirectTxCount;
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     bool mIsCslEnabled : 1;
