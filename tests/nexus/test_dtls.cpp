@@ -38,15 +38,17 @@ namespace Nexus {
 
 typedef MeshCoP::Dtls Dtls;
 
-static constexpr uint16_t kMaxNodes    = 3;
-static constexpr uint16_t kUdpPort     = 1234;
-static constexpr uint16_t kMessageSize = 100;
-static constexpr uint16_t kMaxAttempts = 3;
+static constexpr uint16_t kMaxNodes               = 3;
+static constexpr uint16_t kUdpPort                = 1234;
+static constexpr uint16_t kMessageSize            = 600;
+static constexpr uint16_t kMaxAttempts            = 3;
+static constexpr uint16_t kMultiBufferMessageSize = 500;
 
 static const uint8_t kPsk[] = {0x10, 0x20, 0x03, 0x15, 0x10, 0x00, 0x60, 0x16};
 
 static Dtls::Session::ConnectEvent  sDtlsEvent[kMaxNodes];
 static Array<uint8_t, kMessageSize> sDtlsLastReceive[kMaxNodes];
+static uint32_t                     sDtlsReceiveCount[kMaxNodes];
 static bool                         sDtlsAutoClosed[kMaxNodes];
 static uint32_t                     sHeapSessionsAllocated = 0;
 
@@ -79,21 +81,27 @@ const char *ConnectEventToString(Dtls::Session::ConnectEvent aEvent)
     return str;
 }
 
-void HandleReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
+void HandleReceive(void *aContext, Message &aMessage)
 {
     Node *node = static_cast<Node *>(aContext);
 
     VerifyOrQuit(node != nullptr);
     VerifyOrQuit(node->GetId() < kMaxNodes);
 
-    Log("   node%u: HandleReceive(aLength:%u)", node->GetId(), aLength);
+    Array<uint8_t, kMessageSize> &received = sDtlsLastReceive[node->GetId()];
+    uint16_t                      length   = aMessage.GetLength();
 
-    sDtlsLastReceive[node->GetId()].Clear();
+    Log("   node%u: HandleReceive(aLength:%u)", node->GetId(), length);
 
-    for (; aLength > 0; aLength--, aBuf++)
+    if (length == kMultiBufferMessageSize)
     {
-        SuccessOrQuit(sDtlsLastReceive[node->GetId()].PushBack(*aBuf));
+        VerifyOrQuit(aMessage.GetBufferCount() > 1);
     }
+
+    sDtlsReceiveCount[node->GetId()]++;
+    VerifyOrQuit(length <= received.GetMaxSize());
+    VerifyOrQuit(aMessage.ReadBytes(0, received.GetArrayBuffer(), length) == length);
+    received.SetLength(length);
 }
 
 void HandleConnectEvent(Dtls::Session::ConnectEvent aEvent, void *aContext)
@@ -263,6 +271,10 @@ void TestDtlsSingleSession(void)
     VerifyOrQuit(node2.Get<Mle::Mle>().IsChild());
 
     {
+        static constexpr uint16_t kTestLengths[] = {63, 64, 65, 100, 129, kMultiBufferMessageSize};
+
+        static_assert(OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN == 64, "DTLS test requires a 64-byte staging buffer");
+
         DtlsTransportAndSingleSession dtls0(node0);
         DtlsTransportAndSingleSession dtls1(node1);
         DtlsTransportAndSingleSession dtls2(node2);
@@ -333,7 +345,7 @@ void TestDtlsSingleSession(void)
             OwnedPtr<Message> msg(PrepareMessage(node0));
 
             SuccessOrQuit(dtls0.Send(*msg->Clone<kNoReservedHeader>()));
-            nexus.AdvanceTime(100);
+            nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
 
             VerifyOrQuit(sDtlsLastReceive[node1.GetId()].GetLength() == msg->GetLength());
             VerifyOrQuit(msg->CompareBytes(0, sDtlsLastReceive[node1.GetId()].GetArrayBuffer(), msg->GetLength()));
@@ -347,10 +359,34 @@ void TestDtlsSingleSession(void)
             OwnedPtr<Message> msg(PrepareMessage(node1));
 
             SuccessOrQuit(dtls1.Send(*msg->Clone<kNoReservedHeader>()));
-            nexus.AdvanceTime(100);
+            nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
 
             VerifyOrQuit(sDtlsLastReceive[node0.GetId()].GetLength() == msg->GetLength());
             VerifyOrQuit(msg->CompareBytes(0, sDtlsLastReceive[node0.GetId()].GetArrayBuffer(), msg->GetLength()));
+        }
+
+        Log("Receive complete DTLS records through the message callback");
+
+        sDtlsReceiveCount[node0.GetId()] = 0;
+
+        for (uint16_t length : kTestLengths)
+        {
+            OwnedPtr<Message> msg(node1.Get<MessagePool>().Allocate(Message::kTypeOther));
+            uint32_t          receiveCount = sDtlsReceiveCount[node0.GetId()];
+
+            VerifyOrQuit(msg != nullptr);
+
+            for (uint16_t index = 0; index < length; index++)
+            {
+                SuccessOrQuit(msg->Append(static_cast<uint8_t>(index)));
+            }
+
+            SuccessOrQuit(dtls1.Send(*msg->Clone<kNoReservedHeader>()));
+            nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+
+            VerifyOrQuit(sDtlsReceiveCount[node0.GetId()] == receiveCount + 1);
+            VerifyOrQuit(sDtlsLastReceive[node0.GetId()].GetLength() == length);
+            VerifyOrQuit(msg->CompareBytes(0, sDtlsLastReceive[node0.GetId()].GetArrayBuffer(), length));
         }
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
