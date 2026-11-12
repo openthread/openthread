@@ -178,14 +178,14 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
-        sudo apt-get remove -y cmake || true
-        sudo apt-get purge -y --auto-remove cmake || true
-        rm -rf cmake-3.10.3*
-        wget --timeout=30 --tries=4 http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
-        tar xf cmake-3.10.3.tar.gz
-        cd cmake-3.10.3
-        ./configure
-        sudo make install
+        sudo apt-get purge -y cmake cmake-data || true
+        sudo rm -rf /usr/local/bin/cmake /usr/local/bin/ctest /usr/local/bin/cpack /usr/local/bin/ccmake /usr/local/bin/cmake-gui /usr/local/share/cmake-* /usr/local/doc/cmake*
+        wget --timeout=30 --tries=4 -O /tmp/cmake-3.10.3-Linux-x86_64.tar.gz https://cmake.org/files/v3.10/cmake-3.10.3-Linux-x86_64.tar.gz
+        echo "9e7c48b797484f74c5ee3ae55132b40b16ed8e81ee762402da8971205b0a896b  /tmp/cmake-3.10.3-Linux-x86_64.tar.gz" | sha256sum -c -
+        sudo tar -xzf /tmp/cmake-3.10.3-Linux-x86_64.tar.gz --strip-components=1 --no-same-owner --keep-directory-symlink -C /usr/local
+        rm -f /tmp/cmake-3.10.3-Linux-x86_64.tar.gz
+        hash -r
+        which cmake
         cmake --version | grep 3.10.3
     - name: Build
       run: |
