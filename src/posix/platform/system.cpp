@@ -42,6 +42,7 @@
 #include <openthread/border_router.h>
 #include <openthread/cli.h>
 #include <openthread/heap.h>
+#include <openthread/mdns.h>
 #include <openthread/tasklet.h>
 #include <openthread/trel.h>
 #include <openthread/platform/alarm-milli.h>
@@ -333,6 +334,12 @@ void platformTearDown(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+    // Disable the mDNS module while its socket is still usable, so
+    // that it sends goodbye announcements for the hosts and services
+    // it has registered.
+    IgnoreError(otMdnsSetEnabled(gInstance, false, 0));
+#endif
     ot::Posix::MdnsSocket::Get().TearDown();
 #endif
 

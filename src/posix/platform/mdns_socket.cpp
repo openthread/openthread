@@ -123,7 +123,7 @@ void MdnsSocket::TearDown(void)
 
     if (mEnabled)
     {
-        ClearTxQueue();
+        FlushTxQueue();
         mEnabled = false;
     }
 }
@@ -244,7 +244,7 @@ exit:
 
 void MdnsSocket::Disable(uint32_t aInfraIfIndex)
 {
-    ClearTxQueue();
+    FlushTxQueue();
 
     IgnoreError(JoinOrLeaveIp4MulticastGroup(/* aJoin */ false, aInfraIfIndex));
     IgnoreError(JoinOrLeaveIp6MulticastGroup(/* aJoin */ false, aInfraIfIndex));
@@ -360,6 +360,18 @@ void MdnsSocket::ClearTxQueue(void)
 
     mPendingIp4Tx = 0;
     mPendingIp6Tx = 0;
+}
+
+void MdnsSocket::FlushTxQueue(void)
+{
+    // Tries to send the queued messages before dropping whatever
+    // could not be sent. Used when the socket is disabled or torn
+    // down, so that the goodbye announcements the mDNS module
+    // prepares right before that still get out.
+
+    SendQueuedMessages(kIp6Msg);
+    SendQueuedMessages(kIp4Msg);
+    ClearTxQueue();
 }
 
 void MdnsSocket::SendQueuedMessages(MsgType aMsgType)
