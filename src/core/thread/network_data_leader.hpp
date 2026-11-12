@@ -331,6 +331,16 @@ public:
     void Start(Mle::LeaderStartMode aStartMode);
 
     /**
+     * Indicates whether the Leader is waiting to synchronize Network Data after restoring the leader role on reset.
+     *
+     * @note The caller MUST ensure that the device is in the Leader role (`Mle::IsLeader()`) before using this method.
+     *
+     * @retval TRUE   The Leader is waiting to synchronize Network Data after reset.
+     * @retval FALSE  The Leader is not waiting to synchronize Network Data.
+     */
+    bool IsWaitingForNetDataSync(void) const { return mWaitingForNetDataSync; }
+
+    /**
      * Increments the Thread Network Data version.
      */
     void IncrementVersion(void);
