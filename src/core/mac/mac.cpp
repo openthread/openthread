@@ -81,6 +81,9 @@ Mac::Mac(Instance &aInstance)
 #if OPENTHREAD_FTD
     , mMaxFrameRetriesIndirect(kDefaultMaxFrameRetriesIndirect)
 #endif
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT > 0)
+    , mDeferredDirectTxCount(0)
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mIsCslEnabled(false)
     , mIsCslCapable(false)
@@ -612,6 +615,9 @@ void Mac::PerformNextOperation(void)
     if (!IsEnabled())
     {
         mPendingOperations = 0;
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT > 0)
+        mDeferredDirectTxCount = 0;
+#endif
         mTimer.Stop();
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
         mDelayingSleep    = false;
@@ -628,6 +634,27 @@ void Mac::PerformNextOperation(void)
             break;
         }
     }
+
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT > 0)
+    // `TransmitDataIndirect` is listed ahead of `TransmitDataDirect` in
+    // `kOperationPriorityList`, so bound how many consecutive times a
+    // pending direct transmission can be deferred in favor of indirect
+    // transmissions.
+    if (!IsPending(kOperationTransmitDataDirect) || (mOperation == kOperationTransmitDataDirect))
+    {
+        mDeferredDirectTxCount = 0;
+    }
+    else if (mOperation == kOperationTransmitDataIndirect)
+    {
+        mDeferredDirectTxCount++;
+
+        if (mDeferredDirectTxCount > kMaxDeferredDirectTxCount)
+        {
+            mOperation             = kOperationTransmitDataDirect;
+            mDeferredDirectTxCount = 0;
+        }
+    }
+#endif
 
     if (mShouldTxPollBeforeData && (mOperation == kOperationTransmitDataDirect) && IsPending(kOperationTransmitPoll))
     {
