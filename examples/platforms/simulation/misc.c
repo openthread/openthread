@@ -122,3 +122,21 @@ void otPlatAssertFail(const char *aFilename, int aLineNumber)
     assert(false);
     exit(1);
 }
+
+otError otPlatGetBatteryLevel(otInstance *aInstance, uint8_t *aBatteryLevel)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    *aBatteryLevel = 100;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatGetSupplyVoltage(otInstance *aInstance, uint16_t *aSupplyVoltage)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    *aSupplyVoltage = 3000;
+
+    return OT_ERROR_NONE;
+}
