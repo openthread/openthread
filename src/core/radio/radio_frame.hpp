@@ -493,14 +493,23 @@ public:
      *
      * @param[in]  aOffset  The Time IE offset, 0 means no Time IE.
      */
-    void SetTimeIeOffset(uint8_t aOffset) { AsFrame().mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
+    void SetTimeIeOffset(uint8_t aOffset)
+    {
+        if (AsFrame().mInfo.mTxInfo.mIeInfo != nullptr)
+        {
+            AsFrame().mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset;
+        }
+    }
 
     /**
      * Gets the Time IE offset.
      *
      * @returns The Time IE offset, 0 means no Time IE.
      */
-    uint8_t GetTimeIeOffset(void) const { return AsFrame().mInfo.mTxInfo.mIeInfo->mTimeIeOffset; }
+    uint8_t GetTimeIeOffset(void) const
+    {
+        return (AsFrame().mInfo.mTxInfo.mIeInfo != nullptr) ? AsFrame().mInfo.mTxInfo.mIeInfo->mTimeIeOffset : 0;
+    }
 
     /**
      * Sets the offset to network time.
@@ -509,7 +518,10 @@ public:
      */
     void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
     {
-        AsFrame().mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset = aNetworkTimeOffset;
+        if (AsFrame().mInfo.mTxInfo.mIeInfo != nullptr)
+        {
+            AsFrame().mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset = aNetworkTimeOffset;
+        }
     }
 
     /**
@@ -517,7 +529,13 @@ public:
      *
      * @param[in]  aTimeSyncSeq  The time sync sequence.
      */
-    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { AsFrame().mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
+    void SetTimeSyncSeq(uint8_t aTimeSyncSeq)
+    {
+        if (AsFrame().mInfo.mTxInfo.mIeInfo != nullptr)
+        {
+            AsFrame().mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq;
+        }
+    }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     /**

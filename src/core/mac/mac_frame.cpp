@@ -900,9 +900,19 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 
     memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.mLength);
 
-    // mIeInfo may be null when TIME_SYNC is not enabled.
+    // mIeInfo may be null when TIME_SYNC is not enabled or on non-15.4 links (e.g., TREL).
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
+    if (mInfo.mTxInfo.mIeInfo != nullptr)
+    {
+        if (aFromFrame.mInfo.mTxInfo.mIeInfo != nullptr)
+        {
+            memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
+        }
+        else
+        {
+            ClearAllBytes(*mInfo.mTxInfo.mIeInfo);
+        }
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO

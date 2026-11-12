@@ -929,6 +929,135 @@ void TestMultiRadioRxFragmentTag(void)
     VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0x0002));
     VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0x0002));
 }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+void TestMultiRadioTimeSync(void)
+{
+    static constexpr uint16_t kTimeSyncPeriod = 10;
+
+    Core     nexus;
+    Node    &leader     = nexus.CreateNode();
+    Node    &router     = nexus.CreateNode();
+    Node    &fed        = nexus.CreateNode();
+    Node    &sed        = nexus.CreateNode();
+    Node    &fed154     = nexus.CreateNode();
+    Node    &sed154     = nexus.CreateNode();
+    Node    &routerTrel = nexus.CreateNode();
+    Node    &fedTrel    = nexus.CreateNode();
+    uint64_t leaderTime;
+    uint64_t nodeTime;
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("TestMultiRadioTimeSync()");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
+    for (Node &node : nexus.GetNodes())
+    {
+        SuccessOrQuit(otNetworkTimeSetSyncPeriod(&node.GetInstance(), kTimeSyncPeriod));
+    }
+
+    SuccessOrQuit(leader.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(router.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(fed.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(sed.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(routerTrel.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(fedTrel.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
+    fed154.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
+    sed154.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
+
+    // Filter 802.15.4 on `routerTrel` and `fedTrel` so they only communicate over TREL.
+    routerTrel.Get<Mac::Mac>().SetRadioFilterEnabled(true);
+    fedTrel.Get<Mac::Mac>().SetRadioFilterEnabled(true);
+
+    leader.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+    VerifyOrQuit(otNetworkTimeGet(&leader.GetInstance(), &leaderTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+    VerifyOrQuit(leader.Get<TimeSync>().GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ);
+
+    // Join both a multi-radio SED and an 802.15.4-only SED.
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(1000));
+    SuccessOrQuit(sed154.Get<DataPollSender>().SetExternalPollPeriod(1000));
+    sed.Join(leader, Node::kAsSed);
+    sed154.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed154.Get<Mle::Mle>().IsChild());
+
+    router.Join(leader);
+    fed.Join(leader, Node::kAsFed);
+    fed154.Join(leader, Node::kAsFed);
+    routerTrel.Join(leader);
+    fedTrel.Join(leader, Node::kAsFed);
+
+    nexus.AdvanceTime(150 * 1000);
+
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+    VerifyOrQuit(fed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(fed154.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed154.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(routerTrel.Get<Mle::Mle>().IsRouter());
+    VerifyOrQuit(fedTrel.Get<Mle::Mle>().IsChild());
+
+    VerifyOrQuit(leader.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 5);
+    VerifyOrQuit(router.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 5);
+
+    // Verify `routerTrel` and `fedTrel` are TREL-only neighbors and remain unsynchronized
+    // because Time Sync IE is only carried over 802.15.4.
+    {
+        Node *const trelOnlyNodes[] = {&routerTrel, &fedTrel};
+
+        for (Node *trelNode : trelOnlyNodes)
+        {
+            Neighbor::MultiRadioInfo info;
+            Neighbor                *neighbor;
+
+            neighbor = leader.Get<NeighborTable>().FindNeighbor(trelNode->Get<Mac::Mac>().GetExtAddress());
+            VerifyOrQuit(neighbor != nullptr);
+            neighbor->PopulateMultiRadioInfo(info);
+            VerifyOrQuit(!info.mSupportsIeee802154);
+            VerifyOrQuit(info.mSupportsTrelUdp6);
+
+            VerifyOrQuit(otNetworkTimeGet(&trelNode->GetInstance(), &nodeTime) == OT_NETWORK_TIME_UNSYNCHRONIZED);
+        }
+    }
+
+    VerifyOrQuit(otNetworkTimeGet(&leader.GetInstance(), &leaderTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+
+    {
+        Node *const rxOnNodes[] = {&leader, &router, &fed, &fed154};
+
+        for (Node *rxOnNode : rxOnNodes)
+        {
+            VerifyOrQuit(otNetworkTimeGet(&rxOnNode->GetInstance(), &nodeTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+            VerifyOrQuit(nodeTime == leaderTime);
+            VerifyOrQuit(rxOnNode->Get<TimeSync>().GetTimeSyncSeq() == leader.Get<TimeSync>().GetTimeSyncSeq());
+        }
+    }
+
+    nexus.SendAndVerifyEchoRequest(leader, router.Get<Mle::Mle>().GetMeshLocalEid());
+    nexus.SendAndVerifyEchoRequest(router, fed.Get<Mle::Mle>().GetMeshLocalEid());
+    nexus.SendAndVerifyEchoRequest(leader, sed.Get<Mle::Mle>().GetMeshLocalEid(), 0, 64, 3000);
+    nexus.SendAndVerifyEchoRequest(leader, sed154.Get<Mle::Mle>().GetMeshLocalEid(), 0, 64, 3000);
+    nexus.SendAndVerifyEchoRequest(router, fed154.Get<Mle::Mle>().GetMeshLocalEid());
+    nexus.SendAndVerifyEchoRequest(leader, routerTrel.Get<Mle::Mle>().GetMeshLocalEid());
+    nexus.SendAndVerifyEchoRequest(leader, fedTrel.Get<Mle::Mle>().GetMeshLocalEid());
+
+    // Re-enable 802.15.4 on `fedTrel` and verify it synchronizes upon the next 802.15.4 Time Sync.
+    fedTrel.Get<Mac::Mac>().SetRadioFilterEnabled(false);
+    nexus.AdvanceTime((kTimeSyncPeriod + 5) * 1000);
+
+    VerifyOrQuit(otNetworkTimeGet(&leader.GetInstance(), &leaderTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+    VerifyOrQuit(otNetworkTimeGet(&fedTrel.GetInstance(), &nodeTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+    VerifyOrQuit(nodeTime == leaderTime);
+    VerifyOrQuit(fedTrel.Get<TimeSync>().GetTimeSyncSeq() == leader.Get<TimeSync>().GetTimeSyncSeq());
+}
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -947,6 +1076,9 @@ int main(void)
     ot::Nexus::TestMultiServiceSameHost();
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     ot::Nexus::TestMultiRadioRxFragmentTag();
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    ot::Nexus::TestMultiRadioTimeSync();
+#endif
 #endif
     printf("All tests passed\n");
 #else

@@ -1708,7 +1708,8 @@ otError RadioSpinel::Transmit(otRadioFrame &aFrame)
     mTransmitFrame = &aFrame;
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (mTransmitFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
+    if ((mTransmitFrame->mInfo.mTxInfo.mIeInfo != nullptr) &&
+        (mTransmitFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0))
     {
         otRadioTime64 netRadioTime = otPlatRadioGetNow(mInstance);
         otRadioTime64 netSyncTime;

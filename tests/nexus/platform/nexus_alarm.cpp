@@ -28,6 +28,7 @@
 
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/time.h>
 
 #include "nexus_alarm.hpp"
 #include "nexus_core.hpp"
@@ -68,6 +69,10 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance) { AsNode(aInstance).mAlarmMicro.mScheduled = false; }
+
+uint64_t otPlatTimeGet(void) { return Core::Get().GetNowMicro64(); }
+
+uint16_t otPlatTimeGetXtalAccuracy(void) { return 0; }
 
 } // extern "C"
 
