@@ -33,7 +33,7 @@ import os
 import subprocess
 import unittest
 
-from typing import cast, Dict
+from typing import cast, Dict, List
 
 import otci
 from otci import OTCI
@@ -68,9 +68,12 @@ class TestOTCI(unittest.TestCase):
         else:
             self.fail("Please set OT_CLI_SERIAL or OTBR_SSH to test the real device.")
 
-        node.factory_reset()
+        try:
+            node.factory_reset()
 
-        self._test_otci_single_node(node)
+            self._test_otci_single_node(node)
+        finally:
+            node.close()
 
     def testCliSimRealTime(self):
         if REAL_DEVICE:
@@ -93,23 +96,36 @@ class TestOTCI(unittest.TestCase):
             executable = os.getenv('OT_NCP', '')
             connector = otci.connect_ncp_sim
         else:
+            if sim is not None:
+                sim.stop()
             self.fail("Please set OT_CLI to test virtual device")
 
-        node1 = connector(executable, 1, simulator=sim)
-        self._test_otci_single_node(node1)
+        nodes: List[OTCI] = []
+        try:
+            node1 = connector(executable, 1, simulator=sim)
+            nodes.append(node1)
+            self._test_otci_single_node(node1)
 
-        node1.factory_reset()
+            node1.factory_reset()
 
-        node2 = connector(executable, 2, simulator=sim)
-        node3 = connector(executable, 3, simulator=sim)
-        node4 = connector(executable, 4, simulator=sim)
+            node2 = connector(executable, 2, simulator=sim)
+            nodes.append(node2)
+            node3 = connector(executable, 3, simulator=sim)
+            nodes.append(node3)
+            node4 = connector(executable, 4, simulator=sim)
+            nodes.append(node4)
 
-        self._test_otci_example(node1, node2)
+            self._test_otci_example(node1, node2)
 
-        node1.factory_reset()
-        node2.factory_reset()
+            node1.factory_reset()
+            node2.factory_reset()
 
-        self._test_otci_multi_nodes(node1, node2, node3, node4)
+            self._test_otci_multi_nodes(node1, node2, node3, node4)
+        finally:
+            for node in nodes:
+                node.close()
+            if sim is not None:
+                sim.stop()
 
     def _test_otci_single_node(self, leader: OTCI):
         logging.info('leader version: %r', leader.version)
@@ -668,7 +684,7 @@ class TestOTCI(unittest.TestCase):
         child1.set_allowlist([commissioner.get_extaddr()])
 
         child1.thread_start()
-        child1.wait(3)
+        child1.wait(5)
         self.assertEqual('child', child1.get_state())
 
         child1.thread_stop()
@@ -678,7 +694,7 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual(1000, child1.get_poll_period())
 
         child1.thread_start()
-        child1.wait(3)
+        child1.wait(5)
         self.assertEqual('child', child1.get_state())
 
         child2.ifconfig_up()
@@ -696,7 +712,7 @@ class TestOTCI(unittest.TestCase):
         child2.set_allowlist([commissioner.get_extaddr()])
 
         child2.thread_start()
-        child2.wait(3)
+        child2.wait(5)
         self.assertEqual('child', child2.get_state())
 
         child_table = commissioner.get_child_table()

@@ -93,9 +93,10 @@ class OtCliCommandRunner(OTCommandHandler):
     __PATTERN_COMMAND_DONE_OR_ERROR = re.compile(
         r'(Done|Error|Error \d+:.*|.*: command not found)$')  # "Error" for spinel-cli.py
 
-    __pattern_log_line = re.compile(r'((\[(NONE|CRIT|WARN|NOTE|INFO|DEBG)\])'
+    __pattern_log_line = re.compile(r'((?:\d+d\.)?\d{2}:\d{2}:\d{2}\.\d{3} )?'
+                                    r'((\[(NONE|CRIT|WARN|NOTE|INFO|DEBG)\])'
                                     r'|(-.*-+: )'  # e.g. -CLI-----:
-                                    r'|(\[[DINWC\-]\] (?=[\w\-]{14}:)\w+-*:)'  # e.g. [I] Mac-----------:
+                                    r'|(\[[DINWC\-]\] (?=[\w\-]{14}:)\w*-*:)'  # e.g. [I] Mac-----------:
                                     r')')
     """regex used to filter logs"""
 
@@ -105,6 +106,9 @@ class OtCliCommandRunner(OTCommandHandler):
     assert __pattern_log_line.match('[W] Notifier------: warn log')
     assert __pattern_log_line.match('[C] Mle-----------: critical log')
     assert __pattern_log_line.match('[-] Settings------: none log')
+    assert __pattern_log_line.match('[-] --------------: none log')
+    assert __pattern_log_line.match('00:00:20.841 [-] --------------: [THCI] direction=recv')
+    assert __pattern_log_line.match('1d.00:00:20.841 [I] Mac-----------: info log')
     assert not __pattern_log_line.match('[-] Settings-----: none log')  # not enough `-` after module name
 
     __ASYNC_COMMANDS = {'scan', 'ping', 'discover', 'networkdiagnostic get'}
@@ -116,6 +120,8 @@ class OtCliCommandRunner(OTCommandHandler):
         self.__line_read_callback = None
 
         self.__pending_lines: queue.Queue[str] = queue.Queue()
+        self.__reader_cond = threading.Condition()
+        self.__reader_busy: bool = False
         self.__should_close = threading.Event()
         self.__otcli_reader = threading.Thread(target=self.__otcli_read_routine, daemon=True)
         self.__otcli_reader.start()
@@ -151,8 +157,9 @@ class OtCliCommandRunner(OTCommandHandler):
     def execute_platform_command(self, cmd: str, timeout: float = 10) -> List[str]:
         raise NotImplementedError(f'Platform command is not supported on {self.__class__.__name__}')
 
-    def wait(self, duration: float, maybeoff=False) -> List[str]:
+    def wait(self, duration: float, maybeoff: bool = False) -> List[str]:
         self.__otcli.wait(duration, maybeoff=maybeoff)
+        self.__sync_reader()
 
         output: List[str] = []
         try:
@@ -166,6 +173,8 @@ class OtCliCommandRunner(OTCommandHandler):
         return output
 
     def close(self):
+        if self.__should_close.is_set():
+            return
         self.__should_close.set()
         self.__otcli.close()
         self.__otcli_reader.join()
@@ -188,6 +197,21 @@ class OtCliCommandRunner(OTCommandHandler):
     #
     # Private methods
     #
+
+    def __sync_reader(self, timeout: float = 0.5) -> None:
+        deadline = time.monotonic() + timeout
+        time.sleep(0)
+        while True:
+            with self.__reader_cond:
+                if not self.__reader_busy and not self.__otcli.has_pending_lines():
+                    return
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    return
+                if self.__reader_busy:
+                    self.__reader_cond.wait(timeout=remaining)
+                    continue
+            time.sleep(min(remaining, 0.001))
 
     def __expect_line(self,
                       timeout: float,
@@ -245,32 +269,45 @@ class OtCliCommandRunner(OTCommandHandler):
     def __otcli_read_routine(self):
         while not self.__should_close.is_set():
             try:
-                line = self.__otcli.readline()
-            except Exception:
-                if self.__should_close.is_set():
+                try:
+                    line_ready = self.__otcli.wait_for_line()
+                    if line_ready:
+                        with self.__reader_cond:
+                            self.__reader_busy = True
+                    line = self.__otcli.readline()
+                except Exception:
+                    if self.__should_close.is_set():
+                        break
+                    else:
+                        raise
+
+                if not line_ready:
+                    with self.__reader_cond:
+                        self.__reader_busy = True
+
+                logging.debug('%s: %r', self.__otcli, line)
+
+                if line is None:
                     break
-                else:
-                    raise
 
-            logging.debug('%s: %r', self.__otcli, line)
+                line = line.rstrip()
 
-            if line is None:
-                break
+                while line.startswith('> '):
+                    line = line[2:]
 
-            line = line.rstrip()
+                if self.__line_read_callback is not None:
+                    self.__line_read_callback(line)
 
-            while line.startswith('> '):
-                line = line[2:]
+                logging.debug('%s: %s', self.__otcli, line)
 
-            if self.__line_read_callback is not None:
-                self.__line_read_callback(line)
-
-            logging.debug('%s: %s', self.__otcli, line)
-
-            if not OtCliCommandRunner.__pattern_log_line.match(line):
-                if line:
-                    logging.info('%s: %s', self.__otcli, line)
-                self.__pending_lines.put(line)
+                if not OtCliCommandRunner.__pattern_log_line.match(line):
+                    if line:
+                        logging.info('%s: %s', self.__otcli, line)
+                    self.__pending_lines.put(line)
+            finally:
+                with self.__reader_cond:
+                    self.__reader_busy = False
+                    self.__reader_cond.notify_all()
 
 
 class OtbrSshCommandRunner(OTCommandHandler):

@@ -216,6 +216,13 @@ class VirtualTime(BaseSimulator):
 
     def stop(self):
         if self.sock:
+            for key in list(self.sel.get_map().values()):
+                self.sel.unregister(key.fileobj)
+                if key.fileobj is not self.sock:
+                    key.fileobj.close()
+            for device in self.devices.values():
+                device.pop('sock', None)
+            self.sel.close()
             self.sock.close()
             self.sock = None
 
@@ -307,15 +314,22 @@ class VirtualTime(BaseSimulator):
                 sock, addr = key.fileobj.accept()
                 sock.setblocking(False)
 
+                if addr == self._spinel_cli_addr:
+                    data = types.SimpleNamespace(port=None, inb=b"", outb=b"")
+                    self.sel.register(sock, selectors.EVENT_READ, data=data)
+                    continue
+
                 port = int(addr.split('.')[1])
                 data = types.SimpleNamespace(port=port, inb=b"", outb=b"")
                 self.sel.register(sock, selectors.EVENT_READ, data=data)
 
-                if addr == self._spinel_cli_addr:
-                    continue
-
-                if port in self.devices and self.devices[port]['alarm']:
-                    self.event_queue.remove(self.devices[port]['alarm'])
+                if port in self.devices:
+                    old_sock = self.devices[port].get('sock')
+                    if old_sock is not None:
+                        self.sel.unregister(old_sock)
+                        old_sock.close()
+                    if self.devices[port]['alarm']:
+                        self.event_queue.remove(self.devices[port]['alarm'])
 
                 self.devices[port] = {}
                 self.devices[port]['sock'] = sock
@@ -325,18 +339,21 @@ class VirtualTime(BaseSimulator):
                 self.awake_devices.add(port)
 
             elif mask & selectors.EVENT_READ:
+                port = key.data.port
+                if port is not None and self.devices.get(port, {}).get('sock') is not key.fileobj:
+                    continue
                 try:
                     msg = key.fileobj.recv(self.MAX_MESSAGE)
                 except ConnectionResetError:
                     msg = b''
-                port = key.data.port
                 if msg:
                     yield (msg, port)
                 else:
-                    if self.devices[port]['alarm']:
-                        self.event_queue.remove(self.devices[port]['alarm'])
-                        self.devices[port]['alarm'] = None
-                    del self.devices[port]['sock']
+                    if port is not None:
+                        if self.devices[port]['alarm']:
+                            self.event_queue.remove(self.devices[port]['alarm'])
+                            self.devices[port]['alarm'] = None
+                        self.devices[port].pop('sock', None)
                     self.sel.unregister(key.fileobj)
                     key.fileobj.close()
 
@@ -522,13 +539,14 @@ class VirtualTime(BaseSimulator):
                 except (BrokenPipeError, ConnectionResetError):
                     assert port in self._maybeoff_ports, f'The node {port} is unexpectedly off'
                     dbg_print('skip sending message to off node', port)
-                    return
+                    return False
             else:
                 assert port in self._maybeoff_ports, f'The node {port} is unexpectedly off'
                 dbg_print('skip sending message to off node', port)
-                return
+                return False
 
         assert sent == len(message)
+        return True
 
     def process_next_event(self):
         assert self.current_event is None
@@ -552,8 +570,6 @@ class VirtualTime(BaseSimulator):
                 binascii.hexlify(data),
             )
 
-        self.current_event = event
-
         assert event_time >= self.current_time
         self.current_time = event_time
 
@@ -564,33 +580,31 @@ class VirtualTime(BaseSimulator):
 
         if type == self.OT_SIM_EVENT_ALARM_FIRED:
             self.devices[port]['alarm'] = None
-            self._send_message(message, port)
-        elif type == self.OT_SIM_EVENT_RADIO_RECEIVED:
+        elif type in (
+                self.OT_SIM_EVENT_RADIO_RECEIVED,
+                self.OT_SIM_EVENT_RADIO_SPINEL_WRITE,
+                self.OT_SIM_EVENT_UART_WRITE,
+        ):
             message += data
-            self._send_message(message, port)
-        elif type == self.OT_SIM_EVENT_RADIO_SPINEL_WRITE:
-            message += data
-            self._send_message(message, port)
-        elif type == self.OT_SIM_EVENT_UART_WRITE:
-            message += data
-            self._send_message(message, port)
         else:
             raise NotImplementedError(f'Unknown event type: {type}')
 
-        self.awake_devices.add(port)
+        if self._send_message(message, port):
+            self.current_event = event
+            self.awake_devices.add(port)
 
     def sync_devices(self):
         self.current_time = self._pause_time
-        for port in self.devices:
+        for port in list(self.devices):
             elapsed = self.current_time - self.devices[port]['time']
             if elapsed == 0:
                 continue
             dbg_print('syncing', port, elapsed)
             self.devices[port]['time'] = self.current_time
             message = struct.pack('=QBH', elapsed, self.OT_SIM_EVENT_ALARM_FIRED, 0)
-            self._send_message(message, port)
-            self.awake_devices.add(port)
-            self.process_events()
+            if self._send_message(message, port):
+                self.awake_devices.add(port)
+                self.process_events()
         self.awake_devices.clear()
 
     def now(self):

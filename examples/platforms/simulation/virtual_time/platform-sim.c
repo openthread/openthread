@@ -333,19 +333,31 @@ void otSysProcessDrivers(otInstance *aInstance)
     FD_ZERO(&write_fds);
     FD_ZERO(&error_fds);
 
-    FD_SET(sSockFd, &read_fds);
-    max_fd = sSockFd;
-
-    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-
     if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0 && !platformRadioIsTransmitPending() &&
         !platformUartIsTransmitPending())
     {
         platformSendSleepEvent();
 
-        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, NULL);
+        do
+        {
+            FD_ZERO(&read_fds);
+            FD_ZERO(&write_fds);
+            FD_ZERO(&error_fds);
 
-        if ((rval < 0) && (errno != EINTR))
+            FD_SET(sSockFd, &read_fds);
+            max_fd = sSockFd;
+
+            platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
+
+            rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, NULL);
+
+            if (gTerminate)
+            {
+                exit(0);
+            }
+        } while ((rval < 0) && (errno == EINTR));
+
+        if (rval < 0)
         {
             perror("select");
             DieNow(OT_EXIT_ERROR_ERRNO);
