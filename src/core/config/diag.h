@@ -80,6 +80,23 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DIAG_TX_DONE_TIMEOUT
+ *
+ * Define the maximum time in milliseconds that `diag stop` and `diag repeat stop` wait for an in-flight frame
+ * transmission to complete before aborting the frame and finishing the command anyway.
+ *
+ * The radio driver may never report the completion of an in-flight frame, e.g., when the frame requests an ACK that
+ * is never received and the radio does not implement an ACK timeout, or when the RCP stops responding and RCP
+ * restoration is disabled. This timeout ensures these commands always complete.
+ *
+ * The default value is longer than the default `OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS` so that, in RCP mode,
+ * the host gets the chance to detect an RCP transmit timeout and recover before this timeout fires.
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_TX_DONE_TIMEOUT
+#define OPENTHREAD_CONFIG_DIAG_TX_DONE_TIMEOUT 6000
+#endif
+
+/**
  * @}
  */
 
