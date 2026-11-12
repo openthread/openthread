@@ -123,6 +123,68 @@ expect_line "Done"
 send "diag stats clear\n"
 expect_line "Done"
 
+switch_node 2
+
+send_user "async send active state gating test\n"
+send "diag frame 21085affff12340000\n"
+expect_line "Done"
+
+send "diag send async 200\n"
+expect_line "Done"
+
+send "diag channel 20\n"
+expect_line "Error 13: InvalidState"
+
+send "diag radio receive\n"
+expect_line "Error 13: InvalidState"
+
+send "diag radio sleep\n"
+expect_line "Error 13: InvalidState"
+
+send "diag frame 112233\n"
+expect_line "Error 13: InvalidState"
+
+send "diag cw start\n"
+expect_line "Error 13: InvalidState"
+
+send "diag stream start\n"
+expect_line "Error 13: InvalidState"
+
+send "diag repeat stop\n"
+expect_line "Error 13: InvalidState"
+
+send "diag channel\n"
+expect_line "11"
+expect_line "Done"
+
+send "diag radio state\n"
+expect_line "transmit"
+expect_line "Done"
+
+send "diag stop\n"
+
+switch_node 1
+send "diag frame 02005a0000\n"
+expect_line "Done"
+
+send "diag send 1\n"
+expect_line "Done"
+
+switch_node 2
+expect_line "Done"
+
+send "diag start\n"
+expect_line "Done"
+
+send "diag channel 20\n"
+expect_line "Done"
+
+send "diag radio receive\n"
+expect_line "Done"
+
+send "diag stop\n"
+expect_line "Done"
+
 dispose_all
 
 
@@ -159,16 +221,63 @@ send "diag radio receive\n"
 expect_line "Done"
 
 send "diag repeat 100 100\n"
-expect "Done"
+expect_line "Done"
 
 send "diag send 1 10\n"
-expect "Error 13: InvalidState"
+expect_line "Error 13: InvalidState"
+
+send "diag sweep 10\n"
+expect_line "Error 13: InvalidState"
+
+send "diag channel 20\n"
+expect_line "Error 13: InvalidState"
+
+send "diag radio receive\n"
+expect_line "Error 13: InvalidState"
+
+send "diag radio receive 1\n"
+expect_line "Error 13: InvalidState"
+
+send "diag radio sleep\n"
+expect_line "Error 13: InvalidState"
+
+send "diag radio enable\n"
+expect_line "Error 13: InvalidState"
+
+send "diag radio disable\n"
+expect_line "Error 13: InvalidState"
+
+send "diag frame 112233\n"
+expect_line "Error 13: InvalidState"
+
+send "diag start\n"
+expect_line "Error 13: InvalidState"
+
+send "diag cw start\n"
+expect_line "Error 13: InvalidState"
+
+send "diag stream start\n"
+expect_line "Error 13: InvalidState"
+
+send "diag channel\n"
+expect_line "20"
+expect_line "Done"
+
+send "diag radio state\n"
+expect_line {receive|transmit}
+expect_line "Done"
 
 send "diag repeat stop\n"
-expect "Done"
+expect_line "Done"
+
+send "diag channel 20\n"
+expect_line "Done"
+
+send "diag radio receive\n"
+expect_line "Done"
 
 send "diag send 1 10\n"
-expect "Done"
+expect_line "Done"
 
 send_user "shortest frame test\n"
 send "diag frame 112233\n"
