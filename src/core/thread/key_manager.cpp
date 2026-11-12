@@ -302,13 +302,39 @@ void KeyManager::SetNetworkKey(const NetworkKey &aNetworkKey)
 #endif
 
     Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
-
-    mKeySequence = 0;
-    UpdateKeyMaterial();
-    ResetFrameCounters();
+    HandleNetworkKeyChange();
 
 exit:
     return;
+}
+
+void KeyManager::HandleNetworkKeyChange(void)
+{
+    // Reset our own MAC and MLE frame counters before updating keys,
+    // as in `SetCurrentKeySequence()`, so that they stay in sync with
+    // a radio that resets its counter on `otPlatRadioSetMacKey()`.
+
+    SetAllMacFrameCounters(0, /* aSetIfLarger */ false);
+    mMleFrameCounter = 0;
+
+    ResetFrameCounters();
+
+    mKeySequence = 0;
+    UpdateKeyMaterial();
+
+    // Restart key rotation and key switch guard state for the new key,
+    // so that they do not carry over from the previous key.
+
+    mKeySwitchGuardTimer = 0;
+
+    if (mKeyRotationTimer.IsRunning())
+    {
+        ResetKeyRotationTimer();
+    }
+    else
+    {
+        mHoursSinceKeyRotation = 0;
+    }
 }
 
 void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys) const
@@ -698,9 +724,7 @@ void KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
     mNetworkKeyRef = aKeyRef;
     Get<Notifier>().Signal(kEventNetworkKeyChanged);
     Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
-    mKeySequence = 0;
-    UpdateKeyMaterial();
-    ResetFrameCounters();
+    HandleNetworkKeyChange();
 
 exit:
     return;
