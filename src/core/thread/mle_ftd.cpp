@@ -374,6 +374,23 @@ void Mle::HandleChildStart(void)
 
         break;
 
+    case kBetterIdSequence:
+    {
+        bool samePartition = (mPreviousPartitionIdRouter == mLeaderData.GetPartitionId());
+
+        if (HasChildren())
+        {
+            IgnoreError(BecomeRouter(samePartition ? kReasonHaveChildIdRequest : kReasonParentPartitionChange));
+        }
+        else if (samePartition && mRoleTransitioner.IsRouterCountBelowUpgradeThreshold())
+        {
+            // Request the previous Router ID.
+            IgnoreError(BecomeRouter(kReasonTooFewRouters));
+        }
+
+        break;
+    }
+
     case kAnyPartition:
     case kBetterParent:
     case kSelectedParent:
@@ -1188,7 +1205,7 @@ Error Mle::ProcessRouteTlv(const RouteTlv::Data &aRouteTlvData, RxInfo &aRxInfo)
         // Either we're a router and our own router ID has been removed from the router table,
         // or we're a child and our parent's router ID has been removed from the router table.
         // Detach immediately to minimize time where we're not connected.
-        IgnoreError(BecomeDetached());
+        IgnoreError(BecomeDetached(IsRouter() ? kBetterIdSequence : kAnyPartition));
         error = kErrorNoRoute;
     }
 
