@@ -90,14 +90,7 @@ public:
     uint8_t               GetReceiveChannel(void) const { return mChannel; }
     virtual otRadioFrame *GetTransmitBuffer() { return &mTransmitFrame; }
     virtual otError       Transmit(otRadioFrame *aFrame);
-    virtual otError       ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
-    {
-        mReceiveAtChannel = aChannel;
-        mReceiveAtStart   = mNow + aStart;
-        mReceiveAtEnd     = mReceiveAtStart + aDuration;
-
-        return OT_ERROR_NONE;
-    }
+    virtual otError       ReceiveAt(uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration);
 
     virtual otError Receive(uint8_t aChannel)
     {

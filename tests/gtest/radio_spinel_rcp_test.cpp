@@ -414,32 +414,218 @@ TEST(RadioSpinelTransmit, shouldIncludeFcsInImmAckReportedWithoutFcs)
 }
 #endif
 
-TEST(RadioSpinelReceiveAt, shouldReceiveAtGiveRadioTime)
+TEST(RadioSpinelReceiveAt, shouldReceiveAtGivenRadioTime)
 {
     class MockPlatform : public FakeCoprocessorPlatform
     {
     public:
-        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, uint32_t aStart, uint32_t aDuration), (override));
+        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration), (override));
+    };
+
+    constexpr uint64_t kInitialNow = 50000;
+    constexpr uint64_t kWhen       = 150000;
+    constexpr uint32_t kDuration   = 10000;
+    constexpr uint8_t  kChannel    = 11;
+
+    MockPlatform platform;
+
+    ON_CALL(platform, ReceiveAt)
+        .WillByDefault([&platform](uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration) -> otError {
+            return platform.FakePlatform::ReceiveAt(aChannel, aStart, aDuration);
+        });
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+
+    platform.GoInUs(kInitialNow);
+    ASSERT_EQ(platform.GetNow(), kInitialNow);
+
+    EXPECT_CALL(platform, ReceiveAt(kChannel, static_cast<otRadioTime32>(kWhen), kDuration)).Times(1);
+
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(kWhen, kDuration, kChannel), kErrorNone);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(kWhen - kInitialNow);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), kChannel);
+
+    platform.GoInUs(kDuration - 1);
+    EXPECT_EQ(platform.GetReceiveChannel(), kChannel);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+}
+
+TEST(RadioSpinelReceiveAt, shouldHandleRadioTime32Rollover)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration), (override));
+    };
+
+    constexpr uint64_t kBeforeRollover = 0xffffd8f0ULL;
+    constexpr uint64_t kAfterRollover  = 0x100002710ULL;
+    constexpr uint32_t kDuration       = 15000;
+    constexpr uint8_t  kChannel        = 15;
+
+    MockPlatform platform;
+
+    ON_CALL(platform, ReceiveAt)
+        .WillByDefault([&platform](uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration) -> otError {
+            return platform.FakePlatform::ReceiveAt(aChannel, aStart, aDuration);
+        });
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+
+    platform.GoInUs(kBeforeRollover);
+    ASSERT_EQ(platform.GetNow(), kBeforeRollover);
+
+    EXPECT_CALL(platform, ReceiveAt(kChannel, static_cast<otRadioTime32>(kAfterRollover), kDuration)).Times(1);
+
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(kAfterRollover, kDuration, kChannel), kErrorNone);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(kAfterRollover - kBeforeRollover);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), kChannel);
+
+    platform.GoInUs(kDuration - 1);
+    EXPECT_EQ(platform.GetReceiveChannel(), kChannel);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    // Also verify an already-started window whose start is just before 32-bit rollover while `now` is past rollover.
+    {
+        constexpr uint64_t kPastRolloverWhen = 0xfffff000ULL;
+        constexpr uint64_t kNowPastRollover  = 0x100008000ULL;
+        constexpr uint32_t kSpanningDuration = 50000;
+        constexpr uint8_t  kSpanningChannel  = 20;
+
+        platform.GoInUs(kNowPastRollover - platform.GetNow());
+        ASSERT_EQ(platform.GetNow(), kNowPastRollover);
+
+        EXPECT_CALL(platform,
+                    ReceiveAt(kSpanningChannel, static_cast<otRadioTime32>(kPastRolloverWhen), kSpanningDuration))
+            .Times(1);
+
+        ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(kPastRolloverWhen, kSpanningDuration, kSpanningChannel), kErrorNone);
+        EXPECT_EQ(platform.GetReceiveChannel(), kSpanningChannel);
+
+        platform.GoInUs((kPastRolloverWhen + kSpanningDuration) - kNowPastRollover);
+        EXPECT_EQ(platform.GetReceiveChannel(), kSpanningChannel);
+
+        platform.GoInUs(1);
+        EXPECT_EQ(platform.GetReceiveChannel(), 0);
+    }
+}
+
+TEST(RadioSpinelReceiveAt, shouldHandleOngoingReceiveWindow)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration), (override));
     };
 
     MockPlatform platform;
 
     ON_CALL(platform, ReceiveAt)
-        .WillByDefault([&platform](uint8_t aChannel, uint32_t aStart, uint32_t aDuration) -> otError {
+        .WillByDefault([&platform](uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration) -> otError {
             return platform.FakePlatform::ReceiveAt(aChannel, aStart, aDuration);
         });
 
-    EXPECT_CALL(platform, ReceiveAt).Times(1);
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+
+    // 1. Schedule a window whose start time is slightly in the past (`when < now < when + duration`).
+    platform.GoInUs(100000);
+    ASSERT_EQ(platform.GetNow(), 100000ULL);
+
+    EXPECT_CALL(platform, ReceiveAt(12, static_cast<otRadioTime32>(96000), 10000)).Times(1);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(96000, 10000, 12), kErrorNone);
+    EXPECT_EQ(platform.GetReceiveChannel(), 12);
+
+    platform.GoInUs(6000);
+    EXPECT_EQ(platform.GetReceiveChannel(), 12);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    // 2. Shrink and switch channel of an already-active window.
+    EXPECT_CALL(platform, ReceiveAt(11, static_cast<otRadioTime32>(200000), 50000)).Times(1);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(200000, 50000, 11), kErrorNone);
+
+    platform.GoInUs(210000 - platform.GetNow());
+    ASSERT_EQ(platform.GetNow(), 210000ULL);
+    EXPECT_EQ(platform.GetReceiveChannel(), 11);
+
+    EXPECT_CALL(platform, ReceiveAt(15, static_cast<otRadioTime32>(205000), 15000)).Times(1);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(205000, 15000, 15), kErrorNone);
+    EXPECT_EQ(platform.GetReceiveChannel(), 15);
+
+    platform.GoInUs(10000);
+    EXPECT_EQ(platform.GetReceiveChannel(), 15);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+}
+
+TEST(RadioSpinelReceiveAt, shouldRejectInvalidArgs)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration), (override));
+    };
+
+    constexpr uint64_t kMaxTimeOffset = 0x7fffffffULL;
+    constexpr uint64_t kNow           = 100000;
+
+    MockPlatform platform;
+
+    ON_CALL(platform, ReceiveAt)
+        .WillByDefault([&platform](uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration) -> otError {
+            return platform.FakePlatform::ReceiveAt(aChannel, aStart, aDuration);
+        });
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
-    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(100000, 10000, 11), kErrorNone);
-    platform.GoInUs(100000);
-    EXPECT_EQ(platform.GetReceiveChannel(), 0);
-    platform.GoInUs(1);
-    EXPECT_EQ(platform.GetReceiveChannel(), 11);
-    platform.GoInUs(10000);
-    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(kNow);
+    ASSERT_EQ(platform.GetNow(), kNow);
+
+    EXPECT_CALL(platform, ReceiveAt).Times(0);
+
+    // Zero duration is rejected.
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow + 10000, 0, 11), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow, 0, 11), kErrorInvalidArgs);
+
+    // Expired window (`when + duration <= now`) is rejected.
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow - 10000, 10000, 11), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow - 20000, 10000, 11), kErrorInvalidArgs);
+
+    // Future `when` exceeding the 32-bit half-range (`when - now > 0x7fffffff`) is rejected.
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow + kMaxTimeOffset + 1, 10000, 11), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow + 0x100000000ULL, 10000, 11), kErrorInvalidArgs);
+
+    // Past `when` exceeding the 32-bit half-range (`now - when > 0x7fffffff`) is rejected even with large duration.
+    platform.GoInUs(kMaxTimeOffset + 1);
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow, 0x90000000U, 11), kErrorInvalidArgs);
+
+    // Exact maximum valid future offset (`when - now == 0x7fffffff`) is accepted.
+    {
+        uint64_t maxValidWhen = platform.GetNow() + kMaxTimeOffset;
+
+        EXPECT_CALL(platform, ReceiveAt(11, static_cast<otRadioTime32>(maxValidWhen), 10000)).Times(1);
+        EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(maxValidWhen, 10000, 11), kErrorNone);
+    }
 }
 
 TEST(RadioSpinelTransmit, shouldSkipCsmaBackoffWhenCsmaCaIsEnabledAndMaxBackoffsIsZero)
