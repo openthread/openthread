@@ -2341,6 +2341,57 @@ exit:
 }
 #endif // __linux__
 
+#if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
+/**
+ * Handles packets that the macOS kernel routes to one of the utun interface's own unicast addresses.
+ *
+ * When an IPv6 address is assigned to a macOS utun interface, XNU installs a /128 host route via lo0 whose
+ * rt_ifa references the utun address. During ip6_output, XNU skips software UDP/TCP checksum calculation
+ * because lo0 advertises checksum offload, and nd6_output then redirects the packet to dlil_output(utun)
+ * instead of lo0. Complete the transport checksum here, and when platform UDP sockets are used, inject the
+ * packet back into utun so the host IPv6 stack delivers it locally (matching Linux loopback behavior).
+ */
+static bool tryProcessMacosUtunLoopback(otInstance *aInstance, char *aPacket, size_t aOffset, ssize_t aLength)
+{
+    bool         handled = false;
+    uint8_t     *ip6Packet;
+    otIp6Address dstAddr;
+
+    VerifyOrExit(aLength >= OT_IP6_HEADER_SIZE);
+
+    ip6Packet = reinterpret_cast<uint8_t *>(&aPacket[aOffset]);
+    VerifyOrExit((ip6Packet[0] >> 4) == 6);
+    VerifyOrExit(ip6Packet[kIp6HopLimitOffset] > 0);
+
+    ReadIp6AddressFrom(&ip6Packet[kIp6DestinationOffset], dstAddr);
+    VerifyOrExit(!IsIp6AddressMulticast(dstAddr) && otIp6HasUnicastAddress(aInstance, &dstAddr));
+
+    UpdateIp6TransportChecksum(ip6Packet, static_cast<size_t>(aLength));
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    if (aOffset == 4)
+    {
+        ssize_t totalLength = aLength + 4;
+
+        aPacket[0] = 0;
+        aPacket[1] = 0;
+        aPacket[2] = (PF_INET6 >> 8) & 0xff;
+        aPacket[3] = (PF_INET6 >> 0) & 0xff;
+
+        if (write(sTunFd, aPacket, static_cast<size_t>(totalLength)) != totalLength)
+        {
+            LogWarn("Failed to loop back packet on %s: %s", gNetifName, strerror(errno));
+        }
+
+        handled = true;
+    }
+#endif
+
+exit:
+    return handled;
+}
+#endif // defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
+
 static void processTransmit(otInstance *aInstance)
 {
     otMessage *message = nullptr;
@@ -2373,6 +2424,13 @@ static void processTransmit(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
     !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     if (tryProcessIcmp6RaMessage(aInstance, reinterpret_cast<uint8_t *>(&packet[offset]), rval) == OT_ERROR_NONE)
+    {
+        ExitNow();
+    }
+#endif
+
+#if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
+    if (tryProcessMacosUtunLoopback(aInstance, packet, offset, rval))
     {
         ExitNow();
     }

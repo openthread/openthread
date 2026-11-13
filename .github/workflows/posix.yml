@@ -170,15 +170,7 @@ jobs:
         sudo apt-get --no-install-recommends install -y expect lcov libreadline-dev net-tools ninja-build
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         sudo bash script/install_socat
-        cd /tmp
-        rm -rf bsd-licensed.tar.gz libcoap-bsd-licensed
-        wget --timeout=30 --tries=4 https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
-        tar xvf bsd-licensed.tar.gz
-        cd libcoap-bsd-licensed
-        ./autogen.sh
-        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
-        make -j2
-        sudo make install
+        sudo bash script/install_libcoap
     - name: Build
       run: |
         script/check-posix-pty build
@@ -262,6 +254,7 @@ jobs:
         rm -f /usr/local/bin/python3-config
         rm -f /usr/local/bin/python3.11-config
         sudo bash script/install_socat
+        sudo bash script/install_libcoap
     - name: Build
       run: |
         script/check-posix-pty build
