@@ -75,11 +75,16 @@ public:
 
     /**
      * Instructs the data poll sender to start sending periodic data polls.
+     *
+     * If already started and polling, calling this method has no effect.
      */
     void StartPolling(void);
 
     /**
      * Instructs the data poll sender to stop sending periodic data polls.
+     *
+     * Also resets transient polling state (such as attach mode and fast-poll counters), and can be called safely even
+     * if polling is already stopped.
      */
     void StopPolling(void);
 

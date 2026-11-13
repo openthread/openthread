@@ -497,7 +497,15 @@ otError otLinkSetRxOnWhenIdle(otInstance *aInstance, bool aRxOnWhenIdle)
     VerifyOrExit(instance.Get<Mac::Mac>().IsEnabled() && instance.Get<Mle::Mle>().IsDisabled(),
                  error = kErrorInvalidState);
 
-    instance.Get<Mac::Mac>().SetRxOnWhenIdle(aRxOnWhenIdle);
+    if (instance.Get<ThreadNetif>().IsUp())
+    {
+        instance.Get<MeshForwarder>().SetSleepMode(aRxOnWhenIdle ? MeshForwarder::kNonSleepy
+                                                                 : MeshForwarder::kDetachedSleepy);
+    }
+    else
+    {
+        instance.Get<Mac::Mac>().SetRxOnWhenIdle(aRxOnWhenIdle);
+    }
 
 exit:
     return error;

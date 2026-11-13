@@ -233,6 +233,7 @@ void Mle::Stop(StopMode aMode)
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocalEid);
 
     SetRole(kRoleDisabled);
+    Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
 
 exit:
     mDetacher.HandleStop();
@@ -576,11 +577,11 @@ void Mle::SetStateDetached(void)
     Get<Mlr::Manager>().UpdateState();
 #endif
     mAttacher.CancelAttachOnRoleChange();
+    Get<MeshForwarder>().SetSleepMode(IsRxOnWhenIdle() ? MeshForwarder::kNonSleepy : MeshForwarder::kDetachedSleepy);
     mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
     mRetxTracker.Stop();
     mInitiallyAttachedAsSleepy = false;
     mRetrieveNewNetworkData    = false;
-    Get<MeshForwarder>().SetRxOnWhenIdle(true);
     Get<Mac::Mac>().SetBeaconEnabled(false);
 #if OPENTHREAD_FTD
     mRoleTransitioner.SetDowngradeBlocked(false);
@@ -1299,7 +1300,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
 
     if (!IsRxOnWhenIdle())
     {
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         Get<DataPollSender>().SetAttachMode(!Get<Mac::Mac>().IsCslEnabled());
 #else
@@ -1308,7 +1309,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     }
     else
     {
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
     }
 
 exit:
@@ -2479,11 +2480,11 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
         if (!IsRxOnWhenIdle())
         {
             Get<DataPollSender>().SetAttachMode(false);
-            Get<MeshForwarder>().SetRxOnWhenIdle(false);
+            Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
         }
         else
         {
-            Get<MeshForwarder>().SetRxOnWhenIdle(true);
+            Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
         }
 
         break;
@@ -4286,7 +4287,7 @@ Error Mle::PrevRoleRestorer::Start(void)
         VerifyOrExit((Get<Mle>().mLastSavedRole == kRoleRouter) || (Get<Mle>().mLastSavedRole == kRoleLeader));
         VerifyOrExit(Get<Mle>().IsRouterRoleAllowed());
 
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
         SetState(kRestoringRouterOrLeaderRole);
         mAttempts = kRestoreLinkRequestAttempts;
         mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
@@ -4508,6 +4509,7 @@ void Mle::Attacher::CancelAttachOnRoleChange(void)
 {
     SetState(kStateIdle);
     mTimer.Stop();
+    Get<MeshForwarder>().ResumeSleepyOperation(MeshForwarder::kRequesterMleAttacher);
 
     if (Get<Mle>().IsChild())
     {
@@ -4589,7 +4591,7 @@ void Mle::Attacher::Attach(AttachMode aMode)
 
         if (!Get<Mle>().IsRxOnWhenIdle())
         {
-            Get<Mac::Mac>().SetRxOnWhenIdle(false);
+            Get<MeshForwarder>().SetSleepMode(MeshForwarder::kDetachedSleepy);
         }
     }
 
@@ -4795,7 +4797,7 @@ void Mle::Attacher::HandleTimer(void)
         mReceivedResponseFromParent = false;
         mParentRequestCounter       = 0;
         mChildIdRequestsRemaining   = kMaxChildIdRequests;
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        Get<MeshForwarder>().SuspendSleepyOperation(MeshForwarder::kRequesterMleAttacher);
 
         OT_FALL_THROUGH;
 
@@ -4890,6 +4892,15 @@ uint32_t Mle::Attacher::Reattach(void)
 {
     uint32_t delay = 0;
 
+    if (!Get<Mle>().IsRxOnWhenIdle())
+    {
+        Get<DataPollSender>().SetAttachMode(false);
+        Get<MeshForwarder>().SetSleepMode(Get<Mle>().IsChild() ? MeshForwarder::kSleepy
+                                                               : MeshForwarder::kDetachedSleepy);
+    }
+
+    Get<MeshForwarder>().ResumeSleepyOperation(MeshForwarder::kRequesterMleAttacher);
+
     // First, check `mReattachMode`. If an attach attempt failed
     // while using the Active Dataset, start a new attach cycle with
     // the Pending Dataset (if available). If attaching with the
@@ -4927,14 +4938,8 @@ uint32_t Mle::Attacher::Reattach(void)
         if (Get<Mle>().IsChild())
         {
             // If already attached (e.g., trying to find a better
-            // parent or partition), and attach fails, we revert to
-            // sleepy operation if needed and stop the attach process.
-
-            if (!Get<Mle>().IsRxOnWhenIdle())
-            {
-                Get<DataPollSender>().SetAttachMode(false);
-                Get<MeshForwarder>().SetRxOnWhenIdle(false);
-            }
+            // parent or partition), and attach fails, stop the
+            // attach process.
 
             ExitNow();
         }
@@ -5055,8 +5060,9 @@ void Mle::Attacher::HandleChildIdRequestTxDone(const Message &aMessage)
 {
     if (aMessage.GetTxSuccess() && !Get<Mle>().IsRxOnWhenIdle())
     {
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
         Get<DataPollSender>().SetAttachMode(true);
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+        Get<MeshForwarder>().ResumeSleepyOperation(MeshForwarder::kRequesterMleAttacher);
     }
 
     if (aMessage.IsLinkSecurityEnabled() && (mState == kStateChildIdRequest))
@@ -5507,11 +5513,11 @@ void Mle::Attacher::HandleChildIdResponse(RxInfo &aRxInfo)
     if (!Get<Mle>().IsRxOnWhenIdle())
     {
         Get<DataPollSender>().SetAttachMode(false);
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
     }
     else
     {
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;

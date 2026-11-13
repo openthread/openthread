@@ -33,6 +33,8 @@
 #include "thread/child_supervision.hpp"
 #include "thread/child_table.hpp"
 #include "thread/discover_scanner.hpp"
+#include "thread/mesh_forwarder.hpp"
+#include "thread/mle.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -296,9 +298,11 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
     StartDiscoverScan(sed, leader);
     SuccessOrQuit(
         sed.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(sedMode.Get() | Mle::DeviceMode::kModeRxOnWhenIdle)));
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kNonSleepy);
     nexus.AdvanceTime(Mle::DiscoverScanner::kDefaultScanDuration / 2);
     VerifyOrQuit(sed.Get<Mle::DiscoverScanner>().IsInProgress());
     SuccessOrQuit(sed.Get<Mle::Mle>().SetDeviceMode(sedMode));
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
 
     // Wait just under a full check timeout, past the fire time the check timeout had before the rx-on mode change.
     nexus.AdvanceTime(Time::SecToMsec(kCheckTimeout) - 1000);
@@ -313,6 +317,283 @@ void TestChildSupervisionChangesDuringDiscoveryScan(void)
     VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
 }
 
+void TestChildSupervisionWithParentSearch(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25;        // (seconds)
+    static constexpr uint32_t kSearchPeriod = 4 * 1000;  // (msec)
+    static constexpr uint32_t kMaxWaitTime  = 60 * 1000; // (msec)
+
+    Core     nexus;
+    uint32_t elapsed = 0;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+    VerifyOrQuit(leader.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kNonSleepy);
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Verify parent search suspends and resumes sleepy operation");
+
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    nexus.AdvanceTime(100);
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsAttaching());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+    nexus.AdvanceTime(3 * 1000);
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsAttaching());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Block traffic from child on parent while child runs periodic parent searches");
+
+    // Parent searches more frequent than the supervision check timeout must pause/resume
+    // SupervisionListener rather than resetting it, so parent loss is still detected on schedule.
+
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+    sed.Get<SupervisionListener>().ResetCounter();
+
+    while (sed.Get<Mle::Mle>().IsChild() && (elapsed < kMaxWaitTime))
+    {
+        SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+
+        nexus.AdvanceTime(kSearchPeriod);
+        elapsed += kSearchPeriod;
+    }
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kDetachedSleepy);
+    VerifyOrQuit(sed.Get<SupervisionListener>().GetCounter() > 0);
+}
+
+void TestConcurrentSleepySuspensions(void)
+{
+    static constexpr uint16_t kCheckTimeout = 25; // (seconds)
+
+    Core     nexus;
+    uint32_t dataPollCount;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and attach SED");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(500));
+
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Parent search completes while multi-channel discovery scan is still running");
+
+    // Suppress parent response so SearchForBetterParent completes via Reattach (~2000ms) instead of ChildIdResponse.
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+    SuccessOrQuit(sed.Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Mac::kPanIdBroadcast,
+                                                           /* aJoiner */ false, /* aEnableFiltering */ false,
+                                                           /* aFilterIndexes */ nullptr, nullptr, nullptr));
+    nexus.AdvanceTime(100);
+    VerifyOrQuit(sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    dataPollCount = sed.Get<Mac::Mac>().GetCounters().mTxDataPoll;
+
+    nexus.AdvanceTime(2500);
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsAttaching());
+    VerifyOrQuit(sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrQuit(sed.Get<Mac::Mac>().GetCounters().mTxDataPoll == dataPollCount);
+
+    nexus.AdvanceTime(3500);
+
+    VerifyOrQuit(!sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrQuit(sed.Get<Mac::Mac>().GetCounters().mTxDataPoll > dataPollCount);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Single-channel discovery scan completes while parent search is still running");
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+    nexus.AdvanceTime(50);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsAttaching());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+    StartDiscoverScan(sed, leader);
+    dataPollCount = sed.Get<Mac::Mac>().GetCounters().mTxDataPoll;
+
+    nexus.AdvanceTime(500);
+
+    VerifyOrQuit(!sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsAttaching());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrQuit(sed.Get<Mac::Mac>().GetCounters().mTxDataPoll == dataPollCount);
+
+    nexus.AdvanceTime(2500);
+
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsAttaching());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrQuit(sed.Get<Mac::Mac>().GetCounters().mTxDataPoll > dataPollCount);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("ChildUpdateRequest during an active discovery scan preserves suspension");
+
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeRssInOnly);
+    sed.Get<SupervisionListener>().SetTimeout(kCheckTimeout);
+
+    StartDiscoverScan(sed, leader);
+    nexus.AdvanceTime(50);
+    VerifyOrQuit(sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+    dataPollCount = sed.Get<Mac::Mac>().GetCounters().mTxDataPoll;
+    sed.Get<SupervisionListener>().SetInterval(5);
+
+    nexus.AdvanceTime(100);
+
+    VerifyOrQuit(sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrQuit(sed.Get<Mac::Mac>().GetCounters().mTxDataPoll == dataPollCount);
+
+    nexus.AdvanceTime(1000);
+
+    VerifyOrQuit(!sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrQuit(sed.Get<Mac::Mac>().GetCounters().mTxDataPoll > dataPollCount);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    {
+        Child *child = leader.Get<ChildTable>().GetChildAtIndex(0);
+        VerifyOrQuit(child != nullptr);
+        VerifyOrQuit(child->GetSupervisionInterval() == 5);
+    }
+}
+
+void TestDetachedSleepyWithDiscoverScan(void)
+{
+    Core     nexus;
+    uint32_t dataPollCount;
+    uint32_t step;
+
+    Node &leader = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and start detached SED in attach backoff");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+    sed.Join(leader, Node::kAsSed);
+
+    // Advance into a long attach backoff window and align just after it begins sleeping.
+    nexus.AdvanceTime(35 * 1000);
+
+    for (step = 0; (step < 50) && sed.Get<MeshForwarder>().GetRxOnWhenIdle(); step++)
+    {
+        nexus.AdvanceTime(100);
+    }
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsDetached());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kDetachedSleepy);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Discovery scan while detached wakes receiver and returns to detached sleep without polling");
+
+    dataPollCount = sed.Get<Mac::Mac>().GetCounters().mTxDataPoll;
+
+    StartDiscoverScan(sed, leader);
+
+    VerifyOrQuit(sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kDetachedSleepy);
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+    nexus.AdvanceTime(500);
+
+    VerifyOrQuit(!sed.Get<Mle::DiscoverScanner>().IsInProgress());
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsDetached());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kDetachedSleepy);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrQuit(sed.Get<Mac::Mac>().GetCounters().mTxDataPoll == dataPollCount);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Allow parent to respond and verify SED attaches as sleepy child");
+
+    leader.Get<Mac::Filter>().SetMode(Mac::Filter::kModeRssInOnly);
+    nexus.AdvanceTime(30 * 1000);
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetSleepMode() == MeshForwarder::kSleepy);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -321,6 +602,9 @@ int main(void)
     ot::Nexus::TestChildSupervision();
     ot::Nexus::TestChildSupervisionWithDiscoveryScans();
     ot::Nexus::TestChildSupervisionChangesDuringDiscoveryScan();
+    ot::Nexus::TestChildSupervisionWithParentSearch();
+    ot::Nexus::TestConcurrentSleepySuspensions();
+    ot::Nexus::TestDetachedSleepyWithDiscoverScan();
     printf("All tests passed\n");
     return 0;
 }

@@ -70,6 +70,8 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mSendMessage(nullptr)
     , mMeshSource()
     , mMeshDest()
+    , mSleepMode(kNonSleepy)
+    , mSleepSuspendRequesters(0)
     , mAddMeshHeader(false)
     , mEnabled(false)
     , mTxPaused(false)
@@ -93,6 +95,9 @@ void MeshForwarder::Start(void)
 {
     if (!mEnabled)
     {
+        mSleepMode = kNonSleepy;
+        ClearAllSleepSuspendRequesters();
+
         Get<Mac::Mac>().SetRxOnWhenIdle(true);
 #if OPENTHREAD_FTD
         mIndirectSender.Start();
@@ -106,7 +111,13 @@ void MeshForwarder::Stop(void)
 {
     VerifyOrExit(mEnabled);
 
+    mEnabled = false;
+
     mDataPollSender.StopPolling();
+    Get<SupervisionListener>().Stop();
+    mSleepMode = kNonSleepy;
+    ClearAllSleepSuspendRequesters();
+
     Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMeshForwarder);
     Get<Mle::DiscoverScanner>().Stop();
 
@@ -123,7 +134,6 @@ void MeshForwarder::Stop(void)
     mDelayNextTx = false;
 #endif
 
-    mEnabled     = false;
     mSendMessage = nullptr;
     Get<Mac::Mac>().SetRxOnWhenIdle(false);
 
@@ -842,34 +852,77 @@ exit:
 
 bool MeshForwarder::GetRxOnWhenIdle(void) const { return Get<Mac::Mac>().GetRxOnWhenIdle(); }
 
-void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
+void MeshForwarder::SetSleepMode(SleepMode aMode)
 {
-    Get<Mac::Mac>().SetRxOnWhenIdle(aRxOnWhenIdle);
+    VerifyOrExit(mSleepMode != aMode);
 
-    if (aRxOnWhenIdle)
+    mSleepMode = aMode;
+    UpdateSleepState();
+
+exit:
+    return;
+}
+
+void MeshForwarder::SuspendSleepyOperation(SuspendRequester aRequester)
+{
+    VerifyOrExit(!IsSleepModeSuspendedBy(aRequester));
+
+    AddSleepSuspendRequester(aRequester);
+    UpdateSleepState();
+
+exit:
+    return;
+}
+
+void MeshForwarder::ResumeSleepyOperation(SuspendRequester aRequester)
+{
+    VerifyOrExit(IsSleepModeSuspendedBy(aRequester));
+
+    RemoveSleepSuspendRequester(aRequester);
+    UpdateSleepState();
+
+exit:
+    return;
+}
+
+void MeshForwarder::UpdateSleepState(void)
+{
+    VerifyOrExit(mEnabled);
+
+    switch (mSleepMode)
     {
+    case kNonSleepy:
+        Get<Mac::Mac>().SetRxOnWhenIdle(true);
         mDataPollSender.StopPolling();
         Get<SupervisionListener>().Stop();
-    }
-    else
-    {
-        mDataPollSender.StartPolling();
+        break;
+
+    case kDetachedSleepy:
+        Get<Mac::Mac>().SetRxOnWhenIdle(IsSleepModeSuspended());
+        mDataPollSender.StopPolling();
+        Get<SupervisionListener>().Stop();
+        break;
+
+    case kSleepy:
+        Get<Mac::Mac>().SetRxOnWhenIdle(IsSleepModeSuspended());
         Get<SupervisionListener>().Start();
+
+        if (IsSleepModeSuspended())
+        {
+            mDataPollSender.StopPolling();
+            Get<SupervisionListener>().Pause();
+        }
+        else
+        {
+            mDataPollSender.StartPolling();
+            Get<SupervisionListener>().Resume();
+        }
+
+        break;
     }
-}
 
-void MeshForwarder::SuspendSleepyOperation(void)
-{
-    Get<Mac::Mac>().SetRxOnWhenIdle(true);
-    mDataPollSender.StopPolling();
-    Get<SupervisionListener>().Pause();
-}
-
-void MeshForwarder::ResumeSleepyOperation(void)
-{
-    Get<Mac::Mac>().SetRxOnWhenIdle(false);
-    mDataPollSender.StartPolling();
-    Get<SupervisionListener>().Resume();
+exit:
+    return;
 }
 
 Mac::TxFrame *MeshForwarder::PrepareFrame(Mac::TxFrames &aTxFrames)
