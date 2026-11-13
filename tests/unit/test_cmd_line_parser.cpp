@@ -57,7 +57,7 @@ template <typename ValueType> struct TestCase
     ValueType   mValue;
 };
 
-template <typename ValueType, otError (&Parser)(const char *aString, ValueType &aValue)>
+template <typename ValueType, Error (&Parser)(const char *aString, ValueType &aValue)>
 void VerifyParser(const TestCase<ValueType> *aTestCases, const char *aParserName, const char *aPrintFormat)
 {
     const TestCase<ValueType> *testCase = aTestCases;
