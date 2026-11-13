@@ -4514,6 +4514,11 @@ void Mle::Attacher::CancelAttachOnRoleChange(void)
 
     if (Get<Mle>().IsChild())
     {
+        // A child keeps its parent when a search is cancelled. A
+        // valid candidate would take over data polls from it, see
+        // `DataPollSender::GetParent()`.
+        mParentCandidate.Clear();
+
         mTimer.Start(kAttachBackoffDelayToResetCounter);
         mReattachMode = kReattachModeStop;
 
