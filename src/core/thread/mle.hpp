@@ -1938,7 +1938,7 @@ private:
         bool  HasMoreChannelsToAnnounce(void) const;
         void  SendParentRequest(ParentRequestType aType);
         Error SendChildIdRequest(void);
-        void  HandleChildIdRequestTxDone(const Message &aMessage);
+        void  HandleChildIdRequestTxDone(const Message &aMessage, Error aError);
         bool  PrepareAnnounceState(void);
         bool  IsBetterParent(uint16_t                aRloc16,
                              uint8_t                 aTwoWayLinkMargin,

@@ -5051,21 +5051,22 @@ exit:
 
 void Mle::Attacher::HandleChildIdRequestTxDone(const otMessage *aMessage, otError aError, void *aContext)
 {
-    OT_UNUSED_VARIABLE(aError);
-
-    static_cast<Attacher *>(aContext)->HandleChildIdRequestTxDone(AsCoreType(aMessage));
+    static_cast<Attacher *>(aContext)->HandleChildIdRequestTxDone(AsCoreType(aMessage), aError);
 }
 
-void Mle::Attacher::HandleChildIdRequestTxDone(const Message &aMessage)
+void Mle::Attacher::HandleChildIdRequestTxDone(const Message &aMessage, Error aError)
 {
-    if (aMessage.GetTxSuccess() && !Get<Mle>().IsRxOnWhenIdle())
+    VerifyOrExit(mState == kStateChildIdRequest);
+
+    if ((aError == kErrorNone) && !Get<Mle>().IsRxOnWhenIdle())
     {
         Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
         Get<DataPollSender>().SetAttachMode(true);
         Get<MeshForwarder>().ResumeSleepyOperation(MeshForwarder::kRequesterMleAttacher);
     }
 
-    if (aMessage.IsLinkSecurityEnabled() && (mState == kStateChildIdRequest))
+    if (aMessage.IsLinkSecurityEnabled() && !Get<Mle>().IsFullThreadDevice() &&
+        (mAddressRegistrationMode == kAppendAllAddresses))
     {
         // If the Child ID Request requires fragmentation and therefore
         // link layer security, the frame transmission will be aborted.
@@ -5078,6 +5079,9 @@ void Mle::Attacher::HandleChildIdRequestTxDone(const Message &aMessage)
         mAddressRegistrationMode = kAppendMeshLocalOnly;
         IgnoreError(SendChildIdRequest());
     }
+
+exit:
+    return;
 }
 
 Error Mle::Attacher::SendChildIdRequest(void)
