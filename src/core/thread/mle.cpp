@@ -576,8 +576,11 @@ void Mle::SetStateDetached(void)
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     Get<Mlr::Manager>().UpdateState();
 #endif
-    mAttacher.CancelAttachOnRoleChange();
+    // Set the sleep mode before `CancelAttachOnRoleChange()`, which
+    // can resume sleepy operation (e.g., when cancelling a better
+    // parent search).
     Get<MeshForwarder>().SetSleepMode(IsRxOnWhenIdle() ? MeshForwarder::kNonSleepy : MeshForwarder::kDetachedSleepy);
+    mAttacher.CancelAttachOnRoleChange();
     mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
     mRetxTracker.Stop();
     mInitiallyAttachedAsSleepy = false;
@@ -601,6 +604,10 @@ void Mle::SetStateChild(uint16_t aRloc16)
 
     SetRloc16(aRloc16);
     SetRole(kRoleChild);
+    // Set the sleep mode before `CancelAttachOnRoleChange()`, which
+    // can resume sleepy operation (e.g., when cancelling a better
+    // parent search).
+    Get<MeshForwarder>().SetSleepMode(IsRxOnWhenIdle() ? MeshForwarder::kNonSleepy : MeshForwarder::kSleepy);
     mAttacher.CancelAttachOnRoleChange();
     Get<Mac::Mac>().SetBeaconEnabled(false);
     mRetxTracker.UpdateOnRoleChangeToChild();
