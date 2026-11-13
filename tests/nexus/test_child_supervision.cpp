@@ -594,6 +594,98 @@ void TestDetachedSleepyWithDiscoverScan(void)
     VerifyOrQuit(!sed.Get<MeshForwarder>().GetRxOnWhenIdle());
 }
 
+void TestChildSupervisionModeChangeDuringChildIdRequest(void)
+{
+    static constexpr uint16_t kSupervisionInterval = 10;   // (seconds)
+    static constexpr uint32_t kPollPeriod          = 500;  // (msec)
+    static constexpr uint32_t kPollWindow          = 5000; // (msec)
+
+    Core nexus;
+
+    Node &leader = nexus.CreateNode();
+    Node &router = nexus.CreateNode();
+    Node &sed    = nexus.CreateNode();
+
+    leader.SetName("LEADER");
+    router.SetName("ROUTER");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network, attach SED to leader and router to leader");
+
+    leader.Form();
+    nexus.AdvanceTime(15 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Get<SupervisionListener>().SetInterval(kSupervisionInterval);
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    router.Join(leader);
+    nexus.AdvanceTime(200 * 1000);
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(kPollPeriod));
+
+    Mle::DeviceMode sedMode = sed.Get<Mle::Mle>().GetDeviceMode();
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Change the child mode, staying sleepy, while sending a Child ID Request to a better parent");
+
+    SuccessOrQuit(sed.Get<Mac::Filter>().AddRssIn(leader.Get<Mac::Mac>().GetExtAddress(),
+                                                  GetTypicalRssForLinkQuality(-100, kLinkQuality1)));
+    SuccessOrQuit(leader.Get<Mac::Filter>().AddRssIn(sed.Get<Mac::Mac>().GetExtAddress(),
+                                                     GetTypicalRssForLinkQuality(-100, kLinkQuality1)));
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SearchForBetterParent());
+
+    for (uint32_t elapsed = 0; !sed.Get<Mle::Mle>().GetParentCandidate().IsStateValid(); elapsed++)
+    {
+        VerifyOrQuit(elapsed < 10 * 1000);
+        nexus.AdvanceTime(1);
+    }
+
+    // The Child ID Request may still be queued, so its tx done can arrive after the search is cancelled.
+
+    SuccessOrQuit(
+        sed.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(sedMode.Get() ^ Mle::DeviceMode::kModeFullNetworkData)));
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsAttaching());
+
+    nexus.AdvanceTime(5 * 1000);
+
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<Mle::Mle>().GetParent().GetExtAddress() == leader.Get<Mac::Mac>().GetExtAddress());
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Check the child polls its parent at its own period");
+
+    // Attach mode polls every `OPENTHREAD_CONFIG_MAC_ATTACH_DATA_POLL_PERIOD`, which would send several times more
+    // polls in the window than `kPollPeriod`.
+
+    uint32_t polls       = sed.Get<Mac::Mac>().GetCounters().mTxDataPoll;
+    uint32_t leaderPolls = leader.Get<Mac::Mac>().GetCounters().mRxDataPoll;
+    uint32_t routerPolls = router.Get<Mac::Mac>().GetCounters().mRxDataPoll;
+
+    nexus.AdvanceTime(kPollWindow);
+
+    polls       = sed.Get<Mac::Mac>().GetCounters().mTxDataPoll - polls;
+    leaderPolls = leader.Get<Mac::Mac>().GetCounters().mRxDataPoll - leaderPolls;
+    routerPolls = router.Get<Mac::Mac>().GetCounters().mRxDataPoll - routerPolls;
+
+    Log("Data polls in %lu msec: %lu, leader rx %lu, router rx %lu", ToUlong(kPollWindow), ToUlong(polls),
+        ToUlong(leaderPolls), ToUlong(routerPolls));
+    VerifyOrQuit(polls > 0);
+    VerifyOrQuit(polls <= kPollWindow / kPollPeriod + 1);
+    VerifyOrQuit(leaderPolls == polls);
+    VerifyOrQuit(routerPolls == 0);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -605,6 +697,7 @@ int main(void)
     ot::Nexus::TestChildSupervisionWithParentSearch();
     ot::Nexus::TestConcurrentSleepySuspensions();
     ot::Nexus::TestDetachedSleepyWithDiscoverScan();
+    ot::Nexus::TestChildSupervisionModeChangeDuringChildIdRequest();
     printf("All tests passed\n");
     return 0;
 }
