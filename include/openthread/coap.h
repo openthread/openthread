@@ -64,6 +64,8 @@ extern "C" {
 
 #define OT_COAP_MAX_TOKEN_LENGTH 8 ///< Max token length as specified (RFC 7252).
 
+#define OT_COAP_MAX_ETAG_LENGTH 8 ///< Max ETag length as specified (RFC 7252).
+
 #define OT_COAP_MAX_RETRANSMIT 20 ///< Max retransmit supported by OpenThread.
 
 #define OT_COAP_MIN_ACK_TIMEOUT 1000 ///< Minimal ACK timeout in milliseconds supported by OpenThread.
