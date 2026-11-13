@@ -392,7 +392,7 @@ void RadioSelector::Log(LogLevel aLogLevel, const char *aActionText, Radio::Type
     String<kRadioPreferenceStringSize> preferenceString;
     bool                               isFirstEntry = true;
 
-    VerifyOrExit(GetInstance().GetLogLevel() >= aLogLevel);
+    VerifyOrExit(GetInstance().ShouldLogAt(aLogLevel));
 
     for (Radio::Type radio : sRadioSelectionOrder)
     {

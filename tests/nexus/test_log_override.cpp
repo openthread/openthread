@@ -47,6 +47,7 @@ void TestLogOverride(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check initial log level");
     VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelCrit);
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == Instance::GetGlobalLogLevel());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check OverrideLogLevel to a higher level");
@@ -55,9 +56,47 @@ void TestLogOverride(void)
     VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelInfo);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    Log("Check RestoreLogLevel");
+    Log("Check RestoreLogLevel when instance uses global log level");
 
     node.Get<Instance>().RestoreLogLevel();
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelCrit);
+
+    // Changing the global log level should update the instance since it uses the global log level.
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelWarn);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelCrit));
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelCrit);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check OverrideLogLevel when global log level changes while override is active");
+
+    node.Get<Instance>().OverrideLogLevel(kLogLevelInfo);
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelInfo);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelInfo);
+
+    // Restoring should adopt the new global log level (kLogLevelWarn).
+    node.Get<Instance>().RestoreLogLevel();
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelWarn);
+
+    // Check changing global log level to a lower level while override is active.
+    node.Get<Instance>().OverrideLogLevel(kLogLevelInfo);
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelInfo);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelCrit));
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelInfo);
+
+    // Restoring should adopt the new global log level (kLogLevelCrit).
+    node.Get<Instance>().RestoreLogLevel();
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelCrit);
+
+    // Verify instance continues to follow global log level changes.
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelNote);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelCrit));
     VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelCrit);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -108,6 +147,15 @@ void TestLogOverride(void)
     VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelInfo);
 
     node.Get<Instance>().RestoreLogLevel();
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelInfo);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check that instance with explicitly set log level does not track global log level changes");
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+    VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelInfo);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelCrit));
     VerifyOrQuit(node.Get<Instance>().GetLogLevel() == kLogLevelInfo);
 }
 
