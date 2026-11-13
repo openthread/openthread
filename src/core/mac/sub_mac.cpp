@@ -170,7 +170,7 @@ bool SubMac::HasAddress(const Address &aAddress) const
         break;
 
     case Address::kTypeShort:
-        if (aAddress.GetShort() == mShortAddress)
+        if ((mShortAddress != kShortAddrInvalid) && (aAddress.GetShort() == mShortAddress))
         {
             matches = true;
         }
@@ -369,11 +369,21 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
     }
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    if (!mRadioFilterEnabled)
+    VerifyOrExit(!mRadioFilterEnabled);
 #endif
+
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+    if (aError == kErrorNone)
     {
-        mCallbacks.ReceiveDone(frameInfo, aError);
+        VerifyOrExit(!Get<ThreadDirect::Listener>().ProcessRxFrame(frameInfo));
     }
+#endif
+
+    mCallbacks.ReceiveDone(frameInfo, aError);
+    ExitNow();
+
+exit:
+    return;
 }
 
 Error SubMac::Send(void)

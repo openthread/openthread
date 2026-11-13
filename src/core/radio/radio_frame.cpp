@@ -33,10 +33,44 @@
 
 #include "radio_frame.hpp"
 
+#include <string.h>
+
+#include "common/code_utils.hpp"
 #include "radio/trel_link.hpp"
 
 namespace ot {
 namespace Radio {
+
+Error SavedPsdu::Save(const Frame &aFrame)
+{
+    Error    error  = kErrorNone;
+    uint16_t length = aFrame.GetLength();
+
+    VerifyOrExit(length <= kMaxSize, error = kErrorNoBufs);
+
+    if (length > 0)
+    {
+        memcpy(mPsdu, aFrame.GetPsdu(), length);
+    }
+
+    mIsSaved = true;
+
+exit:
+    return error;
+}
+
+void SavedPsdu::Restore(Frame &aFrame) const
+{
+    uint16_t length = aFrame.GetLength();
+
+    VerifyOrExit(mIsSaved);
+    VerifyOrExit((length > 0) && (length <= kMaxSize));
+
+    memcpy(aFrame.GetPsdu(), mPsdu, length);
+
+exit:
+    return;
+}
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 uint16_t Frame::GetMtu(void) const
