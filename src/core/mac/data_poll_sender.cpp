@@ -66,8 +66,6 @@ void DataPollSender::StartPolling(void)
 {
     VerifyOrExit(!mEnabled);
 
-    OT_ASSERT(!Get<Mle::Mle>().IsRxOnWhenIdle());
-
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
 
