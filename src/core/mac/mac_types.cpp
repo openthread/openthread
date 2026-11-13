@@ -59,6 +59,11 @@ PanId GenerateRandomPanId(void)
     return panId;
 }
 
+bool MatchPanIds(PanId aFirstPanId, PanId aSecondPanId)
+{
+    return (aFirstPanId == kPanIdBroadcast) || (aSecondPanId == kPanIdBroadcast) || (aFirstPanId == aSecondPanId);
+}
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 void ExtAddress::GenerateRandom(void)

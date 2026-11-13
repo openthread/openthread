@@ -49,6 +49,7 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -106,6 +107,16 @@ public:
      * @returns A pointer to the Key ID byte array of `kSize` bytes.
      */
     const uint8_t *GetBytes(void) const { return m8; }
+
+    /**
+     * Reads and populates the Key ID from a given parsed MAC frame header.
+     *
+     * @param[in] aFrameInfo  The parsed MAC frame info to read the Key ID from.
+     *
+     * @retval kErrorNone   Successfully read the Key ID from @p aFrameInfo.
+     * @retval kErrorParse  The frame does not have a valid Mode 2 security header.
+     */
+    Error ReadFrom(const Mac::Frame::ParseInfo &aFrameInfo);
 
     /**
      * Converts the Key ID to a hex string.

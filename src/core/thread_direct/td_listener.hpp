@@ -191,6 +191,7 @@ private:
     };
 
     const TimedRx &DetermineCurWindow(const Radio::SyncedTime &aNow);
+    bool           ProcessRxFrame(Mac::RxFrame::ParseInfo &aFrameInfo);
 
     uint32_t               mInterval;
     TimedRx                mTimedRx;
