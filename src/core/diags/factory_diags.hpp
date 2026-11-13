@@ -236,6 +236,7 @@ private:
     Error TransmitPacket(void);
     void  OutputReceivedFrame(const otRadioFrame *aFrame);
     bool  ShouldHandleReceivedFrame(const otRadioFrame &aFrame) const;
+    bool  IsTxActive(void) const;
 
     void Output(const char *aFormat, ...);
     void ResetTxPacket(void);
@@ -255,7 +256,10 @@ private:
         kTxCmdRepeatStop,
         kTxCmdSend,
         kTxCmdSweep,
+        kTxCmdStop,
     };
+
+    void Stop(void);
 
     Stats mStats;
 
