@@ -78,6 +78,11 @@ public:
         mReceived = true;
         if (aError == kErrorNone)
         {
+            if (mFrameFilter && !mFrameFilter(mDecoderBuffer->GetFrame(), mDecoderBuffer->GetLength()))
+            {
+                mDecoderBuffer->DiscardFrame();
+                return;
+            }
             if (mFrameObserver)
             {
                 mFrameObserver(mDecoderBuffer->GetFrame(), mDecoderBuffer->GetLength());
@@ -93,6 +98,8 @@ public:
      * Optional observer called with every spinel frame received from the coprocessor.
      */
     std::function<void(const uint8_t *aFrame, uint16_t aLength)> mFrameObserver;
+    std::function<bool(const uint8_t *aFrame, uint16_t aLength)> mFrameFilter;
+    otError                                                      mSendError = OT_ERROR_NONE;
 
 private:
     ReceiveFrameCallback            mReceiveFrameCallback = nullptr;
@@ -104,7 +111,7 @@ private:
 class FakeCoprocessorPlatform : public FakePlatform
 {
 public:
-    FakeCoprocessorPlatform();
+    explicit FakeCoprocessorPlatform(otRadioCaps aRadioCaps = OT_RADIO_CAPS_NONE, bool aSoftwareReset = false);
     virtual ~FakeCoprocessorPlatform() = default;
 
     Spinel::RadioSpinel   mRadioSpinel;
