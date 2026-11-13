@@ -802,7 +802,9 @@ protected:
     void SetResourceHandler(ResourceHandler aHandler) { mResourceHandler = aHandler; }
 
 private:
-    static constexpr uint16_t kMaxBlockSize = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
+    static constexpr uint16_t kMaxBlockSize  = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
+    static constexpr uint8_t  kMinEtagLength = 1;
+    static constexpr uint8_t  kMaxEtagLength = OT_COAP_MAX_ETAG_LENGTH;
 
     struct SendCallbacks
     {
@@ -821,6 +823,9 @@ private:
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         BlockwiseReceiveHook  mBlockwiseReceiveHook;
         BlockwiseTransmitHook mBlockwiseTransmitHook;
+        uint8_t               mBlock2Etag[kMaxEtagLength]; // Expected ETag across Block2 responses.
+        uint8_t               mBlock2EtagLength;           // Length of `mBlock2Etag` (0 if no ETag).
+        bool                  mHasBlock2Response;          // Whether initial Block2 response was seen.
 #endif
     };
 
@@ -1012,6 +1017,7 @@ private:
     Error SendNextBlock1Request(Request &aRequest, Msg &aRxMsg);
     Error SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t aTotalLength, bool aBeginBlock1Transfer);
 
+    static Error ProcessBlock2Etag(const Message &aMessage, SendCallbacks &aCallbacks);
     static Error DetermineBlockSzxFromSize(uint16_t aSize, BlockSzx &aBlockSzx);
 
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
