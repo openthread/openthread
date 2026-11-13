@@ -112,6 +112,18 @@ exit:
     return error;
 }
 
+Error BleSecure::SetTcatVendorInfo(const MeshCoP::TcatAgent::VendorInfo &aVendorInfo)
+{
+    Error error;
+
+    SuccessOrExit(error = Get<MeshCoP::TcatAgent>().SetTcatVendorInfo(aVendorInfo));
+
+    IgnoreError(NotifyAdvertisementChanged());
+
+exit:
+    return error;
+}
+
 void BleSecure::Stop(void)
 {
     VerifyOrExit(mBleState != kStopped);
@@ -278,24 +290,6 @@ void BleSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
                   "The maximum length of TLS PSK is smaller than joiner PSKd");
 
     SuccessOrAssert(mTls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength()));
-}
-
-Error BleSecure::SendMessage(ot::Message &aMessage)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(IsConnected(), error = kErrorInvalidState);
-    if (mSendMessage == nullptr)
-    {
-        mSendMessage = Get<MessagePool>().Allocate(Message::kTypeBle);
-        VerifyOrExit(mSendMessage != nullptr, error = kErrorNoBufs);
-    }
-    SuccessOrExit(error = mSendMessage->AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
-    SuccessOrExit(error = Flush());
-
-    aMessage.Free();
-exit:
-    return error;
 }
 
 Error BleSecure::Send(uint8_t *aBuf, uint16_t aLength)
