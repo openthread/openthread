@@ -1024,13 +1024,8 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddres
         ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
         InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, aAddressInfo.mPrefixLength);
         ifr6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
-        ifr6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
-
-#if defined(__APPLE__)
-        ifr6.ifra_lifetime.ia6t_expire = ND6_INFINITE_LIFETIME;
-        ifr6.ifra_lifetime.ia6t_preferred =
-            (aAddressInfo.mPreferred && !aAddressInfo.mMeshLocal ? ND6_INFINITE_LIFETIME : 0);
-#endif
+        ifr6.ifra_lifetime.ia6t_pltime =
+            (aAddressInfo.mPreferred && !aAddressInfo.mMeshLocal) ? ND6_INFINITE_LIFETIME : 0;
 
         rval = ioctl(sIpFd, aIsAdded ? SIOCAIFADDR_IN6 : SIOCDIFADDR_IN6, &ifr6);
         if ((rval != 0) && (errno != EALREADY))
@@ -2852,11 +2847,6 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                         InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, netAddr.mPrefixLength);
                         ifr6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
                         ifr6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
-
-#if defined(__APPLE__)
-                        ifr6.ifra_lifetime.ia6t_expire    = ND6_INFINITE_LIFETIME;
-                        ifr6.ifra_lifetime.ia6t_preferred = ND6_INFINITE_LIFETIME;
-#endif
 
                         err = ioctl(sIpFd, SIOCDIFADDR_IN6, &ifr6);
                         if (err != 0)
