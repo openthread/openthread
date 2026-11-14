@@ -43,6 +43,25 @@ namespace ThreadDirect {
 //---------------------------------------------------------------------------------------------------------------------
 // KeyId
 
+Error KeyId::ReadFrom(const Mac::Frame::ParseInfo &aFrameInfo)
+{
+    static_assert(kSize == Mac::Frame::kKeySourceSizeMode2 + sizeof(uint8_t), "KeyId::kSize is invalid");
+
+    Error error = kErrorParse;
+
+    VerifyOrExit(aFrameInfo.mParsedSecurityHeader);
+    VerifyOrExit(aFrameInfo.mIsSecurityEnabled);
+    VerifyOrExit(aFrameInfo.mKeyIdMode == Mac::Frame::kKeyIdMode2);
+
+    memcpy(m8, aFrameInfo.mKeySource.GetBytes(), Mac::Frame::kKeySourceSizeMode2);
+    m8[Mac::Frame::kKeySourceSizeMode2] = aFrameInfo.mKeyIndex;
+
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
 KeyId::InfoString KeyId::ToString(void) const
 {
     InfoString string;

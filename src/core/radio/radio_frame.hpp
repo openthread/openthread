@@ -55,6 +55,54 @@ namespace Radio {
 class Frame;
 
 /**
+ * Represents a buffer for saving and restoring the PSDU of a radio frame.
+ */
+class SavedPsdu
+{
+public:
+    /**
+     * Initializes the `SavedPsdu` as empty (no saved PSDU).
+     */
+    SavedPsdu(void)
+        : mIsSaved(false)
+    {
+    }
+
+    /**
+     * Indicates whether a PSDU has been saved in this object.
+     *
+     * @retval TRUE   A PSDU has been saved.
+     * @retval FALSE  No PSDU has been saved yet.
+     */
+    bool IsSaved(void) const { return mIsSaved; }
+
+    /**
+     * Saves the PSDU bytes from a given `Frame` into this object.
+     *
+     * @param[in] aFrame  The `Frame` to save the PSDU from.
+     *
+     * @retval kErrorNone    Successfully saved the PSDU from @p aFrame.
+     * @retval kErrorNoBufs  The frame length exceeds the maximum size supported by `SavedPsdu`.
+     */
+    Error Save(const Frame &aFrame);
+
+    /**
+     * Restores the PSDU bytes of a given `Frame` from this object.
+     *
+     * If no PSDU has been saved (`IsSaved()` is `false`), this method does nothing.
+     *
+     * @param[in,out] aFrame  The `Frame` to restore the PSDU into.
+     */
+    void Restore(Frame &aFrame) const;
+
+private:
+    static constexpr uint16_t kMaxSize = OT_RADIO_FRAME_MAX_SIZE;
+
+    uint8_t mPsdu[kMaxSize];
+    bool    mIsSaved;
+};
+
+/**
  * Defines a CRTP base class providing property accessors for a radio frame.
  *
  * Users of this class should follow CRTP-style inheritance, where the `FrameType` class inherits from
@@ -148,6 +196,23 @@ public:
      */
     void SetRadioType(Type aRadioType) { AsFrame().mRadioType = static_cast<uint8_t>(aRadioType); }
 #endif
+
+    /**
+     * Saves the frame's PSDU bytes into a given `SavedPsdu`.
+     *
+     * @param[out] aSavedPsdu  The `SavedPsdu` to save the PSDU into.
+     *
+     * @retval kErrorNone    Successfully saved the PSDU into @p aSavedPsdu.
+     * @retval kErrorNoBufs  The frame length exceeds the maximum size supported by `SavedPsdu`.
+     */
+    Error SavePsdu(SavedPsdu &aSavedPsdu) const { return aSavedPsdu.Save(AsFrame()); }
+
+    /**
+     * Restores the frame's PSDU bytes from a previously saved `SavedPsdu`.
+     *
+     * @param[in] aSavedPsdu  The `SavedPsdu` to restore the PSDU from.
+     */
+    void RestorePsdu(const SavedPsdu &aSavedPsdu) { aSavedPsdu.Restore(AsFrame()); }
 
 private:
     FrameProperties(void) = default;
