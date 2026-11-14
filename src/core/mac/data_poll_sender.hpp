@@ -39,6 +39,7 @@
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
@@ -62,9 +63,7 @@ namespace ot {
 class DataPollSender : public InstanceLocator, private NonCopyable
 {
 public:
-    static constexpr uint8_t kDefaultFastPolls  = 8;  ///< Default number of fast poll tx (@sa StartFastPolls).
-    static constexpr uint8_t kMaxFastPolls      = 15; ///< Maximum number of fast poll tx allowed.
-    static constexpr uint8_t kMaxFastPollsUsers = 63; ///< Maximum number of the users of fast poll tx allowed.
+    static constexpr uint8_t kDefaultFastPolls = 8; ///< Default number of fast poll tx (@sa SendFastPolls).
 
     /**
      * Initializes the data poll sender object.
@@ -109,8 +108,7 @@ public:
      * value is larger than the child timeout.
      *
      * A non-zero `aPeriod` should be larger than or equal to `OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD` (10ms) or
-     * this method returns `kErrorInvalidArgs`. If a non-zero `aPeriod` is larger than maximum value of
-     * `0x3FFFFFF ((1 << 26) - 1)`, it would be clipped to this value.
+     * this method returns `kErrorInvalidArgs`.
      *
      * @param[in]  aPeriod  The data poll period in milliseconds.
      *
@@ -174,7 +172,7 @@ public:
      * This is mainly used to inform the poll sender that a parameter impacting the poll period (e.g., the child's
      * timeout value which is used to determine the default data poll period) is modified.
      */
-    void RecalculatePollPeriod(void);
+    void RecalculatePollPeriod(void) { ScheduleNextPoll(kRecalculatePollPeriod); }
 
     /**
      * Sets/clears the attach mode on data poll sender.
@@ -190,10 +188,9 @@ public:
      * Asks data poll sender to send the next given number of polls at a faster rate (poll period defined
      * by `kFastPollPeriod`). This is used by OpenThread stack when it expects a response from the parent/sender.
      *
-     * If @p aNumFastPolls is zero the default value specified by `kDefaultFastPolls` is used instead. The number of
-     * fast polls is clipped by maximum value specified by `kMaxFastPolls`.
+     * If @p aNumFastPolls is zero the default value specified by `kDefaultFastPolls` is used instead.
      *
-     * Note that per `SendFastPolls()` would increase the internal reference count until up to the allowed maximum
+     * Note that per `SendFastPolls()` would increase the internal reference count up to the allowed maximum
      * value. If there are retransmission mechanism in the caller component, it should be responsible to call
      * `StopFastPolls()` the same times as `SendFastPolls()` it triggered to decrease the reference count properly,
      * guaranteeing to exit fast poll mode gracefully. Otherwise, fast poll would continue until all data polls are sent
@@ -224,16 +221,6 @@ public:
     void ResetKeepAliveTimer(void);
 
     /**
-     * Returns the default maximum poll period.
-     *
-     * The default poll period is determined based on the child timeout interval, ensuing the child would send data poll
-     * within the child's timeout.
-     *
-     * @returns The maximum default data polling interval (in msec).
-     */
-    uint32_t GetDefaultPollPeriod(void) const;
-
-    /**
      * Prepares and returns a data request command frame.
      *
      * @param[in] aTxFrames  The set of TxFrames for all radio links.
@@ -246,6 +233,13 @@ private:
     static constexpr uint8_t kQuickPollsAfterTimeout = 5; // Quick data poll tx in case of back-to-back poll timeouts.
     static constexpr uint8_t kMaxPollRetxAttempts    = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS;
     static constexpr uint8_t kMaxCslPollRetxAttempts = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
+    static constexpr uint8_t kMaxFastPollsUsers      = NumericLimits<uint8_t>::kMax;
+
+    // Poll period under different conditions (in milliseconds).
+    static constexpr uint32_t kAttachDataPollPeriod = OPENTHREAD_CONFIG_MAC_ATTACH_DATA_POLL_PERIOD;
+    static constexpr uint32_t kRetxPollPeriod       = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD;
+    static constexpr uint32_t kFastPollPeriod       = 188;
+    static constexpr uint32_t kMinPollPeriod        = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;
 
     enum PollPeriodSelector : uint8_t
     {
@@ -253,13 +247,7 @@ private:
         kRecalculatePollPeriod,
     };
 
-    // Poll period under different conditions (in milliseconds).
-    static constexpr uint32_t kAttachDataPollPeriod = OPENTHREAD_CONFIG_MAC_ATTACH_DATA_POLL_PERIOD;
-    static constexpr uint32_t kRetxPollPeriod       = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD;
-    static constexpr uint32_t kFastPollPeriod       = 188;
-    static constexpr uint32_t kMinPollPeriod        = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;
-    static constexpr uint32_t kMaxExternalPeriod    = ((1 << 26) - 1); // ~18.6 hours.
-
+    uint32_t        DetermineMaxPollPeriod(void) const;
     void            ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t        CalculatePollPeriod(void) const;
     const Neighbor &GetParent(void) const;
@@ -272,19 +260,17 @@ private:
 
     using PollTimer = TimerMilliIn<DataPollSender, &DataPollSender::HandlePollTimer>;
 
-    TimeMilli mTimerStartTime;
+    bool      mEnabled : 1;
+    bool      mAttachMode : 1;
+    bool      mRetxMode : 1;
+    uint8_t   mPollTimeoutCounter;
+    uint8_t   mPollTxFailureCounter;
+    uint8_t   mRemainingFastPolls;
+    uint8_t   mFastPollsUsers;
     uint32_t  mPollPeriod;
-    uint32_t  mExternalPollPeriod : 26; // In milliseconds.
-    uint8_t   mFastPollsUsers : 6;      // Number of callers which request fast polls.
-
+    uint32_t  mExternalPollPeriod;
+    TimeMilli mTimerStartTime;
     PollTimer mTimer;
-
-    bool    mEnabled : 1;              // Indicates whether data polling is enabled/started.
-    bool    mAttachMode : 1;           // Indicates whether in attach mode (to use attach poll period).
-    bool    mRetxMode : 1;             // Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
-    uint8_t mPollTimeoutCounter : 4;   // Poll timeouts counter (0 to `kQuickPollsAfterTimeout`).
-    uint8_t mPollTxFailureCounter : 4; // Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
-    uint8_t mRemainingFastPolls : 4;   // Number of remaining fast polls when in transient fast polling mode.
 };
 
 /**

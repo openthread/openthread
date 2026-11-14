@@ -41,17 +41,17 @@ RegisterLogModule("DataPollSender");
 
 DataPollSender::DataPollSender(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimerStartTime(0)
-    , mPollPeriod(0)
-    , mExternalPollPeriod(0)
-    , mFastPollsUsers(0)
-    , mTimer(aInstance)
     , mEnabled(false)
     , mAttachMode(false)
     , mRetxMode(false)
     , mPollTimeoutCounter(0)
     , mPollTxFailureCounter(0)
     , mRemainingFastPolls(0)
+    , mFastPollsUsers(0)
+    , mPollPeriod(0)
+    , mExternalPollPeriod(0)
+    , mTimerStartTime(0)
+    , mTimer(aInstance)
 {
 }
 
@@ -157,20 +157,13 @@ Error DataPollSender::SetExternalPollPeriod(uint32_t aPeriod)
 
     if (aPeriod != 0)
     {
-        VerifyOrExit(aPeriod >= OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD, error = kErrorInvalidArgs);
-
-        aPeriod = Min(aPeriod, kMaxExternalPeriod);
+        VerifyOrExit(aPeriod >= kMinPollPeriod, error = kErrorInvalidArgs);
     }
 
-    if (mExternalPollPeriod != aPeriod)
-    {
-        mExternalPollPeriod = aPeriod;
+    VerifyOrExit(mExternalPollPeriod != aPeriod);
 
-        if (mEnabled)
-        {
-            ScheduleNextPoll(kRecalculatePollPeriod);
-        }
-    }
+    mExternalPollPeriod = aPeriod;
+    ScheduleNextPoll(kRecalculatePollPeriod);
 
 exit:
     return error;
@@ -178,7 +171,7 @@ exit:
 
 uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
 {
-    uint32_t period = GetDefaultPollPeriod();
+    uint32_t period = DetermineMaxPollPeriod();
 
     if (mExternalPollPeriod != 0)
     {
@@ -359,25 +352,15 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
-void DataPollSender::RecalculatePollPeriod(void)
-{
-    if (mEnabled)
-    {
-        ScheduleNextPoll(kRecalculatePollPeriod);
-    }
-}
-
 void DataPollSender::SetAttachMode(bool aMode)
 {
-    if (mAttachMode != aMode)
-    {
-        mAttachMode = aMode;
+    VerifyOrExit(mAttachMode != aMode);
 
-        if (mEnabled)
-        {
-            ScheduleNextPoll(kRecalculatePollPeriod);
-        }
-    }
+    mAttachMode = aMode;
+    ScheduleNextPoll(kRecalculatePollPeriod);
+
+exit:
+    return;
 }
 
 void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
@@ -394,10 +377,9 @@ void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
         aNumFastPolls = kDefaultFastPolls;
     }
 
-    aNumFastPolls       = Min(aNumFastPolls, kMaxFastPolls);
     mRemainingFastPolls = Max(mRemainingFastPolls, aNumFastPolls);
 
-    if (mEnabled && shouldRecalculatePollPeriod)
+    if (shouldRecalculatePollPeriod)
     {
         ScheduleNextPoll(kRecalculatePollPeriod);
     }
@@ -424,7 +406,7 @@ exit:
 
 void DataPollSender::ResetKeepAliveTimer(void)
 {
-    if (mTimer.IsRunning() && mPollPeriod == GetDefaultPollPeriod())
+    if (mTimer.IsRunning() && mPollPeriod == DetermineMaxPollPeriod())
     {
         mTimerStartTime = TimerMilli::GetNow();
         mTimer.StartAt(mTimerStartTime, mPollPeriod);
@@ -434,7 +416,11 @@ void DataPollSender::ResetKeepAliveTimer(void)
 void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 {
     TimeMilli now;
-    uint32_t  oldPeriod = mPollPeriod;
+    uint32_t  oldPeriod;
+
+    VerifyOrExit(mEnabled);
+
+    oldPeriod = mPollPeriod;
 
     if (aPollPeriodSelector == kRecalculatePollPeriod)
     {
@@ -443,40 +429,40 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 
     now = TimerMilli::GetNow();
 
-    if (mTimer.IsRunning())
-    {
-        if (oldPeriod != mPollPeriod)
-        {
-            // If poll interval did change and re-starting the timer from
-            // last start time with new poll interval would fire quickly
-            // (i.e., fires within window `[now, now + kMinPollPeriod]`)
-            // add an extra minimum delay of `kMinPollPeriod`. This
-            // ensures that when an internal or external request triggers
-            // a switch to a shorter poll interval, the first data poll
-            // will not be sent too quickly (and possibly before the
-            // response is available/prepared on the parent node).
-
-            if (mTimerStartTime + mPollPeriod < now + kMinPollPeriod)
-            {
-                mTimer.StartAt(now, kMinPollPeriod);
-            }
-            else
-            {
-                mTimer.StartAt(mTimerStartTime, mPollPeriod);
-            }
-        }
-        // Do nothing on the running poll timer if the poll interval doesn't change
-    }
-    else
+    if (!mTimer.IsRunning())
     {
         mTimerStartTime = now;
         mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        ExitNow();
     }
+
+    VerifyOrExit(oldPeriod != mPollPeriod);
+
+    // If poll interval did change and re-starting the timer from
+    // last start time with new poll interval would fire quickly
+    // (i.e., fires within window `[now, now + kMinPollPeriod]`)
+    // add an extra minimum delay of `kMinPollPeriod`. This
+    // ensures that when an internal or external request triggers
+    // a switch to a shorter poll interval, the first data poll
+    // will not be sent too quickly (and possibly before the
+    // response is available/prepared on the parent node).
+
+    if (mTimerStartTime + mPollPeriod < now + kMinPollPeriod)
+    {
+        mTimer.StartAt(now, kMinPollPeriod);
+    }
+    else
+    {
+        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+    }
+
+exit:
+    return;
 }
 
 uint32_t DataPollSender::CalculatePollPeriod(void) const
 {
-    uint32_t period = GetDefaultPollPeriod();
+    uint32_t period = DetermineMaxPollPeriod();
 
     if (mAttachMode)
     {
@@ -505,33 +491,40 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
         period = Min(period, mExternalPollPeriod);
     }
 
-    if (period == 0)
-    {
-        period = kMinPollPeriod;
-    }
+    period = Max(period, kMinPollPeriod);
 
     return period;
 }
 
-uint32_t DataPollSender::GetDefaultPollPeriod(void) const
+uint32_t DataPollSender::DetermineMaxPollPeriod(void) const
 {
-    uint32_t pollAhead = static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
-    uint32_t period;
+    // Derives the maximum poll period from the child (and CSL) timeout interval,
+    // ensuring the child sends a data poll before its timeout expires.
 
-    period = Time::SecToMsec(Min(Get<Mle::Mle>().GetTimeout(), Time::MsecToSec(TimerMilli::kMaxDelay)));
+    static constexpr uint32_t kPollAhead    = kRetxPollPeriod * kMaxPollRetxAttempts;
+    static constexpr uint32_t kTimeoutLimit = Time::MsecToSec(TimerMilli::kMaxDelay);
+
+    uint32_t timeout   = Get<Mle::Mle>().GetTimeout();
+    uint32_t pollAhead = kPollAhead;
+    uint32_t period;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled())
     {
-        period    = Min(period, Time::SecToMsec(Get<Mle::Mle>().GetCslTimeout()));
-        pollAhead = static_cast<uint32_t>(kRetxPollPeriod);
+        timeout   = Min(timeout, Get<Mle::Mle>().GetCslTimeout());
+        pollAhead = kRetxPollPeriod;
     }
 #endif
+
+    timeout = Min(timeout, kTimeoutLimit);
+    period  = Time::SecToMsec(timeout);
 
     if (period > pollAhead)
     {
         period -= pollAhead;
     }
+
+    period = Max(period, kMinPollPeriod);
 
     return period;
 }
