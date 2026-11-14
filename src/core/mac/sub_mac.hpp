@@ -245,11 +245,29 @@ public:
 #endif
 
     /**
+     * Gets the PAN ID.
+     *
+     * @returns The PAN ID.
+     */
+    PanId GetPanId(void) const { return mPanId; }
+
+    /**
      * Sets the PAN ID.
      *
      * @param[in] aPanId  The PAN ID.
      */
     void SetPanId(PanId aPanId);
+
+    /**
+     * Pauses PAN ID filtering on the radio (setting the radio PAN ID filter to `kPanIdBroadcast`) without changing the
+     * stored PAN ID.
+     */
+    void PausePanIdFiltering(void);
+
+    /**
+     * Resumes PAN ID filtering on the radio after a prior `PausePanIdFiltering()`, restoring the stored PAN ID.
+     */
+    void ResumePanIdFiltering(void);
 
     /**
      * Gets the short address.
@@ -778,6 +796,7 @@ private:
     void Init(void);
     bool IsEnabled(void) const { return mState != kStateDisabled; }
     void SetState(State aState);
+    void ApplyPanId(PanId aPanId);
     bool RadioSupports(Capability aCapability) const { return (mRadioCaps & aCapability) != 0; }
     bool ShouldHandle(Capability aCapability) const;
     bool ShouldHandleCsmaBackoff(void) const;
@@ -817,10 +836,12 @@ private:
     State        mState;
     uint8_t      mCsmaBackoffs;
     uint8_t      mTransmitRetries;
+    PanId        mPanId;
     ShortAddress mShortAddress;
     ShortAddress mAlternateShortAddress;
     ExtAddress   mExtAddress;
     bool         mRxOnWhenIdle : 1;
+    bool         mPanIdFilteringPaused : 1;
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     bool mRadioFilterEnabled : 1;
 #endif

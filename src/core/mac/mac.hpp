@@ -303,7 +303,7 @@ public:
      *
      * @returns The IEEE 802.15.4 PAN ID.
      */
-    PanId GetPanId(void) const { return mPanId; }
+    PanId GetPanId(void) const { return mLinks.GetPanId(); }
 
     /**
      * Sets the IEEE 802.15.4 PAN ID.
@@ -769,7 +769,6 @@ private:
     uint8_t     mBeaconSequence;
     uint8_t     mDataSequence;
     uint8_t     mBroadcastTransmitCount;
-    PanId       mPanId;
     uint8_t     mPanChannel;
     uint8_t     mRadioChannel;
     ChannelMask mSupportedChannelMask;

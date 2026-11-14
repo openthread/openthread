@@ -126,6 +126,7 @@ Links::Links(Instance &aInstance)
 #endif
     , mTxFrames(aInstance)
 #if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    , mPanId(kPanIdBroadcast)
     , mShortAddress(kShortAddrInvalid)
     , mAlternateShortAddress(kShortAddrInvalid)
 #endif

@@ -200,7 +200,7 @@ public:
      *
      * @returns PANID.
      */
-    PanId GetPanId(void) const { return mPanId; }
+    PanId GetPanId(void) const { return mSubMac.GetPanId(); }
 
     /**
      * Updates PANID.
@@ -283,7 +283,6 @@ private:
 #endif
 
     uint8_t                 mReceiveChannel;
-    PanId                   mPanId;
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;

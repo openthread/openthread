@@ -48,7 +48,6 @@ RegisterLogModule("LinkRaw");
 LinkRaw::LinkRaw(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mReceiveChannel(Radio::kDefaultChannel)
-    , mPanId(kPanIdBroadcast)
     , mReceiveDoneCallback(nullptr)
     , mTransmitDoneCallback(nullptr)
     , mEnergyScanDoneCallback(nullptr)
@@ -68,7 +67,6 @@ void LinkRaw::Init(void)
     mTransmitDoneCallback   = nullptr;
     mReceiveDoneCallback    = nullptr;
     mReceiveChannel         = Radio::kDefaultChannel;
-    mPanId                  = kPanIdBroadcast;
 #if OPENTHREAD_RADIO
     mSubMac.Init();
 #endif
@@ -130,7 +128,6 @@ Error LinkRaw::SetPanId(uint16_t aPanId)
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
     mSubMac.SetPanId(aPanId);
-    mPanId = aPanId;
 
 exit:
     return error;
