@@ -421,7 +421,8 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
         if ((mCurTxCmd == kTxCmdRepeat) && mDiagSendOn)
         {
             mCurTxCmd = kTxCmdRepeatStop;
-            error     = kErrorPending;
+            StartTxDoneTimeout();
+            error = kErrorPending;
         }
         else
         {
@@ -613,7 +614,8 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     if (mDiagSendOn)
     {
         mCurTxCmd = kTxCmdStop;
-        error     = kErrorPending;
+        StartTxDoneTimeout();
+        error = kErrorPending;
     }
     else
     {
@@ -979,6 +981,10 @@ void Diags::AlarmFired(void)
         IgnoreError(TransmitPacket());
         otPlatAlarmMilliStartAt(&GetInstance(), now, mTxPeriod);
     }
+    else if ((mCurTxCmd == kTxCmdRepeatStop) || (mCurTxCmd == kTxCmdStop))
+    {
+        HandleTxDoneTimeout();
+    }
     else
     {
         otPlatDiagAlarmCallback(&GetInstance());
@@ -1066,8 +1072,7 @@ void Diags::TransmitDone(Error aError)
 
     if (mCurTxCmd == kTxCmdStop)
     {
-        Stop();
-        Output("OT_ERROR_NONE");
+        CompletePendingStop();
         ExitNow();
     }
 
@@ -1078,8 +1083,7 @@ void Diags::TransmitDone(Error aError)
 
     if (mCurTxCmd == kTxCmdRepeatStop)
     {
-        mCurTxCmd = kTxCmdNone;
-        Output("OT_ERROR_NONE");
+        CompletePendingStop();
         ExitNow();
     }
 
@@ -1122,6 +1126,43 @@ void Diags::TransmitDone(Error aError)
 
 exit:
     return;
+}
+
+void Diags::StartTxDoneTimeout(void)
+{
+    // Bound the wait for the in-flight frame in case the radio never reports its transmit done.
+    otPlatAlarmMilliStartAt(&GetInstance(), otPlatAlarmMilliGetNow(), kTxDoneTimeout);
+}
+
+void Diags::HandleTxDoneTimeout(void)
+{
+    // Abort the in-flight frame by switching the radio back to receive while still in diag mode. Clearing
+    // `mDiagSendOn` makes `TransmitDone()` drop a late transmit done instead of handling it again.
+    mDiagSendOn = false;
+    IgnoreError(Get<Radio::Radio>().Receive(mChannel));
+
+    if (mIsSleepOn)
+    {
+        IgnoreError(Get<Radio::Radio>().Sleep());
+    }
+
+    CompletePendingStop();
+}
+
+void Diags::CompletePendingStop(void)
+{
+    otPlatAlarmMilliStop(&GetInstance());
+
+    if (mCurTxCmd == kTxCmdStop)
+    {
+        Stop();
+    }
+    else
+    {
+        mCurTxCmd = kTxCmdNone;
+    }
+
+    Output("OT_ERROR_NONE");
 }
 
 bool Diags::ShouldHandleReceivedFrame(const otRadioFrame &aFrame) const

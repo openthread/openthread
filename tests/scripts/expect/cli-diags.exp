@@ -185,6 +185,61 @@ expect_line "Done"
 send "diag stop\n"
 expect_line "Done"
 
+send_user "diag stop transmit done timeout test\n"
+send "diag start\n"
+expect_line "Done"
+
+send "diag frame 21085affff12340000\n"
+expect_line "Done"
+
+send "diag send async 1\n"
+expect_line "Done"
+
+send "diag radio state\n"
+expect_line "transmit"
+expect_line "Done"
+
+send "diag stop\n"
+expect_line "Done"
+
+send "diag start\n"
+expect_line "Done"
+
+send "diag frame 112233\n"
+expect_line "Done"
+
+send "diag send 1\n"
+expect_line "Done"
+
+send_user "diag repeat stop transmit done timeout test\n"
+send "diag frame 21085affff12340000\n"
+expect_line "Done"
+
+send "diag repeat 100\n"
+expect_line "Done"
+
+sleep 1
+
+send "diag radio state\n"
+expect_line "transmit"
+expect_line "Done"
+
+send "diag repeat stop\n"
+expect_line "Done"
+
+send "diag radio state\n"
+expect_line "receive"
+expect_line "Done"
+
+send "diag frame 112233\n"
+expect_line "Done"
+
+send "diag send 1\n"
+expect_line "Done"
+
+send "diag stop\n"
+expect_line "Done"
+
 dispose_all
 
 
