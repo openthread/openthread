@@ -83,8 +83,10 @@ public:
 
     /**
      * Sets the `Router` entry from a `Parent`
+     *
+     * The Link Metrics Forward Tracking Series of @p aParent are moved to this entry.
      */
-    void SetFrom(const Parent &aParent);
+    void SetFrom(Parent &aParent);
 
     /**
      * Restarts the Link Accept timeout (setting it to max value).

@@ -200,6 +200,39 @@ public:
         void SetFrom(const Neighbor &aNeighbor);
     };
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    /**
+     * Represents a list of Link Metrics Forward Tracking Series tracked for a neighbor.
+     *
+     * The `SeriesInfo` entries are allocated from the `LinkMetrics::Subject` pool and each entry is owned by a single
+     * list. Copying or assigning a list moves its entries to the destination list and leaves the source list empty.
+     */
+    class SeriesInfoList : public LinkedList<LinkMetrics::SeriesInfo>
+    {
+    public:
+        /**
+         * Initializes an empty list.
+         */
+        SeriesInfoList(void) = default;
+
+        /**
+         * Initializes the list by moving the entries of another list.
+         *
+         * @param[in,out] aOther  The list to move the entries from. It is left empty.
+         */
+        SeriesInfoList(SeriesInfoList &aOther) { *this = aOther; }
+
+        /**
+         * Moves the entries of another list to the end of this list.
+         *
+         * @param[in,out] aOther  The list to move the entries from. It is left empty.
+         *
+         * @returns A reference to this list.
+         */
+        SeriesInfoList &operator=(SeriesInfoList &aOther);
+    };
+#endif
+
     /**
      * Returns the current state.
      *
@@ -581,7 +614,7 @@ public:
     void SetTimeSyncEnabled(bool aEnabled) { mTimeSyncEnabled = aEnabled; }
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
      * Aggregates the Link Metrics data into all the series that is running for this neighbor.
      *
@@ -625,6 +658,15 @@ public:
      */
     void RemoveAllForwardTrackingSeriesInfo(void);
 
+    /**
+     * Gets the list of Forward Tracking Series tracked for this neighbor.
+     *
+     * @returns A reference to the list of Forward Tracking Series.
+     */
+    SeriesInfoList &GetForwardTrackingSeriesInfoList(void) { return mLinkMetricsSeriesInfoList; }
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
      * Gets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
      *
@@ -706,12 +748,15 @@ private:
 #endif
     uint16_t        mVersion;
     LinkQualityInfo mLinkInfo;
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     // A list of Link Metrics Forward Tracking Series that is being
     // tracked for this neighbor. Note that this device is the
-    // Subject and this neighbor is the Initiator.
-    LinkedList<LinkMetrics::SeriesInfo> mLinkMetricsSeriesInfoList;
-
+    // Subject and this neighbor is the Initiator. The entries are
+    // freed when the neighbor state becomes `kStateInvalid` or its
+    // entry is cleared.
+    SeriesInfoList mLinkMetricsSeriesInfoList;
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     // Metrics configured for Enh-ACK Based Probing at the Probing
     // Subject (this neighbor). Note that this device is the Initiator
     // and this neighbor is the Subject.
