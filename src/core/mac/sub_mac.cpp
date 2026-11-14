@@ -73,12 +73,14 @@ void SubMac::Init(void)
     mState                 = kStateDisabled;
     mCsmaBackoffs          = 0;
     mTransmitRetries       = 0;
+    mPanId                 = kPanIdBroadcast;
     mShortAddress          = kShortAddrInvalid;
     mAlternateShortAddress = kShortAddrInvalid;
     mExtAddress.Clear();
-    mRxOnWhenIdle      = true;
-    mEnergyScanMaxRssi = Radio::kInvalidRssi;
-    mEnergyScanEndTime = Time{0};
+    mRxOnWhenIdle         = true;
+    mPanIdFilteringPaused = false;
+    mEnergyScanMaxRssi    = Radio::kInvalidRssi;
+    mEnergyScanEndTime    = Time{0};
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     mRetxDelayBackoffExponent = kRetxDelayMinBackoffExponent;
 #endif
@@ -128,6 +130,38 @@ SubMac::Capabilities SubMac::GetCaps(void) const
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 void SubMac::SetPanId(PanId aPanId)
+{
+    mPanId = aPanId;
+
+    if (!mPanIdFilteringPaused)
+    {
+        ApplyPanId(mPanId);
+    }
+}
+
+void SubMac::PausePanIdFiltering(void)
+{
+    VerifyOrExit(!mPanIdFilteringPaused);
+
+    mPanIdFilteringPaused = true;
+    ApplyPanId(kPanIdBroadcast);
+
+exit:
+    return;
+}
+
+void SubMac::ResumePanIdFiltering(void)
+{
+    VerifyOrExit(mPanIdFilteringPaused);
+
+    mPanIdFilteringPaused = false;
+    ApplyPanId(mPanId);
+
+exit:
+    return;
+}
+
+void SubMac::ApplyPanId(PanId aPanId)
 {
     Get<Radio::Radio>().SetPanId(aPanId);
     LogDebg("RadioPanId: 0x%04x", aPanId);
@@ -236,6 +270,8 @@ Error SubMac::Disable(void)
     mPendingTimedRx.Clear();
     mListenScheduler.Stop();
 #endif
+
+    ResumePanIdFiltering();
 
     mTimer.Stop();
     SuccessOrExit(error = Get<Radio::Radio>().Sleep());

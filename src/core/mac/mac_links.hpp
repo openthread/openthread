@@ -268,6 +268,21 @@ public:
     explicit Links(Instance &aInstance);
 
     /**
+     * Gets the PAN ID.
+     *
+     * @returns The PAN ID.
+     */
+    PanId GetPanId(void) const
+    {
+        return
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+            mSubMac.GetPanId();
+#else
+            mPanId;
+#endif
+    }
+
+    /**
      * Sets the PAN ID.
      *
      * @param[in] aPanId  The PAN ID.
@@ -276,9 +291,38 @@ public:
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         mSubMac.SetPanId(aPanId);
+#else
+        mPanId = aPanId;
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         mTrel.SetPanId(aPanId);
+#endif
+    }
+
+    /**
+     * Pauses PAN ID filtering on all radio links (setting the PAN ID filter to `kPanIdBroadcast`) without changing
+     * the stored PAN ID.
+     */
+    void PausePanIdFiltering(void)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mSubMac.PausePanIdFiltering();
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        mTrel.SetPanId(kPanIdBroadcast);
+#endif
+    }
+
+    /**
+     * Resumes PAN ID filtering on all radio links after a prior `PausePanIdFiltering()`, restoring the stored PAN ID.
+     */
+    void ResumePanIdFiltering(void)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mSubMac.ResumePanIdFiltering();
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        mTrel.SetPanId(GetPanId());
 #endif
     }
 
@@ -418,6 +462,7 @@ public:
      */
     void Disable(void)
     {
+        ResumePanIdFiltering();
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         IgnoreError(mSubMac.Disable());
 #endif
@@ -634,6 +679,7 @@ private:
     TxFrames mTxFrames;
 
 #if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    PanId        mPanId;
     ShortAddress mShortAddress;
     ShortAddress mAlternateShortAddress;
     ExtAddress   mExtAddress;
