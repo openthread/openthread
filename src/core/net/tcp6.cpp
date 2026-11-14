@@ -59,6 +59,7 @@ Tcp::Tcp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance)
     , mTasklet(aInstance)
+    , mWatchedEndpoint(nullptr)
     , mEphemeralPort(kDynamicPortMin)
 {
     OT_UNUSED_VARIABLE(mEphemeralPort);
@@ -288,6 +289,7 @@ Error Tcp::Endpoint::Abort(void)
 {
     struct tcpcb &tp = GetTcb();
 
+    Get<Tcp>().ClearWatchedEndpoint(*this);
     tcp_usr_abort(&tp);
     /* connection_lost will do any reinitialization work for this socket. */
     return kErrorNone;
@@ -474,15 +476,16 @@ void Tcp::Endpoint::PostCallbacksAfterSend(size_t aSent, size_t aBacklogBefore)
 
 bool Tcp::Endpoint::FirePendingCallbacks(void)
 {
-    bool calledUserCallback = false;
+    bool    calledUserCallback = false;
+    uint8_t pendingCallbacks   = mPendingCallbacks;
 
-    if ((mPendingCallbacks & kForwardProgressCallbackFlag) != 0 && mForwardProgressCallback != nullptr)
+    mPendingCallbacks = 0;
+
+    if ((pendingCallbacks & kForwardProgressCallbackFlag) != 0 && mForwardProgressCallback != nullptr)
     {
         mForwardProgressCallback(this, GetSendBufferBytes(), GetBacklogBytes());
         calledUserCallback = true;
     }
-
-    mPendingCallbacks = 0;
 
     return calledUserCallback;
 }
@@ -662,18 +665,24 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
 
     if (endpoint != nullptr)
     {
-        struct tcpcb *tp = &endpoint->GetTcb();
-
+        struct tcpcb   *tp           = &endpoint->GetTcb();
         otLinkedBuffer *priorHead    = lbuf_head(&tp->sendbuf);
         size_t          priorBacklog = endpoint->GetSendBufferBytes() - endpoint->GetInFlightBytes();
 
+        mWatchedEndpoint = endpoint;
         ClearAllBytes(sig);
         nextAction = tcplp_input(ip6Header, tcpHeader, &aMessage, tp, nullptr, &sig);
         if (nextAction != RELOOKUP_REQUIRED)
         {
-            ProcessSignals(*endpoint, priorHead, priorBacklog, sig);
+            if (mWatchedEndpoint != nullptr)
+            {
+                ProcessSignals(*endpoint, priorHead, priorBacklog, sig);
+            }
+
             ExitNow();
         }
+
+        mWatchedEndpoint = nullptr;
         /* If the matching socket was in the TIME-WAIT state, then we try passive sockets. */
     }
 
@@ -697,21 +706,24 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
                       ECONNREFUSED);
 
 exit:
+    mWatchedEndpoint = nullptr;
     return error;
 }
 
 void Tcp::ProcessSignals(Endpoint             &aEndpoint,
                          otLinkedBuffer       *aPriorHead,
                          size_t                aPriorBacklog,
-                         struct tcplp_signals &aSignals) const
+                         struct tcplp_signals &aSignals)
 {
     VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
+    mWatchedEndpoint = &aEndpoint;
+
     if (aSignals.conn_established && aEndpoint.mEstablishedCallback != nullptr)
     {
         aEndpoint.mEstablishedCallback(&aEndpoint);
+        VerifyOrExit((mWatchedEndpoint != nullptr) && !aEndpoint.IsClosed());
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
     if (aEndpoint.mSendDoneCallback != nullptr)
     {
         otLinkedBuffer *curr = aPriorHead;
@@ -722,42 +734,48 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
         {
             otLinkedBuffer *next = curr->mNext;
 
-            VerifyOrExit(i == 0 || (IsInitialized(aEndpoint) && !aEndpoint.IsClosed()));
-
             curr->mNext = nullptr;
             aEndpoint.mSendDoneCallback(&aEndpoint, curr);
+            VerifyOrExit((mWatchedEndpoint != nullptr) && !aEndpoint.IsClosed());
             curr = next;
         }
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
     if (aEndpoint.mForwardProgressCallback != nullptr)
     {
         size_t backlogBytes = aEndpoint.GetBacklogBytes();
 
         if (aSignals.bytes_acked > 0 || backlogBytes < aPriorBacklog)
         {
-            aEndpoint.mForwardProgressCallback(&aEndpoint, aEndpoint.GetSendBufferBytes(), backlogBytes);
             aEndpoint.mPendingCallbacks &= ~kForwardProgressCallbackFlag;
+            aEndpoint.mForwardProgressCallback(&aEndpoint, aEndpoint.GetSendBufferBytes(), backlogBytes);
+            VerifyOrExit((mWatchedEndpoint != nullptr) && !aEndpoint.IsClosed());
         }
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
     if ((aSignals.recvbuf_added || aSignals.rcvd_fin) && aEndpoint.mReceiveAvailableCallback != nullptr)
     {
         aEndpoint.mReceiveAvailableCallback(&aEndpoint, cbuf_used_space(&aEndpoint.GetTcb().recvbuf),
                                             aEndpoint.GetTcb().reass_fin_index != -1,
                                             cbuf_free_space(&aEndpoint.GetTcb().recvbuf));
+        VerifyOrExit((mWatchedEndpoint != nullptr) && !aEndpoint.IsClosed());
     }
 
-    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
     if (aEndpoint.GetTcb().t_state == TCP6S_TIME_WAIT && aEndpoint.mDisconnectedCallback != nullptr)
     {
         aEndpoint.mDisconnectedCallback(&aEndpoint, OT_TCP_DISCONNECTED_REASON_TIME_WAIT);
     }
 
 exit:
-    return;
+    mWatchedEndpoint = nullptr;
+}
+
+void Tcp::ClearWatchedEndpoint(const Endpoint &aEndpoint)
+{
+    if (mWatchedEndpoint == &aEndpoint)
+    {
+        mWatchedEndpoint = nullptr;
+    }
 }
 
 Error Tcp::BsdErrorToOtError(int aBsdError)
@@ -1057,11 +1075,12 @@ bool tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
     {
         otSockAddr addr;
 
+        tcp.mWatchedEndpoint = &endpoint;
         memcpy(&addr.mAddress, aAddr, sizeof(addr.mAddress));
         addr.mPort = BigEndian::HostSwap16(aPort);
         listener.mAcceptDoneCallback(&listener, &endpoint, &addr);
 
-        if (!tcp.IsInitialized(endpoint) || endpoint.IsClosed())
+        if ((tcp.mWatchedEndpoint == nullptr) || endpoint.IsClosed())
         {
             accepted = false;
         }
@@ -1073,6 +1092,8 @@ bool tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
 void tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum)
 {
     Tcp::Endpoint &endpoint = Tcp::Endpoint::FromTcb(*aTcb);
+
+    endpoint.Get<Tcp>().ClearWatchedEndpoint(endpoint);
 
     if (endpoint.mDisconnectedCallback != nullptr)
     {

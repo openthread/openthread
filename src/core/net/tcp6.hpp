@@ -54,6 +54,7 @@
  * #includ'ing third_party/tcplp/tcplp.h in this header file.
  */
 extern "C" {
+struct in6_addr;
 struct tcpcb;
 struct tcpcb_listen;
 struct tcplp_signals;
@@ -68,6 +69,13 @@ void tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay
 
 // NOLINTNEXTLINE(readability-inconsistent-declaration-parameter-name)
 void tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
+
+bool tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
+                                   struct tcpcb        *aAccepted,
+                                   struct in6_addr     *aAddr,
+                                   uint16_t             aPort);
+
+void tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum);
 }
 
 namespace ot {
@@ -553,6 +561,12 @@ public:
     bool IsInitialized(const Listener &aListener) const { return mListeners.Contains(aListener); }
 
 private:
+    friend bool ::tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
+                                                struct tcpcb        *aAccepted,
+                                                struct in6_addr     *aAddr,
+                                                uint16_t             aPort);
+    friend void ::tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum);
+
     static constexpr uint16_t kDynamicPortMin = 49152;
     static constexpr uint16_t kDynamicPortMax = 65535;
 
@@ -567,7 +581,8 @@ private:
     void ProcessSignals(Endpoint             &aEndpoint,
                         otLinkedBuffer       *aPriorHead,
                         size_t                aPriorBacklog,
-                        struct tcplp_signals &aSignals) const;
+                        struct tcplp_signals &aSignals);
+    void ClearWatchedEndpoint(const Endpoint &aEndpoint);
 
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);
@@ -584,6 +599,7 @@ private:
 
     LinkedList<Endpoint> mEndpoints;
     LinkedList<Listener> mListeners;
+    const Endpoint      *mWatchedEndpoint;
     uint16_t             mEphemeralPort;
 };
 
