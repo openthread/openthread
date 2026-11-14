@@ -583,7 +583,7 @@ EOF
 
     sudo lsof -iUDP:5683 -nP || die 'Application CoAP port is not available!'
 
-    extaddr=$(grep -ao -A +1 'extaddr' "$OT_OUTPUT" | tail -n1 | tr -d '\r\n\0')
+    extaddr=$(grep -a -A 3 'extaddr' "$OT_OUTPUT" | grep -aoE '[0-9a-f]{16}' | head -n 1)
     echo "Extended address is: ${extaddr}"
 
     prefix=$(grep -ao 'Mesh Local Prefix: [0-9a-f:]\+' "$OT_OUTPUT" | cut -d: -f2- | tr -d ' \r\n')
@@ -609,16 +609,7 @@ EOF
     fi
     check_daemon_mdns_address_monitor
 
-    # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
-    if [[ $OSTYPE != "linux-gnu"* ]]; then
-        check_daemon_omr_route
-        check_host_link_state
-        check_daemon_netif_down
-        check_daemon_backtrace
-        return 0
-    fi
-
-    # Retrievie test resource through application CoAP
+    # Retrieve test resource through application CoAP
     coap_response=$(coap-client -B 5 -m GET "coap://[${LEADER_ALOC}]:5683/TestResource")
     echo "CoAP response is: ${coap_response}"
 
@@ -629,11 +620,14 @@ EOF
         die 'Failed to access application CoAP'
     fi
 
-    # Retrievie extended address through network diagnostic get
-    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -B 5 -m POST "coap://[${LEADER_ALOC}]:61631/d/dg" -f-)
+    # Retrieve extended address through network diagnostic get
+    rm -f "$PWD/tmp/coap-response"
+    echo -n '120100' | xxd -r -p | coap-client -B 5 -m POST -o "$PWD/tmp/coap-response" "coap://[${LEADER_ALOC}]:61631/d/dg" -f-
 
-    # Verify Tmf CoAP is blocked
-    if [[ -z ${coap_response} ]]; then
+    # Verify TMF CoAP is blocked
+    if [[ -s "$PWD/tmp/coap-response" ]]; then
+        coap_response=$(xxd -p "$PWD/tmp/coap-response" | tr -d '\r\n')
+        echo "Unexpected TMF CoAP response: ${coap_response}"
         die 'Tmf is not blocked'
     fi
 
