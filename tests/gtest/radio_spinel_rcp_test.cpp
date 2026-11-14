@@ -1499,3 +1499,135 @@ TEST(RadioSpinelTransmit, shouldRejectReceiveDuringPendingTransmit)
     EXPECT_EQ(platform.mTransmitCount, 1u);
     EXPECT_EQ(lastStatuses[kTxTid], std::vector<unsigned int>{SPINEL_STATUS_OK});
 }
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+TEST(RadioSpinelTransmit, shouldAbortTxOnTimeoutWhenRcpRestorationDisabled)
+{
+    class NoTxDonePlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        otError Transmit(otRadioFrame *aFrame) override
+        {
+            mTxFrame = aFrame;
+
+            return OT_ERROR_NONE;
+        }
+
+        void ClearPendingRcpTx(void)
+        {
+            if (mTxFrame != nullptr)
+            {
+                otPlatRadioTxDone(FakePlatform::CurrentInstance(), mTxFrame, nullptr, OT_ERROR_ABORT);
+                mTxFrame = nullptr;
+            }
+        }
+
+        otRadioFrame *mTxFrame = nullptr;
+    };
+
+    struct TxDoneResult
+    {
+        uint32_t mCount    = 0;
+        Error    mError    = kErrorNone;
+        bool     mHadAck   = false;
+        uint16_t mTxLength = 0;
+    };
+
+    static constexpr uint8_t  kChannel     = 11;
+    static constexpr uint32_t kNumTimeouts = 16;
+    static constexpr uint64_t kTxWaitTimeUs =
+        static_cast<uint64_t>(OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS) * OT_US_PER_S;
+
+    static TxDoneResult sResult;
+
+    NoTxDonePlatform             platform;
+    Spinel::RadioSpinelCallbacks callbacks{};
+    uint8_t                      frameBuffer[OT_RADIO_FRAME_MAX_SIZE]{};
+    Mac::TxFrame                 txFrame{};
+
+    sResult = {};
+
+    callbacks.mReceiveDone    = [](otInstance *, otRadioFrame *, Error) {};
+    callbacks.mEnergyScanDone = [](otInstance *, int8_t) {};
+    callbacks.mTxStarted      = [](otInstance *, otRadioFrame *) {};
+    callbacks.mTransmitDone   = [](otInstance *, otRadioFrame *aFrame, otRadioFrame *aAckFrame, Error aError) {
+        sResult.mCount++;
+        sResult.mError    = aError;
+        sResult.mHadAck   = (aAckFrame != nullptr);
+        sResult.mTxLength = (aFrame != nullptr) ? aFrame->mLength : 0;
+    };
+
+    txFrame.mPsdu = frameBuffer;
+
+    {
+        Mac::TxFrame::BuildInfo buildInfo;
+
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(0xac00);
+        buildInfo.mAddrs.mDestination.SetShort(Mac::kShortAddrBroadcast);
+        buildInfo.mPanIds.SetSource(0x1234);
+        buildInfo.mPanIds.SetDestination(0x4321);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
+    }
+
+    txFrame.mChannel = kChannel;
+
+    platform.mRadioSpinel.SetCallbacks(callbacks);
+    platform.mRadioSpinel.SetRcpRestorationEnabled(false);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Receive(kChannel), kErrorNone);
+
+    // Repeat across 16 timed-out transmissions (exceeding the 15 non-zero 4-bit Spinel TIDs)
+    // to verify that TX timeout aborts cleanly, frees the Spinel TID, does not spin on
+    // subsequent `Process()` ticks, and does not leave `mRcpFailure` set for `Set()`/`Get()`.
+    for (uint32_t i = 1; i <= kNumTimeouts; i++)
+    {
+        ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+        platform.GoInMs(1);
+        ASSERT_NE(platform.mTxFrame, nullptr);
+        EXPECT_EQ(platform.mRadioSpinel.GetState(), OT_RADIO_STATE_TRANSMIT);
+
+        platform.GoInUs(kTxWaitTimeUs);
+
+        // First `Process()` detects TX timeout and transitions to `kStateTransmitDone`.
+        platform.mRadioSpinel.Process(nullptr);
+        EXPECT_TRUE(platform.mRadioSpinel.IsTransmitDone());
+        EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpTimeoutCount, i);
+        EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpRestorationCount, 0u);
+
+        // Next `Process()` transitions to `OT_RADIO_STATE_RECEIVE` and invokes `mTransmitDone` once.
+        platform.mRadioSpinel.Process(nullptr);
+        EXPECT_FALSE(platform.mRadioSpinel.IsTransmitDone());
+        EXPECT_EQ(platform.mRadioSpinel.GetState(), OT_RADIO_STATE_RECEIVE);
+        EXPECT_EQ(platform.mRadioSpinel.GetTxRadioEndUs(), UINT64_MAX);
+        EXPECT_EQ(sResult.mCount, i);
+        EXPECT_EQ(sResult.mError, kErrorAbort);
+        EXPECT_FALSE(sResult.mHadAck);
+        EXPECT_EQ(sResult.mTxLength, txFrame.mLength);
+
+        // Subsequent `Process()` calls must not re-trigger TX timeout or invoke `mTransmitDone` again.
+        platform.GoInUs(kTxWaitTimeUs);
+        platform.mRadioSpinel.Process(nullptr);
+        platform.mRadioSpinel.Process(nullptr);
+        EXPECT_EQ(sResult.mCount, i);
+        EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpTimeoutCount, i);
+        EXPECT_EQ(platform.mRadioSpinel.GetState(), OT_RADIO_STATE_RECEIVE);
+
+        // Property `Set()` and `Get()` calls must succeed and not spin on `mRcpFailure`.
+        EXPECT_EQ(platform.mRadioSpinel.SetShortAddress(static_cast<uint16_t>(i)), kErrorNone);
+        EXPECT_EQ(platform.mRadioSpinel.SetPromiscuous((i & 1) != 0), kErrorNone);
+        EXPECT_NE(platform.mRadioSpinel.GetRadioChannelMask(false), 0u);
+
+        // Reset the stalled simulated RCP radio TX before the next iteration; the late RCP TX-done
+        // response must be ignored now that `mTxRadioTid` has been freed.
+        platform.ClearPendingRcpTx();
+        platform.GoInMs(1);
+        platform.mRadioSpinel.Process(nullptr);
+        EXPECT_EQ(sResult.mCount, i);
+    }
+}
+#endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0

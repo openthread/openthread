@@ -81,6 +81,7 @@ RadioSpinel::RadioSpinel(void)
     , mPanId(0xffff)
     , mChannel(0)
     , mRxSensitivity(0)
+    , mTxError(OT_ERROR_NONE)
     , mBusLatency(0)
     , mState(kStateDisabled)
     , mIsPromiscuous(false)
@@ -126,6 +127,9 @@ RadioSpinel::RadioSpinel(void)
     , mSpinelDriver(nullptr)
 {
     memset(&mCallbacks, 0, sizeof(mCallbacks));
+    memset(&mRxRadioFrame, 0, sizeof(mRxRadioFrame));
+    memset(&mTxRadioFrame, 0, sizeof(mTxRadioFrame));
+    memset(&mAckRadioFrame, 0, sizeof(mAckRadioFrame));
 }
 
 void RadioSpinel::Init(bool          aSkipRcpVersionCheck,
@@ -774,12 +778,23 @@ void RadioSpinel::ProcessRadioStateMachine(void)
         mState        = kStateReceive;
         mTxRadioEndUs = UINT64_MAX;
 
-        TransmitDone(mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : nullptr, mTxError);
+        TransmitDone(mTransmitFrame,
+                     (mTxError == OT_ERROR_NONE && mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : nullptr, mTxError);
     }
     else if (mState == kStateTransmitting && otPlatTimeGet() >= mTxRadioEndUs)
     {
         // Frame has been successfully passed to radio, but no `TransmitDone` event received within kTxWaitUs.
         LogWarn("radio tx timeout");
+
+        if (mTxRadioTid != 0)
+        {
+            FreeTid(mTxRadioTid);
+            mTxRadioTid = 0;
+        }
+
+        mAckRadioFrame.mLength = 0;
+        mTxError               = OT_ERROR_ABORT;
+        mState                 = kStateTransmitDone;
         HandleRcpTimeout();
     }
 }
@@ -1608,6 +1623,8 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
     bool            headerUpdated = false;
     spinel_ssize_t  unpacked;
 
+    mAckRadioFrame.mLength = 0;
+
     VerifyOrExit(aCommand == SPINEL_CMD_PROP_VALUE_IS && aKey == SPINEL_PROP_LAST_STATUS, error = OT_ERROR_FAILED);
 
     unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT_PACKED_S, &status);
@@ -2089,7 +2106,10 @@ void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
     LogCrit("Unexpected RCP reset: %s", spinel_status_to_cstr(aStatus));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    mRcpFailure = kRcpFailureUnexpectedReset;
+    if (mRcpRestorationEnabled)
+    {
+        mRcpFailure = kRcpFailureUnexpectedReset;
+    }
 #else
     if (sSupportsLogCrashDump)
     {
@@ -2111,7 +2131,10 @@ void RadioSpinel::HandleRcpTimeout(void)
     mMetrics.IncrementRcpTimeoutCount();
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    mRcpFailure = kRcpFailureTimeout;
+    if (mRcpRestorationEnabled)
+    {
+        mRcpFailure = kRcpFailureTimeout;
+    }
 #else
     LogCrit("Failed to communicate with RCP - no response from RCP during initialization");
     LogCrit("This is not a bug and typically due a config error (wrong URL parameters) or bad RCP image:");
@@ -2129,7 +2152,7 @@ void RadioSpinel::RecoverFromRcpFailure(void)
     State             recoveringState  = mState;
     bool              skipReset        = false;
 
-    VerifyOrExit(mRcpRestorationEnabled);
+    VerifyOrExit(mRcpRestorationEnabled, mRcpFailure = kRcpFailureNone);
 
     if (mRcpFailure == kRcpFailureNone)
     {

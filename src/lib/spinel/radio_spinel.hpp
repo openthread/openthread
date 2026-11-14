@@ -1079,7 +1079,15 @@ public:
      *
      * @param[in]  aEnabled  TRUE to enable the RCP restoration feature, FALSE otherwise.
      */
-    void SetRcpRestorationEnabled(bool aEnabled) { mRcpRestorationEnabled = aEnabled; }
+    void SetRcpRestorationEnabled(bool aEnabled)
+    {
+        mRcpRestorationEnabled = aEnabled;
+
+        if (!mRcpRestorationEnabled)
+        {
+            mRcpFailure = kRcpFailureNone;
+        }
+    }
 #endif
 
 private:
