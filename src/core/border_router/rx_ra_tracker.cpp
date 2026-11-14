@@ -363,11 +363,14 @@ void RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &
         ExitNow();
     }
 
-    // Disregard the PIO prefix if it matches our local on-link prefix,
-    // as this indicates it's likely from a peer Border Router connected
-    // to the same Thread mesh.
+    // Disregard the PIO prefix if it matches our local on-link prefix
+    // or is a deprecated old local on-link prefix, as this indicates
+    // it's likely from a peer Border Router connected to the same
+    // Thread mesh.
 
-    disregard = (prefix == Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix());
+    disregard = (prefix == Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix()) ||
+                ((aPio.GetPreferredLifetime() == 0) &&
+                 Get<RoutingManager>().mOnLinkPrefixManager.ContainsOldLocalPrefix(prefix));
 
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
     VerifyOrExit(!disregard);
@@ -824,6 +827,12 @@ void RxRaTracker::Evaluate(void)
 
         for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
         {
+            if (entry.IsDeprecated() &&
+                Get<RoutingManager>().mOnLinkPrefixManager.ContainsOldLocalPrefix(entry.GetPrefix()))
+            {
+                entry.SetDisregardFlag(true);
+            }
+
             mDecisionFactors.UpdateFrom(entry);
             entry.SetStaleTimeCalculated(false);
 
