@@ -303,7 +303,7 @@ public:
      *
      * @returns The IEEE 802.15.4 PAN ID.
      */
-    PanId GetPanId(void) const { return mPanId; }
+    PanId GetPanId(void) const { return mLinks.GetPanId(); }
 
     /**
      * Sets the IEEE 802.15.4 PAN ID.
@@ -311,6 +311,14 @@ public:
      * @param[in]  aPanId  The IEEE 802.15.4 PAN ID.
      */
     void SetPanId(PanId aPanId);
+
+    /**
+     * Indicates whether PAN ID filtering is currently paused.
+     *
+     * @retval TRUE   PAN ID filtering is paused.
+     * @retval FALSE  PAN ID filtering is not paused.
+     */
+    bool IsPanIdFilteringPaused(void) const { return mLinks.IsPanIdFilteringPaused(); }
 
     /**
      * Returns the maximum number of frame retries during direct transmission.
@@ -769,7 +777,6 @@ private:
     uint8_t     mBeaconSequence;
     uint8_t     mDataSequence;
     uint8_t     mBroadcastTransmitCount;
-    PanId       mPanId;
     uint8_t     mPanChannel;
     uint8_t     mRadioChannel;
     ChannelMask mSupportedChannelMask;

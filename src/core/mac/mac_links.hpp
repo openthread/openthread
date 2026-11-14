@@ -268,6 +268,21 @@ public:
     explicit Links(Instance &aInstance);
 
     /**
+     * Gets the PAN ID.
+     *
+     * @returns The PAN ID.
+     */
+    PanId GetPanId(void) const
+    {
+        return
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+            mSubMac.GetPanId();
+#else
+            mPanId;
+#endif
+    }
+
+    /**
      * Sets the PAN ID.
      *
      * @param[in] aPanId  The PAN ID.
@@ -276,9 +291,49 @@ public:
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         mSubMac.SetPanId(aPanId);
+#else
+        mPanId = aPanId;
 #endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-        mTrel.SetPanId(aPanId);
+    }
+
+    /**
+     * Pauses PAN ID filtering on all radio links (setting the PAN ID filter to `kPanIdBroadcast`) without changing
+     * the stored PAN ID.
+     */
+    void PausePanIdFiltering(void)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mSubMac.PausePanIdFiltering();
+#else
+        mPanIdFilteringPaused = true;
+#endif
+    }
+
+    /**
+     * Resumes PAN ID filtering on all radio links after a prior `PausePanIdFiltering()`, restoring the stored PAN ID.
+     */
+    void ResumePanIdFiltering(void)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mSubMac.ResumePanIdFiltering();
+#else
+        mPanIdFilteringPaused = false;
+#endif
+    }
+
+    /**
+     * Indicates whether PAN ID filtering is currently paused.
+     *
+     * @retval TRUE   PAN ID filtering is paused.
+     * @retval FALSE  PAN ID filtering is not paused.
+     */
+    bool IsPanIdFilteringPaused(void) const
+    {
+        return
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+            mSubMac.IsPanIdFilteringPaused();
+#else
+            mPanIdFilteringPaused;
 #endif
     }
 
@@ -418,6 +473,7 @@ public:
      */
     void Disable(void)
     {
+        ResumePanIdFiltering();
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         IgnoreError(mSubMac.Disable());
 #endif
@@ -634,6 +690,8 @@ private:
     TxFrames mTxFrames;
 
 #if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    bool         mPanIdFilteringPaused : 1;
+    PanId        mPanId;
     ShortAddress mShortAddress;
     ShortAddress mAlternateShortAddress;
     ExtAddress   mExtAddress;

@@ -96,13 +96,6 @@ public:
     explicit Link(Instance &aInstance);
 
     /**
-     * Sets the PAN Identifier.
-     *
-     * @param[in] aPanId   A PAN Identifier.
-     */
-    void SetPanId(Mac::PanId aPanId) { mPanId = aPanId; }
-
-    /**
      * Notifies TREL radio link that device's extended MAC address has changed for it to update any
      * internal address/state.
      */
@@ -196,7 +189,6 @@ private:
 
     State          mState;
     uint8_t        mRxChannel;
-    Mac::PanId     mPanId;
     uint32_t       mTxPacketNumber;
     TxTasklet      mTxTasklet;
     TimeoutTimer   mTimer;
