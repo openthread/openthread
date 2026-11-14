@@ -165,11 +165,101 @@ kernel_route_gone()
     ! kernel_route_known "$1"
 }
 
+# Checks the kernel state of an IPv6 address ($1) on the Thread interface; $2 is "deprecated" or "preferred".
+kernel_address_state_is()
+{
+    local output
+
+    if [[ ${OSTYPE} == linux* ]]; then
+        output=$(ip -6 -o addr show dev "${NETIF_NAME}") || return 1
+    else
+        output=$(ifconfig "${NETIF_NAME}") || return 1
+    fi
+
+    python3 -c '
+import ipaddress, re, sys
+
+target = ipaddress.IPv6Address(sys.argv[1])
+want = sys.argv[2]
+
+def has_flag(line, flag):
+    return re.search(r"(?:^|[\s<,])" + flag + r"(?:$|[\s>,])", line, re.IGNORECASE) is not None
+
+for line in sys.stdin:
+    tokens = line.split()
+    if "inet6" not in tokens:
+        continue
+    idx = tokens.index("inet6")
+    if idx + 1 >= len(tokens):
+        continue
+    raw = tokens[idx + 1].split("/", 1)[0].split("%", 1)[0]
+    try:
+        addr = ipaddress.IPv6Address(raw)
+    except ValueError:
+        continue
+    if addr == target:
+        if want == "deprecated":
+            ok = has_flag(line, "deprecated")
+        else:
+            ok = not has_flag(line, "deprecated") and not has_flag(line, "tentative")
+        sys.exit(0 if ok else 1)
+
+sys.exit(1)
+' "$1" "$2" <<<"${output}"
+}
+
+# Prints OpenThread's SLAAC address within the given prefix ($1).
+slaac_address_in_prefix()
+{
+    local addresses
+
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ipaddr -v) || return 1
+    python3 -c '
+import ipaddress, sys
+
+net = ipaddress.IPv6Network(sys.argv[1])
+for line in sys.stdin:
+    fields = line.split()
+    if len(fields) >= 2 and fields[1] == "origin:slaac":
+        addr = ipaddress.IPv6Address(fields[0])
+        if addr in net:
+            print(addr)
+            sys.exit(0)
+
+sys.exit(1)
+' "$1" <<<"${addresses//$'\r'/}"
+}
+
+check_daemon_address_deprecation()
+{
+    local output
+    local mleid
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # Locators are deprecated on every platform. On Linux the ML-EID stays preferred (paired
+    # with an RFC 6724 address label); BSD has no address label table, so mesh-local addresses
+    # are deprecated there to keep OMR addresses preferred for off-mesh traffic.
+    timeout_run 10 kernel_address_state_is "${LEADER_ALOC}" deprecated \
+        || die 'the leader ALOC is not deprecated on the Thread interface'
+
+    output=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ipaddr mleid) || die 'failed to read the ML-EID'
+    mleid=$(head -n 1 <<<"${output//$'\r'/}")
+    if [[ ${OSTYPE} == linux* ]]; then
+        timeout_run 10 kernel_address_state_is "${mleid}" preferred \
+            || die 'the ML-EID is deprecated on Linux'
+    else
+        timeout_run 10 kernel_address_state_is "${mleid}" deprecated \
+            || die 'the ML-EID is not deprecated on BSD'
+    fi
+}
+
 check_daemon_omr_route()
 {
     local omr_prefix=fd00:dead:beef::/64
     # OpenThread prints every group within the prefix length, zero groups included.
     local logged_prefix=fd00:dead:beef:0::/64
+    local slaac_address
 
     [[ ${OT_DAEMON} == 'on' ]] || return 0
 
@@ -181,6 +271,11 @@ check_daemon_omr_route()
     ot_ctl_done prefix add "${omr_prefix}" paos || die 'prefix add failed'
     ot_ctl_done netdata register || die 'netdata register failed'
     timeout_run 10 kernel_route_known "${omr_prefix}" || die 'the OMR prefix was not installed as a route through the Thread interface'
+    timeout_run 10 slaac_address_in_prefix "${omr_prefix}" >/dev/null \
+        || die 'no SLAAC address was configured for the OMR prefix'
+    slaac_address=$(slaac_address_in_prefix "${omr_prefix}")
+    timeout_run 10 kernel_address_state_is "${slaac_address}" preferred \
+        || die 'the SLAAC address of the preferred OMR prefix is not preferred on the Thread interface'
     timeout_run 10 grep -qE "(Successfully added|Failed to add) an OMR route ${logged_prefix} in kernel" "${OT_DAEMON_OUTPUT}" \
         || die 'the daemon did not report the route of the OMR prefix'
     grep -qF "Successfully added an OMR route ${logged_prefix} in kernel" "${OT_DAEMON_OUTPUT}" \
@@ -189,6 +284,9 @@ check_daemon_omr_route()
     ot_ctl_done prefix remove "${omr_prefix}" || die 'prefix remove failed'
     ot_ctl_done netdata register || die 'netdata register failed'
     timeout_run 10 kernel_route_gone "${omr_prefix}" || die 'the route of the removed OMR prefix is still installed'
+    # Removing a preferred SLAAC prefix deprecates its address for OPENTHREAD_CONFIG_IP6_SLAAC_DEPRECATION_INTERVAL.
+    timeout_run 10 kernel_address_state_is "${slaac_address}" deprecated \
+        || die 'the SLAAC address of the removed OMR prefix is not deprecated on the Thread interface'
     timeout_run 10 grep -qE "(Successfully deleted|Failed to delete) an OMR route ${logged_prefix} in kernel" "${OT_DAEMON_OUTPUT}" \
         || die 'the daemon did not report the removal of the route of the OMR prefix'
     grep -qF "Successfully deleted an OMR route ${logged_prefix} in kernel" "${OT_DAEMON_OUTPUT}" \
@@ -598,6 +696,7 @@ EOF
 
     check_daemon_multicast_group Added
     check_daemon_address_events
+    check_daemon_address_deprecation
 
     # A group an application joins on the host becomes a membership of OpenThread and goes with the leave
     # (netlink on Linux, RTM_NEWMADDR/RTM_DELMADDR on BSD).
