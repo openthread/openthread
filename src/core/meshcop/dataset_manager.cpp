@@ -106,7 +106,12 @@ Error DatasetManager::Read(Dataset &aDataset) const
     SuccessOrExit(error = Get<Settings>().ReadOperationalDataset(mType, aDataset));
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    EmplaceSecurelyStoredKeys(aDataset);
+    if (EmplaceSecurelyStoredKeys(aDataset) != kErrorNone)
+    {
+        // Do not return a partially reconstructed dataset to the caller.
+        aDataset.Clear();
+        ExitNow(error = kErrorNotFound);
+    }
 #endif
 
     if (mType == Dataset::kActive)
@@ -347,7 +352,7 @@ void DatasetManager::LocalSave(const Dataset &aDataset)
         Dataset dataset;
 
         dataset.SetFrom(aDataset);
-        MoveKeysToSecureStorage(dataset);
+        SuccessOrAssert(MoveKeysToSecureStorage(dataset));
         Get<Settings>().SaveOperationalDataset(mType, dataset);
 #else
         Get<Settings>().SaveOperationalDataset(mType, aDataset);
@@ -735,24 +740,29 @@ void DatasetManager::DestroySecurelyStoredKeys(void) const
     }
 }
 
-void DatasetManager::MoveKeysToSecureStorage(Dataset &aDataset) const
+Error DatasetManager::MoveKeysToSecureStorage(Dataset &aDataset) const
 {
+    Error error = kErrorNone;
+
     for (const SecurelyStoredTlv &entry : kSecurelyStoredTlvs)
     {
         KeyRef keyRef = Get<KeyRefManager>().KeyRefFor(entry.GetKeyRefType(mType));
 
-        SaveTlvInSecureStorageAndClearValue(aDataset, entry.mTlvType, keyRef);
+        SuccessOrExit(error = SaveTlvInSecureStorageAndClearValue(aDataset, entry.mTlvType, keyRef));
     }
+
+exit:
+    return error;
 }
 
-void DatasetManager::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
+Error DatasetManager::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
 {
-    bool moveKeys = false;
+    Error error    = kErrorNone;
+    bool  moveKeys = false;
 
-    // If reading any of the TLVs fails, it indicates they are not yet
-    // stored in secure storage and are still contained in the `Dataset`
-    // read from `Settings`. In this case, we move the keys to secure
-    // storage and then clear them from 'Settings'.
+    // If reading any of the TLVs fails, try migrating the keys from the
+    // `Dataset` read from `Settings` to secure storage. Return an error if
+    // migration fails instead of returning a partially reconstructed dataset.
 
     for (const SecurelyStoredTlv &entry : kSecurelyStoredTlvs)
     {
@@ -769,27 +779,31 @@ void DatasetManager::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
         Dataset dataset;
 
         dataset.SetFrom(aDataset);
-        MoveKeysToSecureStorage(dataset);
+        SuccessOrExit(error = MoveKeysToSecureStorage(dataset));
         Get<Settings>().SaveOperationalDataset(mType, dataset);
     }
+
+exit:
+    return error;
 }
 
-void DatasetManager::SaveTlvInSecureStorageAndClearValue(Dataset &aDataset, Tlv::Type aTlvType, KeyRef aKeyRef) const
+Error DatasetManager::SaveTlvInSecureStorageAndClearValue(Dataset &aDataset, Tlv::Type aTlvType, KeyRef aKeyRef) const
 {
     using namespace ot::Crypto::Storage;
 
-    Tlv *tlv = aDataset.FindTlv(aTlvType);
+    Error error = kErrorNone;
+    Tlv  *tlv   = aDataset.FindTlv(aTlvType);
 
     VerifyOrExit(tlv != nullptr);
     VerifyOrExit(tlv->GetLength() > 0);
 
-    SuccessOrAssert(SaveKey(aKeyRef, kKeyTypeRaw, kKeyAlgorithmVendor, kUsageExport, kTypePersistent, tlv->GetValue(),
-                            tlv->GetLength()));
+    SuccessOrExit(error = SaveKey(aKeyRef, kKeyTypeRaw, kKeyAlgorithmVendor, kUsageExport, kTypePersistent,
+                                  tlv->GetValue(), tlv->GetLength()));
 
     memset(tlv->GetValue(), 0, tlv->GetLength());
 
 exit:
-    return;
+    return error;
 }
 
 Error DatasetManager::ReadTlvFromSecureStorage(Dataset &aDataset, Tlv::Type aTlvType, KeyRef aKeyRef) const
