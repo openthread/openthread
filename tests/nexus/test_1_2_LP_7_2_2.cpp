@@ -226,9 +226,9 @@ void Test1_2_LP_7_2_2(void)
     ssed3.Join(leader, Node::kAsSed);
     nexus.AdvanceTime(kAttachTime);
 
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
-    ssed2.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
-    ssed3.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
+    ssed2.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
+    ssed3.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
     nexus.AdvanceTime(kCslSyncTime);
 
     nexus.AdvanceTime(kStabilizationTime);

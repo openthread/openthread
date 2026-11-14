@@ -491,50 +491,21 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * Gets the CSL channel.
+     * Updates CSL receiver parameters and enables or disables CSL.
      *
-     * @returns CSL channel.
+     * If @p aPeriod is zero, CSL receiver is disabled.
+     *
+     * @param[in]  aPeriod     The CSL period in units of 10 symbols (0 to disable CSL).
+     * @param[in]  aChannel    The CSL channel (0 to use the MAC PAN channel).
+     * @param[in]  aShortAddr  The parent short address.
+     * @param[in]  aExtAddr    The parent extended address.
      */
-    uint8_t GetCslChannel(void) const { return mCslChannel; }
+    void UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
 
     /**
-     * Sets the CSL channel.
-     *
-     * @param[in]  aChannel  The CSL channel.
+     * Disables CSL receiver.
      */
-    void SetCslChannel(uint8_t aChannel);
-
-    /**
-     * Sets whether the MLE layer is capable of starting CSL.
-     *
-     * @retval TRUE   If MLE layer is capable of starting CSL.
-     * @retval FALSE  If MLE layer is not capable of starting CSL.
-     */
-    void SetCslCapable(bool aIsCslCapable);
-
-    /**
-     * Gets the CSL period.
-     *
-     * @returns CSL period in units of 10 symbols.
-     */
-    uint16_t GetCslPeriod(void) const { return mCslPeriod; }
-
-    /**
-     * Gets the CSL period in milliseconds.
-     *
-     * If the CSL period cannot be represented exactly in milliseconds, return the rounded value to the nearest
-     * millisecond.
-     *
-     * @returns CSL period in milliseconds.
-     */
-    uint32_t GetCslPeriodInMsec(void) const;
-
-    /**
-     * Sets the CSL period.
-     *
-     * @param[in]  aPeriod  The CSL period in 10 symbols.
-     */
-    void SetCslPeriod(uint16_t aPeriod);
+    void DisableCsl(void);
 
     /**
      * Indicates whether CSL is started at the moment.
@@ -542,7 +513,7 @@ public:
      * @retval TRUE   If CSL is enabled.
      * @retval FALSE  If CSL is not enabled.
      */
-    bool IsCslEnabled(void) const { return mIsCslEnabled; }
+    bool IsCslEnabled(void) const { return mLinks.GetSubMac().IsCslEnabled(); }
 
     /**
      * Returns parent CSL accuracy (clock accuracy and uncertainty).
@@ -739,10 +710,6 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame::ParseInfo &aFrameInfo, const Address &aSrcAddr);
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void UpdateCslParameters(void);
-    void UpdateCslState(void);
-#endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     void ProcessEnhAckProbing(const RxFrame::ParseInfo &aFrameInfo, const Neighbor &aNeighbor);
 #endif
@@ -784,11 +751,8 @@ private:
     uint8_t mDeferredDirectTxCount;
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    bool mIsCslEnabled : 1;
-    bool mIsCslCapable : 1;
-    // When Mac::mCslChannel is 0, it indicates that CSL channel has not been specified by the upper layer.
-    uint8_t  mCslChannel;
-    uint16_t mCslPeriod;
+    // When `mCslChannel` is 0, it indicates that CSL channel has not been specified by the upper layer.
+    uint8_t mCslChannel;
 #endif
     union
     {

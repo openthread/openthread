@@ -163,7 +163,7 @@ void Test5_3_8(void)
      */
 
     SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout));
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");
@@ -234,7 +234,7 @@ void Test5_3_8(void)
      * - Pass Criteria: N/A.
      */
 
-    ssed1.Get<Mac::Mac>().SetCslChannel(kSecondaryChannel);
+    ssed1.Get<Mle::Mle>().SetCslChannel(kSecondaryChannel);
     ssed1.Get<Mle::Mle>().ScheduleChildUpdateRequest();
 
     Log("---------------------------------------------------------------------------------------");
@@ -287,7 +287,7 @@ void Test5_3_8(void)
      * - Pass Criteria: N/A.
      */
 
-    ssed1.Get<Mac::Mac>().SetCslChannel(0);
+    ssed1.Get<Mle::Mle>().SetCslChannel(0);
     ssed1.Get<Mle::Mle>().ScheduleChildUpdateRequest();
 
     Log("---------------------------------------------------------------------------------------");

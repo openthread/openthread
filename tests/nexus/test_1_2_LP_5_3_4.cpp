@@ -130,7 +130,7 @@ void Test1_2_LP_5_3_4(void)
      */
 
     ssed1.Join(leader, Node::kAsSed);
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod500ms);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod500ms);
     SuccessOrQuit(ssed1.Get<Mle::Mle>().SetCslTimeout(kCslTimeout20s));
     nexus.AdvanceTime(kStabilizationTime);
     VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
@@ -167,7 +167,7 @@ void Test1_2_LP_5_3_4(void)
      * - Pass Criteria: N/A.
      */
 
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod3300ms);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod3300ms);
     nexus.AdvanceTime(kStabilizationTime);
 
     Log("Step 6: Harness");
@@ -213,7 +213,7 @@ void Test1_2_LP_5_3_4(void)
      * - Pass Criteria: N/A.
      */
 
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod400ms);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod400ms);
     nexus.AdvanceTime(kStabilizationTime);
 
     Log("Step 10: Harness");

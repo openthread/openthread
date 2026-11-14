@@ -474,9 +474,9 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
         period = Min(period, kRetxPollPeriod);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (Get<Mac::Mac>().GetCslPeriodInMsec() > 0)
+        if (Get<Mle::Mle>().GetCslPeriodInMsec() > 0)
         {
-            period = Min(period, Get<Mac::Mac>().GetCslPeriodInMsec());
+            period = Min(period, Get<Mle::Mle>().GetCslPeriodInMsec());
         }
 #endif
     }
@@ -509,7 +509,7 @@ uint32_t DataPollSender::DetermineMaxPollPeriod(void) const
     uint32_t period;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
-    if (Get<Mac::Mac>().IsCslEnabled())
+    if (Get<Mle::Mle>().IsCslEnabled())
     {
         timeout   = Min(timeout, Get<Mle::Mle>().GetCslTimeout());
         pollAhead = kRetxPollPeriod;

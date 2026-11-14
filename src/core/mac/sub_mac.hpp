@@ -444,6 +444,14 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
+     * Indicates whether CSL receiver is enabled.
+     *
+     * @retval TRUE   If CSL receiver is enabled.
+     * @retval FALSE  If CSL receiver is not enabled.
+     */
+    bool IsCslEnabled(void) const { return mCslReceiver.IsEnabled(); }
+
+    /**
      * Sets CSL parameters in 'SubMac'.
      *
      * @param[in]  aPeriod    The CSL period (in unit of 10 symbols), 0 for disabling CSL receiver.
@@ -455,6 +463,13 @@ public:
     {
         mCslReceiver.SetParams(aPeriod, aChannel, aShortAddr, aExtAddr);
     }
+
+    /**
+     * Sets the CSL channel in `SubMac`.
+     *
+     * @param[in]  aChannel   The CSL channel.
+     */
+    void SetCslChannel(uint8_t aChannel) { mCslReceiver.SetChannel(aChannel); }
 
     /**
      * Returns parent CSL accuracy (clock accuracy and uncertainty).
@@ -736,6 +751,7 @@ private:
         void Init(void);
         bool IsEnabled(void) const { return mPeriod > 0; }
         void SetParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
+        void SetChannel(uint8_t aChannel);
         void ProcessTxDone(const TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame);
         void ProcessRxFrame(const RxFrame::ParseInfo &aFrameInfo);
         void AdvanceToNextWindow(void);

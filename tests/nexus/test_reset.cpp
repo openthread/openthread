@@ -178,7 +178,7 @@ void TestReset(void)
 
     AllowLinkBetween(router, ssed);
     ssed.Join(router, Node::kAsSed);
-    ssed.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
     nexus.AdvanceTime(kAttachAsChildTime);
     VerifyOrQuit(ssed.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(ssed.Get<Mac::Mac>().IsCslEnabled());
@@ -195,7 +195,7 @@ void TestReset(void)
                  Mac::CslAccuracy::kWorstClockAccuracy);
 
     AllowLinkBetween(ssed, router);
-    ssed.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
     ssed.Get<ThreadNetif>().Up();
     SuccessOrQuit(ssed.Get<Mle::Mle>().Start());
     nexus.AdvanceTime(kAttachAsChildTime);
