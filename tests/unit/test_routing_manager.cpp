@@ -2167,6 +2167,76 @@ void TestDefaultRoute(void)
     VerifyPrefixTable({RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceLow, routerAddressA)});
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate `RouteInfoOption::IsValid()` with valid and reserved
+    // 2-bit preference values, and verify that `RxRaTracker` ignores
+    // an RIO with reserved preference (0b10) while still processing
+    // the RA header.
+
+    {
+        static constexpr uint8_t kPrfOffset       = 3;
+        static constexpr uint8_t kResvdPrfByteIdx = 3;
+
+        uint8_t                          rioBytes[sizeof(Ip6::Nd::RouteInfoOption) + sizeof(Ip6::Address)];
+        Ip6::Nd::RouteInfoOption        &rio         = *reinterpret_cast<Ip6::Nd::RouteInfoOption *>(rioBytes);
+        Ip6::Prefix                      routePrefix = PrefixFromString("2000:1234:5678::", 64);
+        Ip6::Nd::RouterAdvert::TxMessage raMsg;
+        Ip6::Nd::RouterAdvert::Header    header;
+        Icmp6Packet                      packet;
+        uint8_t                          rawRa[kMaxRaSize];
+
+        memset(rioBytes, 0, sizeof(rioBytes));
+        rio.Init();
+        rio.SetPrefix(routePrefix);
+        rio.SetRouteLifetime(kValidLitime);
+
+        rioBytes[kResvdPrfByteIdx] = (0 << kPrfOffset); // 0b00 (Medium)
+        VerifyOrQuit(rio.IsValid());
+        VerifyOrQuit(rio.GetPreference() == NetworkData::kRoutePreferenceMedium);
+
+        rioBytes[kResvdPrfByteIdx] = (1 << kPrfOffset); // 0b01 (High)
+        VerifyOrQuit(rio.IsValid());
+        VerifyOrQuit(rio.GetPreference() == NetworkData::kRoutePreferenceHigh);
+
+        rioBytes[kResvdPrfByteIdx] = (3 << kPrfOffset); // 0b11 (Low)
+        VerifyOrQuit(rio.IsValid());
+        VerifyOrQuit(rio.GetPreference() == NetworkData::kRoutePreferenceLow);
+
+        rioBytes[kResvdPrfByteIdx] = (2 << kPrfOffset); // 0b10 (Reserved)
+        VerifyOrQuit(!rio.IsValid());
+
+        rioBytes[kResvdPrfByteIdx] = (2 << kPrfOffset) | 0xe7; // 0b10 with other reserved bits set
+        VerifyOrQuit(!rio.IsValid());
+
+        // Build an RA with a valid header (High preference) and an RIO
+        // whose preference field is set to the reserved value 0b10.
+        header.SetRouterLifetime(kValidLitime);
+        header.SetDefaultRouterPreference(NetworkData::kRoutePreferenceHigh);
+        SuccessOrQuit(raMsg.Append(header));
+        SuccessOrQuit(raMsg.AppendRouteInfoOption(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium));
+        raMsg.GetAsPacket(packet);
+
+        VerifyOrQuit(packet.GetLength() <= sizeof(rawRa));
+        memcpy(rawRa, packet.GetBytes(), packet.GetLength());
+
+        // Set the RIO's 2-bit preference field to reserved (0b10).
+        rawRa[sizeof(Ip6::Nd::RouterAdvert::Header) + kResvdPrfByteIdx] = (2 << kPrfOffset);
+        VerifyOrQuit(!reinterpret_cast<const Ip6::Nd::RouteInfoOption *>(rawRa + sizeof(Ip6::Nd::RouterAdvert::Header))
+                          ->IsValid());
+
+        SendRouterAdvert(routerAddressA, rawRa, packet.GetLength());
+        AdvanceTime(10000);
+
+        // The RIO with reserved preference must be ignored, while the
+        // RA header update (to High preference) is still processed.
+        VerifyPrefixTable({RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceHigh, routerAddressA)});
+
+        // Restore router A's default route preference to Low.
+        SendRouterAdvert(routerAddressA, DefaultRoute(kValidLitime, NetworkData::kRoutePreferenceLow));
+        AdvanceTime(10000);
+        VerifyPrefixTable({RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceLow, routerAddressA)});
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data. We should not see default route in
     // Network Data yet since there is no infrastructure-derived
     // OMR prefix (with preference medium or higher).
@@ -3081,6 +3151,135 @@ void TestUnadvertisedLocalOnLinkPrefix(void)
     VerifyExternalRouteInNetData(kNoRoute);
 
     Log("End of TestUnadvertisedLocalOnLinkPrefix");
+    FinalizeTest();
+}
+
+void TestOnLinkPrefixValidLifetimeUpdate(void)
+{
+    Ip6::Prefix  localOnLink;
+    Ip6::Prefix  localOmr;
+    Ip6::Prefix  onLinkPrefix   = PrefixFromString("2000:abba:baba::", 64);
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    uint16_t     heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestOnLinkPrefixValidLifetimeUpdate");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30 * 1000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    sExpectedPio = kNoPio;
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Rule 1 (> 2 hours): Advertise `onLinkPrefix` with valid lifetime 10000 (> 7200)
+    // and preferred lifetime 1800.
+
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, 10000, 1800)});
+    AdvanceTime(10 * 1000);
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, 10000, 1800, routerAddressA)});
+    VerifyFavoredOnLinkPrefix(onLinkPrefix);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Rule 3 (remaining > 2 hours, received <= 2 hours): After 100 seconds total
+    // (remaining valid lifetime 9900 > 7200), send PIO with valid lifetime 1800
+    // and preferred lifetime 0. Valid lifetime must be capped to 7200 (2 hours)
+    // and preferred lifetime updated to 0 immediately.
+
+    AdvanceTime(90 * 1000);
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, 1800, 0)});
+    AdvanceTime(10 * 1000);
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, 7200, 0, routerAddressA)});
+    VerifyFavoredOnLinkPrefix(localOnLink);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Rule 1 (received > remaining, both <= 2 hours): After 6000 seconds total
+    // (remaining valid lifetime 1200 <= 7200), send PIO with valid lifetime 1800
+    // (> 1200) and preferred lifetime 1800. Valid lifetime must be updated to 1800.
+
+    AdvanceTime(5990 * 1000);
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, 1800, 1800)});
+    AdvanceTime(10 * 1000);
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, 1800, 1800, routerAddressA)});
+    VerifyFavoredOnLinkPrefix(onLinkPrefix);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Rule 2 (remaining <= 2 hours, received <= remaining): After 300 seconds total
+    // (remaining valid lifetime 1500), send PIO with shorter valid lifetime 600
+    // and preferred lifetime 200. Preferred lifetime must become 200 while the
+    // expiration time remains unchanged (adjusted valid lifetime 1500).
+
+    AdvanceTime(290 * 1000);
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, 600, 200)});
+    AdvanceTime(10 * 1000);
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, 1500, 200, routerAddressA)});
+    VerifyFavoredOnLinkPrefix(localOnLink);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Rule 2 with zero lifetimes: Send subsequent deprecating RAs (`valid = 0, preferred = 0`)
+    // after 100 seconds (remaining 1400) and another 400 seconds (remaining 1000), and verify
+    // they do not push the expiration time forward.
+
+    AdvanceTime(90 * 1000);
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, 0, 0)});
+    AdvanceTime(10 * 1000);
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, 1400, 0, routerAddressA)});
+
+    AdvanceTime(390 * 1000);
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, 0, 0)});
+    AdvanceTime(10 * 1000);
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, 1000, 0, routerAddressA)});
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Verify that the prefix remains present 1 second before its original expiration
+    // time (990 seconds remaining from now) and expires right on schedule.
+
+    AdvanceTime(989 * 1000);
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, 1000, 0, routerAddressA)});
+
+    AdvanceTime(2 * 1000);
+    VerifyPrefixTableIsEmpty();
+
+    AdvanceTime(10 * 1000);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestOnLinkPrefixValidLifetimeUpdate");
+
     FinalizeTest();
 }
 
@@ -5960,6 +6159,7 @@ int main(void)
     ot::TestStaleFavoredOnLinkPrefix();
     ot::TestLocalOnLinkPrefixDeprecation();
     ot::TestUnadvertisedLocalOnLinkPrefix();
+    ot::TestOnLinkPrefixValidLifetimeUpdate();
     ot::TestExtPanIdChange();
     ot::TestOldOnLinkPrefixAdvertisedOnLink();
     ot::TestConflictingPrefix();

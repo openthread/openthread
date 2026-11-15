@@ -893,7 +893,7 @@ public:
 private:
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    static constexpr uint16_t kUdpPort = 5353;
+    static constexpr uint16_t kUdpPort = kMdnsPort;
 
     static constexpr bool kDefaultAutoEnable = OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF;
     static constexpr bool kDefaultQuAllowed  = OPENTHREAD_CONFIG_MULTICAST_DNS_DEFAULT_QUESTION_UNICAST_ALLOWED;

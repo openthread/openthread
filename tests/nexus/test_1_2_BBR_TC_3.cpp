@@ -157,13 +157,15 @@ void TestBbrTc3(void)
 
     host1.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
     SuccessOrQuit(host1.Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    host1.Get<MeshCoP::BorderAgent::Manager>().SetEnabled(false);
+    host1.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     host1.Get<Dns::Multicast::Core>().SetAutoEnableMode(false);
-    SuccessOrQuit(host1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     host2.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
     SuccessOrQuit(host2.Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    host2.Get<MeshCoP::BorderAgent::Manager>().SetEnabled(false);
+    host2.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     host2.Get<Dns::Multicast::Core>().SetAutoEnableMode(false);
-    SuccessOrQuit(host2.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     nexus.AdvanceTime(kBbrSelectionTime);
     nexus.AdvanceTime(kStabilizationTime);
@@ -194,6 +196,7 @@ void TestBbrTc3(void)
         SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StartBrowser(browser));
         nexus.AdvanceTime(kStabilizationTime);
         SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StopBrowser(browser));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
     }
 
     nexus.AddOmrPrefixTestVar("OMR_PREFIX_STEP_0", br1);
@@ -264,6 +267,7 @@ void TestBbrTc3(void)
      *   - N/A
      */
     br2.Get<BackboneRouter::Local>().SetEnabled(false);
+    nexus.AdvanceTime(kStabilizationTime);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: The device must be rebooted (reset); wait until it is back online.");
@@ -321,6 +325,7 @@ void TestBbrTc3(void)
         SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StartBrowser(browser));
         nexus.AdvanceTime(kStabilizationTime);
         SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StopBrowser(browser));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
     }
 
     nexus.AddOmrPrefixTestVar("OMR_PREFIX_STEP_4", br1);
@@ -394,6 +399,7 @@ void TestBbrTc3(void)
         SuccessOrQuit(host2.Get<Dns::Multicast::Core>().StartBrowser(browser));
         nexus.AdvanceTime(kStabilizationTime);
         SuccessOrQuit(host2.Get<Dns::Multicast::Core>().StopBrowser(browser));
+        SuccessOrQuit(host2.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
     }
 
     nexus.AddOmrPrefixTestVar("OMR_PREFIX_STEP_10", br2);
@@ -490,6 +496,7 @@ void TestBbrTc3(void)
         SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StartBrowser(browser));
         nexus.AdvanceTime(kStabilizationTime);
         SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StopBrowser(browser));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
     }
 
     nexus.AddOmrPrefixTestVar("OMR_PREFIX_STEP_11", br1);

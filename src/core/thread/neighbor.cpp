@@ -177,15 +177,59 @@ bool Neighbor::Matches(StateFilter aFilter) const
 }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-void Neighbor::SetLastRxFragmentTag(uint16_t aTag)
+bool Neighbor::IsRxFragmentTagDuplicate(uint16_t aTag)
 {
-    mLastRxFragmentTag     = (aTag == 0) ? 0xffff : aTag;
-    mLastRxFragmentTagTime = TimerMilli::GetNow();
+    bool      isDuplicate = false;
+    TimeMilli now         = TimerMilli::GetNow();
+
+    aTag = (aTag == 0) ? 0xffff : aTag;
+
+    if (!IsLastRxFragmentTagSet(now))
+    {
+        mLastRxFragmentTag        = aTag;
+        mPrevRxFragmentTagsBitmap = 0;
+        mLastRxFragmentTagTime    = now;
+        ExitNow();
+    }
+
+    if (aTag == mLastRxFragmentTag)
+    {
+        ExitNow(isDuplicate = true);
+    }
+
+    if (SerialNumber::IsGreater(aTag, mLastRxFragmentTag))
+    {
+        uint16_t delta = aTag - mLastRxFragmentTag;
+
+        mPrevRxFragmentTagsBitmap = (delta < kPrevRxFragmentTagsBitmapBits) ? (mPrevRxFragmentTagsBitmap << delta) : 0;
+
+        if (delta <= kPrevRxFragmentTagsBitmapBits)
+        {
+            mPrevRxFragmentTagsBitmap |= (1U << (delta - 1));
+        }
+
+        mLastRxFragmentTag     = aTag;
+        mLastRxFragmentTagTime = now;
+    }
+    else
+    {
+        uint16_t delta = mLastRxFragmentTag - aTag;
+        uint32_t mask;
+
+        VerifyOrExit(delta <= kPrevRxFragmentTagsBitmapBits, isDuplicate = true);
+
+        mask = (1U << (delta - 1));
+        VerifyOrExit((mPrevRxFragmentTagsBitmap & mask) == 0, isDuplicate = true);
+        mPrevRxFragmentTagsBitmap |= mask;
+    }
+
+exit:
+    return isDuplicate;
 }
 
-bool Neighbor::IsLastRxFragmentTagSet(void) const
+bool Neighbor::IsLastRxFragmentTagSet(TimeMilli aNow) const
 {
-    return (mLastRxFragmentTag != 0) && (TimerMilli::GetNow() <= mLastRxFragmentTagTime + kLastRxFragmentTagTimeout);
+    return (mLastRxFragmentTag != 0) && (aNow <= mLastRxFragmentTagTime + kLastRxFragmentTagTimeout);
 }
 #endif
 

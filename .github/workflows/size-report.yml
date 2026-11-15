@@ -71,16 +71,34 @@ jobs:
               return;
             }
             const [owner, repo] = head_repo.split('/')
-            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner,
-              repo,
-              commit_sha: context.payload.workflow_run.head_sha,
-            })
-            const base_full_name = `${context.repo.owner}/${context.repo.repo}`
-            const pr = prs?.find(pr => pr.base.repo.full_name === base_full_name && pr.state === 'open') ||
-                       prs?.find(pr => pr.base.repo.full_name === base_full_name);
-            if (pr) {
-              pr_number = pr.number
+            try {
+              const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: context.payload.workflow_run.head_sha,
+              })
+              const base_full_name = `${context.repo.owner}/${context.repo.repo}`
+              const pr = prs?.find(pr => pr.base.repo.full_name === base_full_name && pr.state === 'open') ||
+                         prs?.find(pr => pr.base.repo.full_name === base_full_name);
+              if (pr) {
+                pr_number = pr.number
+              }
+            } catch (error) {
+              core.info(`Failed to list PRs for commit ${context.payload.workflow_run.head_sha}: ${error.message}`)
+            }
+
+            const head_branch = context.payload.workflow_run.head_branch
+            if (!pr_number && head_branch) {
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${owner}:${head_branch}`,
+                state: 'all',
+              })
+              const pr = prs?.find(pr => pr.state === 'open') || prs?.[0]
+              if (pr) {
+                pr_number = pr.number
+              }
             }
           }
 

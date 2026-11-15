@@ -478,6 +478,55 @@ void TestOwningList(void)
     VerifyOrQuit(c.WasFreed());
     VerifyOrQuit(d.WasFreed());
     VerifyOrQuit(f.WasFreed());
+
+    // Test `RemoveAndFree()`
+
+    a.ResetTestFlags();
+    b.ResetTestFlags();
+    c.ResetTestFlags();
+    d.ResetTestFlags();
+    e.ResetTestFlags();
+    f.ResetTestFlags();
+
+    VerifyOrQuit(!list.RemoveAndFree(a));
+    VerifyOrQuit(list.IsEmpty());
+    VerifyOrQuit(!a.WasFreed());
+
+    list.Push(a);
+    list.Push(b);
+    list.Push(c);
+    list.Push(d);
+    list.Push(e);
+    VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, nullptr);
+
+    VerifyOrQuit(!list.RemoveAndFree(f));
+    VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, nullptr);
+    VerifyOrQuit(!f.WasFreed());
+
+    VerifyOrQuit(list.RemoveAndFree(c));
+    VerifyLinkedListContent(&list, &e, &d, &b, &a, nullptr);
+    VerifyOrQuit(c.WasFreed());
+
+    VerifyOrQuit(list.RemoveAndFree(e));
+    VerifyLinkedListContent(&list, &d, &b, &a, nullptr);
+    VerifyOrQuit(e.WasFreed());
+
+    VerifyOrQuit(list.RemoveAndFree(a));
+    VerifyLinkedListContent(&list, &d, &b, nullptr);
+    VerifyOrQuit(a.WasFreed());
+
+    a.ResetTestFlags();
+    VerifyOrQuit(!list.RemoveAndFree(a));
+    VerifyLinkedListContent(&list, &d, &b, nullptr);
+    VerifyOrQuit(!a.WasFreed());
+
+    VerifyOrQuit(list.RemoveAndFree(d));
+    VerifyLinkedListContent(&list, &b, nullptr);
+    VerifyOrQuit(d.WasFreed());
+
+    VerifyOrQuit(list.RemoveAndFree(b));
+    VerifyOrQuit(list.IsEmpty());
+    VerifyOrQuit(b.WasFreed());
 }
 
 } // namespace ot

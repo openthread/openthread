@@ -100,7 +100,7 @@ public:
      *                        ignored.
      *
      * @retval TRUE   if the first 2 bits of @p a2BitUint are `0b00`, `0b01`, or `0b11`.
-     * @retval FALSE  if the first 2 bits of @p a2BitUint are `0b01`.
+     * @retval FALSE  if the first 2 bits of @p a2BitUint are `0b10`.
      */
     static bool Is2BitUintValid(uint8_t a2BitUint) { return ((a2BitUint & k2BitMask) != k2BitReserved); }
 

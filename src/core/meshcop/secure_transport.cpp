@@ -97,6 +97,7 @@ void SecureSession::SetState(State aState)
     VerifyOrExit(mState != aState);
 
     LogInfo("Session state: %s -> %s", StateToString(mState), StateToString(aState));
+
     mState = aState;
 
 exit:
@@ -522,7 +523,6 @@ exit:
 
 void SecureSession::Process(void)
 {
-    uint8_t      buf[kMaxContentLen];
     int          rval;
     ConnectEvent disconnectEvent;
     bool         shouldReset;
@@ -542,11 +542,17 @@ void SecureSession::Process(void)
         }
         else
         {
-            rval = mbedtls_ssl_read(&mSsl, buf, sizeof(buf));
+            OwnedPtr<Message> message;
+
+            rval = ReadRxMessage(message);
 
             if (rval > 0)
             {
-                mReceiveCallback.InvokeIfSet(buf, static_cast<uint16_t>(rval));
+                if (message != nullptr)
+                {
+                    mReceiveCallback.InvokeIfSet(*message);
+                }
+
                 continue;
             }
         }
@@ -612,6 +618,47 @@ void SecureSession::Process(void)
 
         break; // from `while()` loop
     }
+}
+
+int SecureSession::ReadRxMessage(OwnedPtr<Message> &aMessage)
+{
+    uint8_t buf[kRxStagingBufferSize];
+    bool    dropped = false;
+    int     rval;
+
+    // Reassemble a DTLS record; TLS stream data can be delivered after each read.
+    do
+    {
+        rval = mbedtls_ssl_read(&mSsl, buf, sizeof(buf));
+        VerifyOrExit(rval > 0);
+
+        if ((aMessage == nullptr) && !dropped)
+        {
+            aMessage.Reset(mTransport.mTimer.Get<MessagePool>().Allocate(Message::kTypeOther));
+            dropped = (aMessage == nullptr);
+        }
+
+        if (!dropped && (aMessage->AppendBytes(buf, static_cast<uint16_t>(rval)) != kErrorNone))
+        {
+            aMessage.Free();
+            dropped = true;
+        }
+    } while (mTransport.mDatagramTransport && (mbedtls_ssl_get_bytes_avail(&mSsl) > 0));
+
+    if (dropped)
+    {
+        LogWarn("Failed to allocate or append received data");
+
+        if (!mTransport.mDatagramTransport)
+        {
+            // A TLS stream cannot recover after bytes are lost.
+            Disconnect(kDisconnectedError);
+            rval = MBEDTLS_ERR_SSL_WANT_READ;
+        }
+    }
+
+exit:
+    return rval;
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -1414,6 +1461,30 @@ SecureSession *Tls::HandleAccept(void *aContext, const Ip6::MessageInfo &aMessag
 }
 
 SecureSession *Tls::HandleAccept(void) { return IsSessionInUse() ? nullptr : static_cast<SecureSession *>(this); }
+
+void Tls::HandleReceiveMessage(void *aContext, Message &aMessage)
+{
+    static_cast<Tls *>(aContext)->HandleReceiveMessage(aMessage);
+}
+
+void Tls::HandleReceiveMessage(Message &aMessage)
+{
+    uint8_t  buf[kRxStagingBufferSize];
+    uint16_t offset = 0;
+
+    while (offset < aMessage.GetLength())
+    {
+        uint16_t length = Min<uint16_t>(sizeof(buf), aMessage.GetLength() - offset);
+
+        SuccessOrAssert(aMessage.Read(offset, buf, length));
+        mReceiveBufferCallback.InvokeIfSet(buf, length);
+        VerifyOrExit(IsConnected());
+        offset += length;
+    }
+
+exit:
+    return;
+}
 
 #endif
 

@@ -646,6 +646,52 @@ void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalD
 otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
 
 /**
+ * Adds or updates a given TLV in an Operational Dataset (`otOperationalDatasetTlvs`).
+ *
+ * If the specified @p aType TLV already exists in @p aDatasetTlvs, it will be replaced. Otherwise, the TLV will be
+ * appended.
+ *
+ * @p aValue contains the raw wire-encoded TLV value bytes (e.g., in network byte order where applicable) and is
+ * written without validating type-specific TLV format or value semantics (unlike `otDatasetUpdateTlvs()` or
+ * `otDatasetIsValid()`).
+ *
+ * @p aDatasetTlvs is expected to contain well-formed Operational Dataset Base TLVs (i.e., valid TLV framing with no
+ * truncated, Extended, or duplicate TLVs).
+ *
+ * @param[in,out] aDatasetTlvs  A pointer to dataset TLVs to update. Must not be NULL.
+ * @param[in]     aType         The MeshCoP TLV type to add or update.
+ * @param[in]     aValue        A pointer to a buffer containing the raw TLV value bytes. Must not be NULL if
+ *                              @p aLength > 0.
+ * @param[in]     aLength       The TLV value length in bytes.
+ *
+ * @retval OT_ERROR_NONE          Successfully added or updated the TLV in @p aDatasetTlvs.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs's length is longer than `OT_OPERATIONAL_DATASET_MAX_LENGTH`, or
+ *                                @p aValue is NULL when @p aLength > 0.
+ * @retval OT_ERROR_NO_BUFS       Not enough space in @p aDatasetTlvs to add or update the TLV.
+ */
+otError otDatasetAddTlv(otOperationalDatasetTlvs *aDatasetTlvs,
+                        otMeshcopTlvType          aType,
+                        const void               *aValue,
+                        uint8_t                   aLength);
+
+/**
+ * Removes a given TLV type from an Operational Dataset (`otOperationalDatasetTlvs`).
+ *
+ * If @p aDatasetTlvs does not contain the given @p aType TLV, no action is performed and `OT_ERROR_NONE` is
+ * returned.
+ *
+ * @p aDatasetTlvs is expected to contain well-formed Operational Dataset Base TLVs (i.e., valid TLV framing with no
+ * truncated, Extended, or duplicate TLVs).
+ *
+ * @param[in,out] aDatasetTlvs  A pointer to dataset TLVs to update. Must not be NULL.
+ * @param[in]     aType         The MeshCoP TLV type to remove.
+ *
+ * @retval OT_ERROR_NONE          Successfully updated @p aDatasetTlvs.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs's length is longer than `OT_OPERATIONAL_DATASET_MAX_LENGTH`.
+ */
+otError otDatasetRemoveTlv(otOperationalDatasetTlvs *aDatasetTlvs, otMeshcopTlvType aType);
+
+/**
  * Indicates whether or not a given Operational Dataset (in TLVs format) affects connectivity.
  *
  * A Dataset affects connectivity if it contains a different Channel, PAN ID, Mesh Local Prefix, Network Key, or

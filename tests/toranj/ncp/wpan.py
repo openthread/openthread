@@ -35,7 +35,7 @@ import random
 import weakref
 import subprocess
 import socket
-import asyncore
+import selectors
 import inspect
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -385,7 +385,7 @@ class Node(object):
         if self._verbose:
             _log('$ Node{}.wpanctl(\'{}\')'.format(self._index, cmd), new_line=False)
 
-        result = subprocess.check_output(self._wpanctl_cmd + cmd, shell=True, stderr=subprocess.STDOUT)
+        result = subprocess.check_output(self._wpanctl_cmd + cmd, shell=True, stderr=subprocess.STDOUT, text=True)
 
         if len(result) >= 1 and result[-1] == '\n':  # remove the last char if it is '\n',
             result = result[:-1]
@@ -606,7 +606,7 @@ class Node(object):
         if self._verbose:
             _log('$ Node{} \'{}\')'.format(self._index, cmd))
 
-        result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, text=True)
         return result
 
     def remove_ip6_address_on_interface(self, address, prefix_len=64):
@@ -620,7 +620,7 @@ class Node(object):
         if self._verbose:
             _log('$ Node{} \'{}\')'.format(self._index, cmd))
 
-        result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, text=True)
         return result
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -744,14 +744,28 @@ class Node(object):
         """Called to perform all previously prepared async rx/listen and tx operations"""
         try:
             start_time = time.time()
-            while asyncore.socket_map:
+            while _selector.get_map():
+                for key in list(_selector.get_map().values()):
+                    key.data._poll_timeout()
+                if not _selector.get_map():
+                    break
+
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     print('Performing async tx/tx took too long ({}>{} sec)'.format(elapsed_time, timeout))
                     raise Node._NodeError('perform_tx_rx timed out ({}>{} sec)'.format(elapsed_time, timeout))
-                # perform a single asyncore loop
-                asyncore.loop(timeout=0.5, count=1)
+
+                events = _selector.select(timeout=0.1)
+                for key, mask in events:
+                    if key.data._closed:
+                        continue
+                    if mask & selectors.EVENT_READ:
+                        key.data.handle_read()
+                    if (mask & selectors.EVENT_WRITE) and not key.data._closed:
+                        key.data.handle_write()
         except BaseException:
+            for key in list(_selector.get_map().values()):
+                key.data.handle_close()
             print('Failed to perform async rx/tx')
             raise
 
@@ -760,6 +774,7 @@ class Node(object):
 # `AsyncSender` and `AsyncReceiver classes
 
 _SO_BINDTODEVICE = 25
+_selector = selectors.DefaultSelector()
 
 
 def _is_ipv6_addr_link_local(ip_addr):
@@ -774,7 +789,7 @@ def _create_socket_address(ip_address, port):
     return socket.getaddrinfo(ip_address, port)[0][4]
 
 
-class AsyncSender(asyncore.dispatcher):
+class AsyncSender(object):
     """ An IPv6 async message sender - use `Node.prepare_tx()` to create one"""
 
     def __init__(self, node, src_addr, src_port, dst_addr, dst_port, msg, count, mcast_hops=None):
@@ -784,30 +799,47 @@ class AsyncSender(asyncore.dispatcher):
         self._dst_addr = dst_addr
         self._dst_port = dst_port
         self._msg = msg
+        self._msg_bytes = msg.encode('utf-8', errors='surrogateescape') if isinstance(msg, str) else bytes(msg)
         self._count = count
         self._dst_sock_addr = _create_socket_address(dst_addr, dst_port)
-        self._tx_buffer = self._msg
+        self._tx_buffer = self._msg_bytes
         self._tx_counter = 0
+        self._sock = None
+        self._closed = True
 
         # Create a socket, bind it to the node's interface
         sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE, node.interface_name + '\0')
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        try:
+            if node.interface_name:
+                sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE, (node.interface_name + '\0').encode('utf-8'))
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
-        # Set the IPV6_MULTICAST_HOPS
-        if mcast_hops is not None:
-            sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_MULTICAST_HOPS, mcast_hops)
+            # Set the IPV6_MULTICAST_HOPS
+            if mcast_hops is not None:
+                sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_MULTICAST_HOPS, mcast_hops)
 
-        # Bind the socket to the given src address
-        if _is_ipv6_addr_link_local(src_addr):
-            # If src is a link local address it requires the interface name to
-            # be specified.
-            src_sock_addr = _create_socket_address(src_addr + '%' + node.interface_name, src_port)
+            # Bind the socket to the given src address
+            if _is_ipv6_addr_link_local(src_addr):
+                # If src is a link local address it requires the interface name to
+                # be specified.
+                src_sock_addr = _create_socket_address(src_addr + '%' + node.interface_name, src_port)
+            else:
+                src_sock_addr = _create_socket_address(src_addr, src_port)
+            sock.bind(src_sock_addr)
+            sock.setblocking(False)
+        except BaseException:
+            sock.close()
+            raise
+
+        self._sock = sock
+        self._closed = False
+        if self._count > 0:
+            _selector.register(self._sock, selectors.EVENT_WRITE, self)
         else:
-            src_sock_addr = _create_socket_address(src_addr, src_port)
-        sock.bind(src_sock_addr)
+            self.close()
 
-        asyncore.dispatcher.__init__(self, sock)
+    def __del__(self):
+        self.close()
 
     # Property getters
 
@@ -844,20 +876,21 @@ class AsyncSender(asyncore.dispatcher):
         """Indicates if the transmission of IPv6 messages finished successfully"""
         return self._tx_counter == self._count
 
-    # asyncore.dispatcher callbacks
+    # Selector callbacks
 
-    def readable(self):
-        return False
-
-    def writable(self):
-        return True
+    def _poll_timeout(self):
+        pass
 
     def handle_write(self):
-        sent_len = self.sendto(self._tx_buffer, self._dst_sock_addr)
+        try:
+            sent_len = self._sock.sendto(self._tx_buffer, self._dst_sock_addr)
+        except BlockingIOError:
+            return
 
         if self._node._verbose:
             if sent_len < 30:
-                info_text = '{} bytes ("{}")'.format(sent_len, self._tx_buffer[:sent_len])
+                sent_text = self._tx_buffer[:sent_len].decode('utf-8', errors='replace')
+                info_text = '{} bytes ("{}")'.format(sent_len, sent_text)
             else:
                 info_text = '{} bytes'.format(sent_len)
             _log('- Node{} sent {} to [{}]:{} from [{}]:{}'.format(self._node._index, info_text, self._dst_addr,
@@ -868,9 +901,19 @@ class AsyncSender(asyncore.dispatcher):
         if len(self._tx_buffer) == 0:
             self._tx_counter += 1
             if self._tx_counter < self._count:
-                self._tx_buffer = self._msg
+                self._tx_buffer = self._msg_bytes
             else:
                 self.handle_close()
+
+    def close(self):
+        if not self._closed:
+            self._closed = True
+            if self._sock is not None:
+                try:
+                    _selector.unregister(self._sock)
+                except KeyError:
+                    pass
+                self._sock.close()
 
     def handle_close(self):
         self.close()
@@ -879,7 +922,7 @@ class AsyncSender(asyncore.dispatcher):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-class AsyncReceiver(asyncore.dispatcher):
+class AsyncReceiver(object):
     """ An IPv6 async message receiver - use `prepare_rx()` to create one"""
 
     _MAX_RECV_SIZE = 2048
@@ -911,17 +954,30 @@ class AsyncReceiver(asyncore.dispatcher):
         self._timeout = 0  # listen timeout (zero means forever)
         self._started = False
         self._start_time = 0
+        self._sock = None
+        self._closed = True
 
         # Create a socket, bind it to the node's interface
         sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE, node.interface_name + '\0')
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        try:
+            if node.interface_name:
+                sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE, (node.interface_name + '\0').encode('utf-8'))
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
-        # Bind the socket to any IPv6 address with the given local port
-        local_sock_addr = _create_socket_address('::', local_port)
-        sock.bind(local_sock_addr)
+            # Bind the socket to any IPv6 address with the given local port
+            local_sock_addr = _create_socket_address('::', local_port)
+            sock.bind(local_sock_addr)
+            sock.setblocking(False)
+        except BaseException:
+            sock.close()
+            raise
 
-        asyncore.dispatcher.__init__(self, sock)
+        self._sock = sock
+        self._closed = False
+        _selector.register(self._sock, selectors.EVENT_READ, self)
+
+    def __del__(self):
+        self.close()
 
     def _add_sender(self, sender_addr, sender_port, msg, count):
         self._senders.append(AsyncReceiver._SenderInfo(sender_addr, sender_port, msg, count))
@@ -949,9 +1005,9 @@ class AsyncReceiver(asyncore.dispatcher):
         """Indicates if all expected IPv6 messages were received successfully"""
         return len(self._senders) == 0 or all([sender._did_recv_all() for sender in self._senders])
 
-    # asyncore.dispatcher callbacks
+    # Selector callbacks
 
-    def readable(self):
+    def _poll_timeout(self):
         if not self._started:
             self._start_time = time.time()
             self._started = True
@@ -960,14 +1016,14 @@ class AsyncReceiver(asyncore.dispatcher):
             if self._node._verbose:
                 _log('- Node{} finished listening on port {} for {} sec, received {} msg(s)'.format(
                     self._node._index, self._local_port, self._timeout, len(self._all_rx)))
-            return False
-        return True
-
-    def writable(self):
-        return False
 
     def handle_read(self):
-        (msg, src_sock_addr) = self.recvfrom(AsyncReceiver._MAX_RECV_SIZE)
+        try:
+            (data, src_sock_addr) = self._sock.recvfrom(AsyncReceiver._MAX_RECV_SIZE)
+        except BlockingIOError:
+            return
+
+        msg = data.decode('utf-8', errors='surrogateescape')
         src_addr = src_sock_addr[0]
         src_port = src_sock_addr[1]
 
@@ -988,6 +1044,16 @@ class AsyncReceiver(asyncore.dispatcher):
 
         if all([sender._check_received(msg, src_addr, src_port) for sender in self._senders]):
             self.handle_close()
+
+    def close(self):
+        if not self._closed:
+            self._closed = True
+            if self._sock is not None:
+                try:
+                    _selector.unregister(self._sock)
+                except KeyError:
+                    pass
+                self._sock.close()
 
     def handle_close(self):
         self.close()
@@ -1032,7 +1098,7 @@ def verify_within(condition_checker_func, wait_time, delay_time=0.1):
         except VerifyError as e:
             if time.time() - start_time > wait_time:
                 print('Took too long to pass the condition ({}>{} sec)'.format(time.time() - start_time, wait_time))
-                print(e.message)
+                print(e)
                 raise e
         except BaseException:
             raise

@@ -33,6 +33,10 @@
 
 #include "thread_link_info.hpp"
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#include <openthread/network_time.h>
+#endif
+
 namespace ot {
 
 void ThreadLinkInfo::SetFrom(const Mac::RxFrame::ParseInfo &aFrameInfo)
@@ -83,10 +87,13 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame::ParseInfo &aFrameInfo)
     mLqi     = aFrameInfo.GetLqi();
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (aFrameInfo.GetRadioType() == Radio::kTypeIeee802154)
+#endif
     {
         const Mac::TimeIe *timeIe = aFrameInfo.Find<Mac::TimeIe>();
 
-        if (timeIe != nullptr)
+        if ((timeIe != nullptr) && (timeIe->GetSequence() != OT_TIME_SYNC_INVALID_SEQ))
         {
             mNetworkTimeOffset = static_cast<int64_t>(timeIe->GetTime() - aFrameInfo.GetTimestamp());
             mTimeSyncSeq       = timeIe->GetSequence();

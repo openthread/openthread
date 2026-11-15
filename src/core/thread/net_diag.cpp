@@ -33,6 +33,8 @@
 
 #include "net_diag.hpp"
 
+#include <openthread/platform/misc.h>
+
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -387,6 +389,24 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
         tlvValue.InitFrom(Get<Mle::Mle>().GetCounters());
         error = Tlv::Append<MleCountersTlv>(aMessage, tlvValue);
+        break;
+    }
+
+    case Tlv::kBatteryLevel:
+    {
+        uint8_t batteryLevel;
+
+        SuccessOrExit(otPlatGetBatteryLevel(&GetInstance(), &batteryLevel));
+        error = Tlv::Append<BatteryLevelTlv>(aMessage, batteryLevel);
+        break;
+    }
+
+    case Tlv::kSupplyVoltage:
+    {
+        uint16_t supplyVoltage;
+
+        SuccessOrExit(otPlatGetSupplyVoltage(&GetInstance(), &supplyVoltage));
+        error = Tlv::Append<SupplyVoltageTlv>(aMessage, supplyVoltage);
         break;
     }
 
@@ -1265,3 +1285,22 @@ const char *Client::UriToString(Uri aUri)
 } // namespace NetDiag
 
 } // namespace ot
+
+//---------------------------------------------------------------------------------------------------------------------
+// Default/weak implementation of platform APIs
+
+extern "C" OT_TOOL_WEAK otError otPlatGetBatteryLevel(otInstance *aInstance, uint8_t *aBatteryLevel)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aBatteryLevel);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatGetSupplyVoltage(otInstance *aInstance, uint16_t *aSupplyVoltage)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aSupplyVoltage);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}

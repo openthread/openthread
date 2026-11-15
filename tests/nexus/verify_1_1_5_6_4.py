@@ -93,7 +93,8 @@ def verify(pv):
     # - Description: Automatically sends a CoAP Response frame to Router_1.
     # - Pass Criteria: The DUT MUST transmit a 2.04 Changed CoAP response to Router_1.
     print("Step 3: Leader (DUT)")
-    pkts.filter_wpan_src16(DUT_RLOC16).\
+    pkts.copy().\
+      filter_wpan_src16(DUT_RLOC16).\
       filter_wpan_dst16(ROUTER_1_RLOC16).\
       filter_coap_ack(consts.SVR_DATA_URI).\
       filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
@@ -107,7 +108,9 @@ def verify(pv):
     #     - 6LoWPAN ID sub-TLV
     #     - Border Router sub-TLV
     print("Step 4: Leader (DUT)")
-    pkts.filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
+    pkts.filter_wpan_src64(DUT).\
+      filter_LLANMA().\
+      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
       filter(lambda p: {
         consts.NETWORK_DATA_TLV
       } <= set(p.mle.tlv.type)).\

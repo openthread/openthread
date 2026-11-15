@@ -132,6 +132,7 @@
  * @defgroup api-server                  Server
  * @defgroup api-steering-data           Steering Data
  * @defgroup api-thread-direct           Thread Direct
+ * @defgroup api-thread-direct-listener  Thread Direct Listener
  *
  * @}
  *

@@ -257,6 +257,13 @@ Mac::TxFrame &RadioSelector::SelectRadio(Message &aMessage, const Mac::Address &
 
     if (aMacDest.IsBroadcast() || aMacDest.IsNone())
     {
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        if (aMessage.IsTimeSync())
+        {
+            aMessage.SetRadioType(Radio::kTypeIeee802154);
+            ExitNow(selections.Add(Radio::kTypeIeee802154));
+        }
+#endif
         aMessage.ClearRadioType();
         ExitNow(selections.AddAll());
     }
@@ -268,6 +275,12 @@ Mac::TxFrame &RadioSelector::SelectRadio(Message &aMessage, const Mac::Address &
 
     if (aMessage.IsRadioTypeSet())
     {
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        if (aMessage.GetRadioType() != Radio::kTypeIeee802154)
+        {
+            aMessage.SetTimeSync(false);
+        }
+#endif
         ExitNow(selections.Add(aMessage.GetRadioType()));
     }
 
@@ -281,16 +294,39 @@ Mac::TxFrame &RadioSelector::SelectRadio(Message &aMessage, const Mac::Address &
         // happen when recovering a non-sleepy child (sending MLE
         // Child Update Request to it) after device itself was reset.
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        aMessage.SetTimeSync(false);
+#endif
         aMessage.ClearRadioType();
         ExitNow(selections.AddAll());
     }
 
-    selectedRadio = Select(neighbor->GetSupportedRadioTypes(), *neighbor);
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (aMessage.IsTimeSync() && neighbor->GetSupportedRadioTypes().Contains(Radio::kTypeIeee802154) &&
+        (neighbor->GetRadioPreference(Radio::kTypeIeee802154) > 0))
+    {
+        selectedRadio = Radio::kTypeIeee802154;
+    }
+    else
+#endif
+    {
+        selectedRadio = Select(neighbor->GetSupportedRadioTypes(), *neighbor);
+    }
+
     selections.Add(selectedRadio);
 
     Log(kLogLevelDebg, "SelectRadio", selectedRadio, *neighbor);
 
     aMessage.SetRadioType(selectedRadio);
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (selectedRadio != Radio::kTypeIeee802154)
+    {
+        aMessage.SetTimeSync(false);
+    }
+
+    VerifyOrExit(!aMessage.IsTimeSync());
+#endif
 
     // We (probabilistically) decide whether to probe on another radio
     // link for the current frame tx. When probing we allow the same

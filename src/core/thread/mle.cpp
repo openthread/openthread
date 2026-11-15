@@ -233,6 +233,7 @@ void Mle::Stop(StopMode aMode)
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocalEid);
 
     SetRole(kRoleDisabled);
+    Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
 
 exit:
     mDetacher.HandleStop();
@@ -348,6 +349,7 @@ void Mle::Restore(void)
 {
     Settings::NetworkInfo networkInfo;
     Settings::ParentInfo  parentInfo;
+    uint16_t              rloc16;
 
     IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
     IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
@@ -370,35 +372,17 @@ void Mle::Restore(void)
 
     mLastSavedRole = static_cast<DeviceRole>(networkInfo.GetRole());
 
+    Get<Mac::Mac>().SetExtAddress(networkInfo.GetExtAddress());
+    mMeshLocalEid.GetAddress().SetIid(networkInfo.GetMeshLocalIid());
+
+    rloc16 = networkInfo.GetRloc16();
+    VerifyOrExit(IsValidRloc16(rloc16));
+
     switch (mLastSavedRole)
     {
     case kRoleChild:
-    case kRoleRouter:
-    case kRoleLeader:
-        break;
+        VerifyOrExit(IsChildRloc16(rloc16));
 
-    default:
-        ExitNow();
-    }
-
-#if OPENTHREAD_MTD
-    if (IsChildRloc16(networkInfo.GetRloc16()))
-#endif
-    {
-        Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
-        mRloc16 = networkInfo.GetRloc16();
-    }
-    Get<Mac::Mac>().SetExtAddress(networkInfo.GetExtAddress());
-
-    mMeshLocalEid.GetAddress().SetIid(networkInfo.GetMeshLocalIid());
-
-    if (networkInfo.GetRloc16() == kInvalidRloc16)
-    {
-        ExitNow();
-    }
-
-    if (IsChildRloc16(networkInfo.GetRloc16()))
-    {
         if (Get<Settings>().Read(parentInfo) != kErrorNone)
         {
             // If the restored RLOC16 corresponds to an end-device, it
@@ -407,8 +391,7 @@ void Mle::Restore(void)
             // setting by skipping the re-attach ("Child Update Request"
             // exchange) and going through the full attach process.
 
-            LogWarn("Invalid settings - no saved parent info with valid end-device RLOC16 0x%04x",
-                    networkInfo.GetRloc16());
+            LogWarn("Invalid settings - no saved parent info with valid end-device RLOC16 0x%04x", rloc16);
             ExitNow();
         }
 
@@ -417,19 +400,29 @@ void Mle::Restore(void)
         mParent.SetVersion(parentInfo.GetVersion());
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData));
-        mParent.SetRloc16(ParentRloc16ForRloc16(networkInfo.GetRloc16()));
+        mParent.SetRloc16(ParentRloc16ForRloc16(rloc16));
         mParent.SetState(Neighbor::kStateRestored);
 
         mPreviousParentRloc = mParent.GetRloc16();
-    }
+        break;
+
 #if OPENTHREAD_FTD
-    else
-    {
-        SetRouterId(RouterIdFromRloc16(GetRloc16()));
+    case kRoleRouter:
+    case kRoleLeader:
+        VerifyOrExit(IsRouterRloc16(rloc16));
+
+        SetRouterId(RouterIdFromRloc16(rloc16));
         SetPreviousPartitionId(networkInfo.GetPreviousPartitionId());
         Get<ChildTable>().Restore();
-    }
+        break;
 #endif
+
+    default:
+        ExitNow();
+    }
+
+    Get<Mac::Mac>().SetShortAddress(rloc16);
+    mRloc16 = rloc16;
 
     // Successfully restored the network information from
     // non-volatile settings after boot.
@@ -584,10 +577,11 @@ void Mle::SetStateDetached(void)
     Get<Mlr::Manager>().UpdateState();
 #endif
     mAttacher.CancelAttachOnRoleChange();
+    Get<MeshForwarder>().SetSleepMode(IsRxOnWhenIdle() ? MeshForwarder::kNonSleepy : MeshForwarder::kDetachedSleepy);
     mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
     mRetxTracker.Stop();
     mInitiallyAttachedAsSleepy = false;
-    Get<MeshForwarder>().SetRxOnWhenIdle(true);
+    mRetrieveNewNetworkData    = false;
     Get<Mac::Mac>().SetBeaconEnabled(false);
 #if OPENTHREAD_FTD
     mRoleTransitioner.SetDowngradeBlocked(false);
@@ -1122,9 +1116,15 @@ bool Mle::ShouldRegisterMulticastAddrsWithParent(void) const
     }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    if (!IsFullThreadDevice() && GetParent().IsThreadVersion1p2OrHigher())
+    if (!IsFullThreadDevice())
     {
-        ExitNow(shouldRegister = true);
+        const Parent &parent =
+            !mAttacher.GetParentCandidate().IsStateInvalid() ? mAttacher.GetParentCandidate() : mParent;
+
+        if (parent.IsThreadVersion1p2OrHigher())
+        {
+            ExitNow(shouldRegister = true);
+        }
     }
 #endif
 
@@ -1300,7 +1300,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
 
     if (!IsRxOnWhenIdle())
     {
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         Get<DataPollSender>().SetAttachMode(!Get<Mac::Mac>().IsCslEnabled());
 #else
@@ -1309,7 +1309,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     }
     else
     {
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
     }
 
 exit:
@@ -1944,6 +1944,7 @@ void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
         Child &child = static_cast<Child &>(aNeighbor);
 
         child.SetState(Child::kStateChildUpdateRequest);
+        Get<MeshForwarder>().RemoveMessagesForChild(child, Message::AcceptMle<kCommandChildUpdateRequest>);
         IgnoreError(SendChildUpdateRequestToChild(child));
     }
 #endif
@@ -2304,15 +2305,17 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
         }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        switch (ProcessCslAccuracyTlv(aRxInfo, canTrustMessage))
         {
-            Mac::CslAccuracy cslAccuracy;
-
-            if (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy) == kErrorNone)
-            {
-                // MUST include CSL timeout TLV when request includes
-                // CSL accuracy
-                info.mTlvList.Add(Tlv::kCslTimeout);
-            }
+        case kErrorNone:
+            // MUST include CSL timeout TLV when request includes
+            // CSL accuracy
+            info.mTlvList.Add(Tlv::kCslTimeout);
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
         }
 #endif
 
@@ -2444,7 +2447,7 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
     case kRoleChild:
         SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-        if (!HasMatchingRouterIdWith(sourceAddress))
+        if (sourceAddress != mParent.GetRloc16())
         {
             IgnoreError(BecomeDetached());
             ExitNow();
@@ -2465,30 +2468,24 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
         }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        switch (ProcessCslAccuracyTlv(aRxInfo, /* aCanTrustMessage */ true))
         {
-            Mac::CslAccuracy cslAccuracy;
-
-            switch (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy))
-            {
-            case kErrorNone:
-                Get<Mac::Mac>().SetCslParentAccuracy(cslAccuracy);
-                break;
-            case kErrorNotFound:
-                break;
-            default:
-                ExitNow(error = kErrorParse);
-            }
+        case kErrorNone:
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
         }
 #endif
 
         if (!IsRxOnWhenIdle())
         {
             Get<DataPollSender>().SetAttachMode(false);
-            Get<MeshForwarder>().SetRxOnWhenIdle(false);
+            Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
         }
         else
         {
-            Get<MeshForwarder>().SetRxOnWhenIdle(true);
+            Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
         }
 
         break;
@@ -3013,6 +3010,24 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+Error Mle::ProcessCslAccuracyTlv(RxInfo &aRxInfo, bool aCanTrustMessage)
+{
+    Error            error;
+    Mac::CslAccuracy cslAccuracy;
+
+    SuccessOrExit(error = aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy));
+
+    if (aCanTrustMessage)
+    {
+        mParent.SetCslAccuracy(cslAccuracy);
+        Get<Mac::Mac>().SetCslParentAccuracy(cslAccuracy);
+    }
+
+exit:
+    return error;
+}
+
 uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 {
     // This method calculates a metric estimating the average CSL sample window
@@ -4096,6 +4111,7 @@ Error Mle::RxMessage::ReadLeaderDataTlv(LeaderData &aLeaderData) const
 
     SuccessOrExit(error = Tlv::Find<LeaderDataTlv>(*this, tlvValue));
     tlvValue.Get(aLeaderData);
+    VerifyOrExit(IsRouterIdValid(aLeaderData.GetLeaderRouterId()), error = kErrorParse);
 
 exit:
     return error;
@@ -4272,7 +4288,7 @@ Error Mle::PrevRoleRestorer::Start(void)
         VerifyOrExit((Get<Mle>().mLastSavedRole == kRoleRouter) || (Get<Mle>().mLastSavedRole == kRoleLeader));
         VerifyOrExit(Get<Mle>().IsRouterRoleAllowed());
 
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
         SetState(kRestoringRouterOrLeaderRole);
         mAttempts = kRestoreLinkRequestAttempts;
         mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
@@ -4494,6 +4510,7 @@ void Mle::Attacher::CancelAttachOnRoleChange(void)
 {
     SetState(kStateIdle);
     mTimer.Stop();
+    Get<MeshForwarder>().ResumeSleepyOperation(MeshForwarder::kRequesterMleAttacher);
 
     if (Get<Mle>().IsChild())
     {
@@ -4575,7 +4592,7 @@ void Mle::Attacher::Attach(AttachMode aMode)
 
         if (!Get<Mle>().IsRxOnWhenIdle())
         {
-            Get<Mac::Mac>().SetRxOnWhenIdle(false);
+            Get<MeshForwarder>().SetSleepMode(MeshForwarder::kDetachedSleepy);
         }
     }
 
@@ -4781,7 +4798,7 @@ void Mle::Attacher::HandleTimer(void)
         mReceivedResponseFromParent = false;
         mParentRequestCounter       = 0;
         mChildIdRequestsRemaining   = kMaxChildIdRequests;
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        Get<MeshForwarder>().SuspendSleepyOperation(MeshForwarder::kRequesterMleAttacher);
 
         OT_FALL_THROUGH;
 
@@ -4876,6 +4893,15 @@ uint32_t Mle::Attacher::Reattach(void)
 {
     uint32_t delay = 0;
 
+    if (!Get<Mle>().IsRxOnWhenIdle())
+    {
+        Get<DataPollSender>().SetAttachMode(false);
+        Get<MeshForwarder>().SetSleepMode(Get<Mle>().IsChild() ? MeshForwarder::kSleepy
+                                                               : MeshForwarder::kDetachedSleepy);
+    }
+
+    Get<MeshForwarder>().ResumeSleepyOperation(MeshForwarder::kRequesterMleAttacher);
+
     // First, check `mReattachMode`. If an attach attempt failed
     // while using the Active Dataset, start a new attach cycle with
     // the Pending Dataset (if available). If attaching with the
@@ -4913,14 +4939,8 @@ uint32_t Mle::Attacher::Reattach(void)
         if (Get<Mle>().IsChild())
         {
             // If already attached (e.g., trying to find a better
-            // parent or partition), and attach fails, we revert to
-            // sleepy operation if needed and stop the attach process.
-
-            if (!Get<Mle>().IsRxOnWhenIdle())
-            {
-                Get<DataPollSender>().SetAttachMode(false);
-                Get<MeshForwarder>().SetRxOnWhenIdle(false);
-            }
+            // parent or partition), and attach fails, stop the
+            // attach process.
 
             ExitNow();
         }
@@ -5032,20 +5052,22 @@ exit:
 
 void Mle::Attacher::HandleChildIdRequestTxDone(const otMessage *aMessage, otError aError, void *aContext)
 {
-    OT_UNUSED_VARIABLE(aError);
-
-    static_cast<Attacher *>(aContext)->HandleChildIdRequestTxDone(AsCoreType(aMessage));
+    static_cast<Attacher *>(aContext)->HandleChildIdRequestTxDone(AsCoreType(aMessage), aError);
 }
 
-void Mle::Attacher::HandleChildIdRequestTxDone(const Message &aMessage)
+void Mle::Attacher::HandleChildIdRequestTxDone(const Message &aMessage, Error aError)
 {
-    if (aMessage.GetTxSuccess() && !Get<Mle>().IsRxOnWhenIdle())
+    VerifyOrExit(mState == kStateChildIdRequest);
+
+    if ((aError == kErrorNone) && !Get<Mle>().IsRxOnWhenIdle())
     {
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
         Get<DataPollSender>().SetAttachMode(true);
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+        Get<MeshForwarder>().ResumeSleepyOperation(MeshForwarder::kRequesterMleAttacher);
     }
 
-    if (aMessage.IsLinkSecurityEnabled() && (mState == kStateChildIdRequest))
+    if (aMessage.IsLinkSecurityEnabled() && !Get<Mle>().IsFullThreadDevice() &&
+        (mAddressRegistrationMode == kAppendAllAddresses))
     {
         // If the Child ID Request requires fragmentation and therefore
         // link layer security, the frame transmission will be aborted.
@@ -5058,6 +5080,9 @@ void Mle::Attacher::HandleChildIdRequestTxDone(const Message &aMessage)
         mAddressRegistrationMode = kAppendMeshLocalOnly;
         IgnoreError(SendChildIdRequest());
     }
+
+exit:
+    return;
 }
 
 Error Mle::Attacher::SendChildIdRequest(void)
@@ -5227,6 +5252,8 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
     Log(kMessageReceive, kTypeParentResponse, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
+
+    VerifyOrExit(IsValidRloc16(sourceAddress), error = kErrorParse);
 
     VerifyOrExit(mState != kStateChildIdRequest, error = kErrorInvalidState);
 
@@ -5411,7 +5438,8 @@ void Mle::Attacher::HandleChildIdResponse(RxInfo &aRxInfo)
     VerifyOrExit(mState == kStateChildIdRequest);
 
     SuccessOrExit(error = Tlv::Find<Address16Tlv>(aRxInfo.mMessage, shortAddress));
-    VerifyOrExit(RouterIdMatch(sourceAddress, shortAddress), error = kErrorRejected);
+    VerifyOrExit(IsValidRloc16(shortAddress) && IsChildRloc16(shortAddress), error = kErrorRejected);
+    VerifyOrExit(sourceAddress == ParentRloc16ForRloc16(shortAddress), error = kErrorRejected);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
@@ -5490,11 +5518,11 @@ void Mle::Attacher::HandleChildIdResponse(RxInfo &aRxInfo)
     if (!Get<Mle>().IsRxOnWhenIdle())
     {
         Get<DataPollSender>().SetAttachMode(false);
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kSleepy);
     }
     else
     {
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;

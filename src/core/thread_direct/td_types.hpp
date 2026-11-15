@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/thread_direct.h>
+#include <openthread/thread_direct_listener.h>
 #include <openthread/platform/radio.h>
 
 #include "common/as_core_type.hpp"
@@ -55,6 +56,10 @@
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
 
 struct otThreadDirectKey
+{
+};
+
+struct otThreadDirectLink
 {
 };
 
@@ -196,6 +201,18 @@ private:
     KeyId       mId;
     uint32_t    mFrameCounter;
     uint32_t    mSavedFrameCounter;
+};
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+/**
+ * Defines the Thread Direct Wake types (`otThreadDirectWakeType`).
+ */
+enum WakeType : uint8_t
+{
+    kWakeTypeTdLink         = OT_THREAD_DIRECT_WAKE_TYPE_TD_LINK,  ///< Establish Thread Direct Link.
+    kWakeTypeReattach       = OT_THREAD_DIRECT_WAKE_TYPE_REATTACH, ///< Reattach to Thread Network (for future use).
+    kWakeTypeConnectionless = OT_THREAD_DIRECT_WAKE_TYPE_CONNECTIONLESS, ///< Connectionless control (for future use).
 };
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -359,6 +376,7 @@ private:
 
 DefineCoreType(otThreadDirectKeyId, ThreadDirect::KeyId);
 DefineCoreType(otThreadDirectKey, ThreadDirect::Key);
+DefineMapEnum(otThreadDirectWakeType, ThreadDirect::WakeType);
 DefineMapEnum(otRadioAvailabilitySlotDuration, ThreadDirect::SlotDuration);
 
 } // namespace ot

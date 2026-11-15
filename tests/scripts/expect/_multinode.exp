@@ -75,9 +75,7 @@ proc setup_node {node {mode "r"} {role "child"}} {
     expect_line "Done"
     send "ifconfig up\n"
     expect_line "Done"
-    send "joiner start $::JOINER_PSK\n"
-    expect_line "Done"
-    wait_for "" "Join success" "Join failed"
+    join_network $::JOINER_PSK
     send "thread start\n"
     expect_line "Done"
     wait_for "state" $role

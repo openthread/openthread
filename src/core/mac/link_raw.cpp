@@ -192,13 +192,14 @@ exit:
     return error;
 }
 
-void LinkRaw::InvokeReceiveDone(RxFrame *aFrame, Error aError)
+void LinkRaw::InvokeReceiveDone(RxFrame::ParseInfo &aFrameInfo, Error aError)
 {
-    LogDebg("ReceiveDone(%d bytes), error:%s", (aFrame != nullptr) ? aFrame->mLength : 0, ErrorToString(aError));
+    LogDebg("ReceiveDone(%d bytes), error:%s", (aFrameInfo.GetRxFrame() != nullptr) ? aFrameInfo.GetLength() : 0,
+            ErrorToString(aError));
 
     if (mReceiveDoneCallback && (aError == kErrorNone))
     {
-        mReceiveDoneCallback(&GetInstance(), aFrame, aError);
+        mReceiveDoneCallback(&GetInstance(), aFrameInfo.GetRxFrame(), aError);
     }
 }
 

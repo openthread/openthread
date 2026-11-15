@@ -91,6 +91,7 @@
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
@@ -138,13 +139,15 @@ public:
     typedef otHandleCoapSecureClientConnect ConnectHandler;
 
     /**
-     * Pointer is called when data is received from the session.
+     * Function pointer called when data is received from the session.
+     *
+     * A DTLS message contains exactly one complete record; a TLS message contains a portion of the stream.
+     * Ownership stays with the secure session; the handler must not free or retain the message.
      *
      * @param[in]  aContext  A pointer to application-specific context.
-     * @param[in]  aBuf      A pointer to the received data buffer.
-     * @param[in]  aLength   Number of bytes in the received data buffer.
+     * @param[in]  aMessage  The received data.
      */
-    typedef void (*ReceiveHandler)(void *aContext, uint8_t *aBuf, uint16_t aLength);
+    typedef void (*ReceiveHandler)(void *aContext, Message &aMessage);
 
     /**
      * Sets the connection event callback.
@@ -160,13 +163,10 @@ public:
     /**
      * Sets the receive callback.
      *
-     * @param[in]  aReceiveHandler      A pointer to a function that is called to receive payload.
-     * @param[in]  aContext             A pointer to arbitrary context information.
+     * @param[in]  aHandler  A pointer to a function called when data is received.
+     * @param[in]  aContext  A pointer to arbitrary context information.
      */
-    void SetReceiveCallback(ReceiveHandler aReceiveHandler, void *aContext)
-    {
-        mReceiveCallback.Set(aReceiveHandler, aContext);
-    }
+    void SetReceiveCallback(ReceiveHandler aHandler, void *aContext) { mReceiveCallback.Set(aHandler, aContext); }
 
     /**
      * Establishes a secure session (as client).
@@ -245,7 +245,7 @@ protected:
 
 private:
     static constexpr uint32_t kGuardTimeNewConnectionMilli = 2000;
-    static constexpr uint16_t kMaxContentLen               = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
+    static constexpr uint16_t kRxStagingBufferSize         = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
 
 #if !OPENTHREAD_CONFIG_TLS_API_ENABLE
     static constexpr uint16_t kApplicationDataMaxLength = 1152;
@@ -278,6 +278,7 @@ private:
     void  Disconnect(ConnectEvent aEvent);
     void  HandleTimer(TimeMilli aNow);
     void  Process(void);
+    int   ReadRxMessage(OwnedPtr<Message> &aMessage);
     void  FreeMbedtls(void);
 
     static int  HandleMbedtlsGetTimer(void *aContext);
@@ -946,6 +947,15 @@ class Tls : public SecureTransport, public SecureSession
 {
 public:
     /**
+     * Function pointer called when data is received from the TLS stream.
+     *
+     * @param[in]  aContext  A pointer to application-specific context.
+     * @param[in]  aBuf      A pointer to the received data buffer.
+     * @param[in]  aLength   Number of bytes in the received data buffer.
+     */
+    typedef void (*ReceiveHandler)(void *aContext, uint8_t *aBuf, uint16_t aLength);
+
+    /**
      * Initializes the `Tls` object.
      *
      * @param[in]  aInstance            A reference to the OpenThread instance.
@@ -960,9 +970,25 @@ public:
         SetAcceptCallback(&HandleAccept, this);
     }
 
+    /**
+     * Sets the callback for received TLS stream data.
+     *
+     * @param[in] aHandler  A pointer to a function called to receive data.
+     * @param[in] aContext  A pointer to arbitrary context information.
+     */
+    void SetReceiveCallback(ReceiveHandler aHandler, void *aContext)
+    {
+        mReceiveBufferCallback.Set(aHandler, aContext);
+        SecureSession::SetReceiveCallback(HandleReceiveMessage, this);
+    }
+
 private:
     static SecureSession *HandleAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo);
     SecureSession        *HandleAccept(void);
+    static void           HandleReceiveMessage(void *aContext, Message &aMessage);
+    void                  HandleReceiveMessage(Message &aMessage);
+
+    Callback<ReceiveHandler> mReceiveBufferCallback;
 };
 
 #endif

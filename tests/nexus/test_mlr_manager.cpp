@@ -244,6 +244,65 @@ void TestMlrState(void)
     Log("Renewal registration successful");
 }
 
+void TestMedMulticastRegistrationOnAttach(void)
+{
+    /**
+     * This test verifies that an rx-on-when-idle MED includes subscribed
+     * larger-than-realm-local multicast addresses in its MLE Child ID Request
+     * during initial attach and re-attach to a Thread 1.2+ parent.
+     */
+
+    Core         nexus;
+    Node        &leader = nexus.CreateNode();
+    Node        &med    = nexus.CreateNode();
+    Ip6::Address mcastAddr1;
+    Ip6::Address mcastAddr2;
+    Ip6::Address realmLocalMcastAddr;
+    const Child *child;
+
+    nexus.AdvanceTime(0);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
+
+    AllowLinkBetween(leader, med);
+
+    leader.Form();
+    nexus.AdvanceTime(kFormNetworkTime);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    SuccessOrQuit(mcastAddr1.FromString("ff05::1234"));
+    SuccessOrQuit(mcastAddr2.FromString("ff05::abcd"));
+    SuccessOrQuit(realmLocalMcastAddr.FromString("ff03::5678"));
+
+    Log("Subscribe MED to multicast addresses before initial attach");
+    SuccessOrQuit(med.Get<Ip6::Netif>().SubscribeExternalMulticast(mcastAddr1));
+    SuccessOrQuit(med.Get<Ip6::Netif>().SubscribeExternalMulticast(realmLocalMcastAddr));
+
+    med.Join(leader, Node::kAsMed);
+    nexus.AdvanceTime(2 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(med.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(med.Get<Mle::Mle>().IsMinimalEndDevice());
+
+    child = leader.Get<ChildTable>().FindChild(med.Get<Mac::Mac>().GetExtAddress(), Child::kInStateValid);
+    VerifyOrQuit(child != nullptr);
+    VerifyOrQuit(child->HasIp6Address(mcastAddr1));
+    VerifyOrQuit(!child->HasIp6Address(realmLocalMcastAddr));
+
+    Log("Detach MED, change multicast subscription while detached, and verify re-attach registration");
+    SuccessOrQuit(med.Get<Mle::Mle>().BecomeDetached());
+    SuccessOrQuit(med.Get<Ip6::Netif>().UnsubscribeExternalMulticast(mcastAddr1));
+    SuccessOrQuit(med.Get<Ip6::Netif>().SubscribeExternalMulticast(mcastAddr2));
+
+    nexus.AdvanceTime(2 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(med.Get<Mle::Mle>().IsChild());
+    child = leader.Get<ChildTable>().FindChild(med.Get<Mac::Mac>().GetExtAddress(), Child::kInStateValid);
+    VerifyOrQuit(child != nullptr);
+    VerifyOrQuit(!child->HasIp6Address(mcastAddr1));
+    VerifyOrQuit(child->HasIp6Address(mcastAddr2));
+    VerifyOrQuit(!child->HasIp6Address(realmLocalMcastAddr));
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -251,6 +310,7 @@ int main(void)
 {
     ot::Nexus::TestMlrRedundant();
     ot::Nexus::TestMlrState();
+    ot::Nexus::TestMedMulticastRegistrationOnAttach();
     printf("All tests passed\n");
     return 0;
 }

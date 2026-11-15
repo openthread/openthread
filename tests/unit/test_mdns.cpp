@@ -6832,6 +6832,53 @@ void TestSrvResolver(void)
     }
 
     VerifyOrQuit(dnsMsg == nullptr);
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send response with unchanged SRV record and TTL. Ensure query retries stop.");
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 120, kInAnswerSection);
+
+    AdvanceTime(40 * 1000);
+
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Receive multiple responses and verify the 80%% TTL refresh query is sent.");
+
+    // First send a response with `TTL = 1` and advance 2 seconds so the
+    // cached record expires and any leftover `mFireTime` from preceding
+    // test steps is cleared.
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 1, kInAnswerSection);
+    AdvanceTime(2 * 1000);
+    sDnsMessages.Clear();
+
+    // Send 20 back-to-back responses with `TTL = 100`. Each response
+    // recalculates a random jittered refresh time in `[80s, 82s)`.
+    // This verifies that `DetermineNextFireTime()` clears `mFireTime`
+    // on each update (rather than keeping the earliest jitter roll in
+    // `mFireTime` while `mNextQueryTime` holds the latest roll, which
+    // would cause the timer to fire early in `[80s, 82s)` and skip the
+    // 80% TTL refresh query).
+
+    for (uint8_t count = 0; count < 20; count++)
+    {
+        SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 100, kInAnswerSection);
+    }
+
+    sSrvCallbacks.Clear();
+
+    AdvanceTime(83 * 1000);
+
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    sDnsMessages.Clear();
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
@@ -7258,6 +7305,17 @@ void TestTxtResolver(void)
     }
 
     VerifyOrQuit(dnsMsg == nullptr);
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send response with unchanged TXT record and TTL. Ensure query retries stop.");
+
+    SendTxtResponse("mysrv._srv._udp.local.", kTxtData1, sizeof(kTxtData1), 120, kInAnswerSection);
+
+    AdvanceTime(40 * 1000);
+
+    VerifyOrQuit(sTxtCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
@@ -7771,6 +7829,97 @@ void TestIp6AddrResolver(void)
     }
 
     VerifyOrQuit(dnsMsg == nullptr);
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Receive a second address during the 80%% TTL jitter window and verify the 80%% query is not skipped.");
+
+    addrs[0].mTtl = 200;
+    SendHostAddrResponse("myhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+    AdvanceTime(15 * 1000);
+    sDnsMessages.Clear();
+
+    addrs[0].mTtl = 100;
+    SendHostAddrResponse("myhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    AdvanceTime(80 * 1000 + 1);
+
+    addrs[1].mTtl = 200;
+    SendHostAddrResponse("myhost.local.", &addrs[1], 1, /* aCacheFlush */ false, kInAnswerSection);
+
+    AdvanceTime(3 * 1000);
+
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    sDnsMessages.Clear();
+    sAddrCallbacks.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop and restart the resolver after 80%% of TTL has passed.");
+    Log("Ensure the initial query waits for at least the minimum initial delay (20 ms).");
+
+    addrs[0].mTtl = 100;
+    SendHostAddrResponse("myhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    SuccessOrQuit(mdns->StopIp6AddressResolver(resolver));
+
+    AdvanceTime(85 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+    sAddrCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver));
+
+    AdvanceTime(19);
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    sAddrCallbacks.Clear();
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(120);
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Verify unrelated and zero-TTL responses do not stop initial query retries.");
+
+    SuccessOrQuit(mdns->StopIp6AddressResolver(resolver));
+    AdvanceTime(10);
+    sDnsMessages.Clear();
+    sAddrCallbacks.Clear();
+
+    ClearAllBytes(resolver2);
+    resolver2.mHostName     = "newhost";
+    resolver2.mInfraIfIndex = kInfraIfIndex;
+    resolver2.mCallback     = HandleAddrResultAlternate;
+
+    SuccessOrQuit(addrs[4].mAddress.FromString("fd00::99"));
+    addrs[4].mTtl = 120;
+
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver2));
+
+    AdvanceTime(DetermineQueryWaitTime(0));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    sDnsMessages.Clear();
+
+    SendHostAddrResponse("otherhost.local.", &addrs[4], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    addrs[0].mTtl = 0;
+    SendHostAddrResponse("newhost.local.", &addrs[0], 1, /* aCacheFlush */ true, kInAnswerSection);
+
+    AdvanceTime(DetermineQueryWaitTime(1));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver2);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+    sDnsMessages.Clear();
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
@@ -8260,6 +8409,71 @@ void TestRecordQuerier(void)
     mdns->FreeIterator(*iterator);
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Verify unrelated and zero-TTL responses do not stop initial query retries.");
+
+    IgnoreError(mdns->StopRecordQuerier(querier));
+    AdvanceTime(10);
+    sDnsMessages.Clear();
+    sRecordCallbacks.Clear();
+
+    ClearAllBytes(querier2);
+    querier2.mFirstLabel   = "newsrv";
+    querier2.mNextLabels   = "_srv._udp";
+    querier2.mRecordType   = ResourceRecord::kTypeKey;
+    querier2.mInfraIfIndex = kInfraIfIndex;
+    querier2.mCallback     = HandleRecordResultAlternate;
+
+    SuccessOrQuit(mdns->StartRecordQuerier(querier2));
+
+    AdvanceTime(DetermineQueryWaitTime(0));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    sDnsMessages.Clear();
+
+    records[0].mType       = ResourceRecord::kTypeKey;
+    records[0].mData       = kKey1;
+    records[0].mLength     = sizeof(kKey1);
+    records[0].mTtl        = 120;
+    records[0].mCacheFlush = true;
+    SendRecordResponse("othersrv._srv._udp.local.", 1, records);
+
+    records[0].mTtl = 0;
+    SendRecordResponse("newsrv._srv._udp.local.", 1, records);
+
+    AdvanceTime(DetermineQueryWaitTime(1));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(querier2);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    VerifyOrQuit(sRecordCallbacks.IsEmpty());
+    sDnsMessages.Clear();
+
+    Log("Verify non-cache-flush response does not stop query retries.");
+
+    records[0].mTtl        = 120;
+    records[0].mCacheFlush = false;
+    SendRecordResponse("newsrv._srv._udp.local.", 1, records);
+
+    AdvanceTime(DetermineQueryWaitTime(2));
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(querier2);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    sDnsMessages.Clear();
+    sRecordCallbacks.Clear();
+
+    Log("Verify cache-flush response with non-zero TTL stops query retries.");
+
+    records[0].mCacheFlush = true;
+    SendRecordResponse("newsrv._srv._udp.local.", 1, records);
+
+    AdvanceTime(20 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+    VerifyOrQuit(sRecordCallbacks.IsEmpty());
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 

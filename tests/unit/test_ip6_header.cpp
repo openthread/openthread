@@ -27,8 +27,12 @@
  */
 
 #include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "instance/instance.hpp"
+#include "net/ip6.hpp"
 #include "net/ip6_headers.hpp"
 
+#include "test_platform.h"
 #include "test_util.hpp"
 
 namespace ot {
@@ -54,6 +58,11 @@ void TestIp6Header(void)
 {
     static constexpr uint16_t kPayloadLength = 650;
     static constexpr uint8_t  kHopLimit      = 0xd1;
+#if !OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    static constexpr uint16_t kMaxPayload = kMaxDatagramLength - sizeof(Header);
+#else
+    static constexpr uint16_t kMaxPayload = kMaxAssembledDatagramLength - sizeof(Header);
+#endif
 
     const uint32_t kFlows[] = {0x0, 0x1, 0xfff, 0xffff, 0xff000, 0xfffff};
     const uint8_t  kDscps[] = {0x0, 0x1, 0x3, 0xf, 0x30, 0x2f, 0x3f};
@@ -93,6 +102,25 @@ void TestIp6Header(void)
     VerifyOrQuit(header.GetSource() == source);
     VerifyOrQuit(header.GetDestination() == destination);
 
+    // Verify `IsValid()` length and version boundaries.
+
+    header.SetPayloadLength(kMaxPayload);
+    VerifyOrQuit(header.IsValid());
+
+    header.SetPayloadLength(kMaxPayload + 1);
+    VerifyOrQuit(!header.IsValid());
+
+    header.SetPayloadLength(0xffff);
+    VerifyOrQuit(!header.IsValid());
+
+    header.SetPayloadLength(kPayloadLength);
+    header.SetVerionTrafficClassFlow(0x40000000);
+    VerifyOrQuit(!header.IsVersion6());
+    VerifyOrQuit(!header.IsValid());
+
+    header.InitVersionTrafficClassFlow();
+    VerifyOrQuit(header.IsValid());
+
     // Verify the offsets to different fields.
 
     VerifyOrQuit(BigEndian::ReadUint16(headerBytes + Header::kPayloadLengthFieldOffset) == kPayloadLength,
@@ -129,12 +157,148 @@ void TestIp6Header(void)
     VerifyVersionTcFlow(header, 0x2f, kEcnNotCapable, 1);
 }
 
+static Message *BuildIp6Message(MessagePool   &aMessagePool,
+                                const Address &aSource,
+                                const Address &aDestination,
+                                uint8_t        aNextHeader,
+                                uint16_t       aTotalLength)
+{
+    Message *message;
+    Header   header;
+
+    VerifyOrQuit(aTotalLength >= sizeof(Header));
+
+    message = aMessagePool.Allocate(Message::kTypeIp6);
+    VerifyOrQuit(message != nullptr);
+
+    header.Clear();
+    header.InitVersionTrafficClassFlow();
+    header.SetPayloadLength(aTotalLength - sizeof(Header));
+    header.SetNextHeader(aNextHeader);
+    header.SetHopLimit(kDefaultHopLimit);
+    header.SetSource(aSource);
+    header.SetDestination(aDestination);
+
+    SuccessOrQuit(message->Append(header));
+    SuccessOrQuit(message->SetLength(aTotalLength));
+
+    return message;
+}
+
+static void VerifyLengthOutcome(MessagePool   &aMessagePool,
+                                const Address &aSource,
+                                const Address &aDestination,
+                                uint8_t        aNextHeader,
+                                uint16_t       aTotalLength,
+                                bool           aExpectedIsValid,
+                                Error          aExpectedParseError)
+{
+    Message *message;
+    Header   parsedHeader;
+    Headers  parsedHeaders;
+
+    message = BuildIp6Message(aMessagePool, aSource, aDestination, aNextHeader, aTotalLength);
+
+    VerifyOrQuit(parsedHeader.ParseFrom(*message) == aExpectedParseError);
+
+    if (aExpectedParseError == kErrorNone)
+    {
+        VerifyOrQuit(parsedHeader.IsValid() == aExpectedIsValid);
+    }
+
+    VerifyOrQuit(parsedHeaders.ParseFrom(*message) == aExpectedParseError);
+
+    message->Free();
+}
+
+void TestIp6HeaderMaxLength(void)
+{
+    static constexpr uint16_t kMaxMplEncapSize = sizeof(Header) + ExtensionHeader::kLengthUnitSize;
+
+    Instance    *instance;
+    MessagePool *messagePool;
+    Message     *message;
+    Header       parsedHeader;
+    Headers      parsedHeaders;
+    Address      srcAddr;
+    Address      dstAddr;
+
+    printf("TestIp6HeaderMaxLength()\n");
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+    messagePool = &instance->Get<MessagePool>();
+
+    SuccessOrQuit(srcAddr.FromString("fd00::1"));
+    SuccessOrQuit(dstAddr.FromString("ff03::1234"));
+
+    // Truncated message (< sizeof(Header)) must fail.
+    message = messagePool->Allocate(Message::kTypeIp6);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(message->SetLength(sizeof(Header) - 1));
+    VerifyOrQuit(parsedHeader.ParseFrom(*message) == kErrorParse);
+    VerifyOrQuit(parsedHeaders.ParseFrom(*message) == kErrorParse);
+    message->Free();
+
+    // Non-IPv6 version must fail.
+    message = BuildIp6Message(*messagePool, srcAddr, dstAddr, kProtoUdp, sizeof(Header) + sizeof(UdpHeader));
+    message->Write<uint8_t>(0, 0x40);
+    VerifyOrQuit(parsedHeader.ParseFrom(*message) == kErrorParse);
+    VerifyOrQuit(parsedHeaders.ParseFrom(*message) == kErrorParse);
+    message->Free();
+
+    // PayloadLength mismatch (larger or smaller than actual bytes) must fail.
+    message = BuildIp6Message(*messagePool, srcAddr, dstAddr, kProtoUdp, 100);
+    message->Write<uint16_t>(Header::kPayloadLengthFieldOffset, BigEndian::HostSwap16(61));
+    VerifyOrQuit(parsedHeader.ParseFrom(*message) == kErrorParse);
+    VerifyOrQuit(parsedHeaders.ParseFrom(*message) == kErrorParse);
+    message->Write<uint16_t>(Header::kPayloadLengthFieldOffset, BigEndian::HostSwap16(59));
+    VerifyOrQuit(parsedHeader.ParseFrom(*message) == kErrorParse);
+    VerifyOrQuit(parsedHeaders.ParseFrom(*message) == kErrorParse);
+    message->Free();
+
+    // Empty IPv6 packet (40 bytes, kProtoNone) is valid.
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoNone, sizeof(Header), /* aExpectedIsValid */ true,
+                        kErrorNone);
+
+#if !OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    // Without fragmentation:
+    // - `IsValid()` enforces strict `kMaxDatagramLength` (1280).
+    // - `Header::ParseFrom()` and `Headers::ParseFrom()` allow up to `kMaxDatagramLength + kMaxMplEncapSize` (1328).
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoUdp, kMaxDatagramLength, /* aExpectedIsValid */ true,
+                        kErrorNone);
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoUdp, kMaxDatagramLength + 1,
+                        /* aExpectedIsValid */ false, kErrorNone);
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoUdp,
+                        kMaxDatagramLength + ExtensionHeader::kLengthUnitSize, /* aExpectedIsValid */ false,
+                        kErrorNone);
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoUdp, kMaxDatagramLength + kMaxMplEncapSize,
+                        /* aExpectedIsValid */ false, kErrorNone);
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoUdp, kMaxDatagramLength + kMaxMplEncapSize + 1,
+                        /* aExpectedIsValid */ false, kErrorParse);
+#else
+    // With fragmentation enabled (default kMaxAssembledDatagramLength = 2000):
+    // Both `IsValid()` and `ParseFrom()` allow up to `kMaxAssembledDatagramLength` and reject `2001`.
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoUdp, kMaxDatagramLength, /* aExpectedIsValid */ true,
+                        kErrorNone);
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoUdp, kMaxDatagramLength + kMaxMplEncapSize,
+                        /* aExpectedIsValid */ true, kErrorNone);
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoUdp, kMaxAssembledDatagramLength,
+                        /* aExpectedIsValid */ true, kErrorNone);
+    VerifyLengthOutcome(*messagePool, srcAddr, dstAddr, kProtoUdp, kMaxAssembledDatagramLength + 1,
+                        /* aExpectedIsValid */ false, kErrorParse);
+#endif
+
+    testFreeInstance(instance);
+}
+
 } // namespace Ip6
 } // namespace ot
 
 int main(void)
 {
     ot::Ip6::TestIp6Header();
+    ot::Ip6::TestIp6HeaderMaxLength();
     printf("All tests passed\n");
     return 0;
 }

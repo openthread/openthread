@@ -990,6 +990,133 @@ void TestMacFrameValidation(void)
     SuccessOrQuit(frameInfo.ParseFrom(frame, Mac::Frame::kParseFully));
 }
 
+void TestMacTxFrameCopyAndTimeIe(void)
+{
+    static constexpr uint8_t kChannel = 15;
+    static const uint8_t     kPsdu[]  = {0x01, 0x08, 0x2a, 0xce, 0xfa, 0xff, 0xff, 0xaa, 0xbb, 0x00, 0x00};
+
+    uint8_t      srcBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    uint8_t      dstBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame srcFrame;
+    Mac::TxFrame dstFrame;
+
+    ClearAllBytes(srcBuffer);
+    ClearAllBytes(dstBuffer);
+    ClearAllBytes(srcFrame);
+    ClearAllBytes(dstFrame);
+
+    memcpy(srcBuffer, kPsdu, sizeof(kPsdu));
+    srcFrame.mPsdu   = srcBuffer;
+    srcFrame.mLength = sizeof(kPsdu);
+    srcFrame.SetChannel(kChannel);
+
+    dstFrame.mPsdu = dstBuffer;
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    srcFrame.SetRadioType(Radio::kTypeIeee802154);
+    dstFrame.SetRadioType(Radio::kTypeTrel);
+#endif
+
+    dstFrame.CopyFrom(srcFrame);
+    VerifyOrQuit(dstFrame.mPsdu == dstBuffer);
+    VerifyOrQuit(dstFrame.GetChannel() == kChannel);
+    VerifyOrQuit(memcmp(dstBuffer, kPsdu, sizeof(kPsdu) - srcFrame.GetFcsSize()) == 0);
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    VerifyOrQuit(dstFrame.GetRadioType() == Radio::kTypeTrel);
+    VerifyOrQuit(dstFrame.GetLength() == sizeof(kPsdu) - srcFrame.GetFcsSize());
+#else
+    VerifyOrQuit(dstFrame.GetLength() == sizeof(kPsdu));
+#endif
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    {
+        otRadioIeInfo srcIeInfo;
+        otRadioIeInfo dstIeInfo;
+
+        ClearAllBytes(srcIeInfo);
+        ClearAllBytes(dstIeInfo);
+
+        // Verify null `mIeInfo` helpers do not dereference null (e.g., TREL TxFrame).
+        srcFrame.mInfo.mTxInfo.mIeInfo = nullptr;
+        dstFrame.mInfo.mTxInfo.mIeInfo = nullptr;
+
+        VerifyOrQuit(srcFrame.GetTimeIeOffset() == 0);
+        srcFrame.SetTimeIeOffset(12);
+        srcFrame.SetTimeSyncSeq(7);
+        srcFrame.SetNetworkTimeOffset(-123456);
+        VerifyOrQuit(srcFrame.GetTimeIeOffset() == 0);
+
+        // Copy null -> null.
+        dstFrame.CopyFrom(srcFrame);
+        VerifyOrQuit(dstFrame.mInfo.mTxInfo.mIeInfo == nullptr);
+        VerifyOrQuit(dstFrame.GetTimeIeOffset() == 0);
+
+        // Verify non-null `mIeInfo` helpers populate `otRadioIeInfo`.
+        srcFrame.mInfo.mTxInfo.mIeInfo = &srcIeInfo;
+        srcFrame.SetTimeIeOffset(18);
+        srcFrame.SetTimeSyncSeq(42);
+        srcFrame.SetNetworkTimeOffset(987654321LL);
+        VerifyOrQuit(srcFrame.GetTimeIeOffset() == 18);
+        VerifyOrQuit(srcIeInfo.mTimeIeOffset == 18);
+        VerifyOrQuit(srcIeInfo.mTimeSyncSeq == 42);
+        VerifyOrQuit(srcIeInfo.mNetworkTimeOffset == 987654321LL);
+
+        // Copy non-null -> null (e.g., 15.4 broadcast copied to TREL frame).
+        dstFrame.mInfo.mTxInfo.mIeInfo = nullptr;
+        dstFrame.CopyFrom(srcFrame);
+        VerifyOrQuit(dstFrame.mInfo.mTxInfo.mIeInfo == nullptr);
+        VerifyOrQuit(dstFrame.GetTimeIeOffset() == 0);
+
+        // Copy non-null -> non-null.
+        dstFrame.mInfo.mTxInfo.mIeInfo = &dstIeInfo;
+        dstFrame.CopyFrom(srcFrame);
+        VerifyOrQuit(dstFrame.mInfo.mTxInfo.mIeInfo == &dstIeInfo);
+        VerifyOrQuit(dstFrame.GetTimeIeOffset() == 18);
+        VerifyOrQuit(dstIeInfo.mTimeSyncSeq == 42);
+        VerifyOrQuit(dstIeInfo.mNetworkTimeOffset == 987654321LL);
+
+        // Copy null -> non-null must clear stale `otRadioIeInfo` in destination.
+        srcFrame.mInfo.mTxInfo.mIeInfo = nullptr;
+        dstFrame.CopyFrom(srcFrame);
+        VerifyOrQuit(dstFrame.mInfo.mTxInfo.mIeInfo == &dstIeInfo);
+        VerifyOrQuit(dstFrame.GetTimeIeOffset() == 0);
+        VerifyOrQuit(dstIeInfo.mTimeIeOffset == 0);
+        VerifyOrQuit(dstIeInfo.mTimeSyncSeq == 0);
+        VerifyOrQuit(dstIeInfo.mNetworkTimeOffset == 0);
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+        {
+            Mac::TxFrame::BuildInfo buildInfo;
+            Mac::Frame::ParseInfo   parseInfo;
+            const Mac::TimeIe      *timeIe;
+
+            memset(srcBuffer, 0xff, sizeof(srcBuffer));
+            srcFrame.mPsdu                 = srcBuffer;
+            srcFrame.mInfo.mTxInfo.mIeInfo = nullptr;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+            srcFrame.SetRadioType(Radio::kTypeIeee802154);
+#endif
+
+            buildInfo.mType         = Mac::Frame::kTypeData;
+            buildInfo.mVersion      = Mac::Frame::kVersion2015;
+            buildInfo.mAppendTimeIe = true;
+            buildInfo.mEmptyPayload = true;
+            buildInfo.mAddrs.mDestination.SetShort(Mac::kShortAddrBroadcast);
+            buildInfo.mPanIds.SetDestination(0xface);
+
+            srcFrame.PrepareHeadersWithEmptyPayload(buildInfo);
+            SuccessOrQuit(parseInfo.ParseFrom(srcFrame, Mac::Frame::kParseFully));
+            timeIe = parseInfo.Find<Mac::TimeIe>();
+            VerifyOrQuit(timeIe != nullptr);
+            VerifyOrQuit(timeIe->GetSequence() == 0);
+            VerifyOrQuit(timeIe->GetTime() == 0);
+        }
+#endif
+    }
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+}
+
 } // namespace ot
 
 int main(void)
@@ -1001,6 +1128,7 @@ int main(void)
     ot::TestMacFrameApi();
     ot::TestMacFrameAckGeneration();
     ot::TestMacFrameValidation();
+    ot::TestMacTxFrameCopyAndTimeIe();
     printf("All tests passed\n");
     return 0;
 }

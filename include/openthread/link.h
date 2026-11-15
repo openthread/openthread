@@ -575,9 +575,6 @@ uint32_t otLinkGetPollPeriod(otInstance *aInstance);
  * @note Minimal non-zero value should be `OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD` (10ms).
  *       Or zero to clear user-specified poll period.
  *
- * @note User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed,
- * otherwise it would be clipped by the maximal value.
- *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aPollPeriod  data poll period in milliseconds.
  *
@@ -1127,11 +1124,14 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
 /**
  * Sets the rx-on-when-idle state.
  *
+ * Succeeds when raw link-layer is enabled, or when link-layer is enabled and Thread protocols are disabled.
+ *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aRxOnWhenIdle  TRUE to keep radio in Receive state, FALSE to put to Sleep state during idle periods.
  *
  * @retval OT_ERROR_NONE             If successful.
- * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ * @retval OT_ERROR_INVALID_STATE    If raw link-layer is not enabled and either link-layer is disabled or Thread
+ *                                   protocols are enabled.
  */
 otError otLinkSetRxOnWhenIdle(otInstance *aInstance, bool aRxOnWhenIdle);
 

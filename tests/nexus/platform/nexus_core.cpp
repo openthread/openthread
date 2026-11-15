@@ -510,7 +510,7 @@ void Core::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeigh
         {
             Instance &instance = *static_cast<Instance *>(aInfo->mInstance);
 
-            if (instance.Get<RouterTable>().FindRouter(*extAddr) != nullptr)
+            if (instance.Get<RouterTable>().FindRouter(*extAddr, Router::kInStateValid) != nullptr)
             {
                 Log("Suppressing CHILD_REMOVED event because neighbor is a valid router");
                 ExitNow();

@@ -270,7 +270,7 @@ public:
 
 private:
     // Callbacks from `SubMac`
-    void InvokeReceiveDone(RxFrame *aFrame, Error aError);
+    void InvokeReceiveDone(RxFrame::ParseInfo &aFrameInfo, Error aError);
     void InvokeTransmitDone(TxFrame::ParseInfo &aFrameInfo, RxFrame *aAckFrame, Error aError);
     void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

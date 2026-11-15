@@ -5607,13 +5607,7 @@ void Core::CacheRecordInfo::UpdateStateAfterQuery(TimeMilli aNow)
 {
     VerifyOrExit(IsPresent());
 
-    // If the less than half TTL remains, then this record would not
-    // be included as "Known-Answer" in the send query, so we can
-    // count it towards queries to refresh this record.
-
-    VerifyOrExit(LessThanHalfTtlRemains(aNow));
-
-    if (mQueryCount < kNumberOfQueries)
+    while ((mQueryCount < kNumberOfQueries) && (GetQueryTime(mQueryCount) <= aNow))
     {
         mQueryCount++;
     }
@@ -5624,28 +5618,18 @@ exit:
 
 void Core::CacheRecordInfo::UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry)
 {
-    TimeMilli now;
-    TimeMilli expireTime;
-
     VerifyOrExit(IsPresent());
 
-    now        = TimerMilli::GetNow();
-    expireTime = GetExpireTime();
-
-    aCacheEntry.SetFireTime(expireTime);
+    aCacheEntry.SetFireTime(GetExpireTime());
 
     // Determine next query time
 
-    for (uint8_t attemptIndex = mQueryCount; attemptIndex < kNumberOfQueries; attemptIndex++)
+    if (mQueryCount < kNumberOfQueries)
     {
-        TimeMilli queryTime = GetQueryTime(attemptIndex);
+        TimeMilli queryTime = GetQueryTime(mQueryCount);
 
-        if (queryTime > now)
-        {
-            queryTime += Random::NonCrypto::GenerateUpToExcluding(GetClampedTtl() * kQueryTtlVariation);
-            aCacheEntry.ScheduleQuery(queryTime);
-            break;
-        }
+        queryTime += Random::NonCrypto::GenerateUpToExcluding(GetClampedTtl() * kQueryTtlVariation);
+        aCacheEntry.ScheduleQuery(queryTime);
     }
 
 exit:
@@ -5770,14 +5754,18 @@ void Core::CacheEntry::ScheduleQuery(TimeMilli aQueryTime)
 {
     VerifyOrExit(mIsActive);
 
-    if (mQueryPending)
-    {
-        VerifyOrExit(aQueryTime < mNextQueryTime);
-    }
-
     if (mLastQueryTimeValid)
     {
         aQueryTime = Max(aQueryTime, mLastQueryTime + kMinIntervalBetweenQueries);
+    }
+    else if (mContinuousRetry)
+    {
+        aQueryTime = Max(aQueryTime, mLastQueryTime);
+    }
+
+    if (mQueryPending)
+    {
+        VerifyOrExit(aQueryTime < mNextQueryTime);
     }
 
     mQueryPending  = true;
@@ -5993,6 +5981,7 @@ Core::ResultCallback *Core::CacheEntry::FindCallbackMatching(const ResultCallbac
 
 void Core::CacheEntry::DetermineNextFireTime(void)
 {
+    ClearFireTime();
     mQueryPending = false;
 
     if (mContinuousRetry)
@@ -6633,12 +6622,15 @@ void Core::SrvCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
         }
     }
 
+    if (mRecord.IsPresent())
+    {
+        StopQueryRetries();
+    }
+
     VerifyOrExit(changed);
 
     if (mRecord.IsPresent())
     {
-        StopQueryRetries();
-
         // If not present already, we add a passive `TxtCache` for the
         // same service name, and an `Ip6AddrCache` for the host name.
 
@@ -6809,12 +6801,12 @@ void Core::TxtCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
         }
     }
 
-    VerifyOrExit(changed);
-
     if (mRecord.IsPresent())
     {
         StopQueryRetries();
     }
+
+    VerifyOrExit(changed);
 
     ConvertTo(result);
     InvokeCallbacks(result);
@@ -7134,6 +7126,8 @@ void Core::AddrCache::CommitNewResponseEntries(void)
 {
     bool changed = false;
 
+    VerifyOrExit(!mNewEntries.IsEmpty());
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Determine whether there is any changes to the list of addresses
     // between the `mNewEntries` and `mCommittedEntries` lists.
@@ -7217,7 +7211,10 @@ void Core::AddrCache::CommitNewResponseEntries(void)
         }
     }
 
-    StopQueryRetries();
+    if (!mCommittedEntries.IsEmpty())
+    {
+        StopQueryRetries();
+    }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invoke callbacks if there is any change.
@@ -7233,6 +7230,9 @@ void Core::AddrCache::CommitNewResponseEntries(void)
 
     DetermineNextFireTime();
     ScheduleTimer();
+
+exit:
+    return;
 }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
@@ -7489,6 +7489,8 @@ void Core::RecordCache::CommitNewResponseEntries(void)
     // response. We process and commit all the new records matching
     // the same type, together.
 
+    VerifyOrExit(!mNewEntries.IsEmpty());
+
     while (!mNewEntries.IsEmpty())
     {
         uint16_t recordType = mNewEntries.GetHead()->mType;
@@ -7500,6 +7502,9 @@ void Core::RecordCache::CommitNewResponseEntries(void)
 
     DetermineNextFireTime();
     ScheduleTimer();
+
+exit:
+    return;
 }
 
 void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
@@ -7578,11 +7583,6 @@ void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
     if (shouldFlush)
     {
         mCommittedEntries.RemoveAndFreeAllMatching(aRecordType);
-
-        if (mRecordType != ResourceRecord::kTypeAny)
-        {
-            StopQueryRetries();
-        }
     }
 
     while (!newMatchingEntries.IsEmpty())
@@ -7596,13 +7596,18 @@ void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
         {
             entry->mRecord.RefreshTtl(newEntry->mTtl);
         }
-        else
+        else if (newEntry->mTtl > 0)
         {
             entry = RecordEntry::Allocate(*newEntry);
             OT_ASSERT(entry != nullptr);
 
             mCommittedEntries.Push(*entry);
         }
+    }
+
+    if (shouldFlush && (mRecordType != ResourceRecord::kTypeAny) && !mCommittedEntries.IsEmpty())
+    {
+        StopQueryRetries();
     }
 }
 

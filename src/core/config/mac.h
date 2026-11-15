@@ -195,6 +195,21 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT
+ *
+ * Specifies the maximum number of consecutive times a pending direct transmission can be deferred in favor of
+ * indirect transmissions on an FTD.
+ *
+ * Setting this configuration to `0` disables this limit, so pending indirect transmissions are always prioritized
+ * ahead of direct transmissions.
+ *
+ * Value MUST be less than 255. Default value is 4.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT
+#define OPENTHREAD_CONFIG_MAC_MAX_DEFERRED_DIRECT_TX_COUNT 4
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US
  *
  * Define how many microseconds ahead should MAC deliver CSL frame to SubMac.
@@ -566,6 +581,20 @@
  */
 #ifndef OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT
 #define OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT 100
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_DATA_POLL_MAX_PENDING_TIME
+ *
+ * Specifies the maximum time (in msec) a received Data Poll from a sleepy child can remain pending on an FTD
+ * parent before it is considered expired and skipped in `DataPollHandler::ProcessPendingPolls()`.
+ *
+ * Defaults to `OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT`. Platforms with noticeable host-to-radio latency can
+ * configure a smaller value to account for transmission turnaround, or set this to `0` to disable pending Data
+ * Poll expiration.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_DATA_POLL_MAX_PENDING_TIME
+#define OPENTHREAD_CONFIG_MAC_DATA_POLL_MAX_PENDING_TIME OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT
 #endif
 
 /**

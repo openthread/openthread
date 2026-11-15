@@ -326,7 +326,8 @@ exit:
 
 void Link::ProcessReceivedPacket(Packet &aPacket, const Ip6::SockAddr &aSockAddr)
 {
-    Header::Type type;
+    Header::Type            type;
+    Mac::RxFrame::ParseInfo frameInfo;
 
     VerifyOrExit(aPacket.IsHeaderValid());
 
@@ -395,13 +396,15 @@ void Link::ProcessReceivedPacket(Packet &aPacket, const Ip6::SockAddr &aSockAddr
     mRxFrame.mInfo.mRxInfo.mLqi                   = OT_RADIO_LQI_NONE;
     mRxFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 
+    IgnoreError(frameInfo.ParseFrom(mRxFrame, Mac::Frame::kParseFully));
+
     // As the received frame is processed by the MAC or MLE layers,
     // `CheckPeerAddrOnRxSuccess()` may be called with different modes,
     // depending on whether the frame passes receive security checks
     // at either the MAC or MLE layers, allowing or disallowing peer
     // socket address to be updated from received TREL packet info.
 
-    Get<Mac::Mac>().HandleReceivedFrame(&mRxFrame, kErrorNone);
+    Get<Mac::Mac>().HandleReceivedFrame(frameInfo, kErrorNone);
 
 exit:
     mRxPacketPeer = nullptr;

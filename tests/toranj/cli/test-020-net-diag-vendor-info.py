@@ -64,6 +64,8 @@ verify(r2.get_state() == 'router')
 # -----------------------------------------------------------------------------------------------------------------------
 # Test Implementation
 
+BATTERY_LEVEL_TLV = 14
+SUPPLY_VOLTAGE_TLV = 15
 VENDOR_NAME_TLV = 25
 VENDOR_MODEL_TLV = 26
 VENDOR_SW_VERSION_TLV = 27
@@ -153,21 +155,35 @@ r2.set_vendor_app_url("https://example.com/vendor-app")
 r1_rloc = r1.get_rloc_ip_addr()
 r2_rloc = r2.get_rloc_ip_addr()
 
-# Get vendor name (TLV 27)
+# Get battery level (TLV 14)
+
+result = r2.cli('networkdiagnostic get', r1_rloc, BATTERY_LEVEL_TLV)
+verify(len(result) == 2)
+verify(result[1].startswith("Battery Level:"))
+verify(result[1].split(':', 1)[1].strip() == '100%')
+
+# Get supply voltage (TLV 15)
+
+result = r2.cli('networkdiagnostic get', r1_rloc, SUPPLY_VOLTAGE_TLV)
+verify(len(result) == 2)
+verify(result[1].startswith("Supply Voltage:"))
+verify(result[1].split(':', 1)[1].strip() == '3000mV')
+
+# Get vendor name (TLV 25)
 
 result = r2.cli('networkdiagnostic get', r1_rloc, VENDOR_NAME_TLV)
 verify(len(result) == 2)
 verify(result[1].startswith("Vendor Name:"))
 verify(result[1].split(':', 1)[1].strip() == r1.get_vendor_name())
 
-# Get vendor model (TLV 28)
+# Get vendor model (TLV 26)
 
 result = r2.cli('networkdiagnostic get', r1_rloc, VENDOR_MODEL_TLV)
 verify(len(result) == 2)
 verify(result[1].startswith("Vendor Model:"))
 verify(result[1].split(':', 1)[1].strip() == r1.get_vendor_model())
 
-# Get vendor sw version (TLV 29)
+# Get vendor sw version (TLV 27)
 
 result = r2.cli('networkdiagnostic get', r1_rloc, VENDOR_SW_VERSION_TLV)
 verify(len(result) == 2)
@@ -188,20 +204,24 @@ verify(len(result) == 2)
 verify(result[1].startswith("Vendor OUI:"))
 verify(result[1].split(':', 1)[1].strip() == r1.get_vendor_oui())
 
-# Get thread stack version (TLV 30)
+# Get thread stack version (TLV 28)
 
 result = r2.cli('networkdiagnostic get', r1_rloc, THREAD_STACK_VERSION_TLV)
 verify(len(result) == 2)
 verify(result[1].startswith("Thread Stack Version:"))
 verify(r1.get_version().startswith(result[1].split(':', 1)[1].strip()))
 
-# Get all three TLVs (now from `r1`)
+# Get multiple TLVs (now from `r1`)
 
-result = r1.cli('networkdiagnostic get', r2_rloc, VENDOR_NAME_TLV, VENDOR_MODEL_TLV, VENDOR_SW_VERSION_TLV,
-                THREAD_STACK_VERSION_TLV, VENDOR_APP_URL)
-verify(len(result) == 6)
+result = r1.cli('networkdiagnostic get', r2_rloc, BATTERY_LEVEL_TLV, SUPPLY_VOLTAGE_TLV, VENDOR_NAME_TLV,
+                VENDOR_MODEL_TLV, VENDOR_SW_VERSION_TLV, THREAD_STACK_VERSION_TLV, VENDOR_APP_URL)
+verify(len(result) == 8)
 for line in result[1:]:
-    if line.startswith("Vendor Name:"):
+    if line.startswith("Battery Level:"):
+        verify(line.split(':', 1)[1].strip() == '100%')
+    elif line.startswith("Supply Voltage:"):
+        verify(line.split(':', 1)[1].strip() == '3000mV')
+    elif line.startswith("Vendor Name:"):
         verify(line.split(':', 1)[1].strip() == r2.get_vendor_name())
     elif line.startswith("Vendor Model:"):
         verify(line.split(':', 1)[1].strip() == r2.get_vendor_model())

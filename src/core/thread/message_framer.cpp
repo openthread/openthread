@@ -106,10 +106,15 @@ void MessageFramer::PrepareMacHeaders(Mac::TxFrame                 &aTxFrame,
        // || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if ((aMessage != nullptr) && aMessage->IsTimeSync())
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (aTxFrame.GetRadioType() == Radio::kTypeIeee802154)
+#endif
     {
-        aBuildInfo.mAppendTimeIe = true;
-        aBuildInfo.mVersion      = Mac::Frame::kVersion2015;
+        if ((aMessage != nullptr) && aMessage->IsTimeSync())
+        {
+            aBuildInfo.mAppendTimeIe = true;
+            aBuildInfo.mVersion      = Mac::Frame::kVersion2015;
+        }
     }
 #endif
 

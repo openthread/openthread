@@ -32,6 +32,30 @@
 #include "platform/nexus_node.hpp"
 
 namespace ot {
+
+class UnitTester
+{
+public:
+    static void SendChildUpdateRequestWithCslAccuracy(Nexus::Node &aParent,
+                                                      Nexus::Node &aChild,
+                                                      uint8_t      aClockAccuracy,
+                                                      uint8_t      aUncertainty)
+    {
+        Mle::Mle            &parentMle = aParent.Get<Mle::Mle>();
+        Mle::Mle::TxMessage *message   = parentMle.NewMleMessage(Mle::kCommandChildUpdateRequest);
+        Ip6::Address         destination;
+
+        VerifyOrQuit(message != nullptr);
+
+        SuccessOrQuit(message->AppendSourceAddressAndLeaderDataTlvs());
+        SuccessOrQuit(Tlv::Append<Mle::CslClockAccuracyTlv>(
+            *message, Mle::CslClockAccuracyTlvValue(aClockAccuracy, aUncertainty)));
+
+        destination.InitAsLinkLocalAddress(aChild.Get<Mac::Mac>().GetExtAddress());
+        SuccessOrQuit(message->SendTo(destination));
+    }
+};
+
 namespace Nexus {
 
 /**
@@ -54,6 +78,11 @@ static constexpr uint32_t kAttachAsChildTime = 5 * 1000;
  */
 static constexpr uint16_t kNumPings = 1010;
 
+static constexpr uint32_t kCslPeriodMs       = 100;
+static constexpr uint16_t kCslPeriod         = kCslPeriodMs * 1000 / OT_US_PER_TEN_SYMBOLS;
+static constexpr uint8_t  kTestClockAccuracy = 42;
+static constexpr uint8_t  kTestUncertainty   = 123;
+
 void TestReset(void)
 {
     Core nexus;
@@ -61,10 +90,12 @@ void TestReset(void)
     Node &leader = nexus.CreateNode();
     Node &router = nexus.CreateNode();
     Node &ed     = nexus.CreateNode();
+    Node &ssed   = nexus.CreateNode();
 
     leader.SetName("Leader");
     router.SetName("Router");
     ed.SetName("ED");
+    ssed.SetName("SSED");
 
     nexus.AdvanceTime(0);
 
@@ -141,6 +172,47 @@ void TestReset(void)
     // from settings after reset, it would start at 0, and its packets would be
     // rejected by its neighbors.
     nexus.SendAndVerifyEchoRequest(ed, leaderRloc);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Joining SSED and verifying parent CSL accuracy after reset and on Child Update Request");
+
+    AllowLinkBetween(router, ssed);
+    ssed.Join(router, Node::kAsSed);
+    ssed.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    nexus.AdvanceTime(kAttachAsChildTime);
+    VerifyOrQuit(ssed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(ssed.Get<Mac::Mac>().IsCslEnabled());
+    VerifyOrQuit(ssed.Get<Mle::Mle>().GetParent().GetCslAccuracy().GetClockAccuracy() == 0);
+    VerifyOrQuit(ssed.Get<Mac::Mac>().GetCslParentAccuracy().GetClockAccuracy() == 0);
+
+    Log("Resetting SSED and verifying parent CSL accuracy is updated on Child Update Response");
+    ssed.Reset();
+
+    // After reset, restored parent and MAC CSL accuracy start at worst-case defaults (255).
+    VerifyOrQuit(ssed.Get<Mle::Mle>().GetParent().GetCslAccuracy().GetClockAccuracy() ==
+                 Mac::CslAccuracy::kWorstClockAccuracy);
+    VerifyOrQuit(ssed.Get<Mac::Mac>().GetCslParentAccuracy().GetClockAccuracy() ==
+                 Mac::CslAccuracy::kWorstClockAccuracy);
+
+    AllowLinkBetween(ssed, router);
+    ssed.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed.Get<ThreadNetif>().Up();
+    SuccessOrQuit(ssed.Get<Mle::Mle>().Start());
+    nexus.AdvanceTime(kAttachAsChildTime);
+
+    VerifyOrQuit(ssed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(ssed.Get<Mac::Mac>().IsCslEnabled());
+    VerifyOrQuit(ssed.Get<Mle::Mle>().GetParent().GetCslAccuracy().GetClockAccuracy() == 0);
+    VerifyOrQuit(ssed.Get<Mac::Mac>().GetCslParentAccuracy().GetClockAccuracy() == 0);
+
+    Log("Verifying parent CSL accuracy is updated on trusted Child Update Request");
+    UnitTester::SendChildUpdateRequestWithCslAccuracy(router, ssed, kTestClockAccuracy, kTestUncertainty);
+    nexus.AdvanceTime(1 * 1000);
+
+    VerifyOrQuit(ssed.Get<Mle::Mle>().GetParent().GetCslAccuracy().GetClockAccuracy() == kTestClockAccuracy);
+    VerifyOrQuit(ssed.Get<Mle::Mle>().GetParent().GetCslAccuracy().GetUncertainty() == kTestUncertainty);
+    VerifyOrQuit(ssed.Get<Mac::Mac>().GetCslParentAccuracy().GetClockAccuracy() == kTestClockAccuracy);
+    VerifyOrQuit(ssed.Get<Mac::Mac>().GetCslParentAccuracy().GetUncertainty() == kTestUncertainty);
 }
 
 } // namespace Nexus

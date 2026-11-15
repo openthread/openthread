@@ -228,3 +228,27 @@ target_include_directories(ot-posix-test-settings
         ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
 add_test(NAME ot-posix-test-settings COMMAND ot-posix-test-settings)
+
+add_executable(ot-posix-test-ip6-utils
+    ${PROJECT_SOURCE_DIR}/tests/unit/test_posix_ip6_utils.cpp
+)
+target_compile_options(ot-posix-test-ip6-utils
+    PRIVATE
+        ${OT_CFLAGS}
+)
+target_include_directories(ot-posix-test-ip6-utils
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/src/core
+        ${PROJECT_SOURCE_DIR}/src/include
+        ${PROJECT_SOURCE_DIR}/src/posix/platform
+        ${PROJECT_SOURCE_DIR}/src/posix/platform/include
+        ${PROJECT_SOURCE_DIR}/tests/unit
+)
+target_link_libraries(ot-posix-test-ip6-utils
+    PRIVATE
+        ot-config
+        ot-posix-config
+)
+add_test(NAME ot-posix-test-ip6-utils COMMAND ot-posix-test-ip6-utils)

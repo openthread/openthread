@@ -47,7 +47,7 @@ jobs:
 
   expects-linux:
     name: expects-posix-${{ matrix.category }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -170,15 +170,7 @@ jobs:
         sudo apt-get --no-install-recommends install -y expect lcov libreadline-dev net-tools ninja-build
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         sudo bash script/install_socat
-        cd /tmp
-        rm -rf bsd-licensed.tar.gz libcoap-bsd-licensed
-        wget --timeout=30 --tries=4 https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
-        tar xvf bsd-licensed.tar.gz
-        cd libcoap-bsd-licensed
-        ./autogen.sh
-        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
-        make -j2
-        sudo make install
+        sudo bash script/install_libcoap
     - name: Build
       run: |
         script/check-posix-pty build
@@ -202,7 +194,7 @@ jobs:
 
   infra-if-index-changed-linux:
     name: infra-if-index-changed-linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -229,7 +221,7 @@ jobs:
 
   pty-macos:
     name: pty-macos OT_DAEMON=${{ matrix.OT_DAEMON }}
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
@@ -262,6 +254,7 @@ jobs:
         rm -f /usr/local/bin/python3-config
         rm -f /usr/local/bin/python3.11-config
         sudo bash script/install_socat
+        sudo bash script/install_libcoap
     - name: Build
       run: |
         script/check-posix-pty build
@@ -270,7 +263,7 @@ jobs:
         script/check-posix-pty check
 
   rcp-stack-reset:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -290,7 +283,7 @@ jobs:
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov
         sudo bash script/install_socat
-        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+        python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build
       run: |
         script/cmake-build simulation -DOT_CSL_RECEIVER=ON -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED
@@ -310,7 +303,8 @@ jobs:
     needs:
     - expects-linux
     - pty-linux
-    runs-on: ubuntu-22.04
+    - rcp-stack-reset
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -331,7 +325,6 @@ jobs:
       with:
         path: coverage/
         pattern: cov-*
-        merge-multiple: true
     - name: Combine Coverage
       run: |
         script/test combine_coverage

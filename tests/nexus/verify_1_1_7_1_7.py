@@ -136,7 +136,8 @@ def verify(pv):
     #       - 6LoWPAN ID sub-TLV.
     #       - Stable Flag set.
     print("Step 5: Leader (DUT) multicasts a MLE Data Response with new network data.")
-    pkts.filter_LLANMA().\
+    pkts.filter_wpan_src64(LEADER).\
+        filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: {
             consts.SOURCE_ADDRESS_TLV,
@@ -164,7 +165,8 @@ def verify(pv):
     #   - Active Timestamp TLV.
     print("Step 6: Leader (DUT) sends notification of new network data to SED_1.")
     with pkts.save_index():
-        pkts.filter_wpan_dst64(SED_1).\
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(SED_1).\
             filter_mle_cmd2(consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE).\
             filter(lambda p: {
                 consts.SOURCE_ADDRESS_TLV,

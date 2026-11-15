@@ -133,6 +133,8 @@ void PingSender::SendPing(void)
     message = Get<Ip6::Icmp>().NewMessage();
     VerifyOrExit(message != nullptr);
 
+    message->SetLoopbackToHostAllowed(true);
+
     SuccessOrExit(message->Append(BigEndian::HostSwap32(now.GetValue())));
 
     if (mConfig.mSize > message->GetLength())

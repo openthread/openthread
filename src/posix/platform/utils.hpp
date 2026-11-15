@@ -29,7 +29,12 @@
 #ifndef OT_POSIX_PLATFORM_UTILS_HPP_
 #define OT_POSIX_PLATFORM_UTILS_HPP_
 
+#include <stddef.h>
 #include <stdint.h>
+#include <sys/types.h>
+#ifdef __linux__
+#include <linux/netlink.h>
+#endif
 
 #include <openthread/error.h>
 
@@ -68,6 +73,26 @@ int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption
  * @retval OT_ERROR_FAILED  It failed to execute the command.
  */
 otError ExecuteCommand(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+
+#ifdef __linux__
+/**
+ * Checks whether a Netlink message header fits within the remaining buffer length.
+ *
+ * Replaces the kernel `NLMSG_OK()` macro, which compares `__u32 nlmsg_len` directly against the remaining buffer
+ * length and triggers `-Wsign-compare` when passing the signed remaining length required by `NLMSG_NEXT()`.
+ *
+ * @param[in] aHeader  A pointer to the Netlink message header.
+ * @param[in] aLen     The remaining number of bytes in the Netlink message buffer (may be negative after `NLMSG_NEXT`).
+ *
+ * @retval true   The remaining buffer contains a complete, valid Netlink message.
+ * @retval false  The remaining buffer is exhausted or the message length is invalid or truncated.
+ */
+inline bool IsNetlinkMessageOk(const struct nlmsghdr *aHeader, ssize_t aLen)
+{
+    return (aLen >= static_cast<ssize_t>(sizeof(struct nlmsghdr))) && (aHeader->nlmsg_len >= sizeof(struct nlmsghdr)) &&
+           (static_cast<size_t>(aHeader->nlmsg_len) <= static_cast<size_t>(aLen));
+}
+#endif
 
 } // namespace Posix
 } // namespace ot

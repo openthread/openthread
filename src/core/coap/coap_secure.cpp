@@ -121,22 +121,16 @@ void SecureSession::HandleDtlsConnectEvent(ConnectEvent aEvent)
     mConnectCallback.InvokeIfSet(aEvent);
 }
 
-void SecureSession::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
+void SecureSession::HandleDtlsReceive(void *aContext, ot::Message &aMessage)
 {
-    static_cast<SecureSession *>(aContext)->HandleDtlsReceive(aBuf, aLength);
+    static_cast<SecureSession *>(aContext)->HandleDtlsReceive(aMessage);
 }
 
-void SecureSession::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
+void SecureSession::HandleDtlsReceive(ot::Message &aMessage)
 {
-    ot::Message *message = nullptr;
-
-    VerifyOrExit((message = Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
-    SuccessOrExit(message->AppendBytes(aBuf, aLength));
-
-    CoapBase::Receive(*message, GetMessageInfo());
-
-exit:
-    FreeMessage(message);
+    // `aMessage` contains exactly one complete DTLS record; it is owned by the secure session and only
+    // valid for the duration of this call.
+    CoapBase::Receive(aMessage, GetMessageInfo());
 }
 
 void SecureSession::HandleTransmitTask(Tasklet &aTasklet)

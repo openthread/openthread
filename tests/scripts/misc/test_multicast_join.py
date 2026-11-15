@@ -37,8 +37,23 @@ from ipaddress import ip_address
 
 
 def get_maddrs(if_name):
-    lines = subprocess.run(['ot-ctl', '-I', if_name, 'ipmaddr'], stdout=subprocess.PIPE).stdout.decode().split()
+    proc = subprocess.run(['ot-ctl', '-I', if_name, 'ipmaddr'], stdout=subprocess.PIPE, check=True)
+    lines = proc.stdout.decode().split()
+    if 'Done' not in lines:
+        raise RuntimeError(f'ot-ctl command did not complete successfully: {lines}')
     return [ip_address(l) for l in lines if l.startswith('ff')]
+
+
+def wait_for_maddr(if_name, group, expected_present, timeout=10):
+    group_addr = ip_address(group)
+    for i in range(timeout):
+        maddrs = get_maddrs(if_name)
+        print(maddrs)
+        if (group_addr in maddrs) == expected_present:
+            return True
+        if i < timeout - 1:
+            time.sleep(1)
+    return False
 
 
 def main():
@@ -50,19 +65,12 @@ def main():
         s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_MULTICAST_IF, if_index)
         s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP,
                      struct.pack('16si', socket.inet_pton(socket.AF_INET6, group), if_index))
-        time.sleep(2)
-        maddrs = get_maddrs(if_name)
-        print(maddrs)
-        if not any(addr == ip_address(group) for addr in maddrs):
+        if not wait_for_maddr(if_name, group, True):
             return -1
 
         s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_LEAVE_GROUP,
                      struct.pack('16si', socket.inet_pton(socket.AF_INET6, group), if_index))
-
-        time.sleep(2)
-        maddrs = get_maddrs(if_name)
-        print(maddrs)
-        if any(addr == ip_address(group) for addr in maddrs):
+        if not wait_for_maddr(if_name, group, False):
             return -1
     return 0
 

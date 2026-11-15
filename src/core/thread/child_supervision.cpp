@@ -141,14 +141,62 @@ SupervisionListener::SupervisionListener(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimeout(0)
     , mInterval(kDefaultInterval)
+    , mCounter(0)
+    , mState(kStopped)
     , mTimer(aInstance)
 {
     SetTimeout(kDefaultTimeout);
 }
 
-void SupervisionListener::Start(void) { RestartTimer(); }
+void SupervisionListener::Start(void)
+{
+    VerifyOrExit(mState == kStopped);
 
-void SupervisionListener::Stop(void) { mTimer.Stop(); }
+    mState = kRunning;
+    RestartTimer();
+
+exit:
+    return;
+}
+
+void SupervisionListener::Stop(void)
+{
+    VerifyOrExit(mState != kStopped);
+
+    mState = kStopped;
+    mTimer.Stop();
+
+exit:
+    return;
+}
+
+void SupervisionListener::Pause(void)
+{
+    VerifyOrExit(mState == kRunning);
+
+    // `mTimer` keeps running, so time spent paused still counts toward the check timeout. Otherwise, pausing more
+    // often than the check timeout would prevent the detection of a lost parent.
+    mState = kPaused;
+
+exit:
+    return;
+}
+
+void SupervisionListener::Resume(void)
+{
+    VerifyOrExit(mState == kPaused);
+
+    mState = kRunning;
+
+    if (mTimeout != 0)
+    {
+        // If the check timeout expired while paused, `FireAt()` with its past fire time makes it fire right away.
+        mTimer.FireAt(mTimer.GetFireTime());
+    }
+
+exit:
+    return;
+}
 
 void SupervisionListener::SetInterval(uint16_t aInterval)
 {
@@ -180,9 +228,10 @@ void SupervisionListener::SetTimeout(uint16_t aTimeout)
 
 void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bool aIsSecure)
 {
-    // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
+    // If listener is running (neither stopped nor paused) and device is a child and it received a secure frame from
+    // its parent, restart the timer.
 
-    VerifyOrExit(mTimer.IsRunning() && aIsSecure && Get<Mle::Mle>().IsChild() &&
+    VerifyOrExit((mState == kRunning) && aIsSecure && Get<Mle::Mle>().IsChild() &&
                  (Get<NeighborTable>().FindNeighbor(aSourceAddress) == &Get<Mle::Mle>().GetParent()));
 
     RestartTimer();
@@ -193,7 +242,7 @@ exit:
 
 void SupervisionListener::RestartTimer(void)
 {
-    if ((mTimeout != 0) && !Get<Mle::Mle>().IsDisabled() && !Get<MeshForwarder>().GetRxOnWhenIdle())
+    if ((mState != kStopped) && (mTimeout != 0) && !Get<Mle::Mle>().IsDisabled() && !Get<Mle::Mle>().IsRxOnWhenIdle())
     {
         mTimer.Start(Time::SecToMsec(mTimeout));
     }
@@ -205,15 +254,21 @@ void SupervisionListener::RestartTimer(void)
 
 void SupervisionListener::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::Mle>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle());
+    // While paused, an expired check timeout is handled on `Resume()`.
+    VerifyOrExit(mState == kRunning);
 
-    LogWarn("Supervision timeout. No frame from parent in %u sec", mTimeout);
-    mCounter++;
+    if (Get<Mle::Mle>().IsChild() && !Get<Mle::Mle>().IsRxOnWhenIdle())
+    {
+        LogWarn("Supervision timeout. No frame from parent in %u sec", mTimeout);
+        mCounter++;
 
-    IgnoreError(Get<Mle::Mle>().SendChildUpdateRequestToParent());
+        IgnoreError(Get<Mle::Mle>().SendChildUpdateRequestToParent());
+    }
+
+    RestartTimer();
 
 exit:
-    RestartTimer();
+    return;
 }
 
 } // namespace ot

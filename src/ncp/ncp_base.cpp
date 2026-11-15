@@ -1705,24 +1705,32 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RX_AT>(void)
 {
-    otError  error = OT_ERROR_NONE;
-    uint64_t when;
-    uint32_t duration;
-    uint8_t  channel;
+    static constexpr uint64_t kMaxTimeOffset = 0x7fffffffULL;
+
+    otError       error = OT_ERROR_NONE;
+    uint64_t      when;
+    uint32_t      duration;
+    uint8_t       channel;
+    otRadioTime64 now;
 
     SuccessOrExit(error = mDecoder.ReadUint64(when));
     SuccessOrExit(error = mDecoder.ReadUint32(duration));
     SuccessOrExit(error = mDecoder.ReadUint8(channel));
 
+    VerifyOrExit(duration > 0, error = OT_ERROR_INVALID_ARGS);
+
+    now = otPlatRadioGetNow(mInstance);
+
+    if (when > now)
     {
-        otRadioTime64 now = otPlatRadioGetNow(mInstance);
-        uint32_t      start;
-
-        VerifyOrExit(when > now && (when - now) < UINT32_MAX, error = OT_ERROR_INVALID_ARGS);
-
-        start = when - now;
-        error = otPlatRadioReceiveAt(mInstance, channel, start, duration);
+        VerifyOrExit((when - now) <= kMaxTimeOffset, error = OT_ERROR_INVALID_ARGS);
     }
+    else
+    {
+        VerifyOrExit(((now - when) < duration) && ((now - when) <= kMaxTimeOffset), error = OT_ERROR_INVALID_ARGS);
+    }
+
+    error = otPlatRadioReceiveAt(mInstance, channel, static_cast<otRadioTime32>(when), duration);
 
 exit:
     return error;

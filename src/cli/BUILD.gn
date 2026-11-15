@@ -74,6 +74,8 @@ openthread_cli_sources = [
   "cli_tcat.hpp",
   "cli_tcp.cpp",
   "cli_tcp.hpp",
+  "cli_thread_direct.cpp",
+  "cli_thread_direct.hpp",
   "cli_udp.cpp",
   "cli_udp.hpp",
   "cli_utils.cpp",

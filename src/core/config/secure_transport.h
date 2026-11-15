@@ -52,6 +52,10 @@
  * @def OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN
  *
  * The max length of the OpenThread dtls content buffer.
+ *
+ * This is the size of the staging buffer used to read from Mbed TLS. When using the complete DTLS record receive
+ * callback, a record larger than this buffer is read in multiple chunks and reassembled before delivery.
+ * The maximum incoming DTLS record length is still limited by `MBEDTLS_SSL_IN_CONTENT_LEN`.
  */
 #ifndef OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN
 #define OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN MBEDTLS_SSL_IN_CONTENT_LEN

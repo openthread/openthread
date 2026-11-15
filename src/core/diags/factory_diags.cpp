@@ -169,6 +169,8 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     return kErrorNone;
 }
 
+bool Diags::IsTxActive(void) const { return false; }
+
 extern "C" void otPlatDiagAlarmFired(otInstance *aInstance) { otPlatDiagAlarmCallback(aInstance); }
 
 #else // OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
@@ -245,6 +247,8 @@ void Diags::ResetTxPacket(void)
     mTxPacket->mInfo.mTxInfo.mCslPresent           = false;
 }
 
+bool Diags::IsTxActive(void) const { return mCurTxCmd != kTxCmdNone; }
+
 Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
 {
     Error    error                = kErrorNone;
@@ -258,6 +262,9 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     uint8_t  rxChannelAfterTxDone = mChannel;
     uint32_t txDelayBaseTime      = 0;
     uint32_t txDelay              = 0;
+
+    VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
+    VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
 
     while (aArgsLength > 1)
     {
@@ -359,6 +366,7 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
     {
         uint8_t channel;
 
+        VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
         SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], channel));
         VerifyOrExit(Radio::IsChannelValid(channel), error = kErrorInvalidArgs);
 
@@ -406,8 +414,19 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
 
     if (StringMatch(aArgs[0], "stop"))
     {
+        VerifyOrExit((mCurTxCmd == kTxCmdNone) || (mCurTxCmd == kTxCmdRepeat), error = kErrorInvalidState);
+
         otPlatAlarmMilliStop(&GetInstance());
-        mCurTxCmd = kTxCmdNone;
+
+        if ((mCurTxCmd == kTxCmdRepeat) && mDiagSendOn)
+        {
+            mCurTxCmd = kTxCmdRepeatStop;
+            error     = kErrorPending;
+        }
+        else
+        {
+            mCurTxCmd = kTxCmdNone;
+        }
     }
     else
     {
@@ -415,7 +434,7 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
         uint16_t txLength;
 
         VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
-        VerifyOrExit(mCurTxCmd == kTxCmdNone, error = kErrorInvalidState);
+        VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
 
         SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[0], txPeriod));
         mTxPeriod = txPeriod;
@@ -452,7 +471,7 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[])
     uint16_t txLength;
 
     VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
-    VerifyOrExit(mCurTxCmd == kTxCmdNone, error = kErrorInvalidState);
+    VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
 
     if (StringMatch(aArgs[0], "async"))
     {
@@ -503,13 +522,17 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    Error error = kErrorNone;
+    Error error      = kErrorNone;
+    bool  wasEnabled = Get<Radio::Radio>().GetDiagMode();
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
 #endif
+    VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
 
     mStats.Clear();
+    mIsSleepOn                = false;
+    mReceiveConfig.mIsEnabled = false;
     IgnoreError(Get<Radio::Radio>().Enable());
     Get<Radio::Radio>().SetDiagMode(true);
     otPlatDiagChannelSet(mChannel);
@@ -523,13 +546,10 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     SuccessOrExit(error = Get<Radio::Radio>().SetTransmitPower(mTxPower));
 
 exit:
-    if (error != kErrorNone)
+    if ((error != kErrorNone) && !wasEnabled && Get<Radio::Radio>().GetDiagMode())
     {
-        if (Get<Radio::Radio>().GetDiagMode())
-        {
-            Get<Radio::Radio>().SetDiagMode(false);
-            Get<Radio::Radio>().SetPromiscuous(false);
-        }
+        Get<Radio::Radio>().SetDiagMode(false);
+        Get<Radio::Radio>().SetPromiscuous(false);
     }
 
     return error;
@@ -569,18 +589,38 @@ exit:
     return error;
 }
 
+void Diags::Stop(void)
+{
+    mCurTxCmd                 = kTxCmdNone;
+    mDiagSendOn               = false;
+    mIsSleepOn                = false;
+    mReceiveConfig.mIsEnabled = false;
+    Get<Radio::Radio>().SetDiagMode(false);
+    Get<Radio::Radio>().SetPromiscuous(false);
+    Get<Mac::SubMac>().SetRxOnWhenIdle(false);
+    ResetRadioAddresses();
+}
+
 Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    otPlatAlarmMilliStop(&GetInstance());
-    Get<Radio::Radio>().SetDiagMode(false);
-    Get<Radio::Radio>().SetPromiscuous(false);
-    Get<Mac::SubMac>().SetRxOnWhenIdle(false);
-    ResetRadioAddresses();
+    Error error = kErrorNone;
 
-    return kErrorNone;
+    otPlatAlarmMilliStop(&GetInstance());
+
+    if (mDiagSendOn)
+    {
+        mCurTxCmd = kTxCmdStop;
+        error     = kErrorPending;
+    }
+    else
+    {
+        Stop();
+    }
+
+    return error;
 }
 
 Error Diags::ProcessSweep(uint8_t aArgsLength, char *aArgs[])
@@ -589,7 +629,7 @@ Error Diags::ProcessSweep(uint8_t aArgsLength, char *aArgs[])
     uint8_t txLength;
 
     VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
-    VerifyOrExit(mCurTxCmd == kTxCmdNone, error = kErrorInvalidState);
+    VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
 
     if (StringMatch(aArgs[0], "async"))
     {
@@ -695,6 +735,7 @@ Error Diags::RadioReceive(void)
 {
     Error error;
 
+    VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
     SuccessOrExit(error = Get<Radio::Radio>().Receive(mChannel));
     SuccessOrExit(error = Get<Radio::Radio>().SetTransmitPower(mTxPower));
     otPlatDiagChannelSet(mChannel);
@@ -713,6 +754,7 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
 
     if (StringMatch(aArgs[0], "sleep"))
     {
+        VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
         SuccessOrExit(error = Get<Radio::Radio>().Sleep());
         mIsSleepOn = true;
     }
@@ -746,29 +788,24 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
                 mReceiveConfig.mIsFilterEnabled = false;
                 error                           = kErrorNone;
             }
+            else if (StringMatch(aArgs[0], "-"))
+            {
+                mReceiveConfig.mFilterAddress.SetNone();
+                error = kErrorNone;
+            }
+            else if (strlen(aArgs[0]) == 2 * sizeof(Mac::ExtAddress))
+            {
+                Mac::ExtAddress extAddress;
+
+                SuccessOrExit(error = Utils::CmdLineParser::ParseAsHexString(aArgs[0], extAddress.m8));
+                mReceiveConfig.mFilterAddress.SetExtended(extAddress);
+            }
             else
             {
-                Mac::Address dstAddress;
+                Mac::ShortAddress shortAddress;
 
-                if (StringMatch(aArgs[0], "-"))
-                {
-                    dstAddress.SetNone();
-                    error = kErrorNone;
-                }
-                else if (strlen(aArgs[0]) == 2 * sizeof(Mac::ExtAddress))
-                {
-                    Mac::ExtAddress extAddress;
-
-                    SuccessOrExit(error = Utils::CmdLineParser::ParseAsHexString(aArgs[0], extAddress.m8));
-                    mReceiveConfig.mFilterAddress.SetExtended(extAddress);
-                }
-                else
-                {
-                    Mac::ShortAddress shortAddress;
-
-                    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[0], shortAddress));
-                    mReceiveConfig.mFilterAddress.SetShort(shortAddress);
-                }
+                SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[0], shortAddress));
+                mReceiveConfig.mFilterAddress.SetShort(shortAddress);
             }
 
             ExitNow();
@@ -837,10 +874,12 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
     }
     else if (StringMatch(aArgs[0], "enable"))
     {
+        VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
         SuccessOrExit(error = Get<Radio::Radio>().Enable());
     }
     else if (StringMatch(aArgs[0], "disable"))
     {
+        VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
         SuccessOrExit(error = Get<Radio::Radio>().Disable());
     }
     else if (StringMatch(aArgs[0], "promiscuous"))
@@ -1023,12 +1062,27 @@ void Diags::TransmitDone(Error aError)
     VerifyOrExit(mDiagSendOn);
     mDiagSendOn = false;
 
+    UpdateTxStats(aError);
+
+    if (mCurTxCmd == kTxCmdStop)
+    {
+        Stop();
+        Output("OT_ERROR_NONE");
+        ExitNow();
+    }
+
     if (mIsSleepOn)
     {
         IgnoreError(Get<Radio::Radio>().Sleep());
     }
 
-    UpdateTxStats(aError);
+    if (mCurTxCmd == kTxCmdRepeatStop)
+    {
+        mCurTxCmd = kTxCmdNone;
+        Output("OT_ERROR_NONE");
+        ExitNow();
+    }
+
     VerifyOrExit(((mCurTxCmd == kTxCmdSend) && (mTxPackets > 0)) || (mCurTxCmd == kTxCmdSweep));
 
     if (mCurTxCmd == kTxCmdSweep)
@@ -1119,6 +1173,7 @@ Error Diags::ProcessContinuousWave(uint8_t aArgsLength, char *aArgs[])
 
     if (StringMatch(aArgs[0], "start"))
     {
+        VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
         SuccessOrExit(error = otPlatDiagRadioTransmitCarrier(&GetInstance(), true));
     }
     else if (StringMatch(aArgs[0], "stop"))
@@ -1138,6 +1193,7 @@ Error Diags::ProcessStream(uint8_t aArgsLength, char *aArgs[])
 
     if (StringMatch(aArgs[0], "start"))
     {
+        VerifyOrExit(!IsTxActive(), error = kErrorInvalidState);
         error = otPlatDiagRadioTransmitStream(&GetInstance(), true);
     }
     else if (StringMatch(aArgs[0], "stop"))

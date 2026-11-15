@@ -49,6 +49,7 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 #include "radio/radio_frame.hpp"
+#include "radio/radio_statistics.hpp"
 #include "radio/radio_types.hpp"
 
 namespace ot {
@@ -71,11 +72,6 @@ constexpr uint8_t kPhyHeaderSize = kPreambleSize + kSfdSize + kPhrSize; ///< Tot
 constexpr uint32_t kHeaderShrDuration = 160; ///< Duration of SHR in us
 constexpr uint32_t kHeaderPhrDuration = 32;  ///< Duration of PHR in us
 constexpr uint32_t kOctetDuration     = 32;  ///< Duration of one octet in us
-
-#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD) && \
-    !OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-#error "OPENTHREAD_CONFIG_RADIO_STATS_ENABLE requires OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE".
-#endif
 
 constexpr uint32_t kSymbolTime      = OT_RADIO_SYMBOL_TIME;
 constexpr uint8_t  kSymbolsPerOctet = OT_RADIO_SYMBOLS_PER_OCTET;
@@ -293,74 +289,6 @@ private:
     }
 };
 
-#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
-
-/**
- * Implements the radio statistics logic.
- *
- * The radio statistics are the time when the radio in TX/RX/radio state.
- * Since this class collects these statistics from pure software level
- * and no platform API is involved, a simplified model is used to
- * calculate the time of different radio states. The data may not be very
- * accurate, but it's sufficient to provide a general understanding of
- * the proportion of time a device is in different radio states.
- *
- * The simplified model is:
- * - The radio statistics is only aware of 2 states: RX and sleep.
- * - Each time `Radio::Receive` or `Radio::Sleep` is called, it will check
- *   the current state and add the time since last time the methods were
- *   called. For example, `Sleep` is first called and `Receive` is called
- *   after 1 second, then 1 second will be added to SleepTime and the
- *   current state switches to `Receive`.
- * - The time of TX will be calculated from the callback of TransmitDone.
- *   If TX returns kErrorNone or kErrorNoAck, the tx time will be added
- *   according to the number of bytes sent. And the SleepTime or RxTime
- *   will be reduced accordingly.
- * - When `GetStats` is called, an operation will be executed to calculate
- *   the time for the last state. And the result will be returned.
- */
-class Statistics : private NonCopyable
-{
-    friend class Radio;
-    friend class Callbacks;
-
-public:
-    using TimeStats = otRadioTimeStats; ///< Radio statistics (time spend in each state).
-
-    /**
-     * Retrieves the current radio statistics.
-     *
-     * @return The current time statistics.
-     */
-    const TimeStats &GetStats(void);
-
-    /**
-     * Resets the radio statistics.
-     */
-    void ResetTime(void);
-
-private:
-    enum Status : uint8_t
-    {
-        kDisabled,
-        kSleep,
-        kReceive,
-    };
-
-    Statistics(void);
-    void RecordStateChange(Status aStatus);
-    void HandleReceiveAt(uint32_t aDurationUs);
-    void RecordTxDone(Error aError, uint16_t aPsduLength);
-    void RecordRxDone(Error aError);
-    void UpdateTime(void);
-
-    Status    mStatus;
-    TimeStats mTimeStats;
-    TimeMicro mLastUpdateTime;
-};
-
-#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
-
 /**
  * Represents an OpenThread radio abstraction.
  */
@@ -557,7 +485,9 @@ public:
     /**
      * Enables the radio.
      *
-     * @retval kErrorNone     Successfully enabled.
+     * @sa otPlatRadioEnable()
+     *
+     * @retval kErrorNone     Successfully enabled, or the radio was already enabled.
      * @retval kErrorFailed   The radio could not be enabled.
      */
     Error Enable(void);
@@ -565,8 +495,13 @@ public:
     /**
      * Disables the radio.
      *
-     * @retval kErrorNone           Successfully transitioned to Disabled.
-     * @retval kErrorInvalidState   The radio was not in sleep state.
+     * A transition to Disabled state requires the radio to be in Sleep state, or to have a pending transition
+     * to Sleep state.
+     *
+     * @sa otPlatRadioDisable()
+     *
+     * @retval kErrorNone           Successfully transitioned to Disabled, or the radio was already disabled.
+     * @retval kErrorInvalidState   The radio is neither in Sleep state nor transitioning to Sleep state.
      */
     Error Disable(void);
 
@@ -580,24 +515,37 @@ public:
     /**
      * Transitions the radio from Receive to Sleep (turn off the radio).
      *
-     * @retval kErrorNone          Successfully transitioned to Sleep.
-     * @retval kErrorBusy          The radio was transmitting.
+     * If the radio is receiving a frame or transmitting an ACK, the transition to Sleep is accepted and scheduled to
+     * happen right after that operation completes.
+     *
+     * @sa otPlatRadioSleep()
+     *
+     * @retval kErrorNone          Successfully transitioned to Sleep, already in Sleep, or transition is scheduled.
+     * @retval kErrorBusy          The radio was transmitting a frame.
      * @retval kErrorInvalidState  The radio was disabled.
      */
     Error Sleep(void);
 
     /**
-     * Transitions the radio from Sleep to Receive (turn on the radio).
+     * Transitions the radio from Sleep to Receive (turn on the radio), or changes the radio's receive channel.
+     *
+     * If @p aChannel differs from the current receive channel, the radio transitions to it as soon as possible
+     * while typically completing any ongoing receive operation on the old channel.
+     *
+     * @sa otPlatRadioReceive()
      *
      * @param[in]  aChannel   The channel to use for receiving.
      *
-     * @retval kErrorNone          Successfully transitioned to Receive.
+     * @retval kErrorNone          Successfully transitioned to Receive on channel @p aChannel, was already
+     *                             receiving on channel @p aChannel, or the transition is scheduled successfully.
      * @retval kErrorInvalidState  The radio was disabled or transmitting.
      */
     Error Receive(uint8_t aChannel);
 
     /**
      * Schedules a radio reception window at a specific time and duration.
+     *
+     * @sa otPlatRadioReceiveAt()
      *
      * @param[in]  aChannel   The radio channel on which to receive.
      * @param[in]  aStart     The receive window start time, in microseconds.

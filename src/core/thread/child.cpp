@@ -103,6 +103,11 @@ void Child::SetDeviceMode(Mle::DeviceMode aMode)
     }
 #endif
 
+    if (IsFullThreadDevice())
+    {
+        ClearIp6Addresses();
+    }
+
     VerifyOrExit(IsStateValid());
     Get<NeighborTable>().Signal(NeighborTable::kChildModeChanged, *this);
 

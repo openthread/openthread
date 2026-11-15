@@ -41,7 +41,11 @@
 #include <mbedtls/cmac.h>
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/ecdsa.h>
+#include <mbedtls/ecp.h>
 #include <mbedtls/entropy.h>
+#ifdef MBEDTLS_HKDF_C
+#include <mbedtls/hkdf.h>
+#endif
 #include <mbedtls/md.h>
 #include <mbedtls/pk.h>
 #include <mbedtls/sha256.h>
@@ -312,54 +316,67 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
                                             uint16_t         aOutputKeyLength)
 {
     Error             error = kErrorNone;
-    HmacSha256        hmac;
-    HmacSha256::Hash  hash;
-    uint8_t           iter = 0;
-    uint16_t          copyLength;
     HmacSha256::Hash *prk;
 
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aOutputKey != nullptr || aOutputKeyLength == 0, error = kErrorInvalidArgs);
+    VerifyOrExit(aInfo != nullptr || aInfoLength == 0, error = kErrorInvalidArgs);
     VerifyOrExit(aContext->mContextSize >= sizeof(HmacSha256::Hash), error = kErrorFailed);
+    VerifyOrExit(aOutputKeyLength <= 255 * sizeof(HmacSha256::Hash), error = kErrorFailed);
 
     prk = static_cast<HmacSha256::Hash *>(aContext->mContext);
 
-    // The aOutputKey is calculated as follows [RFC5889]:
-    //
-    //   N = ceil( aOutputKeyLength / HashSize)
-    //   T = T(1) | T(2) | T(3) | ... | T(N)
-    //   aOutputKey is first aOutputKeyLength of T
-    //
-    // Where:
-    //   T(0) = empty string (zero length)
-    //   T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
-    //   T(2) = HMAC-Hash(PRK, T(1) | info | 0x02)
-    //   T(3) = HMAC-Hash(PRK, T(2) | info | 0x03)
-    //   ...
-
-    while (aOutputKeyLength > 0)
+#ifdef MBEDTLS_HKDF_C
+    VerifyOrExit(aOutputKeyLength > 0);
+    VerifyOrExit(mbedtls_hkdf_expand(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), prk->GetBytes(),
+                                     sizeof(HmacSha256::Hash), aInfo, aInfoLength, aOutputKey, aOutputKeyLength) == 0,
+                 error = kErrorFailed);
+#else
     {
-        Key cryptoKey;
+        HmacSha256       hmac;
+        HmacSha256::Hash hash;
+        uint8_t          iter = 0;
+        uint16_t         copyLength;
 
-        cryptoKey.Set(prk->GetBytes(), sizeof(HmacSha256::Hash));
-        hmac.Start(cryptoKey);
+        // The aOutputKey is calculated as follows [RFC5869]:
+        //
+        //   N = ceil( aOutputKeyLength / HashSize)
+        //   T = T(1) | T(2) | T(3) | ... | T(N)
+        //   aOutputKey is first aOutputKeyLength of T
+        //
+        // Where:
+        //   T(0) = empty string (zero length)
+        //   T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
+        //   T(2) = HMAC-Hash(PRK, T(1) | info | 0x02)
+        //   T(3) = HMAC-Hash(PRK, T(2) | info | 0x03)
+        //   ...
 
-        if (iter != 0)
+        while (aOutputKeyLength > 0)
         {
-            hmac.Update(hash);
+            Key cryptoKey;
+
+            cryptoKey.Set(prk->GetBytes(), sizeof(HmacSha256::Hash));
+            hmac.Start(cryptoKey);
+
+            if (iter != 0)
+            {
+                hmac.Update(hash);
+            }
+
+            hmac.Update(aInfo, aInfoLength);
+
+            iter++;
+            hmac.Update(iter);
+            hmac.Finish(hash);
+
+            copyLength = Min(aOutputKeyLength, static_cast<uint16_t>(sizeof(hash)));
+
+            memcpy(aOutputKey, hash.GetBytes(), copyLength);
+            aOutputKey += copyLength;
+            aOutputKeyLength -= copyLength;
         }
-
-        hmac.Update(aInfo, aInfoLength);
-
-        iter++;
-        hmac.Update(iter);
-        hmac.Finish(hash);
-
-        copyLength = Min(aOutputKeyLength, static_cast<uint16_t>(sizeof(hash)));
-
-        memcpy(aOutputKey, hash.GetBytes(), copyLength);
-        aOutputKey += copyLength;
-        aOutputKeyLength -= copyLength;
     }
+#endif // MBEDTLS_HKDF_C
 
 exit:
     return error;
@@ -371,21 +388,32 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(otCryptoContext   *aContext,
                                              const otCryptoKey *aInputKey)
 {
     Error             error = kErrorNone;
-    HmacSha256        hmac;
-    Key               cryptoKey;
     HmacSha256::Hash *prk;
-    const LiteralKey  inputKey(*static_cast<const Key *>(aInputKey));
 
-    VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aContext != nullptr && aInputKey != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aSalt != nullptr || aSaltLength == 0, error = kErrorInvalidArgs);
     VerifyOrExit(aContext->mContextSize >= sizeof(HmacSha256::Hash), error = kErrorFailed);
 
     prk = static_cast<HmacSha256::Hash *>(aContext->mContext);
 
-    cryptoKey.Set(aSalt, aSaltLength);
-    // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
-    hmac.Start(cryptoKey);
-    hmac.Update(inputKey.GetBytes(), inputKey.GetLength());
-    hmac.Finish(*prk);
+    {
+        const LiteralKey inputKey(*static_cast<const Key *>(aInputKey));
+
+#ifdef MBEDTLS_HKDF_C
+        VerifyOrExit(mbedtls_hkdf_extract(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), aSalt, aSaltLength,
+                                          inputKey.GetBytes(), inputKey.GetLength(), prk->m8) == 0,
+                     error = kErrorFailed);
+#else
+        HmacSha256 hmac;
+        Key        cryptoKey;
+
+        cryptoKey.Set(aSalt, aSaltLength);
+        // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
+        hmac.Start(cryptoKey);
+        hmac.Update(inputKey.GetBytes(), inputKey.GetLength());
+        hmac.Finish(*prk);
+#endif
+    }
 
 exit:
     return error;
@@ -587,6 +615,13 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPai
     mbedtls_pk_context   pk;
     mbedtls_ecp_keypair *keyPair;
     int                  ret;
+#if (MBEDTLS_VERSION_NUMBER >= 0x03060000)
+    uint8_t buf[1 + OT_CRYPTO_ECDSA_PUBLIC_KEY_SIZE];
+    size_t  len;
+#endif
+
+    AssertPointerIsNotNull(aKeyPair);
+    AssertPointerIsNotNull(aPublicKey);
 
     mbedtls_pk_init(&pk);
 
@@ -602,7 +637,14 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPai
 #endif
 
     keyPair = mbedtls_pk_ec(pk);
+    VerifyOrExit(keyPair != nullptr, error = kErrorParse);
 
+#if (MBEDTLS_VERSION_NUMBER >= 0x03060000)
+    ret = mbedtls_ecp_write_public_key(keyPair, MBEDTLS_ECP_PF_UNCOMPRESSED, &len, buf, sizeof(buf));
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+    VerifyOrExit(len == sizeof(buf), error = kErrorFailed);
+    memcpy(aPublicKey->m8, buf + 1, OT_CRYPTO_ECDSA_PUBLIC_KEY_SIZE);
+#else
     ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), aPublicKey->m8,
                                    Ecdsa::P256::kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
@@ -610,6 +652,7 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPai
     ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y),
                                    aPublicKey->m8 + Ecdsa::P256::kMpiSize, Ecdsa::P256::kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+#endif
 
 exit:
     mbedtls_pk_free(&pk);

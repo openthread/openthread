@@ -289,6 +289,7 @@ void Test1_2_LP_5_3_7(void)
      *   Description: Harness instructs the device to resume sending synchronization messages containing CSL IEs.
      *   Pass Criteria: N/A.
      */
+    ssed1.Get<DataPollSender>().StartPolling();
     ssed1.Get<Mle::Mle>().ScheduleChildUpdateRequest();
 
     Log("---------------------------------------------------------------------------------------");

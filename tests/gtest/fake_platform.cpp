@@ -218,6 +218,39 @@ otError FakePlatform::Transmit(otRadioFrame *aFrame)
     return OT_ERROR_NONE;
 }
 
+otError FakePlatform::ReceiveAt(uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration)
+{
+    static constexpr uint32_t kMaxForwardOffset = 0x7fffffffU;
+
+    uint32_t forwardOffset = aStart - static_cast<otRadioTime32>(mNow);
+
+    if (forwardOffset <= kMaxForwardOffset)
+    {
+        mReceiveAtChannel = aChannel;
+        mReceiveAtStart   = mNow + forwardOffset;
+        mReceiveAtEnd     = mReceiveAtStart + aDuration;
+    }
+    else
+    {
+        uint32_t pastOffset = static_cast<otRadioTime32>(mNow) - aStart;
+
+        if (pastOffset < aDuration)
+        {
+            mReceiveAtChannel = aChannel;
+            mChannel          = aChannel;
+            mReceiveAtStart   = kAlarmStop;
+            mReceiveAtEnd     = mNow + (aDuration - pastOffset);
+        }
+        else
+        {
+            mReceiveAtStart = kAlarmStop;
+            mReceiveAtEnd   = kAlarmStop;
+        }
+    }
+
+    return OT_ERROR_NONE;
+}
+
 otError FakePlatform::SettingsGet(uint16_t aKey, uint16_t aIndex, uint8_t *aValue, uint16_t *aValueLength) const
 {
     auto setting = mSettings.find(aKey);

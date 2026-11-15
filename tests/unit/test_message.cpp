@@ -537,6 +537,173 @@ void TestAppender(void)
     testFreeInstance(instance);
 }
 
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+
+static uint16_t sNumFragmentsPassedToHost;
+
+static void HandleIp6ReceiveFragment(otMessage *aMessage, void *aContext)
+{
+    Message    &message = AsCoreType(aMessage);
+    Ip6::Header header;
+
+    OT_UNUSED_VARIABLE(aContext);
+
+    SuccessOrQuit(message.Read(0, header));
+    VerifyOrQuit(header.GetNextHeader() == Ip6::kProtoFragment);
+    sNumFragmentsPassedToHost++;
+
+    message.Free();
+}
+
+void TestFragmentLoopbackToHost(void)
+{
+    // Send a datagram larger than `kMaxDatagramLength` to an off-mesh
+    // destination so that it is fragmented and the fragments are
+    // forwarded to the host. Verify that the fragments inherit the
+    // loopback-to-host flag of the original message.
+
+    static const uint8_t kPayload[Ip6::kMaxDatagramLength] = {0};
+    static const bool    kAllowLoopbackToHost[]            = {true, false};
+
+    Instance    *instance;
+    Ip6::Address source;
+    Ip6::Address destination;
+
+    printf("TestFragmentLoopbackToHost\n");
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+
+    otIp6SetReceiveCallback(instance, HandleIp6ReceiveFragment, nullptr);
+
+    SuccessOrQuit(source.FromString("2001:db8::1"));
+    SuccessOrQuit(destination.FromString("2001:db8::2"));
+
+    for (bool allowLoopbackToHost : kAllowLoopbackToHost)
+    {
+        Message         *message;
+        Ip6::MessageInfo messageInfo;
+
+        printf(" - LoopbackToHostAllowed: %s\n", allowLoopbackToHost ? "true" : "false");
+
+        message = instance->Get<Ip6::Ip6>().NewMessage();
+        VerifyOrQuit(message != nullptr);
+        SuccessOrQuit(message->AppendBytes(kPayload, sizeof(kPayload)));
+        message->SetLoopbackToHostAllowed(allowLoopbackToHost);
+
+        messageInfo.SetSockAddr(source);
+        messageInfo.SetPeerAddr(destination);
+
+        sNumFragmentsPassedToHost = 0;
+
+        SuccessOrQuit(instance->Get<Ip6::Ip6>().SendDatagram(*message, messageInfo, Ip6::kProtoUdp));
+
+        while (otTaskletsArePending(instance))
+        {
+            otTaskletsProcess(instance);
+        }
+
+        printf("   fragments passed to host: %u\n", sNumFragmentsPassedToHost);
+
+        if (allowLoopbackToHost)
+        {
+            VerifyOrQuit(sNumFragmentsPassedToHost > 1);
+        }
+        else
+        {
+            VerifyOrQuit(sNumFragmentsPassedToHost == 0);
+        }
+    }
+
+    testFreeInstance(instance);
+}
+
+#endif // OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+
+static uint16_t sNumEchoRequestsPassedToHost;
+static uint16_t sNumEchoRepliesPassedToHost;
+
+static void HandleIp6ReceiveIcmp(otMessage *aMessage, void *aContext)
+{
+    Message         &message = AsCoreType(aMessage);
+    Ip6::Header      header;
+    Ip6::Icmp6Header icmpHeader;
+
+    OT_UNUSED_VARIABLE(aContext);
+
+    SuccessOrQuit(message.Read(0, header));
+    VerifyOrQuit(header.GetNextHeader() == Ip6::kProtoIcmp6);
+    SuccessOrQuit(message.Read(sizeof(header), icmpHeader));
+
+    switch (icmpHeader.GetType())
+    {
+    case Ip6::Icmp6Header::kTypeEchoRequest:
+        sNumEchoRequestsPassedToHost++;
+        break;
+    case Ip6::Icmp6Header::kTypeEchoReply:
+        sNumEchoRepliesPassedToHost++;
+        break;
+    default:
+        VerifyOrQuit(false);
+    }
+
+    message.Free();
+}
+
+void TestIcmpLoopbackToHost(void)
+{
+    // Ping one of the device's own (non mesh-local) addresses and
+    // verify that both the echo request (from `PingSender`) and the
+    // echo reply (from `Icmp`) are passed to the host, independent
+    // of `OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS`.
+
+    Instance          *instance;
+    otNetifAddress     netifAddress;
+    otPingSenderConfig config;
+
+    printf("TestIcmpLoopbackToHost\n");
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+
+    otIp6SetReceiveCallback(instance, HandleIp6ReceiveIcmp, nullptr);
+
+    ClearAllBytes(netifAddress);
+    SuccessOrQuit(AsCoreType(&netifAddress.mAddress).FromString("2001:db8::1"));
+    netifAddress.mPrefixLength = 64;
+    netifAddress.mPreferred    = true;
+    netifAddress.mValid        = true;
+    SuccessOrQuit(otIp6AddUnicastAddress(instance, &netifAddress));
+
+    ClearAllBytes(config);
+    config.mSource      = netifAddress.mAddress;
+    config.mDestination = netifAddress.mAddress;
+    config.mCount       = 1;
+
+    sNumEchoRequestsPassedToHost = 0;
+    sNumEchoRepliesPassedToHost  = 0;
+
+    SuccessOrQuit(otPingSenderPing(instance, &config));
+
+    while (otTaskletsArePending(instance))
+    {
+        otTaskletsProcess(instance);
+    }
+
+    printf(" - echo requests passed to host: %u, echo replies passed to host: %u\n", sNumEchoRequestsPassedToHost,
+           sNumEchoRepliesPassedToHost);
+
+    VerifyOrQuit(sNumEchoRequestsPassedToHost == 1);
+    VerifyOrQuit(sNumEchoRepliesPassedToHost == 1);
+
+    otPingSenderStop(instance);
+    testFreeInstance(instance);
+}
+
+#endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+
 } // namespace ot
 
 int main(void)
@@ -550,6 +717,12 @@ int main(void)
 
     ot::UnitTester::TestCloning();
     ot::TestAppender();
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    ot::TestFragmentLoopbackToHost();
+#endif
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    ot::TestIcmpLoopbackToHost();
+#endif
 
     printf("All tests passed\n");
     return 0;

@@ -854,6 +854,212 @@ void TestMultiServiceSameHost(void)
     }
 }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+void TestMultiRadioRxFragmentTag(void)
+{
+    Core      nexus;
+    Node     &node1 = nexus.CreateNode();
+    Node     &node2 = nexus.CreateNode();
+    Neighbor *neighbor;
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("TestMultiRadioRxFragmentTag()");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
+    node1.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(node1.Get<Mle::Mle>().IsLeader());
+
+    node2.Join(node1, Node::kAsFed);
+    nexus.AdvanceTime(10 * 1000);
+    VerifyOrQuit(node2.Get<Mle::Mle>().IsChild());
+
+    neighbor = node1.Get<NeighborTable>().FindNeighbor(node2.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(neighbor != nullptr);
+
+    neighbor->ClearLastRxFragmentTag();
+
+    // Exact sequence from TREL-TC-4 out-of-order multi-radio delivery:
+    // Tag 8826 received on TREL, then duplicate 8826 and new 8829 on 15.4,
+    // followed by 8827, 8828 (TREL-only unicasts) and duplicate 8829 on TREL.
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(8826));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8826));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(8829));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(8827));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(8828));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8829));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8826));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8827));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(8828));
+
+    // Test bitmap boundary (delta == 32 and delta > 32)
+    neighbor->ClearLastRxFragmentTag();
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(99));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(100));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(132)); // delta == 32 with non-zero bitmap
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(100));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(101)); // delta == 31
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(101));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(131)); // delta == 1
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(131));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(99)); // delta == 33 (> 32)
+
+    // Test large advance (> 32) clearing bitmap
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(200)); // delta == 68 (> 32)
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(199));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(199));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(200));
+
+    // Test 16-bit tag wrap-around (0xfffe, 0xffff, 0x0001, 0x0002)
+    neighbor->ClearLastRxFragmentTag();
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0xfffe));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0x0002));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0xfffe));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0xffff));
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0x0001));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0xffff));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0x0001));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0x0002));
+
+    // Test tag timeout expiration
+    nexus.AdvanceTime(OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT + 1);
+    VerifyOrQuit(!neighbor->IsRxFragmentTagDuplicate(0x0002));
+    VerifyOrQuit(neighbor->IsRxFragmentTagDuplicate(0x0002));
+}
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+void TestMultiRadioTimeSync(void)
+{
+    static constexpr uint16_t kTimeSyncPeriod = 10;
+
+    Core     nexus;
+    Node    &leader     = nexus.CreateNode();
+    Node    &router     = nexus.CreateNode();
+    Node    &fed        = nexus.CreateNode();
+    Node    &sed        = nexus.CreateNode();
+    Node    &fed154     = nexus.CreateNode();
+    Node    &sed154     = nexus.CreateNode();
+    Node    &routerTrel = nexus.CreateNode();
+    Node    &fedTrel    = nexus.CreateNode();
+    uint64_t leaderTime;
+    uint64_t nodeTime;
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("TestMultiRadioTimeSync()");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
+    for (Node &node : nexus.GetNodes())
+    {
+        SuccessOrQuit(otNetworkTimeSetSyncPeriod(&node.GetInstance(), kTimeSyncPeriod));
+    }
+
+    SuccessOrQuit(leader.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(router.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(fed.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(sed.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(routerTrel.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(fedTrel.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
+    fed154.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
+    sed154.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
+
+    // Filter 802.15.4 on `routerTrel` and `fedTrel` so they only communicate over TREL.
+    routerTrel.Get<Mac::Mac>().SetRadioFilterEnabled(true);
+    fedTrel.Get<Mac::Mac>().SetRadioFilterEnabled(true);
+
+    leader.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+    VerifyOrQuit(otNetworkTimeGet(&leader.GetInstance(), &leaderTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+    VerifyOrQuit(leader.Get<TimeSync>().GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ);
+
+    // Join both a multi-radio SED and an 802.15.4-only SED.
+    SuccessOrQuit(sed.Get<DataPollSender>().SetExternalPollPeriod(1000));
+    SuccessOrQuit(sed154.Get<DataPollSender>().SetExternalPollPeriod(1000));
+    sed.Join(leader, Node::kAsSed);
+    sed154.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(5 * 1000);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed154.Get<Mle::Mle>().IsChild());
+
+    router.Join(leader);
+    fed.Join(leader, Node::kAsFed);
+    fed154.Join(leader, Node::kAsFed);
+    routerTrel.Join(leader);
+    fedTrel.Join(leader, Node::kAsFed);
+
+    nexus.AdvanceTime(150 * 1000);
+
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+    VerifyOrQuit(fed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(fed154.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(sed154.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(routerTrel.Get<Mle::Mle>().IsRouter());
+    VerifyOrQuit(fedTrel.Get<Mle::Mle>().IsChild());
+
+    VerifyOrQuit(leader.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 5);
+    VerifyOrQuit(router.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 5);
+
+    // Verify `routerTrel` and `fedTrel` are TREL-only neighbors and remain unsynchronized
+    // because Time Sync IE is only carried over 802.15.4.
+    {
+        Node *const trelOnlyNodes[] = {&routerTrel, &fedTrel};
+
+        for (Node *trelNode : trelOnlyNodes)
+        {
+            Neighbor::MultiRadioInfo info;
+            Neighbor                *neighbor;
+
+            neighbor = leader.Get<NeighborTable>().FindNeighbor(trelNode->Get<Mac::Mac>().GetExtAddress());
+            VerifyOrQuit(neighbor != nullptr);
+            neighbor->PopulateMultiRadioInfo(info);
+            VerifyOrQuit(!info.mSupportsIeee802154);
+            VerifyOrQuit(info.mSupportsTrelUdp6);
+
+            VerifyOrQuit(otNetworkTimeGet(&trelNode->GetInstance(), &nodeTime) == OT_NETWORK_TIME_UNSYNCHRONIZED);
+        }
+    }
+
+    VerifyOrQuit(otNetworkTimeGet(&leader.GetInstance(), &leaderTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+
+    {
+        Node *const rxOnNodes[] = {&leader, &router, &fed, &fed154};
+
+        for (Node *rxOnNode : rxOnNodes)
+        {
+            VerifyOrQuit(otNetworkTimeGet(&rxOnNode->GetInstance(), &nodeTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+            VerifyOrQuit(nodeTime == leaderTime);
+            VerifyOrQuit(rxOnNode->Get<TimeSync>().GetTimeSyncSeq() == leader.Get<TimeSync>().GetTimeSyncSeq());
+        }
+    }
+
+    nexus.SendAndVerifyEchoRequest(leader, router.Get<Mle::Mle>().GetMeshLocalEid());
+    nexus.SendAndVerifyEchoRequest(router, fed.Get<Mle::Mle>().GetMeshLocalEid());
+    nexus.SendAndVerifyEchoRequest(leader, sed.Get<Mle::Mle>().GetMeshLocalEid(), 0, 64, 3000);
+    nexus.SendAndVerifyEchoRequest(leader, sed154.Get<Mle::Mle>().GetMeshLocalEid(), 0, 64, 3000);
+    nexus.SendAndVerifyEchoRequest(router, fed154.Get<Mle::Mle>().GetMeshLocalEid());
+    nexus.SendAndVerifyEchoRequest(leader, routerTrel.Get<Mle::Mle>().GetMeshLocalEid());
+    nexus.SendAndVerifyEchoRequest(leader, fedTrel.Get<Mle::Mle>().GetMeshLocalEid());
+
+    // Re-enable 802.15.4 on `fedTrel` and verify it synchronizes upon the next 802.15.4 Time Sync.
+    fedTrel.Get<Mac::Mac>().SetRadioFilterEnabled(false);
+    nexus.AdvanceTime((kTimeSyncPeriod + 5) * 1000);
+
+    VerifyOrQuit(otNetworkTimeGet(&leader.GetInstance(), &leaderTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+    VerifyOrQuit(otNetworkTimeGet(&fedTrel.GetInstance(), &nodeTime) == OT_NETWORK_TIME_SYNCHRONIZED);
+    VerifyOrQuit(nodeTime == leaderTime);
+    VerifyOrQuit(fedTrel.Get<TimeSync>().GetTimeSyncSeq() == leader.Get<TimeSync>().GetTimeSyncSeq());
+}
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 } // namespace Nexus
@@ -868,6 +1074,12 @@ int main(void)
     ot::Nexus::TestServiceNameConflict();
     ot::Nexus::TestHostAddressChange();
     ot::Nexus::TestMultiServiceSameHost();
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    ot::Nexus::TestMultiRadioRxFragmentTag();
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    ot::Nexus::TestMultiRadioTimeSync();
+#endif
+#endif
     printf("All tests passed\n");
 #else
     printf("TREL is not enabled - test skipped\n");

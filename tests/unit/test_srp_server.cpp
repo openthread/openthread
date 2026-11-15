@@ -834,6 +834,228 @@ void TestSrpServerClientRemove(bool aShouldRemoveKeyLease)
     Log("End of TestSrpServerClientRemove");
 }
 
+const Srp::Server::Service *FindService(const Srp::Server::Host &aHost, const char *aInstanceLabel)
+{
+    const Srp::Server::Service *service = nullptr;
+
+    while ((service = aHost.GetNextService(service)) != nullptr)
+    {
+        if (StringMatch(service->GetInstanceLabel(), aInstanceLabel))
+        {
+            break;
+        }
+    }
+
+    return service;
+}
+
+void TestSrpServerRetainedServiceKeyLease(void)
+{
+    Srp::Server                *srpServer;
+    Srp::Client                *srpClient;
+    Srp::Client::Service        service1;
+    Srp::Client::Service        service2;
+    Srp::Client::Service        service3;
+    const Srp::Server::Host    *host;
+    const Srp::Server::Service *srv;
+    uint16_t                    heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestSrpServerRetainedServiceKeyLease");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    PrepareService1(service1);
+    service1.mLease    = 30;
+    service1.mKeyLease = 60;
+
+    PrepareService2(service2);
+    service2.mLease    = 45;
+    service2.mKeyLease = 80;
+
+    PrepareService2(service3);
+    service3.mInstanceName = "JKLMNOPQR";
+    service3.mLease        = 30;
+    service3.mKeyLease     = 120;
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server and client.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    srpServer->SetServiceHandler(HandleSrpServerUpdate, sInstance);
+    srpServer->SetEnabled(true);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    srpClient->SetCallback(HandleSrpClientCallback, sInstance);
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    SuccessOrQuit(srpClient->SetHostName(kHostName));
+    SuccessOrQuit(srpClient->EnableAutoHostAddress());
+
+    sUpdateHandlerMode = kAccept;
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Register three services with distinct lease / key-lease intervals:
+    // - service1: lease = 30s, key-lease = 60s
+    // - service2: lease = 45s, key-lease = 80s
+    // - service3: lease = 30s, key-lease = 120s (also sets host lease = 30s, key-lease = 120s)
+
+    SuccessOrQuit(srpClient->AddService(service1));
+    AdvanceTime(2 * 1000);
+    VerifyOrQuit(service1.GetState() == Srp::Client::kRegistered);
+
+    SuccessOrQuit(srpClient->AddService(service2));
+    AdvanceTime(2 * 1000);
+    VerifyOrQuit(service2.GetState() == Srp::Client::kRegistered);
+
+    SuccessOrQuit(srpClient->AddService(service3));
+    AdvanceTime(2 * 1000);
+    VerifyOrQuit(service3.GetState() == Srp::Client::kRegistered);
+
+    ValidateHost(*srpServer, kHostName);
+    host = srpServer->GetNextHost(nullptr);
+    VerifyOrQuit(!host->IsDeleted());
+    VerifyOrQuit(host->GetLease() == 30);
+    VerifyOrQuit(host->GetKeyLease() == 120);
+
+    srv = FindService(*host, service1.mInstanceName);
+    VerifyOrQuit(srv != nullptr && !srv->IsDeleted());
+    VerifyOrQuit(srv->GetLease() == 30 && srv->GetKeyLease() == 60);
+
+    srv = FindService(*host, service2.mInstanceName);
+    VerifyOrQuit(srv != nullptr && !srv->IsDeleted());
+    VerifyOrQuit(srv->GetLease() == 45 && srv->GetKeyLease() == 80);
+
+    srv = FindService(*host, service3.mInstanceName);
+    VerifyOrQuit(srv != nullptr && !srv->IsDeleted());
+    VerifyOrQuit(srv->GetLease() == 30 && srv->GetKeyLease() == 120);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Stop SRP client without unregistering so leases expire on the server.
+
+    srpClient->ClearHostAndServices();
+    srpClient->Stop();
+    VerifyOrQuit(!srpClient->IsRunning());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advance 26s: service1's LEASE expires while the host, service2, and service3 remain active.
+
+    AdvanceTime(26 * 1000);
+
+    VerifyOrQuit(!host->IsDeleted());
+    srv = FindService(*host, service1.mInstanceName);
+    VerifyOrQuit(srv != nullptr && srv->IsDeleted());
+    srv = FindService(*host, service2.mInstanceName);
+    VerifyOrQuit(srv != nullptr && !srv->IsDeleted());
+    srv = FindService(*host, service3.mInstanceName);
+    VerifyOrQuit(srv != nullptr && !srv->IsDeleted());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advance 4s: the host's LEASE expires; host and all three services are now deleted with retained names.
+
+    AdvanceTime(4 * 1000);
+
+    VerifyOrQuit(host->IsDeleted());
+    srv = FindService(*host, service1.mInstanceName);
+    VerifyOrQuit(srv != nullptr && srv->IsDeleted());
+    srv = FindService(*host, service2.mInstanceName);
+    VerifyOrQuit(srv != nullptr && srv->IsDeleted());
+    srv = FindService(*host, service3.mInstanceName);
+    VerifyOrQuit(srv != nullptr && srv->IsDeleted());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advance 26s: service1's KEY lease expires and its retained name is removed, while service2 and service3 remain.
+
+    AdvanceTime(26 * 1000);
+
+    VerifyOrQuit(host->IsDeleted());
+    VerifyOrQuit(FindService(*host, service1.mInstanceName) == nullptr);
+    srv = FindService(*host, service2.mInstanceName);
+    VerifyOrQuit(srv != nullptr && srv->IsDeleted());
+    srv = FindService(*host, service3.mInstanceName);
+    VerifyOrQuit(srv != nullptr && srv->IsDeleted());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advance 22s: service2's KEY lease expires and its retained name is removed, while host and service3 remain.
+
+    AdvanceTime(22 * 1000);
+
+    VerifyOrQuit(host->IsDeleted());
+    VerifyOrQuit(FindService(*host, service1.mInstanceName) == nullptr);
+    VerifyOrQuit(FindService(*host, service2.mInstanceName) == nullptr);
+    srv = FindService(*host, service3.mInstanceName);
+    VerifyOrQuit(srv != nullptr && srv->IsDeleted());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client with a new key and host name before the first host's KEY lease expires.
+    // Verify that service3 (still within KEY lease) conflicts, whereas service1 and service2 can be claimed.
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::DestroyKey(
+        sInstance->Get<Crypto::Storage::KeyRefManager>().KeyRefFor(Crypto::Storage::KeyRefManager::kEcdsa));
+#else
+    sInstance->Get<Settings>().Delete<Settings::SrpEcdsaKey>();
+#endif
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    AdvanceTime(2 * 1000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    SuccessOrQuit(srpClient->SetHostName("myhost2"));
+    SuccessOrQuit(srpClient->EnableAutoHostAddress());
+
+    sProcessedClientCallback = false;
+    SuccessOrQuit(srpClient->AddService(service3));
+    AdvanceTime(2 * 1000);
+    VerifyOrQuit(sProcessedClientCallback);
+    VerifyOrQuit(sLastClientCallbackError == kErrorDuplicated);
+    SuccessOrQuit(srpClient->ClearService(service3));
+
+    service1.mLease    = 30;
+    service1.mKeyLease = 120;
+    service2.mLease    = 30;
+    service2.mKeyLease = 120;
+
+    sProcessedClientCallback = false;
+    SuccessOrQuit(srpClient->AddService(service1));
+    SuccessOrQuit(srpClient->AddService(service2));
+    AdvanceTime(2 * 1000);
+    VerifyOrQuit(sProcessedClientCallback);
+    VerifyOrQuit(sLastClientCallbackError == kErrorNone);
+    VerifyOrQuit(service1.GetState() == Srp::Client::kRegistered);
+    VerifyOrQuit(service2.GetState() == Srp::Client::kRegistered);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advance 40s: the first host's KEY lease expires and it is fully removed, leaving only "myhost2".
+
+    AdvanceTime(40 * 1000);
+
+    ValidateHost(*srpServer, "myhost2");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable SRP server, verify that all heap allocations by SRP server are freed.
+
+    srpServer->SetEnabled(false);
+    AdvanceTime(100);
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    FinalizeTest();
+    VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
+
+    Log("End of TestSrpServerRetainedServiceKeyLease");
+}
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void TestUpdateLeaseShortVariant(void)
 {
@@ -1622,6 +1844,7 @@ int main(void)
     ot::TestSrpServerIgnore();
     ot::TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ true);
     ot::TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ false);
+    ot::TestSrpServerRetainedServiceKeyLease();
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     ot::TestUpdateLeaseShortVariant();
     ot::TestSrpClientDelayedResponse();

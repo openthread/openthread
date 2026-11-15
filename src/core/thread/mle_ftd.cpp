@@ -240,7 +240,7 @@ Error Mle::BecomeRouter(RouterUpgradeReason aReason)
 
     LogInfo("Attempt to become router, reason:%s", RouterUpgradeReasonToString(aReason));
 
-    Get<MeshForwarder>().SetRxOnWhenIdle(true);
+    Get<MeshForwarder>().SetSleepMode(MeshForwarder::kNonSleepy);
     mRoleTransitioner.StopTimeout();
 
     error = SendAddressSolicit(aReason);
@@ -458,6 +458,11 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
 
     if (aRole == kRoleLeader)
     {
+        if (aStartMode == kStartingAsLeader)
+        {
+            mRetrieveNewNetworkData = false;
+        }
+
         ComposeLeaderAloc(mLeaderAloc.GetAddress());
         Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
         Get<NetworkData::Leader>().Start(aStartMode);
@@ -791,6 +796,7 @@ void Mle::HandleLinkRequest(RxInfo &aRxInfo)
             neighbor = router;
         }
 
+        RemoveNeighborIfRloc16Mismatches(aRxInfo, info.mRloc16);
         break;
 
     case kErrorNotFound:
@@ -853,15 +859,17 @@ Error Mle::SendLinkAccept(const LinkAcceptInfo &aInfo)
     Error        error   = kErrorNone;
     TxMessage   *message = nullptr;
     Command      command = kCommandLinkAccept;
-    Router      *router;
+    Router      *router  = nullptr;
     Ip6::Address destination;
 
     VerifyOrExit(IsAttached());
 
-    router = mRouterTable.FindRouter(aInfo.mExtAddress);
-
-    if (router != nullptr)
+    if (IsRouterRloc16(aInfo.mRloc16))
     {
+        router = mRouterTable.FindRouterByRloc16(aInfo.mRloc16);
+        VerifyOrExit(router != nullptr);
+        VerifyOrExit(router->GetExtAddress() == aInfo.mExtAddress);
+
         if (router->IsStateLinkRequest())
         {
             command = kCommandLinkAcceptAndRequest;
@@ -987,11 +995,7 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         ExitNow(error = kErrorSecurity);
     }
 
-    // Remove stale neighbors
-    if (aRxInfo.mNeighbor && aRxInfo.mNeighbor->GetRloc16() != sourceAddress)
-    {
-        RemoveNeighbor(*aRxInfo.mNeighbor);
-    }
+    RemoveNeighborIfRloc16Mismatches(aRxInfo, sourceAddress);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadVersionTlv(version));
 
@@ -2120,7 +2124,7 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
         SuccessOrExit(error = ProcessAddressRegistrationTlv(aRxInfo, *child));
     }
 
-    router = mRouterTable.FindRouter(extAddr);
+    router = mRouterTable.FindRouter(extAddr, Router::kInStateAnyExceptInvalid);
 
     if (router != nullptr)
     {
@@ -2269,15 +2273,18 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         info.mTlvList.Add(Tlv::kLinkFrameCounter);
     }
 
-    switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
+    if (!mode.IsFullThreadDevice())
     {
-    case kErrorNone:
-        info.mTlvList.Add(Tlv::kAddressRegistration);
-        break;
-    case kErrorNotFound:
-        break;
-    default:
-        ExitNow(error = kErrorParse);
+        switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
+        {
+        case kErrorNone:
+            info.mTlvList.Add(Tlv::kAddressRegistration);
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
+        }
     }
 
     switch (aRxInfo.mMessage.ReadLeaderDataTlv(leaderData))
@@ -2526,13 +2533,16 @@ void Mle::HandleChildUpdateResponseOnParent(RxInfo &aRxInfo)
         }
     }
 
-    switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
+    if (!child->IsFullThreadDevice())
     {
-    case kErrorNone:
-    case kErrorNotFound:
-        break;
-    default:
-        ExitNow(error = kErrorParse);
+        switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
+        {
+        case kErrorNone:
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
+        }
     }
 
     switch (aRxInfo.mMessage.ReadLeaderDataTlv(leaderData))
@@ -2625,6 +2635,15 @@ void Mle::HandleNetworkDataUpdateRouter(void)
     else
     {
         mDelayedSender.ScheduleMulticastDataResponse(GenerateRandomDelay(kUnsolicitedDataResponseJitter));
+    }
+
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    {
+        if (!child.IsRxOnWhenIdle() &&
+            (child.GetNetworkDataVersion() != Get<NetworkData::Leader>().GetVersion(child.GetNetworkDataType())))
+        {
+            Get<MeshForwarder>().RemoveMessagesForChild(child, Message::AcceptMle<kCommandChildUpdateRequest>);
+        }
     }
 
     SynchronizeChildNetworkData();
@@ -2924,11 +2943,11 @@ Error Mle::SendChildUpdateRequestToChild(Child &aChild)
 
     VerifyOrExit(IsRouterOrLeader());
 
-    if (!aChild.IsRxOnWhenIdle() && aChild.IsStateRestoring())
+    if (!aChild.IsRxOnWhenIdle())
     {
-        // No need to send the resync "Child Update Request"
-        // to the sleepy child if there is one already
-        // queued.
+        // Do not replace an already queued "Child Update Request"
+        // for a sleepy child. Callers that need to replace an
+        // outdated request remove it explicitly beforehand.
 
         VerifyOrExit(!Get<IndirectSender>().HasQueuedMessageForSleepyChild(
             aChild, Message::AcceptMle<kCommandChildUpdateRequest>));
@@ -3358,11 +3377,13 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     }
 
     SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMsg->mMessage, rloc16));
+    VerifyOrExit(IsValidRloc16(rloc16) && IsRouterRloc16(rloc16));
     routerId = RouterIdFromRloc16(rloc16);
 
     SuccessOrExit(Tlv::Find<ThreadRouterMaskTlv>(aMsg->mMessage, routerIdMask));
     VerifyOrExit(routerIdMask.IsValid());
     VerifyOrExit(routerIdMask.IsAllocated(GetLeaderId()));
+    VerifyOrExit(routerIdMask.IsAllocated(routerId));
 
     SetAlternateRloc16(GetRloc16());
 
@@ -3533,7 +3554,7 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
     VerifyOrExit(aInfo.mXtalAccuracy <= Get<TimeSync>().GetXtalThreshold());
 #endif
 
-    aInfo.mRouter = mRouterTable.FindRouter(aInfo.mExtAddress);
+    aInfo.mRouter = mRouterTable.FindRouter(aInfo.mExtAddress, Router::kInStateAny);
 
     if (aInfo.mRouter != nullptr)
     {

@@ -114,10 +114,13 @@ void TestHkdfSha256(void)
     const uint8_t kOutKey4[] = {0x13, 0x48, 0x50, 0x67, 0xe2, 0x1a, 0xf1, 0x7c,
                                 0x09, 0x00, 0xf7, 0x0d, 0x88, 0x5f, 0x02, 0x59};
 
+    const uint8_t kEmpty[] = {0x00};
+
     const TestVector kTestVectors[] = {
         {kInKey1, sizeof(kInKey1), kSalt1, sizeof(kSalt1), kInfo1, sizeof(kInfo1), kOutKey1, sizeof(kOutKey1)},
         {kInKey2, sizeof(kInKey2), kSalt2, sizeof(kSalt2), kInfo2, sizeof(kInfo2), kOutKey2, sizeof(kOutKey2)},
         {kInKey3, sizeof(kInKey3), nullptr, 0, nullptr, 0, kOutKey3, sizeof(kOutKey3)},
+        {kInKey3, sizeof(kInKey3), kEmpty, 0, kEmpty, 0, kOutKey3, sizeof(kOutKey3)},
         {kInKey4, sizeof(kInKey4), kSalt4, sizeof(kSalt4), nullptr, 0, kOutKey4, sizeof(kOutKey4)},
     };
 
@@ -149,11 +152,65 @@ void TestHkdfSha256(void)
 
         VerifyOrQuit(memcmp(outKey, test->mOutKey, test->mOutKeyLength) == 0, "HKDF-SHA-256 failed");
 
-        for (size_t i = test->mOutKeyLength + 1; i < sizeof(outKey); i++)
+        for (size_t i = test->mOutKeyLength; i < sizeof(outKey); i++)
         {
             VerifyOrQuit(outKey[i] == kFillByte, "HKDF-SHA-256 wrote beyond output key length");
         }
+
+        // Verify expanding again from the same extracted PRK produces consistent output
+        memset(outKey, kFillByte, sizeof(outKey));
+        hkdf.Expand(test->mInfo, test->mInfoLength, outKey, test->mOutKeyLength);
+        VerifyOrQuit(memcmp(outKey, test->mOutKey, test->mOutKeyLength) == 0, "Repeated HKDF-SHA-256 Expand failed");
     }
+
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
+    {
+        Crypto::ContextWith<Crypto::kHkdfContextSize> context;
+        otCryptoContext                               smallContext;
+        uint8_t                                       smallBuf[1];
+        uint8_t                                       outKey[kMaxOuttKey];
+        static uint8_t                                sMaxOutKey[255 * OT_CRYPTO_SHA256_HASH_SIZE];
+        Crypto::Key                                   inputKey;
+
+        inputKey.Clear();
+        inputKey.Set(kInKey1, sizeof(kInKey1));
+
+        smallContext.mContext     = smallBuf;
+        smallContext.mContextSize = sizeof(smallBuf);
+
+        VerifyOrQuit(otPlatCryptoHkdfInit(nullptr) == kErrorInvalidArgs);
+        VerifyOrQuit(otPlatCryptoHkdfInit(&smallContext) == kErrorFailed);
+        SuccessOrQuit(otPlatCryptoHkdfInit(&context));
+
+        VerifyOrQuit(otPlatCryptoHkdfExtract(nullptr, kSalt1, sizeof(kSalt1), &inputKey) == kErrorInvalidArgs);
+        VerifyOrQuit(otPlatCryptoHkdfExtract(&context, kSalt1, sizeof(kSalt1), nullptr) == kErrorInvalidArgs);
+        VerifyOrQuit(otPlatCryptoHkdfExtract(&context, nullptr, sizeof(kSalt1), &inputKey) == kErrorInvalidArgs);
+        VerifyOrQuit(otPlatCryptoHkdfExtract(&smallContext, kSalt1, sizeof(kSalt1), &inputKey) == kErrorFailed);
+        SuccessOrQuit(otPlatCryptoHkdfExtract(&context, kSalt1, sizeof(kSalt1), &inputKey));
+
+        VerifyOrQuit(otPlatCryptoHkdfExpand(nullptr, kInfo1, sizeof(kInfo1), outKey, sizeof(kOutKey1)) ==
+                     kErrorInvalidArgs);
+        VerifyOrQuit(otPlatCryptoHkdfExpand(&context, kInfo1, sizeof(kInfo1), nullptr, sizeof(kOutKey1)) ==
+                     kErrorInvalidArgs);
+        VerifyOrQuit(otPlatCryptoHkdfExpand(&context, nullptr, sizeof(kInfo1), outKey, sizeof(kOutKey1)) ==
+                     kErrorInvalidArgs);
+        VerifyOrQuit(otPlatCryptoHkdfExpand(&smallContext, kInfo1, sizeof(kInfo1), outKey, sizeof(kOutKey1)) ==
+                     kErrorFailed);
+
+        memset(outKey, kFillByte, sizeof(outKey));
+        SuccessOrQuit(otPlatCryptoHkdfExpand(&context, kInfo1, sizeof(kInfo1), nullptr, 0));
+        SuccessOrQuit(otPlatCryptoHkdfExpand(&context, kInfo1, sizeof(kInfo1), outKey, 0));
+        VerifyOrQuit(outKey[0] == kFillByte);
+
+        SuccessOrQuit(otPlatCryptoHkdfExpand(&context, kInfo1, sizeof(kInfo1), sMaxOutKey, sizeof(sMaxOutKey)));
+        VerifyOrQuit(otPlatCryptoHkdfExpand(&context, kInfo1, sizeof(kInfo1), sMaxOutKey, sizeof(sMaxOutKey) + 1) ==
+                     kErrorFailed);
+
+        VerifyOrQuit(otPlatCryptoHkdfDeinit(nullptr) == kErrorInvalidArgs);
+        VerifyOrQuit(otPlatCryptoHkdfDeinit(&smallContext) == kErrorFailed);
+        SuccessOrQuit(otPlatCryptoHkdfDeinit(&context));
+    }
+#endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
     testFreeInstance(instance);
 }

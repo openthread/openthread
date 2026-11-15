@@ -1871,6 +1871,243 @@ void TestDnsTxtEntry(void)
     testFreeInstance(instance);
 }
 
+void TestTranslatedRecordData(void)
+{
+    static constexpr uint16_t kHeaderOffset = 8;
+    static constexpr uint32_t kTtl          = 120;
+    static constexpr uint16_t kMaxDataSize  = 512;
+
+    static const char kOriginalDomain[]   = "local.";
+    static const char kTranslatedDomain[] = "default.service.arpa.";
+
+    static const uint8_t kPrefixBytes[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
+    static const uint8_t kSuffixBytes[] = {
+        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
+        0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14,
+    };
+
+    struct RecipeTest
+    {
+        uint16_t mRecordType;
+        uint8_t  mNumPrefixBytes;
+        uint8_t  mNumNames;
+        uint16_t mNumSuffixBytes;
+    };
+
+    struct NameTestCase
+    {
+        const char *mInputName;
+        const char *mExpectedOutputName;
+        bool        mIsTranslated;
+    };
+
+    static const RecipeTest kRecipeTests[] = {
+        {Dns::ResourceRecord::kTypeNs, 0, 1, 0},
+        {Dns::ResourceRecord::kTypeCname, 0, 1, 0},
+        {Dns::ResourceRecord::kTypeSoa, 0, 2, 5 * sizeof(uint32_t)},
+        {Dns::ResourceRecord::kTypePtr, 0, 1, 0},
+        {Dns::ResourceRecord::kTypeMx, sizeof(uint16_t), 1, 0},
+        {Dns::ResourceRecord::kTypeRp, 0, 2, 0},
+        {Dns::ResourceRecord::kTypeAfsdb, sizeof(uint16_t), 1, 0},
+        {Dns::ResourceRecord::kTypeRt, sizeof(uint16_t), 1, 0},
+        {Dns::ResourceRecord::kTypePx, sizeof(uint16_t), 2, 0},
+        {Dns::ResourceRecord::kTypeSrv, sizeof(Dns::SrvRecord) - sizeof(Dns::ResourceRecord), 1, 0},
+        {Dns::ResourceRecord::kTypeKx, sizeof(uint16_t), 1, 0},
+        {Dns::ResourceRecord::kTypeDname, 0, 1, 0},
+        {Dns::ResourceRecord::kTypeNsec, 0, 1, 4},
+        {Dns::ResourceRecord::kTypeTxt, 0, 0, 8},
+    };
+
+    static const NameTestCase kNameTestCases[] = {
+        {"host1.local.", "host1.default.service.arpa.", true},
+        {"my-service._tcp.local.", "my-service._tcp.default.service.arpa.", true},
+        {"local.", "default.service.arpa.", true},
+        {"host1.example.com.", "host1.example.com.", false},
+        {"singlelabel.", "singlelabel.", false},
+        {".", ".", false},
+    };
+
+    Instance    *instance;
+    MessagePool *messagePool;
+    Message     *message;
+    Message     *rdataMsg;
+
+    printf("================================================================\n");
+    printf("TestTranslatedRecordData()\n");
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+
+    messagePool = &instance->Get<MessagePool>();
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+    VerifyOrQuit((rdataMsg = messagePool->Allocate(Message::kTypeOther)) != nullptr);
+
+    for (const RecipeTest &recipe : kRecipeTests)
+    {
+        uint16_t numCases2 = (recipe.mNumNames == 2) ? GetArrayLength(kNameTestCases) : 1;
+        uint16_t numCases1 = (recipe.mNumNames >= 1) ? GetArrayLength(kNameTestCases) : 1;
+
+        for (uint16_t index1 = 0; index1 < numCases1; index1++)
+        {
+            for (uint16_t index2 = 0; index2 < numCases2; index2++)
+            {
+                const NameTestCase     *nameCases[2] = {&kNameTestCases[index1], &kNameTestCases[index2]};
+                uint8_t                 rdataBuffer[kMaxDataSize];
+                Data<kWithUint16Length> rdata;
+                Dns::Header             header;
+                Dns::ResourceRecord     record;
+                Dns::Name::Buffer       readName;
+                OwnedPtr<Message>       decompressedMsg;
+                uint16_t                translatedDomainOffset;
+                uint16_t                recordOffset;
+                uint16_t                offset;
+                uint16_t                decompressedOffset;
+
+                // 1. Construct uncompressed input RDATA in `rdataMsg`
+                SuccessOrQuit(rdataMsg->SetLength(0));
+                rdataMsg->SetOffset(0);
+
+                if (recipe.mNumPrefixBytes > 0)
+                {
+                    SuccessOrQuit(rdataMsg->AppendBytes(kPrefixBytes, recipe.mNumPrefixBytes));
+                }
+
+                for (uint8_t nameIdx = 0; nameIdx < recipe.mNumNames; nameIdx++)
+                {
+                    SuccessOrQuit(Dns::Name::AppendName(nameCases[nameIdx]->mInputName, *rdataMsg));
+                }
+
+                if (recipe.mNumSuffixBytes > 0)
+                {
+                    SuccessOrQuit(rdataMsg->AppendBytes(kSuffixBytes, recipe.mNumSuffixBytes));
+                }
+
+                VerifyOrQuit(rdataMsg->GetLength() <= sizeof(rdataBuffer));
+                SuccessOrQuit(rdataMsg->Read(0, rdataBuffer, rdataMsg->GetLength()));
+                rdata.Init(rdataBuffer, rdataMsg->GetLength());
+
+                // 2. Prepare DNS message with header and translated domain name
+                SuccessOrQuit(message->SetLength(0));
+
+                for (uint16_t i = 0; i < kHeaderOffset; i++)
+                {
+                    SuccessOrQuit(message->Append<uint8_t>(0xaa));
+                }
+
+                header.Clear();
+                SuccessOrQuit(message->Append(header));
+                message->SetOffset(kHeaderOffset);
+
+                translatedDomainOffset = message->GetLength() - kHeaderOffset;
+                SuccessOrQuit(Dns::Name::AppendName(kTranslatedDomain, *message));
+
+                // Append RR owner name and header, then translated RDATA
+                SuccessOrQuit(Dns::Name::AppendPointerLabel(translatedDomainOffset, *message));
+                recordOffset = message->GetLength();
+                record.Init(recipe.mRecordType);
+                record.SetTtl(kTtl);
+                SuccessOrQuit(message->Append(record));
+
+                SuccessOrQuit(Dns::ResourceRecord::AppendTranslatedRecordDataTo(
+                    *message, recipe.mRecordType, rdata, kOriginalDomain, translatedDomainOffset));
+                Dns::ResourceRecord::UpdateRecordLengthInMessage(*message, recordOffset);
+
+                // 3. Verify the translated RDATA in `message`
+                SuccessOrQuit(message->Read(recordOffset, record));
+                offset = recordOffset + sizeof(Dns::ResourceRecord);
+
+                if (recipe.mNumPrefixBytes > 0)
+                {
+                    VerifyOrQuit(message->CompareBytes(offset, kPrefixBytes, recipe.mNumPrefixBytes));
+                    offset += recipe.mNumPrefixBytes;
+                }
+
+                for (uint8_t nameIdx = 0; nameIdx < recipe.mNumNames; nameIdx++)
+                {
+                    uint16_t nameStartOffset = offset;
+                    uint8_t  lastByte        = 0xff;
+
+                    SuccessOrQuit(Dns::Name::ReadName(*message, offset, readName));
+                    VerifyOrQuit(strcmp(readName, nameCases[nameIdx]->mExpectedOutputName) == 0);
+
+                    if (nameCases[nameIdx]->mIsTranslated)
+                    {
+                        uint16_t expectedCompressedLen =
+                            static_cast<uint16_t>(strlen(nameCases[nameIdx]->mInputName) - strlen(kOriginalDomain) + 2);
+
+                        VerifyOrQuit(offset - nameStartOffset == expectedCompressedLen);
+                    }
+                    else
+                    {
+                        uint16_t expectedUncompressedLen =
+                            (strcmp(nameCases[nameIdx]->mInputName, ".") == 0)
+                                ? 1
+                                : static_cast<uint16_t>(strlen(nameCases[nameIdx]->mInputName) + 1);
+
+                        VerifyOrQuit(offset - nameStartOffset == expectedUncompressedLen);
+                        SuccessOrQuit(message->Read(offset - 1, lastByte));
+                        VerifyOrQuit(lastByte == 0);
+                    }
+                }
+
+                if (recipe.mNumSuffixBytes > 0)
+                {
+                    VerifyOrQuit(message->CompareBytes(offset, kSuffixBytes, recipe.mNumSuffixBytes));
+                    offset += recipe.mNumSuffixBytes;
+                }
+
+                VerifyOrQuit(offset == recordOffset + record.GetSize());
+                VerifyOrQuit(offset == message->GetLength());
+
+                // 4. Verify `DecompressRecordData()` on the translated record
+                SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, recordOffset, decompressedMsg));
+
+                if (recipe.mNumNames == 0)
+                {
+                    VerifyOrQuit(decompressedMsg == nullptr);
+                    continue;
+                }
+
+                VerifyOrQuit(decompressedMsg != nullptr);
+                decompressedOffset = 0;
+
+                if (recipe.mNumPrefixBytes > 0)
+                {
+                    VerifyOrQuit(
+                        decompressedMsg->CompareBytes(decompressedOffset, kPrefixBytes, recipe.mNumPrefixBytes));
+                    decompressedOffset += recipe.mNumPrefixBytes;
+                }
+
+                for (uint8_t nameIdx = 0; nameIdx < recipe.mNumNames; nameIdx++)
+                {
+                    uint16_t nameStartOffset = decompressedOffset;
+                    uint16_t expectedDecompressedLen =
+                        (strcmp(nameCases[nameIdx]->mExpectedOutputName, ".") == 0)
+                            ? 1
+                            : static_cast<uint16_t>(strlen(nameCases[nameIdx]->mExpectedOutputName) + 1);
+
+                    SuccessOrQuit(Dns::Name::ReadName(*decompressedMsg, decompressedOffset, readName));
+                    VerifyOrQuit(strcmp(readName, nameCases[nameIdx]->mExpectedOutputName) == 0);
+                    VerifyOrQuit(decompressedOffset - nameStartOffset == expectedDecompressedLen);
+                }
+
+                if (recipe.mNumSuffixBytes > 0)
+                {
+                    VerifyOrQuit(
+                        decompressedMsg->CompareBytes(decompressedOffset, kSuffixBytes, recipe.mNumSuffixBytes));
+                    decompressedOffset += recipe.mNumSuffixBytes;
+                }
+
+                VerifyOrQuit(decompressedOffset == decompressedMsg->GetLength());
+            }
+        }
+    }
+
+    rdataMsg->Free();
+    message->Free();
+    testFreeInstance(instance);
+}
+
 } // namespace ot
 
 int main(void)
@@ -1879,6 +2116,7 @@ int main(void)
     ot::TestDnsCompressedName();
     ot::TestHeaderAndResourceRecords();
     ot::TestDnsTxtEntry();
+    ot::TestTranslatedRecordData();
 
     printf("All tests passed\n");
     return 0;

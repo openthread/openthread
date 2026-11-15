@@ -45,17 +45,17 @@ SubMac::Callbacks::Callbacks(Instance &aInstance)
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError)
+void SubMac::Callbacks::ReceiveDone(RxFrame::ParseInfo &aFrameInfo, Error aError)
 {
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     if (Get<LinkRaw>().IsEnabled())
     {
-        Get<LinkRaw>().InvokeReceiveDone(aFrame, aError);
+        Get<LinkRaw>().InvokeReceiveDone(aFrameInfo, aError);
     }
     else
 #endif
     {
-        Get<Mac>().HandleReceivedFrame(aFrame, aError);
+        Get<Mac>().HandleReceivedFrame(aFrameInfo, aError);
     }
 }
 
@@ -107,7 +107,10 @@ void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter)
 
 #elif OPENTHREAD_RADIO
 
-void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError) { Get<LinkRaw>().InvokeReceiveDone(aFrame, aError); }
+void SubMac::Callbacks::ReceiveDone(RxFrame::ParseInfo &aFrameInfo, Error aError)
+{
+    Get<LinkRaw>().InvokeReceiveDone(aFrameInfo, aError);
+}
 
 void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t) {}
 

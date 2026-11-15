@@ -137,8 +137,8 @@ private:
     void         HandleTransmitTask(void);
     static void  HandleDtlsConnectEvent(ConnectEvent aEvent, void *aContext);
     void         HandleDtlsConnectEvent(ConnectEvent aEvent);
-    static void  HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
-    void         HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
+    static void  HandleDtlsReceive(void *aContext, ot::Message &aMessage);
+    void         HandleDtlsReceive(ot::Message &aMessage);
 
     Callback<ConnectHandler> mConnectCallback;
     ot::MessageQueue         mTransmitQueue;

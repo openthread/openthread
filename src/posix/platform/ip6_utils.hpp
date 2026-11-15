@@ -33,10 +33,14 @@
 #include "platform-posix.h"
 
 #include <arpa/inet.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <openthread/ip6.h>
+
+#include "common/code_utils.hpp"
 
 namespace ot {
 namespace Posix {
@@ -95,6 +99,116 @@ inline void CopyIp6AddressTo(const otIp6Address &aAddress, void *aBuffer)
 inline void ReadIp6AddressFrom(const void *aBuffer, otIp6Address &aAddress)
 {
     memcpy(&aAddress, aBuffer, sizeof(otIp6Address));
+}
+
+constexpr size_t kIp6PayloadLengthOffset = 4;  ///< Offset of Payload Length in IPv6 header.
+constexpr size_t kIp6HopLimitOffset      = 7;  ///< Offset of Hop Limit in IPv6 header.
+constexpr size_t kIp6SourceOffset        = 8;  ///< Offset of Source Address in IPv6 header.
+constexpr size_t kIp6DestinationOffset   = 24; ///< Offset of Destination Address in IPv6 header.
+
+/**
+ * Sums a sequence of bytes in network byte order into a 32-bit one's complement accumulator.
+ *
+ * @param[in] aBytes   A pointer to the byte sequence.
+ * @param[in] aLength  The number of bytes to sum.
+ *
+ * @returns The 32-bit sum prior to 16-bit carry folding.
+ */
+inline uint32_t SumChecksumBytes(const uint8_t *aBytes, size_t aLength)
+{
+    uint32_t sum = 0;
+
+    for (size_t i = 0; i + 1 < aLength; i += 2)
+    {
+        sum += (static_cast<uint32_t>(aBytes[i]) << 8) | aBytes[i + 1];
+    }
+
+    if ((aLength & 1) != 0)
+    {
+        sum += static_cast<uint32_t>(aBytes[aLength - 1]) << 8;
+    }
+
+    return sum;
+}
+
+/**
+ * Recomputes the UDP or TCP checksum in an unfragmented IPv6 packet without extension headers.
+ *
+ * Packets with other next-header values or truncated lengths are left unmodified.
+ *
+ * @param[in,out] aPacket  A pointer to the IPv6 packet buffer.
+ * @param[in]     aLength  The length of the packet buffer in bytes.
+ */
+inline void UpdateIp6TransportChecksum(uint8_t *aPacket, size_t aLength)
+{
+    constexpr uint16_t kUdpHeaderSize     = 8;
+    constexpr size_t   kUdpLengthOffset   = 4;
+    constexpr size_t   kUdpChecksumOffset = 6;
+    constexpr uint16_t kTcpHeaderSize     = 20;
+    constexpr size_t   kTcpChecksumOffset = 16;
+
+    uint16_t payloadLength;
+    uint16_t upperLayerLength = 0;
+    uint8_t  nextHeader;
+    size_t   checksumOffset = 0;
+    uint32_t sum            = 0;
+    uint16_t checksum;
+
+    VerifyOrExit(aPacket != nullptr);
+    VerifyOrExit(aLength >= OT_IP6_HEADER_SIZE);
+    VerifyOrExit((aPacket[0] >> 4) == 6);
+
+    payloadLength =
+        (static_cast<uint16_t>(aPacket[kIp6PayloadLengthOffset]) << 8) | aPacket[kIp6PayloadLengthOffset + 1];
+    VerifyOrExit(OT_IP6_HEADER_SIZE + static_cast<size_t>(payloadLength) <= aLength);
+
+    nextHeader = aPacket[OT_IP6_HEADER_PROTO_OFFSET];
+
+    switch (nextHeader)
+    {
+    case OT_IP6_PROTO_UDP:
+        VerifyOrExit(payloadLength >= kUdpHeaderSize);
+        upperLayerLength = (static_cast<uint16_t>(aPacket[OT_IP6_HEADER_SIZE + kUdpLengthOffset]) << 8) |
+                           aPacket[OT_IP6_HEADER_SIZE + kUdpLengthOffset + 1];
+        VerifyOrExit((upperLayerLength >= kUdpHeaderSize) && (upperLayerLength <= payloadLength));
+        checksumOffset = OT_IP6_HEADER_SIZE + kUdpChecksumOffset;
+        break;
+
+    case OT_IP6_PROTO_TCP:
+        VerifyOrExit(payloadLength >= kTcpHeaderSize);
+        upperLayerLength = payloadLength;
+        checksumOffset   = OT_IP6_HEADER_SIZE + kTcpChecksumOffset;
+        break;
+
+    default:
+        ExitNow();
+    }
+
+    aPacket[checksumOffset]     = 0;
+    aPacket[checksumOffset + 1] = 0;
+
+    sum += SumChecksumBytes(&aPacket[kIp6SourceOffset], 2 * OT_IP6_ADDRESS_SIZE);
+    sum += upperLayerLength;
+    sum += nextHeader;
+    sum += SumChecksumBytes(&aPacket[OT_IP6_HEADER_SIZE], upperLayerLength);
+
+    while ((sum >> 16) != 0)
+    {
+        sum = (sum & 0xffff) + (sum >> 16);
+    }
+
+    checksum = static_cast<uint16_t>(~sum);
+
+    if ((nextHeader == OT_IP6_PROTO_UDP) && (checksum == 0))
+    {
+        checksum = 0xffff;
+    }
+
+    aPacket[checksumOffset]     = static_cast<uint8_t>(checksum >> 8);
+    aPacket[checksumOffset + 1] = static_cast<uint8_t>(checksum & 0xff);
+
+exit:
+    return;
 }
 
 /**

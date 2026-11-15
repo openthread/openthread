@@ -45,6 +45,15 @@ class TestFrameFormats(unittest.TestCase):
         cls.__dut.factory_reset()
         cls.__ref.factory_reset()
 
+        # Older OpenThread hosts do not support the `diag radio promiscuous|panid|shortaddr|extaddr` commands. Fall
+        # back to promiscuous RX on such DUTs instead of aborting the test run.
+        cls.__dut.diag_start()
+        cls.__enable_radio_address_filter = cls.__dut.is_command_supported('diag radio promiscuous')
+        cls.__dut.diag_stop()
+
+        if not cls.__enable_radio_address_filter:
+            print('Warning: the DUT does not support `diag radio promiscuous`, RX address filtering is not tested')
+
     def setUp(self):
         pass
 
@@ -191,7 +200,8 @@ class TestFrameFormats(unittest.TestCase):
     def __test_frame_format(self, number: int, frame: Frame):
         ret = self.__device_manager.send_formatted_frames_retries(self.__dut, self.__ref, frame)
         self.__device_manager.output_test_result_bool(f'{number} TX {frame.name}', ret, align_length=100)
-        ret = self.__device_manager.send_formatted_frames_retries(self.__ref, self.__dut, frame)
+        ret = self.__device_manager.send_formatted_frames_retries(
+            self.__ref, self.__dut, frame, enable_radio_address_filter=self.__enable_radio_address_filter)
         self.__device_manager.output_test_result_bool(f'{number} RX {frame.name}', ret, align_length=100)
 
     def tearDown(self):

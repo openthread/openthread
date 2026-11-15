@@ -142,13 +142,35 @@ public:
 
     /**
      * Starts the supervision listener operation.
+     *
+     * Does nothing if the listener is already running or paused.
      */
     void Start(void);
 
     /**
      * Stops the supervision listener operation.
+     *
+     * Does nothing if the listener is already stopped.
      */
     void Stop(void);
+
+    /**
+     * Pauses the supervision listener operation.
+     *
+     * The pending check timeout keeps running while paused. Received frames do not restart it, and a check timeout
+     * that expires is handled on `Resume()`.
+     *
+     * Does nothing if the listener is not running or already paused.
+     */
+    void Pause(void);
+
+    /**
+     * Resumes the supervision listener operation after `Pause()`.
+     *
+     * The pending check timeout keeps its fire time, and expires right away if that time already passed. Does nothing
+     * if the listener is not paused, for example after `Stop()` while paused.
+     */
+    void Resume(void);
 
     /**
      * Sets the supervision interval.
@@ -210,6 +232,13 @@ private:
     static constexpr uint16_t kDefaultTimeout  = OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT; // (seconds)
     static constexpr uint16_t kDefaultInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL;      // (seconds)
 
+    enum State : uint8_t
+    {
+        kStopped,
+        kRunning,
+        kPaused,
+    };
+
     void RestartTimer(void);
     void HandleTimer(void);
 
@@ -218,6 +247,7 @@ private:
     uint16_t      mTimeout;
     uint16_t      mInterval;
     uint16_t      mCounter;
+    State         mState;
     ListenerTimer mTimer;
 };
 

@@ -62,10 +62,9 @@ jobs:
       shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y shellcheck iwyu
+        sudo apt-get --no-install-recommends install -y shellcheck iwyu shfmt
         sudo bash script/install-llvm.sh
         python3 -m pip install yapf==0.43.0
-        sudo snap install shfmt
         npm install prettier@2.0.4
     - name: Check
       run: |
@@ -73,7 +72,7 @@ jobs:
         script/check-iwyu-public-header
 
   markdown-lint-check:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -95,6 +94,7 @@ jobs:
       env:
         PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
       run: |
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         npm install -g @umbrelladocs/linkspector@0.5.5
         wget --timeout=30 --tries=4 -O /tmp/reviewdog.tar.gz https://github.com/reviewdog/reviewdog/releases/download/v0.21.0/reviewdog_0.21.0_Linux_x86_64.tar.gz
         sudo tar -xzf /tmp/reviewdog.tar.gz -C /usr/local/bin reviewdog
@@ -178,14 +178,14 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
-        sudo apt-get remove -y cmake || true
-        sudo apt-get purge -y --auto-remove cmake || true
-        rm -rf cmake-3.10.3*
-        wget --timeout=30 --tries=4 http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
-        tar xf cmake-3.10.3.tar.gz
-        cd cmake-3.10.3
-        ./configure
-        sudo make install
+        sudo apt-get purge -y cmake cmake-data || true
+        sudo rm -rf /usr/local/bin/cmake /usr/local/bin/ctest /usr/local/bin/cpack /usr/local/bin/ccmake /usr/local/bin/cmake-gui /usr/local/share/cmake-* /usr/local/doc/cmake*
+        wget --timeout=30 --tries=4 -O /tmp/cmake-3.10.3-Linux-x86_64.tar.gz https://cmake.org/files/v3.10/cmake-3.10.3-Linux-x86_64.tar.gz
+        echo "9e7c48b797484f74c5ee3ae55132b40b16ed8e81ee762402da8971205b0a896b  /tmp/cmake-3.10.3-Linux-x86_64.tar.gz" | sha256sum -c -
+        sudo tar -xzf /tmp/cmake-3.10.3-Linux-x86_64.tar.gz --strip-components=1 --no-same-owner --keep-directory-symlink -C /usr/local
+        rm -f /tmp/cmake-3.10.3-Linux-x86_64.tar.gz
+        hash -r
+        which cmake
         cmake --version | grep 3.10.3
     - name: Build
       run: |
@@ -463,7 +463,7 @@ jobs:
             CXX: clang++
           - CC: gcc
             CXX: g++
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       CC: ${{ matrix.CC }}
       CXX: ${{ matrix.CXX }}

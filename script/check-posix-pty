@@ -47,6 +47,12 @@ at_exit()
     sudo killall ot-rcp || true
     sudo killall socat || true
 
+    # On macOS the daemon ends on SIGTERM without removing its socket and lock file, and utun names are reused
+    # across runs; stale files would make the next run's socket check pass for the wrong reason.
+    if [[ ${OT_DAEMON} == 'on' && -n ${NETIF_NAME:-} ]]; then
+        sudo rm -f "$(daemon_socket_basename).sock" "$(daemon_socket_basename).lock"
+    fi
+
     # The daemon's output no longer streams through tee; show it when the check failed.
     if [[ ${EXIT_CODE} != 0 && -f ${OT_DAEMON_OUTPUT:-} ]]; then
         cat "${OT_DAEMON_OUTPUT}"
@@ -85,7 +91,10 @@ do_build()
     ./script/cmake-build simulation
     # OMR prefixes are installed as kernel routes (which needs border routing for otNetDataContainsOmrPrefix), so that
     # the daemon's route handling is exercised.
-    ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_POSIX_INSTALL_OMR_ROUTES=ON -DOT_BORDER_ROUTING=ON -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
+    # The mDNS CLI (`mdns enable`, `mdns localhostaddrs`) needs the public mDNS API, which has no cmake option.
+    CFLAGS="-DOPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE=1 ${CFLAGS:-}" \
+        CXXFLAGS="-DOPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE=1 ${CXXFLAGS:-}" \
+        ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_POSIX_INSTALL_OMR_ROUTES=ON -DOT_BORDER_ROUTING=ON -DOT_MDNS=ON -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
 }
 
 # The netif joins ff02::1 on the Thread interface when it comes up and leaves it when it
@@ -186,6 +195,246 @@ check_daemon_omr_route()
         || die 'the daemon failed to delete the route of the OMR prefix'
 }
 
+set_host_address()
+{
+    if [[ ${OSTYPE} == darwin* ]]; then
+        sudo ifconfig "${NETIF_NAME}" inet6 "$2" prefixlen 64 "$([[ $1 == add ]] && echo alias || echo -alias)"
+    else
+        sudo ip -6 addr "$1" "$2/64" dev "${NETIF_NAME}"
+    fi
+}
+
+check_daemon_address_events()
+{
+    local address='fd00:1234:5678::1'
+    # ot-ctl prints every address as eight groups, without "::"; `ipaddr -v` adds the origin, the prefix
+    # length taken from the trimmed netmask and the flags the address was added with.
+    local listed='fd00:1234:5678:0:0:0:0:1'
+    local listed_verbose="${listed} origin:manual plen:64 preferred:1 valid:1"
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # The routing socket (netlink on Linux) reports every address and multicast membership of the
+    # interface to the daemon, its own included, and the daemon logs each report at info level.
+    grep -q 'ADD \[U\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of OpenThread's own addresses did not reach ot-daemon"
+    grep -q 'ADD \[M\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of the interface's multicast memberships did not reach ot-daemon"
+
+    # An address the host adds becomes an address of OpenThread and goes with its removal.
+    set_host_address add "${address}"
+    timeout_run 10 host_address_known "${listed_verbose}" || die 'an address added on the host did not reach OpenThread'
+
+    set_host_address del "${address}"
+    timeout_run 10 host_address_gone "${listed}" || die 'an address removed on the host is still known to OpenThread'
+}
+
+# The CLI ends its lines with CR LF; the CR goes before the whole-line match.
+host_address_known()
+{
+    local addresses
+
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ipaddr -v) || return 1
+    grep -Fx "$1" <<<"${addresses//$'\r'/}" >/dev/null
+}
+
+host_address_gone()
+{
+    local addresses
+
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ipaddr) || return 1
+    ! grep -Fx "$1" <<<"${addresses//$'\r'/}" >/dev/null
+}
+
+check_daemon_socket_flags()
+{
+    local fifo="$PWD/tmp/ot-ctl-input"
+    local sockets
+
+    # ot-ctl connects before it reads its input; the session stays open until it reads "exit".
+    mkfifo "${fifo}"
+    "${OT_CTL[@]}" -I "${NETIF_NAME}" <"${fifo}" &
+    exec 3>"${fifo}"
+
+    # lsof prints the file status flags of each descriptor with +fg: NB for O_NONBLOCK, or ND
+    # where that is the same flag as O_NDELAY (Linux). Two descriptors of ot-daemon carry the
+    # socket path: the listening socket, which is non-blocking, and the session it accepted,
+    # which is served blocking on every platform (on BSD it inherits the flag from the listening
+    # socket until the daemon clears it).
+    for _ in $(seq 1 10); do
+        sockets=$(sudo lsof +fg -U -a -c ot-daemon | grep "openthread-${NETIF_NAME}.sock" || true)
+        [[ $(echo "${sockets}" | grep -c .) == 2 ]] && break
+        sleep 1
+    done
+    echo "${sockets}"
+
+    echo exit >&3 || true
+    exec 3>&-
+    wait $! || die 'ot-ctl did not exit cleanly'
+    rm -f "${fifo}"
+
+    # lsof lists the descriptors in order; the listening socket was opened first.
+    [[ $(echo "${sockets}" | grep -c .) == 2 ]] || die 'ot-daemon does not hold a listening and a session socket'
+    echo "${sockets}" | sed -n '1p' | grep -qwE 'NB|ND' || die 'the listening socket must be non-blocking'
+    ! echo "${sockets}" | sed -n '2p' | grep -qwE 'NB|ND' || die 'the session socket must be blocking'
+}
+
+# The default socket basename of the build: in the runtime directory, not /tmp.
+daemon_socket_basename()
+{
+    if [[ ${OSTYPE} == linux-gnu* ]]; then
+        echo "/run/openthread-${NETIF_NAME}"
+    else
+        echo "/var/run/openthread-${NETIF_NAME}"
+    fi
+}
+
+check_daemon_socket_path()
+{
+    local basename
+
+    basename=$(daemon_socket_basename)
+    sudo test -S "${basename}.sock" || die "ot-daemon does not listen on ${basename}.sock"
+    sudo test -f "${basename}.lock" || die "ot-daemon lock file ${basename}.lock does not exist"
+}
+
+set_host_link_state()
+{
+    if [[ ${OSTYPE} == "linux-gnu"* ]]; then
+        sudo ip link set dev "${NETIF_NAME}" "$1"
+    else
+        sudo ifconfig "${NETIF_NAME}" "$1"
+    fi
+}
+
+# OpenThread's interface is in the given state (up or down), as ot-ctl reports it.
+ot_ifconfig_is()
+{
+    local output
+
+    output=$("${OT_CTL[@]}" -I "${NETIF_NAME}" ifconfig) || return 1
+    grep -q "$1" <<<"${output}"
+}
+
+# Dies with the given message, or with ot-daemon's exit status when it is the daemon that is gone.
+die_on_host_link_state()
+{
+    local status
+
+    # OT_DAEMON_JOB is sudo (or the sudo function of script/_maybe_isolate), which
+    # lives as long as ot-daemon and exits with its status.
+    if ! ps -p "${OT_DAEMON_JOB}" >/dev/null; then
+        wait "${OT_DAEMON_JOB}" && status=0 || status=$?
+        die "ot-daemon exited with status ${status} on the host setting the interface $1"
+    fi
+    die "OpenThread did not follow the host setting the interface $1"
+}
+
+check_host_link_state()
+{
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # The host's link state is passed to OpenThread on every platform. Thread is running here: the
+    # host's down stops it, and the host's up brings OpenThread's interface back (not Thread), so the
+    # ifconfig-down check that follows starts from an interface that is up.
+    set_host_link_state down
+    timeout_run 10 ot_ifconfig_is down || die_on_host_link_state down
+    set_host_link_state up
+    timeout_run 10 ot_ifconfig_is up || die_on_host_link_state up
+}
+
+check_netif_mtu()
+{
+    local mtu
+
+    # The Thread interface carries IPv6 datagrams of at most 1280 bytes on every platform.
+    if [[ ${OSTYPE} == linux* ]]; then
+        mtu=$(ip link show "${NETIF_NAME}" | sed -En 's/.* mtu ([0-9]+).*/\1/p')
+    else
+        mtu=$(ifconfig "${NETIF_NAME}" | sed -En 's/.* mtu ([0-9]+).*/\1/p')
+    fi
+    [[ ${mtu} == 1280 ]] || die "the Thread interface MTU is '${mtu}', expected 1280"
+}
+
+check_daemon_backtrace()
+{
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # A fatal signal leaves a stack trace in the log on every platform. This ends ot-daemon, so
+    # it is the last check.
+    sudo pkill -SEGV -n -x ot-daemon
+    wait "${OT_DAEMON_JOB}" 2>/dev/null || true
+
+    grep -A20 'BEGINNING OF CRASH' "${OT_DAEMON_OUTPUT}" || die 'no stack trace after SIGSEGV'
+    grep -q 'END OF CRASH' "${OT_DAEMON_OUTPUT}" || die 'the stack trace is incomplete'
+    # A parsed frame ends in "+0x<offset> [0x<address>]"; the unparsed fallback prints the raw symbol line.
+    grep -qE '# *[0-9]+: [^ ]+ .+\+0x[0-9a-f]+ \[0x[0-9a-f]+\]' "${OT_DAEMON_OUTPUT}" || die 'the stack trace has no parsed frame'
+}
+
+mdns_lists_address()
+{
+    local addresses
+
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" mdns localhostaddrs) || return 1
+    grep -Fx "$1" <<<"${addresses//$'\r'/}" >/dev/null
+}
+
+mdns_lacks_address()
+{
+    local addresses
+
+    addresses=$("${OT_CTL[@]}" -I "${NETIF_NAME}" mdns localhostaddrs) || return 1
+    ! grep -Fx "$1" <<<"${addresses//$'\r'/}" >/dev/null
+}
+
+check_daemon_mdns_address_monitor()
+{
+    local address='fd00:5678::1'
+    # ot-ctl prints every address as eight groups, without "::".
+    local listed='fd00:5678:0:0:0:0:0:1'
+    local iface
+    local index
+    local state
+    local enabled_here=0
+    local listed_ok=0
+
+    [[ ${OT_DAEMON} == 'on' ]] || return 0
+
+    # OpenThread's mDNS learns the addresses of the interface it serves from the routing socket
+    # (netlink on Linux) and lists them as its local host addresses. With an infrastructure interface
+    # (-B) mDNS is enabled there by itself (OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF), and
+    # enabling it again on another interface changes nothing; without one it is enabled on the Thread
+    # interface for this check.
+    iface=${INFRA_IF_NAME:-${NETIF_NAME}}
+    index=$(python3 -c 'import socket, sys; print(socket.if_nametoindex(sys.argv[1]))' "${iface}")
+    state=$("${OT_CTL[@]}" -I "${NETIF_NAME}" mdns state) || die 'failed to read the mDNS state'
+    if ! grep -q Enabled <<<"${state}"; then
+        ot_ctl_done mdns enable "${index}" || die 'failed to enable mDNS'
+        enabled_here=1
+    fi
+
+    if [[ ${OSTYPE} == darwin* ]]; then
+        sudo ifconfig "${iface}" inet6 "${address}" prefixlen 64 alias
+    else
+        sudo ip -6 addr add "${address}/64" dev "${iface}"
+    fi
+    # The address is removed again before a failure ends the check, so that it cannot stay on a
+    # persistent interface.
+    if timeout_run 10 mdns_lists_address "${listed}"; then
+        listed_ok=1
+    fi
+
+    if [[ ${OSTYPE} == darwin* ]]; then
+        sudo ifconfig "${iface}" inet6 "${address}" prefixlen 64 -alias
+    else
+        sudo ip -6 addr del "${address}/64" dev "${iface}"
+    fi
+    [[ ${listed_ok} == 1 ]] || die 'an address added on the host did not reach mDNS'
+    timeout_run 10 mdns_lacks_address "${listed}" || die 'an address removed on the host is still an mDNS local host address'
+
+    if [[ ${enabled_here} == 1 ]]; then
+        ot_ctl_done mdns disable || die 'failed to disable mDNS'
+    fi
+}
+
 do_check()
 {
     trap at_exit INT TERM EXIT
@@ -202,8 +451,12 @@ do_check()
     timeout_run 10 test -c "${SOCAT_PTY}"
     echo 'SOCAT_PTY' "${SOCAT_PTY}"
 
-    # Cover setting a valid network interface name.
-    VALID_NETIF_NAME="wan$(date +%H%M%S)"
+    # Cover setting a valid network interface name. On macOS only a utun number can be chosen.
+    if [[ ${OSTYPE} == darwin* ]]; then
+        VALID_NETIF_NAME="utun$((200 + 10#$(date +%S)))"
+    else
+        VALID_NETIF_NAME="wan$(date +%H%M%S)"
+    fi
     readonly VALID_NETIF_NAME
 
     RADIO_URL="spinel+hdlc+uart://${SOCAT_PTY}?region=US&max-power-table-mbm=1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600"
@@ -214,8 +467,9 @@ do_check()
         sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d5 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" >"${OT_DAEMON_OUTPUT}" 2>&1 &
         OT_DAEMON_JOB=$!
         sleep 3
-        # macOS cannot explicitly set network interface name
         NETIF_NAME=$(grep -o 'Thread interface: .\+' "${OT_DAEMON_OUTPUT}" | cut -d: -f2 | tr -d ' \r\n')
+        [[ ${NETIF_NAME} == "${VALID_NETIF_NAME}" ]] || die "ot-daemon created ${NETIF_NAME}, not the requested ${VALID_NETIF_NAME}"
+        check_daemon_socket_path
         OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
         if [[ ${OT_DAEMON_ALLOW_ALL} == 1 ]] || [[ -n ${OT_ISOLATED_REEXEC:-} ]]; then
             OT_CTL=("${OT_CTL_PATH}")
@@ -225,6 +479,8 @@ do_check()
         # -d5 asks for debug logging; the daemon's output must carry OpenThread's own log lines, not only the
         # syslog() lines of its startup.
         timeout_run 10 grep -qE '\[(D|I)\] ' "${OT_DAEMON_OUTPUT}" || die 'the daemon does not log at the level -d asked for'
+
+        check_netif_mtu
         "${OT_CTL[@]}" -I "${NETIF_NAME}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
 
         # verify supports options in OpenThread commands without separator --
@@ -256,6 +512,7 @@ do_check()
         # check_daemon_multicast_group reads INFO lines of the netif; -d5 above gives them along
         # with everything at DEBG, so settle on INFO for the rest of the run.
         "${OT_CTL[@]}" -I "${NETIF_NAME}" log level 4 | grep 'Done' || die 'failed to set log level'
+        check_daemon_socket_flags
         OT_CLI_CMD="${OT_CTL[*]} -I ${NETIF_NAME}"
     else
         OT_CLI="$PWD/build/posix/src/posix/ot-cli"
@@ -266,6 +523,12 @@ do_check()
         INVALID_NETIF_NAME="wan0123456789123"
         readonly INVALID_NETIF_NAME
         sudo "${OT_CLI}" -I "${INVALID_NETIF_NAME}" -n "${RADIO_URL}" || test $? = 2
+
+        if [[ ${OSTYPE} == darwin* ]]; then
+            # A utun name needs a number. The check runs when the interface is created, after a dry run ends,
+            # so no -n here; the CLI exits with 2 (OT_EXIT_INVALID_ARGUMENTS) before it would block.
+            sudo "${OT_CLI}" -I utunabc "${RADIO_URL}" || test $? = 2
+        fi
 
         OT_CLI_CMD="$PWD/build/posix/src/posix/ot-cli ${RADIO_URL}"
     fi
@@ -320,7 +583,7 @@ EOF
 
     sudo lsof -iUDP:5683 -nP || die 'Application CoAP port is not available!'
 
-    extaddr=$(grep -ao -A +1 'extaddr' "$OT_OUTPUT" | tail -n1 | tr -d '\r\n\0')
+    extaddr=$(grep -a -A 3 'extaddr' "$OT_OUTPUT" | grep -aoE '[0-9a-f]{16}' | head -n 1)
     echo "Extended address is: ${extaddr}"
 
     prefix=$(grep -ao 'Mesh Local Prefix: [0-9a-f:]\+' "$OT_OUTPUT" | cut -d: -f2- | tr -d ' \r\n')
@@ -334,22 +597,19 @@ EOF
     fi
 
     check_daemon_multicast_group Added
+    check_daemon_address_events
 
-    # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
-    if [[ $OSTYPE != "linux-gnu"* ]]; then
-        check_daemon_omr_route
-        check_daemon_netif_down
-        return 0
-    fi
-
+    # A group an application joins on the host becomes a membership of OpenThread and goes with the leave
+    # (netlink on Linux, RTM_NEWMADDR/RTM_DELMADDR on BSD).
     if [[ ${OT_DAEMON} == 'on' ]]; then
-        NETIF_INDEX=$(ip link show "${NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
+        NETIF_INDEX=$(python3 -c 'import socket, sys; print(socket.if_nametoindex(sys.argv[1]))' "${NETIF_NAME}")
         sudo env PATH="$(dirname "${OT_CTL_PATH}"):${PATH}" \
             python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" "${NETIF_NAME}" \
             || die 'multicast group join failed'
     fi
+    check_daemon_mdns_address_monitor
 
-    # Retrievie test resource through application CoAP
+    # Retrieve test resource through application CoAP
     coap_response=$(coap-client -B 5 -m GET "coap://[${LEADER_ALOC}]:5683/TestResource")
     echo "CoAP response is: ${coap_response}"
 
@@ -360,16 +620,21 @@ EOF
         die 'Failed to access application CoAP'
     fi
 
-    # Retrievie extended address through network diagnostic get
-    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -B 5 -m POST "coap://[${LEADER_ALOC}]:61631/d/dg" -f-)
+    # Retrieve extended address through network diagnostic get
+    rm -f "$PWD/tmp/coap-response"
+    echo -n '120100' | xxd -r -p | coap-client -B 5 -m POST -o "$PWD/tmp/coap-response" "coap://[${LEADER_ALOC}]:61631/d/dg" -f-
 
-    # Verify Tmf CoAP is blocked
-    if [[ -z ${coap_response} ]]; then
+    # Verify TMF CoAP is blocked
+    if [[ -s "$PWD/tmp/coap-response" ]]; then
+        coap_response=$(xxd -p "$PWD/tmp/coap-response" | tr -d '\r\n')
+        echo "Unexpected TMF CoAP response: ${coap_response}"
         die 'Tmf is not blocked'
     fi
 
     check_daemon_omr_route
+    check_host_link_state
     check_daemon_netif_down
+    check_daemon_backtrace
 }
 
 main()

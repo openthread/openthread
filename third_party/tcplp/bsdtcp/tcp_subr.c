@@ -220,7 +220,7 @@ tcp_close_tcb(struct tcpcb *tp)
 void
 tcpip_maketemplate(struct tcpcb* tp, struct tcptemp* t)
 {
-	tcpip_fillheaders(tp, (void *)&t->tt_ipgen, (void *)&t->tt_t);
+	tcpip_fillheaders(tp, &t->tt_ipgen, (void *)&t->tt_t);
 }
 
 /*
@@ -304,22 +304,15 @@ tcp_respond(struct tcpcb *tp, void *ipgen, struct tcphdr *th, struct mbuf *m,
  * provided mbuf is no longer there).
  */
 void
-tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, struct tcphdr *thgen,
+tcp_respond(struct tcpcb *tp, otInstance* instance, void *ip6gen, struct tcphdr *thgen,
 	tcp_seq ack, tcp_seq seq, int flags)
 {
-	otMessage* message = tcplp_sys_new_message(instance);
-	if (message == NULL) {
-		return;
-	}
-	if (otMessageSetLength(message, sizeof(struct tcphdr)) != OT_ERROR_NONE) {
-		tcplp_sys_free_message(instance, message);
-		return;
-	}
-
-	struct tcphdr th;
-	struct tcphdr* nth = &th;
-	otMessageInfo ip6info;
+	struct tcpopt to;
+	uint32_t optlen = 0;
+	uint8_t opt[TCP_MAXOLEN];
 	int win = 0;
+	int xchg;
+
 	if (tp != NULL) {
 		if (!(flags & TH_RST)) {
 			win = cbuf_free_space(&tp->recvbuf);
@@ -327,18 +320,57 @@ tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, stru
 				win = (long)TCP_MAXWIN << tp->rcv_scale;
 		}
 	}
-	memset(&ip6info, 0x00, sizeof(otMessageInfo));
-	memcpy(&ip6info.mSockAddr, &ip6gen->ip6_dst, sizeof(ip6info.mSockAddr));
-	memcpy(&ip6info.mPeerAddr, &ip6gen->ip6_src, sizeof(ip6info.mPeerAddr));
-	nth->th_sport = thgen->th_dport;
-	nth->th_dport = thgen->th_sport;
+
+	if (flags == 0) {
+		flags = TH_ACK;
+		xchg = 0;
+	} else {
+		xchg = 1;
+	}
+
+	to.to_flags = 0;
+	if (tp != NULL && (flags & TH_RST) == 0) {
+		if (tp->t_flags & TF_RCVD_TSTMP) {
+			to.to_flags |= TOF_TS;
+			to.to_tsval = tcp_ts_getticks() + tp->ts_offset;
+			to.to_tsecr = tp->ts_recent;
+		}
+		optlen = (uint32_t) tcp_addoptions(&to, opt);
+	}
+
+	otMessage* message = tcplp_sys_new_message(instance);
+	if (message == NULL) {
+		return;
+	}
+	if (otMessageSetLength(message, (uint16_t)(sizeof(struct tcphdr) + optlen)) != OT_ERROR_NONE) {
+		tcplp_sys_free_message(instance, message);
+		return;
+	}
+
+	struct tcphdr th;
+	struct tcphdr* nth = &th;
+	otMessageInfo ip6info;
+
+	if (xchg) {
+		struct ip6_hdr* ip6 = (struct ip6_hdr*) ip6gen;
+
+		memset(&ip6info, 0x00, sizeof(otMessageInfo));
+		memcpy(&ip6info.mSockAddr, &ip6->ip6_dst, sizeof(ip6info.mSockAddr));
+		memcpy(&ip6info.mPeerAddr, &ip6->ip6_src, sizeof(ip6info.mPeerAddr));
+		nth->th_sport = thgen->th_dport;
+		nth->th_dport = thgen->th_sport;
+	} else {
+		memcpy(&ip6info, ip6gen, sizeof(otMessageInfo));
+		nth->th_sport = thgen->th_sport;
+		nth->th_dport = thgen->th_dport;
+	}
 	nth->th_seq = htonl(seq);
 	nth->th_ack = htonl(ack);
 	/* samkumar: original code for setting th_x2 and th_off, for reference. */
 	// nth->th_x2 = 0;
 	// nth->th_off = (sizeof (struct tcphdr) + optlen) >> 2;
-	nth->th_off_x2 = (sizeof(struct tcphdr) >> 2) << TH_OFF_SHIFT;
-	nth->th_flags = flags;
+	nth->th_off_x2 = (uint8_t)(((sizeof(struct tcphdr) + optlen) >> 2) << TH_OFF_SHIFT);
+	nth->th_flags = (uint8_t)flags;
 	if (tp != NULL)
 		nth->th_win = htons((uint16_t) (win >> tp->rcv_scale));
 	else
@@ -347,6 +379,8 @@ tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, stru
 	nth->th_sum = 0;
 
 	otMessageWrite(message, 0, &th, sizeof(struct tcphdr));
+	if (optlen > 0)
+		otMessageWrite(message, sizeof(struct tcphdr), opt, (uint16_t) optlen);
 
 	tcplp_sys_send_message(instance, message, &ip6info);
 }

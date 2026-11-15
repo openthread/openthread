@@ -155,6 +155,8 @@ public:
      *
      * @retval kErrorNone     Successfully enqueued the message into an output interface.
      * @retval kErrorNoBufs   Insufficient available buffer to add the IPv6 headers.
+     * @retval kErrorDrop     The message is an mDNS message or a TMF message from an untrusted origin and was not
+     *                        sent.
      */
     Error SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
 
@@ -278,6 +280,17 @@ public:
      */
     bool IsOnLink(const Address &aAddress) const;
 
+    /**
+     * Indicates whether a given IPv6 message contains an MPL Option in its Hop-by-Hop Options header.
+     *
+     * @param[in] aMessage  The IPv6 message to check.
+     * @param[in] aHeader   The parsed IPv6 header of @p aMessage.
+     *
+     * @retval TRUE   The message contains an MPL Option in its Hop-by-Hop Options header.
+     * @retval FALSE  The message does not contain an MPL Option in its Hop-by-Hop Options header.
+     */
+    bool HasMplOption(const Message &aMessage, const Header &aHeader) const;
+
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 
     typedef otBorderRoutingCounters BrCounters; ///< Border Routing counters.
@@ -353,21 +366,23 @@ private:
     Error HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
                                  const Header      &aHeader,
                                  uint8_t           &aNextHeader,
-                                 bool              &aReceive);
+                                 bool              &aReceive,
+                                 bool              &aForwardHost);
     Error ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHeader, OffsetRange &aOffsetRange) const;
     bool  HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const;
-    Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
-    Error HandleFragment(Message &aMessage);
+    Error ApplyTmfAndMdnsFilters(const Message &aMessage, uint8_t aNextHeader) const;
+    Error HandleFragment(Message &aMessage, bool &aReceive, bool &aForwardHost);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    void CleanupFragmentationBuffer(void);
-    void HandleTimeTick(void);
-    void UpdateReassemblyList(void);
-    void SendIcmpError(Message &aMessage, Icmp6Header::Type aIcmpType, Icmp6Header::Code aIcmpCode);
+    Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
+    void  CleanupFragmentationBuffer(void);
+    void  HandleTimeTick(void);
+    void  UpdateReassemblyList(void);
+    void  SendIcmpError(Message &aMessage, Icmp6Header::Type aIcmpType, Icmp6Header::Code aIcmpCode);
 #endif
     Error ReadHopByHopHeader(const Message &aMessage, OffsetRange &aOffsetRange, HopByHopHeader &aHbhHeader) const;
     Error AddMplOption(Message &aMessage, Header &aHeader);
     Error PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader);
-    Error InsertMplOption(Message &aMessage, Header &aHeader);
+    Error InsertMplOption(Message &aMessage, const Header &aHeader);
     Error RemoveMplOption(Message &aMessage);
     Error HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive, bool aIsHopByHop);
     Error Receive(Header            &aIp6Header,

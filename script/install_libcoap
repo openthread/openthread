@@ -1,0 +1,117 @@
+#!/bin/bash
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -euxo pipefail
+
+TEMP_PATH=$(mktemp -d)
+LIBCOAP_VERSION="4.3.5"
+LIBCOAP="libcoap-${LIBCOAP_VERSION}"
+LIBCOAP_TAR="v${LIBCOAP_VERSION}.tar.gz"
+LIBCOAP_URL="https://github.com/obgm/libcoap/archive/refs/tags/${LIBCOAP_TAR}"
+LIBCOAP_SHA256="a417ed26ec6c95c041b42353b5b6fad1602e2bf42a6e26c09863450e227b7b5f"
+
+trap 'rm -rf "$TEMP_PATH" || sudo rm -rf "$TEMP_PATH"' EXIT
+
+verify_sha256()
+{
+    local actual_sha256
+    local archive=$1
+
+    if command -v sha256sum >/dev/null 2>&1; then
+        actual_sha256=$(sha256sum "$archive" | awk '{print $1}')
+    elif command -v shasum >/dev/null 2>&1; then
+        actual_sha256=$(shasum -a 256 "$archive" | awk '{print $1}')
+    else
+        echo "sha256sum or shasum is required to verify $archive" >&2
+        exit 1
+    fi
+
+    if [[ $actual_sha256 != "$LIBCOAP_SHA256" ]]; then
+        echo "SHA-256 mismatch for $archive" >&2
+        echo "Expected: $LIBCOAP_SHA256" >&2
+        echo "Actual:   $actual_sha256" >&2
+        exit 1
+    fi
+}
+
+if [[ -z ${INSTALL_PREFIX:-} ]]; then
+    if [[ ${OSTYPE} == darwin* ]] || command -v brew >/dev/null 2>&1; then
+        # On macOS, /usr/bin is protected by System Integrity Protection.
+        INSTALL_PREFIX="/usr/local"
+    else
+        INSTALL_PREFIX="/usr"
+    fi
+fi
+
+cd "$TEMP_PATH"
+if [[ ! -f $LIBCOAP_TAR ]]; then
+    if command -v curl >/dev/null 2>&1; then
+        curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            -fsSL \
+            --retry 4 \
+            --connect-timeout 30 \
+            -o "$LIBCOAP_TAR" \
+            "$LIBCOAP_URL"
+    elif command -v wget >/dev/null 2>&1; then
+        wget \
+            --tries=4 \
+            --timeout=30 \
+            --https-only \
+            --secure-protocol=TLSv1_2 \
+            --output-document="$LIBCOAP_TAR" \
+            "$LIBCOAP_URL"
+    else
+        echo "curl or wget is required to download $LIBCOAP_URL" >&2
+        exit 1
+    fi
+fi
+verify_sha256 "$LIBCOAP_TAR"
+tar -xzf "$LIBCOAP_TAR"
+cd "$LIBCOAP"
+cmake -GNinja -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DENABLE_DTLS=OFF \
+    -DENABLE_DOCS=OFF \
+    -DENABLE_TESTS=OFF \
+    -DENABLE_EXAMPLES=ON \
+    -DENABLE_SERVER_MODE=OFF \
+    -DENABLE_PROXY_CODE=OFF \
+    -DENABLE_OSCORE=OFF \
+    -DENABLE_WS=OFF
+cmake --build build --target coap-client
+
+if mkdir -p "${INSTALL_PREFIX}/bin" 2>/dev/null && [[ -w "${INSTALL_PREFIX}/bin" ]]; then
+    install -m 0755 build/coap-client "${INSTALL_PREFIX}/bin/coap-client"
+else
+    sudo install -d "${INSTALL_PREFIX}/bin"
+    sudo install -m 0755 build/coap-client "${INSTALL_PREFIX}/bin/coap-client"
+fi

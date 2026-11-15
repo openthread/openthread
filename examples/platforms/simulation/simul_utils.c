@@ -457,11 +457,7 @@ uint16_t utilsReceiveFromSocket(const utilsSocket *aSocket,
 
         len = (uint16_t)rval;
     }
-    else if (rval == 0)
-    {
-        assert(false);
-    }
-    else if (errno != EINTR && errno != EAGAIN)
+    else if ((rval < 0) && (errno != EINTR) && (errno != EAGAIN))
     {
         perror("recvfrom(RxFd)");
         DieNow(OT_EXIT_ERROR_ERRNO);

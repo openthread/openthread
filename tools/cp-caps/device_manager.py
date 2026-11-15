@@ -54,8 +54,9 @@ class Frame:
     Attributes:
       name: The description of the frame.
       tx_frame: The psdu of the frame that is to be sent.
-      dst_address: The destination MAC address of the `tx_frame`. It is used by the receiver to filter
-          out the `tx_frame`.
+      dst_address: The destination MAC address of the `tx_frame`, or '-' if the `tx_frame` has no destination
+          address. The receiver uses it to configure its radio address filter and to filter out the `tx_frame`.
+          A destination PAN ID present in the `tx_frame` must be `DeviceManager.RADIO_FILTER_PAN_ID` or `0xffff`.
       is_security_processed: The value of the `otRadioFrame.mInfo.mTxInfo.mIsSecurityProcessed` field.
           If it is set to False, the `active_dataset` and `src_ext_address` should also be set for the
           radio driver to encrypt the `tx_frame`.
@@ -77,6 +78,8 @@ class DeviceManager(object):
     """Provides the DUT, reference device and common methods for test cases."""
 
     DEFAULT_FORMAT_ALIGN_LENGTH = 58  # The default formatted string alignment length
+    RADIO_FILTER_PAN_ID = 0xdddd  # The destination PAN ID of the test frames
+    BROADCAST_SHORT_ADDRESS = 0xffff
 
     def __init__(self):
         self.__dut = None
@@ -145,9 +148,20 @@ class DeviceManager(object):
     def get_default_dataset(self):
         return self.__dut.create_dataset(channel=20, network_key='00112233445566778899aabbccddcafe')
 
-    def send_formatted_frames_retries(self, sender: OTCI, receiver: OTCI, frame: Frame, max_send_retries: int = 5):
+    def send_formatted_frames_retries(self,
+                                      sender: OTCI,
+                                      receiver: OTCI,
+                                      frame: Frame,
+                                      max_send_retries: int = 5,
+                                      enable_radio_address_filter: bool = False):
+        """Sends the frame from `sender` to `receiver` until it is received or `max_send_retries` is reached.
+
+        If `enable_radio_address_filter` is True, the receiver disables promiscuous mode and configures its radio
+        address filter from the frame's destination, so the result also covers the receiver's address filtering.
+        Otherwise the receiver stays in promiscuous mode (the default after `diag start`).
+        """
         for i in range(0, max_send_retries):
-            if self.__send_formatted_frame(sender, receiver, frame):
+            if self.__send_formatted_frame(sender, receiver, frame, enable_radio_address_filter):
                 return True
 
         return False
@@ -288,7 +302,26 @@ class DeviceManager(object):
 
         return node
 
-    def __send_formatted_frame(self, sender: OTCI, receiver: OTCI, frame: Frame):
+    def __configure_radio_address_filter(self, receiver: OTCI, dst_address: str):
+        # `diag start` enables promiscuous mode and resets the radio addresses. Disable promiscuous mode so the radio
+        # address filter of the receiver is exercised, and configure the PAN ID and the destination address used by
+        # the test frames.
+        receiver.diag_disable_radio_promiscuous()
+        receiver.diag_set_radio_panid(self.RADIO_FILTER_PAN_ID)
+
+        if dst_address == '-':
+            return
+
+        if len(dst_address) == 16:
+            receiver.diag_set_radio_extaddr(dst_address)
+        elif dst_address.lower().startswith('0x'):
+            short_addr = int(dst_address, 16)
+            if short_addr != self.BROADCAST_SHORT_ADDRESS:
+                receiver.diag_set_radio_shortaddr(short_addr)
+        else:
+            raise InvalidArgumentsError(f'Invalid dst_address: {dst_address!r}')
+
+    def __send_formatted_frame(self, sender: OTCI, receiver: OTCI, frame: Frame, enable_radio_address_filter: bool):
         # When `is_security_processed` is False, the frame may need the radio driver
         # to encrypt the frame. Here sets the active dataset and the MAC source address for the
         # radio driver to encrypt the frame.
@@ -311,6 +344,8 @@ class DeviceManager(object):
 
         sender.diag_set_channel(channel)
         receiver.diag_set_channel(channel)
+        if enable_radio_address_filter:
+            self.__configure_radio_address_filter(receiver, frame.dst_address)
         receiver.diag_radio_receive()
         receiver.diag_set_radio_receive_filter_dest_mac_address(frame.dst_address)
         receiver.diag_enable_radio_receive_filter()

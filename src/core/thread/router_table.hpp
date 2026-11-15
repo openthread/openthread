@@ -263,10 +263,11 @@ public:
      * Find the router for a given MAC Extended Address.
      *
      * @param[in]  aExtAddress  A reference to the MAC Extended Address.
+     * @param[in]  aFilter      A state filter.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      */
-    Router *FindRouter(const Mac::ExtAddress &aExtAddress);
+    Router *FindRouter(const Mac::ExtAddress &aExtAddress, Router::StateFilter aFilter);
 
     /**
      * Indicates whether the router table contains a given `Neighbor` instance.

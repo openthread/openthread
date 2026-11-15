@@ -152,7 +152,7 @@ bool ChannelMaskTlv::IsValid(void) const
 {
     uint32_t channelMask;
 
-    return (ReadChannelMask(channelMask) == kErrorNone);
+    return (ReadChannelMask(channelMask) == kErrorNone) && (channelMask != 0);
 }
 
 Error ChannelMaskTlv::ReadChannelMask(uint32_t &aChannelMask) const

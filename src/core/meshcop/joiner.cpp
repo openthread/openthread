@@ -46,7 +46,6 @@ Joiner::Joiner(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateIdle)
     , mFinalizeRejected(false)
-    , mFinalizeMessage(nullptr)
     , mTimer(aInstance)
 {
     SetIdFromIeeeEui64();
@@ -154,7 +153,7 @@ Error Joiner::Start(const char      *aPskd,
 exit:
     if ((error != kErrorNone) && shouldCleanup)
     {
-        FreeJoinerFinalizeMessage();
+        mFinalizeMessage.Free();
         Get<Tmf::SecureAgent>().Close();
         Get<Seeker>().Stop();
         SetState(kStateIdle);
@@ -197,7 +196,7 @@ void Joiner::Finish(Error aError)
     }
 
     SetState(kStateIdle);
-    FreeJoinerFinalizeMessage();
+    mFinalizeMessage.Free();
 
     mCompletionCallback.InvokeIfSet(aError);
 
@@ -334,7 +333,7 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     Error                 error = kErrorNone;
     VendorStackVersionTlv vendorStackVersionTlv;
 
-    mFinalizeMessage = Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriJoinerFinalize);
+    mFinalizeMessage.Reset(Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriJoinerFinalize));
     VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
 
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
@@ -366,17 +365,6 @@ exit:
     return error;
 }
 
-void Joiner::FreeJoinerFinalizeMessage(void)
-{
-    VerifyOrExit(mFinalizeMessage != nullptr);
-
-    mFinalizeMessage->Free();
-    mFinalizeMessage = nullptr;
-
-exit:
-    return;
-}
-
 void Joiner::SendJoinerFinalize(void)
 {
     OT_ASSERT(mFinalizeMessage != nullptr);
@@ -386,7 +374,7 @@ void Joiner::SendJoinerFinalize(void)
 #endif
 
     SuccessOrExit(Get<Tmf::SecureAgent>().SendMessage(*mFinalizeMessage, HandleJoinerFinalizeResponse, this));
-    mFinalizeMessage = nullptr;
+    mFinalizeMessage.Release();
 
     LogInfo("Sent %s", UriToString<kUriJoinerFinalize>());
 
@@ -448,10 +436,9 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)
         // The commissioner rejected the JOIN_FIN.req: acknowledge the
         // entrust message (the exchange is part of the certified message
         // flow) without adopting the delivered credentials. The joining
-        // process then completes with `kErrorRejected` from the timer.
+        // process then completes with `kErrorRejected`.
         error = kErrorNone;
         SendJoinerEntrustResponse(aMsg);
-        mTimer.Start(kConfigExtAddressDelay);
         ExitNow();
     }
 
@@ -468,26 +455,25 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)
 
     SendJoinerEntrustResponse(aMsg);
 
-    // Delay extended address configuration to allow DTLS wrap up.
-    mTimer.Start(kConfigExtAddressDelay);
-
 exit:
     LogWarnOnError(error, "process joiner entrust");
 }
 
 void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
 {
-    Error            error = kErrorNone;
-    Coap::Message   *message;
-    Ip6::MessageInfo responseInfo(aMsg.mMessageInfo);
+    OwnedPtr<Coap::Message> message;
+    Ip6::MessageInfo        responseInfo(aMsg.mMessageInfo);
 
-    message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage));
+    VerifyOrExit(message != nullptr);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);
+    message->RegisterTxCallback(HandleJoinerEntrustResponseTxDone, this);
 
     responseInfo.GetSockAddr().Clear();
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, responseInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(message.PassOwnership(), responseInfo));
+
+    mTimer.Stop();
 
     if (!mFinalizeRejected)
     {
@@ -498,7 +484,24 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
     LogCert("[THCI] direction=send | type=JOIN_ENT.rsp");
 
 exit:
-    FreeMessageOnError(message, error);
+    return;
+}
+
+void Joiner::HandleJoinerEntrustResponseTxDone(const otMessage *aMessage, otError aError, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+
+    Joiner &joiner = *static_cast<Joiner *>(aContext);
+
+    // `Finish()` may already have run (e.g., via `Stop()` or an earlier Entrust response).
+    VerifyOrExit(joiner.mState == kStateJoined || (joiner.mFinalizeRejected && joiner.mState == kStateEntrust));
+
+    LogWarnOnError(aError, "send %s response", UriToString<kUriJoinerEntrust>());
+
+    joiner.HandleTimer();
+
+exit:
+    return;
 }
 
 void Joiner::HandleTimer(void)
@@ -514,7 +517,7 @@ void Joiner::HandleTimer(void)
     case kStateEntrust:
         // After a rejected JOIN_FIN.rsp the joining process always ends
         // with `kErrorRejected`, whether the entrust was acknowledged
-        // (short delay) or never arrived (response timeout).
+        // or never arrived (response timeout).
         error = mFinalizeRejected ? kErrorRejected : kErrorResponseTimeout;
         break;
 

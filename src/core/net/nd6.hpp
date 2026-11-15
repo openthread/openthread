@@ -51,6 +51,7 @@
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/heap_array.hpp"
+#include "common/preference.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_headers.hpp"

@@ -86,8 +86,9 @@ typedef struct otDnsTxtEntry
      *   - If `mValue` is NULL, then key is treated as a boolean attribute and encoded as "key" (with no `=`).
      *   - If `mValue` is not NULL but `mValueLength` is zero, then it is treated as empty value and encoded as "key=".
      *
-     * If `mKey` is NULL, then `mValue` buffer is treated as an already encoded TXT-DATA and is appended as is in the
-     * DNS message.
+     * When encoding (e.g., `otDnsEncodeTxtData()`), if `mKey` is NULL, then `mValue` buffer is treated as an already
+     * encoded wire-format TXT-DATA (one or more length-prefixed strings) and is appended as is in the DNS message.
+     * Note that `otDnsGetNextTxtEntry()` uses `mKey == NULL` differently when decoding (see `otDnsGetNextTxtEntry()`).
      */
     const char    *mKey;
     const uint8_t *mValue;       ///< The TXT record value or already encoded TXT-DATA (depending on `mKey`).
@@ -125,9 +126,11 @@ void otDnsInitTxtEntryIterator(otDnsTxtEntryIterator *aIterator, const uint8_t *
  * data buffer used to initialize the iterator MUST persist and remain unchanged. Otherwise the behavior of this
  * function is undefined.
  *
- * If the parsed key string length is smaller than or equal to `OT_DNS_TXT_KEY_ITER_MAX_LENGTH` the key string is
- * returned in `mKey` in @p aEntry. But if the key is longer, then `mKey` is set to NULL and the entire encoded TXT
- * entry string is returned in `mValue` and `mValueLength`.
+ * If the parsed key string length is smaller than or equal to `OT_DNS_TXT_KEY_ITER_MAX_LENGTH`, the key string is
+ * returned in `mKey` in @p aEntry. If the key is longer, `mKey` is set to NULL and the unsplit `"key=value"` (or
+ * `"key"`) entry string (excluding the leading length byte) is returned in `mValue` and `mValueLength`. Note that
+ * such an output entry cannot be passed directly to `otDnsEncodeTxtData()`, where `mKey == NULL` expects
+ * length-prefixed wire-format TXT-DATA.
  *
  * @param[in]  aIterator   A pointer to the iterator (MUST NOT be NULL).
  * @param[out] aEntry      A pointer to a `otDnsTxtEntry` structure to output the parsed/read entry (MUST NOT be NULL).

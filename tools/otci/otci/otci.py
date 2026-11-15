@@ -1771,11 +1771,12 @@ class OTCI(object):
         ch_count = len(list(bits_set(channel_mask)))
         self.execute_command(f'commissioner energy {channel_mask} {count} {period} {duration} {destination}')
         output = self.__otcmd.wait(ch_count * count * (period + duration + 999) / 1000 + 1)
+        energy_lines = [line for line in output if line.startswith('Energy: ')]
 
-        if len(output) > 1:
+        if len(energy_lines) != 1:
             raise UnexpectedCommandOutput(output)
 
-        _mask, _energies = output[0].split(": ")[1].split(" ", 1)
+        _mask, _energies = energy_lines[0].split(": ")[1].split(" ", 1)
         channels = [b for b in bits_set(int(_mask, 16))]
         energies = [int(e) for e in _energies.split(" ")]
         return {ch: energies[idx::len(channels)] for (idx, ch) in enumerate(channels)}
@@ -1815,8 +1816,9 @@ class OTCI(object):
         """Perform a PAN ID query on the specified channels."""
         self.execute_command(f'commissioner panid {panid} {channel_mask} {destination}')
         output = self.__otcmd.wait(len(list(bits_set(channel_mask))))
-        if output:
-            masks = [int(line.split(": ")[1].split(", ", 1)[1], 16) for line in output]
+        conflict_lines = [line for line in output if line.startswith('Conflict: ')]
+        if conflict_lines:
+            masks = [int(line.split(": ")[1].split(", ", 1)[1], 16) for line in conflict_lines]
             conflict_mask = functools.reduce(lambda x, y: x | y, masks)
             return [b for b in bits_set(conflict_mask)]
         else:
@@ -3114,6 +3116,47 @@ class OTCI(object):
     def diag_get_radio_state(self) -> str:
         """Get the state of the radio."""
         return self.__parse_str(self.execute_command('diag radio state'))
+
+    def diag_get_radio_promiscuous(self) -> bool:
+        """Get whether the radio promiscuous mode is enabled."""
+        return self.__parse_values(self.execute_command('diag radio promiscuous'), enabled=True, disabled=False)
+
+    def diag_enable_radio_promiscuous(self):
+        """Enable the radio promiscuous mode."""
+        self.execute_command('diag radio promiscuous enable')
+
+    def diag_disable_radio_promiscuous(self):
+        """Disable the radio promiscuous mode so that the radio performs address filtering."""
+        self.execute_command('diag radio promiscuous disable')
+
+    def diag_get_radio_panid(self) -> int:
+        """Get the PAN ID used by the radio address filter."""
+        return self.__parse_int(self.execute_command('diag radio panid'), 16)
+
+    def diag_set_radio_panid(self, panid: int):
+        """Set the PAN ID used by the radio address filter."""
+        if not 0 <= panid <= 0xffff:
+            raise ValueError(panid)
+        self.execute_command(f'diag radio panid {panid:#06x}')
+
+    def diag_get_radio_shortaddr(self) -> int:
+        """Get the short address used by the radio address filter."""
+        return self.__parse_int(self.execute_command('diag radio shortaddr'), 16)
+
+    def diag_set_radio_shortaddr(self, shortaddr: int):
+        """Set the short address used by the radio address filter."""
+        if not 0 <= shortaddr <= 0xffff:
+            raise ValueError(shortaddr)
+        self.execute_command(f'diag radio shortaddr {shortaddr:#06x}')
+
+    def diag_get_radio_extaddr(self) -> str:
+        """Get the extended address used by the radio address filter."""
+        return self.__parse_extaddr(self.execute_command('diag radio extaddr'))
+
+    def diag_set_radio_extaddr(self, extaddr: str):
+        """Set the extended address used by the radio address filter."""
+        self.__validate_extaddr(extaddr)
+        self.execute_command(f'diag radio extaddr {extaddr}')
 
     def diag_get_stats(self) -> Dict[str, int]:
         """Get statistics during diagnostics mode."""

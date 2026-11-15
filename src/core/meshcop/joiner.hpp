@@ -48,6 +48,7 @@
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/owned_ptr.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -178,8 +179,7 @@ public:
     static const char *StateToString(State aState);
 
 private:
-    static constexpr uint32_t kConfigExtAddressDelay = 100;  // in msec.
-    static constexpr uint32_t kResponseTimeout       = 4000; // in msec
+    static constexpr uint32_t kResponseTimeout = 4000; // in msec
 
     void                   SetState(State aState);
     void                   SetIdFromIeeeEui64(void);
@@ -192,9 +192,9 @@ private:
                                                         const char *aVendorModel,
                                                         const char *aVendorSwVersion,
                                                         const char *aVendorData);
-    void                   FreeJoinerFinalizeMessage(void);
     void                   SendJoinerFinalize(void);
     void                   SendJoinerEntrustResponse(const Coap::Msg &aMsg);
+    static void            HandleJoinerEntrustResponseTxDone(const otMessage *aMessage, otError aError, void *aContext);
     static Seeker::Verdict EvaluateScanResult(void *aContext, const otSeekerScanResult *aResult);
     Seeker::Verdict        EvaluateScanResult(const ScanResult *aResult);
     void                   HandleScanCompleted(void);
@@ -212,7 +212,7 @@ private:
     State                        mState;
     bool                         mFinalizeRejected;
     Callback<CompletionCallback> mCompletionCallback;
-    Coap::Message               *mFinalizeMessage;
+    OwnedPtr<Coap::Message>      mFinalizeMessage;
     JoinerTimer                  mTimer;
 };
 

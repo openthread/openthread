@@ -101,25 +101,19 @@ def verify(pv):
     #   on FED_1.
     # - Pass Criteria: N/A.
     print("Step 3: Leader transmits a 2.04 Changed CoAP response and multicast MLE Data Response.")
-    # We use two separate filters to find MLE Data Response and CoAP ACK independently,
-    # as their order is not guaranteed.
-    mle_filter = pkts.copy().\
+    pkts.copy().\
         filter_wpan_src64(LEADER).\
+        filter_coap_ack(consts.SVR_DATA_URI).\
+        must_next()
+
+    pkts.filter_wpan_src64(LEADER).\
         filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: {
             PREFIX_1,
             PREFIX_2
-        } <= set(p.thread_nwd.tlv.prefix))
-    mle_filter.must_next()
-
-    coap_filter = pkts.copy().\
-        filter_wpan_src64(LEADER).\
-        filter_coap_ack(consts.SVR_DATA_URI)
-    coap_filter.must_next()
-
-    # Advance the main filter's index past both packets.
-    pkts.index = (max(mle_filter.index[0], coap_filter.index[0]), max(mle_filter.index[1], coap_filter.index[1]))
+        } <= set(p.thread_nwd.tlv.prefix)).\
+        must_next()
 
     # Step 4: Router_1 (DUT)
     # - Description: Automatically transmits multicast MLE Data Response with the new information collected, adding

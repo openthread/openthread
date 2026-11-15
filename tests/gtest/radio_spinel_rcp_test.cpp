@@ -293,32 +293,339 @@ TEST(RadioSpinelTransmit, shouldNotCauseSwitchingToRxAfterTxDoneIfNotRxOnWhenIdl
     EXPECT_EQ(platform.GetReceiveChannel(), 11);
 }
 
-TEST(RadioSpinelReceiveAt, shouldReceiveAtGiveRadioTime)
+#if OPENTHREAD_SPINEL_CONFIG_RCP_IMM_ACK_FCS_COMPATIBILITY_WORKAROUND_ENABLE
+TEST(RadioSpinelTransmit, shouldIncludeFcsInImmAckReportedWithoutFcs)
+{
+    class ImmAckPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        otError Transmit(otRadioFrame *aFrame) override
+        {
+            mTxFrame = aFrame;
+            otPlatRadioTxStarted(FakePlatform::CurrentInstance(), aFrame);
+
+            return OT_ERROR_NONE;
+        }
+
+        void ReportTxDoneWithImmAck(uint16_t aAckLength)
+        {
+            uint8_t      ackPsdu[OT_RADIO_FRAME_MAX_SIZE] = {0x02, 0x00, mTxFrame->mPsdu[2]};
+            otRadioFrame ackFrame{};
+
+            ackFrame.mPsdu    = ackPsdu;
+            ackFrame.mLength  = aAckLength;
+            ackFrame.mChannel = mTxFrame->mChannel;
+
+            otPlatRadioTxDone(FakePlatform::CurrentInstance(), mTxFrame, &ackFrame, OT_ERROR_NONE);
+        }
+
+        otRadioFrame *mTxFrame = nullptr;
+    };
+
+    struct TxDoneResult
+    {
+        Error    mTxError;
+        uint16_t mAckLength;
+        Error    mAckParseError;
+        bool     mAckParsedFully;
+        uint8_t  mAckType;
+        uint8_t  mAckSequenceNum;
+    };
+
+    static constexpr uint8_t  kSequenceNum  = 0x5a;
+    static constexpr uint16_t kAckLengths[] = {Mac::Frame::GetImmAckLength() - sizeof(uint16_t),
+                                               Mac::Frame::GetImmAckLength()};
+
+    static TxDoneResult sResult;
+
+    ImmAckPlatform               platform;
+    Spinel::RadioSpinelCallbacks callbacks{};
+    uint8_t                      frameBuffer[OT_RADIO_FRAME_MAX_SIZE]{};
+    Mac::TxFrame                 txFrame{};
+
+    callbacks.mReceiveDone    = [](otInstance *, otRadioFrame *, Error) {};
+    callbacks.mEnergyScanDone = [](otInstance *, int8_t) {};
+    callbacks.mTxStarted      = [](otInstance *, otRadioFrame *) {};
+    callbacks.mTransmitDone   = [](otInstance *, otRadioFrame *, otRadioFrame *aAckFrame, Error aError) {
+        Mac::RxFrame::ParseInfo ackFrameInfo;
+
+        sResult.mTxError = aError;
+
+        if (aAckFrame != nullptr)
+        {
+            sResult.mAckLength = aAckFrame->mLength;
+            sResult.mAckParseError =
+                ackFrameInfo.ParseFrom(*static_cast<Mac::RxFrame *>(aAckFrame), Mac::Frame::kParseFully);
+            sResult.mAckParsedFully = ackFrameInfo.mParsedFully;
+            sResult.mAckType        = ackFrameInfo.mType;
+            sResult.mAckSequenceNum = ackFrameInfo.mSequenceNum;
+        }
+    };
+
+    txFrame.mPsdu = frameBuffer;
+
+    {
+        Mac::TxFrame::BuildInfo buildInfo;
+        Mac::TxFrame::ParseInfo frameInfo;
+        constexpr uint8_t       kDstAddr[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(0xac00);
+        buildInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        buildInfo.mPanIds.SetSource(0x1234);
+        buildInfo.mPanIds.SetDestination(0x4321);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
+
+        ASSERT_EQ(frameInfo.ParseFrom(txFrame, Mac::Frame::kParseFully), kErrorNone);
+        frameInfo.WriteSequenceNum(kSequenceNum);
+    }
+
+    txFrame.mChannel = 11;
+
+    platform.mRadioSpinel.SetCallbacks(callbacks);
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    // An Imm-Ack reported without the FCS, then a compliant Imm-Ack.
+
+    for (uint16_t ackLength : kAckLengths)
+    {
+        sResult           = {};
+        sResult.mTxError  = kErrorFailed;
+        platform.mTxFrame = nullptr;
+
+        ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+        platform.GoInMs(1);
+        ASSERT_NE(platform.mTxFrame, nullptr);
+
+        platform.ReportTxDoneWithImmAck(ackLength);
+        platform.GoInMs(1);
+        platform.mRadioSpinel.Process(nullptr);
+
+        EXPECT_EQ(sResult.mTxError, kErrorNone);
+        EXPECT_EQ(sResult.mAckLength, Mac::Frame::GetImmAckLength());
+        EXPECT_EQ(sResult.mAckParseError, kErrorNone);
+        EXPECT_TRUE(sResult.mAckParsedFully);
+        EXPECT_EQ(sResult.mAckType, Mac::Frame::kTypeAck);
+        EXPECT_EQ(sResult.mAckSequenceNum, kSequenceNum);
+    }
+}
+#endif
+
+TEST(RadioSpinelReceiveAt, shouldReceiveAtGivenRadioTime)
 {
     class MockPlatform : public FakeCoprocessorPlatform
     {
     public:
-        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, uint32_t aStart, uint32_t aDuration), (override));
+        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration), (override));
+    };
+
+    constexpr uint64_t kInitialNow = 50000;
+    constexpr uint64_t kWhen       = 150000;
+    constexpr uint32_t kDuration   = 10000;
+    constexpr uint8_t  kChannel    = 11;
+
+    MockPlatform platform;
+
+    ON_CALL(platform, ReceiveAt)
+        .WillByDefault([&platform](uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration) -> otError {
+            return platform.FakePlatform::ReceiveAt(aChannel, aStart, aDuration);
+        });
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+
+    platform.GoInUs(kInitialNow);
+    ASSERT_EQ(platform.GetNow(), kInitialNow);
+
+    EXPECT_CALL(platform, ReceiveAt(kChannel, static_cast<otRadioTime32>(kWhen), kDuration)).Times(1);
+
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(kWhen, kDuration, kChannel), kErrorNone);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(kWhen - kInitialNow);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), kChannel);
+
+    platform.GoInUs(kDuration - 1);
+    EXPECT_EQ(platform.GetReceiveChannel(), kChannel);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+}
+
+TEST(RadioSpinelReceiveAt, shouldHandleRadioTime32Rollover)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration), (override));
+    };
+
+    constexpr uint64_t kBeforeRollover = 0xffffd8f0ULL;
+    constexpr uint64_t kAfterRollover  = 0x100002710ULL;
+    constexpr uint32_t kDuration       = 15000;
+    constexpr uint8_t  kChannel        = 15;
+
+    MockPlatform platform;
+
+    ON_CALL(platform, ReceiveAt)
+        .WillByDefault([&platform](uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration) -> otError {
+            return platform.FakePlatform::ReceiveAt(aChannel, aStart, aDuration);
+        });
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+
+    platform.GoInUs(kBeforeRollover);
+    ASSERT_EQ(platform.GetNow(), kBeforeRollover);
+
+    EXPECT_CALL(platform, ReceiveAt(kChannel, static_cast<otRadioTime32>(kAfterRollover), kDuration)).Times(1);
+
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(kAfterRollover, kDuration, kChannel), kErrorNone);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(kAfterRollover - kBeforeRollover);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), kChannel);
+
+    platform.GoInUs(kDuration - 1);
+    EXPECT_EQ(platform.GetReceiveChannel(), kChannel);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    // Also verify an already-started window whose start is just before 32-bit rollover while `now` is past rollover.
+    {
+        constexpr uint64_t kPastRolloverWhen = 0xfffff000ULL;
+        constexpr uint64_t kNowPastRollover  = 0x100008000ULL;
+        constexpr uint32_t kSpanningDuration = 50000;
+        constexpr uint8_t  kSpanningChannel  = 20;
+
+        platform.GoInUs(kNowPastRollover - platform.GetNow());
+        ASSERT_EQ(platform.GetNow(), kNowPastRollover);
+
+        EXPECT_CALL(platform,
+                    ReceiveAt(kSpanningChannel, static_cast<otRadioTime32>(kPastRolloverWhen), kSpanningDuration))
+            .Times(1);
+
+        ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(kPastRolloverWhen, kSpanningDuration, kSpanningChannel), kErrorNone);
+        EXPECT_EQ(platform.GetReceiveChannel(), kSpanningChannel);
+
+        platform.GoInUs((kPastRolloverWhen + kSpanningDuration) - kNowPastRollover);
+        EXPECT_EQ(platform.GetReceiveChannel(), kSpanningChannel);
+
+        platform.GoInUs(1);
+        EXPECT_EQ(platform.GetReceiveChannel(), 0);
+    }
+}
+
+TEST(RadioSpinelReceiveAt, shouldHandleOngoingReceiveWindow)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration), (override));
     };
 
     MockPlatform platform;
 
     ON_CALL(platform, ReceiveAt)
-        .WillByDefault([&platform](uint8_t aChannel, uint32_t aStart, uint32_t aDuration) -> otError {
+        .WillByDefault([&platform](uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration) -> otError {
             return platform.FakePlatform::ReceiveAt(aChannel, aStart, aDuration);
         });
 
-    EXPECT_CALL(platform, ReceiveAt).Times(1);
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+
+    // 1. Schedule a window whose start time is slightly in the past (`when < now < when + duration`).
+    platform.GoInUs(100000);
+    ASSERT_EQ(platform.GetNow(), 100000ULL);
+
+    EXPECT_CALL(platform, ReceiveAt(12, static_cast<otRadioTime32>(96000), 10000)).Times(1);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(96000, 10000, 12), kErrorNone);
+    EXPECT_EQ(platform.GetReceiveChannel(), 12);
+
+    platform.GoInUs(6000);
+    EXPECT_EQ(platform.GetReceiveChannel(), 12);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    // 2. Shrink and switch channel of an already-active window.
+    EXPECT_CALL(platform, ReceiveAt(11, static_cast<otRadioTime32>(200000), 50000)).Times(1);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(200000, 50000, 11), kErrorNone);
+
+    platform.GoInUs(210000 - platform.GetNow());
+    ASSERT_EQ(platform.GetNow(), 210000ULL);
+    EXPECT_EQ(platform.GetReceiveChannel(), 11);
+
+    EXPECT_CALL(platform, ReceiveAt(15, static_cast<otRadioTime32>(205000), 15000)).Times(1);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(205000, 15000, 15), kErrorNone);
+    EXPECT_EQ(platform.GetReceiveChannel(), 15);
+
+    platform.GoInUs(10000);
+    EXPECT_EQ(platform.GetReceiveChannel(), 15);
+
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+}
+
+TEST(RadioSpinelReceiveAt, shouldRejectInvalidArgs)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration), (override));
+    };
+
+    constexpr uint64_t kMaxTimeOffset = 0x7fffffffULL;
+    constexpr uint64_t kNow           = 100000;
+
+    MockPlatform platform;
+
+    ON_CALL(platform, ReceiveAt)
+        .WillByDefault([&platform](uint8_t aChannel, otRadioTime32 aStart, uint32_t aDuration) -> otError {
+            return platform.FakePlatform::ReceiveAt(aChannel, aStart, aDuration);
+        });
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
-    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(100000, 10000, 11), kErrorNone);
-    platform.GoInUs(100000);
-    EXPECT_EQ(platform.GetReceiveChannel(), 0);
-    platform.GoInUs(1);
-    EXPECT_EQ(platform.GetReceiveChannel(), 11);
-    platform.GoInUs(10000);
-    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+
+    platform.GoInUs(kNow);
+    ASSERT_EQ(platform.GetNow(), kNow);
+
+    EXPECT_CALL(platform, ReceiveAt).Times(0);
+
+    // Zero duration is rejected.
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow + 10000, 0, 11), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow, 0, 11), kErrorInvalidArgs);
+
+    // Expired window (`when + duration <= now`) is rejected.
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow - 10000, 10000, 11), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow - 20000, 10000, 11), kErrorInvalidArgs);
+
+    // Future `when` exceeding the 32-bit half-range (`when - now > 0x7fffffff`) is rejected.
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow + kMaxTimeOffset + 1, 10000, 11), kErrorInvalidArgs);
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow + 0x100000000ULL, 10000, 11), kErrorInvalidArgs);
+
+    // Past `when` exceeding the 32-bit half-range (`now - when > 0x7fffffff`) is rejected even with large duration.
+    platform.GoInUs(kMaxTimeOffset + 1);
+    EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(kNow, 0x90000000U, 11), kErrorInvalidArgs);
+
+    // Exact maximum valid future offset (`when - now == 0x7fffffff`) is accepted.
+    {
+        uint64_t maxValidWhen = platform.GetNow() + kMaxTimeOffset;
+
+        EXPECT_CALL(platform, ReceiveAt(11, static_cast<otRadioTime32>(maxValidWhen), 10000)).Times(1);
+        EXPECT_EQ(platform.mRadioSpinel.ReceiveAt(maxValidWhen, 10000, 11), kErrorNone);
+    }
 }
 
 TEST(RadioSpinelTransmit, shouldSkipCsmaBackoffWhenCsmaCaIsEnabledAndMaxBackoffsIsZero)
@@ -1192,3 +1499,135 @@ TEST(RadioSpinelTransmit, shouldRejectReceiveDuringPendingTransmit)
     EXPECT_EQ(platform.mTransmitCount, 1u);
     EXPECT_EQ(lastStatuses[kTxTid], std::vector<unsigned int>{SPINEL_STATUS_OK});
 }
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+TEST(RadioSpinelTransmit, shouldAbortTxOnTimeoutWhenRcpRestorationDisabled)
+{
+    class NoTxDonePlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        otError Transmit(otRadioFrame *aFrame) override
+        {
+            mTxFrame = aFrame;
+
+            return OT_ERROR_NONE;
+        }
+
+        void ClearPendingRcpTx(void)
+        {
+            if (mTxFrame != nullptr)
+            {
+                otPlatRadioTxDone(FakePlatform::CurrentInstance(), mTxFrame, nullptr, OT_ERROR_ABORT);
+                mTxFrame = nullptr;
+            }
+        }
+
+        otRadioFrame *mTxFrame = nullptr;
+    };
+
+    struct TxDoneResult
+    {
+        uint32_t mCount    = 0;
+        Error    mError    = kErrorNone;
+        bool     mHadAck   = false;
+        uint16_t mTxLength = 0;
+    };
+
+    static constexpr uint8_t  kChannel     = 11;
+    static constexpr uint32_t kNumTimeouts = 16;
+    static constexpr uint64_t kTxWaitTimeUs =
+        static_cast<uint64_t>(OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS) * OT_US_PER_S;
+
+    static TxDoneResult sResult;
+
+    NoTxDonePlatform             platform;
+    Spinel::RadioSpinelCallbacks callbacks{};
+    uint8_t                      frameBuffer[OT_RADIO_FRAME_MAX_SIZE]{};
+    Mac::TxFrame                 txFrame{};
+
+    sResult = {};
+
+    callbacks.mReceiveDone    = [](otInstance *, otRadioFrame *, Error) {};
+    callbacks.mEnergyScanDone = [](otInstance *, int8_t) {};
+    callbacks.mTxStarted      = [](otInstance *, otRadioFrame *) {};
+    callbacks.mTransmitDone   = [](otInstance *, otRadioFrame *aFrame, otRadioFrame *aAckFrame, Error aError) {
+        sResult.mCount++;
+        sResult.mError    = aError;
+        sResult.mHadAck   = (aAckFrame != nullptr);
+        sResult.mTxLength = (aFrame != nullptr) ? aFrame->mLength : 0;
+    };
+
+    txFrame.mPsdu = frameBuffer;
+
+    {
+        Mac::TxFrame::BuildInfo buildInfo;
+
+        buildInfo.mType    = Mac::Frame::kTypeData;
+        buildInfo.mVersion = Mac::Frame::kVersion2006;
+        buildInfo.mAddrs.mSource.SetShort(0xac00);
+        buildInfo.mAddrs.mDestination.SetShort(Mac::kShortAddrBroadcast);
+        buildInfo.mPanIds.SetSource(0x1234);
+        buildInfo.mPanIds.SetDestination(0x4321);
+        buildInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+
+        txFrame.PrepareHeadersWithEmptyPayload(buildInfo);
+    }
+
+    txFrame.mChannel = kChannel;
+
+    platform.mRadioSpinel.SetCallbacks(callbacks);
+    platform.mRadioSpinel.SetRcpRestorationEnabled(false);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Receive(kChannel), kErrorNone);
+
+    // Repeat across 16 timed-out transmissions (exceeding the 15 non-zero 4-bit Spinel TIDs)
+    // to verify that TX timeout aborts cleanly, frees the Spinel TID, does not spin on
+    // subsequent `Process()` ticks, and does not leave `mRcpFailure` set for `Set()`/`Get()`.
+    for (uint32_t i = 1; i <= kNumTimeouts; i++)
+    {
+        ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+        platform.GoInMs(1);
+        ASSERT_NE(platform.mTxFrame, nullptr);
+        EXPECT_EQ(platform.mRadioSpinel.GetState(), OT_RADIO_STATE_TRANSMIT);
+
+        platform.GoInUs(kTxWaitTimeUs);
+
+        // First `Process()` detects TX timeout and transitions to `kStateTransmitDone`.
+        platform.mRadioSpinel.Process(nullptr);
+        EXPECT_TRUE(platform.mRadioSpinel.IsTransmitDone());
+        EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpTimeoutCount, i);
+        EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpRestorationCount, 0u);
+
+        // Next `Process()` transitions to `OT_RADIO_STATE_RECEIVE` and invokes `mTransmitDone` once.
+        platform.mRadioSpinel.Process(nullptr);
+        EXPECT_FALSE(platform.mRadioSpinel.IsTransmitDone());
+        EXPECT_EQ(platform.mRadioSpinel.GetState(), OT_RADIO_STATE_RECEIVE);
+        EXPECT_EQ(platform.mRadioSpinel.GetTxRadioEndUs(), UINT64_MAX);
+        EXPECT_EQ(sResult.mCount, i);
+        EXPECT_EQ(sResult.mError, kErrorAbort);
+        EXPECT_FALSE(sResult.mHadAck);
+        EXPECT_EQ(sResult.mTxLength, txFrame.mLength);
+
+        // Subsequent `Process()` calls must not re-trigger TX timeout or invoke `mTransmitDone` again.
+        platform.GoInUs(kTxWaitTimeUs);
+        platform.mRadioSpinel.Process(nullptr);
+        platform.mRadioSpinel.Process(nullptr);
+        EXPECT_EQ(sResult.mCount, i);
+        EXPECT_EQ(platform.mRadioSpinel.GetRadioSpinelMetrics().mRcpTimeoutCount, i);
+        EXPECT_EQ(platform.mRadioSpinel.GetState(), OT_RADIO_STATE_RECEIVE);
+
+        // Property `Set()` and `Get()` calls must succeed and not spin on `mRcpFailure`.
+        EXPECT_EQ(platform.mRadioSpinel.SetShortAddress(static_cast<uint16_t>(i)), kErrorNone);
+        EXPECT_EQ(platform.mRadioSpinel.SetPromiscuous((i & 1) != 0), kErrorNone);
+        EXPECT_NE(platform.mRadioSpinel.GetRadioChannelMask(false), 0u);
+
+        // Reset the stalled simulated RCP radio TX before the next iteration; the late RCP TX-done
+        // response must be ignored now that `mTxRadioTid` has been freed.
+        platform.ClearPendingRcpTx();
+        platform.GoInMs(1);
+        platform.mRadioSpinel.Process(nullptr);
+        EXPECT_EQ(sResult.mCount, i);
+    }
+}
+#endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0

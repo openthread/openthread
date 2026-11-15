@@ -98,7 +98,8 @@ def verify(pv):
     # - Description: Automatically responds to the Server Data notification.
     # - Pass Criteria: N/A
     print("Step 4: Leader responds to SVR_DATA.ntf.")
-    pkts.filter_wpan_src64(LEADER).\
+    pkts.copy().\
+        filter_wpan_src64(LEADER).\
         filter_coap_ack(consts.SVR_DATA_URI).\
         must_next()
 

@@ -299,16 +299,18 @@ static constexpr size_t kMaxIp6Size = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
 static bool sIsSyncingState = false;
 #endif
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+static bool sIsHostNetifUp     = false; ///< The host's link state as last seen, to act on changes only.
+static bool sIsSyncingFromHost = false; ///< OpenThread's IPv6 is being enabled or disabled after the host's link state.
+#endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
 // Joining an interface-local or link-local multicast group fails with EINVAL until IPv6 is attached to the
 // interface, as the kernel takes the scope zone of such a group from the interface's IPv6 data. A tun interface
 // gets IPv6 attached by its first `SIOCAIFADDR_IN6`, which `UpdateUnicast()` issues only after the stack has
-// subscribed `ff02::1`. Such joins are deferred until then and replayed by `UpdateUnicast()`.
-static constexpr size_t kMaxDeferredJoins = 8;
-static otIp6Address     sDeferredJoins[kMaxDeferredJoins];
-static size_t           sDeferredJoinsCount = 0;
-static bool             sIsIp6Attached      = false;
+// subscribed `ff02::1`. Such joins are deferred until then: once IPv6 is attached, every such group the stack is
+// subscribed to is joined from `otIp6GetMulticastAddresses()`, so no list of deferred joins is kept that could fill up.
+static bool sIsIp6Attached = false;
 #endif
 
 #define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
@@ -920,76 +922,44 @@ static bool IsLinkOrNodeLocalMulticast(const struct in6_addr &aAddress)
     return IN6_IS_ADDR_MC_LINKLOCAL(&aAddress) || IN6_IS_ADDR_MC_NODELOCAL(&aAddress);
 }
 
-static otError AddDeferredJoin(const otIp6Address &aAddress)
+static void JoinDeferredGroups(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    for (size_t i = 0; i < sDeferredJoinsCount; i++)
+    for (const otNetifMulticastAddress *addr = otIp6GetMulticastAddresses(gInstance); addr != nullptr;
+         addr                                = addr->mNext)
     {
-        // Deferred already; a single leave must remove the group.
-        VerifyOrExit(!otIp6IsAddressEqual(&sDeferredJoins[i], &aAddress));
-    }
+        struct ipv6_mreq mreq;
 
-    VerifyOrExit(sDeferredJoinsCount < kMaxDeferredJoins, error = OT_ERROR_NO_BUFS);
-    sDeferredJoins[sDeferredJoinsCount++] = aAddress;
+        memcpy(&mreq.ipv6mr_multiaddr, &addr->mAddress, sizeof(mreq.ipv6mr_multiaddr));
+        mreq.ipv6mr_interface = gNetifIndex;
 
-exit:
-    return error;
-}
-
-static bool RemoveDeferredJoin(const otIp6Address &aAddress)
-{
-    bool removed = false;
-
-    for (size_t i = 0; i < sDeferredJoinsCount; i++)
-    {
-        if (!otIp6IsAddressEqual(&sDeferredJoins[i], &aAddress))
+        // Only Thread-origin groups are joined by `UpdateMulticast()`, and only scoped ones could have been deferred.
+        if ((addr->mAddressOrigin != OT_ADDRESS_ORIGIN_THREAD) || !IsLinkOrNodeLocalMulticast(mreq.ipv6mr_multiaddr))
         {
             continue;
         }
 
-        for (size_t j = i + 1; j < sDeferredJoinsCount; j++)
-        {
-            sDeferredJoins[j - 1] = sDeferredJoins[j];
-        }
-
-        sDeferredJoinsCount--;
-        removed = true;
-        break;
-    }
-
-    return removed;
-}
-
-static void JoinDeferredGroups(void)
-{
-    for (size_t i = 0; i < sDeferredJoinsCount; i++)
-    {
-        const otIp6Address &address = sDeferredJoins[i];
-        struct ipv6_mreq    mreq;
-
-        memcpy(&mreq.ipv6mr_multiaddr, &address, sizeof(mreq.ipv6mr_multiaddr));
-        mreq.ipv6mr_interface = gNetifIndex;
-
         // EADDRINUSE: the socket is a member of the group already.
-        if ((setsockopt(sIpFd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq, sizeof(mreq)) != 0) && (errno != EADDRINUSE))
+        if ((setsockopt(sIpFd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq, sizeof(mreq)) != 0))
         {
+            if (errno == EADDRINUSE)
+            {
+                continue;
+            }
+
             LogWarn("IPV6_JOIN_GROUP failure (%d) for deferred multicast address %s", errno,
-                    Ip6AddressString(&address).AsCString());
+                    Ip6AddressString(&addr->mAddress).AsCString());
             DieNow(OT_EXIT_FAILURE);
         }
 
-        LogInfo("Added multicast address %s", Ip6AddressString(&address).AsCString());
+        LogInfo("Added multicast address %s", Ip6AddressString(&addr->mAddress).AsCString());
     }
-
-    sDeferredJoinsCount = 0;
 }
 
 static void HandleIp6Attached(void)
 {
     VerifyOrExit(!sIsIp6Attached);
 
-    // IPv6 is attached to the interface now, so the joins that had to wait can proceed (see `sDeferredJoins`).
+    // IPv6 is attached to the interface now, so the joins that had to wait can proceed (see `sIsIp6Attached`).
     sIsIp6Attached = true;
     JoinDeferredGroups();
 
@@ -997,6 +967,39 @@ exit:
     return;
 }
 #endif // defined(__APPLE__) || defined(__FreeBSD__)
+
+// Reads the interface's flags from the host into `aIfr`, which is then ready for `SIOCSIFFLAGS`.
+static bool ReadHostNetifFlags(struct ifreq &aIfr)
+{
+    memset(&aIfr, 0, sizeof(aIfr));
+    strncpy(aIfr.ifr_name, gNetifName, sizeof(aIfr.ifr_name));
+
+    return ioctl(sIpFd, SIOCGIFFLAGS, &aIfr) == 0;
+}
+
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+// A BSD tun comes up when an address is added to it: the driver's SIOCSIFADDR handler sets IFF_UP and
+// the kernel sends RTM_IFINFO. Called after an address was added, this puts the interface back down
+// when OpenThread's IPv6 is disabled and the host has not set it up, so that the kernel's change is
+// not read as the host's.
+static void KeepHostNetifDown(otInstance *aInstance)
+{
+    struct ifreq ifr;
+
+    VerifyOrExit(!sIsHostNetifUp && !otIp6IsEnabled(aInstance));
+    VerifyOrExit(ReadHostNetifFlags(ifr) && ((ifr.ifr_flags & IFF_UP) != 0));
+
+    ifr.ifr_flags = ifr.ifr_flags & ~IFF_UP;
+
+    if (ioctl(sIpFd, SIOCSIFFLAGS, &ifr) != 0)
+    {
+        LogWarn("Failed to keep the interface down: %s", strerror(errno));
+    }
+
+exit:
+    return;
+}
+#endif
 
 static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
 {
@@ -1043,13 +1046,14 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddres
                         Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
             }
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
             if (aIsAdded)
             {
+                KeepHostNetifDown(aInstance);
+#if defined(__APPLE__) || defined(__FreeBSD__)
                 // The address is on the interface, added now or present already (EALREADY), so IPv6 is attached.
                 HandleIp6Attached();
-            }
 #endif
+            }
         }
     }
 #endif
@@ -1062,38 +1066,48 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     struct ipv6_mreq mreq;
     otError          error = OT_ERROR_NONE;
     int              err;
+#if defined(__APPLE__) || defined(__FreeBSD__)
+    bool isScopedGroup = false;
+#endif
 
     assert(gInstance == aInstance);
 
     VerifyOrExit(sIpFd >= 0);
 
+    memcpy(&mreq.ipv6mr_multiaddr, &aAddress, sizeof(mreq.ipv6mr_multiaddr));
+    mreq.ipv6mr_interface = gNetifIndex;
+
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    if (!aIsAdded && RemoveDeferredJoin(aAddress))
+    isScopedGroup = IsLinkOrNodeLocalMulticast(mreq.ipv6mr_multiaddr);
+
+    if (!aIsAdded && !sIsIp6Attached && isScopedGroup)
     {
-        // The join never reached the kernel, so there is no membership to leave.
+        // A join of such a group succeeds only once IPv6 is attached, so the join was deferred and never reached the
+        // kernel: there is no membership to leave, and the group is no longer subscribed when IPv6 gets attached.
         LogInfo("Dropped deferred join of multicast address %s", Ip6AddressString(&aAddress).AsCString());
         ExitNow();
     }
 #endif
 
-    memcpy(&mreq.ipv6mr_multiaddr, &aAddress, sizeof(mreq.ipv6mr_multiaddr));
-    mreq.ipv6mr_interface = gNetifIndex;
-
     err = setsockopt(sIpFd, IPPROTO_IPV6, (aIsAdded ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP), &mreq, sizeof(mreq));
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    if ((err != 0) && aIsAdded && (errno == EINVAL) && !sIsIp6Attached &&
-        IsLinkOrNodeLocalMulticast(mreq.ipv6mr_multiaddr))
+    if ((err != 0) && aIsAdded && isScopedGroup)
     {
-        // The kernel cannot scope the group before IPv6 is attached to the interface, which the first unicast
-        // address will do (see `sDeferredJoins`).
-        error = AddDeferredJoin(aAddress);
-        VerifyOrExit(error == OT_ERROR_NONE, LogWarn("Cannot defer join of multicast address %s, list is full",
-                                                     Ip6AddressString(&aAddress).AsCString()));
+        if ((errno == EINVAL) && !sIsIp6Attached)
+        {
+            // The kernel cannot scope the group before IPv6 is attached to the interface, which the first unicast
+            // address will do (see `sIsIp6Attached`).
+            LogInfo("Deferred join of multicast address %s until IPv6 is attached to %s",
+                    Ip6AddressString(&aAddress).AsCString(), gNetifName);
+            ExitNow();
+        }
 
-        LogInfo("Deferred join of multicast address %s until IPv6 is attached to %s",
-                Ip6AddressString(&aAddress).AsCString(), gNetifName);
-        ExitNow();
+        if (errno == EADDRINUSE)
+        {
+            // `JoinDeferredGroups()` joined the group already, ahead of this notification.
+            ExitNow();
+        }
     }
 #endif
 
@@ -1105,11 +1119,10 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     }
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    if (aIsAdded && IsLinkOrNodeLocalMulticast(mreq.ipv6mr_multiaddr))
+    if (aIsAdded && isScopedGroup)
     {
         // The kernel scoped the group to the interface, which needs IPv6 attached: a recycled utun or a BSD tun
-        // has it before the first unicast address. The group is a member now, so a deferred join of it is void.
-        (void)RemoveDeferredJoin(aAddress);
+        // has it before the first unicast address.
         HandleIp6Attached();
     }
 #endif
@@ -1131,9 +1144,7 @@ static void SetLinkState(otInstance *aInstance, bool aState)
     assert(gInstance == aInstance);
 
     VerifyOrExit(sIpFd >= 0);
-    memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, gNetifName, sizeof(ifr.ifr_name));
-    VerifyOrExit(ioctl(sIpFd, SIOCGIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
+    VerifyOrExit(ReadHostNetifFlags(ifr), perror("ioctl"); error = OT_ERROR_FAILED);
 
     ifState = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
 
@@ -1145,10 +1156,19 @@ static void SetLinkState(otInstance *aInstance, bool aState)
         ifr.ifr_flags = aState ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
         VerifyOrExit(ioctl(sIpFd, SIOCSIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
-        // wait for RTM_NEWLINK event before processing notification from kernel to avoid infinite loop
-        sIsSyncingState = true;
+        // wait for RTM_NEWLINK event before processing notification from kernel to avoid infinite loop;
+        // the event only comes once the netlink socket is open (a persistent interface is set down before)
+        if (sNetlinkFd >= 0)
+        {
+            sIsSyncingState = true;
+        }
 #endif
     }
+
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    // The host's link state is what was just set (see `sIsHostNetifUp`).
+    sIsHostNetifUp = aState;
+#endif
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -2130,7 +2150,20 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
 {
     if (OT_CHANGED_THREAD_NETIF_STATE & aFlags)
     {
-        UpdateLink(aInstance);
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+        bool isSyncingFromHost = sIsSyncingFromHost;
+
+        sIsSyncingFromHost = false;
+
+        // The host set the link state and OpenThread followed it; the host may have changed it again
+        // since, and `UpdateLink()` would then undo that with the state OpenThread took from it. Unless
+        // OpenThread was set back before this notification (the notifier emits once for both changes):
+        // then the host's interface follows OpenThread, as always.
+        if (!isSyncingFromHost || (otIp6IsEnabled(aInstance) != sIsHostNetifUp))
+#endif
+        {
+            UpdateLink(aInstance);
+        }
     }
 #ifdef __linux__
     if ((OT_CHANGED_THREAD_NETIF_STATE | OT_CHANGED_THREAD_ML_ADDR) & aFlags)
@@ -2308,6 +2341,57 @@ exit:
 }
 #endif // __linux__
 
+#if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
+/**
+ * Handles packets that the macOS kernel routes to one of the utun interface's own unicast addresses.
+ *
+ * When an IPv6 address is assigned to a macOS utun interface, XNU installs a /128 host route via lo0 whose
+ * rt_ifa references the utun address. During ip6_output, XNU skips software UDP/TCP checksum calculation
+ * because lo0 advertises checksum offload, and nd6_output then redirects the packet to dlil_output(utun)
+ * instead of lo0. Complete the transport checksum here, and when platform UDP sockets are used, inject the
+ * packet back into utun so the host IPv6 stack delivers it locally (matching Linux loopback behavior).
+ */
+static bool tryProcessMacosUtunLoopback(otInstance *aInstance, char *aPacket, size_t aOffset, ssize_t aLength)
+{
+    bool         handled = false;
+    uint8_t     *ip6Packet;
+    otIp6Address dstAddr;
+
+    VerifyOrExit(aLength >= OT_IP6_HEADER_SIZE);
+
+    ip6Packet = reinterpret_cast<uint8_t *>(&aPacket[aOffset]);
+    VerifyOrExit((ip6Packet[0] >> 4) == 6);
+    VerifyOrExit(ip6Packet[kIp6HopLimitOffset] > 0);
+
+    ReadIp6AddressFrom(&ip6Packet[kIp6DestinationOffset], dstAddr);
+    VerifyOrExit(!IsIp6AddressMulticast(dstAddr) && otIp6HasUnicastAddress(aInstance, &dstAddr));
+
+    UpdateIp6TransportChecksum(ip6Packet, static_cast<size_t>(aLength));
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    if (aOffset == 4)
+    {
+        ssize_t totalLength = aLength + 4;
+
+        aPacket[0] = 0;
+        aPacket[1] = 0;
+        aPacket[2] = (PF_INET6 >> 8) & 0xff;
+        aPacket[3] = (PF_INET6 >> 0) & 0xff;
+
+        if (write(sTunFd, aPacket, static_cast<size_t>(totalLength)) != totalLength)
+        {
+            LogWarn("Failed to loop back packet on %s: %s", gNetifName, strerror(errno));
+        }
+
+        handled = true;
+    }
+#endif
+
+exit:
+    return handled;
+}
+#endif // defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
+
 static void processTransmit(otInstance *aInstance)
 {
     otMessage *message = nullptr;
@@ -2340,6 +2424,13 @@ static void processTransmit(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
     !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     if (tryProcessIcmp6RaMessage(aInstance, reinterpret_cast<uint8_t *>(&packet[offset]), rval) == OT_ERROR_NONE)
+    {
+        ExitNow();
+    }
+#endif
+
+#if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
+    if (tryProcessMacosUtunLoopback(aInstance, packet, offset, rval))
     {
         ExitNow();
     }
@@ -2419,13 +2510,18 @@ static void logAddrEvent(bool isAdd, const otIp6Address &aAddress, otError error
 static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetlinkMessage)
 {
     struct ifaddrmsg   *ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
-    size_t              rtaLength;
+    int                 rtaLength;
     otError             error = OT_ERROR_NONE;
     struct sockaddr_in6 addr6;
 
+    // verify that the message length (aNetlinkMessage->nlmsg_len) is at least large enough to contain the ifaddrmsg
+    // header before accessing its fields or calculating the payload length.
+    VerifyOrExit(aNetlinkMessage->nlmsg_len >= NLMSG_LENGTH(sizeof(struct ifaddrmsg)));
+
     VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(gNetifIndex) && ifaddr->ifa_family == AF_INET6);
 
-    rtaLength = IFA_PAYLOAD(aNetlinkMessage);
+    // Use a signed remaining length as required by RTA_OK / RTA_NEXT.
+    rtaLength = static_cast<int>(IFA_PAYLOAD(aNetlinkMessage));
 
     for (struct rtattr *rta = reinterpret_cast<struct rtattr *>(IFA_RTA(ifaddr)); RTA_OK(rta, rtaLength);
          rta                = RTA_NEXT(rta, rtaLength))
@@ -2461,18 +2557,20 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                 {
                     otNetifAddress netAddr;
 
-                    netAddr.mAddress      = addr;
-                    netAddr.mPrefixLength = ifaddr->ifa_prefixlen;
+                    // An address the host added is usable, as one added with `ipaddr add` is, and preferred
+                    // unless the kernel reports it tentative or deprecated (it reports again when that changes).
+                    memset(&netAddr, 0, sizeof(netAddr));
+                    netAddr.mAddress       = addr;
+                    netAddr.mPrefixLength  = ifaddr->ifa_prefixlen;
+                    netAddr.mPreferred     = ((ifaddr->ifa_flags & (IFA_F_TENTATIVE | IFA_F_DEPRECATED)) == 0);
+                    netAddr.mValid         = true;
+                    netAddr.mAddressOrigin = OT_ADDRESS_ORIGIN_MANUAL;
 
                     error = otIp6AddUnicastAddress(aInstance, &netAddr);
                     error = (error == OT_ERROR_INVALID_ARGS) ? OT_ERROR_NONE : error;
                 }
                 else
                 {
-                    otNetifMulticastAddress netAddr;
-
-                    netAddr.mAddress = addr;
-
                     error = otIp6SubscribeMulticastAddress(aInstance, &addr);
                 }
 
@@ -2597,6 +2695,21 @@ exit:
 #define SA_SIZE(sa) RT_ROUNDUP(sa->sa_len)
 #endif
 
+// The multicast groups a BSD kernel joins on its own for every IPv6 interface and address: the node-local
+// all-nodes group, the solicited-node group of each unicast address and the node information group
+// (RFC 4620). The host's applications did not ask for them, and each would take one of OpenThread's
+// external multicast slots. Linux never reports them for a tun interface: without ARP it joins no
+// solicited-node group, and MLD does not report ff01::/16.
+static bool IsKernelJoinedMulticastGroup(const struct in6_addr &aAddress)
+{
+    static const uint8_t kSolicitedNodePrefix[] = {0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0xff};
+    static const uint8_t kNodeInfoPrefix[]      = {0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x02, 0xff};
+
+    return IN6_IS_ADDR_MC_NODELOCAL(&aAddress) ||
+           (memcmp(aAddress.s6_addr, kSolicitedNodePrefix, sizeof(kSolicitedNodePrefix)) == 0) ||
+           (memcmp(aAddress.s6_addr, kNodeInfoPrefix, sizeof(kNodeInfoPrefix)) == 0);
+}
+
 static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 {
     otError            error;
@@ -2610,10 +2723,10 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
     unsigned int        addrmask = 0;
     unsigned int        i;
     struct sockaddr    *sa;
-    bool                is_link_local;
+    bool                isLinkLocal;
 
-    addr6.sin6_family   = 0;
-    netmask.sin6_family = 0;
+    memset(&addr6, 0, sizeof(addr6));
+    memset(&netmask, 0, sizeof(netmask));
 
     if ((rtm->rtm_type == RTM_NEWADDR) || (rtm->rtm_type == RTM_DELADDR))
     {
@@ -2621,8 +2734,8 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 
         VerifyOrExit(ifam->ifam_index == static_cast<unsigned int>(gNetifIndex));
 
-        addrbuf  = (uint8_t *)&ifam[1];
-        addrmask = (unsigned int)ifam->ifam_addrs;
+        addrbuf  = reinterpret_cast<uint8_t *>(&ifam[1]);
+        addrmask = static_cast<unsigned int>(ifam->ifam_addrs);
     }
 #ifdef RTM_NEWMADDR
     else if ((rtm->rtm_type == RTM_NEWMADDR) || (rtm->rtm_type == RTM_DELMADDR))
@@ -2631,26 +2744,43 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 
         VerifyOrExit(ifmam->ifmam_index == static_cast<unsigned int>(gNetifIndex));
 
-        addrbuf  = (uint8_t *)&ifmam[1];
-        addrmask = (unsigned int)ifmam->ifmam_addrs;
+        addrbuf  = reinterpret_cast<uint8_t *>(&ifmam[1]);
+        addrmask = static_cast<unsigned int>(ifmam->ifmam_addrs);
     }
 #endif
 
     if (addrmask != 0)
     {
+        // The addresses end with the message; `rtm_msglen` was checked against the bytes received.
+        const uint8_t *end = reinterpret_cast<const uint8_t *>(rtm) + rtm->rtm_msglen;
+
         for (i = 0; i < RTAX_MAX; i++)
         {
             unsigned int mask = (addrmask & (1 << i));
             if (mask)
             {
-                sa = (struct sockaddr *)addrbuf;
-
-                if (sa->sa_family == AF_INET6)
+                // XNU does not pad the last address into `rtm_msglen`, and the zero-length broadcast
+                // address of a point-to-point interface can end the message exactly here.
+                if (addrbuf >= end)
                 {
+                    break;
+                }
+
+                sa = reinterpret_cast<struct sockaddr *>(addrbuf);
+                VerifyOrExit(sa->sa_len <= end - addrbuf);
+
+                // A `/0` netmask is trimmed to a `sa_len` of 0, which leaves no family to read.
+                if ((sa->sa_len >= sizeof(sa->sa_len) + sizeof(sa->sa_family)) && (sa->sa_family == AF_INET6))
+                {
+                    // The kernel sends a netmask trimmed to its last non-zero byte.
                     if (i == RTAX_IFA)
-                        memcpy(&addr6, sa, sizeof(sockaddr_in6));
+                    {
+                        memcpy(&addr6, sa, OT_MIN(static_cast<size_t>(sa->sa_len), sizeof(addr6)));
+                    }
                     if (i == RTAX_NETMASK)
-                        memcpy(&netmask, sa, sizeof(sockaddr_in6));
+                    {
+                        memcpy(&netmask, sa, OT_MIN(static_cast<size_t>(sa->sa_len), sizeof(netmask)));
+                    }
                 }
                 addrbuf += SA_SIZE(sa);
             }
@@ -2661,18 +2791,18 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
     {
         otIp6Address addr;
 
-        is_link_local = false;
+        isLinkLocal = IN6_IS_ADDR_LINKLOCAL(&addr6.sin6_addr);
 
-        if (IN6_IS_ADDR_LINKLOCAL(&addr6.sin6_addr))
+        // The kernel embeds the interface index in bytes 2 and 3 of link-local addresses and of
+        // link-local multicast addresses.
+        if (isLinkLocal || IN6_IS_ADDR_MC_LINKLOCAL(&addr6.sin6_addr))
         {
-            is_link_local = true;
-            // clear the scope -- Mac OS X sends this to us (bozos!)
+            addr6.sin6_addr.s6_addr[2] = 0;
             addr6.sin6_addr.s6_addr[3] = 0;
         }
-        else if (IN6_IS_ADDR_MC_LINKLOCAL(&addr6.sin6_addr))
-        {
-            addr6.sin6_addr.s6_addr[3] = 0;
-        }
+
+        // The groups the kernel joins by itself are not memberships of the host's applications.
+        VerifyOrExit(!IsKernelJoinedMulticastGroup(addr6.sin6_addr));
 
         ReadIp6AddressFrom(&addr6.sin6_addr, addr);
 
@@ -2686,8 +2816,14 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             {
                 otNetifAddress netAddr;
 
-                netAddr.mAddress      = addr;
-                netAddr.mPrefixLength = NetmaskToPrefixLength(&netmask);
+                // An address the host added is usable, as one added with `ipaddr add` is; the message
+                // carries no address flags, so it is preferred.
+                memset(&netAddr, 0, sizeof(netAddr));
+                netAddr.mAddress       = addr;
+                netAddr.mPrefixLength  = NetmaskToPrefixLength(&netmask);
+                netAddr.mPreferred     = true;
+                netAddr.mValid         = true;
+                netAddr.mAddressOrigin = OT_ADDRESS_ORIGIN_MANUAL;
 
                 if (otIp6HasUnicastAddress(aInstance, &addr))
                 {
@@ -2696,7 +2832,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                 }
                 else
                 {
-                    if (is_link_local)
+                    if (isLinkLocal)
                     {
                         // remove the stack-added link-local address
 
@@ -2725,7 +2861,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                         err = ioctl(sIpFd, SIOCDIFADDR_IN6, &ifr6);
                         if (err != 0)
                         {
-                            LogWarn("Error (%d) removing stack-addded link-local address %s", errno,
+                            LogWarn("Error (%d) removing stack-added link-local address %s", errno,
                                     inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)));
                             error = OT_ERROR_FAILED;
                         }
@@ -2751,9 +2887,6 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             }
             else
             {
-                otNetifMulticastAddress netAddr;
-                netAddr.mAddress = addr;
-
                 error = otIp6SubscribeMulticastAddress(aInstance, &addr);
                 logAddrEvent(/* isAdd */ true, addr, error);
 
@@ -2795,23 +2928,90 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
         }
     }
 
-exit:;
+exit:
+    return;
 }
 
-static void processNetifInfoEvent(otInstance *aInstance, struct rt_msghdr *rtm)
+// Reads the host's link state and passes a change of it to OpenThread, whose IPv6 follows the host's up
+// and down. Called for RTM_IFINFO, and when the routing socket overflowed and may have dropped one.
+static void SyncHostNetifState(otInstance *aInstance)
 {
-    struct if_msghdr *ifm   = reinterpret_cast<struct if_msghdr *>(rtm);
-    otError           error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
+    struct ifreq ifr;
+    bool         isUp;
 
-    VerifyOrExit(ifm->ifm_index == static_cast<int>(gNetifIndex));
+    // RTM_IFINFO is sent for every change of the interface and carries the flags of that moment, so
+    // read the flags as they are now and act on a change of the host's link state only (as the Linux
+    // handler does with ifi_change): a message queued for another reason cannot then undo a change
+    // OpenThread made in the meantime.
+    if (!ReadHostNetifFlags(ifr))
+    {
+        LogWarn("Failed to sync netif state with host: ioctl(SIOCGIFFLAGS): %s", strerror(errno));
+        ExitNow();
+    }
 
-    UpdateLink(aInstance);
+    isUp = ((ifr.ifr_flags & IFF_UP) != 0);
+
+    VerifyOrExit(isUp != sIsHostNetifUp);
+    sIsHostNetifUp = isUp;
+
+    LogInfo("Host netif is %s", isUp ? "up" : "down");
+
+    VerifyOrExit(isUp != otIp6IsEnabled(aInstance));
+    sIsSyncingFromHost = true;
+    error              = otIp6SetEnabled(aInstance, isUp);
+    VerifyOrExit(error == OT_ERROR_NONE, sIsSyncingFromHost = false);
+    LogInfo("Succeeded to sync netif state with host");
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        LogWarn("Failed to process info event: %s", otThreadErrorToString(error));
+        LogWarn("Failed to sync netif state with host: %s", otThreadErrorToString(error));
     }
+}
+
+static void processNetifInfoEvent(otInstance *aInstance, struct rt_msghdr *aRtm)
+{
+    struct if_msghdr *ifm = reinterpret_cast<struct if_msghdr *>(aRtm);
+
+    VerifyOrExit(ifm->ifm_index == static_cast<int>(gNetifIndex));
+
+    SyncHostNetifState(aInstance);
+
+exit:
+    return;
+}
+
+// The header of a routing socket message depends on its type; the address and
+// membership headers are shorter than `struct rt_msghdr`.
+static size_t RouteMessageHeaderSize(uint8_t aType)
+{
+    size_t size;
+
+    switch (aType)
+    {
+    case RTM_NEWADDR:
+    case RTM_DELADDR:
+        size = sizeof(struct ifa_msghdr);
+        break;
+
+#ifdef RTM_NEWMADDR
+    case RTM_NEWMADDR:
+    case RTM_DELMADDR:
+        size = sizeof(struct ifma_msghdr);
+        break;
+#endif
+
+    case RTM_IFINFO:
+        size = sizeof(struct if_msghdr);
+        break;
+
+    default:
+        size = sizeof(struct rt_msghdr);
+        break;
+    }
+
+    return size;
 }
 
 #endif
@@ -3037,20 +3237,42 @@ static void processNetlinkEvent(otInstance *aInstance)
     length = recv(sNetlinkFd, msgBuffer.buffer, sizeof(msgBuffer.buffer), 0);
 
 #ifdef __linux__
-#define HEADER_SIZE sizeof(nlmsghdr)
+    constexpr size_t kHeaderSize = sizeof(nlmsghdr);
 #else
-#define HEADER_SIZE sizeof(rt_msghdr)
+    // Every routing message begins with rtm_msglen, rtm_version and rtm_type; the rest of
+    // the header depends on the type and is checked once the type is known.
+    constexpr size_t kHeaderSize =
+        sizeof(rt_msghdr::rtm_msglen) + sizeof(rt_msghdr::rtm_version) + sizeof(rt_msghdr::rtm_type);
 #endif
 
-    // Ensures full netlink header is received
-    if (length < static_cast<ssize_t>(HEADER_SIZE))
+    if (length < 0)
+    {
+        int error = errno;
+
+        VerifyOrExit(error != EAGAIN && error != EWOULDBLOCK && error != EINTR);
+
+        LogWarn("Failed to receive netlink message: %s", strerror(error));
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+        // `ENOBUFS`: the receive buffer overflowed and messages were dropped, possibly the RTM_IFINFO of a
+        // change of the host's link state. Read the state rather than wait for a message that is not
+        // coming again (as `InfraNetif::ReceiveRouteMessage()` does for the infrastructure interface).
+        if (error == ENOBUFS)
+        {
+            SyncHostNetifState(aInstance);
+        }
+#endif
+        ExitNow();
+    }
+
+    // Ensures the fixed part of the header is received: the netlink header, or the prelude of a routing message.
+    if (length < static_cast<ssize_t>(kHeaderSize))
     {
         LogWarn("Unexpected netlink recv() result: %ld", static_cast<long>(length));
         ExitNow();
     }
 
 #ifdef __linux__
-    for (struct nlmsghdr *msg = &msgBuffer.nlMsg; NLMSG_OK(msg, static_cast<size_t>(length));
+    for (struct nlmsghdr *msg = &msgBuffer.nlMsg; ot::Posix::IsNetlinkMessageOk(msg, length);
          msg                  = NLMSG_NEXT(msg, length))
     {
 #else
@@ -3059,6 +3281,14 @@ static void processNetlinkEvent(otInstance *aInstance)
         struct rt_msghdr *msg;
 
         msg = &msgBuffer.rtMsg;
+
+        // The message's own length must hold the header of its type and fit in what was received.
+        if ((msg->rtm_msglen < RouteMessageHeaderSize(msg->rtm_type)) || (msg->rtm_msglen > length))
+        {
+            LogWarn("Unexpected routing message length %u for type %u (%ld bytes received)",
+                    static_cast<unsigned int>(msg->rtm_msglen), msg->rtm_type, static_cast<long>(length));
+            ExitNow();
+        }
 
 #define nlmsg_type rtm_type
 
@@ -3299,19 +3529,47 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     }
 
     VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_NONE) == 0, OT_EXIT_ERROR_ERRNO);
-
-    ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
-    VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
 }
 #endif
 
 #if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
 static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 {
-    (void)aPlatformConfig;
-    int                 err = 0;
+    constexpr char      kUtunPrefix[] = "utun";
+    int                 err           = 0;
     struct sockaddr_ctl addr;
     struct ctl_info     info;
+    uint32_t            unit = 0; // 0: the kernel picks the lowest free utun
+    const char         *name = aPlatformConfig->mInterfaceName;
+
+    // A requested name utunN asks for that unit, which gives the interface a stable name across restarts; the
+    // digits must be the whole rest of the name, written as the kernel names the interface (no leading zero).
+    // The default name, which main.c passes when -I is not given, leaves the choice to the kernel, the only way
+    // to a free utun; any other name cannot be honoured on macOS and is refused.
+    if ((name != nullptr) && (strncmp(name, kUtunPrefix, sizeof(kUtunPrefix) - 1) == 0))
+    {
+        const char   *digits = name + sizeof(kUtunPrefix) - 1;
+        char         *end;
+        unsigned long number;
+
+        errno  = 0;
+        number = strtoul(digits, &end, 10);
+
+        if ((*digits < '0') || (*digits > '9') || ((*digits == '0') && (digits[1] != '\0')) || (*end != '\0') ||
+            (errno != 0) || (number >= UINT32_MAX) || (strlen(name) >= IFNAMSIZ))
+        {
+            LogCrit("Invalid utun interface name: %s", name);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
+        }
+
+        unit = static_cast<uint32_t>(number) + 1; // sc_unit is the utun number plus one
+    }
+    else if ((name != nullptr) && (name[0] != '\0') &&
+             (strcmp(name, OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME) != 0))
+    {
+        LogCrit("Interface name %s cannot be chosen on macOS: use utunN for a given utun, or none", name);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
 
     sTunFd = ot::Posix::SocketWithCloseExec(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -3326,9 +3584,17 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     addr.sc_family  = AF_SYSTEM;
     addr.ss_sysaddr = AF_SYS_CONTROL;
 
-    addr.sc_unit = 0;
-    err          = connect(sTunFd, (struct sockaddr *)&addr, sizeof(addr));
-    VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
+    addr.sc_unit = unit;
+    err          = connect(sTunFd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
+    if (err != 0)
+    {
+        int error = errno; // the log call may change it, and the exit code reports it
+
+        // EBUSY: the requested utun exists already.
+        LogCrit("Failed to create %s: %s", (unit != 0) ? name : "a utun", strerror(error));
+        errno = error;
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
 
     socklen_t devNameLen;
     devNameLen = (socklen_t)sizeof(gNetifName);
@@ -3429,33 +3695,29 @@ static void platformConfigureNetLink(void)
 #endif
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    // Where the platform can filter, avoid waking up for every routing table event on the host.
+#if defined(ROUTE_FILTER)
     {
-        int status;
-#ifdef ROUTE_FILTER
-        unsigned int msgfilter = ROUTE_FILTER(RTM_IFINFO) | ROUTE_FILTER(RTM_NEWADDR) | ROUTE_FILTER(RTM_DELADDR) |
-                                 ROUTE_FILTER(RTM_NEWMADDR) | ROUTE_FILTER(RTM_DELMADDR);
-#define FILTER_CMD ROUTE_MSGFILTER
-#define FILTER_ARG msgfilter
-#define FILTER_ARG_SZ sizeof(msgfilter)
-#endif
-#ifdef RO_MSGFILTER
-        uint8_t msgfilter[] = {RTM_IFINFO, RTM_NEWADDR, RTM_DELADDR};
-#define FILTER_CMD RO_MSGFILTER
-#define FILTER_ARG msgfilter
-#define FILTER_ARG_SZ sizeof(msgfilter)
-#endif
-#if defined(ROUTE_FILTER) || defined(RO_MSGFILTER)
-        status = setsockopt(sNetlinkFd, AF_ROUTE, FILTER_CMD, FILTER_ARG, FILTER_ARG_SZ);
-        VerifyOrDie(status == 0, OT_EXIT_ERROR_ERRNO);
-#endif
-        status = fcntl(sNetlinkFd, F_SETFL, O_NONBLOCK);
-        VerifyOrDie(status == 0, OT_EXIT_ERROR_ERRNO);
+        unsigned int filter = ROUTE_FILTER(RTM_IFINFO) | ROUTE_FILTER(RTM_NEWADDR) | ROUTE_FILTER(RTM_DELADDR) |
+                              ROUTE_FILTER(RTM_NEWMADDR) | ROUTE_FILTER(RTM_DELMADDR);
+
+        VerifyOrDie(setsockopt(sNetlinkFd, AF_ROUTE, ROUTE_MSGFILTER, &filter, sizeof(filter)) == 0,
+                    OT_EXIT_ERROR_ERRNO);
     }
+#elif defined(RO_MSGFILTER)
+    {
+        uint8_t filter[] = {RTM_IFINFO, RTM_NEWADDR, RTM_DELADDR};
+
+        VerifyOrDie(setsockopt(sNetlinkFd, AF_ROUTE, RO_MSGFILTER, filter, sizeof(filter)) == 0, OT_EXIT_ERROR_ERRNO);
+    }
+#endif
 #endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 }
 
 void platformNetifInit(otPlatformConfig *aPlatformConfig)
 {
+    struct ifreq ifr;
+
     // To silence "unused function" warning.
     (void)LogCrit;
     (void)LogWarn;
@@ -3475,16 +3737,32 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     sIpFd = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
-    platformConfigureNetLink();
     platformConfigureTunDevice(aPlatformConfig);
+
+    // The interface carries IPv6 datagrams of at most OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH bytes
+    // on every platform; a larger packet from the host would be cut by the tunnel read.
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, gNetifName, sizeof(ifr.ifr_name));
+    ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
+    VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, &ifr) == 0, OT_EXIT_ERROR_ERRNO);
+
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    // A macOS utun is created up (a BSD tun is not). Start down, as a Linux tun does: OpenThread
+    // brings the interface up with its IPv6, and the host's changes of the link state are passed
+    // to OpenThread from there on.
+    SetLinkState(gInstance, false);
+#endif
+
+    // The routing socket (netlink on Linux) is opened once the interface is in place, so that neither
+    // its creation nor the change just made is queued as a link message.
+    platformConfigureNetLink();
 
     gNetifIndex = if_nametoindex(gNetifName);
     VerifyOrDie(gNetifIndex > 0, OT_EXIT_FAILURE);
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    // A new tun interface has no IPv6 attached yet (see `sDeferredJoins`).
-    sIsIp6Attached      = false;
-    sDeferredJoinsCount = 0;
+    // A new tun interface has no IPv6 attached yet (see `sIsIp6Attached`).
+    sIsIp6Attached = false;
 #endif
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
@@ -3585,9 +3863,15 @@ void platformNetifDeinit(void)
 #endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-    // Deferred joins never reached the kernel; there is nothing to leave.
-    sIsIp6Attached      = false;
-    sDeferredJoinsCount = 0;
+    sIsIp6Attached = false;
+#endif
+
+#if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
+    sIsSyncingState = false;
+#endif
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    sIsHostNetifUp     = false;
+    sIsSyncingFromHost = false;
 #endif
 
     gNetifIndex = 0;

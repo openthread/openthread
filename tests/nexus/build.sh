@@ -38,6 +38,7 @@ display_usage()
     echo "        trel            : Build OpenThread Nexus platform with TREL radio (no 15.4)"
     echo "        wasm            : Build OpenThread Nexus platform for WebAssembly"
     echo "        long_routes     : Build OpenThread Nexus platform with LONG_ROUTES feature enabled"
+    echo "        time_sync       : Build OpenThread Nexus platform with TIME_SYNC feature enabled"
     echo "        no_tests        : Build OpenThread Nexus platform without test executables"
     echo ""
 }
@@ -65,6 +66,7 @@ if [ "$#" -gt 1 ]; then
 fi
 
 long_routes=OFF
+time_sync=OFF
 build_tests=ON
 
 case $1 in
@@ -80,6 +82,11 @@ case $1 in
         fifteenfour=ON
         wasm=OFF
         long_routes=ON
+        ;;
+    time_sync)
+        fifteenfour=ON
+        wasm=OFF
+        time_sync=ON
         ;;
     no_tests)
         fifteenfour=ON
@@ -116,6 +123,7 @@ CMAKE_ARGS=(
     -DOT_APP_RCP=OFF
     -DOT_15_4="${fifteenfour}"
     -DOT_MLE_LONG_ROUTES="${long_routes}"
+    -DOT_TIME_SYNC="${time_sync}"
     -DOT_NEXUS_BUILD_TESTS="${build_tests}"
     -DOT_PROJECT_CONFIG="${top_srcdir}/tests/nexus/openthread-core-nexus-config.h"
 )

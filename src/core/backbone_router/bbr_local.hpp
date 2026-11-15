@@ -212,6 +212,7 @@ private:
     void HandleNotifierEvents(Events aEvents);
     void UpdateState(void);
     void RemoveService(void);
+    void StopRegistrationTimer(void);
     void HandleTimeTick(void);
     void IncrementSequenceNumber(void);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -221,10 +222,13 @@ private:
     void LogService(Action, Error) {}
 #endif
 
-    // Indicates whether or not already add Backbone Router Service to local server data.
-    // Used to check whether or not in restore stage after reset or whether to remove
-    // Backbone Router service for Secondary Backbone Router if it was added by force.
-    bool                       mIsServiceAdded;
+    // Indicates whether Backbone Router Service is added to local server data.
+    bool mIsServiceAdded : 1;
+
+    // Indicates whether sequence number/config has already been restored from
+    // Network Data after reset, explicitly configured, or used as Primary.
+    bool mSequenceNumberRestored : 1;
+
     State                      mState;
     uint8_t                    mSequenceNumber;
     uint8_t                    mRegistrationJitter;

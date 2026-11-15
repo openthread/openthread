@@ -49,6 +49,10 @@
 
 #if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
 
+#ifdef __linux__
+struct nlmsghdr;
+#endif
+
 namespace ot {
 namespace Posix {
 

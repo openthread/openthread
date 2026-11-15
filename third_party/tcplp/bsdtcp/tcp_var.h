@@ -126,7 +126,7 @@ struct sackhint {
 };
 
 struct tcptemp {
-	uint8_t	tt_ipgen[40]; /* the size must be of max ip header, now IPv6 */
+	otMessageInfo	tt_ipgen;
 	struct	tcphdr tt_t;
 };
 
@@ -386,7 +386,7 @@ tcp_seq tcp_new_isn(struct tcpcb *);
 struct tcpcb *tcp_close_tcb(struct tcpcb *);
 struct tcpcb *tcp_drop(struct tcpcb *, int);
 void
-tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, struct tcphdr *thgen,
+tcp_respond(struct tcpcb *tp, otInstance* instance, void *ip6gen, struct tcphdr *thgen,
     tcp_seq ack, tcp_seq seq, int flags);
 void	 tcp_setpersist(struct tcpcb *);
 void	cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type);

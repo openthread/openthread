@@ -1891,19 +1891,20 @@ private:
     public:
         explicit Attacher(Instance &aInstance);
 
-        bool             IsAttaching(void) const { return mState != kStateIdle; }
-        bool             WillStartAttachSoon(void) const { return mState == kStateStart; }
-        bool             IsReattachWithDatasetDone(void) const { return mReattachMode == kReattachModeStop; }
-        void             Start(StartMode aMode);
-        void             Attach(AttachMode aMode);
-        void             CancelAttachOnRoleChange(void);
-        void             ResetAttachCounter(void) { mAttachCounter = 0; }
-        AttachMode       GetAttachMode(void) const { return mMode; }
-        ParentCandidate &GetParentCandidate(void) { return mParentCandidate; }
-        void             ClearParentCandidate(void) { mParentCandidate.Clear(); }
-        void             HandleParentResponse(RxInfo &aRxInfo);
-        void             HandleChildIdResponse(RxInfo &aRxInfo);
-        void             HandleTimer(void);
+        bool                   IsAttaching(void) const { return mState != kStateIdle; }
+        bool                   WillStartAttachSoon(void) const { return mState == kStateStart; }
+        bool                   IsReattachWithDatasetDone(void) const { return mReattachMode == kReattachModeStop; }
+        void                   Start(StartMode aMode);
+        void                   Attach(AttachMode aMode);
+        void                   CancelAttachOnRoleChange(void);
+        void                   ResetAttachCounter(void) { mAttachCounter = 0; }
+        AttachMode             GetAttachMode(void) const { return mMode; }
+        ParentCandidate       &GetParentCandidate(void) { return mParentCandidate; }
+        const ParentCandidate &GetParentCandidate(void) const { return mParentCandidate; }
+        void                   ClearParentCandidate(void) { mParentCandidate.Clear(); }
+        void                   HandleParentResponse(RxInfo &aRxInfo);
+        void                   HandleChildIdResponse(RxInfo &aRxInfo);
+        void                   HandleTimer(void);
 
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
         Callback<otThreadParentResponseCallback> mParentResponseCallback;
@@ -1937,7 +1938,7 @@ private:
         bool  HasMoreChannelsToAnnounce(void) const;
         void  SendParentRequest(ParentRequestType aType);
         Error SendChildIdRequest(void);
-        void  HandleChildIdRequestTxDone(const Message &aMessage);
+        void  HandleChildIdRequestTxDone(const Message &aMessage, Error aError);
         bool  PrepareAnnounceState(void);
         bool  IsBetterParent(uint16_t                aRloc16,
                              uint8_t                 aTwoWayLinkMargin,
@@ -2337,7 +2338,8 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void UpdateCslState(void);
+    void  UpdateCslState(void);
+    Error ProcessCslAccuracyTlv(RxInfo &aRxInfo, bool aCanTrustMessage);
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
