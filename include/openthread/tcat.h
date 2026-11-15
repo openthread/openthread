@@ -69,11 +69,12 @@ extern "C" {
     15 ///< Maximum string length of a UDP or TCP service name (does not include null char).
 #define OT_TCAT_APPLICATION_LAYER_MAX_COUNT 4 ///< Maximum number of application layer service names supported
 
-#define OT_TCAT_ADVERTISEMENT_MAX_LEN 29       ///< Maximum length of TCAT advertisement.
-#define OT_TCAT_OPCODE 0x2                     ///< TCAT Advertisement Operation Code.
-#define OT_TCAT_MAX_ADVERTISED_DEVICEID_SIZE 5 ///< TCAT max size of any type of advertised Device ID.
-#define OT_TCAT_MAX_DEVICEID_SIZE 64           ///< TCAT max size of device ID.
-#define OT_TCAT_ENABLE_MAX 600                 ///< TCAT_ENABLE_MAX, default max TMF TCAT enable time,  in seconds.
+#define OT_TCAT_ADVERTISEMENT_MAX_LEN 29         ///< Maximum length of TCAT advertisement.
+#define OT_TCAT_OPCODE 0x2                       ///< TCAT Advertisement Operation Code.
+#define OT_TCAT_MAX_ADVERTISED_DEVICEID_COUNT 10 ///< TCAT max count of advertised Device IDs.
+#define OT_TCAT_MAX_ADVERTISED_DEVICEID_SIZE 5   ///< TCAT max size of any type of advertised Device ID.
+#define OT_TCAT_MAX_DEVICEID_SIZE 64             ///< TCAT max size of device ID.
+#define OT_TCAT_ENABLE_MAX 600                   ///< TCAT_ENABLE_MAX, default max TMF TCAT enable time,  in seconds.
 
 /**
  * Represents TCAT command TLV type.
@@ -181,12 +182,12 @@ typedef enum otTcatCommandClass
  */
 typedef enum otTcatAdvertisedDeviceIdType
 {
-    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Advertised device ID type not set
-    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Advertised device ID type IEEE OUI-24
-    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Advertised device ID type IEEE OUI-36
-    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Advertised device ID type Device Discriminator
-    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Advertised device ID type IANA PEN
-    OT_TCAT_DEVICE_ID_MAX           = 5, ///< Advertised device ID max number of types
+    OT_TCAT_DEVICE_ID_EMPTY,                ///< Advertised device ID type not set
+    OT_TCAT_DEVICE_ID_OUI,                  ///< Advertised device ID type IEEE OUI
+    OT_TCAT_DEVICE_ID_DISCRIMINATOR,        ///< Advertised device ID type Device Discriminator
+    OT_TCAT_DEVICE_ID_IANAPEN,              ///< Advertised device ID type IANA PEN
+    OT_TCAT_DEVICE_ID_APPLICATION_PROTOCOL, ///< Advertised device ID type Application Protocol
+    OT_TCAT_DEVICE_ID_MAX,                  ///< Advertised device ID max number of types
 } otTcatAdvertisedDeviceIdType;
 
 typedef struct otTcatAdvertisedDeviceId
