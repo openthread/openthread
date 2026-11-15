@@ -478,22 +478,20 @@ void Tcp::Endpoint::PostCallbacksAfterSend(size_t aSent, size_t aBacklogBefore)
 bool Tcp::Endpoint::FirePendingCallbacks(void)
 {
     otTcpForwardProgress callback = nullptr;
-    bool                 calledUserCallback;
 
     if ((mPendingCallbacks & kForwardProgressCallbackFlag) != 0 && mForwardProgressCallback != nullptr)
     {
         callback = mForwardProgressCallback;
     }
 
-    mPendingCallbacks  = 0;
-    calledUserCallback = (callback != nullptr);
+    mPendingCallbacks &= kProcessSignalsActiveFlag;
 
     if (callback != nullptr)
     {
         callback(this, GetSendBufferBytes(), GetBacklogBytes());
     }
 
-    return calledUserCallback;
+    return (callback != nullptr);
 }
 
 size_t Tcp::Endpoint::GetSendBufferBytes(void) const
