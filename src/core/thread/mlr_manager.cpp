@@ -432,7 +432,7 @@ void Manager::SendNextRequest(void)
 
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
-        Get<DataPollSender>().SendFastPolls();
+        Get<DataPollSender>().RequestFastPolls(DataPollSender::kRequesterMlrManager, DataPollSender::kDefaultFastPolls);
     }
 
 exit:
@@ -561,7 +561,7 @@ void Manager::ProcessResponse(Coap::Msg *aMsg, Error aResult)
 
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
-        Get<DataPollSender>().StopFastPolls();
+        Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterMlrManager);
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
