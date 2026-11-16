@@ -45,7 +45,6 @@ Link::Link(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateDisabled)
     , mRxChannel(0)
-    , mPanId(Mac::kPanIdBroadcast)
     , mTxPacketNumber(0)
     , mTxTasklet(aInstance)
     , mTimer(aInstance)
@@ -341,11 +340,16 @@ void Link::ProcessReceivedPacket(Packet &aPacket, const Ip6::SockAddr &aSockAddr
         VerifyOrExit((mState == kStateReceive) || (mState == kStateTransmit));
     }
 
-    if (mPanId != Mac::kPanIdBroadcast)
+    if (!Get<Mac::Mac>().IsPanIdFilteringPaused())
     {
-        Mac::PanId rxPanId = aPacket.GetHeader().GetPanId();
+        Mac::PanId panId = Get<Mac::Mac>().GetPanId();
 
-        VerifyOrExit((rxPanId == mPanId) || (rxPanId == Mac::kPanIdBroadcast));
+        if (panId != Mac::kPanIdBroadcast)
+        {
+            Mac::PanId rxPanId = aPacket.GetHeader().GetPanId();
+
+            VerifyOrExit((rxPanId == panId) || (rxPanId == Mac::kPanIdBroadcast));
+        }
     }
 
     // Drop packets originating from same device.

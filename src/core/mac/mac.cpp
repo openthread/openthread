@@ -71,7 +71,6 @@ Mac::Mac(Instance &aInstance)
     , mBeaconSequence(Random::NonCrypto::Generate<uint8_t>())
     , mDataSequence(Random::NonCrypto::Generate<uint8_t>())
     , mBroadcastTransmitCount(0)
-    , mPanId(kPanIdBroadcast)
     , mPanChannel(Radio::kDefaultChannel)
     , mRadioChannel(Radio::kDefaultChannel)
     , mSupportedChannelMask(Get<Radio::Radio>().GetSupportedChannelMask())
@@ -115,7 +114,7 @@ Mac::Mac(Instance &aInstance)
 
     mLinks.Enable();
 
-    SetPanId(mPanId);
+    mLinks.SetPanId(GetPanId());
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
 #if OPENTHREAD_FTD
@@ -256,12 +255,13 @@ void Mac::PerformActiveScan(void)
     {
         // If there are more channels to scan, send the beacon request.
         mLinks.SetRxOnWhenIdle(true);
+        mLinks.PausePanIdFiltering();
         BeginTransmit();
     }
     else
     {
         mLinks.SetRxOnWhenIdle(mRxOnWhenIdle);
-        mLinks.SetPanId(mPanId);
+        mLinks.ResumePanIdFiltering();
         FinishOperation();
         ReportActiveScanResult(nullptr);
         PerformNextOperation();
@@ -450,8 +450,10 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 
 void Mac::SetPanId(PanId aPanId)
 {
-    SuccessOrExit(Get<Notifier>().Update(mPanId, aPanId, kEventThreadPanIdChanged));
-    mLinks.SetPanId(mPanId);
+    VerifyOrExit(GetPanId() != aPanId);
+
+    mLinks.SetPanId(aPanId);
+    Get<Notifier>().Signal(kEventThreadPanIdChanged);
 
 exit:
     return;
@@ -746,7 +748,7 @@ TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 #endif
 
     buildInfo.mAddrs.mSource.SetExtended(GetExtAddress());
-    buildInfo.mPanIds.SetSource(mPanId);
+    buildInfo.mPanIds.SetSource(GetPanId());
     buildInfo.mAddrs.mDestination.SetNone();
 
     buildInfo.mType    = Frame::kTypeBeacon;
@@ -930,7 +932,6 @@ void Mac::BeginTransmit(void)
     switch (mOperation)
     {
     case kOperationActiveScan:
-        mLinks.SetPanId(kPanIdBroadcast);
         frame = PrepareBeaconRequest(txFrames);
         VerifyOrExit(frame != nullptr);
         frame->SetChannel(mScanChannel);
@@ -1916,7 +1917,7 @@ void Mac::HandleReceivedFrame(RxFrame::ParseInfo &aFrameInfo, Error aError)
     {
         PanId panId = aFrameInfo.mPanIds.GetDestination();
 
-        VerifyOrExit(panId == kPanIdBroadcast || panId == mPanId, error = kErrorDestinationAddressFiltered);
+        VerifyOrExit(panId == kPanIdBroadcast || panId == GetPanId(), error = kErrorDestinationAddressFiltered);
     }
 
     // Source Address Filtering
