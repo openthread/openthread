@@ -206,18 +206,6 @@ private:
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 /**
- * Defines the Thread Direct Wake types (`otThreadDirectWakeType`).
- */
-enum WakeType : uint8_t
-{
-    kWakeTypeTdLink         = OT_THREAD_DIRECT_WAKE_TYPE_TD_LINK,  ///< Establish Thread Direct Link.
-    kWakeTypeReattach       = OT_THREAD_DIRECT_WAKE_TYPE_REATTACH, ///< Reattach to Thread Network (for future use).
-    kWakeTypeConnectionless = OT_THREAD_DIRECT_WAKE_TYPE_CONNECTIONLESS, ///< Connectionless control (for future use).
-};
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-/**
  * Defines the slot durations of a radio availability schedule (`otRadioAvailabilitySlotDuration`).
  */
 enum SlotDuration : uint8_t
@@ -376,7 +364,6 @@ private:
 
 DefineCoreType(otThreadDirectKeyId, ThreadDirect::KeyId);
 DefineCoreType(otThreadDirectKey, ThreadDirect::Key);
-DefineMapEnum(otThreadDirectWakeType, ThreadDirect::WakeType);
 DefineMapEnum(otRadioAvailabilitySlotDuration, ThreadDirect::SlotDuration);
 
 } // namespace ot

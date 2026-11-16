@@ -226,22 +226,6 @@ const otThreadDirectKeyId *otThreadDirectKeyGetId(otThreadDirectKey *aKey);
 uint32_t otThreadDirectKeyGetFrameCounter(otThreadDirectKey *aKey);
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Thread Direct Wake
-
-/**
- * Represents the Thread Direct Wake type.
- *
- * Currently, only `OT_THREAD_DIRECT_WAKE_TYPE_TD_LINK` is supported. `OT_THREAD_DIRECT_WAKE_TYPE_REATTACH` and
- * `OT_THREAD_DIRECT_WAKE_TYPE_CONNECTIONLESS` are defined for future use.
- */
-typedef enum otThreadDirectWakeType
-{
-    OT_THREAD_DIRECT_WAKE_TYPE_TD_LINK        = 0x00, ///< Establish Thread Direct Link.
-    OT_THREAD_DIRECT_WAKE_TYPE_REATTACH       = 0x01, ///< Reattach to Thread Network (for future use).
-    OT_THREAD_DIRECT_WAKE_TYPE_CONNECTIONLESS = 0x02, ///< Connectionless control (for future use).
-} otThreadDirectWakeType;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Thread Direct Link
 
 /**
