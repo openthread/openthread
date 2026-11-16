@@ -111,7 +111,9 @@ class OtCliCommandRunner(OTCommandHandler):
     assert __pattern_log_line.match('1d.00:00:20.841 [I] Mac-----------: info log')
     assert not __pattern_log_line.match('[-] Settings-----: none log')  # not enough `-` after module name
 
-    __ASYNC_COMMANDS = {'scan', 'ping', 'discover', 'networkdiagnostic get'}
+    __ASYNC_COMMANDS = {
+        'scan', 'ping', 'discover', 'networkdiagnostic get', 'linkmetrics config', 'linkmetrics request'
+    }
 
     def __init__(self, otcli: OtCliHandler, is_spinel_cli: bool = False):
         self.__otcli: OtCliHandler = otcli
@@ -139,7 +141,8 @@ class OtCliCommandRunner(OTCommandHandler):
             return []
 
         if self.__expect_command_echoback:
-            self.__expect_line(timeout, cmd)
+            # `__otcli_read_routine` strips trailing whitespace from every line read.
+            self.__expect_line(timeout, cmd.rstrip())
 
         asynchronous = any(cmd.strip().startswith(x) for x in OtCliCommandRunner.__ASYNC_COMMANDS)
         if asynchronous:
