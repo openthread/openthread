@@ -116,6 +116,7 @@ class TestOTCI(unittest.TestCase):
             nodes.append(node4)
 
             self._test_otci_example(node1, node2)
+            self._test_otci_link_metrics(node1, node2)
 
             node1.factory_reset()
             node2.factory_reset()
@@ -588,6 +589,30 @@ class TestOTCI(unittest.TestCase):
         node2.thread_start()
         node2.wait(10)
         assert node2.get_state() == "router"
+
+    def _test_otci_link_metrics(self, initiator: OTCI, subject: OTCI):
+        subject_addr = subject.get_ipaddr_linklocal()
+        seriesid = 1
+
+        self.assertTrue(initiator.linkmetrics_config_enhanced_ack_register(subject_addr, 'qr'))
+        self.assertTrue(initiator.linkmetrics_config_forward(subject_addr, seriesid, 'ldra', 'pqmr'))
+
+        initiator.linkmetrics_probe(subject_addr, seriesid, 10)
+        initiator.wait(1)
+
+        results = initiator.linkmetrics_request_single(subject_addr, 'qmr')
+        self.assertIn('lqi', results)
+        self.assertIn('margin', results)
+        self.assertIn('rssi', results)
+
+        results = initiator.linkmetrics_request_forward(subject_addr, seriesid)
+        self.assertGreater(results['pdu_counter'], 0)
+        self.assertIn('lqi', results)
+        self.assertIn('margin', results)
+        self.assertIn('rssi', results)
+
+        self.assertTrue(initiator.linkmetrics_config_forward(subject_addr, seriesid, 'X'))
+        self.assertTrue(initiator.linkmetrics_config_enhanced_ack_clear(subject_addr))
 
     def _test_otci_multi_nodes(self, leader: OTCI, commissioner: OTCI, child1: OTCI, child2: OTCI):
         self.assertFalse(leader.get_ifconfig_state())

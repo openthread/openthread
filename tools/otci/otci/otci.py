@@ -2599,19 +2599,22 @@ class OTCI(object):
             raise ValueError(link_metrics_flags)
 
         output = self.execute_command(
-            f'linkmetrics config {peer_addr} enhanced-ack register {link_metrics_flags} {"r" if reference else ""}')
+            f'linkmetrics config {peer_addr} enhanced-ack register {link_metrics_flags}{" r" if reference else ""}')
         return self.__parse_linkmetrics_mgmt_response(peer_addr, output)
 
-    def linkmetrics_config_forward(self, peer_addr: Union[str, Ip6Addr], seriesid: int, series_flags: str,
-                                   link_metrics_flags: str) -> bool:
+    def linkmetrics_config_forward(self,
+                                   peer_addr: Union[str, Ip6Addr],
+                                   seriesid: int,
+                                   series_flags: str,
+                                   link_metrics_flags: str = '') -> bool:
         if self.__valid_flags(series_flags, 'ldraX') is False:
             raise ValueError(series_flags)
 
         if self.__valid_flags(link_metrics_flags, 'pqmr') is False:
             raise ValueError(link_metrics_flags)
 
-        output = self.execute_command(
-            f'linkmetrics config {peer_addr} forward {seriesid} {series_flags} {link_metrics_flags}')
+        output = self.execute_command(f'linkmetrics config {peer_addr} forward {seriesid} {series_flags}'
+                                      f'{f" {link_metrics_flags}" if link_metrics_flags else ""}')
         return self.__parse_linkmetrics_mgmt_response(peer_addr, output)
 
     def linkmetrics_probe(self, peer_addr: Union[str, Ip6Addr], seriesid: int, length: int):
