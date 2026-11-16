@@ -1139,9 +1139,10 @@ void Diags::HandleTxDoneTimeout(void)
     // Abort the in-flight frame by switching the radio back to receive while still in diag mode. Clearing
     // `mDiagSendOn` makes `TransmitDone()` drop a late transmit done instead of handling it again.
     mDiagSendOn = false;
+    UpdateTxStats(kErrorAbort);
     IgnoreError(Get<Radio::Radio>().Receive(mChannel));
 
-    if (mIsSleepOn)
+    if ((mCurTxCmd != kTxCmdStop) && mIsSleepOn)
     {
         IgnoreError(Get<Radio::Radio>().Sleep());
     }

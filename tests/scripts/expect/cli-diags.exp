@@ -185,6 +185,10 @@ expect_line "Done"
 send "diag stop\n"
 expect_line "Done"
 
+dispose_all
+
+spawn_node 1 "cli"
+
 send_user "diag stop transmit done timeout test\n"
 send "diag start\n"
 expect_line "Done"
@@ -211,7 +215,14 @@ expect_line "Done"
 send "diag send 1\n"
 expect_line "Done"
 
+send "diag stats\n"
+expect "sent success packets: 1"
+expect_line "Done"
+
 send_user "diag repeat stop transmit done timeout test\n"
+send "diag stats clear\n"
+expect_line "Done"
+
 send "diag frame 21085affff12340000\n"
 expect_line "Done"
 
@@ -235,6 +246,11 @@ send "diag frame 112233\n"
 expect_line "Done"
 
 send "diag send 1\n"
+expect_line "Done"
+
+send "diag stats\n"
+expect "sent success packets: 1"
+expect "sent error abort packets: 1"
 expect_line "Done"
 
 send "diag stop\n"
