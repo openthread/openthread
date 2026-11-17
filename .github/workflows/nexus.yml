@@ -62,19 +62,58 @@ jobs:
         submodules: recursive
         persist-credentials: false
 
+    - name: Cache Wireshark PPA packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: /tmp/wireshark-ppa-debs
+        key: wireshark-ppa-debs-ubuntu-24.04-v1
+
     - name: Bootstrap
-      timeout-minutes: 10
+      timeout-minutes: 16
       shell: bash ./script/retry {0}
+      env:
+        OT_RETRY_TIMEOUT: 300
       run: |
-        sudo mkdir -p /etc/apt/keyrings
-        curl -fsSL --retry 3 --connect-timeout 10 --max-time 30 \
-          "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xA2E402B85A4B70CD78D8A3D9D875551314ECA0F0" \
-          | sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/wireshark-dev-stable.gpg
-        echo "deb [signed-by=/etc/apt/keyrings/wireshark-dev-stable.gpg] https://ppa.launchpadcontent.net/wireshark-dev/stable/ubuntu $(. /etc/os-release && echo "${VERSION_CODENAME}") main" \
-          | sudo tee /etc/apt/sources.list.d/wireshark-dev-stable.list >/dev/null
-        sudo apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y ninja-build tshark
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+        tshark_status="$(dpkg-query -W -f='${db:Status-Status}' tshark 2>/dev/null || true)"
+        tshark_version="$(dpkg-query -W -f='${Version}' tshark 2>/dev/null || true)"
+        if [[ "${tshark_status}" != "installed" ]] || ! command -v ninja >/dev/null 2>&1 || ! dpkg --compare-versions "${tshark_version}" ge 4.4; then
+          installed_from_cache=false
+          if compgen -G "/tmp/wireshark-ppa-debs/tshark_*.deb" >/dev/null; then
+            sudo rm -f /etc/apt/sources.list.d/wireshark-dev-stable.list
+            sudo apt-get update
+            if sudo DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y ninja-build /tmp/wireshark-ppa-debs/*.deb; then
+              installed_from_cache=true
+            else
+              rm -rf /tmp/wireshark-ppa-debs/*
+            fi
+          fi
+          if [[ "${installed_from_cache}" == false ]]; then
+            candidate_ver="$(apt-cache policy tshark | awk '/Candidate:/ {print $2}')"
+            if [[ -z "${candidate_ver}" || "${candidate_ver}" == "(none)" ]] || ! dpkg --compare-versions "${candidate_ver}" ge 4.4; then
+              sudo rm -f /etc/apt/sources.list.d/wireshark-dev-stable.list
+              sudo apt-get update
+              sudo mkdir -p /etc/apt/keyrings
+              curl -fsSL --retry 3 --connect-timeout 10 --max-time 30 \
+                "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xA2E402B85A4B70CD78D8A3D9D875551314ECA0F0" \
+                | sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/wireshark-dev-stable.gpg
+              echo "deb [signed-by=/etc/apt/keyrings/wireshark-dev-stable.gpg] https://ppa.launchpadcontent.net/wireshark-dev/stable/ubuntu $(. /etc/os-release && echo "${VERSION_CODENAME}") main" \
+                | sudo tee /etc/apt/sources.list.d/wireshark-dev-stable.list >/dev/null
+              sudo apt-get -o Acquire::Retries=5 update --error-on=any \
+                -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/wireshark-dev-stable.list \
+                -o Dir::Etc::sourceparts=- \
+                -o APT::Get::List-Cleanup=0
+            fi
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=5 -o APT::Keep-Downloaded-Packages=true --no-install-recommends install -y ninja-build tshark
+            mkdir -p /tmp/wireshark-ppa-debs
+            cp -f /var/cache/apt/archives/*ppa*.deb /tmp/wireshark-ppa-debs/
+          fi
+        fi
+        tshark_version="$(dpkg-query -W -f='${Version}' tshark)"
+        if ! dpkg --compare-versions "${tshark_version}" ge 4.4; then
+          echo "ERROR: expected tshark >= 4.4 from wireshark PPA, got ${tshark_version}" >&2
+          exit 1
+        fi
+        python3 -m pip install --retries 5 --timeout 30 -r tests/scripts/thread-cert/requirements.txt
 
     - name: Build Nexus
       run: |
