@@ -285,6 +285,7 @@ set(COMMON_SOURCES
     thread/uri_paths.cpp
     thread/vendor_info.cpp
     thread/version.cpp
+    thread_direct/td_commands.cpp
     thread_direct/td_key_manager.cpp
     thread_direct/td_listener.cpp
     thread_direct/td_types.cpp
