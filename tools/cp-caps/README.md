@@ -39,16 +39,11 @@ The [nRF52840DK][ot-nrf528xx-nrf52840] is set as the reference device by default
 
 ### Sniffer
 
-The sniffer is an RCP (e.g. an nRF52840 dongle running `ot-rcp`) driven by [ot-extcap][ot-extcap] from ot-br-posix. The test cases capture frames by running `ot-extcap` on the channel of interest, and read each frame with its timestamp in microseconds taken by the sniffer radio.
+The sniffer is an RCP (e.g. an nRF52840 dongle running `ot-rcp`) driven by [ot-extcap](../extcap/README.md). The test cases capture frames by running `ot-extcap` on the channel of interest, and read each frame with its timestamp in microseconds taken by the sniffer radio.
 
-[ot-extcap]: https://github.com/openthread/ot-br-posix/tree/main/tools/extcap
-
-Quick guide to building `ot-extcap`:
+Quick guide to building `ot-extcap` (from the root of the OpenThread repository):
 
 ```bash
-$ git clone git@github.com:openthread/ot-br-posix.git
-$ cd ot-br-posix/
-$ git submodule update --init
 $ ./script/cmake-build extcap
 ```
 

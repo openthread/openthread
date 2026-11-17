@@ -26,7 +26,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-"""Captures IEEE 802.15.4 frames with an OpenThread RCP sniffer driven by `ot-extcap` (from ot-br-posix)."""
+"""Captures IEEE 802.15.4 frames with an OpenThread RCP sniffer driven by `ot-extcap` (tools/extcap)."""
 
 import atexit
 import logging
