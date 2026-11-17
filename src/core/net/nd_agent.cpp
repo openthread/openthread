@@ -42,7 +42,8 @@ namespace NeighborDiscovery {
 
 void Agent::HandleNotifierEvents(Events aEvents)
 {
-    if (aEvents.Contains(kEventThreadNetdataChanged))
+    if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged | kEventThreadRlocAdded |
+                            kEventThreadRlocRemoved))
     {
         UpdateService();
     }
@@ -50,8 +51,8 @@ void Agent::HandleNotifierEvents(Events aEvents)
 
 void Agent::UpdateService(void)
 {
-    uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
-    NetworkData::Iterator           iterator;
+    uint16_t              rloc16 = Get<Mle::Mle>().IsAttached() ? Get<Mle::Mle>().GetRloc16() : Mle::kInvalidRloc16;
+    NetworkData::Iterator iterator;
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Lowpan::Context                 lowpanContext;
 
@@ -60,21 +61,25 @@ void Agent::UpdateService(void)
         uint8_t contextId = Mle::Aloc16::ToNdAgentContextId(mAloc.GetAddress().GetIid().GetLocator());
         bool    found     = false;
 
-        iterator = NetworkData::kIteratorInit;
-
-        while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
+        if (rloc16 != Mle::kInvalidRloc16)
         {
-            if (!prefixConfig.mNdDns)
-            {
-                continue;
-            }
+            iterator = NetworkData::kIteratorInit;
 
-            Get<NetworkData::Leader>().FindContextForAddress(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
-
-            if (lowpanContext.MatchesContextId(contextId))
+            while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
             {
-                found = true;
-                break;
+                if (!prefixConfig.mNdDns)
+                {
+                    continue;
+                }
+
+                Get<NetworkData::Leader>().FindContextForAddress(AsCoreType(&prefixConfig.mPrefix.mPrefix),
+                                                                 lowpanContext);
+
+                if (lowpanContext.MatchesContextId(contextId))
+                {
+                    found = true;
+                    break;
+                }
             }
         }
 
@@ -86,6 +91,7 @@ void Agent::UpdateService(void)
     }
 
     VerifyOrExit(!IsAlocInUse());
+    VerifyOrExit(rloc16 != Mle::kInvalidRloc16);
 
     iterator = NetworkData::kIteratorInit;
 
