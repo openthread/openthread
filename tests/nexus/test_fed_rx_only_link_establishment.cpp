@@ -49,7 +49,9 @@ static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeig
 
 void TestFedRxOnlyLinkEstablishment(void)
 {
-    static constexpr uint16_t kNumRouters = 15;
+    static constexpr uint16_t kNumRouters   = 15;
+    static constexpr uint32_t kMaxWaitTime  = 4 * Time::kOneHourInMsec;
+    static constexpr uint32_t kWaitInterval = 2 * Time::kOneMinuteInMsec;
 
     Core  nexus;
     Node &leader = nexus.CreateNode();
@@ -105,9 +107,9 @@ void TestFedRxOnlyLinkEstablishment(void)
 
     VerifyOrQuit(fed->Get<RouterTable>().GetActiveRouterCount() == kNumRouters + 1);
 
-    for (uint16_t i = 0; i < 45; i++)
+    for (uint32_t step = 0; step < kMaxWaitTime / kWaitInterval; step++)
     {
-        nexus.AdvanceTime(2 * Time::kOneMinuteInMsec);
+        nexus.AdvanceTime(kWaitInterval);
 
         if (sRxOnlyNeighborCount == kNumRouters)
         {
