@@ -37,6 +37,7 @@ sys.path.append(CUR_DIR)
 import verify_utils
 from pktverify import consts
 from pktverify.addrs import Ipv6Addr, EthAddr
+from pktverify.null_field import nullField
 
 
 def verify(pv):
@@ -60,9 +61,12 @@ def verify(pv):
     # Use ML-EIDs for SRP traffic verification
     ED_1_MLEID = Ipv6Addr(pv.vars['ED_1_MLEID_ADDR'])
     ED_1_OMR = Ipv6Addr(pv.vars['ED_1_OMR_ADDR'])
+    BR_1 = pv.vars['BR_1']
+    BR_1_RLOC16 = pv.vars['BR_1_RLOC16']
     BR_1_MLEID = Ipv6Addr(pv.vars['BR_1_MLEID_ADDR'])
     br1_srp_port = int(pv.vars['BR_1_SRP_PORT'])
     BR_1_ETH = EthAddr(pv.vars['BR_1_ETH'])
+    ETH_1_ETH = EthAddr(pv.vars['Eth_1_ETH'])
 
     SRP_SERVICE_NAME = '_thread-test._udp.default.service.arpa'
     SRP_INSTANCE_NAME = 'service-test-1.' + SRP_SERVICE_NAME
@@ -75,6 +79,12 @@ def verify(pv):
     SRP_UPDATED_PORT = 55556
 
     SERVICE_ID_SRP_SERVER = 93
+    RR_TYPE_KEY = 25
+    DNS_QUERY_TIMEOUT = 5.0
+
+    def is_ff0x_fb(addr):
+        return (isinstance(addr, Ipv6Addr) and addr[0] == 0xff and (addr[1] & 0xf0) == 0x00 and
+                all(b == 0 for b in addr[2:15]) and addr[15] == 0xfb)
 
     # Step 1: BR 1 (DUT) power on.
     print("Step 1: BR 1 (DUT) power on.")
@@ -92,7 +102,6 @@ def verify(pv):
 
     # Step 4: ED 1 sends SRP Update to register a service.
     print("Step 4: ED 1 sends SRP Update to register a service.")
-    index_era_1 = pkts.index
     pkts.\
         filter_ipv6_dst(BR_1_MLEID).\
         filter_ipv6_src(ED_1_MLEID).\
@@ -168,22 +177,43 @@ def verify(pv):
         filter(lambda p: ED_1_MLEID in verify_utils.as_list(p.dns.aaaa) and ED_1_OMR in verify_utils.as_list(p.dns.aaaa)).\
         must_next()
 
-    # mDNS Discovery 1 (Step 8/9 era)
-    print("Step 8/9: mDNS discovery on AIL.")
+    # Step 8: Eth 1 sends mDNS query QType=PTR.
+    print("Step 8: Eth 1 sends mDNS query QType=PTR.")
+    index_step_8 = pkts.index
+    step8_qry = pkts.\
+        filter(lambda p: p.eth.src == ETH_1_ETH).\
+        filter_ipv6_dst('ff02::fb').\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 0).\
+        filter(lambda p: MDNS_SERVICE_NAME in verify_utils.as_list(p.mdns.qry.name)).\
+        filter(lambda p: consts.DNS_TYPE_PTR in verify_utils.as_list(p.mdns.qry.type)).\
+        must_next()
+
+    # Step 9: BR 1 (DUT) sends mDNS Response.
+    print("Step 9: BR 1 (DUT) sends mDNS Response.")
     with pkts.save_index():
-        pkts.index = index_era_1
-        era_mdns_55555 = pkts.\
-            filter(lambda p: p.eth.src == BR_1_ETH).\
-            filter(lambda p: p.udp.dstport == 5353).\
-            filter(lambda p: p.mdns.flags.response == 1).\
-            filter(lambda p: SRP_SERVICE_PORT in verify_utils.as_list(p.mdns.srv.port)).\
-            must_next()
-        assert MDNS_INSTANCE_NAME in verify_utils.as_list(era_mdns_55555.mdns.ptr.domain_name)
-        assert ED_1_OMR in verify_utils.as_list(era_mdns_55555.mdns.aaaa)
+        pkts.index = index_step_8
+        pkts.\
+            filter(lambda p: p.sniff_timestamp <= step8_qry.sniff_timestamp + DNS_QUERY_TIMEOUT).\
+            filter_wpan().\
+            filter(lambda p: p.wpan.src64 == BR_1 or p.wpan.src16 == BR_1_RLOC16).\
+            filter(lambda p: is_ff0x_fb(p.ipv6.dst) or p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA or
+                   p.ipv6.opt.mpl.sequence is not nullField).\
+            must_not_next()
+
+    pkts.\
+        filter(lambda p: p.eth.src == BR_1_ETH).\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 1).\
+        filter(lambda p: p.mdns.flags.rcode == 0).\
+        filter(lambda p: MDNS_SERVICE_NAME in verify_utils.as_list(p.mdns.resp.name)).\
+        filter(lambda p: MDNS_INSTANCE_NAME in verify_utils.as_list(p.mdns.ptr.domain_name)).\
+        must_next()
 
     # Step 9b: Eth 1 sends mDNS query QTYPE SRV.
     print("Step 9b: Eth 1 sends mDNS query QTYPE SRV.")
     pkts.\
+        filter(lambda p: p.eth.src == ETH_1_ETH).\
         filter_ipv6_dst('ff02::fb').\
         filter(lambda p: p.udp.dstport == 5353).\
         filter(lambda p: p.mdns.flags.response == 0).\
@@ -204,6 +234,7 @@ def verify(pv):
     # Step 9c: Eth 1 sends mDNS query QTYPE AAAA.
     print("Step 9c: Eth 1 sends mDNS query QTYPE AAAA.")
     pkts.\
+        filter(lambda p: p.eth.src == ETH_1_ETH).\
         filter_ipv6_dst('ff02::fb').\
         filter(lambda p: p.udp.dstport == 5353).\
         filter(lambda p: p.mdns.flags.response == 0).\
@@ -221,7 +252,6 @@ def verify(pv):
 
     # Step 10: ED 1 sends SRP Update to update the service parameters and address.
     print("Step 10: ED 1 sends SRP Update to update the service parameters and address.")
-    index_era_2 = pkts.index
     pkts.\
         filter_ipv6_dst(BR_1_MLEID).\
         filter_ipv6_src(ED_1_MLEID).\
@@ -260,7 +290,8 @@ def verify(pv):
         filter(lambda p: p.dns.flags.response == 1).\
         filter(lambda p: p.dns.flags.rcode == 0).\
         filter(lambda p: SRP_INSTANCE_NAME in verify_utils.as_list(p.dns.ptr.domain_name)).\
-        must_next()
+        must_next().\
+        must_verify(lambda p: ED_1_OMR not in verify_utils.as_list(p.dns.aaaa))
 
     # Step 13b: ED 1 sends unicast DNS query QTYPE SRV.
     print("Step 13b: ED 1 sends unicast DNS query QTYPE SRV.")
@@ -296,28 +327,34 @@ def verify(pv):
         filter(lambda p: all(addr == ED_1_MLEID for addr in verify_utils.as_list(p.dns.aaaa))).\
         must_next()
 
-    # mDNS Discovery 2 (Step 14/15 era)
-    print("Step 14/15: updated mDNS discovery on AIL.")
-    with pkts.save_index():
-        pkts.index = index_era_2
-        pkts.\
-            filter(lambda p: p.eth.src == BR_1_ETH).\
-            filter(lambda p: p.udp.dstport == 5353).\
-            filter(lambda p: p.mdns.flags.response == 1).\
-            filter(lambda p: SRP_UPDATED_PORT in verify_utils.as_list(p.mdns.srv.port)).\
-            must_next()
-    with pkts.save_index():
-        pkts.index = index_era_2
-        pkts.\
-            filter(lambda p: p.eth.src == BR_1_ETH).\
-            filter(lambda p: p.udp.dstport == 5353).\
-            filter(lambda p: p.mdns.flags.response == 1).\
-            filter(lambda p: MDNS_INSTANCE_NAME in verify_utils.as_list(p.mdns.ptr.domain_name)).\
-            must_next()
+    # Step 14: Eth 1 sends mDNS query QType=PTR.
+    print("Step 14: Eth 1 sends mDNS query QType=PTR.")
+    pkts.\
+        filter(lambda p: p.eth.src == ETH_1_ETH).\
+        filter_ipv6_dst('ff02::fb').\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 0).\
+        filter(lambda p: MDNS_SERVICE_NAME in verify_utils.as_list(p.mdns.qry.name)).\
+        filter(lambda p: consts.DNS_TYPE_PTR in verify_utils.as_list(p.mdns.qry.type)).\
+        must_next()
+
+    # Step 15: BR 1 (DUT) sends mDNS Response.
+    print("Step 15: BR 1 (DUT) sends mDNS Response.")
+    pkts.\
+        filter(lambda p: p.eth.src == BR_1_ETH).\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 1).\
+        filter(lambda p: p.mdns.flags.rcode == 0).\
+        filter(lambda p: MDNS_SERVICE_NAME in verify_utils.as_list(p.mdns.resp.name)).\
+        filter(lambda p: MDNS_INSTANCE_NAME in verify_utils.as_list(p.mdns.ptr.domain_name)).\
+        must_next().\
+        must_verify(lambda p: ED_1_OMR not in verify_utils.as_list(p.mdns.aaaa)).\
+        must_verify(lambda p: RR_TYPE_KEY not in verify_utils.as_list(p.mdns.resp.type))
 
     # Step 15b: Eth 1 sends mDNS query QTYPE SRV.
     print("Step 15b: Eth 1 sends mDNS query QTYPE SRV.")
     pkts.\
+        filter(lambda p: p.eth.src == ETH_1_ETH).\
         filter_ipv6_dst('ff02::fb').\
         filter(lambda p: p.udp.dstport == 5353).\
         filter(lambda p: p.mdns.flags.response == 0).\
@@ -338,6 +375,7 @@ def verify(pv):
     # Step 15c: Eth 1 sends mDNS query QTYPE AAAA.
     print("Step 15c: Eth 1 sends mDNS query QTYPE AAAA.")
     pkts.\
+        filter(lambda p: p.eth.src == ETH_1_ETH).\
         filter_ipv6_dst('ff02::fb').\
         filter(lambda p: p.udp.dstport == 5353).\
         filter(lambda p: p.mdns.flags.response == 0).\
@@ -350,8 +388,10 @@ def verify(pv):
         filter(lambda p: p.udp.dstport == 5353).\
         filter(lambda p: p.mdns.flags.response == 1).\
         filter(lambda p: p.mdns.flags.rcode == 0).\
-        filter(lambda p: all(addr == ED_1_MLEID for addr in verify_utils.as_list(p.mdns.aaaa) if isinstance(addr, Ipv6Addr) and not addr.is_link_local)).\
-        must_next()
+        filter(lambda p: MDNS_HOST_NAME in verify_utils.as_list(p.mdns.resp.name)).\
+        must_next().\
+        must_verify(lambda p: all(addr == ED_1_MLEID for addr in verify_utils.as_list(p.mdns.aaaa)
+                                  if isinstance(addr, Ipv6Addr) and not addr.is_link_local))
 
 
 if __name__ == '__main__':
