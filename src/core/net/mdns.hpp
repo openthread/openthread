@@ -914,9 +914,8 @@ private:
     static constexpr uint32_t kQueryRetryGrowthFactor  = 2;
     static constexpr uint32_t kQueryRetryJitterDivisor = 32;
 
-    static constexpr uint32_t kMinInitialQueryDelay     = 20;  // msec
-    static constexpr uint32_t kMaxInitialQueryDelay     = 120; // msec
-    static constexpr uint32_t kRandomDelayReuseInterval = 2;   // msec
+    static constexpr uint32_t kMinInitialQueryDelay = 20;  // msec
+    static constexpr uint32_t kMaxInitialQueryDelay = 120; // msec
 
     static constexpr uint16_t kMinResponseDelay            = 20;  // msec
     static constexpr uint16_t kMaxResponseDelay            = 120; // msec

@@ -5506,7 +5506,7 @@ TimeMilli Core::RandomizeFirstProbeTxTime(void)
     // correctly even in the unlikely case that `now` has wrapped
     // (49 days has passed) since `mNextProbeTxTime` was last set.
 
-    if ((mNextProbeTxTime - now) >= kMaxProbeDelay)
+    if ((mNextProbeTxTime - now) > kMaxProbeDelay)
     {
         mNextProbeTxTime = now + Random::NonCrypto::GenerateInClosedRange(kMinProbeDelay, kMaxProbeDelay);
     }
@@ -5518,7 +5518,7 @@ TimeMilli Core::RandomizeInitialQueryTxTime(void)
 {
     TimeMilli now = TimerMilli::GetNow();
 
-    if ((mNextQueryTxTime - now) >= kMaxInitialQueryDelay)
+    if ((mNextQueryTxTime - now) > kMaxInitialQueryDelay)
     {
         mNextQueryTxTime = now + Random::NonCrypto::GenerateInClosedRange(kMinInitialQueryDelay, kMaxInitialQueryDelay);
     }
