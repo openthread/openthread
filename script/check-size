@@ -55,20 +55,31 @@ setup_arm_gcc_7()
     fi
 
     local toolchain_url="https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2"
+    local toolchain_mirror_url="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2"
     local toolchain_sha256="bb17109f0ee697254a5d4ae6e5e01440e3ea8f0277f2e8169bf95d07c7d5fe69"
-    local stage
-    stage="$(mktemp -d /var/tmp/.ot-arm-gcc7.XXXXXX)"
-    trap 'rm -rf "${stage:-}"' EXIT
+
     rm -rf /var/tmp/gcc-arm-none-eabi-7-2018-q2-update
-    if wget --tries 4 --no-verbose -O "${stage}/toolchain.tar.bz2" "${toolchain_url}" \
-        && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c - \
-        && tar xj -C /var/tmp -f "${stage}/toolchain.tar.bz2"; then
-        rm -rf "${stage}"
-        trap - EXIT
-    else
-        echo "ERROR: failed to download or verify the Arm GCC 7 toolchain" >&2
-        exit 1
-    fi
+    (
+        stage="$(mktemp -d /var/tmp/.ot-arm-gcc7.XXXXXX)"
+        trap 'rm -rf "${stage}"' EXIT
+        downloaded=0
+
+        for url in "${toolchain_url}" "${toolchain_mirror_url}"; do
+            rm -f "${stage}/toolchain.tar.bz2"
+            if wget --timeout=30 --tries=3 --retry-on-http-error=429,500,502,503,504 --no-verbose \
+                -O "${stage}/toolchain.tar.bz2" "${url}" \
+                && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c -; then
+                downloaded=1
+                break
+            fi
+            echo "WARNING: failed to download or verify Arm GCC 7 from ${url}" >&2
+        done
+
+        if [[ ${downloaded} -ne 1 ]] || ! tar xj -C /var/tmp -f "${stage}/toolchain.tar.bz2"; then
+            echo "ERROR: failed to download or verify the Arm GCC 7 toolchain" >&2
+            exit 1
+        fi
+    )
 
     arm-none-eabi-gcc --version
 }

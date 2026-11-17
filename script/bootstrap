@@ -36,6 +36,7 @@ set -euxo pipefail
 repo_dir=$(cd "$(dirname "$0")/.." && pwd)
 readonly repo_dir
 INSTALL_FORMAT_TOOLS="${INSTALL_FORMAT_TOOLS:-1}"
+INSTALL_ARM_TOOLCHAIN="${INSTALL_ARM_TOOLCHAIN:-1}"
 
 LLVM_MAJOR_VERSION="19"
 
@@ -80,48 +81,70 @@ install_packages_pretty_format()
     sudo apt-get --no-install-recommends install -y iwyu || echo 'WARNING: iwyu, which is useful to ensure applying the IWYU rules.'
 }
 
+install_arm_gcc_toolchain()
+{
+    local platform="$1"
+    local arch="$2"
+
+    echo 'Installing GNU Arm Embedded Toolchain...'
+
+    if [ "${platform}" = "Raspbian" ]; then
+        sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+    elif [ "${platform}" = "Ubuntu" ]; then
+        sudo apt-get --no-install-recommends install -y bzip2 ca-certificates wget
+        local toolchain_url="https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-${arch}-linux.tar.bz2"
+        local toolchain_mirror_url="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-${arch}-linux.tar.bz2"
+        local toolchain_sha256
+        case "${arch}" in
+            x86_64) toolchain_sha256="5adc2ee03904571c2de79d5cfc0f7fe2a5c5f54f44da5b645c17ee57b217f11f" ;;
+            aarch64) toolchain_sha256="1f4165c25e2cff80e29870f409862487ba470afd436e245ba3c743108e17b8ac" ;;
+            *)
+                echo "Unsupported architecture for GNU Arm Embedded Toolchain: ${arch}" >&2
+                exit 1
+                ;;
+        esac
+        (
+            stage="$(mktemp -d /var/tmp/.ot-arm-toolchain.XXXXXX)"
+            trap 'rm -rf "${stage}"' EXIT
+            downloaded=0
+            for url in "${toolchain_url}" "${toolchain_mirror_url}"; do
+                rm -f "${stage}/toolchain.tar.bz2"
+                if wget --timeout=30 --tries=3 --retry-on-http-error=429,500,502,503,504 --no-verbose \
+                    -O "${stage}/toolchain.tar.bz2" "${url}" \
+                    && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c -; then
+                    downloaded=1
+                    break
+                fi
+                echo "WARNING: failed to download or verify GNU Arm Embedded Toolchain from ${url}" >&2
+            done
+            if [[ ${downloaded} -ne 1 ]] || ! sudo tar xj -C /opt -f "${stage}/toolchain.tar.bz2"; then
+                echo "ERROR: failed to download or verify the GNU Arm Embedded Toolchain" >&2
+                exit 1
+            fi
+        )
+        sudo ln -s -f /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.
+    fi
+}
+
 install_packages_apt()
 {
+    local platform
+    local arch
+
     echo 'Installing toolchain dependencies...'
 
     # apt-get update and install dependencies
     sudo apt-get update
     sudo DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y g++ lsb-release cmake ninja-build shellcheck expect libgtest-dev libgmock-dev python3-pip python3-venv
 
-    echo 'Installing GNU Arm Embedded Toolchain...'
-    PLATFORM=$(lsb_release -is)
-    ARCH=$(arch)
+    platform=$(lsb_release -is)
+    arch=$(arch)
 
-    if [ "$PLATFORM" = "Raspbian" ]; then
-        sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-    elif [ "$PLATFORM" = "Ubuntu" ]; then
-        sudo apt-get --no-install-recommends install -y bzip2 ca-certificates wget
-        local toolchain_url="https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-${ARCH}-linux.tar.bz2"
-        local toolchain_sha256
-        case "${ARCH}" in
-            x86_64) toolchain_sha256="5adc2ee03904571c2de79d5cfc0f7fe2a5c5f54f44da5b645c17ee57b217f11f" ;;
-            aarch64) toolchain_sha256="1f4165c25e2cff80e29870f409862487ba470afd436e245ba3c743108e17b8ac" ;;
-            *)
-                echo "Unsupported architecture for GNU Arm Embedded Toolchain: ${ARCH}" >&2
-                exit 1
-                ;;
-        esac
-        local stage
-        stage="$(mktemp -d /var/tmp/.ot-arm-toolchain.XXXXXX)"
-        trap 'rm -rf "${stage:-}"' EXIT
-        if wget --tries 4 --no-verbose -O "${stage}/toolchain.tar.bz2" "${toolchain_url}" \
-            && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c - \
-            && sudo tar xj -C /opt -f "${stage}/toolchain.tar.bz2"; then
-            rm -rf "${stage}"
-            trap - EXIT
-            sudo ln -s -f /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.
-        else
-            echo "ERROR: failed to download or verify the GNU Arm Embedded Toolchain" >&2
-            exit 1
-        fi
+    if [[ ${INSTALL_ARM_TOOLCHAIN} == 1 ]]; then
+        install_arm_gcc_toolchain "${platform}" "${arch}"
     fi
 
-    if [ "$PLATFORM" != "Raspbian" ] && [ "${INSTALL_FORMAT_TOOLS}" = "1" ]; then
+    if [ "${platform}" != "Raspbian" ] && [ "${INSTALL_FORMAT_TOOLS}" = "1" ]; then
         install_packages_pretty_format
     fi
 }
@@ -143,11 +166,13 @@ install_packages_brew()
     # add build tools
     brew install cmake ninja python shfmt shellcheck
 
-    echo 'Installing GNU Arm Embedded Toolchain...'
+    if [[ ${INSTALL_ARM_TOOLCHAIN} == 1 ]]; then
+        echo 'Installing GNU Arm Embedded Toolchain...'
 
-    # add ARM toolchain
-    brew tap ArmMbed/homebrew-formulae
-    brew install armmbed/formulae/arm-none-eabi-gcc
+        # add ARM toolchain
+        brew tap ArmMbed/homebrew-formulae
+        brew install armmbed/formulae/arm-none-eabi-gcc
+    fi
 
     # check for gcc for simulation
     if ! command -v gcc; then
