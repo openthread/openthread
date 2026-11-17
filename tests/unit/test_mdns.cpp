@@ -9413,6 +9413,218 @@ void TestLegacyUnicastResponse(void)
     testFreeInstance(sInstance);
 }
 
+void TestProbeAndInitialQueryAggregation(void)
+{
+    static constexpr uint16_t kMaxIterations        = 10000;
+    static constexpr uint8_t  kTargetMaxHits        = 2;
+    static constexpr uint32_t kMinProbeDelay        = 20;
+    static constexpr uint32_t kMaxProbeDelay        = 250;
+    static constexpr uint32_t kMinInitialQueryDelay = 20;
+    static constexpr uint32_t kMaxInitialQueryDelay = 120;
+
+    Core             *mdns = InitTest();
+    Core::Host        host;
+    Core::Service     service1;
+    Core::Service     service2;
+    Core::Browser     browser1;
+    Core::Browser     browser2;
+    Core::Browser     browser3;
+    Ip6::Address      hostAddress;
+    const DnsMessage *dnsMsg;
+    uint16_t          heapAllocations;
+    uint8_t           maxProbeHits = 0;
+    uint8_t           maxQueryHits = 0;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestProbeAndInitialQueryAggregation");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+    AdvanceTime(10 * 1000);
+
+    SuccessOrQuit(hostAddress.FromString("fd00::1"));
+
+    ClearAllBytes(host);
+    host.mHostName        = "aggrhost";
+    host.mAddresses       = &hostAddress;
+    host.mAddressesLength = 1;
+    host.mTtl             = 1200;
+
+    ClearAllBytes(service1);
+    service1.mHostName        = host.mHostName;
+    service1.mServiceInstance = "srv1";
+    service1.mServiceType     = "_srv1._udp";
+    service1.mTxtData         = kTxtData1;
+    service1.mTxtDataLength   = sizeof(kTxtData1);
+    service1.mPort            = 1111;
+    service1.mTtl             = 1200;
+
+    ClearAllBytes(service2);
+    service2.mHostName        = host.mHostName;
+    service2.mServiceInstance = "srv2";
+    service2.mServiceType     = "_srv2._udp";
+    service2.mTxtData         = kTxtData2;
+    service2.mTxtDataLength   = sizeof(kTxtData2);
+    service2.mPort            = 2222;
+    service2.mTtl             = 1200;
+
+    for (uint16_t iter = 0; (maxProbeHits < kTargetMaxHits) && (iter < kMaxIterations); iter++)
+    {
+        uint32_t probeDelay;
+
+        for (uint8_t index = 0; index < 3; index++)
+        {
+            sRegCallbacks[index].Reset();
+        }
+
+        sDnsMessages.Clear();
+
+        SuccessOrQuit(mdns->RegisterHost(host, 0, HandleSuccessCallback));
+        VerifyOrQuit(sAlarmOn);
+        probeDelay = sAlarmTime - sNow;
+        VerifyOrQuit((probeDelay >= kMinProbeDelay) && (probeDelay <= kMaxProbeDelay));
+
+        SuccessOrQuit(mdns->RegisterService(service1, 1, HandleSuccessCallback));
+        VerifyOrQuit((sAlarmTime - sNow) == probeDelay);
+
+        SuccessOrQuit(mdns->RegisterService(service2, 2, HandleSuccessCallback));
+        VerifyOrQuit((sAlarmTime - sNow) == probeDelay);
+
+        if (probeDelay == kMaxProbeDelay)
+        {
+            maxProbeHits++;
+        }
+
+        if (maxProbeHits < kTargetMaxHits)
+        {
+            SuccessOrQuit(mdns->UnregisterHost(host));
+            SuccessOrQuit(mdns->UnregisterService(service1));
+            SuccessOrQuit(mdns->UnregisterService(service2));
+            AdvanceTime(kMaxProbeDelay + 1);
+            continue;
+        }
+
+        for (uint8_t probeCount = 0; probeCount < 3; probeCount++)
+        {
+            sDnsMessages.Clear();
+            AdvanceTime(kMaxProbeDelay);
+
+            for (uint8_t index = 0; index < 3; index++)
+            {
+                VerifyOrQuit(!sRegCallbacks[index].mWasCalled);
+            }
+
+            dnsMsg = sDnsMessages.GetHead();
+            VerifyOrQuit(dnsMsg != nullptr);
+            dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 3, /* Ans */ 0, /* Auth */ 5, /* Addnl */ 0);
+            dnsMsg->ValidateAsProbeFor(host, /* aUnicastResponse */ (probeCount == 0));
+            dnsMsg->ValidateAsProbeFor(service1, /* aUnicastResponse */ (probeCount == 0));
+            dnsMsg->ValidateAsProbeFor(service2, /* aUnicastResponse */ (probeCount == 0));
+            VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        }
+
+        for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+        {
+            sDnsMessages.Clear();
+            AdvanceTime((anncCount == 0) ? kMaxProbeDelay : (1U << (anncCount - 1)) * 1000);
+
+            for (uint8_t index = 0; index < 3; index++)
+            {
+                VerifyOrQuit(sRegCallbacks[index].mWasCalled);
+            }
+
+            dnsMsg = sDnsMessages.GetHead();
+            VerifyOrQuit(dnsMsg != nullptr);
+            dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 9, /* Auth */ 0, /* Addnl */ 3);
+            dnsMsg->Validate(host, kInAnswerSection);
+            dnsMsg->Validate(service1, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr | kCheckServicesPtr);
+            dnsMsg->Validate(service2, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr | kCheckServicesPtr);
+            VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        }
+
+        SuccessOrQuit(mdns->UnregisterHost(host));
+        SuccessOrQuit(mdns->UnregisterService(service1));
+        SuccessOrQuit(mdns->UnregisterService(service2));
+        AdvanceTime(15 * 1000);
+    }
+
+    VerifyOrQuit(maxProbeHits == kTargetMaxHits);
+
+    ClearAllBytes(browser1);
+    browser1.mServiceType  = "_qaggr1._udp";
+    browser1.mInfraIfIndex = kInfraIfIndex;
+    browser1.mCallback     = HandleBrowseResult;
+
+    ClearAllBytes(browser2);
+    browser2.mServiceType  = "_qaggr2._udp";
+    browser2.mInfraIfIndex = kInfraIfIndex;
+    browser2.mCallback     = HandleBrowseResult;
+
+    ClearAllBytes(browser3);
+    browser3.mServiceType  = "_qaggr3._udp";
+    browser3.mInfraIfIndex = kInfraIfIndex;
+    browser3.mCallback     = HandleBrowseResult;
+
+    for (uint16_t iter = 0; (maxQueryHits < kTargetMaxHits) && (iter < kMaxIterations); iter++)
+    {
+        uint32_t queryDelay;
+
+        sDnsMessages.Clear();
+
+        SuccessOrQuit(mdns->StartBrowser(browser1));
+        VerifyOrQuit(sAlarmOn);
+        queryDelay = sAlarmTime - sNow;
+        VerifyOrQuit((queryDelay >= kMinInitialQueryDelay) && (queryDelay <= kMaxInitialQueryDelay));
+
+        SuccessOrQuit(mdns->StartBrowser(browser2));
+        VerifyOrQuit((sAlarmTime - sNow) == queryDelay);
+
+        SuccessOrQuit(mdns->StartBrowser(browser3));
+        VerifyOrQuit((sAlarmTime - sNow) == queryDelay);
+
+        if (queryDelay == kMaxInitialQueryDelay)
+        {
+            maxQueryHits++;
+        }
+
+        if (maxQueryHits < kTargetMaxHits)
+        {
+            SuccessOrQuit(mdns->StopBrowser(browser1));
+            SuccessOrQuit(mdns->StopBrowser(browser2));
+            SuccessOrQuit(mdns->StopBrowser(browser3));
+            AdvanceTime(kMaxInitialQueryDelay + 1);
+            continue;
+        }
+
+        sDnsMessages.Clear();
+        AdvanceTime(kMaxInitialQueryDelay);
+
+        dnsMsg = sDnsMessages.GetHead();
+        VerifyOrQuit(dnsMsg != nullptr);
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 3, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(browser1);
+        dnsMsg->ValidateAsQueryFor(browser2);
+        dnsMsg->ValidateAsQueryFor(browser3);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+        SuccessOrQuit(mdns->StopBrowser(browser1));
+        SuccessOrQuit(mdns->StopBrowser(browser2));
+        SuccessOrQuit(mdns->StopBrowser(browser3));
+        AdvanceTime(1000);
+    }
+
+    VerifyOrQuit(maxQueryHits == kTargetMaxHits);
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
 } // namespace Multicast
 } // namespace Dns
 } // namespace ot
@@ -9447,6 +9659,7 @@ int main(void)
     ot::Dns::Multicast::TestRecordQuerierForAny();
     ot::Dns::Multicast::TestPassiveCache();
     ot::Dns::Multicast::TestLegacyUnicastResponse();
+    ot::Dns::Multicast::TestProbeAndInitialQueryAggregation();
 
     printf("All tests passed\n");
 #else
