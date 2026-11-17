@@ -344,6 +344,12 @@ public:
         static Endpoint &FromTcb(struct tcpcb &aTcb) { return *reinterpret_cast<Endpoint *>(&aTcb); }
 
         /**
+         * Converts a pointer to a struct tcpcb to a pointer to its enclosing
+         * Endpoint.
+         */
+        static Endpoint *FromTcb(struct tcpcb *aTcb) { return reinterpret_cast<Endpoint *>(aTcb); }
+
+        /**
          * Obtains a reference to this Endpoint's struct tcpcb.
          */
         struct tcpcb &GetTcb(void) { return *reinterpret_cast<struct tcpcb *>(&mTcb); }
@@ -562,7 +568,12 @@ public:
     /**
      * Indicates whether signal processing may continue on an Endpoint.
      */
-    bool CanProcessSignals(const Endpoint &aEndpoint) const;
+    bool CanProcessSignals(const Endpoint &aEndpoint) const { return CanProcessSignals(&aEndpoint); }
+
+    /**
+     * Indicates whether signal processing may continue on an Endpoint pointer.
+     */
+    bool CanProcessSignals(const Endpoint *aEndpoint) const;
 
 private:
     static constexpr uint16_t kDynamicPortMin = 49152;
@@ -577,13 +588,13 @@ private:
 
     typedef TcpHeader Header;
 
-    void ProcessSignals(Endpoint             &aEndpoint,
+    void ProcessSignals(Endpoint             *aEndpoint,
                         otLinkedBuffer       *aPriorHead,
                         size_t                aPriorBacklog,
                         struct tcplp_signals &aSignals,
-                        bool                  aOwnsProcessSignalsFlag) const;
+                        bool                  aOwnsProcessSignalsFlag);
 
-    void StopProcessingSignals(Endpoint &aEndpoint) const;
+    void StopProcessingSignals(const Endpoint *aEndpoint);
 
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);
