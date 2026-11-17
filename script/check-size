@@ -66,8 +66,9 @@ setup_arm_gcc_7()
 
         for url in "${toolchain_url}" "${toolchain_mirror_url}"; do
             rm -f "${stage}/toolchain.tar.bz2"
-            if wget --timeout=30 --tries=3 --retry-on-http-error=429,500,502,503,504 --no-verbose \
-                -O "${stage}/toolchain.tar.bz2" "${url}" \
+            if curl --proto '=https' --tlsv1.2 -fsSL --retry 2 --retry-delay 2 --retry-max-time 80 \
+                --connect-timeout 15 --max-time 75 --speed-limit 1048576 --speed-time 15 \
+                -o "${stage}/toolchain.tar.bz2" "${url}" \
                 && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c -; then
                 downloaded=1
                 break
