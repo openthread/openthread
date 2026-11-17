@@ -279,11 +279,10 @@ void Manager::HandleNotifierEvents(Events aEvents)
     ServiceConfig             service;
     uint16_t                  deviceRloc16;
 
-    VerifyOrExit(aEvents.Contains(kEventThreadNetdataChanged));
+    VerifyOrExit(aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged | kEventThreadRlocAdded |
+                                     kEventThreadRlocRemoved));
 
-    VerifyOrExit(!Get<Mle::Mle>().IsDisabled());
-
-    deviceRloc16 = Get<Mle::Mle>().GetRloc16();
+    deviceRloc16 = Get<Mle::Mle>().IsAttached() ? Get<Mle::Mle>().GetRloc16() : Mle::kInvalidRloc16;
 
     // First remove all ALOCs which are no longer in the Network
     // Data to free up space in `mServiceAlocs` array.
@@ -297,14 +296,17 @@ void Manager::HandleNotifierEvents(Events aEvents)
             continue;
         }
 
-        iterator = kIteratorInit;
-
-        while (Get<Leader>().GetNext(iterator, deviceRloc16, service) == kErrorNone)
+        if (deviceRloc16 != Mle::kInvalidRloc16)
         {
-            if (service.mServiceId == Mle::Aloc16::ToServiceId(serviceAloc.GetAloc16()))
+            iterator = kIteratorInit;
+
+            while (Get<Leader>().GetNext(iterator, deviceRloc16, service) == kErrorNone)
             {
-                found = true;
-                break;
+                if (service.mServiceId == Mle::Aloc16::ToServiceId(serviceAloc.GetAloc16()))
+                {
+                    found = true;
+                    break;
+                }
             }
         }
 
@@ -314,6 +316,8 @@ void Manager::HandleNotifierEvents(Events aEvents)
             serviceAloc.MarkAsNotInUse();
         }
     }
+
+    VerifyOrExit(deviceRloc16 != Mle::kInvalidRloc16);
 
     // Now add any new ALOCs if there is space in `mServiceAlocs`.
 

@@ -53,7 +53,8 @@ Server::Server(Instance &aInstance)
 
 void Server::HandleNotifierEvents(Events aEvents)
 {
-    if (aEvents.Contains(kEventThreadNetdataChanged))
+    if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged | kEventThreadRlocAdded |
+                            kEventThreadRlocRemoved))
     {
         UpdateService();
     }
@@ -61,8 +62,8 @@ void Server::HandleNotifierEvents(Events aEvents)
 
 void Server::UpdateService(void)
 {
-    uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
-    NetworkData::Iterator           iterator;
+    uint16_t              rloc16 = Get<Mle::Mle>().IsAttached() ? Get<Mle::Mle>().GetRloc16() : Mle::kInvalidRloc16;
+    NetworkData::Iterator iterator;
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Lowpan::Context                 lowpanContext;
 
@@ -76,22 +77,25 @@ void Server::UpdateService(void)
             continue;
         }
 
-        iterator = NetworkData::kIteratorInit;
-
-        while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
+        if (rloc16 != Mle::kInvalidRloc16)
         {
-            if (!(prefixConfig.mDhcp || prefixConfig.mConfigure))
-            {
-                continue;
-            }
+            iterator = NetworkData::kIteratorInit;
 
-            Get<NetworkData::Leader>().FindContextForAddress(prefixAgent.GetPrefixAsAddress(), lowpanContext);
-
-            if (lowpanContext.MatchesContextId(prefixAgent.GetContextId()))
+            while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
             {
-                // still in network data
-                found = true;
-                break;
+                if (!(prefixConfig.mDhcp || prefixConfig.mConfigure))
+                {
+                    continue;
+                }
+
+                Get<NetworkData::Leader>().FindContextForAddress(prefixAgent.GetPrefixAsAddress(), lowpanContext);
+
+                if (lowpanContext.MatchesContextId(prefixAgent.GetContextId()))
+                {
+                    // still in network data
+                    found = true;
+                    break;
+                }
             }
         }
 
@@ -103,21 +107,24 @@ void Server::UpdateService(void)
         }
     }
 
-    // add dhcp agent aloc and prefix delegation
-    iterator = NetworkData::kIteratorInit;
-
-    while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
+    if (rloc16 != Mle::kInvalidRloc16)
     {
-        if (!(prefixConfig.mDhcp || prefixConfig.mConfigure))
-        {
-            continue;
-        }
+        // add dhcp agent aloc and prefix delegation
+        iterator = NetworkData::kIteratorInit;
 
-        Get<NetworkData::Leader>().FindContextForAddress(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
-
-        if (lowpanContext.IsValid())
+        while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
         {
-            AddPrefixAgent(prefixConfig.GetPrefix(), lowpanContext.GetContextId());
+            if (!(prefixConfig.mDhcp || prefixConfig.mConfigure))
+            {
+                continue;
+            }
+
+            Get<NetworkData::Leader>().FindContextForAddress(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
+
+            if (lowpanContext.IsValid())
+            {
+                AddPrefixAgent(prefixConfig.GetPrefix(), lowpanContext.GetContextId());
+            }
         }
     }
 
