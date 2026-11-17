@@ -423,13 +423,11 @@ jobs:
       - name: Bootstrap
         timeout-minutes: 10
         shell: bash ./script/retry {0}
+        env:
+          CLANG_VER: ${{ matrix.clang_ver }}
         run: |
-          rm -f llvm.sh
-          wget --timeout=30 --tries=4 https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh ${{ matrix.clang_ver }}
           sudo apt-get update
-          sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
+          sudo apt-get --no-install-recommends install -y "clang-${CLANG_VER}" "libclang-rt-${CLANG_VER}-dev" ninja-build libreadline-dev libncurses-dev
       - name: Build
         run: |
           case ${{ matrix.target }} in
