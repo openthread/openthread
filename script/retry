@@ -32,13 +32,91 @@
 
 set -euo pipefail
 
+configure_apt()
+{
+    if [[ -z ${GITHUB_ACTIONS:-} || ! -d /etc/apt/apt.conf.d ]] || ! command -v sudo >/dev/null 2>&1; then
+        return 0
+    fi
+
+    sudo tee /etc/apt/apt.conf.d/zzz-ot-timeout >/dev/null <<'EOF' || true
+Acquire::Retries "2";
+Acquire::http::Timeout "10";
+Acquire::https::Timeout "10";
+EOF
+}
+
+prepare_apt_retry()
+{
+    local next_attempt="$1"
+
+    if [[ -z ${GITHUB_ACTIONS:-} || ! -d /etc/apt/apt.conf.d ]] || ! command -v sudo >/dev/null 2>&1; then
+        return 0
+    fi
+
+    sudo rm -rf /var/lib/apt/lists/partial/* /var/cache/apt/archives/partial/* || true
+    sudo DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+
+    if [[ -f /etc/apt/apt-mirrors.txt ]] && grep -q 'archive\.ubuntu\.com/ubuntu' /etc/apt/apt-mirrors.txt; then
+        if [[ ${next_attempt} -eq 2 ]]; then
+            sudo tee /etc/apt/apt-mirrors.txt >/dev/null <<'EOF' || true
+https://mirrors.edge.kernel.org/ubuntu/	priority:1
+https://archive.ubuntu.com/ubuntu/	priority:2
+http://azure.archive.ubuntu.com/ubuntu/	priority:3
+https://security.ubuntu.com/ubuntu/	priority:4
+EOF
+        else
+            sudo tee /etc/apt/apt-mirrors.txt >/dev/null <<'EOF' || true
+https://archive.ubuntu.com/ubuntu/	priority:1
+http://azure.archive.ubuntu.com/ubuntu/	priority:2
+https://mirrors.edge.kernel.org/ubuntu/	priority:3
+https://security.ubuntu.com/ubuntu/	priority:4
+EOF
+        fi
+    fi
+}
+
+resolve_attempt_timeout()
+{
+    local docker_pattern='docker[[:space:]]+build|build_otbr_docker'
+    local toranj_pattern='toranj/start\.sh[[:space:]]+bootstrap'
+
+    if [[ -n ${OT_RETRY_TIMEOUT+x} ]]; then
+        printf '%s\n' "${OT_RETRY_TIMEOUT}"
+        return 0
+    fi
+
+    if [[ -z ${GITHUB_ACTIONS:-} ]]; then
+        return 0
+    fi
+
+    if [[ $# -ge 1 ]]; then
+        if [[ $* =~ ${docker_pattern} ]] || {
+            [[ -f $1 ]] && grep -IqE "${docker_pattern}" -- "$1" 2>/dev/null
+        }; then
+            printf '%s\n' "420"
+            return 0
+        fi
+        if [[ $* =~ ${toranj_pattern} ]] || {
+            [[ -f $1 ]] && grep -IqE "${toranj_pattern}" -- "$1" 2>/dev/null
+        }; then
+            printf '%s\n' "270"
+            return 0
+        fi
+    fi
+
+    printf '%s\n' "180"
+}
+
 main()
 {
     local max_attempts="${OT_RETRY_ATTEMPTS:-3}"
     local delay_seconds="${OT_RETRY_DELAY:-10}"
+    local attempt_timeout=""
+    local use_timeout=0
     local attempt=1
     local exit_code=0
     local -a cmd
+    local -a run_cmd
 
     if [[ $# -eq 0 ]]; then
         echo "Usage: $0 <command> [args...]" >&2
@@ -51,20 +129,19 @@ main()
         cmd=("$@")
     fi
 
-    if [[ -n ${GITHUB_ACTIONS:-} && -d /etc/apt/apt.conf.d ]] && command -v sudo >/dev/null 2>&1; then
-        sudo tee /etc/apt/apt.conf.d/zzz-ot-timeout >/dev/null <<'EOF' || true
-Acquire::Retries "1";
-Acquire::http::Timeout "10";
-Acquire::https::Timeout "10";
-EOF
-        if [[ -f /etc/apt/apt-mirrors.txt ]]; then
-            sudo sed -i 's|^\(http://azure\.archive\.ubuntu\.com/.*\)\tpriority:1$|\1\tpriority:4|' /etc/apt/apt-mirrors.txt || true
-        fi
+    attempt_timeout="$(resolve_attempt_timeout "$@")"
+    if [[ -n ${attempt_timeout} && ${attempt_timeout} != 0 ]] && command -v timeout >/dev/null 2>&1; then
+        use_timeout=1
+        run_cmd=(timeout --kill-after=10 "${attempt_timeout}" "${cmd[@]}")
+    else
+        run_cmd=("${cmd[@]}")
     fi
+
+    configure_apt
 
     while true; do
         exit_code=0
-        "${cmd[@]}" || exit_code=$?
+        "${run_cmd[@]}" || exit_code=$?
 
         if [[ ${exit_code} -eq 0 ]]; then
             return 0
@@ -75,9 +152,14 @@ EOF
             return "${exit_code}"
         fi
 
-        echo "Attempt ${attempt}/${max_attempts} failed (exit code ${exit_code}). Retrying in ${delay_seconds}s..." >&2
+        if [[ ${use_timeout} -eq 1 && (${exit_code} -eq 124 || ${exit_code} -eq 137) ]]; then
+            echo "Attempt ${attempt}/${max_attempts} timed out after ${attempt_timeout}s (exit code ${exit_code}). Retrying in ${delay_seconds}s..." >&2
+        else
+            echo "Attempt ${attempt}/${max_attempts} failed (exit code ${exit_code}). Retrying in ${delay_seconds}s..." >&2
+        fi
         sleep "${delay_seconds}"
         attempt=$((attempt + 1))
+        prepare_apt_retry "${attempt}"
     done
 }
 
