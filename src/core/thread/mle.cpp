@@ -1074,6 +1074,13 @@ void Mle::HandleNotifierEvents(Events aEvents)
         }
     }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (aEvents.Contains(kEventThreadChannelChanged) && IsCslEnabled() && (mCslChannel == 0))
+    {
+        ScheduleChildUpdateRequest();
+    }
+#endif
+
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadKeySeqCounterChanged))
     {
         // Store the settings on a key seq change, or when role changes and device
