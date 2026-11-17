@@ -600,6 +600,7 @@ private:
     void StorePskc(const Pskc &aPskc);
 #endif
 
+    void HandleNetworkKeyChange(void);
     void ResetFrameCounters(void);
 
     using RotationTimer = TimerMilliIn<KeyManager, &KeyManager::HandleKeyRotationTimer>;
