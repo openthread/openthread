@@ -47,6 +47,13 @@ void Neighbor::SetState(State aState)
         mConnectionStart = Get<UptimeTracker>().GetUptimeInSeconds();
     }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    if (mState == kStateInvalid)
+    {
+        RemoveAllForwardTrackingSeriesInfo();
+    }
+#endif
+
 exit:
     return;
 }
@@ -234,6 +241,24 @@ bool Neighbor::IsLastRxFragmentTagSet(TimeMilli aNow) const
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+Neighbor::SeriesInfoList &Neighbor::SeriesInfoList::operator=(SeriesInfoList &aOther)
+{
+    // Move the entries so that each `SeriesInfo` entry stays owned
+    // by a single list.
+
+    LinkMetrics::SeriesInfo *seriesInfo;
+
+    if (this != &aOther)
+    {
+        while ((seriesInfo = aOther.Pop()) != nullptr)
+        {
+            PushAfterTail(*seriesInfo);
+        }
+    }
+
+    return *this;
+}
+
 void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
 {
     for (LinkMetrics::SeriesInfo &entry : mLinkMetricsSeriesInfoList)
@@ -262,11 +287,7 @@ LinkMetrics::SeriesInfo *Neighbor::RemoveForwardTrackingSeriesInfo(const uint8_t
 
 void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
 {
-    while (!mLinkMetricsSeriesInfoList.IsEmpty())
-    {
-        LinkMetrics::SeriesInfo *seriesInfo = mLinkMetricsSeriesInfoList.Pop();
-        Get<LinkMetrics::Subject>().Free(*seriesInfo);
-    }
+    Get<LinkMetrics::Subject>().FreeAll(mLinkMetricsSeriesInfoList);
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 

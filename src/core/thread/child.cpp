@@ -77,6 +77,10 @@ void Child::Clear(void)
 {
     Instance &instance = GetInstance();
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    RemoveAllForwardTrackingSeriesInfo();
+#endif
+
     ClearAllBytes(*this);
     Init(instance);
 }
