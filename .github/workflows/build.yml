@@ -281,33 +281,43 @@ jobs:
         include:
           - gcc_ver: 5
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
+            gcc_mirror_url: https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/+download/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
             gcc_extract_dir: gcc-arm-none-eabi-5_4-2016q3
           - gcc_ver: 6
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
+            gcc_mirror_url: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
             gcc_extract_dir: gcc-arm-none-eabi-6-2017-q2-update
           - gcc_ver: 7
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+            gcc_mirror_url: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
             gcc_extract_dir: gcc-arm-none-eabi-7-2018-q2-update
           - gcc_ver: 9
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
+            gcc_mirror_url: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
             gcc_extract_dir: gcc-arm-none-eabi-9-2019-q4-major
           - gcc_ver: 10
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
+            gcc_mirror_url: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
             gcc_extract_dir: gcc-arm-none-eabi-10.3-2021.10
           - gcc_ver: 11
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/11.3.rel1/binrel/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi.tar.xz
+            gcc_mirror_url: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/11.3.rel1/binrel/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi.tar.xz
             gcc_extract_dir: arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi
           - gcc_ver: 12
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz
+            gcc_mirror_url: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz
             gcc_extract_dir: arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi
           - gcc_ver: 13
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz
+            gcc_mirror_url: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz
             gcc_extract_dir: arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
           - gcc_ver: 14
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz
+            gcc_mirror_url: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz
             gcc_extract_dir: arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi
           - gcc_ver: 15
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz
+            gcc_mirror_url: https://armkeil.blob.core.windows.net/developer/files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz
             gcc_extract_dir: arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi
     steps:
     - name: Harden Runner
@@ -328,8 +338,13 @@ jobs:
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
         rm -rf /tmp/gcc-arm /tmp/${{ matrix.gcc_extract_dir }}
-        wget --timeout=30 --tries 4 --no-verbose ${{ matrix.gcc_download_url }} -O /tmp/gcc-arm
-        tar xf /tmp/gcc-arm -C /tmp
+        if ! wget --timeout=30 --tries=3 --retry-on-http-error=429,500,502,503,504 --no-verbose "${{ matrix.gcc_download_url }}" -O /tmp/gcc-arm \
+          || ! tar xf /tmp/gcc-arm -C /tmp; then
+          rm -rf /tmp/gcc-arm /tmp/${{ matrix.gcc_extract_dir }}
+          wget --timeout=30 --tries=3 --retry-on-http-error=429,500,502,503,504 --no-verbose "${{ matrix.gcc_mirror_url }}" -O /tmp/gcc-arm
+          tar xf /tmp/gcc-arm -C /tmp
+        fi
+        rm -f /tmp/gcc-arm
         script/check-arm-build setup
     - name: Build
       env:

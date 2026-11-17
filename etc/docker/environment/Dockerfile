@@ -4,6 +4,16 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8
 ENV INSTALL_FORMAT_TOOLS=0
+ENV INSTALL_ARM_TOOLCHAIN=0
+
+RUN printf 'Acquire::Retries "3";\nAcquire::http::Timeout "15";\nAcquire::https::Timeout "15";\n' \
+    >/etc/apt/apt.conf.d/80-retries \
+    && if grep -q 'archive\.ubuntu\.com/ubuntu' /etc/apt/sources.list; then \
+        printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://mirrors.edge.kernel.org/ubuntu/\tpriority:2\nhttp://archive.ubuntu.com/ubuntu/\tpriority:3\nhttp://security.ubuntu.com/ubuntu/\tpriority:4\n' \
+            >/etc/apt/apt-mirrors.txt \
+        && sed -i -E 's#http://(archive|security)\.ubuntu\.com/ubuntu/?([[:space:]]|$)#mirror+file:/etc/apt/apt-mirrors.txt\2#g' /etc/apt/sources.list; \
+    fi
+
 # Resolves issue with installing libc-bin
 RUN rm /var/lib/dpkg/info/libc-bin.* \
     && apt-get clean -y \
@@ -27,9 +37,9 @@ RUN set -x \
         inetutils-ping \
         ca-certificates \
     && update-ca-certificates \
-    && python3 -m pip install -U pip \
-    && python3 -m pip install -U cmake \
-    && python3 -m pip install wheel
+    && python3 -m pip install --retries 5 --timeout 30 -U pip \
+    && python3 -m pip install --retries 5 --timeout 30 -U cmake \
+    && python3 -m pip install --retries 5 --timeout 30 wheel
 
 # set up openthread simulation cli example apps 
 WORKDIR /
