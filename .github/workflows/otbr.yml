@@ -95,7 +95,7 @@ jobs:
       run: |
         echo "FIREWALL=0" >> $GITHUB_ENV
     - name: Bootstrap
-      timeout-minutes: 15
+      timeout-minutes: 25
       shell: bash ./script/retry {0}
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
