@@ -717,7 +717,7 @@ TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
     buildInfo.mPanIds.SetDestination(kPanIdBroadcast);
 
     buildInfo.mType      = Frame::kTypeMacCmd;
-    buildInfo.mCommandId = Frame::kMacCmdBeaconRequest;
+    buildInfo.mCommandId = Frame::kCmdBeaconRequest;
     buildInfo.mVersion   = Frame::kVersion2003;
 
     frame.PrepareHeadersWithEmptyPayload(buildInfo);
@@ -2013,7 +2013,7 @@ void Mac::HandleReceivedFrame(RxFrame::ParseInfo &aFrameInfo, Error aError)
 
                     // Only accept a "MAC Data Request" frame from a child being restored.
                     VerifyOrExit((aFrameInfo.mType == Frame::kTypeMacCmd) &&
-                                     (aFrameInfo.mCommandId == Frame::kMacCmdDataRequest),
+                                     (aFrameInfo.mCommandId == Frame::kCmdDataRequest),
                                  error = kErrorDrop);
                     break;
 
@@ -2223,7 +2223,7 @@ void Mac::HandleMacCommand(RxFrame::ParseInfo &aFrameInfo)
 {
     switch (aFrameInfo.mCommandId)
     {
-    case Frame::kMacCmdBeaconRequest:
+    case Frame::kCmdBeaconRequest:
         mCounters.mRxBeaconRequest++;
         LogInfo("Received Beacon Request");
 
@@ -2237,7 +2237,7 @@ void Mac::HandleMacCommand(RxFrame::ParseInfo &aFrameInfo)
 
         break;
 
-    case Frame::kMacCmdDataRequest:
+    case Frame::kCmdDataRequest:
         mCounters.mRxDataPoll++;
 #if OPENTHREAD_FTD
         Get<DataPollHandler>().HandleDataPoll(aFrameInfo);

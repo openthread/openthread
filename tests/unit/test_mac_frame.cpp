@@ -724,7 +724,7 @@ void TestMacFrameApi(void)
     VerifyOrQuit(parseInfo.mSequenceNum == 133);
     VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2006);
     VerifyOrQuit(parseInfo.mType == Mac::Frame::kTypeMacCmd);
-    VerifyOrQuit(parseInfo.mCommandId == Mac::Frame::kMacCmdDataRequest);
+    VerifyOrQuit(parseInfo.mCommandId == Mac::Frame::kCmdDataRequest);
     VerifyOrQuit(!parseInfo.mIsIePresent);
     frame.SetIePresent(true);
     SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseAddrFields));
@@ -744,7 +744,7 @@ void TestMacFrameApi(void)
     VerifyOrQuit(parseInfo.mSequenceNum == 141);
     VerifyOrQuit(parseInfo.mVersion == Mac::Frame::kVersion2015);
     VerifyOrQuit(parseInfo.mType == Mac::Frame::kTypeMacCmd);
-    VerifyOrQuit(parseInfo.mCommandId == Mac::Frame::kMacCmdDataRequest);
+    VerifyOrQuit(parseInfo.mCommandId == Mac::Frame::kCmdDataRequest);
     printf("commandId:%d\n", parseInfo.mCommandId);
 
 #endif

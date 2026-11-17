@@ -126,22 +126,6 @@ public:
     };
 
     /**
-     * Represents a subset of MAC Command Identifiers.
-     */
-    enum CommandId : uint8_t
-    {
-        kMacCmdAssociationRequest         = 1,
-        kMacCmdAssociationResponse        = 2,
-        kMacCmdDisassociationNotification = 3,
-        kMacCmdDataRequest                = 4,
-        kMacCmdPanidConflictNotification  = 5,
-        kMacCmdOrphanNotification         = 6,
-        kMacCmdBeaconRequest              = 7,
-        kMacCmdCoordinatorRealignment     = 8,
-        kMacCmdGtsRequest                 = 9,
-    };
-
-    /**
      * Specifies the parsing mode for `ParseInfo::ParseFrom()`.
      *
      * In `kParseSecurityHeader` mode, the frame is explicitly required to have security enabled in FCF; otherwise
@@ -153,6 +137,10 @@ public:
         kParseSecurityHeader, ///< Parse up through Auxiliary Security Header (requires security enabled).
         kParseFully,          ///< Parse all headers fully.
     };
+
+    static constexpr uint8_t kCmdDataRequest   = 0x04; ///< Data Request MAC command ID.
+    static constexpr uint8_t kCmdBeaconRequest = 0x07; ///< Beacon Request MAC command ID.
+    static constexpr uint8_t kCmdThread        = 0x34; ///< Thread MAC command ID.
 
     static constexpr uint8_t kKeySourceSizeMode0 = 0; ///< Key Source size in bytes for Key ID Mode 0.
     static constexpr uint8_t kKeySourceSizeMode1 = 0; ///< Key Source size in bytes for Key ID Mode 1.
@@ -656,7 +644,7 @@ public:
         PanIds        mPanIds;               ///< Source and destination PAN Ids.
         SecurityLevel mSecurityLevel;        ///< Frame security level.
         KeyIdMode     mKeyIdMode;            ///< Frame security key ID mode.
-        CommandId     mCommandId;            ///< Command ID (applicable when `mType == kTypeMacCmd`).
+        uint8_t       mCommandId;            ///< Command ID (applicable when `mType == kTypeMacCmd`).
         bool          mSuppressSequence : 1; ///< Whether to suppress seq number.
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT

@@ -148,7 +148,7 @@ bool otMacFrameIsDataRequest(const otRadioFrame *aFrame)
 
     SuccessOrExit(ParseFully(aFrame, frameInfo));
     VerifyOrExit(frameInfo.mType == Mac::Frame::kTypeMacCmd);
-    VerifyOrExit(frameInfo.mCommandId == Mac::Frame::kMacCmdDataRequest);
+    VerifyOrExit(frameInfo.mCommandId == Mac::Frame::kCmdDataRequest);
     matches = true;
 
 exit:
