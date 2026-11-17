@@ -208,7 +208,7 @@ void Test1_2_LP_7_2_1(void)
     VerifyOrQuit(sed1.Get<Mle::Mle>().IsAttached());
     VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
 
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
     nexus.AdvanceTime(kCslSyncTime);
 
     nexus.AdvanceTime(kStabilizationTime);

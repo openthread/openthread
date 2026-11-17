@@ -112,13 +112,13 @@ exit:
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
 void ChannelManager::ChangeCslChannel(uint8_t aChannel)
 {
-    if (Get<Mle::Mle>().IsRxOnWhenIdle() || !Get<Mac::Mac>().IsCslEnabled())
+    if (Get<Mle::Mle>().IsRxOnWhenIdle() || !Get<Mle::Mle>().IsCslEnabled())
     {
         // cannot select or use other channel
         ExitNow();
     }
 
-    if (aChannel == Get<Mac::Mac>().GetCslChannel())
+    if (aChannel == Get<Mle::Mle>().GetCslChannel())
     {
         LogInfo("Already operating on the requested channel %d", aChannel);
         ExitNow();
@@ -132,7 +132,7 @@ void ChannelManager::ChangeCslChannel(uint8_t aChannel)
     LogInfo("Change to Csl channel %d now.", aChannel);
 
     mChannel = aChannel;
-    Get<Mac::Mac>().SetCslChannel(aChannel);
+    Get<Mle::Mle>().SetCslChannel(aChannel);
 
 exit:
     return;
@@ -353,9 +353,9 @@ Error ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
     SuccessOrExit(error = FindBetterChannel(newChannel, newOccupancy));
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
-    if (Get<Mac::Mac>().IsCslEnabled() && (Get<Mac::Mac>().GetCslChannel() != 0))
+    if (Get<Mle::Mle>().IsCslEnabled() && (Get<Mle::Mle>().GetCslChannel() != 0))
     {
-        curChannel = Get<Mac::Mac>().GetCslChannel();
+        curChannel = Get<Mle::Mle>().GetCslChannel();
     }
     else
 #endif

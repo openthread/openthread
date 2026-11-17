@@ -174,7 +174,7 @@ void Test1_2_LP_7_1_1(void)
     VerifyOrQuit(sed1.Get<Mle::Mle>().IsAttached());
     VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
 
-    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
+    ssed1.Get<Mle::Mle>().SetCslPeriod(kCslPeriod);
     nexus.AdvanceTime(kCslSyncTime);
 
     Log("Step 3: Harness verifies connectivity by instructing each device to send an ICMPv6 Echo Request to the DUT.");
