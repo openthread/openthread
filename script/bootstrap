@@ -91,7 +91,7 @@ install_arm_gcc_toolchain()
     if [ "${platform}" = "Raspbian" ]; then
         sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
     elif [ "${platform}" = "Ubuntu" ]; then
-        sudo apt-get --no-install-recommends install -y bzip2 ca-certificates wget
+        sudo apt-get --no-install-recommends install -y bzip2 ca-certificates curl wget
         local toolchain_url="https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-${arch}-linux.tar.bz2"
         local toolchain_mirror_url="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-${arch}-linux.tar.bz2"
         local toolchain_sha256
@@ -109,8 +109,9 @@ install_arm_gcc_toolchain()
             downloaded=0
             for url in "${toolchain_url}" "${toolchain_mirror_url}"; do
                 rm -f "${stage}/toolchain.tar.bz2"
-                if wget --timeout=30 --tries=3 --retry-on-http-error=429,500,502,503,504 --no-verbose \
-                    -O "${stage}/toolchain.tar.bz2" "${url}" \
+                if curl --proto '=https' --tlsv1.2 -fsSL --retry 2 --retry-delay 2 --retry-max-time 80 \
+                    --connect-timeout 15 --max-time 75 --speed-limit 1048576 --speed-time 15 \
+                    -o "${stage}/toolchain.tar.bz2" "${url}" \
                     && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c -; then
                     downloaded=1
                     break

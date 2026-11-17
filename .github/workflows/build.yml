@@ -336,15 +336,21 @@ jobs:
         PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-        rm -rf /tmp/gcc-arm /tmp/${{ matrix.gcc_extract_dir }}
-        if ! wget --timeout=30 --tries=3 --retry-on-http-error=429,500,502,503,504 --no-verbose "${{ matrix.gcc_download_url }}" -O /tmp/gcc-arm \
-          || ! tar xf /tmp/gcc-arm -C /tmp; then
-          rm -rf /tmp/gcc-arm /tmp/${{ matrix.gcc_extract_dir }}
-          wget --timeout=30 --tries=3 --retry-on-http-error=429,500,502,503,504 --no-verbose "${{ matrix.gcc_mirror_url }}" -O /tmp/gcc-arm
-          tar xf /tmp/gcc-arm -C /tmp
+        sudo apt-get --no-install-recommends install -y build-essential curl lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+        if [[ ! -x "/tmp/${{ matrix.gcc_extract_dir }}/bin/arm-none-eabi-gcc" ]]; then
+          rm -rf /tmp/gcc-arm "/tmp/${{ matrix.gcc_extract_dir }}"
+          if ! curl --proto '=https' --tlsv1.2 -fsSL --retry 2 --retry-delay 2 --retry-max-time 80 \
+            --connect-timeout 15 --max-time 75 --speed-limit 1048576 --speed-time 15 \
+            -o /tmp/gcc-arm "${{ matrix.gcc_download_url }}" \
+            || ! tar xf /tmp/gcc-arm -C /tmp; then
+            rm -rf /tmp/gcc-arm "/tmp/${{ matrix.gcc_extract_dir }}"
+            curl --proto '=https' --tlsv1.2 -fsSL --retry 2 --retry-delay 2 --retry-max-time 80 \
+              --connect-timeout 15 --max-time 75 --speed-limit 1048576 --speed-time 15 \
+              -o /tmp/gcc-arm "${{ matrix.gcc_mirror_url }}"
+            tar xf /tmp/gcc-arm -C /tmp
+          fi
+          rm -f /tmp/gcc-arm
         fi
-        rm -f /tmp/gcc-arm
         script/check-arm-build setup
     - name: Build
       env:
