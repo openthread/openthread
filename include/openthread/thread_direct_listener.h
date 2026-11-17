@@ -106,10 +106,9 @@ typedef struct otThreadDirectListenerConfig
  */
 typedef struct otThreadDirectListenerWakeInfo
 {
-    otExtAddress           mPeerAddress; ///< The Extended MAC Address of the Wake Initiator peer.
-    otThreadDirectWakeType mWakeType;    ///< The Wake type specified in the Wake frame.
-    otThreadDirectKey     *mKey;         ///< The registered `otThreadDirectKey` that authenticated the Wake frame.
-    uint8_t                mLinkChannel; ///< The radio channel indicated for establishing the Thread Direct Link.
+    otExtAddress       mPeerAddress; ///< The Extended MAC Address of the Wake Initiator peer.
+    otThreadDirectKey *mKey;         ///< The registered `otThreadDirectKey` that authenticated the Wake frame.
+    uint8_t            mLinkChannel; ///< The radio channel indicated for establishing the Thread Direct Link.
 } otThreadDirectListenerWakeInfo;
 
 /**
@@ -180,7 +179,7 @@ otError otThreadDirectListenerGetWakeInfo(otInstance *aInstance, otThreadDirectL
  * remains running, and acts on the latest Wake frame reported via `otThreadDirectListenerWakeCallback` (and
  * inspectable via `otThreadDirectListenerGetWakeInfo()`). This function returns `NULL` if the wake cannot be accepted
  * (for example, if the listener is not running, no Wake frame has been received yet, the latest Wake frame was already
- * accepted, the wake type is not `OT_THREAD_DIRECT_WAKE_TYPE_TD_LINK`, or a link could not be allocated/started).
+ * accepted, or a link could not be allocated/started).
  *
  * The caller MUST zero-initialize (`memset` to zero) @p aLinkConfig before populating its fields. OpenThread copies
  * @p aLinkConfig, so it does not need to persist after this call returns.
