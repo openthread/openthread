@@ -148,6 +148,7 @@ endif()
 
 target_link_libraries(ot-nexus-platform
     PRIVATE
+        openthread-pcapng
         ot-config
         ${OT_MBEDTLS}
 )

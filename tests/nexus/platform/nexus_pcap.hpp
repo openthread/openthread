@@ -34,6 +34,7 @@
 
 #include "nexus_infra_if.hpp"
 #include "nexus_radio.hpp"
+#include "lib/pcapng/pcapng.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -47,6 +48,9 @@ public:
     /**
      * Opens a pcapng file.
      *
+     * The file describes two interfaces: IEEE 802.15.4 (for radio frames) and Ethernet (for infrastructure interface
+     * packets).
+     *
      * @param[in] aFilename  The filename to open.
      */
     void Open(const char *aFilename);
@@ -57,15 +61,17 @@ public:
     void Close(void);
 
     /**
-     * Writes a frame to the pcapng file.
+     * Writes a radio frame to the pcapng file.
      *
      * @param[in] aFrame   The frame to write.
      * @param[in] aTimeUs  The timestamp in microseconds.
+     * @param[in] aRssi    The RSSI in dBm, or `OT_RADIO_RSSI_INVALID` if unknown.
+     * @param[in] aLqi     The LQI, or `OT_RADIO_LQI_NONE` if unknown.
      */
-    void WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs);
+    void WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs, int8_t aRssi, uint8_t aLqi);
 
     /**
-     * Writes a packet to the pcapng file.
+     * Writes an infrastructure interface IPv6 packet as an Ethernet frame to the pcapng file.
      *
      * @param[in] aSrcAddr  The source link-layer address.
      * @param[in] aDstAddr  The destination link-layer address.
@@ -80,30 +86,17 @@ public:
                      uint64_t                         aTimeUs);
 
 private:
-    static constexpr uint32_t kPcapngShbType            = 0x0a0d0d0a;
-    static constexpr uint32_t kPcapngByteOrderMagic     = 0x1a2b3c4d;
-    static constexpr uint16_t kPcapngVersionMajor       = 1;
-    static constexpr uint16_t kPcapngVersionMinor       = 0;
-    static constexpr uint32_t kPcapngIdbType            = 0x00000001;
-    static constexpr uint32_t kPcapngEpbType            = 0x00000006;
-    static constexpr uint32_t kPcapngSnapLen            = 65535;
-    static constexpr uint32_t kPcapngLinkTypeIeee802154 = 283; // DLT_IEEE802_15_4_TAP
-    static constexpr uint32_t kPcapngLinkTypeEthernet   = 1;   // LINKTYPE_ETHERNET
-
-    static constexpr uint16_t kEtherTypeIPv6 = 0x86dd;
-
-    static constexpr uint8_t kTapVersion = 0;
-
-    static constexpr uint16_t kTapFcsType   = 0;
-    static constexpr uint16_t kTapFcsLength = 1;
-    static constexpr uint8_t  kTapFcsValue  = 1; // 16-bit CRC
-
-    static constexpr uint16_t kTapChannelType   = 3;
-    static constexpr uint16_t kTapChannelLength = 3;
-    static constexpr uint8_t  kTapChannelPage   = 0;
-
 #ifndef __EMSCRIPTEN__
-    FILE *mFile;
+    // Interface IDs follow the order of the Interface Description Blocks written by `Open()`.
+    static constexpr uint32_t kInterfaceIdIeee802154 = 0;
+    static constexpr uint32_t kInterfaceIdEthernet   = 1;
+
+    static constexpr uint16_t kEtherTypeIp6 = 0x86dd;
+
+    void Write(const Pcapng::Encoder &aEncoder);
+
+    FILE   *mFile;
+    uint8_t mBlock[Pcapng::Encoder::kMaxEthernetFrameBlockSize];
 #endif
 };
 

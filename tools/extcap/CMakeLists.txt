@@ -78,6 +78,7 @@ target_link_libraries(ot-extcap PRIVATE
     openthread-ftd
     openthread-posix
     openthread-hdlc
+    openthread-pcapng
     openthread-radio-spinel
     openthread-spinel-rcp
     openthread-url

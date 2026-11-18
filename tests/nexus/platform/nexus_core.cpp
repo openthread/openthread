@@ -824,7 +824,8 @@ void Core::ProcessRadioTx(Node &aNode, Radio::Frame &aTxFrame, TxType aTxType)
     SuccessOrQuit(otMacFrameProcessTxSfd(&aTxFrame, mNow, &aNode.mRadio.mRadioContext));
     aTxFrame.UpdateFcs();
 
-    mPcap.WriteFrame(aTxFrame, mNow);
+    // A transmitted frame has no single RSSI or LQI, since each receiver sees its own.
+    mPcap.WriteFrame(aTxFrame, mNow, OT_RADIO_RSSI_INVALID, OT_RADIO_LQI_NONE);
 
     if (!mObservers.IsEmpty())
     {
@@ -976,7 +977,7 @@ void Core::ProcessRadioTx(Node &aNode, Radio::Frame &aTxFrame, TxType aTxType)
         ackFrame.mInfo.mRxInfo.mLqi       = kDefaultRxLqi;
         ackFrame.mInfo.mRxInfo.mTimestamp = mNow;
 
-        mPcap.WriteFrame(ackFrame, mNow);
+        mPcap.WriteFrame(ackFrame, mNow, ackFrame.mInfo.mRxInfo.mRssi, ackFrame.mInfo.mRxInfo.mLqi);
 
         if (!RadioModel::ShouldDropPacket(ackRssi))
         {
