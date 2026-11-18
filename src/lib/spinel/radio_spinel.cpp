@@ -101,6 +101,8 @@ RadioSpinel::RadioSpinel(void)
     , mCoexEnabledSet(false)
     , mFemLnaGainSet(false)
     , mEnergyScanning(false)
+    , mEnergyScanStarted(false)
+    , mEnergyScanDonePending(false)
     , mMacFrameCounterSet(false)
     , mSrcMatchSet(false)
 #endif
@@ -110,6 +112,7 @@ RadioSpinel::RadioSpinel(void)
     , mOutputContext(nullptr)
 #endif
     , mTxRadioEndUs(UINT64_MAX)
+    , mEnergyScanEndUs(UINT64_MAX)
     , mRadioTimeRecalcStart(UINT64_MAX)
     , mRadioTimeOffset(UINT64_MAX)
     , mMetrics(mCallbacks)
@@ -556,9 +559,13 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
 
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
+        VerifyOrExit(mEnergyScanEndUs != UINT64_MAX);
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-        mEnergyScanning = false;
+        VerifyOrExit(scanChannel == mScanChannel);
+        mEnergyScanning    = false;
+        mEnergyScanStarted = false;
 #endif
+        mEnergyScanEndUs = UINT64_MAX;
 
         mCallbacks.mEnergyScanDone(mInstance, maxRssi);
     }
@@ -771,8 +778,30 @@ void RadioSpinel::TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, ot
     mCallbacks.mTransmitDone(mInstance, aFrame, aAckFrame, aError);
 }
 
+uint64_t RadioSpinel::GetNextRadioOperationDeadline(void) const
+{
+    uint64_t deadline = IsTransmitting() ? mTxRadioEndUs : UINT64_MAX;
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    if (mEnergyScanDonePending)
+    {
+        deadline = 0;
+    }
+#endif
+
+    return (mEnergyScanEndUs < deadline) ? mEnergyScanEndUs : deadline;
+}
+
 void RadioSpinel::ProcessRadioStateMachine(void)
 {
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    if (mEnergyScanDonePending && (mRcpFailure == kRcpFailureNone || !mRcpRestorationEnabled))
+    {
+        mEnergyScanDonePending = false;
+        mCallbacks.mEnergyScanDone(mInstance, OT_RADIO_RSSI_INVALID);
+    }
+#endif
+
     if (mState == kStateTransmitDone)
     {
         mState        = kStateReceive;
@@ -795,6 +824,19 @@ void RadioSpinel::ProcessRadioStateMachine(void)
         mAckRadioFrame.mLength = 0;
         mTxError               = OT_ERROR_ABORT;
         mState                 = kStateTransmitDone;
+        HandleRcpTimeout();
+    }
+
+    if (mEnergyScanEndUs != UINT64_MAX && otPlatTimeGet() >= mEnergyScanEndUs)
+    {
+        LogWarn("radio energy scan timeout");
+        mEnergyScanEndUs = UINT64_MAX;
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+        // Complete the timed-out scan after recovery if enabled, instead of restarting it.
+        mEnergyScanning        = false;
+        mEnergyScanDonePending = mEnergyScanStarted;
+        mEnergyScanStarted     = false;
+#endif
         HandleRcpTimeout();
     }
 }
@@ -1288,6 +1330,16 @@ exit:
 otError RadioSpinel::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 {
     otError error;
+    bool    canUpdateScanState = false;
+
+    // Rejecting a request must not change the state of an ongoing scan.
+    VerifyOrExit(mState != kStateDisabled, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mEnergyScanEndUs == UINT64_MAX, error = OT_ERROR_BUSY);
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    VerifyOrExit(!mEnergyScanStarted && !mEnergyScanDonePending, error = OT_ERROR_BUSY);
+#endif
+
+    canUpdateScanState = true;
 
     VerifyOrExit(sRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN, error = OT_ERROR_NOT_CAPABLE);
 
@@ -1312,21 +1364,36 @@ otError RadioSpinel::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
                                                      SPINEL_PROP_MAC_SCAN_STATE, SPINEL_DATATYPE_UINT8_S,
                                                      SPINEL_SCAN_STATE_ENERGY));
 
-    mChannel = aScanChannel;
+    mEnergyScanEndUs = otPlatTimeGet() + static_cast<uint64_t>(aScanDuration) * kUsPerMs + kEnergyScanWaitUs;
 
 exit:
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    if (mEnergyScanning && mRcpFailure != kRcpFailureNone && mRcpRestorationEnabled)
+    if (canUpdateScanState)
     {
-        RecoverFromRcpFailure();
-        error = OT_ERROR_NONE;
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+        if (mEnergyScanning && mRcpFailure != kRcpFailureNone && mRcpRestorationEnabled)
+        {
+            RecoverFromRcpFailure();
+            if (mEnergyScanning)
+            {
+                error = OT_ERROR_NONE;
+            }
+        }
+
+        if (error != OT_ERROR_NONE)
+        {
+            mEnergyScanning = false;
+        }
+        else
+        {
+            mEnergyScanStarted = true;
+        }
+#endif
+        if (error != OT_ERROR_NONE)
+        {
+            mEnergyScanEndUs = UINT64_MAX;
+        }
     }
 
-    if (error != OT_ERROR_NONE)
-    {
-        mEnergyScanning = false;
-    }
-#endif
     return error;
 }
 
@@ -1902,6 +1969,12 @@ otError RadioSpinel::Disable(void)
     VerifyOrExit(IsEnabled());
     VerifyOrExit(mState == kStateSleep, error = OT_ERROR_INVALID_STATE);
 
+    mEnergyScanEndUs = UINT64_MAX;
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    mEnergyScanning        = false;
+    mEnergyScanStarted     = false;
+    mEnergyScanDonePending = false;
+#endif
     SuccessOrDie(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false));
     mState    = kStateDisabled;
     mInstance = nullptr;
@@ -2204,6 +2277,12 @@ void RadioSpinel::RecoverFromRcpFailure(void)
     mError        = OT_ERROR_NONE;
     mIsTimeSynced = false;
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY
+    if (!skipReset)
+    {
+        IgnoreReturnValue(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false));
+    }
+#endif
     SuccessOrDie(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, true));
     mState = kStateSleep;
 
@@ -2240,7 +2319,19 @@ void RadioSpinel::RecoverFromRcpFailure(void)
 
     if (mEnergyScanning)
     {
-        SuccessOrDie(EnergyScan(mScanChannel, mScanDuration));
+        otError error;
+        bool    wasStarted = mEnergyScanStarted;
+
+        // Restore a scan interrupted by an RCP failure other than an energy scan timeout.
+        mEnergyScanStarted = false;
+        mEnergyScanEndUs   = UINT64_MAX;
+        error              = EnergyScan(mScanChannel, mScanDuration);
+        if (error != OT_ERROR_NONE)
+        {
+            mEnergyScanning        = false;
+            mEnergyScanStarted     = false;
+            mEnergyScanDonePending = wasStarted;
+        }
     }
 
     --mRcpFailureCount;
@@ -2287,12 +2378,15 @@ void RadioSpinel::RestoreProperties(void)
     SuccessOrDie(Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, mPanId));
     SuccessOrDie(Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, mShortAddress));
     SuccessOrDie(Set(SPINEL_PROP_MAC_15_4_LADDR, SPINEL_DATATYPE_EUI64_S, mExtendedAddress.m8));
+    if (mChannel != 0)
+    {
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-    // In case multiple PANs are running, don't force RCP to change channel.
-    IgnoreReturnValue(Set(SPINEL_PROP_PHY_CHAN, SPINEL_DATATYPE_UINT8_S, mChannel));
+        // In case multiple PANs are running, don't force RCP to change channel.
+        IgnoreReturnValue(Set(SPINEL_PROP_PHY_CHAN, SPINEL_DATATYPE_UINT8_S, mChannel));
 #else
-    SuccessOrDie(Set(SPINEL_PROP_PHY_CHAN, SPINEL_DATATYPE_UINT8_S, mChannel));
+        SuccessOrDie(Set(SPINEL_PROP_PHY_CHAN, SPINEL_DATATYPE_UINT8_S, mChannel));
 #endif
+    }
 
     if (mMacKeySet)
     {
