@@ -360,8 +360,16 @@ void Test5_3_8(void)
     }
 
     nexus.AdvanceTime(kDelayTimerTime + 2 * kChildUpdateResponseWaitTime);
+
+    // The PAN channel switch does not trigger a Child Update exchange. With
+    // polling stopped, the DUT's CSL synchronization with SSED_1 would then
+    // time out (`kCslTimeout`) before Step 13, so resynchronize it with a
+    // data poll (carrying a CSL IE) on the new channel.
+    ssed1.Get<DataPollSender>().StartPolling();
+    SuccessOrQuit(ssed1.Get<DataPollSender>().SendDataPoll());
+    nexus.AdvanceTime(kChildUpdateResponseWaitTime);
     ssed1.Get<DataPollSender>().StopPolling();
-    nexus.AdvanceTime(kWaitPendingDatasetTime - kDelayTimerTime - 2 * kChildUpdateResponseWaitTime);
+    nexus.AdvanceTime(kWaitPendingDatasetTime - kDelayTimerTime - 3 * kChildUpdateResponseWaitTime);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 13: Leader");
