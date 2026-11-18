@@ -1,0 +1,260 @@
+#!/bin/bash
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -euo pipefail
+
+OT_SRCDIR="$(cd "$(dirname "$0")"/../.. && pwd)"
+readonly OT_SRCDIR
+readonly OT_RCP_PATH="${OT_SRCDIR}/build/simulation/examples/apps/ncp/ot-rcp"
+readonly OT_CLI_FTD_PATH="${OT_SRCDIR}/build/simulation/examples/apps/cli/ot-cli-ftd"
+readonly OT_EXTCAP_BIN="${OT_SRCDIR}/build/extcap/ot-extcap"
+readonly FIXED_NETWORK_KEY="00112233445566778899aabbccddeeff"
+
+TEST_TEMP_DIR="$(mktemp -d)"
+readonly TEST_TEMP_DIR
+
+g_spawned_pids=()
+g_extcap_symlink=""
+
+#
+# Prints error message to stderr and terminates execution.
+#
+die()
+{
+    echo " *** ERROR: $*" >&2
+    exit 1
+}
+
+#
+# Kills all spawned background processes (and their children).
+#
+kill_spawned()
+{
+    for pid in "${g_spawned_pids[@]-}"; do
+        if [[ -n ${pid-} ]]; then
+            pkill -9 -P "${pid}" 2>/dev/null || true
+            kill -9 "${pid}" 2>/dev/null || true
+        fi
+    done
+    g_spawned_pids=()
+}
+
+#
+# Clean up background processes and temporary files on exit.
+#
+cleanup()
+{
+    local exit_code=$?
+
+    echo "Cleaning up processes and temporary files..."
+    kill_spawned
+    if [[ -n ${g_extcap_symlink-} ]]; then
+        rm -f "${g_extcap_symlink}" 2>/dev/null || sudo rm -f "${g_extcap_symlink}" 2>/dev/null || true
+    fi
+
+    if [[ ${exit_code} -ne 0 && -d ${TEST_TEMP_DIR-} ]]; then
+        echo "=== Test Debug Logs ==="
+        for log in "${TEST_TEMP_DIR}"/*.log; do
+            [[ -f ${log} ]] || continue
+            echo "--- $(basename "${log}") ---"
+            cat "${log}"
+        done
+    fi
+
+    if [[ -d ${TEST_TEMP_DIR-} ]]; then
+        rm -rf "${TEST_TEMP_DIR}" 2>/dev/null || true
+    fi
+
+    if [[ ${exit_code} -ne 0 ]]; then
+        echo "Check script failed with exit code ${exit_code}." >&2
+    fi
+
+    exit ${exit_code}
+}
+
+trap cleanup INT TERM EXIT
+
+#
+# Configures Wireshark UAT key tables and helper scripts for traffic generation.
+#
+setup_environment()
+{
+    export XDG_CONFIG_HOME="${TEST_TEMP_DIR}/config"
+    export HOME="${TEST_TEMP_DIR}"
+    mkdir -p "${XDG_CONFIG_HOME}/wireshark"
+    # Wireshark's IEEE 802.15.4 key table (UAT): "key","key index","key hash"
+    echo "\"${FIXED_NETWORK_KEY}\",\"1\",\"Thread hash\"" >"${XDG_CONFIG_HOME}/wireshark/ieee802154_keys"
+}
+
+#
+# Generates Thread network traffic on Channel 11 using ot-cli-ftd via inline expect here-doc.
+#
+gen_traffic()
+{
+    echo "Generating Thread network traffic on Channel 11 using ot-cli-ftd..."
+    expect - <<EOF
+set timeout 15
+spawn ${OT_CLI_FTD_PATH} 1
+expect ">"
+send "dataset init new\r\n"
+expect "Done"
+send "dataset channel 11\r\n"
+expect "Done"
+send "dataset networkkey ${FIXED_NETWORK_KEY}\r\n"
+expect "Done"
+send "dataset commit active\r\n"
+expect "Done"
+send "routerselectionjitter 1\r\n"
+expect "Done"
+send "ifconfig up\r\n"
+expect "Done"
+send "thread start\r\n"
+expect "Done"
+send "state\r\n"
+expect {
+    -timeout 1 "leader" {
+    } timeout {
+        send "state\r\n"
+        exp_continue
+    }
+}
+expect "Done"
+send "\x04"
+expect eof
+EOF
+    echo "Generating Thread network traffic done!"
+}
+
+#
+# Builds OpenThread simulation binaries and the ot-extcap sniffer executable.
+#
+build_binaries()
+{
+    if [[ ! -x ${OT_RCP_PATH} || ! -x ${OT_CLI_FTD_PATH} ]]; then
+        echo "Building OpenThread simulation binaries..."
+        OT_CMAKE_BUILD_DIR="${OT_SRCDIR}/build/simulation" OT_CMAKE_NINJA_TARGET="ot-rcp ot-cli-ftd" \
+            "${OT_SRCDIR}/script/cmake-build" simulation -DOT_COVERAGE=OFF
+    fi
+
+    echo "Building ot-extcap..."
+    "${OT_SRCDIR}/script/cmake-build" extcap
+
+    if [[ ! -x ${OT_EXTCAP_BIN} ]]; then
+        die "ot-extcap executable not found at ${OT_EXTCAP_BIN}"
+    fi
+}
+
+#
+# Registers ot-extcap in Wireshark's personal extcap directory (or global extcap directory
+# on older Wireshark versions like 3.6 on Ubuntu 22.04 where Personal Extcap path is not
+# supported).
+#
+install_extcap()
+{
+    local extcap_dir
+    extcap_dir=$(tshark -G folders 2>/dev/null | grep -i "^Personal Extcap path:" | sed -E 's/[[:space:]]+$//; s/^[^:]*:[[:space:]]*//' | head -n 1 || true)
+    if [[ -n ${extcap_dir} ]]; then
+        mkdir -p "${extcap_dir}"
+        g_extcap_symlink="${extcap_dir}/ot-extcap"
+        ln -sf "${OT_EXTCAP_BIN}" "${g_extcap_symlink}"
+    else
+        extcap_dir=$(tshark -G folders 2>/dev/null | grep -E -i "^(Global )?Extcap path:" | sed -E 's/[[:space:]]+$//; s/^[^:]*:[[:space:]]*//' | head -n 1 || true)
+        if [[ -z ${extcap_dir} ]]; then
+            extcap_dir="/usr/lib/x86_64-linux-gnu/wireshark/extcap"
+        fi
+        sudo mkdir -p "${extcap_dir}"
+        g_extcap_symlink="${extcap_dir}/ot-extcap"
+        sudo ln -sf "${OT_EXTCAP_BIN}" "${g_extcap_symlink}"
+    fi
+}
+
+#
+# Test Case: spinel_radio_url Capture & Decryption Verification (Forkpty)
+#
+test_forkpty_capture()
+{
+    echo "=== Test Case: spinel_radio_url Capture & Decryption (Forkpty Transport) ==="
+    local capture_file="${TEST_TEMP_DIR}/capture_forkpty.pcapng"
+    local tshark_pid=""
+    local mle_count=""
+
+    rm -f "${capture_file}"
+
+    echo "Starting tshark capture on spinel_radio_url interface..."
+    tshark -i spinel_radio_url \
+        -o extcap.spinel_radio_url.channel:11 \
+        -o "extcap.spinel_radio_url.radiourl:spinel+hdlc+forkpty://${OT_RCP_PATH}?forkpty-arg=2" \
+        -o extcap.spinel_radio_url.debug:true \
+        -a duration:14 -w "${capture_file}" >"${TEST_TEMP_DIR}/tshark_fork.log" 2>&1 &
+    tshark_pid=$!
+    g_spawned_pids+=("${tshark_pid}")
+    sleep 2
+
+    if ! kill -0 "${tshark_pid}" 2>/dev/null; then
+        die "tshark process died unexpectedly"
+    fi
+
+    gen_traffic
+
+    wait ${tshark_pid} || true
+
+    sleep 1
+
+    [[ -s ${capture_file} ]] || die "Capture file ${capture_file} is missing or empty"
+
+    echo "Decrypting IEEE 802.15.4 frames and checking for decrypted Thread MLE commands..."
+    mle_count=$(tshark -r "${capture_file}" -Y "mle.cmd" | wc -l)
+    echo "Decrypted MLE Frame Count: ${mle_count}"
+    [[ ${mle_count} -gt 0 ]] || die "No MLE frames decoded in Forkpty capture"
+    echo "Forkpty transport capture & decryption PASSED."
+}
+
+#
+# Main entry point for functional test execution sequence.
+#
+main()
+{
+    for cmd in tshark expect; do
+        if ! command -v "${cmd}" &>/dev/null; then
+            die "Required tool '${cmd}' is not installed."
+        fi
+    done
+
+    setup_environment
+    build_binaries
+    install_extcap
+
+    test_forkpty_capture
+
+    echo "=============================================="
+    echo "ALL OT-EXTCAP FUNCTIONAL TESTS PASSED!"
+    echo "=============================================="
+}
+
+main "$@"

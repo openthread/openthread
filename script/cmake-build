@@ -51,6 +51,10 @@
 #
 #      OT_CMAKE_BUILD_DIR="./build/temp"  script/cmake-build ${platform}
 #
+#  Compile the ot-extcap Wireshark sniffer (tools/extcap), which configures its own OpenThread build:
+#
+#      script/cmake-build extcap
+#
 #  Examples:
 #
 #      script/cmake-build simulation
@@ -67,7 +71,7 @@ OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET-}
 OT_SRCDIR="$(cd "$(dirname "$0")"/.. && pwd)"
 readonly OT_SRCDIR
 
-OT_PLATFORMS=(simulation posix)
+OT_PLATFORMS=(simulation posix extcap)
 readonly OT_PLATFORMS
 
 OT_CLEAN_INTERMEDIATES="${OT_CLEAN_INTERMEDIATES-${GITHUB_ACTION-}}"
@@ -128,12 +132,17 @@ build()
 {
     local platform=$1
     local builddir="${OT_CMAKE_BUILD_DIR:-build/${platform}}"
+    local srcdir="${OT_SRCDIR}"
     shift
+
+    if [[ ${platform} == extcap ]]; then
+        srcdir="${OT_SRCDIR}/tools/extcap"
+    fi
 
     mkdir -p "${builddir}"
     cd "${builddir}"
 
-    cmake -GNinja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DOT_COMPILE_WARNING_AS_ERROR=ON "$@" "${OT_SRCDIR}"
+    cmake -GNinja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DOT_COMPILE_WARNING_AS_ERROR=ON "$@" "${srcdir}"
     if [[ -z ${OT_CMAKE_NINJA_TARGET// /} ]]; then
         ninja
     else
@@ -160,6 +169,12 @@ main()
     echo "${OT_PLATFORMS[@]}" | grep -wq "${platform}" || die "${platform}"
 
     shift
+
+    if [[ ${platform} == extcap ]]; then
+        build "${platform}" "$@"
+        return
+    fi
+
     local local_options=()
     local options=(
         "-DOT_SLAAC=ON"
