@@ -88,7 +88,7 @@ void TestSrpClientSaveServerInfo(const char *aJsonFileName)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 2: Enable auto start mode on client and check that server1 is used.");
 
-    SuccessOrQuit(server1.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeUnicast));
+    SuccessOrQuit(server1.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeUnicastForceAdd));
     server1.Get<Srp::Server>().SetEnabled(true);
     nexus.AdvanceTime(kWaitTime);
 
@@ -115,12 +115,15 @@ void TestSrpClientSaveServerInfo(const char *aJsonFileName)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: Enable server2 and server3 and check that server1 is still used.");
 
-    SuccessOrQuit(server2.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeUnicast));
+    SuccessOrQuit(server2.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeUnicastForceAdd));
     server2.Get<Srp::Server>().SetEnabled(true);
-    SuccessOrQuit(server3.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeUnicast));
+    SuccessOrQuit(server3.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeUnicastForceAdd));
     server3.Get<Srp::Server>().SetEnabled(true);
 
     nexus.AdvanceTime(kWaitTime);
+    VerifyOrQuit(server1.Get<Srp::Server>().GetState() == Srp::Server::kStateRunning);
+    VerifyOrQuit(server2.Get<Srp::Server>().GetState() == Srp::Server::kStateRunning);
+    VerifyOrQuit(server3.Get<Srp::Server>().GetState() == Srp::Server::kStateRunning);
     VerifyOrQuit(
         server1.Get<ThreadNetif>().HasUnicastAddress(client.Get<Srp::Client>().GetServerAddress().GetAddress()));
 
@@ -159,6 +162,7 @@ void TestSrpClientSaveServerInfo(const char *aJsonFileName)
 
     server1.Get<Srp::Server>().SetEnabled(true);
     nexus.AdvanceTime(kWaitTime);
+    VerifyOrQuit(server1.Get<Srp::Server>().GetState() == Srp::Server::kStateRunning);
 
     for (int iter = 0; iter < 5; iter++)
     {
