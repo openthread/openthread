@@ -50,37 +50,11 @@ export PATH=/var/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
 
 setup_arm_gcc_7()
 {
-    if arm-none-eabi-gcc --version | grep -q 'Arm Embedded Processors 7'; then
+    if arm-none-eabi-gcc --version 2>/dev/null | grep -q 'Arm Embedded Processors 7'; then
         return 0
     fi
 
-    local toolchain_url="https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2"
-    local toolchain_mirror_url="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2"
-    local toolchain_sha256="bb17109f0ee697254a5d4ae6e5e01440e3ea8f0277f2e8169bf95d07c7d5fe69"
-
-    rm -rf /var/tmp/gcc-arm-none-eabi-7-2018-q2-update
-    (
-        stage="$(mktemp -d /var/tmp/.ot-arm-gcc7.XXXXXX)"
-        trap 'rm -rf "${stage}"' EXIT
-        downloaded=0
-
-        for url in "${toolchain_url}" "${toolchain_mirror_url}"; do
-            rm -f "${stage}/toolchain.tar.bz2"
-            if curl --proto '=https' --tlsv1.2 -fsSL --retry 2 --retry-delay 2 --retry-max-time 80 \
-                --connect-timeout 15 --max-time 75 --speed-limit 1048576 --speed-time 15 \
-                -o "${stage}/toolchain.tar.bz2" "${url}" \
-                && echo "${toolchain_sha256}  ${stage}/toolchain.tar.bz2" | sha256sum -c -; then
-                downloaded=1
-                break
-            fi
-            echo "WARNING: failed to download or verify Arm GCC 7 from ${url}" >&2
-        done
-
-        if [[ ${downloaded} -ne 1 ]] || ! tar xj -C /var/tmp -f "${stage}/toolchain.tar.bz2"; then
-            echo "ERROR: failed to download or verify the Arm GCC 7 toolchain" >&2
-            exit 1
-        fi
-    )
+    bash "$(dirname "$0")/install-arm-toolchain.sh" --force 7 /var/tmp/gcc-arm-none-eabi-7-2018-q2-update
 
     arm-none-eabi-gcc --version
 }
