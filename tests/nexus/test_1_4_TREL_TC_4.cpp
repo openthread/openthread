@@ -34,6 +34,8 @@
 namespace ot {
 namespace Nexus {
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+
 /**
  * Infra interface index.
  */
@@ -217,7 +219,7 @@ void Test_1_4_TREL_TC_4(void)
      *   - N/A
      */
 
-    router.mTrel.Disable();
+    router.Get<ot::Trel::Interface>().SetFilterEnabled(true);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Send 10 pings from Router to ED.");
@@ -289,7 +291,7 @@ void Test_1_4_TREL_TC_4(void)
      *   - N/A
      */
 
-    router.mTrel.mEnabled = true;
+    router.Get<ot::Trel::Interface>().SetFilterEnabled(false);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 7: Send 300 UDP messages from Router to ED.");
@@ -367,12 +369,18 @@ void Test_1_4_TREL_TC_4(void)
     nexus.SaveTestInfo("test_1_4_TREL_TC_4.json");
 }
 
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
 } // namespace Nexus
 } // namespace ot
 
 int main(void)
 {
+#if OPENTHREAD_CONFIG_MULTI_RADIO
     ot::Nexus::Test_1_4_TREL_TC_4();
     printf("All tests passed\n");
+#else
+    printf("Multi-radio is not enabled - test skipped\n");
+#endif
     return 0;
 }

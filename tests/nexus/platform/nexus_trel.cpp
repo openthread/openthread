@@ -102,6 +102,7 @@ void Trel::Send(const uint8_t *aUdpPayload, uint16_t aUdpPayloadLen, const Ip6::
     Message *message;
 
     VerifyOrQuit(mNode != nullptr);
+    VerifyOrExit(mEnabled);
 
     message = mNode->Get<MessagePool>().Allocate(Message::kTypeIp6);
     VerifyOrQuit(message != nullptr);
@@ -112,6 +113,9 @@ void Trel::Send(const uint8_t *aUdpPayload, uint16_t aUdpPayloadLen, const Ip6::
 
     mCounters.mTxPackets++;
     mCounters.mTxBytes += aUdpPayloadLen;
+
+exit:
+    return;
 }
 
 void Trel::Receive(Instance &aInstance, Heap::Data &aPayloadData, const Ip6::SockAddr &aSenderAddr)
