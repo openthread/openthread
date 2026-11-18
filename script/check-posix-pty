@@ -70,12 +70,12 @@ at_exit()
     exit $EXIT_CODE
 }
 
-wait_for_leader()
+wait_for_cli_setup()
 {
-    if grep -q leader "$OT_OUTPUT"; then
+    if [[ -f $OT_OUTPUT ]] && grep -aq OT_CLI_SETUP_DONE "$OT_OUTPUT"; then
         return 0
     else
-        echo 'Still waiting for leader'
+        echo 'Still waiting for CLI setup'
     fi
     return 1
 }
@@ -83,16 +83,16 @@ wait_for_leader()
 timeout_run()
 {
     local count="$1"
-    local exit_code
+    local exit_code=0
     shift 1
 
-    while [[ $count != 0 && $exit_code != 0 ]]; do
-        count=$((count - 1))
+    while ((count > 0)); do
         "$@" && return 0 || exit_code=$?
+        ((--count > 0)) || break
         sleep 1
     done
 
-    return $exit_code
+    return "${exit_code}"
 }
 
 do_build()
@@ -119,7 +119,7 @@ check_daemon_multicast_group()
 
     [[ ${OT_DAEMON} == 'on' ]] || return 0
 
-    grep -q -E "${action} multicast address ff02::1([^0-9a-f:]|$)" "${OT_DAEMON_OUTPUT}" || die "ff02::1 not ${action}"
+    timeout_run 10 grep -q -E "${action} multicast address ff02::1([^0-9a-f:]|$)" "${OT_DAEMON_OUTPUT}" || die "ff02::1 not ${action}"
     if grep -q -E 'IPV6_(JOIN|LEAVE)_GROUP failure' "${OT_DAEMON_OUTPUT}"; then
         die 'multicast group failure in the ot-daemon log'
     fi
@@ -324,8 +324,8 @@ check_daemon_address_events()
 
     # The routing socket (netlink on Linux) reports every address and multicast membership of the
     # interface to the daemon, its own included, and the daemon logs each report at info level.
-    grep -q 'ADD \[U\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of OpenThread's own addresses did not reach ot-daemon"
-    grep -q 'ADD \[M\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of the interface's multicast memberships did not reach ot-daemon"
+    timeout_run 10 grep -q 'ADD \[U\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of OpenThread's own addresses did not reach ot-daemon"
+    timeout_run 10 grep -q 'ADD \[M\] ' "${OT_DAEMON_OUTPUT}" || die "the reports of the interface's multicast memberships did not reach ot-daemon"
 
     # An address the host adds becomes an address of OpenThread and goes with its removal.
     set_host_address add "${address}"
@@ -744,8 +744,9 @@ do_check()
 
     sudo expect <<EOF | tee "${OT_OUTPUT}" &
 spawn ${OT_CLI_CMD}
+set timeout 20
 expect_after {
-    timeout { error }
+    timeout { error "timeout" }
 }
 send "region\r\n"
 expect "US"
@@ -760,10 +761,17 @@ send "ifconfig up\r\n"
 expect "Done"
 send "thread start\r\n"
 expect "Done"
-sleep 10
 send "state\r\n"
-expect "leader"
-expect "Done"
+expect {
+    "leader" {
+        expect "Done"
+    }
+    "Done" {
+        sleep 1
+        send "state\r\n"
+        exp_continue -continue_timer
+    }
+}
 send "extaddr\r\n"
 expect "Done"
 send "dataset active\r\n"
@@ -778,19 +786,15 @@ send "coap resource TestResource\r\n"
 expect "Done"
 send "coap set TestContent\r\n"
 expect "Done"
+send_user "OT_CLI_SETUP_DONE\n"
 set timeout -1
 expect eof
 EOF
 
-    sleep 5
+    # wait until the node becomes leader and finishes CoAP setup
+    timeout_run 30 wait_for_cli_setup || die 'Failed to complete CLI setup'
 
-    # wait until the node becomes leader
-    timeout_run 10 wait_for_leader
-
-    # wait coap service start
-    sleep 5
-
-    sudo lsof -iUDP:5683 -nP || die 'Application CoAP port is not available!'
+    timeout_run 10 sudo lsof -iUDP:5683 -nP || die 'Application CoAP port is not available!'
 
     extaddr=$(grep -a -A 3 'extaddr' "$OT_OUTPUT" | grep -aoE '[0-9a-f]{16}' | head -n 1)
     echo "Extended address is: ${extaddr}"
