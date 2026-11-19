@@ -231,7 +231,7 @@ EOF
 
 resolve_attempt_timeout()
 {
-    local docker_pattern='docker[[:space:]]+build|build_otbr_docker'
+    local long_pattern='docker[[:space:]]+build|build_otbr_docker|install-llvm\.sh'
     local toranj_pattern='toranj/start\.sh[[:space:]]+bootstrap'
 
     if [[ -n ${OT_RETRY_TIMEOUT+x} ]]; then
@@ -244,8 +244,8 @@ resolve_attempt_timeout()
     fi
 
     if [[ $# -ge 1 ]]; then
-        if [[ $* =~ ${docker_pattern} ]] || {
-            [[ -f $1 ]] && grep -IqE "${docker_pattern}" -- "$1" 2>/dev/null
+        if [[ $* =~ ${long_pattern} ]] || {
+            [[ -f $1 ]] && grep -IqE "${long_pattern}" -- "$1" 2>/dev/null
         }; then
             printf '%s\n' "420"
             return 0
