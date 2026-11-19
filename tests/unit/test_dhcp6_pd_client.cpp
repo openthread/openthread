@@ -1011,7 +1011,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Do not send a Reply to the Renew. Wait till T2 time and check the Renew message retries");
 
-    AdvanceTime((prefixInfo.mT2 - prefixInfo.mT1) * 1000 - 6);
+    AdvanceTime((prefixInfo.mT2 - prefixInfo.mT1) * 1000 - 5);
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() > 1);
 
     for (uint16_t index = 2; index < sDhcp6RxMsgs.GetLength(); index++)
@@ -1086,7 +1086,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Wait till T2 time and check that Renew message is retried");
 
-    AdvanceTime((prefixInfo.mT2 - prefixInfo.mT1) * 1000 - 6);
+    AdvanceTime((prefixInfo.mT2 - prefixInfo.mT1) * 1000 - 5);
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() > 1);
 
     for (uint16_t index = 2; index < sDhcp6RxMsgs.GetLength(); index++)
@@ -1109,7 +1109,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Wait till preferred time and check that Rebind message is now retried");
 
-    AdvanceTime((prefixInfo.mPreferredLifetime - prefixInfo.mT2) * 1000 - 6);
+    AdvanceTime((prefixInfo.mPreferredLifetime - prefixInfo.mT2) * 1000 - 5);
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() > 1);
 
     for (uint16_t index = 2; index < sDhcp6RxMsgs.GetLength(); index++)
@@ -1269,9 +1269,9 @@ void TestDhcp6PdSolicitRetries(void)
     VerifyOrQuit(sDhcp6RxMsgs[1].mElapsedTime == (sDhcp6RxMsgs[1].mRxTime - firstRxTime) / 10);
     timeout = sDhcp6RxMsgs[1].mRxTime - firstRxTime;
 
-    // The initial time should be randomly picked from [1, 1.1] sec.
+    // The initial time should be randomly picked from (1, 1.1] sec.
 
-    VerifyOrQuit(timeout >= 1000);
+    VerifyOrQuit(timeout > 1000);
     VerifyOrQuit(timeout <= 1100);
 
     for (uint16_t index = 2; index < sDhcp6RxMsgs.GetLength(); index++)
@@ -1578,8 +1578,8 @@ void TestDhcp6PdSelectBetweenMultipleServers(void)
 
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
 
-    // First timeout is at least 1000 msec
-    AdvanceNowTo(sDhcp6RxMsgs[0].mRxTime + 1000 - 1);
+    // First timeout is strictly greater than 1000 msec
+    AdvanceNowTo(sDhcp6RxMsgs[0].mRxTime + 1000);
 
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
 
@@ -1732,7 +1732,7 @@ void TestDhcp6PdServerOfferingMultiplePrefixes(void)
     Log("Validate that the client does wait for the full timeout (on first Solicit) ");
 
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
-    AdvanceNowTo(sDhcp6RxMsgs[0].mRxTime + 1000 - 1);
+    AdvanceNowTo(sDhcp6RxMsgs[0].mRxTime + 1000);
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");

@@ -1137,7 +1137,7 @@ uint32_t Dhcp6PdClient::RetxTracker::AddJitter(uint32_t aValue, JitterMode aJitt
 {
     // Applies a random jitter to a given value based on the selected
     // jitter mode. For `kPositiveJitter`, the returned value is in
-    // the range `[aValue, aValue * 1.1]`. For `kFullJitter`, the
+    // the range `(aValue, aValue * 1.1]`. For `kFullJitter`, the
     // range is `[aValue * 0.9, aValue * 1.1]`.
     //
     // Follows the RFC 8415 Section 15 rules regarding retransmission
@@ -1147,7 +1147,8 @@ uint32_t Dhcp6PdClient::RetxTracker::AddJitter(uint32_t aValue, JitterMode aJitt
     // `RT + RAND * RT`.
     //
     // For a Solicit message's initial timeout, the randomization is
-    // required to be positive, for which `kPositiveJitter` is used.
+    // required to be strictly positive (RFC 8415 Section 18.2.1),
+    // for which `kPositiveJitter` is used.
 
     uint32_t randomizedValue = aValue;
     uint32_t jitter          = aValue / kJitterDivisor;
@@ -1155,11 +1156,12 @@ uint32_t Dhcp6PdClient::RetxTracker::AddJitter(uint32_t aValue, JitterMode aJitt
     switch (aJitterMode)
     {
     case kPositiveJitter:
-        randomizedValue += Random::NonCrypto::GenerateUpToExcluding<uint32_t>(jitter);
+        randomizedValue += Random::NonCrypto::GenerateInClosedRange<uint32_t>(1, jitter);
         break;
 
     case kFullJitter:
-        randomizedValue += Random::NonCrypto::GenerateUpToExcluding<uint32_t>(2 * jitter) - jitter;
+        randomizedValue += Random::NonCrypto::GenerateInClosedRange<uint32_t>(0, 2 * jitter);
+        randomizedValue -= jitter;
         break;
     }
 
