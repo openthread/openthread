@@ -91,28 +91,12 @@ jobs:
     - name: Bootstrap
       timeout-minutes: 10
       shell: bash ./script/retry {0}
-      env:
-        PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
-      run: |
-        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-        npm install -g @umbrelladocs/linkspector@0.5.5
-        wget --timeout=30 --tries=4 -O /tmp/reviewdog.tar.gz https://github.com/reviewdog/reviewdog/releases/download/v0.21.0/reviewdog_0.21.0_Linux_x86_64.tar.gz
-        sudo tar -xzf /tmp/reviewdog.tar.gz -C /usr/local/bin reviewdog
-        rm -f /tmp/reviewdog.tar.gz
+      run: ./script/check-markdown-links bootstrap
 
     - name: Run linkspector
       env:
-        PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
         REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        set +o pipefail
-        linkspector check -c .linkspector.yml -j |
-          reviewdog -f=rdjson \
-            -name=Linkspector \
-            -reporter=github-pr-review \
-            -filter-mode=added \
-            -fail-level=any \
-            -level=error
+      run: ./script/check-markdown-links run
 
   cmake-presets:
     runs-on: ubuntu-24.04
