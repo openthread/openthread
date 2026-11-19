@@ -674,20 +674,24 @@ void TestListenerConfigAndApi(void)
     Listener::Config   config;
     Listener::Config   invalidConfig;
     Listener::WakeInfo wakeInfo;
+    Radio::Time64      now;
+    Radio::Time64      farNow;
 
-    ResetPlatformState();
+    ResetPlatformState(10000000ULL);
 
     instance = static_cast<Instance *>(testInitInstance());
     VerifyOrQuit(instance != nullptr);
 
     listener = &instance->Get<Listener>();
+    now      = instance->Get<Radio::Radio>().GetNow();
 
-    // Verify `Config` defaults when cleared (`mChannel == 0`, `mInterval == 0`, `mDuration == 0`).
+    // Verify `Config` defaults when cleared (`mChannel == 0`, `mInterval == 0`, `mDuration == 0`, `mStartTime == 0`).
     config.Clear();
     VerifyOrQuit(config.GetChannel() == Listener::Config::kDefaultChannel);
     VerifyOrQuit(config.GetInterval() == Listener::Config::kDefaultInterval);
     VerifyOrQuit(config.GetDuration() == Listener::Config::kDefaultDuration);
-    VerifyOrQuit(config.IsValid());
+    VerifyOrQuit(config.DetermineStartTime(now) == now);
+    VerifyOrQuit(config.IsValid(now));
 
     // Verify `Config` getters with explicit values.
     config.mChannel  = 15;
@@ -696,22 +700,22 @@ void TestListenerConfigAndApi(void)
     VerifyOrQuit(config.GetChannel() == 15);
     VerifyOrQuit(config.GetInterval() == 50000);
     VerifyOrQuit(config.GetDuration() == 4000);
-    VerifyOrQuit(config.IsValid());
+    VerifyOrQuit(config.IsValid(now));
 
     // Verify valid channel boundaries (11 and 26).
     config.mChannel = 11;
-    VerifyOrQuit(config.IsValid());
+    VerifyOrQuit(config.IsValid(now));
     config.mChannel = 26;
-    VerifyOrQuit(config.IsValid());
+    VerifyOrQuit(config.IsValid(now));
 
     // Verify invalid channels (below 11 or above 26).
     invalidConfig          = config;
     invalidConfig.mChannel = 10;
-    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(!invalidConfig.IsValid(now));
     VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
 
     invalidConfig.mChannel = 27;
-    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(!invalidConfig.IsValid(now));
     VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
 
     // Verify interval vs duration validation (`GetInterval() >= GetDuration()`).
@@ -719,33 +723,70 @@ void TestListenerConfigAndApi(void)
     config.mChannel  = 15;
     config.mDuration = 8000;
     config.mInterval = 8000;
-    VerifyOrQuit(config.IsValid());
+    VerifyOrQuit(config.IsValid(now));
 
     invalidConfig           = config;
     invalidConfig.mInterval = 7999;
-    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(!invalidConfig.IsValid(now));
     VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
 
     // Explicit interval smaller than default duration (`kDefaultDuration` is 8000).
     invalidConfig.Clear();
     invalidConfig.mInterval = Listener::Config::kDefaultDuration - 1;
-    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(!invalidConfig.IsValid(now));
     VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
 
     // Explicit duration larger than default interval (`kDefaultInterval` is 1000000).
     invalidConfig.Clear();
     invalidConfig.mDuration = Listener::Config::kDefaultInterval + 1;
-    VerifyOrQuit(!invalidConfig.IsValid());
+    VerifyOrQuit(!invalidConfig.IsValid(now));
     VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
 
-    // Verify `TimerMicro::kMaxDelay` boundary on interval.
+    // Verify `kMaxInterval` boundary on interval.
     config.Clear();
-    config.mInterval = TimerMicro::kMaxDelay;
-    VerifyOrQuit(config.IsValid());
+    config.mInterval = Listener::Config::kMaxInterval;
+    VerifyOrQuit(config.IsValid(now));
 
     invalidConfig.Clear();
-    invalidConfig.mInterval = TimerMicro::kMaxDelay + 1;
-    VerifyOrQuit(!invalidConfig.IsValid());
+    invalidConfig.mInterval = Listener::Config::kMaxInterval + 1;
+    VerifyOrQuit(!invalidConfig.IsValid(now));
+    VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
+
+    // Verify `mStartTime` validation and `DetermineStartTime()` phase alignment for past, current, and future values.
+    config.Clear();
+    config.mInterval  = 50000;
+    config.mStartTime = now;
+    VerifyOrQuit(config.IsValid(now));
+    VerifyOrQuit(config.DetermineStartTime(now) == now);
+
+    // Exact multiple in the past aligns directly to `now`.
+    config.mStartTime = now - 100ULL * 50000;
+    VerifyOrQuit(config.IsValid(now));
+    VerifyOrQuit(config.DetermineStartTime(now) == now);
+
+    // Arbitrary far-past anchor (millions of intervals ago) is valid and aligns to the next grid point `>= farNow`.
+    farNow            = 5000000000000ULL;
+    config.mStartTime = farNow - (1000000ULL * 50000 + 12345);
+    VerifyOrQuit(config.IsValid(farNow));
+    VerifyOrQuit(config.DetermineStartTime(farNow) == farNow + (50000 - 12345));
+
+    // Future `mStartTime` up to `now + kMaxFutureStartOffset` is valid and preserved as-is.
+    config.mStartTime = now + 1;
+    VerifyOrQuit(config.IsValid(now));
+    VerifyOrQuit(config.DetermineStartTime(now) == now + 1);
+
+    config.mStartTime = now + Listener::Config::kMaxFutureStartOffset;
+    VerifyOrQuit(config.IsValid(now));
+    VerifyOrQuit(config.DetermineStartTime(now) == now + Listener::Config::kMaxFutureStartOffset);
+
+    // Future `mStartTime` exceeding `now + kMaxFutureStartOffset` is rejected.
+    invalidConfig.Clear();
+    invalidConfig.mStartTime = now + Listener::Config::kMaxFutureStartOffset + 1;
+    VerifyOrQuit(!invalidConfig.IsValid(now));
+    VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
+
+    invalidConfig.mStartTime = Radio::kMaxTime64;
+    VerifyOrQuit(!invalidConfig.IsValid(now));
     VerifyOrQuit(listener->Start(invalidConfig) == kErrorInvalidArgs);
 
     // Verify initial stopped state and public C API behavior.
@@ -1013,6 +1054,83 @@ void TestListenerPeriodicWindows(void)
 
         AdvanceTime(*instance, 1);
         VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        listener->Stop();
+
+        // 7. Start with explicit `mStartTime` in the future and then far in the past.
+        sReceiveChangeCount = 0;
+        sSleepChangeCount   = 0;
+
+        config.Clear();
+        config.mChannel   = 23;
+        config.mDuration  = 1000;
+        config.mInterval  = 5000;
+        config.mStartTime = instance->Get<Radio::Radio>().GetNow() + 3500;
+
+        SuccessOrQuit(listener->Start(config));
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sReceiveChangeCount == 0);
+
+        AdvanceTime(*instance, 3500 - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sReceiveChangeCount == 0);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == 23);
+        VerifyOrQuit(sReceiveChangeCount == 1);
+
+        AdvanceTime(*instance, 1000 - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTime(*instance, 4000 - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == 23);
+        VerifyOrQuit(sReceiveChangeCount == 2);
+
+        listener->Stop();
+        AdvanceTime(*instance, 1000);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        // Past `mStartTime` (10 intervals + 1800 us ago) aligns to the next grid point (3200 us ahead).
+        sReceiveChangeCount = 0;
+        sSleepChangeCount   = 0;
+
+        config.Clear();
+        config.mChannel   = 24;
+        config.mDuration  = 1000;
+        config.mInterval  = 5000;
+        config.mStartTime = instance->Get<Radio::Radio>().GetNow() - (10 * 5000 + 1800);
+
+        SuccessOrQuit(listener->Start(config));
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sReceiveChangeCount == 0);
+
+        AdvanceTime(*instance, 3200 - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+        VerifyOrQuit(sReceiveChangeCount == 0);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == 24);
+        VerifyOrQuit(sReceiveChangeCount == 1);
+
+        AdvanceTime(*instance, 1000);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTime(*instance, 4000 - 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_SLEEP);
+
+        AdvanceTime(*instance, 1);
+        VerifyOrQuit(sRadioState == OT_RADIO_STATE_RECEIVE);
+        VerifyOrQuit(sChannel == 24);
+        VerifyOrQuit(sReceiveChangeCount == 2);
 
         listener->Stop();
 
