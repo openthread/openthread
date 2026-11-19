@@ -55,6 +55,8 @@
         "OT_JOINER": "ON",
         "OT_LOG_LEVEL_DYNAMIC": "ON",
         "OT_MAC_FILTER": "ON",
+        "OT_MESH_MONITOR_CLIENT": "ON",
+        "OT_MESH_MONITOR_SERVER": "ON",
         "OT_NEIGHBOR_DISCOVERY_AGENT": "ON",
         "OT_NETDATA_PUBLISHER": "ON",
         "OT_NETDIAG_CLIENT": "ON",
