@@ -108,6 +108,17 @@ typedef otMacCounters Counters;
 PanId GenerateRandomPanId(void);
 
 /**
+ * Indicates whether two PAN IDs match (either they are equal or at least one is `kPanIdBroadcast`).
+ *
+ * @param[in] aFirstPanId   The first PAN ID.
+ * @param[in] aSecondPanId  The second PAN ID.
+ *
+ * @retval TRUE   If the PAN IDs match or either is `kPanIdBroadcast`.
+ * @retval FALSE  If the PAN IDs do not match and neither is `kPanIdBroadcast`.
+ */
+bool MatchPanIds(PanId aFirstPanId, PanId aSecondPanId);
+
+/**
  * Represents an IEEE 802.15.4 Extended Address.
  */
 OT_TOOL_PACKED_BEGIN
