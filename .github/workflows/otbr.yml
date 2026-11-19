@@ -107,15 +107,21 @@ jobs:
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         ./script/test build_otbr_docker
         ./script/test get_thread_wireshark
-        curl -fsSL https://codecov.io/env -o /tmp/codecov_env.sh
     - name: Build
       run: |
         ./script/test build
     - name: Run
+      env:
+        CERT_SCRIPTS: ${{ matrix.cert_scripts }}
       run: |
-        export CI_ENV="$(bash /tmp/codecov_env.sh) -e GITHUB_ACTIONS -e COVERAGE"
+        export CI_ENV="-e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
-        sudo -E ./script/test cert_suite ${{ matrix.cert_scripts }} || (sudo chmod a+r ot_testing/* && false)
+        mapfile -t cert_scripts < <(compgen -G "${CERT_SCRIPTS}" || true)
+        if ((${#cert_scripts[@]} == 0)); then
+          echo "No cert scripts matched pattern: ${CERT_SCRIPTS}" >&2
+          exit 1
+        fi
+        sudo -E ./script/test cert_suite "${cert_scripts[@]}" || (sudo chmod a+r ot_testing/* && false)
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: cov-br-docker-${{ matrix.description }}-${{ matrix.otbr_mdns }}-${{matrix.otbr_trel}}
