@@ -5813,13 +5813,13 @@ void Mle::RetxTracker::Stop(void)
 {
     mTimer.Stop();
     mChildUpdate.Reset();
-    mDataRequest.Reset();
+    ResetDataRequest();
 }
 
 void Mle::RetxTracker::UpdateOnRoleChangeToChild(void)
 {
     mChildUpdate.Reset();
-    mDataRequest.Reset();
+    ResetDataRequest();
     DetermineKeepAliveChildUpdateTxTime();
     ScheduleTimer();
 }
@@ -5892,8 +5892,7 @@ void Mle::RetxTracker::UpdateOnDataRequestTx(void)
     }
     else
     {
-        mDataRequest.mState    = kIdle;
-        mDataRequest.mAttempts = 0;
+        ResetDataRequest();
     }
 
     ScheduleTimer();
@@ -5901,9 +5900,27 @@ void Mle::RetxTracker::UpdateOnDataRequestTx(void)
 
 void Mle::RetxTracker::UpdateOnDataResponseRx(void)
 {
-    mDataRequest.mState    = kIdle;
-    mDataRequest.mAttempts = 0;
+    VerifyOrExit(IsWaitingForDataResponse());
+
+    ResetDataRequest();
     ScheduleTimer();
+
+exit:
+    return;
+}
+
+void Mle::RetxTracker::ResetDataRequest(void)
+{
+    // Cancel MLE fast polls only when leaving `kWaitingForResponse`
+    // so resetting an idle tracker does not cancel fast polls for a
+    // Link Metrics Data Request.
+
+    if (IsWaitingForDataResponse())
+    {
+        Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterMle);
+    }
+
+    mDataRequest.Reset();
 }
 
 void Mle::RetxTracker::ScheduleTimer(void)
