@@ -42,19 +42,173 @@ configure_apt()
 Acquire::Retries "2";
 Acquire::http::Timeout "10";
 Acquire::https::Timeout "10";
+DPkg::Lock::Timeout "30";
 EOF
+}
+
+collect_descendant_pids()
+{
+    local parent_pid="$1"
+    local child_pid=""
+
+    while IFS= read -r child_pid; do
+        if [[ -n ${child_pid} ]]; then
+            collect_descendant_pids "${child_pid}"
+            printf '%s\n' "${child_pid}"
+        fi
+    done < <(pgrep -P "${parent_pid}" || true)
+}
+
+has_live_pids()
+{
+    local pid=""
+    local stat=""
+
+    for pid in "$@"; do
+        if [[ -n ${pid} ]]; then
+            stat="$(ps -o stat= -p "${pid}" 2>/dev/null || true)"
+            stat="${stat//[[:space:]]/}"
+            if [[ -n ${stat} && ${stat} != Z* ]]; then
+                return 0
+            fi
+        fi
+    done
+
+    return 1
+}
+
+stop_lingering_apt_processes()
+{
+    local apt_proc_pattern='apt-get|apt'
+    local apt_repo_pattern='^(/[^[:space:]]*/python3[^[:space:]]*([[:space:]]+-[^[:space:]]+)*[[:space:]]+)?/usr/bin/add-apt-repository([[:space:]]|$)'
+    local dpkg_pid=""
+    local pid=""
+    local child_pid=""
+    local killed=0
+    local -a dpkg_descendants=()
+    local -a kill_pids=()
+
+    if [[ -z ${GITHUB_ACTIONS:-} || ! -d /etc/apt/apt.conf.d ]] \
+        || ! command -v sudo >/dev/null 2>&1 \
+        || ! command -v pkill >/dev/null 2>&1 \
+        || ! command -v pgrep >/dev/null 2>&1; then
+        return 0
+    fi
+
+    sudo pkill -TERM -f "${apt_repo_pattern}" >/dev/null 2>&1 || true
+    sudo pkill -TERM -x "${apt_proc_pattern}" >/dev/null 2>&1 || true
+
+    for _ in {1..5}; do
+        if ! pgrep -x "${apt_proc_pattern}" >/dev/null 2>&1 \
+            && ! pgrep -f "${apt_repo_pattern}" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+
+    if pgrep -f "${apt_repo_pattern}" >/dev/null 2>&1; then
+        sudo pkill -KILL -f "${apt_repo_pattern}" >/dev/null 2>&1 || true
+        killed=1
+    fi
+    if pgrep -x "${apt_proc_pattern}" >/dev/null 2>&1; then
+        sudo pkill -KILL -x "${apt_proc_pattern}" >/dev/null 2>&1 || true
+        killed=1
+    fi
+    if [[ ${killed} -eq 1 ]]; then
+        sleep 1
+    fi
+
+    if pgrep -x dpkg >/dev/null 2>&1; then
+        for _ in {1..5}; do
+            sleep 1
+            if ! pgrep -x dpkg >/dev/null 2>&1; then
+                break
+            fi
+        done
+
+        if pgrep -x dpkg >/dev/null 2>&1; then
+            while IFS= read -r dpkg_pid; do
+                if [[ -n ${dpkg_pid} ]]; then
+                    while IFS= read -r pid; do
+                        if [[ -n ${pid} ]]; then
+                            dpkg_descendants+=("${pid}")
+                        fi
+                    done < <(collect_descendant_pids "${dpkg_pid}")
+                fi
+            done < <(pgrep -x dpkg || true)
+
+            if [[ ${#dpkg_descendants[@]} -gt 0 ]]; then
+                sudo kill -TERM "${dpkg_descendants[@]}" >/dev/null 2>&1 || true
+            fi
+            sudo pkill -TERM -x dpkg >/dev/null 2>&1 || true
+
+            for _ in {1..5}; do
+                if ! pgrep -x dpkg >/dev/null 2>&1 \
+                    && {
+                        [[ ${#dpkg_descendants[@]} -eq 0 ]] || ! has_live_pids "${dpkg_descendants[@]}"
+                    }; then
+                    break
+                fi
+                sleep 1
+            done
+
+            if pgrep -x dpkg >/dev/null 2>&1 \
+                || {
+                    [[ ${#dpkg_descendants[@]} -gt 0 ]] && has_live_pids "${dpkg_descendants[@]}"
+                }; then
+                if [[ ${#dpkg_descendants[@]} -gt 0 ]]; then
+                    for pid in "${dpkg_descendants[@]}"; do
+                        while IFS= read -r child_pid; do
+                            if [[ -n ${child_pid} ]]; then
+                                kill_pids+=("${child_pid}")
+                            fi
+                        done < <(collect_descendant_pids "${pid}")
+                        kill_pids+=("${pid}")
+                    done
+                fi
+                while IFS= read -r dpkg_pid; do
+                    if [[ -n ${dpkg_pid} ]]; then
+                        while IFS= read -r child_pid; do
+                            if [[ -n ${child_pid} ]]; then
+                                kill_pids+=("${child_pid}")
+                            fi
+                        done < <(collect_descendant_pids "${dpkg_pid}")
+                        kill_pids+=("${dpkg_pid}")
+                    fi
+                done < <(pgrep -x dpkg || true)
+                if [[ ${#kill_pids[@]} -gt 0 ]]; then
+                    sudo kill -KILL "${kill_pids[@]}" >/dev/null 2>&1 || true
+                fi
+                sudo pkill -KILL -x dpkg >/dev/null 2>&1 || true
+                sleep 1
+            fi
+        fi
+    fi
 }
 
 prepare_apt_retry()
 {
     local next_attempt="$1"
+    local timed_out="${2:-0}"
+    local dpkg_rc=0
 
     if [[ -z ${GITHUB_ACTIONS:-} || ! -d /etc/apt/apt.conf.d ]] || ! command -v sudo >/dev/null 2>&1; then
         return 0
     fi
 
+    if [[ ${timed_out} -eq 1 ]]; then
+        stop_lingering_apt_processes
+    fi
+
     sudo rm -rf /var/lib/apt/lists/partial/* /var/cache/apt/archives/partial/* || true
-    sudo DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+    if command -v timeout >/dev/null 2>&1; then
+        sudo timeout --kill-after=10 60 env DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || dpkg_rc=$?
+        if [[ ${dpkg_rc} -eq 124 || ${dpkg_rc} -eq 137 ]]; then
+            stop_lingering_apt_processes
+        fi
+    else
+        sudo env DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+    fi
 
     if [[ -f /etc/apt/apt-mirrors.txt ]] && grep -q 'archive\.ubuntu\.com/ubuntu' /etc/apt/apt-mirrors.txt; then
         if [[ ${next_attempt} -eq 2 ]]; then
@@ -113,6 +267,7 @@ main()
     local delay_seconds="${OT_RETRY_DELAY:-10}"
     local attempt_timeout=""
     local use_timeout=0
+    local timed_out=0
     local attempt=1
     local exit_code=0
     local -a cmd
@@ -147,19 +302,27 @@ main()
             return 0
         fi
 
+        timed_out=0
+        if [[ ${use_timeout} -eq 1 && (${exit_code} -eq 124 || ${exit_code} -eq 137) ]]; then
+            timed_out=1
+        fi
+
         if [[ ${attempt} -ge ${max_attempts} ]]; then
+            if [[ ${timed_out} -eq 1 ]]; then
+                stop_lingering_apt_processes
+            fi
             echo "Command failed after ${attempt} attempts (exit code ${exit_code}): ${cmd[*]}" >&2
             return "${exit_code}"
         fi
 
-        if [[ ${use_timeout} -eq 1 && (${exit_code} -eq 124 || ${exit_code} -eq 137) ]]; then
+        if [[ ${timed_out} -eq 1 ]]; then
             echo "Attempt ${attempt}/${max_attempts} timed out after ${attempt_timeout}s (exit code ${exit_code}). Retrying in ${delay_seconds}s..." >&2
         else
             echo "Attempt ${attempt}/${max_attempts} failed (exit code ${exit_code}). Retrying in ${delay_seconds}s..." >&2
         fi
-        sleep "${delay_seconds}"
         attempt=$((attempt + 1))
-        prepare_apt_retry "${attempt}"
+        prepare_apt_retry "${attempt}" "${timed_out}"
+        sleep "${delay_seconds}"
     done
 }
 
