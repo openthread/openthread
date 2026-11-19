@@ -40,6 +40,7 @@
 #include <stdint.h>
 
 #include "common/equatable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/serial_number.hpp"
 
 namespace ot {
@@ -74,7 +75,7 @@ public:
     /**
      * This constant defines a maximum time duration ensured to be longer than any other duration.
      */
-    static const uint32_t kMaxDuration = ~static_cast<uint32_t>(0UL);
+    static constexpr uint32_t kMaxDuration = NumericLimits<uint32_t>::kMax;
 
     /**
      * This is the default constructor for a `Time` object.
