@@ -1,0 +1,637 @@
+#!/bin/bash
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+#  Description:
+#    Bootstraps and runs linkspector with reviewdog for Markdown link checks.
+#
+
+set -euo pipefail
+
+readonly LINKSPECTOR_VERSION="0.5.6"
+readonly REVIEWDOG_VERSION="0.21.0"
+readonly REVIEWDOG_SHA256_X86_64="ad5ce7d5ffa52aaa7ec8710a8fa764181b6cecaab843cc791e1cce1680381569"
+readonly REVIEWDOG_SHA256_ARM64="b6aff657b39e9267a258e8fa66d616f7221aec5975d0251dac76043bad0fa177"
+
+readonly DEFAULT_BIN_DIR="/usr/local/bin"
+readonly DEFAULT_CONFIG=".linkspector.yml"
+readonly DEFAULT_REPORTER="github-pr-review"
+readonly DEFAULT_FILTER_MODE="added"
+readonly DEFAULT_FAIL_LEVEL="any"
+readonly DEFAULT_LEVEL="error"
+readonly DEFAULT_ATTEMPTS="3"
+readonly DEFAULT_RETRY_DELAY="10"
+readonly DEFAULT_NPM_ATTEMPTS="3"
+readonly DEFAULT_NPM_RETRY_DELAY="10"
+
+usage()
+{
+    cat <<EOF
+Usage:
+  check-markdown-links bootstrap [options]
+  check-markdown-links run [options]
+
+Commands:
+  bootstrap                 Install linkspector (${LINKSPECTOR_VERSION}) and reviewdog (v${REVIEWDOG_VERSION})
+  run                       Run linkspector with retries and report via reviewdog
+
+Bootstrap options:
+  --bin-dir <dir>           Directory to install reviewdog (default: ${DEFAULT_BIN_DIR})
+  --force                   Reinstall tools even if expected versions are present
+  -h, --help                Display this help text
+
+Run options:
+  --config <path>           Linkspector config path; pass "" to omit -c (default: ${DEFAULT_CONFIG})
+  --reporter <reporter>     Reviewdog reporter (default: ${DEFAULT_REPORTER})
+  --filter-mode <mode>      Reviewdog filter mode (default: ${DEFAULT_FILTER_MODE})
+  --fail-level <level>      Reviewdog fail level (default: ${DEFAULT_FAIL_LEVEL})
+  --level <level>           Reviewdog diagnostic level (default: ${DEFAULT_LEVEL})
+  --attempts <n>            Maximum linkspector attempts (default: ${DEFAULT_ATTEMPTS})
+  --retry-delay <sec>       Seconds to wait between linkspector retries (default: ${DEFAULT_RETRY_DELAY})
+  -h, --help                Display this help text
+EOF
+}
+
+die()
+{
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+require_privilege()
+{
+    if [[ ${EUID} -ne 0 ]] && ! command -v sudo >/dev/null 2>&1; then
+        die "Root privileges or sudo are required"
+    fi
+}
+
+run_privileged()
+{
+    if [[ ${EUID} -eq 0 ]]; then
+        "$@"
+    else
+        sudo "$@"
+    fi
+}
+
+run_bin_dir_cmd()
+{
+    local need_privilege="$1"
+    shift
+
+    if [[ ${need_privilege} -eq 1 ]]; then
+        run_privileged "$@"
+    else
+        "$@"
+    fi
+}
+
+resolve_tmp_parent()
+{
+    local tmp_parent="${TMPDIR:-/tmp}"
+
+    while [[ ${tmp_parent} == */ && ${tmp_parent} != "/" ]]; do
+        tmp_parent="${tmp_parent%/}"
+    done
+
+    TMP_PARENT="${tmp_parent}"
+}
+
+validate_bin_dir()
+{
+    local dir="$1"
+
+    while [[ ${dir} == */ && ${dir} != "/" ]]; do
+        dir="${dir%/}"
+    done
+
+    case "${dir}" in
+        "" | "/" | "." | ".." | ../* | */. | */.. | */../* | -* | "/boot" | "/dev" | "/etc" | "/proc" | "/sys")
+            die "Invalid binary directory: '${dir}'"
+            ;;
+    esac
+
+    if [[ (-e ${dir} || -L ${dir}) && ! -d ${dir} ]]; then
+        die "Binary directory path exists and is not a directory: '${dir}'"
+    fi
+
+    VALIDATED_BIN_DIR="${dir}"
+}
+
+prepare_bin_dir_info()
+{
+    local dir="$1"
+    local probe="${dir}"
+    local parent
+
+    MISSING_BIN_DIRS=()
+    BIN_DIR_NEED_PRIVILEGE=0
+
+    while [[ ! -e ${probe} && ! -L ${probe} ]]; do
+        MISSING_BIN_DIRS+=("${probe}")
+        parent="$(dirname -- "${probe}")"
+        if [[ ${parent} == "${probe}" ]]; then
+            break
+        fi
+        probe="${parent}"
+    done
+
+    if [[ ! -d ${probe} ]]; then
+        die "Parent path '${probe}' exists and is not a directory"
+    fi
+
+    if [[ -d "${dir}/reviewdog" ]]; then
+        die "Destination '${dir}/reviewdog' exists and is a directory"
+    fi
+
+    if [[ ${EUID} -ne 0 ]]; then
+        if [[ ! -w ${probe} ]]; then
+            BIN_DIR_NEED_PRIVILEGE=1
+        elif [[ ${#MISSING_BIN_DIRS[@]} -eq 0 && -k ${dir} && (-e "${dir}/reviewdog" || -L "${dir}/reviewdog") && ! -O "${dir}/reviewdog" ]]; then
+            BIN_DIR_NEED_PRIVILEGE=1
+        fi
+    fi
+}
+
+configure_puppeteer_env()
+{
+    local skip_download="${1:-0}"
+    local candidate
+    local resolved=""
+
+    if [[ -z ${PUPPETEER_EXECUTABLE_PATH:-} ]]; then
+        if [[ -x /usr/bin/google-chrome ]]; then
+            resolved="/usr/bin/google-chrome"
+        else
+            for candidate in google-chrome google-chrome-stable chromium chromium-browser; do
+                if resolved="$(command -v "${candidate}" 2>/dev/null)" && [[ -x ${resolved} ]]; then
+                    break
+                fi
+                resolved=""
+            done
+        fi
+
+        if [[ -n ${resolved} ]]; then
+            export PUPPETEER_EXECUTABLE_PATH="${resolved}"
+        fi
+    else
+        export PUPPETEER_EXECUTABLE_PATH
+    fi
+
+    if [[ ${skip_download} -eq 1 && -n ${PUPPETEER_EXECUTABLE_PATH:-} ]]; then
+        export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+        export PUPPETEER_SKIP_DOWNLOAD=true
+    fi
+}
+
+configure_apparmor_userns()
+{
+    local sysctl_path="/proc/sys/kernel/apparmor_restrict_unprivileged_userns"
+    local host_os
+    local current_value=""
+
+    host_os="$(uname -s)"
+    if [[ ${host_os} != "Linux" ]] || [[ ! -e ${sysctl_path} ]]; then
+        return 0
+    fi
+
+    if [[ -r ${sysctl_path} ]]; then
+        current_value="$(cat "${sysctl_path}")" || current_value=""
+        current_value="${current_value//[[:space:]]/}"
+    fi
+
+    if [[ ${current_value} == "0" ]]; then
+        return 0
+    fi
+
+    require_privilege
+    run_privileged sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+}
+
+has_installed_linkspector()
+{
+    local installed_version=""
+
+    if ! command -v linkspector >/dev/null 2>&1; then
+        return 1
+    fi
+
+    installed_version="$(linkspector --version 2>/dev/null || true)"
+    installed_version="${installed_version//[[:space:]]/}"
+    installed_version="${installed_version#v}"
+
+    [[ ${installed_version} == "${LINKSPECTOR_VERSION}" ]]
+}
+
+install_linkspector()
+{
+    local force="$1"
+    local attempt=1
+    local exit_code=0
+
+    if [[ ${force} -eq 0 ]] && has_installed_linkspector; then
+        echo "linkspector ${LINKSPECTOR_VERSION} already installed; skipping npm install."
+        return 0
+    fi
+
+    command -v npm >/dev/null 2>&1 || die "npm is required to install @umbrelladocs/linkspector@${LINKSPECTOR_VERSION}"
+
+    while true; do
+        echo "Installing @umbrelladocs/linkspector@${LINKSPECTOR_VERSION} (attempt ${attempt}/${DEFAULT_NPM_ATTEMPTS})..."
+        exit_code=0
+        npm install -g "@umbrelladocs/linkspector@${LINKSPECTOR_VERSION}" || exit_code=$?
+
+        if [[ ${exit_code} -eq 0 ]]; then
+            return 0
+        fi
+
+        if [[ ${attempt} -ge ${DEFAULT_NPM_ATTEMPTS} ]]; then
+            die "Failed to install @umbrelladocs/linkspector@${LINKSPECTOR_VERSION} after ${attempt} attempts (exit code ${exit_code})"
+        fi
+
+        echo "WARNING: npm install failed (exit code ${exit_code}); retrying in ${DEFAULT_NPM_RETRY_DELAY}s..." >&2
+        attempt=$((attempt + 1))
+        sleep "${DEFAULT_NPM_RETRY_DELAY}"
+    done
+}
+
+has_installed_reviewdog()
+{
+    local bin_dir="$1"
+    local reviewdog_bin="${bin_dir}/reviewdog"
+    local installed_version=""
+
+    [[ -f ${reviewdog_bin} && -x ${reviewdog_bin} ]] || return 1
+
+    installed_version="$("${reviewdog_bin}" -version 2>/dev/null || true)"
+    installed_version="${installed_version//[[:space:]]/}"
+    installed_version="${installed_version#v}"
+
+    [[ ${installed_version} == "${REVIEWDOG_VERSION}" ]]
+}
+
+resolve_reviewdog_release()
+{
+    local host_os
+    local host_arch
+
+    host_os="$(uname -s)"
+    if [[ ${host_os} != "Linux" ]]; then
+        die "Unsupported host OS: ${host_os} (only Linux is supported)"
+    fi
+
+    host_arch="$(uname -m)"
+    case "${host_arch}" in
+        x86_64 | amd64)
+            REVIEWDOG_ARCH="x86_64"
+            REVIEWDOG_SHA256="${REVIEWDOG_SHA256_X86_64}"
+            ;;
+        aarch64 | arm64)
+            REVIEWDOG_ARCH="arm64"
+            REVIEWDOG_SHA256="${REVIEWDOG_SHA256_ARM64}"
+            ;;
+        *)
+            die "Unsupported host architecture: ${host_arch}"
+            ;;
+    esac
+
+    REVIEWDOG_ARCHIVE="reviewdog_${REVIEWDOG_VERSION}_Linux_${REVIEWDOG_ARCH}.tar.gz"
+    REVIEWDOG_URL="https://github.com/reviewdog/reviewdog/releases/download/v${REVIEWDOG_VERSION}/${REVIEWDOG_ARCHIVE}"
+}
+
+check_reviewdog_prerequisites()
+{
+    if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+        die "Neither curl nor wget is available"
+    fi
+
+    if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1; then
+        die "Neither sha256sum nor shasum is available for SHA-256 verification"
+    fi
+
+    command -v tar >/dev/null 2>&1 || die "tar is required to extract ${REVIEWDOG_ARCHIVE}"
+}
+
+download_archive()
+{
+    local url="$1"
+    local archive_path="$2"
+
+    if command -v curl >/dev/null 2>&1; then
+        curl --proto '=https' --tlsv1.2 -fsSL \
+            --retry 3 --retry-delay 2 --retry-max-time 180 \
+            --connect-timeout 15 --max-time 180 \
+            --speed-limit 10240 --speed-time 15 \
+            -o "${archive_path}" "${url}"
+    elif command -v wget >/dev/null 2>&1; then
+        [[ ${url} == https://* ]] || die "Refusing non-HTTPS download URL: ${url}"
+        wget -nv --https-only --secure-protocol=TLSv1_2 \
+            --tries=4 --timeout=15 --waitretry=2 \
+            -O "${archive_path}" "${url}"
+    else
+        die "Neither curl nor wget is available"
+    fi
+}
+
+verify_sha256()
+{
+    local archive_path="$1"
+    local expected_sha256="$2"
+
+    if command -v sha256sum >/dev/null 2>&1; then
+        printf '%s  %s\n' "${expected_sha256}" "${archive_path}" | sha256sum -c -
+    elif command -v shasum >/dev/null 2>&1; then
+        printf '%s  %s\n' "${expected_sha256}" "${archive_path}" | shasum -a 256 -c -
+    else
+        die "Neither sha256sum nor shasum is available for SHA-256 verification"
+    fi
+}
+
+install_reviewdog()
+{
+    local bin_dir="$1"
+    local force="$2"
+    local need_privilege=0
+    local tmp_parent
+
+    if [[ ${force} -eq 0 ]] && has_installed_reviewdog "${bin_dir}"; then
+        echo "reviewdog v${REVIEWDOG_VERSION} already installed at '${bin_dir}/reviewdog'; skipping download."
+        return 0
+    fi
+
+    resolve_reviewdog_release
+    check_reviewdog_prerequisites
+    prepare_bin_dir_info "${bin_dir}"
+    need_privilege="${BIN_DIR_NEED_PRIVILEGE}"
+
+    if [[ ${need_privilege} -eq 1 ]]; then
+        require_privilege
+    fi
+
+    resolve_tmp_parent
+    tmp_parent="${TMP_PARENT}"
+
+    (
+        umask 022
+        stage_dir=""
+        dest_tmp=""
+        trap 'if [[ -n ${dest_tmp:-} ]]; then run_bin_dir_cmd "${need_privilege}" rm -f -- "${dest_tmp}" || true; fi; if [[ -n ${stage_dir:-} ]]; then rm -rf -- "${stage_dir}"; fi' EXIT
+        trap 'exit 130' INT
+        trap 'exit 143' TERM
+        trap 'exit 129' HUP
+
+        stage_dir="$(mktemp -d "${tmp_parent%/}/.ot-reviewdog.XXXXXX")"
+        archive_path="${stage_dir}/${REVIEWDOG_ARCHIVE}"
+
+        echo "Downloading reviewdog v${REVIEWDOG_VERSION} from '${REVIEWDOG_URL}'..."
+        download_archive "${REVIEWDOG_URL}" "${archive_path}"
+        verify_sha256 "${archive_path}" "${REVIEWDOG_SHA256}"
+
+        echo "Extracting reviewdog v${REVIEWDOG_VERSION}..."
+        tar --no-same-owner -xzf "${archive_path}" -C "${stage_dir}" reviewdog
+
+        if [[ ! -f "${stage_dir}/reviewdog" || -L "${stage_dir}/reviewdog" ]]; then
+            die "Extracted archive is missing regular reviewdog binary"
+        fi
+        chmod 0755 -- "${stage_dir}/reviewdog"
+
+        if [[ ${#MISSING_BIN_DIRS[@]} -gt 0 ]]; then
+            run_bin_dir_cmd "${need_privilege}" mkdir -p -- "${bin_dir}"
+            run_bin_dir_cmd "${need_privilege}" chmod 0755 -- "${MISSING_BIN_DIRS[@]}"
+        fi
+
+        dest_tmp="$(run_bin_dir_cmd "${need_privilege}" mktemp "${bin_dir}/.reviewdog.XXXXXX")"
+        run_bin_dir_cmd "${need_privilege}" cp -- "${stage_dir}/reviewdog" "${dest_tmp}"
+        run_bin_dir_cmd "${need_privilege}" chmod 0755 -- "${dest_tmp}"
+        run_bin_dir_cmd "${need_privilege}" mv -f -- "${dest_tmp}" "${bin_dir}/reviewdog"
+        dest_tmp=""
+    )
+
+    echo "Installed reviewdog v${REVIEWDOG_VERSION} at '${bin_dir}/reviewdog'."
+}
+
+cmd_bootstrap()
+{
+    local bin_dir="${DEFAULT_BIN_DIR}"
+    local force=0
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --bin-dir)
+                [[ $# -ge 2 && -n $2 ]] || die "--bin-dir requires a non-empty argument"
+                bin_dir="$2"
+                shift 2
+                ;;
+            --force)
+                force=1
+                shift
+                ;;
+            -h | --help)
+                usage
+                return 0
+                ;;
+            -*)
+                die "Unknown option: $1"
+                ;;
+            *)
+                die "Unexpected argument: $1"
+                ;;
+        esac
+    done
+
+    validate_bin_dir "${bin_dir}"
+    bin_dir="${VALIDATED_BIN_DIR}"
+
+    configure_puppeteer_env 1
+
+    configure_apparmor_userns
+    install_linkspector "${force}"
+    install_reviewdog "${bin_dir}" "${force}"
+}
+
+cmd_run()
+{
+    local config="${DEFAULT_CONFIG}"
+    local reporter="${DEFAULT_REPORTER}"
+    local filter_mode="${DEFAULT_FILTER_MODE}"
+    local fail_level="${DEFAULT_FAIL_LEVEL}"
+    local level="${DEFAULT_LEVEL}"
+    local attempts="${DEFAULT_ATTEMPTS}"
+    local retry_delay="${DEFAULT_RETRY_DELAY}"
+    local tmp_parent
+    local -a linkspector_args=(check)
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --config)
+                [[ $# -ge 2 ]] || die "--config requires an argument"
+                config="$2"
+                shift 2
+                ;;
+            --reporter)
+                [[ $# -ge 2 && -n $2 ]] || die "--reporter requires a non-empty argument"
+                reporter="$2"
+                shift 2
+                ;;
+            --filter-mode)
+                [[ $# -ge 2 && -n $2 ]] || die "--filter-mode requires a non-empty argument"
+                filter_mode="$2"
+                shift 2
+                ;;
+            --fail-level)
+                [[ $# -ge 2 && -n $2 ]] || die "--fail-level requires a non-empty argument"
+                fail_level="$2"
+                shift 2
+                ;;
+            --level)
+                [[ $# -ge 2 && -n $2 ]] || die "--level requires a non-empty argument"
+                level="$2"
+                shift 2
+                ;;
+            --attempts)
+                [[ $# -ge 2 && -n $2 ]] || die "--attempts requires a non-empty argument"
+                attempts="$2"
+                shift 2
+                ;;
+            --retry-delay)
+                [[ $# -ge 2 && -n $2 ]] || die "--retry-delay requires a non-empty argument"
+                retry_delay="$2"
+                shift 2
+                ;;
+            -h | --help)
+                usage
+                return 0
+                ;;
+            -*)
+                die "Unknown option: $1"
+                ;;
+            *)
+                die "Unexpected argument: $1"
+                ;;
+        esac
+    done
+
+    if [[ ! ${attempts} =~ ^[1-9][0-9]*$ ]]; then
+        die "--attempts must be a positive integer: '${attempts}'"
+    fi
+
+    if [[ ! ${retry_delay} =~ ^(0|[1-9][0-9]*)$ ]]; then
+        die "--retry-delay must be a non-negative integer: '${retry_delay}'"
+    fi
+
+    configure_puppeteer_env 0
+
+    command -v linkspector >/dev/null 2>&1 || die "linkspector is not installed; run '$0 bootstrap' first"
+    command -v reviewdog >/dev/null 2>&1 || die "reviewdog is not installed; run '$0 bootstrap' first"
+
+    if [[ -n ${config} ]]; then
+        linkspector_args+=(-c "${config}")
+    fi
+    linkspector_args+=(-j)
+
+    resolve_tmp_parent
+    tmp_parent="${TMP_PARENT}"
+
+    (
+        stage_dir=""
+        trap 'if [[ -n ${stage_dir:-} ]]; then rm -rf -- "${stage_dir}"; fi' EXIT
+        trap 'exit 130' INT
+        trap 'exit 143' TERM
+        trap 'exit 129' HUP
+
+        stage_dir="$(mktemp -d "${tmp_parent%/}/.ot-linkspector.XXXXXX")"
+        rdjson_file="${stage_dir}/linkspector.rdjson"
+
+        attempt=1
+        linkspector_exit=0
+        while [[ ${attempt} -le ${attempts} ]]; do
+            : >"${rdjson_file}"
+            linkspector_exit=0
+            linkspector "${linkspector_args[@]}" >"${rdjson_file}" || linkspector_exit=$?
+
+            if [[ ${linkspector_exit} -eq 0 && -s ${rdjson_file} ]]; then
+                break
+            fi
+
+            if [[ ${attempt} -lt ${attempts} ]]; then
+                if [[ ${linkspector_exit} -eq 0 ]]; then
+                    echo "WARNING: linkspector attempt ${attempt}/${attempts} produced no RDJSON output; retrying in ${retry_delay}s..." >&2
+                else
+                    echo "WARNING: linkspector attempt ${attempt}/${attempts} failed (exit code ${linkspector_exit}); retrying in ${retry_delay}s..." >&2
+                fi
+                if [[ ${retry_delay} -gt 0 ]]; then
+                    sleep "${retry_delay}"
+                fi
+            fi
+            attempt=$((attempt + 1))
+        done
+
+        if [[ ! -s ${rdjson_file} ]]; then
+            if [[ ${linkspector_exit} -eq 0 ]]; then
+                linkspector_exit=1
+            fi
+            echo "ERROR: linkspector produced no RDJSON output (exit code ${linkspector_exit})" >&2
+            exit "${linkspector_exit}"
+        fi
+
+        reviewdog -f=rdjson \
+            -name=Linkspector \
+            -reporter="${reporter}" \
+            -filter-mode="${filter_mode}" \
+            -fail-level="${fail_level}" \
+            -level="${level}" \
+            <"${rdjson_file}"
+    )
+}
+
+main()
+{
+    if [[ $# -eq 0 ]]; then
+        usage >&2
+        exit 1
+    fi
+
+    case "$1" in
+        bootstrap)
+            shift
+            cmd_bootstrap "$@"
+            ;;
+        run)
+            shift
+            cmd_run "$@"
+            ;;
+        -h | --help)
+            usage
+            return 0
+            ;;
+        *)
+            die "Unknown command: $1"
+            ;;
+    esac
+}
+
+main "$@"
