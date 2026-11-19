@@ -35,6 +35,7 @@ if (OT_LIB_CONFIG)
 endif()
 
 add_subdirectory(hdlc)
+add_subdirectory(pcapng)
 add_subdirectory(platform)
 add_subdirectory(spinel)
 add_subdirectory(url)

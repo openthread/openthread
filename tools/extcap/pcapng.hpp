@@ -89,41 +89,21 @@ public:
      *
      * @param[in] aFrame   The received Radio Frame to write.
      * @param[in] aTimeUs  The capture timestamp in microseconds since the Unix epoch.
+     * @param[in] aRssi    The RSSI in dBm, or `OT_RADIO_RSSI_INVALID` if not reported by the radio.
+     * @param[in] aLqi     The LQI, or `OT_RADIO_LQI_NONE` if not reported by the radio.
      *
      * @retval OT_ERROR_NONE          Successfully wrote the frame.
      * @retval OT_ERROR_INVALID_STATE The file is not open.
+     * @retval OT_ERROR_INVALID_ARGS  The frame is invalid.
      * @retval OT_ERROR_FAILED        Failed to write to the file.
      *
      */
-    otError WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs);
+    otError WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs, int8_t aRssi, uint8_t aLqi);
 
 private:
+    static constexpr uint32_t kInterfaceId = 0;
+
     otError Write(const uint8_t *aData, size_t aLength);
-
-    static constexpr uint32_t kPcapngShbType            = 0x0a0d0d0a;
-    static constexpr uint32_t kPcapngByteOrderMagic     = 0x1a2b3c4d;
-    static constexpr uint16_t kPcapngVersionMajor       = 1;
-    static constexpr uint16_t kPcapngVersionMinor       = 0;
-    static constexpr uint32_t kPcapngIdbType            = 0x00000001;
-    static constexpr uint32_t kPcapngEpbType            = 0x00000006;
-    static constexpr uint32_t kPcapngSnapLen            = 65535;
-    static constexpr uint32_t kPcapngLinkTypeIeee802154 = 283; // DLT_IEEE802_15_4_TAP
-
-    static constexpr uint8_t kTapVersion = 0;
-
-    static constexpr uint16_t kTapFcsType   = 0;
-    static constexpr uint16_t kTapFcsLength = 1;
-    static constexpr uint8_t  kTapFcsValue  = 1; // 16-bit CRC
-
-    static constexpr uint16_t kTapChannelType   = 3;
-    static constexpr uint16_t kTapChannelLength = 3;
-    static constexpr uint8_t  kTapChannelPage   = 0;
-
-    static constexpr uint16_t kTapRssiType   = 1;
-    static constexpr uint16_t kTapRssiLength = 4;
-
-    static constexpr uint16_t kTapLqiType   = 10;
-    static constexpr uint16_t kTapLqiLength = 1;
 
     FILE *mFile;
 };

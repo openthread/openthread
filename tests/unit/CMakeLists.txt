@@ -111,6 +111,7 @@ endif()
 set(COMMON_LIBS
     openthread-spinel-ncp
     openthread-hdlc
+    openthread-pcapng
     ot-test-platform-ftd
     openthread-ftd
     ot-test-platform-ftd
@@ -248,6 +249,7 @@ if(OT_FTD)
     ot_unit_test(network_data)
     ot_unit_test(network_name)
     ot_unit_test(offset_range)
+    ot_unit_test(pcapng)
     ot_unit_test(pool)
     ot_unit_test(plat_tcp)
     ot_unit_test(power_calibration)

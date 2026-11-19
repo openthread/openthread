@@ -29,26 +29,12 @@
 #include "nexus_pcap.hpp"
 
 #include "nexus_utils.hpp"
-#include "common/clearable.hpp"
 #include "common/code_utils.hpp"
-#include "common/encoding.hpp"
 
 namespace ot {
 namespace Nexus {
 
 #ifndef __EMSCRIPTEN__
-
-OT_TOOL_PACKED_BEGIN
-struct Epb
-{
-    uint32_t mBlockType;
-    uint32_t mBlockTotalLength;
-    uint32_t mInterfaceId;
-    uint32_t mTimestampHigh;
-    uint32_t mTimestampLow;
-    uint32_t mCapturedLen;
-    uint32_t mOriginalLen;
-} OT_TOOL_PACKED_END;
 
 Pcap::Pcap(void)
     : mFile(nullptr)
@@ -59,61 +45,17 @@ Pcap::~Pcap(void) { Close(); }
 
 void Pcap::Open(const char *aFilename)
 {
-    OT_TOOL_PACKED_BEGIN
-    struct Shb
-    {
-        uint32_t mBlockType;
-        uint32_t mBlockTotalLength;
-        uint32_t mByteOrderMagic;
-        uint16_t mVersionMajor;
-        uint16_t mVersionMinor;
-        uint64_t mSectionLength;
-        uint32_t mBlockTotalLength2;
-    } OT_TOOL_PACKED_END shb;
-
-    OT_TOOL_PACKED_BEGIN
-    struct Idb
-    {
-        uint32_t mBlockType;
-        uint32_t mBlockTotalLength;
-        uint16_t mLinkType;
-        uint16_t mReserved;
-        uint32_t mSnapLen;
-        uint32_t mBlockTotalLength2;
-    } OT_TOOL_PACKED_END idb;
+    Pcapng::Encoder encoder(mBlock, sizeof(mBlock));
 
     Close();
 
     mFile = fopen(aFilename, "wb");
     VerifyOrExit(mFile != nullptr);
 
-    ClearAllBytes(shb);
-    shb.mBlockType         = LittleEndian::HostSwap(kPcapngShbType);
-    shb.mBlockTotalLength  = LittleEndian::HostSwap(static_cast<uint32_t>(sizeof(shb)));
-    shb.mByteOrderMagic    = LittleEndian::HostSwap(kPcapngByteOrderMagic);
-    shb.mVersionMajor      = LittleEndian::HostSwap(kPcapngVersionMajor);
-    shb.mVersionMinor      = LittleEndian::HostSwap(kPcapngVersionMinor);
-    shb.mSectionLength     = 0xffffffffffffffffULL;
-    shb.mBlockTotalLength2 = shb.mBlockTotalLength;
-    VerifyOrExit(fwrite(&shb, sizeof(shb), 1, mFile) == 1, Close());
-
-    ClearAllBytes(idb);
-    idb.mBlockType         = LittleEndian::HostSwap(kPcapngIdbType);
-    idb.mBlockTotalLength  = LittleEndian::HostSwap(static_cast<uint32_t>(sizeof(idb)));
-    idb.mLinkType          = LittleEndian::HostSwap(static_cast<uint16_t>(kPcapngLinkTypeIeee802154));
-    idb.mSnapLen           = LittleEndian::HostSwap(kPcapngSnapLen);
-    idb.mBlockTotalLength2 = idb.mBlockTotalLength;
-    VerifyOrExit(fwrite(&idb, sizeof(idb), 1, mFile) == 1, Close());
-
-    ClearAllBytes(idb);
-    idb.mBlockType         = LittleEndian::HostSwap(kPcapngIdbType);
-    idb.mBlockTotalLength  = LittleEndian::HostSwap(static_cast<uint32_t>(sizeof(idb)));
-    idb.mLinkType          = LittleEndian::HostSwap(static_cast<uint16_t>(kPcapngLinkTypeEthernet));
-    idb.mSnapLen           = LittleEndian::HostSwap(kPcapngSnapLen);
-    idb.mBlockTotalLength2 = idb.mBlockTotalLength;
-    VerifyOrExit(fwrite(&idb, sizeof(idb), 1, mFile) == 1, Close());
-
-    VerifyOrExit(fflush(mFile) == 0, Close());
+    SuccessOrQuit(encoder.AppendSectionHeader());
+    SuccessOrQuit(encoder.AppendInterfaceDescription(Pcapng::kLinkTypeIeee802154Tap));
+    SuccessOrQuit(encoder.AppendInterfaceDescription(Pcapng::kLinkTypeEthernet));
+    Write(encoder);
 
 exit:
     return;
@@ -130,76 +72,16 @@ exit:
     return;
 }
 
-void Pcap::WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs)
+void Pcap::WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs, int8_t aRssi, uint8_t aLqi)
 {
-    Epb epb;
-
-    OT_TOOL_PACKED_BEGIN
-    struct TapHeader
-    {
-        uint16_t mVersion;
-        uint16_t mLength;
-    } OT_TOOL_PACKED_END tapHeader;
-
-    uint32_t tapLength;
-    uint32_t packetLen;
-    uint32_t paddedLen;
-    uint32_t blockTotalLength;
-    uint32_t padding = 0;
+    Pcapng::Encoder encoder(mBlock, sizeof(mBlock));
 
     VerifyOrExit(mFile != nullptr);
 
-    tapLength = sizeof(tapHeader) + 8 + 8;
-    // Note: tshark expects specific lengths for TLVs.
-    // FCS TLV: Type(2), Length(2), Value(1), Padding(3) -> Total 8 bytes. Value length = 1.
-    // Channel TLV: Type(2), Length(2), Channel(2), Page(1), Padding(1) -> Total 8 bytes. Value length = 3.
-
-    packetLen        = tapLength + aFrame.mLength;
-    paddedLen        = (packetLen + 3) & ~3u;
-    blockTotalLength = sizeof(epb) + paddedLen + sizeof(uint32_t);
-
-    ClearAllBytes(epb);
-    epb.mBlockType        = LittleEndian::HostSwap(kPcapngEpbType);
-    epb.mBlockTotalLength = LittleEndian::HostSwap(blockTotalLength);
-    epb.mInterfaceId      = LittleEndian::HostSwap(0u);
-    epb.mTimestampHigh    = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs >> 32));
-    epb.mTimestampLow     = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs & 0xffffffff));
-    epb.mCapturedLen      = LittleEndian::HostSwap(packetLen);
-    epb.mOriginalLen      = LittleEndian::HostSwap(packetLen);
-    VerifyOrExit(fwrite(&epb, sizeof(epb), 1, mFile) == 1, Close());
-
-    ClearAllBytes(tapHeader);
-    tapHeader.mVersion = LittleEndian::HostSwap(static_cast<uint16_t>(kTapVersion));
-    tapHeader.mLength  = LittleEndian::HostSwap(static_cast<uint16_t>(tapLength));
-    VerifyOrExit(fwrite(&tapHeader, sizeof(tapHeader), 1, mFile) == 1, Close());
-
-    // FCS TLV
-    uint8_t fcsTlv[8];
-    ClearAllBytes(fcsTlv);
-    LittleEndian::WriteUint16(kTapFcsType, &fcsTlv[0]);
-    LittleEndian::WriteUint16(kTapFcsLength, &fcsTlv[2]);
-    fcsTlv[4] = kTapFcsValue;
-    VerifyOrExit(fwrite(fcsTlv, sizeof(fcsTlv), 1, mFile) == 1, Close());
-
-    // Channel TLV
-    uint8_t channelTlv[8];
-    ClearAllBytes(channelTlv);
-    LittleEndian::WriteUint16(kTapChannelType, &channelTlv[0]);
-    LittleEndian::WriteUint16(kTapChannelLength, &channelTlv[2]);
-    LittleEndian::WriteUint16(aFrame.mChannel, &channelTlv[4]);
-    channelTlv[6] = kTapChannelPage;
-    VerifyOrExit(fwrite(channelTlv, sizeof(channelTlv), 1, mFile) == 1, Close());
-
-    VerifyOrExit(fwrite(aFrame.mPsdu, aFrame.mLength, 1, mFile) == 1, Close());
-
-    if (paddedLen > packetLen)
-    {
-        VerifyOrExit(fwrite(&padding, paddedLen - packetLen, 1, mFile) == 1, Close());
-    }
-
-    VerifyOrExit(fwrite(&epb.mBlockTotalLength, sizeof(epb.mBlockTotalLength), 1, mFile) == 1, Close());
-
-    VerifyOrExit(fflush(mFile) == 0, Close());
+    // Nexus updates the FCS of every frame it transmits, so it is written as is.
+    SuccessOrQuit(
+        encoder.AppendIeee802154Frame(kInterfaceIdIeee802154, aTimeUs, aFrame, aRssi, aLqi, Pcapng::kFcsAsIs));
+    Write(encoder);
 
 exit:
     return;
@@ -211,57 +93,28 @@ void Pcap::WritePacket(const InfraIf::LinkLayerAddress &aSrcAddr,
                        uint16_t                         aLength,
                        uint64_t                         aTimeUs)
 {
-    Epb epb;
-
-    OT_TOOL_PACKED_BEGIN
-    struct EthernetHeader
-    {
-        uint8_t  mDst[6];
-        uint8_t  mSrc[6];
-        uint16_t mType;
-    } OT_TOOL_PACKED_END;
-    EthernetHeader ethHeader;
-
-    uint32_t packetLen;
-    uint32_t paddedLen;
-    uint32_t blockTotalLength;
-    uint32_t padding = 0;
+    Pcapng::Encoder        encoder(mBlock, sizeof(mBlock));
+    Pcapng::EthernetHeader ethHeader;
 
     VerifyOrExit(mFile != nullptr);
 
-    ClearAllBytes(ethHeader);
-    VerifyOrQuit(aDstAddr.GetLength() >= sizeof(ethHeader.mDst),
+    VerifyOrQuit(aDstAddr.GetLength() >= sizeof(ethHeader.mDestination),
                  "Destination MAC address length is less than expected");
-    memcpy(ethHeader.mDst, aDstAddr.GetBytes(), sizeof(ethHeader.mDst));
-    VerifyOrQuit(aSrcAddr.GetLength() >= sizeof(ethHeader.mSrc), "Source MAC address length is less than expected");
-    memcpy(ethHeader.mSrc, aSrcAddr.GetBytes(), sizeof(ethHeader.mSrc));
-    ethHeader.mType = BigEndian::HostSwap16(kEtherTypeIPv6);
+    memcpy(ethHeader.mDestination, aDstAddr.GetBytes(), sizeof(ethHeader.mDestination));
+    VerifyOrQuit(aSrcAddr.GetLength() >= sizeof(ethHeader.mSource), "Source MAC address length is less than expected");
+    memcpy(ethHeader.mSource, aSrcAddr.GetBytes(), sizeof(ethHeader.mSource));
+    ethHeader.mEtherType = kEtherTypeIp6;
 
-    packetLen        = sizeof(ethHeader) + aLength;
-    paddedLen        = (packetLen + 3) & ~3u;
-    blockTotalLength = sizeof(epb) + paddedLen + sizeof(uint32_t);
+    SuccessOrQuit(encoder.AppendEthernetFrame(kInterfaceIdEthernet, aTimeUs, ethHeader, aBuffer, aLength));
+    Write(encoder);
 
-    ClearAllBytes(epb);
-    epb.mBlockType        = LittleEndian::HostSwap(kPcapngEpbType);
-    epb.mBlockTotalLength = LittleEndian::HostSwap(blockTotalLength);
-    epb.mInterfaceId      = LittleEndian::HostSwap(1u); // Use Interface ID 1 for Ethernet
-    epb.mTimestampHigh    = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs >> 32));
-    epb.mTimestampLow     = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs & 0xffffffff));
-    epb.mCapturedLen      = LittleEndian::HostSwap(packetLen);
-    epb.mOriginalLen      = LittleEndian::HostSwap(packetLen);
-    VerifyOrExit(fwrite(&epb, sizeof(epb), 1, mFile) == 1, Close());
+exit:
+    return;
+}
 
-    VerifyOrExit(fwrite(&ethHeader, sizeof(ethHeader), 1, mFile) == 1, Close());
-    VerifyOrExit(fwrite(aBuffer, aLength, 1, mFile) == 1, Close());
-
-    if (paddedLen > packetLen)
-    {
-        VerifyOrExit(fwrite(&padding, paddedLen - packetLen, 1, mFile) == 1, Close());
-    }
-
-    VerifyOrExit(fwrite(&epb.mBlockTotalLength, sizeof(epb.mBlockTotalLength), 1, mFile) == 1, Close());
-
-    VerifyOrExit(fflush(mFile) == 0, Close());
+void Pcap::Write(const Pcapng::Encoder &aEncoder)
+{
+    VerifyOrExit(fwrite(mBlock, 1, aEncoder.GetLength(), mFile) == aEncoder.GetLength() && fflush(mFile) == 0, Close());
 
 exit:
     return;
@@ -277,7 +130,7 @@ void Pcap::Open(const char *) {}
 
 void Pcap::Close(void) {}
 
-void Pcap::WriteFrame(const otRadioFrame &, uint64_t) {}
+void Pcap::WriteFrame(const otRadioFrame &, uint64_t, int8_t, uint8_t) {}
 
 void Pcap::WritePacket(const InfraIf::LinkLayerAddress &,
                        const InfraIf::LinkLayerAddress &,

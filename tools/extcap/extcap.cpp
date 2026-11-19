@@ -171,7 +171,8 @@ void HandlePcapCallback(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
     // The sniffer never transmits, so only received frames are captured.
     VerifyOrExit(aFrame != nullptr && !aIsTx && sPcapngWriter.IsOpen());
 
-    error = sPcapngWriter.WriteFrame(*aFrame, sEpochTime.Map(aFrame->mInfo.mRxInfo.mTimestamp));
+    error = sPcapngWriter.WriteFrame(*aFrame, sEpochTime.Map(aFrame->mInfo.mRxInfo.mTimestamp),
+                                     aFrame->mInfo.mRxInfo.mRssi, aFrame->mInfo.mRxInfo.mLqi);
 
     if (error != OT_ERROR_NONE)
     {
