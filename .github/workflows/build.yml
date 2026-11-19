@@ -58,11 +58,11 @@ jobs:
         submodules: recursive
         persist-credentials: false
     - name: Bootstrap
-      timeout-minutes: 10
+      timeout-minutes: 25
       shell: bash ./script/retry {0}
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y shellcheck iwyu shfmt
+        sudo apt-get --no-install-recommends install -y ca-certificates curl iwyu shellcheck shfmt xz-utils
         sudo bash script/install-llvm.sh
         python3 -m pip install yapf==0.43.0
         npm install prettier@2.0.4

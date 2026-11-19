@@ -65,6 +65,8 @@ install_packages_pretty_format()
 {
     echo 'Installing pretty tools useful for code contributions...'
 
+    sudo DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y ca-certificates curl xz-utils
+
     # add clang-format and clang-tidy for pretty
     # To standardize the llvm version, we don't use apt to install
     sudo bash "$(dirname "$0")/install-llvm.sh"
