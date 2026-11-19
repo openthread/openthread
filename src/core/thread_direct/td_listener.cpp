@@ -36,6 +36,7 @@
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
 
 #include "instance/instance.hpp"
+#include "thread_direct/td_commands.hpp"
 
 namespace ot {
 namespace ThreadDirect {
@@ -59,6 +60,7 @@ Listener::Listener(Instance &aInstance)
     , mState(kStopped)
 {
     mTimedRx.Clear();
+    mRxWake.Clear();
 }
 
 Error Listener::Start(const Config &aConfig)
@@ -87,6 +89,7 @@ void Listener::Stop(void)
 
     mState = kStopped;
     mTimedRx.Clear();
+    mRxWake.Clear();
     Get<Mac::SubMac>().mListenScheduler.UpdateOnTdListenerChange();
 
 exit:
@@ -95,9 +98,20 @@ exit:
 
 Error Listener::GetWakeInfo(WakeInfo &aWakeInfo) const
 {
-    OT_UNUSED_VARIABLE(aWakeInfo);
+    Error error = kErrorNone;
 
-    return IsRunning() ? kErrorNotFound : kErrorInvalidState;
+    VerifyOrExit(IsRunning(), error = kErrorInvalidState);
+    VerifyOrExit(mRxWake.mIsValid, error = kErrorNotFound);
+
+    aWakeInfo.mRxTimestamp = mRxWake.mRxTimestamp;
+    aWakeInfo.mExtAddress  = mRxWake.mExtAddress;
+    aWakeInfo.mKey         = mRxWake.mKey;
+    aWakeInfo.mLinkChannel = mRxWake.mLinkChannel;
+    aWakeInfo.mPanId       = mRxWake.mPanId;
+    aWakeInfo.mIsUnicast   = mRxWake.mIsUnicast;
+
+exit:
+    return error;
 }
 
 const Listener::TimedRx &Listener::DetermineCurWindow(const Radio::SyncedTime &aNow)
@@ -115,12 +129,16 @@ exit:
 
 bool Listener::ProcessRxFrame(Mac::RxFrame::ParseInfo &aFrameInfo)
 {
-    bool             processed  = false;
-    Key             *matchedKey = nullptr;
-    KeyId            keyId;
-    Radio::SavedPsdu savedPsdu;
+    bool              processed  = false;
+    Key              *matchedKey = nullptr;
+    KeyId             keyId;
+    Radio::SavedPsdu  savedPsdu;
+    WakeCommand::Info cmdInfo;
 
     VerifyOrExit(IsRunning());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate Wake Command MAC and Security Headers
 
     VerifyOrExit(aFrameInfo.mParsedFully);
 
@@ -180,12 +198,63 @@ bool Listener::ProcessRxFrame(Mac::RxFrame::ParseInfo &aFrameInfo)
 
     VerifyOrExit(matchedKey != nullptr);
 
+    // Mark the frame as processed once it authenticates with a registered
+    // Thread Direct key (which also decrypts the PSDU in-place), so the
+    // caller does not pass it to normal MAC frame processing even if
+    // payload parsing or validation below rejects it.
+
     processed = true;
 
-    // (For future) - Process decrypted Wake frame and `matchedKey`.
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // (For future) Peer Table replay protection:
+    //
+    // Once the Thread Direct Peer Table is added, look up the peer
+    // (using source extended address and `matchedKey`), verify
+    // `aFrameInfo.mFrameCounter` freshness to reject replayed frames, and
+    // update the peer table entry with the new frame counter.
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Parse the Wake Command payload
+
+    SuccessOrExit(cmdInfo.ParseFrom(aFrameInfo.mPayload));
+
+    VerifyOrExit(cmdInfo.IsValid());
+
+    // If Action Select is present, a future-defined post-wake action is
+    // being requested rather than default TD Link establishment. Since no
+    // Action Select values are defined spec for now we simply ignore
+    // the Wake frame and continue listening.
+
+    VerifyOrExit(!cmdInfo.mHasActionSelect);
+
+    // The Wake Command is fully validated.
+
+    mRxWake.mIsValid      = true;
+    mRxWake.mIsUnicast    = !aFrameInfo.mAddrs.mDestination.IsNone() && !aFrameInfo.mAddrs.mDestination.IsBroadcast();
+    mRxWake.mKey          = matchedKey;
+    mRxWake.mRxTimestamp  = aFrameInfo.GetTimestamp();
+    mRxWake.mExtAddress   = aFrameInfo.mAddrs.mSource.GetExtended();
+    mRxWake.mFrameCounter = aFrameInfo.mFrameCounter;
+    mRxWake.mPanId =
+        aFrameInfo.mPanIds.IsDestinationPresent() ? aFrameInfo.mPanIds.GetDestination() : Mac::kPanIdBroadcast;
+
+    mRxWake.mRendezvousTime = cmdInfo.mHasRendezvousTime ? cmdInfo.mRendezvousTime : 0;
+    mRxWake.mRetryInterval  = cmdInfo.mHasConnParams ? cmdInfo.mRetryInterval : WakeCommand::kDefaultRetryInterval;
+    mRxWake.mRetryCount     = cmdInfo.mHasConnParams ? cmdInfo.mRetryCount : WakeCommand::kDefaultRetryCount;
+    mRxWake.mLinkChannel    = cmdInfo.mHasChannel ? cmdInfo.mChannel : mTimedRx.GetChannel();
+
+    mWakeCallback.InvokeIfSet();
 
 exit:
     return processed;
+}
+
+void Listener::HandleKeyUnregistered(Key &aKey)
+{
+    if (mRxWake.mKey == &aKey)
+    {
+        mRxWake.Clear();
+    }
 }
 
 } // namespace ThreadDirect
