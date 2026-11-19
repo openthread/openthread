@@ -918,6 +918,10 @@ void Client::SetState(State aState)
     case kStatePaused:
     case kStateUpdated:
         mTimer.Stop();
+        OT_FALL_THROUGH;
+
+    case kStateToRetry:
+        Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterSrpClient);
         break;
 
     case kStateToUpdate:
@@ -926,9 +930,6 @@ void Client::SetState(State aState)
 
     case kStateUpdating:
         mTimer.Start(GetRetryWaitInterval());
-        break;
-
-    case kStateToRetry:
         break;
     }
 exit:
@@ -1900,10 +1901,7 @@ void Client::ProcessResponse(Message &aMessage)
 
     VerifyOrExit(header.GetMessageId() == mCurMessageId, error = kErrorDrop);
 
-    if (!Get<Mle::Mle>().IsRxOnWhenIdle())
-    {
-        Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterSrpClient);
-    }
+    Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterSrpClient);
 
     LogInfo("Received response, msg-id:0x%x", header.GetMessageId());
 
@@ -2317,6 +2315,7 @@ void Client::HandleTimer(void)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
         mCounters.mTimeouts++;
 #endif
+        Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterSrpClient);
         GrowRetryWaitInterval();
         SetState(kStateToUpdate);
         InvokeCallback(kErrorResponseTimeout);
