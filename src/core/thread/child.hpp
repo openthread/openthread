@@ -294,6 +294,39 @@ public:
      */
     void SetBlockParentDowngrade(bool aBlock) { mBlockParentDowngrade = aBlock; }
 
+    /**
+     * Restarts the Child Update Response timeout (setting it to `Mle::kChildUpdateResponseTimeout`).
+     *
+     * This method is used after completing indirect transmission of an MLE Child Update Request to a sleepy child to
+     * start waiting for the Child Update Response.
+     */
+    void RestartChildUpdateResponseTimeout(void) { mChildUpdateResponseTimeout = Mle::kChildUpdateResponseTimeout; }
+
+    /**
+     * Clears the Child Update Response timeout (setting it to zero).
+     */
+    void ClearChildUpdateResponseTimeout(void) { mChildUpdateResponseTimeout = 0; }
+
+    /**
+     * Indicates whether the parent is waiting for an MLE Child Update Response from the sleepy child (timeout is
+     * non-zero).
+     *
+     * @retval TRUE   Waiting to receive a Child Update Response.
+     * @retval FALSE  Not waiting to receive a Child Update Response.
+     */
+    bool IsWaitingForChildUpdateResponse(void) const { return (mChildUpdateResponseTimeout > 0); }
+
+    /**
+     * Decrements the Child Update Response timeout (in seconds) if non-zero.
+     */
+    void DecrementChildUpdateResponseTimeout(void)
+    {
+        if (mChildUpdateResponseTimeout > 0)
+        {
+            mChildUpdateResponseTimeout--;
+        }
+    }
+
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
     /**
@@ -341,7 +374,11 @@ private:
     ChildIp6AddressSet mMlrRegisteredSet;
 #endif
 
-    bool    mBlockParentDowngrade;
+    static_assert(Mle::kChildUpdateResponseTimeout < 4,
+                  "kChildUpdateResponseTimeout won't fit in mChildUpdateResponseTimeout (2-bit field)");
+
+    bool    mBlockParentDowngrade : 1;
+    uint8_t mChildUpdateResponseTimeout : 2;
     uint8_t mNetworkDataVersion;
 
     union

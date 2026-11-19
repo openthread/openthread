@@ -94,8 +94,9 @@ constexpr uint8_t kMaxRouteCost = 16; ///< Maximum path cost
 
 constexpr uint8_t kMeshLocalPrefixContextId = 0; ///< Reserved 6lowpan context ID for Mesh Local Prefix
 
-constexpr uint8_t kLinkRequestAttempts = 3; ///< Number of Link Request attempts when re-establishing link.
-constexpr uint8_t kLinkAcceptTimeout   = 3; ///< Timeout in seconds to rx Link Accept after Link Request tx.
+constexpr uint8_t kLinkRequestAttempts        = 3; ///< Number of Link Request attempts when re-establishing link.
+constexpr uint8_t kLinkAcceptTimeout          = 3; ///< Timeout in seconds to rx Link Accept after Link Request tx.
+constexpr uint8_t kChildUpdateResponseTimeout = 2; ///< Timeout in seconds to rx Child Update Response after tx.
 
 /**
  * Specifies parent reselect timeout duration in seconds used on FTD child devices.
