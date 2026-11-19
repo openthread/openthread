@@ -64,6 +64,7 @@ void Manager::EnterState(State aState)
     if (oldState == kStateRegistering)
     {
         IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleResponse, this));
+        Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterMlrManager);
     }
 
     if (mState == kStateToRegisterAll)
@@ -559,10 +560,7 @@ void Manager::ProcessResponse(Coap::Msg *aMsg, Error aResult)
     AddressArray            registeredAddresses;
     OwnedPtr<Coap::Message> requestMsg;
 
-    if (!Get<Mle::Mle>().IsRxOnWhenIdle())
-    {
-        Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterMlrManager);
-    }
+    Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterMlrManager);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Parse the response message

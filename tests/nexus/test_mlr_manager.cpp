@@ -36,21 +36,36 @@
 namespace ot {
 namespace Nexus {
 
-static constexpr uint32_t kFormNetworkTime     = 10 * 1000;
-static constexpr uint32_t kAttachAsRouterTime  = 200 * 1000;
-static constexpr uint32_t kAttachAsSedTime     = 10 * 1000;
-static constexpr uint32_t kMlrRegistrationTime = 10 * 1000;
+static constexpr uint32_t kFormNetworkTime      = 10 * 1000;
+static constexpr uint32_t kAttachAsRouterTime   = 200 * 1000;
+static constexpr uint32_t kAttachAsSedTime      = 10 * 1000;
+static constexpr uint32_t kMlrRegistrationTime  = 10 * 1000;
+static constexpr uint32_t kSettleTime           = 5 * 1000;
+static constexpr uint32_t kIdleCheckWindow      = 3 * 1000;
+static constexpr uint32_t kShortIdleCheckWindow = 500;
+static constexpr uint32_t kChildUpdateWaitTime  = 150;
+static constexpr uint32_t kFastPollPeriod       = 188;
+
+static uint32_t GetTxDataPollCount(Node &aNode) { return aNode.Get<Mac::Mac>().GetCounters().mTxDataPoll; }
 
 struct Context
 {
-    Context(void) { mMlrReqCount = 0; }
+    Context(void)
+        : mMlrReqCount(0)
+        , mSourceRloc16(Mle::kInvalidRloc16)
+        , mDropMlrReq(false)
+    {
+    }
 
     uint32_t     mMlrReqCount;
+    uint16_t     mSourceRloc16;
+    bool         mDropMlrReq;
     Ip6::Address mTargetAddress;
 };
 
 static Error BrCoapInterceptor(void *aContext, const Coap::Msg &aMsg)
 {
+    Error                              error = kErrorNone;
     Mlr::AddressArray                  addresses;
     Context                           *context = static_cast<Context *>(aContext);
     Coap::Message::UriPathStringBuffer uriPath;
@@ -61,6 +76,12 @@ static Error BrCoapInterceptor(void *aContext, const Coap::Msg &aMsg)
 
     SuccessOrExit(aMsg.mMessage.ReadUriPathOptions(uriPath));
     VerifyOrExit(UriFromPath(uriPath) == kUriMlr);
+
+    if (context->mSourceRloc16 != Mle::kInvalidRloc16)
+    {
+        VerifyOrExit(aMsg.mMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator() &&
+                     (aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator() == context->mSourceRloc16));
+    }
 
     SuccessOrExit(Ip6AddressesTlv::FindIn(aMsg.mMessage, addresses));
 
@@ -76,8 +97,13 @@ static Error BrCoapInterceptor(void *aContext, const Coap::Msg &aMsg)
         context->mMlrReqCount++;
     }
 
+    if (context->mDropMlrReq)
+    {
+        error = kErrorDrop;
+    }
+
 exit:
-    return kErrorNone;
+    return error;
 }
 
 void TestMlrRedundant(void)
@@ -303,6 +329,188 @@ void TestMedMulticastRegistrationOnAttach(void)
     VerifyOrQuit(!child->HasIp6Address(realmLocalMcastAddr));
 }
 
+void TestSedMlrFastPolls(void)
+{
+    /**
+     * This test verifies that a Thread 1.2 SED attached to a Thread 1.1 parent
+     * requests fast data polls when sending `MLR.req` and cancels
+     * `kRequesterMlrManager` both when receiving `MLR.rsp` and when leaving
+     * `kStateRegistering` on PBBR removal or update while staying attached.
+     */
+
+    Core                   nexus;
+    Node                  &br  = nexus.CreateNode();
+    Node                  &sed = nexus.CreateNode();
+    Ip6::Address           mcastAddr1;
+    Ip6::Address           mcastAddr2;
+    BackboneRouter::Config config;
+    Context                context;
+    uint32_t               pollsBefore;
+    uint32_t               pollsAfter;
+
+    br.SetName("BR");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
+
+    AllowLinkBetween(br, sed);
+
+    br.Form();
+    nexus.AdvanceTime(kFormNetworkTime);
+    VerifyOrQuit(br.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(br, Node::kAsSed);
+    nexus.AdvanceTime(kAttachAsSedTime);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(!sed.Get<Mle::Mle>().IsRxOnWhenIdle());
+
+    // Simulate a Thread 1.1 parent so the Thread 1.2 SED sends MLR.req itself.
+    sed.Get<Mle::Mle>().GetParent().SetVersion(kThreadVersion1p1);
+
+    SuccessOrQuit(mcastAddr1.FromString("ff04::1"));
+    SuccessOrQuit(mcastAddr2.FromString("ff04::2"));
+
+    SuccessOrQuit(sed.Get<Ip6::Netif>().SubscribeExternalMulticast(mcastAddr1));
+    nexus.AdvanceTime(kSettleTime);
+
+    pollsBefore = GetTxDataPollCount(sed);
+    nexus.AdvanceTime(kIdleCheckWindow);
+    VerifyOrQuit(GetTxDataPollCount(sed) == pollsBefore);
+
+    context.mSourceRloc16  = sed.Get<Mle::Mle>().GetRloc16();
+    context.mTargetAddress = mcastAddr1;
+    context.mDropMlrReq    = false;
+    br.Get<Tmf::Agent>().SetInterceptor(BrCoapInterceptor, &context);
+
+    br.Get<BackboneRouter::Local>().GetConfig(config);
+    config.mReregistrationDelay = 1;
+    SuccessOrQuit(br.Get<BackboneRouter::Local>().SetConfig(config));
+    br.Get<BackboneRouter::Local>().SetEnabled(true);
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+    VerifyOrQuit(br.Get<BackboneRouter::Local>().IsPrimary());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Case 1: SED requests fast polls on MLR.req and cancels them on MLR.rsp");
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SendDataPoll());
+    nexus.AdvanceTime(500);
+    VerifyOrQuit(sed.Get<BackboneRouter::Leader>().HasPrimary());
+
+    pollsBefore = GetTxDataPollCount(sed);
+    nexus.AdvanceTime(2 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(context.mMlrReqCount == 1);
+
+    pollsAfter = GetTxDataPollCount(sed);
+    VerifyOrQuit(pollsAfter > pollsBefore);
+    VerifyOrQuit(pollsAfter - pollsBefore < DataPollSender::kDefaultFastPolls);
+
+    nexus.AdvanceTime(kIdleCheckWindow);
+    VerifyOrQuit(GetTxDataPollCount(sed) == pollsAfter);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Case 2: Leaving kStateRegistering on PBBR removal cancels kRequesterMlrManager");
+
+    context.mTargetAddress = mcastAddr2;
+    context.mMlrReqCount   = 0;
+    context.mDropMlrReq    = true;
+
+    SuccessOrQuit(sed.Get<Ip6::Netif>().SubscribeExternalMulticast(mcastAddr2));
+
+    for (uint32_t elapsed = 0; (elapsed < 1000) && (context.mMlrReqCount == 0); elapsed += 10)
+    {
+        nexus.AdvanceTime(10);
+    }
+
+    VerifyOrQuit(context.mMlrReqCount == 1);
+
+    // Let the MLE Child Update exchange triggered by multicast subscription complete.
+    nexus.AdvanceTime(kChildUpdateWaitTime);
+
+    pollsBefore = GetTxDataPollCount(sed);
+    nexus.AdvanceTime(kFastPollPeriod);
+    VerifyOrQuit(GetTxDataPollCount(sed) > pollsBefore);
+
+    br.Get<BackboneRouter::Local>().SetEnabled(false);
+
+    for (uint32_t elapsed = 0; (elapsed < 2000) && sed.Get<BackboneRouter::Leader>().HasPrimary(); elapsed += 10)
+    {
+        nexus.AdvanceTime(10);
+    }
+
+    VerifyOrQuit(!sed.Get<BackboneRouter::Leader>().HasPrimary());
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    // Let the MLE Child Update triggered by Network Data change complete.
+    nexus.AdvanceTime(kChildUpdateWaitTime);
+
+    pollsBefore = GetTxDataPollCount(sed);
+    nexus.AdvanceTime(kIdleCheckWindow);
+    VerifyOrQuit(GetTxDataPollCount(sed) == pollsBefore);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Case 3: Leaving kStateRegistering on PBBR update cancels kRequesterMlrManager");
+
+    br.Get<BackboneRouter::Local>().SetEnabled(true);
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+    VerifyOrQuit(br.Get<BackboneRouter::Local>().IsPrimary());
+
+    context.mTargetAddress = mcastAddr1;
+    context.mMlrReqCount   = 0;
+    context.mDropMlrReq    = true;
+
+    SuccessOrQuit(sed.Get<DataPollSender>().SendDataPoll());
+
+    for (uint32_t elapsed = 0; (elapsed < 2000) && (context.mMlrReqCount == 0); elapsed += 10)
+    {
+        nexus.AdvanceTime(10);
+    }
+
+    VerifyOrQuit(context.mMlrReqCount == 1);
+
+    // Add a concurrent fast poll requester before triggering PBBR update.
+    sed.Get<DataPollSender>().RequestFastPolls(DataPollSender::kRequesterUser, 10);
+
+    br.Get<BackboneRouter::Local>().GetConfig(config);
+    config.mSequenceNumber++;
+    SuccessOrQuit(br.Get<BackboneRouter::Local>().SetConfig(config));
+
+    for (uint32_t elapsed = 0; (elapsed < 2000) && (sed.Get<BackboneRouter::Leader>().GetConfig().GetSequenceNumber() !=
+                                                    config.mSequenceNumber);
+         elapsed += 10)
+    {
+        nexus.AdvanceTime(10);
+    }
+
+    VerifyOrQuit(sed.Get<BackboneRouter::Leader>().GetConfig().GetSequenceNumber() == config.mSequenceNumber);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    // Let the MLE Child Update triggered by Network Data change complete.
+    nexus.AdvanceTime(kChildUpdateWaitTime);
+
+    // Verify kRequesterUser still keeps fast polling active after MLR manager cancelled its request.
+    pollsBefore = GetTxDataPollCount(sed);
+    nexus.AdvanceTime(kFastPollPeriod);
+    VerifyOrQuit(GetTxDataPollCount(sed) > pollsBefore);
+
+    // Cancelling kRequesterUser must stop fast polling immediately without being blocked by kRequesterMlrManager.
+    sed.Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterUser);
+    pollsBefore = GetTxDataPollCount(sed);
+    nexus.AdvanceTime(kShortIdleCheckWindow);
+    VerifyOrQuit(GetTxDataPollCount(sed) == pollsBefore);
+
+    // Allow the subsequent re-registration to complete cleanly.
+    context.mDropMlrReq  = false;
+    context.mMlrReqCount = 0;
+    nexus.AdvanceTime(kMlrRegistrationTime);
+    VerifyOrQuit(context.mMlrReqCount == 1);
+
+    pollsBefore = GetTxDataPollCount(sed);
+    nexus.AdvanceTime(kIdleCheckWindow);
+    VerifyOrQuit(GetTxDataPollCount(sed) == pollsBefore);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -311,6 +519,7 @@ int main(void)
     ot::Nexus::TestMlrRedundant();
     ot::Nexus::TestMlrState();
     ot::Nexus::TestMedMulticastRegistrationOnAttach();
+    ot::Nexus::TestSedMlrFastPolls();
     printf("All tests passed\n");
     return 0;
 }
