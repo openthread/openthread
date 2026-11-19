@@ -231,7 +231,7 @@ EOF
 
 resolve_attempt_timeout()
 {
-    local long_pattern='docker[[:space:]]+build|build_otbr_docker|install-llvm\.sh'
+    local long_pattern='docker[[:space:]]+build|build_otbr_docker|install-llvm\.sh|install-pretty-tools\.sh'
     local toranj_pattern='toranj/start\.sh[[:space:]]+bootstrap'
 
     if [[ -n ${OT_RETRY_TIMEOUT+x} ]]; then
