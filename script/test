@@ -321,18 +321,63 @@ do_cert_suite()
 
 do_get_thread_wireshark()
 {
+    local -r dest_dir="/tmp/thread-wireshark"
+    local -r download_url="https://github.com/openthread/wireshark/releases/download/ot-pktverify-20200727/thread-wireshark.tar.gz"
+    local -r archive_sha256="2fdd33c25fdddfbf3c96642f2cbc36040656738b2e967f795bd7931349b88b4d"
+    local sha256_cmd=()
+
+    if [[ -x ${dest_dir}/tshark && -x ${dest_dir}/dumpcap ]] \
+        && LD_LIBRARY_PATH="${dest_dir}" "${dest_dir}/tshark" -v >/dev/null 2>&1 \
+        && LD_LIBRARY_PATH="${dest_dir}" "${dest_dir}/dumpcap" -v >/dev/null 2>&1; then
+        echo "thread-wireshark already installed at ${dest_dir}; skipping download."
+        LD_LIBRARY_PATH="${dest_dir}" "${dest_dir}/tshark" -v
+        LD_LIBRARY_PATH="${dest_dir}" "${dest_dir}/dumpcap" -v
+        return 0
+    fi
+
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256_cmd=(sha256sum -c -)
+    elif command -v shasum >/dev/null 2>&1; then
+        sha256_cmd=(shasum -a 256 -c -)
+    else
+        echo "ERROR: neither sha256sum nor shasum is available for verification" >&2
+        return 1
+    fi
+
     echo "Downloading thread-wireshark from https://github.com/openthread/wireshark/releases ..."
-    local download_url=https://github.com/openthread/wireshark/releases/download/ot-pktverify-20200727/thread-wireshark.tar.gz
-    local save_file=/tmp/thread-wireshark.tar.gz
 
-    rm -rf /tmp/thread-wireshark || true
-    rm -rf "${save_file}" || true
-    curl -L "${download_url}" -o "${save_file}"
-    tar -C /tmp -xvzf "${save_file}"
+    (
+        umask 022
+        stage_dir="$(mktemp -d /tmp/.ot-thread-wireshark.XXXXXX)" || exit 1
+        trap 'rm -rf "${stage_dir}"' EXIT
 
-    LD_LIBRARY_PATH=/tmp/thread-wireshark /tmp/thread-wireshark/tshark -v
-    LD_LIBRARY_PATH=/tmp/thread-wireshark /tmp/thread-wireshark/dumpcap -v
-    rm -rf "${save_file}"
+        if command -v curl >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -fsSL \
+                --retry 3 --retry-delay 2 --retry-max-time 300 \
+                --connect-timeout 15 --max-time 300 \
+                --speed-limit 10240 --speed-time 15 \
+                -o "${stage_dir}/thread-wireshark.tar.gz" "${download_url}" || exit 1
+        elif command -v wget >/dev/null 2>&1; then
+            wget -nv --https-only --secure-protocol=TLSv1_2 \
+                --tries=4 --timeout=15 --waitretry=2 \
+                -O "${stage_dir}/thread-wireshark.tar.gz" "${download_url}" || exit 1
+        else
+            echo "ERROR: neither curl nor wget is available" >&2
+            exit 1
+        fi
+
+        echo "${archive_sha256}  ${stage_dir}/thread-wireshark.tar.gz" | "${sha256_cmd[@]}" || exit 1
+
+        tar --no-same-owner -C "${stage_dir}" -xzf "${stage_dir}/thread-wireshark.tar.gz" || exit 1
+        [[ -d ${stage_dir}/thread-wireshark ]] || exit 1
+        chmod 0755 "${stage_dir}/thread-wireshark" || exit 1
+
+        rm -rf "${dest_dir}" || exit 1
+        mv "${stage_dir}/thread-wireshark" "${dest_dir}" || exit 1
+    ) || return 1
+
+    LD_LIBRARY_PATH="${dest_dir}" "${dest_dir}/tshark" -v
+    LD_LIBRARY_PATH="${dest_dir}" "${dest_dir}/dumpcap" -v
 }
 
 do_build_otbr_docker()
