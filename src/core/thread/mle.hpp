@@ -2464,6 +2464,7 @@ private:
     void     SendParentResponse(const ParentResponseInfo &aInfo);
     Error    SendChildIdResponse(Child &aChild);
     Error    SendChildUpdateRequestToChild(Child &aChild);
+    void     HandleChildUpdateRequestTxDone(const Message &aMessage, Error aError);
     void     SendChildUpdateResponseToChild(Child *aChild, const ChildUpdateResponseInfo &aInfo);
     void     SendMulticastDataResponse(void);
     void     SendDataResponse(const Ip6::Address &aDestination,
@@ -2492,6 +2493,7 @@ private:
     DeclareTmfResponseHandlerIn(Mle, HandleAddressSolicitResponse);
 
     static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
+    static void HandleChildUpdateRequestTxDone(const otMessage *aMessage, otError aError, void *aContext);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     const char *RouterUpgradeReasonToString(uint8_t aReason);

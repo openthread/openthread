@@ -1735,7 +1735,14 @@ void Mle::HandleTimeTick(void)
         }
         else if (IsRouterOrLeader() && child.IsStateRestored() && !child.IsRxOnWhenIdle())
         {
-            IgnoreError(SendChildUpdateRequestToChild(child));
+            if (child.IsWaitingForChildUpdateResponse())
+            {
+                child.SetWaitingForChildUpdateResponse(false);
+            }
+            else
+            {
+                IgnoreError(SendChildUpdateRequestToChild(child));
+            }
         }
     }
 
@@ -2059,6 +2066,7 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadAndMatchResponseTlvWith(child->GetChallenge()));
 
+    child->SetWaitingForChildUpdateResponse(false);
     Get<MeshForwarder>().RemoveMessagesForChild(*child, Message::AcceptAnyMle);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadFrameCounterTlvs(linkFrameCounter, mleFrameCounter));
@@ -2387,6 +2395,17 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 
         childDidChange = true;
 
+        if (oldMode.GetNetworkDataType() != child->GetNetworkDataType())
+        {
+            // A queued "Child Update Request" encodes the old Network Data
+            // subset with the current Leader Data version. Remove it so
+            // `SynchronizeChildNetworkData()` can push the newly requested
+            // subset instead of delivering a stale subset.
+
+            child->SetWaitingForChildUpdateResponse(false);
+            Get<MeshForwarder>().RemoveMessagesForChild(*child, Message::AcceptMle<kCommandChildUpdateRequest>);
+        }
+
         // The `IndirectSender::HandleChildModeChange()` needs to happen
         // after "Child Update" message is fully parsed to ensure that
         // any registered IPv6 addresses included in the "Child Update"
@@ -2556,10 +2575,18 @@ void Mle::HandleChildUpdateResponseOnParent(RxInfo &aRxInfo)
         ExitNow(error = kErrorParse);
     }
 
+    child->SetWaitingForChildUpdateResponse(false);
+
     SetChildStateToValid(*child);
     child->SetLastHeard(TimerMilli::GetNow());
     child->SetKeySequence(aRxInfo.mKeySequence);
     child->GetLinkInfo().AddRss(aRxInfo.mMessage.GetAverageRss());
+
+    if (!child->IsRxOnWhenIdle() &&
+        (child->GetNetworkDataVersion() == Get<NetworkData::Leader>().GetVersion(child->GetNetworkDataType())))
+    {
+        Get<MeshForwarder>().RemoveMessagesForChild(*child, Message::AcceptMle<kCommandChildUpdateRequest>);
+    }
 
     aRxInfo.mClass = response.IsEmpty() ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
 
@@ -2642,6 +2669,7 @@ void Mle::HandleNetworkDataUpdateRouter(void)
         if (!child.IsRxOnWhenIdle() &&
             (child.GetNetworkDataVersion() != Get<NetworkData::Leader>().GetVersion(child.GetNetworkDataType())))
         {
+            child.SetWaitingForChildUpdateResponse(false);
             Get<MeshForwarder>().RemoveMessagesForChild(child, Message::AcceptMle<kCommandChildUpdateRequest>);
         }
     }
@@ -2660,6 +2688,12 @@ void Mle::SynchronizeChildNetworkData(void)
     {
         if (child.IsRxOnWhenIdle())
         {
+            continue;
+        }
+
+        if (child.IsWaitingForChildUpdateResponse())
+        {
+            child.SetWaitingForChildUpdateResponse(false);
             continue;
         }
 
@@ -2988,6 +3022,12 @@ Error Mle::SendChildUpdateRequestToChild(Child &aChild)
         SuccessOrExit(error = message->AppendChallengeTlv(aChild.GetChallenge()));
     }
 
+    if (!aChild.IsRxOnWhenIdle())
+    {
+        aChild.SetWaitingForChildUpdateResponse(false);
+        message->RegisterTxCallback(HandleChildUpdateRequestTxDone, this);
+    }
+
     destination.InitAsLinkLocalAddress(aChild.GetExtAddress());
     SuccessOrExit(error = message->SendTo(destination));
 
@@ -3001,6 +3041,30 @@ Error Mle::SendChildUpdateRequestToChild(Child &aChild)
 exit:
     FreeMessageOnError(message, error);
     return error;
+}
+
+void Mle::HandleChildUpdateRequestTxDone(const otMessage *aMessage, otError aError, void *aContext)
+{
+    static_cast<Mle *>(aContext)->HandleChildUpdateRequestTxDone(AsCoreType(aMessage), aError);
+}
+
+void Mle::HandleChildUpdateRequestTxDone(const Message &aMessage, Error aError)
+{
+    Ip6::Header     ip6Header;
+    Mac::ExtAddress extAddr;
+    Child          *child;
+
+    VerifyOrExit(aError == kErrorNone);
+    SuccessOrExit(ip6Header.ParseFrom(aMessage));
+
+    extAddr.SetFromIid(ip6Header.GetDestination().GetIid());
+    child = mChildTable.FindChild(extAddr, Child::kInStateValidOrRestoring);
+    VerifyOrExit((child != nullptr) && !child->IsRxOnWhenIdle());
+
+    child->SetWaitingForChildUpdateResponse(true);
+
+exit:
+    return;
 }
 
 void Mle::SendChildUpdateResponseToChild(Child *aChild, const ChildUpdateResponseInfo &aInfo)
@@ -3220,6 +3284,7 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
             mNeighborTable.Signal(NeighborTable::kChildRemoved, aNeighbor);
         }
 
+        child.SetWaitingForChildUpdateResponse(false);
         Get<IndirectSender>().ClearAllMessagesForSleepyChild(child);
 
         if (aNeighbor.IsFullThreadDevice())
