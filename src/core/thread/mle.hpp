@@ -2101,6 +2101,7 @@ private:
         using RetxTimer = TimerMilliIn<Mle, &Mle::HandleRetxTrackerTimer>;
 
         void DetermineKeepAliveChildUpdateTxTime(void);
+        void ResetDataRequest(void);
         void ScheduleTimer(void);
 
         RetryInfo mChildUpdate;
