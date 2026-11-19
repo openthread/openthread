@@ -57,7 +57,7 @@ static constexpr uint32_t kResetTime = 300 * 1000;
 /**
  * Time to wait for network merge.
  */
-static constexpr uint32_t kMergeWaitTime = 350 * 1000;
+static constexpr uint32_t kMergeWaitTime = 450 * 1000;
 
 /**
  * The identifier used for Echo Request.
@@ -197,6 +197,17 @@ void Test5_5_4_1(void)
 
     SuccessOrQuit(dut.Get<Mle::Mle>().Start());
     nexus.AdvanceTime(kMergeWaitTime);
+
+    {
+        uint32_t partitionId = dut.Get<Mle::Mle>().GetLeaderData().GetPartitionId();
+        Node    *nodes[]     = {&dut, &router1, &router2, &router3, &router4};
+
+        for (Node *node : nodes)
+        {
+            VerifyOrQuit(node->Get<Mle::Mle>().IsRouterOrLeader());
+            VerifyOrQuit(node->Get<Mle::Mle>().GetLeaderData().GetPartitionId() == partitionId);
+        }
+    }
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 6: Router_3");
