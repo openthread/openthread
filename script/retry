@@ -200,7 +200,7 @@ prepare_apt_retry()
         stop_lingering_apt_processes
     fi
 
-    sudo rm -rf /var/lib/apt/lists/partial/* /var/cache/apt/archives/partial/* || true
+    sudo find /var/lib/apt/lists/partial /var/cache/apt/archives/partial -mindepth 1 -delete 2>/dev/null || true
     if command -v timeout >/dev/null 2>&1; then
         sudo timeout --kill-after=10 60 env DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || dpkg_rc=$?
         if [[ ${dpkg_rc} -eq 124 || ${dpkg_rc} -eq 137 ]]; then
