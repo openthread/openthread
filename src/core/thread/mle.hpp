@@ -2486,6 +2486,9 @@ private:
     void     HandleTimeTick(void);
     void     ScheduleChildUpdateToRestoreNonSleepyChildren(void);
     void     HandleRouterTableEvent(RouterTable::Events aEvents);
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
+    void SendChildUpdateRequestToPreviousParent(void);
+#endif
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
@@ -2572,6 +2575,9 @@ private:
     RoleTransitioner           mRoleTransitioner;
     TxChallengeTable           mTxChallengeTable;
     Ip6::Netif::UnicastAddress mLeaderAloc;
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
+    Mac::ExtAddress mPreviousParentExtAddress;
+#endif
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     DeviceProperties mDeviceProperties;
 #endif

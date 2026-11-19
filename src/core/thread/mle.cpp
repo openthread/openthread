@@ -104,6 +104,9 @@ Mle::Mle(Instance &aInstance)
 
     mLeaderData.Clear();
     mParent.Clear();
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
+    mPreviousParentExtAddress.Clear();
+#endif
     ResetCounters();
 
     mLinkLocalAddress.InitAsThreadOrigin();
@@ -406,6 +409,9 @@ void Mle::Restore(void)
         mParent.SetState(Neighbor::kStateRestored);
 
         mPreviousParentRloc = mParent.GetRloc16();
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
+        mPreviousParentExtAddress = mParent.GetExtAddress();
+#endif
         break;
 
 #if OPENTHREAD_FTD
@@ -624,9 +630,12 @@ void Mle::SetStateChild(uint16_t aRloc16)
     mParentSearch.UpdateState();
 #endif
 
-    if ((mPreviousParentRloc != kInvalidRloc16) && (mPreviousParentRloc != mParent.GetRloc16()))
+    if (mPreviousParentRloc != kInvalidRloc16)
     {
-        mCounters.mParentChanges++;
+        if (mPreviousParentRloc != mParent.GetRloc16())
+        {
+            mCounters.mParentChanges++;
+        }
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
         InformPreviousParent();
@@ -634,6 +643,9 @@ void Mle::SetStateChild(uint16_t aRloc16)
     }
 
     mPreviousParentRloc = mParent.GetRloc16();
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
+    mPreviousParentExtAddress = mParent.GetExtAddress();
+#endif
 }
 
 uint32_t Mle::GenerateRandomDelay(uint32_t aMaxDelay) const
@@ -2675,6 +2687,16 @@ void Mle::InformPreviousParent(void)
     Error            error   = kErrorNone;
     Message         *message = nullptr;
     Ip6::MessageInfo messageInfo;
+
+#if OPENTHREAD_FTD
+    if (IsFullThreadDevice())
+    {
+        SendChildUpdateRequestToPreviousParent();
+        ExitNow();
+    }
+#endif
+
+    VerifyOrExit(mPreviousParentRloc != mParent.GetRloc16());
 
     VerifyOrExit((message = Get<Ip6::Ip6>().NewMessage()) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->SetLength(0));
