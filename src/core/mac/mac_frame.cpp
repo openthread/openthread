@@ -1122,12 +1122,16 @@ Frame::InfoString Frame::ParseInfo::ToInfoString(void) const
     case kTypeMacCmd:
         switch (mCommandId)
         {
-        case kMacCmdDataRequest:
+        case kCmdDataRequest:
             string.Append("Cmd(DataReq)");
             break;
 
-        case kMacCmdBeaconRequest:
+        case kCmdBeaconRequest:
             string.Append("Cmd(BeaconReq)");
+            break;
+
+        case kCmdThread:
+            string.Append("Cmd(Thread)");
             break;
 
         default:

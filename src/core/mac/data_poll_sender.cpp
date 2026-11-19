@@ -556,7 +556,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
     buildInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
     buildInfo.mType          = Mac::Frame::kTypeMacCmd;
-    buildInfo.mCommandId     = Mac::Frame::kMacCmdDataRequest;
+    buildInfo.mCommandId     = Mac::Frame::kCmdDataRequest;
     buildInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
     buildInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
 
