@@ -1239,7 +1239,7 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlv
 
     if (!IsRxOnWhenIdle())
     {
-        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
+        Get<DataPollSender>().RequestFastPolls(DataPollSender::kRequesterMle, DataPollSender::kDefaultFastPolls);
     }
 
 exit:
@@ -2088,7 +2088,7 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
     {
         // Stop fast data poll request by MLE since we received
         // the response.
-        Get<DataPollSender>().StopFastPolls();
+        Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterMle);
     }
 
     SuccessOrExit(error);

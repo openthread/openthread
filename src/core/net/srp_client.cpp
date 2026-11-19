@@ -1133,7 +1133,7 @@ void Client::SendUpdate(void)
     {
         // If device is sleepy send fast polls while waiting for
         // the response from server.
-        Get<DataPollSender>().SendFastPolls(kFastPollsAfterUpdateTx);
+        Get<DataPollSender>().RequestFastPolls(DataPollSender::kRequesterSrpClient, kFastPollsAfterUpdateTx);
     }
 
 exit:
@@ -1902,7 +1902,7 @@ void Client::ProcessResponse(Message &aMessage)
 
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
-        Get<DataPollSender>().StopFastPolls();
+        Get<DataPollSender>().CancelFastPolls(DataPollSender::kRequesterSrpClient);
     }
 
     LogInfo("Received response, msg-id:0x%x", header.GetMessageId());

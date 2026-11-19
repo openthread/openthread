@@ -39,7 +39,6 @@
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "common/numeric_limits.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
@@ -63,7 +62,18 @@ namespace ot {
 class DataPollSender : public InstanceLocator, private NonCopyable
 {
 public:
-    static constexpr uint8_t kDefaultFastPolls = 8; ///< Default number of fast poll tx (@sa SendFastPolls).
+    static constexpr uint8_t kDefaultFastPolls = 8; ///< Default number of fast poll tx (See `RequestFastPolls()`).
+
+    /**
+     * Represents a requester of fast data polls.
+     */
+    enum Requester : uint8_t
+    {
+        kRequesterMle        = (1 << 0), ///< MLE
+        kRequesterSrpClient  = (1 << 1), ///< SRP Client
+        kRequesterMlrManager = (1 << 2), ///< MLR Manager
+        kRequesterUser       = (1 << 3), ///< User or test
+    };
 
     /**
      * Initializes the data poll sender object.
@@ -185,25 +195,36 @@ public:
     void SetAttachMode(bool aMode);
 
     /**
-     * Asks data poll sender to send the next given number of polls at a faster rate (poll period defined
-     * by `kFastPollPeriod`). This is used by OpenThread stack when it expects a response from the parent/sender.
+     * Requests the data poll sender to send the next given number of polls at a faster rate (`kFastPollPeriod`).
      *
-     * If @p aNumFastPolls is zero the default value specified by `kDefaultFastPolls` is used instead.
+     * This is used by OpenThread components when expecting a response from the parent. If @p aNumFastPolls is zero,
+     * calling this method has no effect.
      *
-     * Note that per `SendFastPolls()` would increase the internal reference count up to the allowed maximum
-     * value. If there are retransmission mechanism in the caller component, it should be responsible to call
-     * `StopFastPolls()` the same times as `SendFastPolls()` it triggered to decrease the reference count properly,
-     * guaranteeing to exit fast poll mode gracefully. Otherwise, fast poll would continue until all data polls are sent
-     * out.
+     * Active requesters are tracked as a bitmask. If multiple requesters request fast polls (or the same requester
+     * calls this method again, such as on a retransmission), @p aRequester is marked active and the remaining fast
+     * poll count is updated to the maximum of the current remaining count and @p aNumFastPolls.
      *
-     * @param[in] aNumFastPolls  If non-zero, number of fast polls to send, if zero, default value is used instead.
+     * Fast polling continues until either the remaining fast poll count reaches zero (which also clears all active
+     * requesters) or all active requesters cancel their requests via `CancelFastPolls()`. Because requesters are
+     * tracked by bitmask, a single `CancelFastPolls()` call clears @p aRequester even if `RequestFastPolls()` was
+     * called multiple times by that requester.
+     *
+     * @param[in] aRequester     The requester asking for fast polls.
+     * @param[in] aNumFastPolls  Number of fast polls to send.
      */
-    void SendFastPolls(uint8_t aNumFastPolls = 0);
+    void RequestFastPolls(Requester aRequester, uint8_t aNumFastPolls);
 
     /**
-     * Asks data poll sender to stop fast polls when the expecting response is received.
+     * Cancels a prior fast poll request from a given requester (for example, once the expected response is received).
+     *
+     * Clears @p aRequester from the set of active fast poll requesters. If no other requesters remain active, fast
+     * polling stops immediately and the normal poll period is recalculated. If other requesters are still active, fast
+     * polling continues until their requests are also cancelled or the remaining fast poll count reaches zero. Calling
+     * this method when @p aRequester has no active request has no effect.
+     *
+     * @param[in] aRequester  The requester cancelling its fast poll request.
      */
-    void StopFastPolls(void);
+    void CancelFastPolls(Requester aRequester);
 
     /**
      * Gets the maximum data polling period in use.
@@ -233,7 +254,6 @@ private:
     static constexpr uint8_t kQuickPollsAfterTimeout = 5; // Quick data poll tx in case of back-to-back poll timeouts.
     static constexpr uint8_t kMaxPollRetxAttempts    = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS;
     static constexpr uint8_t kMaxCslPollRetxAttempts = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
-    static constexpr uint8_t kMaxFastPollsUsers      = NumericLimits<uint8_t>::kMax;
 
     // Poll period under different conditions (in milliseconds).
     static constexpr uint32_t kAttachDataPollPeriod = OPENTHREAD_CONFIG_MAC_ATTACH_DATA_POLL_PERIOD;
@@ -247,6 +267,10 @@ private:
         kRecalculatePollPeriod,
     };
 
+    void            ClearFastPollRequesters(void) { mFastPollRequesters = 0; }
+    void            AddFastPollRequester(Requester aRequester) { mFastPollRequesters |= aRequester; }
+    void            RemoveFastPollRequester(Requester aRequester) { mFastPollRequesters &= ~aRequester; }
+    bool            HasAnyFastPollRequester(void) const { return (mFastPollRequesters != 0); }
     uint32_t        DetermineMaxPollPeriod(void) const;
     void            ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t        CalculatePollPeriod(void) const;
@@ -266,7 +290,7 @@ private:
     uint8_t   mPollTimeoutCounter;
     uint8_t   mPollTxFailureCounter;
     uint8_t   mRemainingFastPolls;
-    uint8_t   mFastPollsUsers;
+    uint8_t   mFastPollRequesters;
     uint32_t  mPollPeriod;
     uint32_t  mExternalPollPeriod;
     TimeMilli mTimerStartTime;

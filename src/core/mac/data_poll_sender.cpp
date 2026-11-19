@@ -47,7 +47,7 @@ DataPollSender::DataPollSender(Instance &aInstance)
     , mPollTimeoutCounter(0)
     , mPollTxFailureCounter(0)
     , mRemainingFastPolls(0)
-    , mFastPollsUsers(0)
+    , mFastPollRequesters(0)
     , mPollPeriod(0)
     , mExternalPollPeriod(0)
     , mTimerStartTime(0)
@@ -76,12 +76,12 @@ exit:
 void DataPollSender::StopPolling(void)
 {
     mTimer.Stop();
+    ClearFastPollRequesters();
     mAttachMode           = false;
     mRetxMode             = false;
     mPollTimeoutCounter   = 0;
     mPollTxFailureCounter = 0;
     mRemainingFastPolls   = 0;
-    mFastPollsUsers       = 0;
     mEnabled              = false;
 }
 
@@ -212,7 +212,7 @@ void DataPollSender::HandlePollTxDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error
             if (mRemainingFastPolls == 0)
             {
                 shouldRecalculatePollPeriod = true;
-                mFastPollsUsers             = 0;
+                ClearFastPollRequesters();
             }
         }
 
@@ -363,42 +363,36 @@ exit:
     return;
 }
 
-void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
+void DataPollSender::RequestFastPolls(Requester aRequester, uint8_t aNumFastPolls)
 {
-    bool shouldRecalculatePollPeriod = (mRemainingFastPolls == 0);
+    bool shouldSched;
 
-    if (mFastPollsUsers < kMaxFastPollsUsers)
-    {
-        mFastPollsUsers++;
-    }
+    VerifyOrExit(aNumFastPolls > 0);
 
-    if (aNumFastPolls == 0)
-    {
-        aNumFastPolls = kDefaultFastPolls;
-    }
+    AddFastPollRequester(aRequester);
 
+    shouldSched         = (mRemainingFastPolls == 0);
     mRemainingFastPolls = Max(mRemainingFastPolls, aNumFastPolls);
 
-    if (shouldRecalculatePollPeriod)
+    if (shouldSched)
     {
         ScheduleNextPoll(kRecalculatePollPeriod);
     }
+
+exit:
+    return;
 }
 
-void DataPollSender::StopFastPolls(void)
+void DataPollSender::CancelFastPolls(Requester aRequester)
 {
-    VerifyOrExit(mFastPollsUsers != 0);
+    RemoveFastPollRequester(aRequester);
 
-    // If `mFastPollsUsers` hits the max, let it be cleared
-    // from `HandlePollTxDone()` (after all fast polls are sent).
-    VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers);
-
-    mFastPollsUsers--;
-
-    VerifyOrExit(mFastPollsUsers == 0);
-
-    mRemainingFastPolls = 0;
-    ScheduleNextPoll(kRecalculatePollPeriod);
+    if (!HasAnyFastPollRequester())
+    {
+        VerifyOrExit(mRemainingFastPolls > 0);
+        mRemainingFastPolls = 0;
+        ScheduleNextPoll(kRecalculatePollPeriod);
+    }
 
 exit:
     return;

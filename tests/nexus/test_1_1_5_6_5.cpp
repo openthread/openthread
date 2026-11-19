@@ -169,7 +169,7 @@ void Test5_6_5(void)
 
     nexus.AdvanceTime(kPropagationTime);
 
-    sed1.Get<DataPollSender>().SendFastPolls(5);
+    sed1.Get<DataPollSender>().RequestFastPolls(DataPollSender::kRequesterUser, 5);
 
     nexus.AdvanceTime(kPropagationTime);
 
