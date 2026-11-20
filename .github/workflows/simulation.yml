@@ -205,6 +205,7 @@ jobs:
       COVERAGE: 1
       VIRTUAL_TIME: 0
       OT_EXPECT_CATEGORY: ${{ matrix.category }}
+      OT_POETRY_VERSION: '2.5.1'
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -215,10 +216,19 @@ jobs:
       with:
         submodules: recursive
         persist-credentials: false
-    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+    - id: setup-python
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      if: matrix.category == 'cli'
       with:
         python-version: '3.12'
-        cache: pip
+    - name: Cache TCAT Commissioner Poetry Environment
+      if: matrix.category == 'cli'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cache/pip
+          ~/.cache/pypoetry
+        key: tcat-ble-client-poetry-${{ env.OT_POETRY_VERSION }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('tools/tcat_ble_client/poetry.lock') }}
     - name: Bootstrap
       timeout-minutes: 10
       shell: bash ./script/retry {0}
@@ -227,7 +237,21 @@ jobs:
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         sudo bash script/install_socat
-        pip install bleak 'cryptography==43.0.0'
+    - name: Install TCAT Commissioner
+      if: matrix.category == 'cli'
+      timeout-minutes: 10
+      shell: bash ./script/retry {0}
+      env:
+        POETRY_KEYRING_ENABLED: 'false'
+      run: |
+        python3 -m pip install "poetry==${OT_POETRY_VERSION}"
+        poetry --directory tools/tcat_ble_client install --no-interaction --no-ansi
+        venv_path="$(poetry --directory tools/tcat_ble_client env info --path)"
+        if [[ "${venv_path}" != /* || "${venv_path}" == "/" || ! -x "${venv_path}/bin/python" ]]; then
+          echo "Unexpected venv_path: ${venv_path}" >&2
+          exit 1
+        fi
+        echo "${venv_path}/bin" >> "${GITHUB_PATH}"
     - name: Run RCP Mode
       run: |
         ulimit -c unlimited
