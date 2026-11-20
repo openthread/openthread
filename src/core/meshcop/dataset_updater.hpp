@@ -45,6 +45,7 @@
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -118,7 +119,7 @@ private:
     void  HandleNotifierEvents(Events aEvents);
     void  HandleDatasetChanged(Dataset::Type aType);
 
-    Message                  *mDataset;
+    OwnedPtr<Message>         mDataset;
     Callback<UpdaterCallback> mCallback;
 };
 
