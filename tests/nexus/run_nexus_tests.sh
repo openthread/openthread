@@ -236,6 +236,7 @@ DEFAULT_TESTS=(
     "inform_previous_parent_on_reattach"
     "leader_reboot_multiple_link_request"
     "router_reboot_multiple_link_request"
+    "router_id_dealloc_reattach"
     "pbbr_aloc"
     "retransmission_security"
     "neighbor_info_by_rloc16"

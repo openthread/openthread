@@ -498,7 +498,9 @@ exit:
     return;
 }
 
-Error Mle::BecomeDetached(void)
+Error Mle::BecomeDetached(void) { return BecomeDetached(kAnyPartition); }
+
+Error Mle::BecomeDetached(AttachMode aMode)
 {
     Error error = kErrorNone;
 
@@ -524,7 +526,7 @@ Error Mle::BecomeDetached(void)
     SetStateDetached();
     mParent.SetState(Neighbor::kStateInvalid);
     SetRloc16(kInvalidRloc16);
-    mAttacher.Attach(kAnyPartition);
+    mAttacher.Attach(aMode);
 
 exit:
     return error;
@@ -4734,7 +4736,8 @@ Error Mle::Attacher::DetermineParentRequestType(ParentRequestType &aType) const
         // During reattach to the same partition all the Parent
         // Request are sent to Routers and REEDs.
 
-        if ((mMode != kSamePartition) && (mParentRequestCounter <= kFirstAttachCycleNumParentRequestToRouters))
+        if ((mMode != kSamePartition) && (mMode != kBetterIdSequence) &&
+            (mParentRequestCounter <= kFirstAttachCycleNumParentRequestToRouters))
         {
             aType = kToRouters;
         }
@@ -4798,6 +4801,7 @@ bool Mle::Attacher::HasAcceptableParentCandidate(void) const
 
         case kAnyPartition:
         case kSamePartition:
+        case kBetterIdSequence:
         case kDowngradeToReed:
         case kBetterParent:
         case kSelectedParent:
@@ -5013,7 +5017,10 @@ uint32_t Mle::Attacher::Reattach(void)
         break;
 
     case kSamePartition:
+    case kBetterIdSequence:
     case kDowngradeToReed:
+        // Device may already be detached; start a full first attach cycle.
+        mAttachCounter = 0;
         Attach(kAnyPartition);
         break;
 
@@ -5361,7 +5368,7 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
 
 #if OPENTHREAD_FTD
-    if (Get<Mle>().IsFullThreadDevice() && !Get<Mle>().IsDetached())
+    if (Get<Mle>().IsFullThreadDevice() && (!Get<Mle>().IsDetached() || (mMode == kBetterIdSequence)))
     {
         bool isPartitionIdSame = (leaderData.GetPartitionId() == Get<Mle>().mLeaderData.GetPartitionId());
         bool isIdSequenceSame  = (connectivity.GetIdSequence() == Get<RouterTable>().GetRouterIdSequence());
@@ -5376,6 +5383,19 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
 
         case kSamePartition:
             VerifyOrExit(isPartitionIdSame && isIdSequenceGreater);
+            break;
+
+        case kBetterIdSequence:
+            if (isPartitionIdSame)
+            {
+                VerifyOrExit(isIdSequenceSame || isIdSequenceGreater);
+            }
+            else
+            {
+                VerifyOrExit(ComparePartitions(connectivity.IsSingleton(), leaderData,
+                                               Get<RouterTable>().GetActiveRouterCount() <= 1,
+                                               Get<Mle>().mLeaderData) > 0);
+            }
             break;
 
         case kDowngradeToReed:
@@ -5605,12 +5625,13 @@ const char *Mle::Attacher::StateToString(State aState)
 
 const char *Mle::Attacher::AttachModeToString(AttachMode aMode)
 {
-#define AttachModeMapList(_)               \
-    _(kAnyPartition, "AnyPartition")       \
-    _(kSamePartition, "SamePartition")     \
-    _(kBetterPartition, "BetterPartition") \
-    _(kDowngradeToReed, "DowngradeToReed") \
-    _(kBetterParent, "BetterParent")       \
+#define AttachModeMapList(_)                 \
+    _(kAnyPartition, "AnyPartition")         \
+    _(kSamePartition, "SamePartition")       \
+    _(kBetterIdSequence, "BetterIdSequence") \
+    _(kBetterPartition, "BetterPartition")   \
+    _(kDowngradeToReed, "DowngradeToReed")   \
+    _(kBetterParent, "BetterParent")         \
     _(kSelectedParent, "SelectedParent")
 
     DefineEnumStringArray(AttachModeMapList);
