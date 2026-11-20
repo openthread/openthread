@@ -119,7 +119,7 @@ otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContex
     uint8_t     spiGpioIntLine     = 0;
     uint8_t     spiGpioResetLine   = 0;
     uint8_t     spiMode            = OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE;
-    uint32_t    spiSpeed           = SPI_IOC_WR_MAX_SPEED_HZ;
+    uint32_t    spiSpeed           = OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ;
     uint32_t    spiResetDelay      = OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS;
     uint16_t    spiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
     uint8_t     spiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
