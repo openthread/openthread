@@ -2192,7 +2192,7 @@ void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
     }
 
 #if OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE
-    abort();
+    otAbortNow(OT_EXIT_RADIO_SPINEL_RESET);
 #else
     DieNow(OT_EXIT_RADIO_SPINEL_RESET);
 #endif

@@ -1826,8 +1826,21 @@ void TestOmrSelection(void)
     VerifyOrQuit(sExpectedRios[0].mPreference == NetworkData::kRoutePreferenceLow);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable Routing Manager and verify it synchronously emits an RA
+    // withdrawing the advertised OMR prefix RIO and deprecating the
+    // local on-link PIO.
 
-    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    sRaValidated = false;
+    sExpectedPio = kPioDeprecatingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, false));
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOrQuit(sExpectedRios[0].mLifetime == 0);
+
     AdvanceTime(3000);
 
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());

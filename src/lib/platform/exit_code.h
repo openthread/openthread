@@ -34,6 +34,7 @@
 #ifndef OT_LIB_PLATFORM_EXIT_CODE_H_
 #define OT_LIB_PLATFORM_EXIT_CODE_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,6 +96,80 @@ enum
 };
 
 /**
+ * Compiler-specific indication that a function does not return.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define OT_EXIT_NORETURN __attribute__((noreturn))
+#elif defined(_MSC_VER)
+#define OT_EXIT_NORETURN __declspec(noreturn)
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+#define OT_EXIT_NORETURN _Noreturn
+#elif defined(__cplusplus) && (__cplusplus >= 201103L)
+#define OT_EXIT_NORETURN [[noreturn]]
+#else
+#define OT_EXIT_NORETURN
+#endif
+
+/**
+ * Pointer type for a callback invoked right before the process terminates
+ * fatally.
+ *
+ * @param[in]  aExitCode  The exit code.
+ * @param[in]  aContext   A pointer to arbitrary context information.
+ */
+typedef void (*otExitHandler)(uint8_t aExitCode, void *aContext);
+
+/**
+ * Registers a callback to be invoked right before the process terminates
+ * fatally.
+ *
+ * Subsequent calls overwrite any previously registered handler. Passing NULL
+ * for @p aHandler clears the registered handler.
+ *
+ * @param[in]  aHandler  A pointer to the callback function, or NULL to clear.
+ * @param[in]  aContext  A pointer to arbitrary context information.
+ */
+void otExitSetHandler(otExitHandler aHandler, void *aContext);
+
+/**
+ * Indicates whether a fatal exit is currently in progress.
+ *
+ * @retval TRUE   A fatal exit is currently in progress.
+ * @retval FALSE  No fatal exit is currently in progress.
+ */
+bool otExitIsExiting(void);
+
+/**
+ * Invokes the registered fatal exit handler (if any) and terminates the
+ * process via `exit()`.
+ *
+ * On the first call, this function records @p aExitCode as the process exit
+ * code and invokes the registered handler (if any) before calling `exit()`.
+ * Re-entrant calls do not re-invoke the handler and preserve the original
+ * termination mode (calling `abort()` if the outer termination was initiated
+ * via `otAbortNow()`, or `exit()` with the original recorded exit code
+ * otherwise).
+ *
+ * @param[in]  aExitCode  The exit code.
+ */
+OT_EXIT_NORETURN void otExitNow(uint8_t aExitCode);
+
+/**
+ * Invokes the registered fatal exit handler (if any) and terminates the
+ * process via `abort()`.
+ *
+ * On the first call, this function records abort termination and invokes the
+ * registered handler (if any) with @p aExitCode before calling `abort()`.
+ * Re-entrant calls do not re-invoke the handler and preserve the original
+ * termination mode (calling `abort()` if the outer termination was initiated
+ * via `otAbortNow()`, or `exit()` with the original recorded exit code
+ * otherwise).
+ *
+ * @param[in]  aExitCode  The exit code passed to the registered handler.
+ */
+OT_EXIT_NORETURN void otAbortNow(uint8_t aExitCode);
+
+/**
  * Converts an exit code into a string.
  *
  * @param[in]  aExitCode  An exit code.
@@ -118,11 +193,12 @@ const char *otExitCodeToString(uint8_t aExitCode);
         }                                                                                          \
         else                                                                                       \
         {                                                                                          \
-            const char *start = strrchr(__FILE__, '/');                                            \
+            uint8_t     _verifyOrDieExitCode = (aExitCode);                                        \
+            const char *start                = strrchr(__FILE__, '/');                             \
             OT_UNUSED_VARIABLE(start);                                                             \
             otLogCritPlat("%s() at %s:%d: %s", __func__, (start ? start + 1 : __FILE__), __LINE__, \
-                          otExitCodeToString(aExitCode));                                          \
-            exit(aExitCode);                                                                       \
+                          otExitCodeToString(_verifyOrDieExitCode));                               \
+            otExitNow(_verifyOrDieExitCode);                                                       \
         }                                                                                          \
     } while (false)
 
@@ -153,12 +229,13 @@ const char *otExitCodeToString(uint8_t aExitCode);
  * @param[in]   aMessage    The exit message.
  * @param[in]   aExitCode   The exit code.
  */
-#define DieNowWithMessage(aMessage, aExitCode)                                                 \
-    do                                                                                         \
-    {                                                                                          \
-        otLogCritPlat("exit(%d): %s line %d, %s, %s", aExitCode, __func__, __LINE__, aMessage, \
-                      otExitCodeToString(aExitCode));                                          \
-        exit(aExitCode);                                                                       \
+#define DieNowWithMessage(aMessage, aExitCode)                                                       \
+    do                                                                                               \
+    {                                                                                                \
+        uint8_t _dieNowExitCode = (aExitCode);                                                       \
+        otLogCritPlat("exit(%d): %s line %d, %s, %s", _dieNowExitCode, __func__, __LINE__, aMessage, \
+                      otExitCodeToString(_dieNowExitCode));                                          \
+        otExitNow(_dieNowExitCode);                                                                  \
     } while (false)
 
 #ifdef __cplusplus

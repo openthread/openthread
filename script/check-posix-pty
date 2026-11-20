@@ -477,6 +477,17 @@ check_daemon_backtrace()
     grep -qE '# *[0-9]+: [^ ]+ .+\+0x[0-9a-f]+ \[0x[0-9a-f]+\]' "${OT_DAEMON_OUTPUT}" || die 'the stack trace has no parsed frame'
 }
 
+check_daemon_fatal_exit_ra_withdrawal()
+{
+    [[ ${OT_DAEMON} == 'on' && ${OSTYPE} == linux* ]] || return 0
+
+    sudo python3 "$PWD/tests/scripts/misc/test_fatal_exit_ra_withdrawal.py" \
+        --ot-daemon "$PWD/build/posix/src/posix/ot-daemon" \
+        --ot-ctl "${OT_CTL_PATH}" \
+        --ot-rcp "${RADIO_NCP_PATH}" \
+        || die 'fatal-exit border routing RA withdrawal check failed'
+}
+
 mdns_lists_address()
 {
     local addresses
@@ -850,6 +861,7 @@ EOF
     check_host_link_state
     check_daemon_netif_down
     check_daemon_backtrace
+    check_daemon_fatal_exit_ra_withdrawal
 }
 
 main()
