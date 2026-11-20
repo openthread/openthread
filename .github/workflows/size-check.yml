@@ -74,6 +74,7 @@ jobs:
       if: ${{ github.event_name == 'pull_request' }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
-        name: report_pr
+        name: report_pr_json
+        if-no-files-found: error
         path: |
-          /tmp/ot-size-report/report_pr
+          /tmp/ot-size-report/report_pr.json
