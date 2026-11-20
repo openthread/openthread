@@ -34,20 +34,44 @@ set -euxo pipefail
 
 apply_dependencies()
 {
+    local remote_url
     local project_name
+    local line
+    local depends_on_repo
+    local depends_on_pr
+    local dependency_pattern='^Depends-On:[[:blank:]]+([^#[:space:]]+)#([1-9][0-9]*)[[:blank:]]*$'
 
-    project_name=$(git remote get-url origin | grep -oE '[^/:]+/[^/:]+\.git$' | cut -d. -f1)
+    remote_url="$(git remote get-url origin)"
+    remote_url="${remote_url%/}"
+    remote_url="${remote_url%.git}"
+
+    if [[ ${remote_url} =~ ([^/:]+/[^/:]+)$ ]]; then
+        project_name="${BASH_REMATCH[1]}"
+    else
+        echo "Unable to determine project name from origin URL: ${remote_url}" >&2
+        return 1
+    fi
+
     echo "project name: ${project_name}"
 
-    git config user.name || git config user.name 'OpenThread Git'
-    git config user.email || git config user.email 'git@openthread'
+    if [[ -z ${PR_BODY:-} ]]; then
+        return 0
+    fi
 
-    while read -r dependency; do
-        echo "${dependency}"
-        depends_on_pr="$(echo "${dependency}" | tr -d '\r\n' | cut -d# -f2)"
-        echo "pr: #${depends_on_pr}"
-        git pull --no-edit --no-rebase origin "pull/${depends_on_pr}/merge"
-    done < <(grep -E "^Depends-On: *${project_name}" <<<"${PR_BODY:-}" || true)
+    while IFS= read -r line; do
+        line="${line%$'\r'}"
+        if [[ ${line} =~ ${dependency_pattern} ]]; then
+            depends_on_repo="${BASH_REMATCH[1]}"
+            depends_on_pr="${BASH_REMATCH[2]}"
+            if [[ ${depends_on_repo} == "${project_name}" ]]; then
+                echo "${line}"
+                echo "pr: #${depends_on_pr}"
+                git config user.name >/dev/null || git config user.name 'OpenThread Git'
+                git config user.email >/dev/null || git config user.email 'git@openthread'
+                git pull --no-edit --no-rebase origin "pull/${depends_on_pr}/merge" </dev/null
+            fi
+        fi
+    done < <(grep '^Depends-On:' <<<"${PR_BODY}" || true)
 }
 
 try_update()

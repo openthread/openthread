@@ -60,12 +60,12 @@ jobs:
       timeout-minutes: 10
       shell: bash ./script/retry {0}
       env:
-        PR_BODY: "${{ github.event.pull_request.body }}"
+        PR_BODY: ${{ (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR') && github.event.pull_request.body || '' }}
       run: |
         ./script/check-size setup
     - name: Run
       env:
-        PR_BODY: "${{ github.event.pull_request.body }}"
+        PR_BODY: ${{ (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR') && github.event.pull_request.body || '' }}
         PR_NUMBER: "${{ github.event.pull_request.number }}"
       run: |
         ./script/check-size nrf52840

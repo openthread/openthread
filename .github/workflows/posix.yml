@@ -277,8 +277,6 @@ jobs:
     - name: Bootstrap
       timeout-minutes: 10
       shell: bash ./script/retry {0}
-      env:
-        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov
