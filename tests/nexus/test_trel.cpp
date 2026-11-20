@@ -1058,6 +1058,94 @@ void TestMultiRadioTimeSync(void)
     VerifyOrQuit(fedTrel.Get<TimeSync>().GetTimeSyncSeq() == leader.Get<TimeSync>().GetTimeSyncSeq());
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+void TestTrelFilterBroadcastPendingAck(void)
+{
+    Core                     nexus;
+    Node                    &leader = nexus.CreateNode();
+    Node                    &router = nexus.CreateNode();
+    Neighbor                *neighbor;
+    Neighbor::MultiRadioInfo info;
+    uint64_t                 txPackets;
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("TestTrelFilterBroadcastPendingAck()");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
+    SuccessOrQuit(leader.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    SuccessOrQuit(router.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Form network and join router");
+
+    leader.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    router.Join(leader);
+    nexus.AdvanceTime(150 * 1000);
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+
+    VerifyOrQuit(leader.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 1);
+    VerifyOrQuit(router.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 1);
+
+    nexus.SendAndVerifyEchoRequest(leader, router.Get<Mle::Mle>().GetMeshLocalEid());
+
+    neighbor = router.Get<NeighborTable>().FindNeighbor(leader.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(neighbor != nullptr);
+    neighbor->PopulateMultiRadioInfo(info);
+    VerifyOrQuit(info.mSupportsIeee802154);
+    VerifyOrQuit(info.mSupportsTrelUdp6);
+    VerifyOrQuit(info.mTrelUdp6Info.mPreference >= info.mIeee802154Info.mPreference);
+    VerifyOrQuit(info.mTrelUdp6Info.mPreference > 0);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Enable TREL filter on router and verify broadcast deferred ACK timeouts decay preference");
+
+    router.Get<ot::Trel::Interface>().SetFilterEnabled(true);
+    VerifyOrQuit(router.Get<ot::Trel::Interface>().IsFilterEnabled());
+
+    txPackets = router.Get<ot::Trel::Interface>().GetCounters()->mTxPackets;
+
+    // Advance time without unicast traffic so periodic broadcast MLE
+    // Advertisements trigger deferred ACK timeouts on the filtered node.
+    nexus.AdvanceTime(150 * 1000);
+
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+    VerifyOrQuit(router.Get<ot::Trel::Interface>().GetCounters()->mTxPackets == txPackets);
+
+    neighbor = router.Get<NeighborTable>().FindNeighbor(leader.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(neighbor != nullptr);
+    neighbor->PopulateMultiRadioInfo(info);
+    VerifyOrQuit(info.mSupportsIeee802154);
+    VerifyOrQuit(info.mSupportsTrelUdp6);
+    VerifyOrQuit(info.mIeee802154Info.mPreference > 0);
+    VerifyOrQuit(info.mTrelUdp6Info.mPreference == 0);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Disable TREL filter on router and verify TREL communication and preference recovery");
+
+    router.Get<ot::Trel::Interface>().SetFilterEnabled(false);
+    VerifyOrQuit(!router.Get<ot::Trel::Interface>().IsFilterEnabled());
+
+    nexus.AdvanceTime(250 * 1000);
+
+    VerifyOrQuit(router.Get<ot::Trel::Interface>().GetCounters()->mTxPackets > txPackets);
+
+    neighbor = router.Get<NeighborTable>().FindNeighbor(leader.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(neighbor != nullptr);
+    neighbor->PopulateMultiRadioInfo(info);
+    VerifyOrQuit(info.mSupportsIeee802154);
+    VerifyOrQuit(info.mSupportsTrelUdp6);
+    VerifyOrQuit(info.mTrelUdp6Info.mPreference >= info.mIeee802154Info.mPreference);
+
+    txPackets = router.Get<ot::Trel::Interface>().GetCounters()->mTxPackets;
+    nexus.SendAndVerifyEchoRequest(router, leader.Get<Mle::Mle>().GetMeshLocalEid());
+    VerifyOrQuit(router.Get<ot::Trel::Interface>().GetCounters()->mTxPackets > txPackets);
+}
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -1079,6 +1167,7 @@ int main(void)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     ot::Nexus::TestMultiRadioTimeSync();
 #endif
+    ot::Nexus::TestTrelFilterBroadcastPendingAck();
 #endif
     printf("All tests passed\n");
 #else

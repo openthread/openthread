@@ -112,13 +112,14 @@ public:
     /**
      * Sets the filter mode (enables/disables filtering).
      *
-     * When filtering is enabled, any rx and tx traffic through TREL interface is silently dropped. This is mainly
+     * When filtering is enabled, any rx and tx traffic through TREL interface is silently dropped while internal
+     * state tracking (such as neighbor packet numbers and pending deferred ACKs) continues normally. This is mainly
      * intended for use during testing.
      *
-     * Unlike `Enable()/Disable()` which fully start/stop the TREL interface operation, when filter mode is enabled the
+     * Unlike `SetEnabled()` which fully starts/stops the TREL interface operation, when filter mode is enabled the
      * TREL interface continues to be enabled.
      *
-     * @param[in] aFiltered  TRUE to enable filter mode, FALSE to disable filter mode.
+     * @param[in] aEnable  TRUE to enable filter mode, FALSE to disable filter mode.
      */
     void SetFilterEnabled(bool aEnable) { mFiltered = aEnable; }
 
@@ -160,6 +161,7 @@ private:
     explicit Interface(Instance &aInstance);
 
     void UpdateState(void);
+    void PlatSend(const Packet &aPacket, const Ip6::SockAddr &aDestAddr);
 
     // Methods used by `Trel::Link`.
     void  Init(void);

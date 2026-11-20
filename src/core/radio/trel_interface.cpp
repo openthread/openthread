@@ -121,7 +121,6 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
     Peer *peerEntry;
 
     VerifyOrExit(IsEnabled(), error = kErrorAbort);
-    VerifyOrExit(!mFiltered);
 
     switch (aPacket.GetHeader().GetType())
     {
@@ -151,7 +150,7 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
                 neighbor->mTrelCurrentPendingAcks++;
             }
 
-            otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &peer.mSockAddr);
+            PlatSend(aPacket, peer.GetSockAddr());
 
             aPacket.GetHeader().SetPacketNumber(originalPacketNumber);
             aPacket.GetHeader().SetAckMode(originalAckMode);
@@ -164,12 +163,21 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
         VerifyOrExit(peerEntry != nullptr, error = kErrorAbort);
         VerifyOrExit(peerEntry->HasValidSockAddr(), error = kErrorAbort);
         peerEntry->UpdateLastInteractionTime();
-        otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &peerEntry->GetSockAddr());
+        PlatSend(aPacket, peerEntry->GetSockAddr());
         break;
     }
 
 exit:
     return error;
+}
+
+void Interface::PlatSend(const Packet &aPacket, const Ip6::SockAddr &aDestAddr)
+{
+    VerifyOrExit(!mFiltered);
+    otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &aDestAddr);
+
+exit:
+    return;
 }
 
 extern "C" void otPlatTrelHandleReceived(otInstance       *aInstance,
