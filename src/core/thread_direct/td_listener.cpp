@@ -45,10 +45,54 @@ RegisterLogModule("TdListener");
 //---------------------------------------------------------------------------------------------------------------------
 // Listener::Config
 
-bool Listener::Config::IsValid(void) const
+bool Listener::Config::IsValid(Radio::Time64 aNow) const
 {
-    return Radio::IsChannelValid(GetChannel()) && (GetInterval() >= GetDuration()) &&
-           (GetInterval() <= TimerMicro::kMaxDelay);
+    static_assert(kMaxFutureStartOffset + kMaxInterval <= TimerMicro::kMaxDelay,
+                  "kMaxFutureStartOffset + kMaxInterval exceeds TimerMicro::kMaxDelay");
+
+    static_assert(2 * static_cast<uint64_t>(kMaxInterval) <= TimerMicro::kMaxDelay,
+                  "2 * kMaxInterval exceeds TimerMicro::kMaxDelay");
+
+    bool     valid = false;
+    uint32_t interval;
+
+    VerifyOrExit(Radio::IsChannelValid(GetChannel()));
+
+    interval = GetInterval();
+    VerifyOrExit((interval >= GetDuration()) && (interval <= kMaxInterval));
+
+    if (mStartTime > aNow)
+    {
+        VerifyOrExit(mStartTime - aNow <= kMaxFutureStartOffset);
+    }
+
+    valid = true;
+
+exit:
+    return valid;
+}
+
+Radio::Time64 Listener::Config::DetermineStartTime(Radio::Time64 aNow) const
+{
+    Radio::Time64 start;
+
+    if (mStartTime == 0)
+    {
+        start = aNow;
+    }
+    else if (mStartTime >= aNow)
+    {
+        start = mStartTime;
+    }
+    else
+    {
+        uint64_t interval  = GetInterval();
+        uint64_t remainder = (aNow - mStartTime) % interval;
+
+        start = (remainder == 0) ? aNow : (aNow + (interval - remainder));
+    }
+
+    return start;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -63,12 +107,16 @@ Listener::Listener(Instance &aInstance)
 
 Error Listener::Start(const Config &aConfig)
 {
-    Error error = kErrorNone;
+    Error         error = kErrorNone;
+    Radio::Time64 now;
 
     VerifyOrExit(mState == kStopped, error = kErrorBusy);
-    VerifyOrExit(aConfig.IsValid(), error = kErrorInvalidArgs);
 
-    mTimedRx.Init(Get<Radio::Radio>().GetNow(), aConfig.GetDuration(), aConfig.GetChannel());
+    now = Get<Radio::Radio>().GetNow();
+
+    VerifyOrExit(aConfig.IsValid(now), error = kErrorInvalidArgs);
+
+    mTimedRx.Init(aConfig.DetermineStartTime(now), aConfig.GetDuration(), aConfig.GetChannel());
 
     mState    = kRunning;
     mInterval = aConfig.GetInterval();

@@ -91,14 +91,24 @@ typedef void (*otThreadDirectListenerWakeCallback)(void *aContext);
  * respectively). Specifying a value other than `0` or the specification-mandated default makes the operation
  * non-compliant with the specification and is intended for testing purposes only. Callers SHOULD either leave these
  * fields set to `0` or set them to the corresponding `OT_THREAD_DIRECT_LISTENER_*` constant.
+ *
+ * The `mStartTime` field optionally controls when periodic listening begins (in radio clock `otPlatRadioGetNow()`):
+ * - When `mStartTime` is `0` (recommended for typical use), the first listen window starts immediately when
+ *   `otThreadDirectListenerStart()` is called.
+ * - When `mStartTime` is non-zero, it specifies the start time of the periodic listen windows. If `mStartTime` is in
+ *   the past, it is adjusted forward by adding multiples of the listen interval to determine the upcoming listen
+ *   window start time (at or after the current radio time). If `mStartTime` is in the future, listening waits until
+ *   the radio time reaches `mStartTime`. Future `mStartTime` values MUST NOT exceed 10 minutes ahead of the current
+ *   radio time, otherwise `otThreadDirectListenerStart()` fails with `OT_ERROR_INVALID_ARGS`.
  */
 typedef struct otThreadDirectListenerConfig
 {
     otThreadDirectListenerWakeCallback mWakeCallback;        ///< Callback invoked on Wake reception (can be `NULL`).
     void                              *mWakeCallbackContext; ///< Context pointer passed to `mWakeCallback`.
     uint8_t                            mChannel;             ///< Radio channel (`0` for default).
-    uint32_t                           mInterval; ///< Listen interval in usec (`0` for default, >= `mDuration`).
-    uint32_t                           mDuration; ///< Listen duration in usec (`0` for default).
+    uint32_t                           mInterval;  ///< Listen interval in usec (`0` for default, >= `mDuration`).
+    uint32_t                           mDuration;  ///< Listen duration in usec (`0` for default).
+    otRadioTime64                      mStartTime; ///< Target start radio time (`0` to start immediately).
 } otThreadDirectListenerConfig;
 
 /**

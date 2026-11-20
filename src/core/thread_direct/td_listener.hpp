@@ -80,6 +80,9 @@ public:
         static constexpr uint32_t kDefaultInterval = OT_THREAD_DIRECT_LISTENER_INTERVAL; ///< Default interval (usec).
         static constexpr uint32_t kDefaultDuration = OT_THREAD_DIRECT_LISTENER_DURATION; ///< Default duration (usec).
 
+        static constexpr uint32_t kMaxInterval          = 600 * Time::kOneSecondInUsec; ///< Max interval (usec).
+        static constexpr uint64_t kMaxFutureStartOffset = 600 * Time::kOneSecondInUsec; ///< Max future start (usec).
+
         /**
          * Gets the effective radio channel (returning `kDefaultChannel` if `mChannel` is `0`).
          *
@@ -102,12 +105,30 @@ public:
         uint32_t GetInterval(void) const { return (mInterval == 0) ? kDefaultInterval : mInterval; }
 
         /**
-         * Indicates whether the configuration parameters are valid.
+         * Determines the initial listen window start time relative to @p aNow.
+         *
+         * Returns @p aNow if `mStartTime` is `0`, `mStartTime` if it is in the future, or `mStartTime` adjusted
+         * forward by multiples of the listen interval to the upcoming window at or after @p aNow.
+         *
+         * @param[in] aNow  The current radio time (microseconds).
+         *
+         * @returns The initial listen window start time (microseconds).
+         */
+        Radio::Time64 DetermineStartTime(Radio::Time64 aNow) const;
+
+        /**
+         * Indicates whether the configuration parameters are valid at @p aNow.
+         *
+         * Checks that the effective channel is valid, the effective interval is at least the effective duration and
+         * does not exceed `kMaxInterval`, and any future `mStartTime` (`> aNow`) does not exceed
+         * `aNow + kMaxFutureStartOffset`.
+         *
+         * @param[in] aNow  The current radio time (microseconds).
          *
          * @retval TRUE   The configuration parameters are valid.
          * @retval FALSE  The configuration parameters are invalid.
          */
-        bool IsValid(void) const;
+        bool IsValid(Radio::Time64 aNow) const;
     };
 
     /**
