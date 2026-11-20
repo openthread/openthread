@@ -294,6 +294,22 @@ public:
      */
     void SetBlockParentDowngrade(bool aBlock) { mBlockParentDowngrade = aBlock; }
 
+    /**
+     * Indicates whether the parent is waiting for an MLE Child Update Response from the sleepy child after
+     * completing indirect transmission of an MLE Child Update Request.
+     *
+     * @retval TRUE   The parent is waiting for an MLE Child Update Response from the child.
+     * @retval FALSE  The parent is not waiting for an MLE Child Update Response from the child.
+     */
+    bool IsWaitingForChildUpdateResponse(void) const { return mWaitingForChildUpdateResponse; }
+
+    /**
+     * Sets whether the parent is waiting for an MLE Child Update Response from the sleepy child.
+     *
+     * @param[in] aWaiting  TRUE if waiting for an MLE Child Update Response, FALSE otherwise.
+     */
+    void SetWaitingForChildUpdateResponse(bool aWaiting) { mWaitingForChildUpdateResponse = aWaiting; }
+
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
     /**
@@ -341,7 +357,8 @@ private:
     ChildIp6AddressSet mMlrRegisteredSet;
 #endif
 
-    bool    mBlockParentDowngrade;
+    bool    mBlockParentDowngrade : 1;
+    bool    mWaitingForChildUpdateResponse : 1;
     uint8_t mNetworkDataVersion;
 
     union
