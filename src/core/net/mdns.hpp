@@ -180,9 +180,9 @@ public:
     /**
      * Enables or disables the mDNS module.
      *
-     * mDNS module should be enabled before registration any host, service, or key entries. Disabling mDNS will
-     * immediately stop all operations and any communication (multicast or unicast tx) and remove any previously
-     * registered entries without sending any "goodbye" announcements or invoking their callback. When disabled,
+     * mDNS module should be enabled before registration any host, service, or key entries. Disabling mDNS will send
+     * a single "goodbye" announcement for all registered entries, then immediately stop all operations and any
+     * communication (multicast or unicast tx) and remove the entries without invoking their callback. When disabled,
      * all browsers and resolvers are stopped and all cached information is cleared.
      *
      * @param[in] aEnable       Whether to enable or disable.
@@ -1324,6 +1324,7 @@ private:
         void  Register(const Key &aKey, const Callback &aCallback);
         void  Unregister(const Host &aHost);
         void  Unregister(const Key &aKey);
+        void  StartGoodbye(void);
         void  AnswerQuestion(const AnswerInfo &aInfo);
         void  HandleTimer(EntryContext &aContext);
         void  ClearAppendState(void);
@@ -1394,6 +1395,7 @@ private:
         void  Register(const Key &aKey, const Callback &aCallback);
         void  Unregister(const Service &aService);
         void  Unregister(const Key &aKey);
+        void  StartGoodbye(void);
         void  AnswerServiceNameQuestion(const AnswerInfo &aInfo);
         void  AnswerServiceTypeQuestion(const AnswerInfo &aInfo, const char *aSubLabel);
         bool  ShouldSuppressKnownAnswer(uint32_t aTtl, const char *aSubLabel) const;
@@ -2392,6 +2394,7 @@ private:
     TimeMilli RandomizeFirstProbeTxTime(void);
     TimeMilli RandomizeInitialQueryTxTime(void);
     void      RemoveEmptyEntries(void);
+    void      SendGoodbyeAnnouncements(void);
     void      HandleEntryTimer(void);
     void      HandleEntryTask(void);
     void      HandleCacheTimer(void);

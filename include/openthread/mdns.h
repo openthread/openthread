@@ -160,9 +160,9 @@ typedef struct otMdnsLocalHostAddress
 /**
  * Enables or disables the mDNS module.
  *
- * The mDNS module should be enabled before registration any host, service, or key entries. Disabling mDNS will
- * immediately stop all operations and any communication (multicast or unicast tx) and remove any previously registered
- * entries without sending any "goodbye" announcements or invoking their callback. Once disabled, all currently active
+ * The mDNS module should be enabled before registration any host, service, or key entries. Disabling mDNS will send a
+ * single "goodbye" announcement for all registered entries, then immediately stop all operations and any communication
+ * (multicast or unicast tx) and remove the entries without invoking their callback. Once disabled, all currently active
  * browsers and resolvers are stopped.
  *
  * @param[in] aInstance      The OpenThread instance.
