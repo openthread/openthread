@@ -146,16 +146,13 @@ async def receive_loop(cli_context: dict):
 
 
 def validate_unsolicited_tlv(tlv: TLV):
-    if tlv.type in [
-            TcatTLVType.APPLICATION_DATA_1.value, TcatTLVType.APPLICATION_DATA_2.value,
-            TcatTLVType.APPLICATION_DATA_3.value, TcatTLVType.APPLICATION_DATA_4.value
-    ]:
-        num = tlv.type - TcatTLVType.APPLICATION_DATA_1.value + 1
-        logger.info(f"  - Send Application Data {num} {hex(tlv.type)}")
-    elif tlv.type in [TcatTLVType.RESPONSE_EVENT.value]:
+    if not TcatTLVType.is_unsolicited(tlv.type):
+        logger.error(f"Error: Illegal unsolicited TLV type sent by TCAT Device: {hex(tlv.type)}")
+    elif tlv.type == TcatTLVType.RESPONSE_EVENT.value:
         logger.info(f"  - Response Event {hex(tlv.type)}")
     else:
-        logger.error(f"Error: Illegal unsolicited TLV type sent by TCAT Device: {hex(tlv.type)}")
+        num = tlv.type - TcatTLVType.APPLICATION_DATA_1.value + 1
+        logger.info(f"  - Send Application Data {num} {hex(tlv.type)}")
 
 
 async def get_device_by_args(args) -> BLEDevice | UdpStream | None:
