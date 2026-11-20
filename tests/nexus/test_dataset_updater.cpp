@@ -164,12 +164,50 @@ void TestDatasetUpdater(void)
     VerifyChannel(nexus, 17);
 }
 
+void TestDatasetUpdaterTeardown(void)
+{
+    Core                   nexus;
+    Node                  &leader = nexus.CreateNode();
+    MeshCoP::Dataset::Info datasetInfo;
+    uint16_t               channel;
+
+    leader.SetName("leader");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Form network and tear down with ongoing Dataset update");
+
+    leader.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    VerifyOrQuit(!leader.Get<MeshCoP::DatasetUpdater>().IsUpdateOngoing());
+    leader.Get<MeshCoP::DatasetUpdater>().CancelUpdate();
+
+    channel = (leader.Get<Mac::Mac>().GetPanChannel() == 11) ? 12 : 11;
+
+    datasetInfo.Clear();
+    datasetInfo.Set<MeshCoP::Dataset::kChannel>(channel);
+    SuccessOrQuit(leader.Get<MeshCoP::DatasetUpdater>().RequestUpdate(datasetInfo, nullptr, nullptr));
+    VerifyOrQuit(leader.Get<MeshCoP::DatasetUpdater>().IsUpdateOngoing());
+
+    leader.Get<MeshCoP::DatasetUpdater>().CancelUpdate();
+    VerifyOrQuit(!leader.Get<MeshCoP::DatasetUpdater>().IsUpdateOngoing());
+
+    SuccessOrQuit(leader.Get<MeshCoP::DatasetUpdater>().RequestUpdate(datasetInfo, nullptr, nullptr));
+    VerifyOrQuit(leader.Get<MeshCoP::DatasetUpdater>().IsUpdateOngoing());
+}
+
 } // namespace Nexus
 } // namespace ot
 
 int main(void)
 {
     ot::Nexus::TestDatasetUpdater();
+    ot::Nexus::TestDatasetUpdaterTeardown();
     printf("All tests passed\n");
     return 0;
 }

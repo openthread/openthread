@@ -42,7 +42,6 @@ namespace MeshCoP {
 
 DatasetUpdater::DatasetUpdater(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mDataset(nullptr)
 {
 }
 
@@ -56,11 +55,11 @@ Error DatasetUpdater::RequestUpdate(const Dataset::Info &aDataset, UpdaterCallba
 
 Error DatasetUpdater::RequestUpdate(Dataset &aDataset, UpdaterCallback aCallback, void *aContext)
 {
-    Error     error;
-    Message  *message = nullptr;
-    Dataset   activeDataset;
-    Timestamp activeTimestamp;
-    Timestamp pendingTimestamp;
+    Error             error;
+    OwnedPtr<Message> message;
+    Dataset           activeDataset;
+    Timestamp         activeTimestamp;
+    Timestamp         pendingTimestamp;
 
     error = kErrorInvalidState;
     VerifyOrExit(!Get<Mle::Mle>().IsDisabled());
@@ -102,7 +101,7 @@ Error DatasetUpdater::RequestUpdate(Dataset &aDataset, UpdaterCallback aCallback
     // Store the dataset in an allocated message to track update
     // status and report the outcome via the callback.
 
-    message = Get<MessagePool>().Allocate(Message::kTypeOther);
+    message.Reset(Get<MessagePool>().Allocate(Message::kTypeOther));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->AppendBytes(aDataset.GetBytes(), aDataset.GetLength()));
@@ -110,30 +109,19 @@ Error DatasetUpdater::RequestUpdate(Dataset &aDataset, UpdaterCallback aCallback
     Get<PendingDatasetManager>().SaveLocal(activeDataset);
 
     mCallback.Set(aCallback, aContext);
-    mDataset = message;
+    mDataset = message.PassOwnership();
 
 exit:
-    FreeMessageOnError(message, error);
     return error;
 }
 
-void DatasetUpdater::CancelUpdate(void)
-{
-    VerifyOrExit(IsUpdateOngoing());
-
-    FreeMessage(mDataset);
-    mDataset = nullptr;
-
-exit:
-    return;
-}
+void DatasetUpdater::CancelUpdate(void) { mDataset.Free(); }
 
 void DatasetUpdater::Finish(Error aError)
 {
     VerifyOrExit(IsUpdateOngoing());
 
-    FreeMessage(mDataset);
-    mDataset = nullptr;
+    mDataset.Free();
     mCallback.InvokeIfSet(aError);
 
 exit:
