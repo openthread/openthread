@@ -76,6 +76,18 @@ if(OT_FTD)
     )
     gtest_discover_tests(ot-ftd-gtest)
 
+    add_executable(ot-exit-code-gtest
+        exit_code_test.cpp
+    )
+    target_link_libraries(ot-exit-code-gtest
+        openthread-platform
+        ot-fake-ftd
+        GTest::gtest
+        GTest::gmock
+        GTest::gtest_main
+    )
+    gtest_discover_tests(ot-exit-code-gtest)
+
     add_executable(ot-posix-gtest
         multicast_forwarding_test.cpp
         ${openthread_SOURCE_DIR}/src/posix/platform/multicast_forwarding.cpp
@@ -94,6 +106,41 @@ if(OT_FTD)
     )
 
     gtest_discover_tests(ot-posix-gtest)
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND OT_BORDER_ROUTING AND NOT OT_BORDER_ROUTING_DHCP6_PD_CLIENT)
+        add_executable(ot-posix-infra-if-gtest
+            infra_if_test.cpp
+            ${openthread_SOURCE_DIR}/src/posix/platform/infra_if.cpp
+            ${openthread_SOURCE_DIR}/src/posix/platform/mainloop.cpp
+            ${openthread_SOURCE_DIR}/src/posix/platform/utils.cpp
+        )
+
+        target_compile_definitions(ot-posix-infra-if-gtest PRIVATE
+            OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE=1
+            OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE=0
+        )
+
+        target_include_directories(ot-posix-infra-if-gtest PRIVATE
+            ${openthread_SOURCE_DIR}/src
+            ${openthread_SOURCE_DIR}/src/core
+            ${openthread_SOURCE_DIR}/src/posix/platform
+            ${openthread_SOURCE_DIR}/src/posix/platform/include
+        )
+
+        target_link_libraries(ot-posix-infra-if-gtest
+            openthread-platform
+            ot-config
+            GTest::gtest
+            GTest::gmock
+            GTest::gtest_main
+        )
+
+        target_link_options(ot-posix-infra-if-gtest PRIVATE
+            -Wl,--wrap=sendmsg
+        )
+
+        gtest_discover_tests(ot-posix-infra-if-gtest)
+    endif()
 
     # The BPF tap exists only where BPF does. Its source is compiled under the Backbone Router multicast routing
     # configuration, which the test turns on for itself so that it runs whether or not the build enables the Backbone
@@ -143,6 +190,7 @@ if(OT_RCP)
         radio_spinel_rcp_test.cpp
     )
     target_link_libraries(ot-radio-spinel-rcp-gtest
+        openthread-platform
         ot-fake-rcp
         GTest::gtest
         GTest::gmock

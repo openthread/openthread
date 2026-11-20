@@ -40,6 +40,9 @@
 
 #include <openthread-core-config.h>
 #include <openthread/border_router.h>
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#include <openthread/border_routing.h>
+#endif
 #include <openthread/cli.h>
 #include <openthread/heap.h>
 #include <openthread/tasklet.h>
@@ -67,6 +70,19 @@ otInstance *gInstance = nullptr;
 bool        gDryRun   = false;
 
 CoprocessorType sCoprocessorType = OT_COPROCESSOR_UNKNOWN;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+static void HandleFatalExit(uint8_t aExitCode, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aExitCode);
+    OT_UNUSED_VARIABLE(aContext);
+
+    if (gInstance != nullptr)
+    {
+        IgnoreError(otBorderRoutingSetEnabled(gInstance, false));
+    }
+}
+#endif
 
 static void processStateChange(otChangedFlags aFlags, void *aContext)
 {
@@ -242,6 +258,10 @@ void platformSetUp(otPlatformConfig *aPlatformConfig)
     ot::Posix::InfraNetif::Get().SetUp();
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    otExitSetHandler(HandleFatalExit, nullptr);
+#endif
+
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifSetUp();
 #endif
@@ -326,6 +346,10 @@ void platformTearDown(void)
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifTearDown();
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    otExitSetHandler(nullptr, nullptr);
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE

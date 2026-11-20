@@ -270,6 +270,8 @@ const char *otExitCodeToString(uint8_t aExitCode)
     return "";
 }
 
+void otExitNow(uint8_t aExitCode) { exit(aExitCode); }
+
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
