@@ -216,9 +216,16 @@ void Decoder::Init(Spinel::FrameWritePointer &aFrameWritePointer, FrameHandler a
 
 void Decoder::Reset(void)
 {
+    bool frameInProgress = (mState != kStateNoSync) && (mDecodedLength > 0);
+
     mState         = kStateNoSync;
     mFcs           = 0;
     mDecodedLength = 0;
+
+    if (frameInProgress && (mFrameHandler != nullptr))
+    {
+        mFrameHandler(mContext, OT_ERROR_ABORT);
+    }
 }
 
 void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
@@ -263,11 +270,12 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
                         error = OT_ERROR_NONE;
                     }
 
+                    // Reset state before invoking the handler in case it calls `Reset()`.
+                    mDecodedLength = 0;
+                    mFcs           = kInitFcs;
                     mFrameHandler(mContext, error);
                 }
 
-                mDecodedLength = 0;
-                mFcs           = kInitFcs;
                 break;
 
             default:
@@ -279,8 +287,9 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
                 }
                 else
                 {
+                    mState         = kStateNoSync;
+                    mDecodedLength = 0;
                     mFrameHandler(mContext, OT_ERROR_NO_BUFS);
-                    mState = kStateNoSync;
                 }
 
                 break;
@@ -299,8 +308,9 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
             }
             else
             {
+                mState         = kStateNoSync;
+                mDecodedLength = 0;
                 mFrameHandler(mContext, OT_ERROR_NO_BUFS);
-                mState = kStateNoSync;
             }
 
             break;
