@@ -49,8 +49,7 @@ Error ScanResult::PopulateFromBeacon(const Mac::RxFrame::ParseInfo &aFrameInfo)
     VerifyOrExit(aFrameInfo.mAddrs.mSource.IsExtended(), error = kErrorParse);
     mExtAddress = aFrameInfo.mAddrs.mSource.GetExtended();
 
-    mPanId =
-        aFrameInfo.mPanIds.IsSourcePresent() ? aFrameInfo.mPanIds.GetSource() : aFrameInfo.mPanIds.GetDestination();
+    mPanId = aFrameInfo.mPanIds.GetSourceOr(aFrameInfo.mPanIds.GetDestination());
 
     mChannel = aFrameInfo.GetChannel();
     mRssi    = aFrameInfo.GetRssi();

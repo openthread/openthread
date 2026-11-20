@@ -816,8 +816,8 @@ void Core::ProcessRadioTx(Node &aNode, Radio::Frame &aTxFrame, TxType aTxType)
 
     IgnoreError(txFrameInfo.ParseFrom(aTxFrame, Mac::Frame::kParseFully));
 
-    dstAddr  = txFrameInfo.mAddrs.mDestination;
-    dstPanId = txFrameInfo.mPanIds.IsDestinationPresent() ? txFrameInfo.mPanIds.GetDestination() : Mac::kPanIdBroadcast;
+    dstAddr      = txFrameInfo.mAddrs.mDestination;
+    dstPanId     = txFrameInfo.mPanIds.GetDestinationOr(Mac::kPanIdBroadcast);
     ackRequested = txFrameInfo.mIsAckRequest;
     txError      = ackRequested ? kErrorNoAck : kErrorNone;
 
