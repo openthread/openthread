@@ -785,6 +785,8 @@ openthread_core_files = [
   "thread/vendor_info.hpp",
   "thread/version.cpp",
   "thread/version.hpp",
+  "thread_direct/td_commands.cpp",
+  "thread_direct/td_commands.hpp",
   "thread_direct/td_key_manager.cpp",
   "thread_direct/td_key_manager.hpp",
   "thread_direct/td_listener.cpp",
