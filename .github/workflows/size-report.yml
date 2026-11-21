@@ -29,40 +29,263 @@
 name: Size Report
 
 on:
-  # zizmor: ignore[dangerous-triggers] - {workflow_run is required to comment on PRs from forks and does not execute untrusted code}
+  # zizmor: ignore[dangerous-triggers] - {workflow_run is required to comment on PRs from forks; validates structured JSON and renders the comment itself without executing or republishing untrusted content}
   workflow_run:
     workflows: ["Size Check"]
     types:
       - completed
 
-permissions:
-  contents: read
-  pull-requests: write
+permissions: {}
 
 jobs:
 
   size-report:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
     steps:
+    - name: Check for JSON report artifact
+      id: check-artifact
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+      with:
+        script: |
+          const kMaxArtifactBytes = 131072;
+          const artifacts = await github.paginate(
+            github.rest.actions.listWorkflowRunArtifacts,
+            {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+              name: 'report_pr_json',
+              per_page: 100,
+            }
+          );
+
+          const matchingArtifacts = artifacts
+            .filter((artifact) => artifact.name === 'report_pr_json' && !artifact.expired)
+            .sort((a, b) => b.id - a.id);
+
+          if (matchingArtifacts.length === 0) {
+            core.notice(
+              'Artifact report_pr_json not found; skipping (PR branch may not be rebased onto main yet).'
+            );
+            core.setOutput('has_report_json', 'false');
+            return;
+          }
+
+          const artifact = matchingArtifacts[0];
+          if (
+            typeof artifact.size_in_bytes !== 'number' ||
+            !Number.isFinite(artifact.size_in_bytes) ||
+            artifact.size_in_bytes <= 0 ||
+            artifact.size_in_bytes > kMaxArtifactBytes
+          ) {
+            core.setFailed(
+              `Artifact report_pr_json has invalid size (${artifact.size_in_bytes}; max ${kMaxArtifactBytes} bytes).`
+            );
+            return;
+          }
+
+          core.setOutput('has_report_json', 'true');
+
     - name: Download report
+      if: steps.check-artifact.outputs.has_report_json == 'true'
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: report_pr
+        name: report_pr_json
         path: /tmp/ot-size-report
         run-id: ${{ github.event.workflow_run.id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Post Report
+      if: steps.check-artifact.outputs.has_report_json == 'true'
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
       id: post-report
       with:
         script: |
-          const fs = require('fs')
+          const fs = require('fs');
 
-          const report = fs.readFileSync('/tmp/ot-size-report/report_pr', 'utf8')
+          const kReportPath = '/tmp/ot-size-report/report_pr.json';
+          const kMagicHeader = '<!-- Size Report of **OpenThread** -->';
+          const kMaxReportBytes = 65536;
+          const kMaxNameLength = 64;
+          const kMinFiles = 1;
+          const kMaxFiles = 50;
+          const kMaxLibs = 50;
+          const kMaxSizeValue = 1e9;
+          const kShaRegex = /^[0-9a-f]{8}$/i;
+          const kFileNameRegex = /^ot-[a-z0-9-]+$/;
+          const kLibNameRegex = /^libopenthread-[a-z0-9-]+\.a$/;
+          const kBaseRefRegex = /^[A-Za-z0-9._\/-]+$/;
+          const kTopLevelKeys = new Set(['sha_old', 'sha_new', 'files', 'libs']);
+          const kEntryKeys = new Set(['name', 'old', 'new']);
 
-          let pr_number = context.payload.workflow_run.pull_requests?.[0]?.number
+          function isPlainObject(value) {
+            return typeof value === 'object' && value !== null && !Array.isArray(value);
+          }
+
+          function validateExactKeys(obj, allowedKeys, contextName) {
+            const keys = Object.keys(obj);
+            if (keys.length !== allowedKeys.size) {
+              throw new Error(`${contextName} must have exact keys [${[...allowedKeys].join(', ')}]`);
+            }
+            for (const key of keys) {
+              if (!allowedKeys.has(key)) {
+                throw new Error(`Unexpected key in ${contextName}`);
+              }
+            }
+            for (const key of allowedKeys) {
+              if (!Object.prototype.hasOwnProperty.call(obj, key)) {
+                throw new Error(`Missing required key "${key}" in ${contextName}`);
+              }
+            }
+          }
+
+          function validateSizes(sizes, contextName) {
+            if (!Array.isArray(sizes) || sizes.length !== 4) {
+              throw new Error(`${contextName} must be an array of 4 integers`);
+            }
+            return sizes.map((v, idx) => {
+              if (
+                typeof v !== 'number' ||
+                !Number.isInteger(v) ||
+                Object.is(v, -0) ||
+                v < 0 ||
+                v > kMaxSizeValue
+              ) {
+                throw new Error(`${contextName}[${idx}] must be an integer in [0, ${kMaxSizeValue}]`);
+              }
+              return v;
+            });
+          }
+
+          function validateEntries(entries, nameRegex, minLen, maxLen, sectionName) {
+            if (!Array.isArray(entries)) {
+              throw new Error(`${sectionName} must be an array`);
+            }
+            if (entries.length < minLen || entries.length > maxLen) {
+              throw new Error(`${sectionName} length must be between ${minLen} and ${maxLen}`);
+            }
+            const seenNames = new Set();
+            return entries.map((entry, idx) => {
+              const entryCtx = `${sectionName}[${idx}]`;
+              if (!isPlainObject(entry)) {
+                throw new Error(`${entryCtx} must be an object`);
+              }
+              validateExactKeys(entry, kEntryKeys, entryCtx);
+              if (
+                typeof entry.name !== 'string' ||
+                entry.name.length > kMaxNameLength ||
+                !nameRegex.test(entry.name)
+              ) {
+                throw new Error(`Invalid target name in ${entryCtx}`);
+              }
+              if (seenNames.has(entry.name)) {
+                throw new Error(`Duplicate target name in ${sectionName}`);
+              }
+              seenNames.add(entry.name);
+              return {
+                name: entry.name,
+                old: validateSizes(entry.old, `${entryCtx}.old`),
+                new: validateSizes(entry.new, `${entryCtx}.new`),
+              };
+            });
+          }
+
+          function validateReport(data) {
+            if (!isPlainObject(data)) {
+              throw new Error('Size report JSON root must be an object');
+            }
+            validateExactKeys(data, kTopLevelKeys, 'size report');
+
+            if (typeof data.sha_old !== 'string' || !kShaRegex.test(data.sha_old)) {
+              throw new Error('Invalid sha_old in size report');
+            }
+            if (typeof data.sha_new !== 'string' || !kShaRegex.test(data.sha_new)) {
+              throw new Error('Invalid sha_new in size report');
+            }
+
+            return {
+              sha_old: data.sha_old.toLowerCase(),
+              sha_new: data.sha_new.toLowerCase(),
+              files: validateEntries(data.files, kFileNameRegex, kMinFiles, kMaxFiles, 'files'),
+              libs: validateEntries(data.libs, kLibNameRegex, 0, kMaxLibs, 'libs'),
+            };
+          }
+
+          function formatDiff(diff) {
+            return diff >= 0 ? `+${diff}` : `${diff}`;
+          }
+
+          function renderRows(entries, shaOld, shaNew) {
+            let rows = '';
+            for (const entry of entries) {
+              const diffs = entry.new.map((val, i) => formatDiff(val - entry.old[i]));
+              rows += `| ${entry.name} | ${shaOld} | ${entry.old[0]} | ${entry.old[1]} | ${entry.old[2]} | ${entry.old[3]} |\n`;
+              rows += `|  | ${shaNew} | ${entry.new[0]} | ${entry.new[1]} | ${entry.new[2]} | ${entry.new[3]} |\n`;
+              rows += `|  | +/- | ${diffs[0]} | ${diffs[1]} | ${diffs[2]} | ${diffs[3]} |\n`;
+            }
+            return rows;
+          }
+
+          function renderReport(data, prNumber, baseRef) {
+            const tableHeader =
+              '|  name  |  branch  |  text  | data  | bss  | total |\n' +
+              '| :----: | :------: | -----: | ----: | ---: | ----: |\n';
+            let body = `${kMagicHeader}\n`;
+            body += `> Merging #${prNumber} into ${baseRef}\n\n`;
+            body += tableHeader;
+            body += renderRows(data.files, data.sha_old, data.sha_new);
+            body += '\n<details><summary>Library files</summary>\n\n\n';
+            body += tableHeader;
+            body += renderRows(data.libs, data.sha_old, data.sha_new);
+            body += '</details>';
+            return body;
+          }
+
+          let stat;
+          try {
+            stat = fs.lstatSync(kReportPath);
+          } catch (error) {
+            core.setFailed(`Failed to stat size report JSON: ${error.message}`);
+            return;
+          }
+
+          if (!stat.isFile()) {
+            core.setFailed('Size report JSON path is not a regular file.');
+            return;
+          }
+
+          if (stat.size > kMaxReportBytes) {
+            core.setFailed(
+              `Size report JSON exceeds maximum allowed size (${stat.size} > ${kMaxReportBytes} bytes).`
+            );
+            return;
+          }
+
+          const rawBytes = fs.readFileSync(kReportPath);
+          if (rawBytes.length > kMaxReportBytes) {
+            core.setFailed(
+              `Size report JSON exceeds maximum allowed size (${rawBytes.length} > ${kMaxReportBytes} bytes).`
+            );
+            return;
+          }
+
+          let validatedReport;
+          try {
+            const parsed = JSON.parse(rawBytes.toString('utf8'));
+            validatedReport = validateReport(parsed);
+          } catch (error) {
+            core.setFailed(`Invalid size report JSON: ${error.message}`);
+            return;
+          }
+
+          const payloadPr = context.payload.workflow_run.pull_requests?.[0];
+          let pr_number = payloadPr?.number;
+          let base_ref = payloadPr?.base?.ref;
 
           if (!pr_number) {
             const head_repo = context.payload.workflow_run.head_repository?.full_name;
@@ -70,62 +293,103 @@ jobs:
               core.setFailed('Head repository not found in workflow run context payload.');
               return;
             }
-            const [owner, repo] = head_repo.split('/')
+            const [owner, repo, ...extra] = head_repo.split('/');
+            if (!owner || !repo || extra.length > 0) {
+              core.setFailed('Invalid head repository name in workflow run context payload.');
+              return;
+            }
+            const head_branch = context.payload.workflow_run.head_branch;
             try {
               const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
                 owner,
                 repo,
                 commit_sha: context.payload.workflow_run.head_sha,
-              })
-              const base_full_name = `${context.repo.owner}/${context.repo.repo}`
-              const pr = prs?.find(pr => pr.base.repo.full_name === base_full_name && pr.state === 'open') ||
-                         prs?.find(pr => pr.base.repo.full_name === base_full_name);
+              });
+              const base_full_name = `${context.repo.owner}/${context.repo.repo}`.toLowerCase();
+              const head_full_name = head_repo.toLowerCase();
+              const matchingPrs = (prs || []).filter(
+                (p) =>
+                  p.base?.repo?.full_name?.toLowerCase() === base_full_name &&
+                  p.head?.repo?.full_name?.toLowerCase() === head_full_name
+              );
+              const pr =
+                (head_branch && matchingPrs.find((p) => p.head?.ref === head_branch && p.state === 'open')) ||
+                (head_branch && matchingPrs.find((p) => p.head?.ref === head_branch)) ||
+                matchingPrs.find((p) => p.state === 'open') ||
+                matchingPrs[0];
               if (pr) {
-                pr_number = pr.number
+                pr_number = pr.number;
+                base_ref = pr.base?.ref;
               }
             } catch (error) {
-              core.info(`Failed to list PRs for commit ${context.payload.workflow_run.head_sha}: ${error.message}`)
+              core.info(`Failed to list PRs for commit ${context.payload.workflow_run.head_sha}: ${error.message}`);
             }
 
-            const head_branch = context.payload.workflow_run.head_branch
             if (!pr_number && head_branch) {
               const { data: prs } = await github.rest.pulls.list({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 head: `${owner}:${head_branch}`,
                 state: 'all',
-              })
-              const pr = prs?.find(pr => pr.state === 'open') || prs?.[0]
+              });
+              const pr = prs?.find((p) => p.state === 'open') || prs?.[0];
               if (pr) {
-                pr_number = pr.number
+                pr_number = pr.number;
+                base_ref = pr.base?.ref;
               }
             }
           }
 
-          if (!pr_number) {
-            core.setFailed('Could not determine PR number for workflow run')
-            return
+          if (!Number.isInteger(pr_number) || pr_number <= 0) {
+            core.setFailed('Could not determine PR number for workflow run');
+            return;
           }
 
-          const params = {
-              issue_number: pr_number,
+          if (!base_ref) {
+            const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: report,
+              pull_number: pr_number,
+            });
+            base_ref = pr?.base?.ref;
           }
 
-          const response = await github.rest.issues.listComments({
+          if (
+            typeof base_ref !== 'string' ||
+            base_ref.length === 0 ||
+            base_ref.length > 256 ||
+            !kBaseRefRegex.test(base_ref)
+          ) {
+            core.setFailed('Could not determine a valid base branch ref for pull request');
+            return;
+          }
+
+          const report = renderReport(validatedReport, pr_number, base_ref);
+
+          const params = {
             issue_number: pr_number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-          })
+            body: report,
+          };
 
-          const kMagicHeader = '<!-- Size Report of **OpenThread** -->'
-          const comment = response.data.find(comment => comment.body.startsWith(kMagicHeader))
+          const comments = await github.paginate(github.rest.issues.listComments, {
+            issue_number: pr_number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100,
+          });
+
+          const comment = comments.find(
+            (c) =>
+              c.user?.login === 'github-actions[bot]' &&
+              typeof c.body === 'string' &&
+              c.body.startsWith(kMagicHeader)
+          );
 
           if (comment) {
             params.comment_id = comment.id;
-            await github.rest.issues.updateComment(params)
+            await github.rest.issues.updateComment(params);
           } else {
-            await github.rest.issues.createComment(params)
+            await github.rest.issues.createComment(params);
           }

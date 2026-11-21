@@ -44,6 +44,9 @@ readonly OT_REPORT_FILE_TABLE
 OT_REPORT_FILE_PR="${OT_TMP_DIR}/report_pr"
 readonly OT_REPORT_FILE_PR
 
+OT_REPORT_FILE_JSON="${OT_TMP_DIR}/report_pr.json"
+readonly OT_REPORT_FILE_JSON
+
 PR_NUMBER="${PR_NUMBER:-}"
 
 export PATH=/var/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
@@ -208,6 +211,10 @@ generate_size_diff()
     local name
     local old_file
     local new_file
+    local table_report_file
+    local pr_report_file
+    local json_report_file
+    local json_name
 
     old_file="$1"
     new_file="$2"
@@ -217,11 +224,13 @@ generate_size_diff()
     case "${name}" in
         lib*)
             table_report_file="${OT_REPORT_FILE_TABLE}_libs"
-            pr_report_file="${OT_REPORT_FILE_PR}"_libs
+            pr_report_file="${OT_REPORT_FILE_PR}_libs"
+            json_report_file="${OT_REPORT_FILE_JSON}_libs"
             ;;
         *)
             table_report_file="${OT_REPORT_FILE_TABLE}"
             pr_report_file="${OT_REPORT_FILE_PR}"
+            json_report_file="${OT_REPORT_FILE_JSON}_files"
             ;;
     esac
 
@@ -270,6 +279,17 @@ generate_size_diff()
         printf "| %+d | %+d | %+d | %+d |" "${size_diff[0]}" "${size_diff[1]}" "${size_diff[2]}" "${size_diff[3]}"
         printf "\n"
     } >>"${pr_report_file}"
+
+    # Generate JSON format entry
+
+    json_name="${name//\\/\\\\}"
+    json_name="${json_name//\"/\\\"}"
+
+    printf '{"name":"%s","old":[%u,%u,%u,%u],"new":[%u,%u,%u,%u]}\n' \
+        "${json_name}" \
+        "${size_old[0]}" "${size_old[1]}" "${size_old[2]}" "${size_old[3]}" \
+        "${size_new[0]}" "${size_new[1]}" "${size_new[2]}" "${size_new[3]}" \
+        >>"${json_report_file}"
 }
 
 generate_report()
@@ -299,13 +319,50 @@ generate_report()
     done
 }
 
+write_json_entries()
+{
+    local file="$1"
+    local first=1
+    local line
+
+    if [[ ! -f ${file} ]]; then
+        return 0
+    fi
+
+    while IFS= read -r line; do
+        if [[ ${first} -eq 1 ]]; then
+            first=0
+        else
+            printf ',\n'
+        fi
+        printf '    %s' "${line}"
+    done <"${file}"
+
+    if [[ ${first} -eq 0 ]]; then
+        printf '\n'
+    fi
+}
+
 finalize_report()
 {
     cat "${OT_REPORT_FILE_TABLE}"
     cat "${OT_REPORT_FILE_TABLE}_libs"
 
-    printf "</details>" >>${OT_REPORT_FILE_PR}_libs
-    cat "${OT_REPORT_FILE_PR}_libs" >>${OT_REPORT_FILE_PR}
+    printf "</details>" >>"${OT_REPORT_FILE_PR}_libs"
+    cat "${OT_REPORT_FILE_PR}_libs" >>"${OT_REPORT_FILE_PR}"
+
+    {
+        printf '{\n'
+        printf '  "sha_old": "%s",\n' "${OT_SHA_OLD:0:8}"
+        printf '  "sha_new": "%s",\n' "${OT_SHA_NEW:0:8}"
+        printf '  "files": [\n'
+        write_json_entries "${OT_REPORT_FILE_JSON}_files"
+        printf '  ],\n'
+        printf '  "libs": [\n'
+        write_json_entries "${OT_REPORT_FILE_JSON}_libs"
+        printf '  ]\n'
+        printf '}\n'
+    } >"${OT_REPORT_FILE_JSON}"
 }
 
 size_nrf52840()
@@ -313,7 +370,9 @@ size_nrf52840()
     export OT_SHA_NEW OT_SHA_OLD
 
     mkdir -p "${OT_TMP_DIR}"
-    rm -rf "${OT_REPORT_FILE_TABLE}" "${OT_REPORT_FILE_TABLE}_libs" "${OT_REPORT_FILE_PR}" "${OT_REPORT_FILE_PR}_libs"
+    rm -rf "${OT_REPORT_FILE_TABLE}" "${OT_REPORT_FILE_TABLE}_libs" \
+        "${OT_REPORT_FILE_PR}" "${OT_REPORT_FILE_PR}_libs" \
+        "${OT_REPORT_FILE_JSON}" "${OT_REPORT_FILE_JSON}_files" "${OT_REPORT_FILE_JSON}_libs"
 
     if [[ "${GITHUB_ACTIONS+x}" ]] && [[ -n ${OT_SHA_OLD} ]] && ! git cat-file -e "${OT_SHA_OLD}^{commit}" 2>/dev/null; then
         git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
