@@ -40,7 +40,7 @@ namespace Ip6 {
 
 RegisterLogModule("Ip6");
 
-const uint8_t Ip6::kForwardIcmpTypes[] = {
+const uint8_t Ip6::kAllowedIcmpTypes[] = {
     Icmp6Header::kTypeDstUnreach,       Icmp6Header::kTypePacketToBig, Icmp6Header::kTypeTimeExceeded,
     Icmp6Header::kTypeParameterProblem, Icmp6Header::kTypeEchoRequest, Icmp6Header::kTypeEchoReply,
 };
@@ -392,7 +392,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     uint8_t  dscp;
     uint16_t payloadLength = aMessage.GetLength();
 
-    SuccessOrExit(error = ApplyTmfAndMdnsFilters(aMessage, aIpProto));
+    SuccessOrExit(error = ApplyUpperLayerFilters(aMessage, aIpProto));
 
     if ((aIpProto == kProtoUdp) &&
         Get<Tmf::Agent>().IsTmfMessage(aMessageInfo.GetSockAddr(), aMessageInfo.GetPeerAddr(),
@@ -974,9 +974,10 @@ exit:
     return hasTunnel;
 }
 
-Error Ip6::ApplyTmfAndMdnsFilters(const Message &aMessage, uint8_t aNextHeader) const
+Error Ip6::ApplyUpperLayerFilters(const Message &aMessage, uint8_t aNextHeader) const
 {
-    // Drops mDNS messages (UDP datagrams with source or destination
+    // Drops ICMPv6 messages whose type is not in `kAllowedIcmpTypes`
+    // and mDNS messages (UDP datagrams with source or destination
     // port 5353) from any origin, and TMF messages (UDP datagrams to
     // the TMF port) from a host-untrusted origin. Returns `kErrorDrop`
     // for a dropped message, `kErrorParse` if its upper-layer header
@@ -994,6 +995,7 @@ Error Ip6::ApplyTmfAndMdnsFilters(const Message &aMessage, uint8_t aNextHeader) 
     Error       error = kErrorNone;
     OffsetRange offsetRange;
     UdpHeader   udpHeader;
+    uint8_t     icmpType;
 
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
     SuccessOrExit(error = ResolveUpperLayerProtocol(aMessage, aNextHeader, offsetRange));
@@ -1006,6 +1008,22 @@ Error Ip6::ApplyTmfAndMdnsFilters(const Message &aMessage, uint8_t aNextHeader) 
         SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, header));
         aNextHeader = header.GetNextHeader();
         SuccessOrExit(error = ResolveUpperLayerProtocol(aMessage, aNextHeader, offsetRange));
+    }
+
+    if (aNextHeader == kProtoIcmp6)
+    {
+        Icmp6Header icmpHeader;
+
+        SuccessOrExit(error = aMessage.Read(offsetRange, icmpHeader));
+        icmpType = icmpHeader.GetType();
+
+        if (!DoesArrayContain(kAllowedIcmpTypes, icmpType))
+        {
+            LogInfo("Dropping ICMPv6 message, type:%u", icmpType);
+            error = kErrorDrop;
+        }
+
+        ExitNow();
     }
 
     VerifyOrExit(aNextHeader == kProtoUdp);
@@ -1459,11 +1477,11 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
 
     aMessagePtr->SetOffset(sizeof(header));
 
-    // Drop mDNS messages and untrusted TMF messages before processing
-    // extension headers, where an MPL option would buffer a copy for
-    // retransmission.
+    // Drop disallowed ICMPv6, mDNS, and untrusted TMF messages before
+    // processing extension headers, where an MPL option would buffer a
+    // copy for retransmission, and before passing to the host.
 
-    SuccessOrExit(error = ApplyTmfAndMdnsFilters(*aMessagePtr, header.GetNextHeader()));
+    SuccessOrExit(error = ApplyUpperLayerFilters(*aMessagePtr, header.GetNextHeader()));
 
     // Process IPv6 Extension Headers
     nextHeader = header.GetNextHeader();
@@ -1506,8 +1524,6 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
 
     if (forwardThread)
     {
-        OffsetRange upperOffsetRange;
-
         if (aMessagePtr->IsOriginThreadNetif())
         {
             VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
@@ -1518,21 +1534,9 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
 
         aMessagePtr->Write<uint8_t>(Header::kHopLimitFieldOffset, header.GetHopLimit());
 
-        // Resolve any extension headers left unprocessed on the
-        // forward path so the check below applies to the final
-        // upper-layer protocol.
-
-        upperOffsetRange.InitFromMessageOffsetToEnd(*aMessagePtr);
-        SuccessOrExit(error = ResolveUpperLayerProtocol(*aMessagePtr, nextHeader, upperOffsetRange));
-
-        if (nextHeader == kProtoIcmp6)
-        {
-            uint8_t icmpType;
-
-            SuccessOrExit(error = aMessagePtr->Read(upperOffsetRange, icmpType));
-
-            VerifyOrExit(DoesArrayContain(kForwardIcmpTypes, icmpType), error = kErrorDrop);
-        }
+        // The message is forwarded, so the result of passing it to
+        // the host or receiving it locally is not reported.
+        error = kErrorNone;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // Since the message will be forwarded, we clear the radio

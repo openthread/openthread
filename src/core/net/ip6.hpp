@@ -155,8 +155,8 @@ public:
      *
      * @retval kErrorNone     Successfully enqueued the message into an output interface.
      * @retval kErrorNoBufs   Insufficient available buffer to add the IPv6 headers.
-     * @retval kErrorDrop     The message is an mDNS message or a TMF message from an untrusted origin and was not
-     *                        sent.
+     * @retval kErrorDrop     The message is a disallowed ICMPv6 message, an mDNS message, or a TMF message from an
+     *                        untrusted origin and was not sent.
      */
     Error SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
 
@@ -370,7 +370,7 @@ private:
                                  bool              &aForwardHost);
     Error ResolveUpperLayerProtocol(const Message &aMessage, uint8_t &aNextHeader, OffsetRange &aOffsetRange) const;
     bool  HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const;
-    Error ApplyTmfAndMdnsFilters(const Message &aMessage, uint8_t aNextHeader) const;
+    Error ApplyUpperLayerFilters(const Message &aMessage, uint8_t aNextHeader) const;
     Error HandleFragment(Message &aMessage, bool &aReceive, bool &aForwardHost);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
@@ -393,7 +393,7 @@ private:
     void UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound);
 #endif
 
-    static const uint8_t kForwardIcmpTypes[];
+    static const uint8_t kAllowedIcmpTypes[];
 
     using SendQueueTask = TaskletIn<Ip6, &Ip6::HandleSendQueue>;
 
