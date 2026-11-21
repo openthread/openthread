@@ -102,13 +102,24 @@ typedef struct otThreadDirectListenerConfig
 } otThreadDirectListenerConfig;
 
 /**
- * Represents information about a received Thread Direct Wake frame.
+ * Represents information about a received Thread Direct Wake Command frame.
+ *
+ * `mPanId` indicates the Destination PAN ID from the received Wake Command frame if present in the MAC header (when
+ * present, it is verified on reception against the device's configured PAN ID). If the Destination PAN ID was omitted
+ * in the Wake Command frame, `mPanId` is set to `OT_PANID_BROADCAST` (`0xffff`). Note that a present Destination PAN
+ * ID may itself be `OT_PANID_BROADCAST`.
+ *
+ * `mIsUnicast` is `TRUE` if the received Wake Command frame included a unicast destination MAC address matching this
+ * device, and `FALSE` if the destination address was broadcast or omitted.
  */
 typedef struct otThreadDirectListenerWakeInfo
 {
-    otExtAddress       mPeerAddress; ///< The Extended MAC Address of the Wake Initiator peer.
+    otRadioTime64      mRxTimestamp; ///< The rx timestamp (in radio clock time) when Wake Command was received.
+    otExtAddress       mExtAddress;  ///< The Extended MAC Address of the Wake Initiator (sender of Wake frame).
     otThreadDirectKey *mKey;         ///< The registered `otThreadDirectKey` that authenticated the Wake frame.
-    uint8_t            mLinkChannel; ///< The radio channel indicated for establishing the Thread Direct Link.
+    uint8_t            mLinkChannel; ///< The radio channel indicated in Wake for establishing the Thread Direct Link.
+    otPanId            mPanId;       ///< The PAN ID in the received Wake command (may be `OT_PANID_BROADCAST`).
+    bool               mIsUnicast;   ///< `TRUE` if the Wake frame was unicast to this device, `FALSE` otherwise.
 } otThreadDirectListenerWakeInfo;
 
 /**
