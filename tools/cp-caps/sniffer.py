@@ -46,7 +46,9 @@ class SniffedFrame:
     """Represents a frame captured by the sniffer.
 
     Attributes:
-      timestamp_us: The receive timestamp in microseconds, taken by the sniffer radio (end of SFD).
+      timestamp_us: The receive timestamp in microseconds, taken by the sniffer radio (end of SFD). `ot-extcap` maps
+          the radio clock to the Unix epoch with a constant offset, so the timing between frames is as measured by the
+          sniffer radio.
       channel: The channel the frame was received on.
       psdu: The PSDU of the frame in hex, including the FCS.
     """
@@ -73,14 +75,25 @@ class Sniffer(object):
         self.__proc: Optional[subprocess.Popen] = None
         self.__log: Optional[IO[bytes]] = None
         self.__pcapng_path: Optional[str] = None
+        self.__keep_pcapng = False
 
-    def start(self, channel: int):
-        """Starts capturing frames on the channel."""
+    def start(self, channel: int, pcapng_path: Optional[str] = None):
+        """Starts capturing frames on the channel.
+
+        :param channel: The channel to capture frames on.
+        :param pcapng_path: The path of the PCAPNG file to keep the capture in, or None to capture in a temporary file
+            which is removed when the capture stops.
+        """
         if self.__proc is not None:
             raise RuntimeError('The sniffer is already capturing')
 
-        fd, self.__pcapng_path = tempfile.mkstemp(prefix='cp-caps-sniffer-', suffix='.pcapng')
-        os.close(fd)
+        self.__keep_pcapng = pcapng_path is not None
+
+        if self.__keep_pcapng:
+            self.__pcapng_path = pcapng_path
+        else:
+            fd, self.__pcapng_path = tempfile.mkstemp(prefix='cp-caps-sniffer-', suffix='.pcapng')
+            os.close(fd)
 
         args = [
             self.__extcap, '--capture', '--extcap-interface', 'spinel_radio_url', '--radio-url', self.__radio_url,
@@ -167,7 +180,8 @@ class Sniffer(object):
 
     def __remove_pcapng(self):
         if self.__pcapng_path is not None:
-            os.remove(self.__pcapng_path)
+            if not self.__keep_pcapng:
+                os.remove(self.__pcapng_path)
             self.__pcapng_path = None
 
     @staticmethod
