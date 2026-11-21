@@ -491,6 +491,15 @@ public:
     PanId GetSource(void) const { return mSource; }
 
     /**
+     * Gets the source PAN ID when it is present, or a given default PAN ID otherwise.
+     *
+     * @param[in] aDefault  The default PAN ID to return if source PAN ID is not present.
+     *
+     * @returns The source PAN ID if present, or @p aDefault otherwise.
+     */
+    PanId GetSourceOr(PanId aDefault) const { return mIsSourcePresent ? mSource : aDefault; }
+
+    /**
      * Indicates whether or not destination PAN ID is present.
      *
      * @retval TRUE   The destination PAN ID is present.
@@ -506,6 +515,15 @@ public:
     PanId GetDestination(void) const { return mDestination; }
 
     /**
+     * Gets the destination PAN ID when it is present, or a given default PAN ID otherwise.
+     *
+     * @param[in] aDefault  The default PAN ID to return if destination PAN ID is not present.
+     *
+     * @returns The destination PAN ID if present, or @p aDefault otherwise.
+     */
+    PanId GetDestinationOr(PanId aDefault) const { return mIsDestinationPresent ? mDestination : aDefault; }
+
+    /**
      * Sets the source PAN ID.
      *
      * @param[in] aPanId  The source PAN ID.
@@ -515,7 +533,7 @@ public:
     /**
      * Sets the destination PAN ID.
      *
-     * @param[in] aPanId  The source PAN ID.
+     * @param[in] aPanId  The destination PAN ID.
      */
     void SetDestination(PanId aPanId);
 

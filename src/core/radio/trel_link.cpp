@@ -178,14 +178,7 @@ void Link::BeginTransmit(void)
         }
     }
 
-    if (txFrameInfo.mPanIds.IsDestinationPresent())
-    {
-        destPanId = txFrameInfo.mPanIds.GetDestination();
-    }
-    else
-    {
-        destPanId = Mac::kPanIdBroadcast;
-    }
+    destPanId = txFrameInfo.mPanIds.GetDestinationOr(Mac::kPanIdBroadcast);
 
     txPacket.Init(type, mTxFrame.GetPsdu(), mTxFrame.GetLength());
 
