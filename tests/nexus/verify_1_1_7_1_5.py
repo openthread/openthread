@@ -76,6 +76,11 @@ def verify(pv):
     # - Description: Topology Ensure topology is formed correctly.
     # - Pass Criteria: N/A
     print("Step 1: All")
+    pkt = pkts.filter_wpan_src64(LEADER).\
+      filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+      filter(lambda p: p.mle.tlv.leader_data.data_version is not nullField).\
+      must_next()
+    initial_data_version = pkt.mle.tlv.leader_data.data_version
 
     # Step 2: Router_1 (DUT)
     # - Description: User configures the DUT with the following On-Mesh Prefix Set:
@@ -125,7 +130,8 @@ def verify(pv):
     pkts.copy().\
       filter_wpan_src64(LEADER).\
       filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-      filter(lambda p: p.mle.tlv.leader_data.data_version > 0).\
+      filter(lambda p: p.mle.tlv.leader_data.data_version is not nullField and
+                       p.mle.tlv.leader_data.data_version != initial_data_version).\
       must_next()
 
     # Step 5: Router_1 (DUT)
