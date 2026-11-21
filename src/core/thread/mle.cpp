@@ -49,6 +49,9 @@ const otMeshLocalPrefix Mle::kMeshLocalPrefixInit = {
 
 Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    , mFastAttachEnabled(false)
+#endif
     , mRetrieveNewNetworkData(false)
     , mRequestRouteTlv(false)
     , mHasRestored(false)
@@ -346,6 +349,16 @@ void Mle::SetRole(DeviceRole aRole)
     UpdateCsl();
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    // Fast Attach stays in effect for all attach attempts until the
+    // device attaches, so clear it once attached by any path (Child ID
+    // Response, becoming Leader, or role restore).
+    if (IsAttached())
+    {
+        mFastAttachEnabled = false;
+    }
+#endif
+
 exit:
     return;
 }
@@ -563,6 +576,19 @@ exit:
 bool Mle::IsAttached(void) const { return (IsChild() || IsRouter() || IsLeader()); }
 
 bool Mle::IsRouterOrLeader(void) const { return (IsRouter() || IsLeader()); }
+
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+Error Mle::SetFastAttachEnabled(bool aEnabled)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!aEnabled || !IsAttached(), error = kErrorInvalidState);
+    mFastAttachEnabled = aEnabled;
+
+exit:
+    return error;
+}
+#endif
 
 void Mle::SetStateDetached(void)
 {
@@ -4672,6 +4698,19 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+bool Mle::Attacher::ShouldUseFastAttach(void) const
+{
+    // Fast Attach applies only to initial attach attempts. It is not
+    // used for opportunistic scans while attached (`kBetterPartition`
+    // / `kBetterParent`), which should wait for all responses and
+    // pick the best parent.
+
+    return Get<Mle>().mFastAttachEnabled && !Get<Mle>().IsAttached() && (mMode != kBetterPartition) &&
+           (mMode != kBetterParent);
+}
+#endif
+
 uint32_t Mle::Attacher::GetStartDelay(void) const
 {
     uint32_t delay = 1;
@@ -4681,6 +4720,9 @@ uint32_t Mle::Attacher::GetStartDelay(void) const
 
     if (mAttachCounter == 0)
     {
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+        VerifyOrExit(!ShouldUseFastAttach());
+#endif
         delay = Get<Mle>().GenerateRandomDelay(kParentRequestRouterTimeout);
         ExitNow();
     }
@@ -5067,6 +5109,13 @@ void Mle::Attacher::SendParentRequest(ParentRequestType aType)
         scanMask = ScanMaskTlv::kRouterFlag | ScanMaskTlv::kEndDeviceFlag;
         break;
     }
+
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    if (ShouldUseFastAttach())
+    {
+        scanMask |= ScanMaskTlv::kFastAttachFlag;
+    }
+#endif
 
     VerifyOrExit((message = Get<Mle>().NewMleMessage(kCommandParentRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendModeTlv());
@@ -5488,6 +5537,16 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.mConnectivity = connectivity;
     mParentCandidate.mLeaderData   = leaderData;
     mParentCandidate.mLinkMargin   = twoWayLinkMargin;
+
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    // Early-select only on an LQ3 candidate, so that a weaker REED
+    // response cannot win a random race against better parents.
+    if (ShouldUseFastAttach() && mState == kStateParentRequest &&
+        mParentCandidate.GetTwoWayLinkQuality() == kLinkQuality3 && HasAcceptableParentCandidate())
+    {
+        mTimer.Start(0);
+    }
+#endif
 
 exit:
     LogProcessError(kTypeParentResponse, error);

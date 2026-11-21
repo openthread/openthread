@@ -42,6 +42,13 @@ expect -re {Stable Data Version: \d+}
 expect -re {Leader Router ID: \d+}
 expect_line "Done"
 
+# MLE Fast Attach cannot be enabled while attached (node is Leader here)
+send "mle fastattach enable\n"
+expect_line "Error 13: InvalidState"
+send "mle fastattach\n"
+expect "Disabled"
+expect_line "Done"
+
 send "help\n"
 expect_line "Done"
 
@@ -199,5 +206,20 @@ expect_line "fd00:dead:beef:cafe::/64"
 
 send "invalidcommand\n"
 expect_line "Error 35: InvalidCommand"
+
+# MLE Fast Attach (node is disabled here, so it can be enabled)
+send "mle fastattach\n"
+expect "Disabled"
+expect_line "Done"
+send "mle fastattach enable\n"
+expect_line "Done"
+send "mle fastattach\n"
+expect "Enabled"
+expect_line "Done"
+send "mle fastattach disable\n"
+expect_line "Done"
+send "mle fastattach\n"
+expect "Disabled"
+expect_line "Done"
 
 dispose_all
