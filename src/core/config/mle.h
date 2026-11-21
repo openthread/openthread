@@ -287,10 +287,16 @@
 /**
  * @def OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
  *
- * Define as 1 for a child to inform its previous parent when it attaches to a new parent.
+ * Define as 1 for a child to inform its previous parent when it attaches to a new parent, so that the previous parent
+ * removes its child entry instead of keeping it until the child timeout.
  *
- * If this feature is enabled, when a device attaches to a new parent, it will send an IP message (with empty payload
- * and mesh-local IP address as the source address) to its previous parent.
+ * How the child informs its previous parent depends on its device type:
+ *
+ * - An MTD child sends an IP message (with empty payload and mesh-local IP address as the source address) to its
+ *   previous parent. The previous parent matches this message to its child entry using the addresses the child
+ *   registered with it.
+ * - An FTD child does not register its addresses, so it sends its previous parent an MLE Child Update Request with a
+ *   zero timeout. The previous parent removes the child entry on its next time tick.
  */
 #ifndef OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 #define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH 1

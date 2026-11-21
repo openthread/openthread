@@ -3102,6 +3102,37 @@ exit:
     FreeMessageOnError(message, error);
 }
 
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
+void Mle::SendChildUpdateRequestToPreviousParent(void)
+{
+    // Used by an FTD child, since it does not register its addresses. The zero timeout makes the previous parent
+    // remove the child entry on its next time tick.
+
+    Error        error   = kErrorNone;
+    TxMessage   *message = nullptr;
+    Ip6::Address destination;
+
+    // The RLOC16 does not tell whether the parent changed. A different parent can have the same RLOC16 (e.g., after a
+    // partition merge), and the same parent can get a new RLOC16 when it gets a different Router ID. In the latter case
+    // the previous parent is the current parent, which must not remove the child.
+    VerifyOrExit(mPreviousParentExtAddress != mParent.GetExtAddress());
+
+    VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
+    SuccessOrExit(error = message->AppendModeTlv());
+    SuccessOrExit(error = message->AppendSourceAddressAndLeaderDataTlvs());
+    SuccessOrExit(error = message->AppendTimeoutTlv(0));
+
+    destination.InitAsLinkLocalAddress(mPreviousParentExtAddress);
+    SuccessOrExit(error = message->SendTo(destination));
+
+    LogNote("Sending Child Update Request to inform previous parent 0x%04x", mPreviousParentRloc);
+
+exit:
+    LogWarnOnError(error, "send Child Update Request to previous parent");
+    FreeMessageOnError(message, error);
+}
+#endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
+
 void Mle::SendMulticastDataResponse(void)
 {
     TlvList tlvList;
