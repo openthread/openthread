@@ -302,6 +302,10 @@ void TestMacHeader(void)
         VerifyOrQuit(buildInfo.mAddrs.mDestination.IsNone());
         VerifyOrQuit(!buildInfo.mPanIds.IsSourcePresent());
         VerifyOrQuit(!buildInfo.mPanIds.IsDestinationPresent());
+        VerifyOrQuit(buildInfo.mPanIds.GetSourceOr(Mac::kPanIdBroadcast) == Mac::kPanIdBroadcast);
+        VerifyOrQuit(buildInfo.mPanIds.GetSourceOr(kPanId1) == kPanId1);
+        VerifyOrQuit(buildInfo.mPanIds.GetDestinationOr(Mac::kPanIdBroadcast) == Mac::kPanIdBroadcast);
+        VerifyOrQuit(buildInfo.mPanIds.GetDestinationOr(kPanId2) == kPanId2);
 
         switch (testCase.mSrcAddrType)
         {
@@ -381,18 +385,28 @@ void TestMacHeader(void)
         if (testCase.mDstPanIdMode == kNoPanId)
         {
             VerifyOrQuit(!parseInfo.mPanIds.IsDestinationPresent());
+            VerifyOrQuit(parseInfo.mPanIds.GetDestinationOr(Mac::kPanIdBroadcast) == Mac::kPanIdBroadcast);
+            VerifyOrQuit(parseInfo.mPanIds.GetDestinationOr(kPanId1) == kPanId1);
         }
         else
         {
             VerifyOrQuit(parseInfo.mPanIds.IsDestinationPresent());
             VerifyOrQuit(parseInfo.mPanIds.GetDestination() == buildInfo.mPanIds.GetDestination());
+            VerifyOrQuit(parseInfo.mPanIds.GetDestinationOr(Mac::kPanIdBroadcast) ==
+                         buildInfo.mPanIds.GetDestination());
             VerifyOrQuit(buildInfo.mPanIds.IsDestinationPresent());
         }
 
         if (parseInfo.mPanIds.IsSourcePresent())
         {
             VerifyOrQuit(parseInfo.mPanIds.GetSource() == buildInfo.mPanIds.GetSource());
+            VerifyOrQuit(parseInfo.mPanIds.GetSourceOr(Mac::kPanIdBroadcast) == buildInfo.mPanIds.GetSource());
             VerifyOrQuit(buildInfo.mPanIds.IsSourcePresent());
+        }
+        else
+        {
+            VerifyOrQuit(parseInfo.mPanIds.GetSourceOr(Mac::kPanIdBroadcast) == Mac::kPanIdBroadcast);
+            VerifyOrQuit(parseInfo.mPanIds.GetSourceOr(kPanId2) == kPanId2);
         }
 
         if (parseInfo.mIsSecurityEnabled)

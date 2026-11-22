@@ -43,29 +43,8 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame::ParseInfo &aFrameInfo)
 {
     Clear();
 
-    if (aFrameInfo.mPanIds.IsSourcePresent())
-    {
-        mPanId = aFrameInfo.mPanIds.GetSource();
-    }
-    else
-    {
-        mPanId = aFrameInfo.mPanIds.GetDestination();
-    }
-
-    {
-        Mac::PanId dstPanId;
-
-        if (aFrameInfo.mPanIds.IsDestinationPresent())
-        {
-            dstPanId = aFrameInfo.mPanIds.GetDestination();
-        }
-        else
-        {
-            dstPanId = mPanId;
-        }
-
-        mIsDstPanIdBroadcast = (dstPanId == Mac::kPanIdBroadcast);
-    }
+    mPanId               = aFrameInfo.mPanIds.GetSourceOr(aFrameInfo.mPanIds.GetDestination());
+    mIsDstPanIdBroadcast = (aFrameInfo.mPanIds.GetDestinationOr(mPanId) == Mac::kPanIdBroadcast);
 
     mLinkSecurity = false;
 
