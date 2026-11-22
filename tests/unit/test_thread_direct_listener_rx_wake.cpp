@@ -444,20 +444,20 @@ void TestValidWakeAddressingAndParams(void)
         {false, 0, false, 0, 0, false, 0, 0ULL, 0},
         // Only Rendezvous Time present (boundary 0, mid, boundary 255).
         {true, 0, false, 0, 0, false, 0, 123456ULL, 1},
-        {true, 42, false, 0, 0, false, 0, 0x0000000100000005ULL, 0x100},
-        {true, 255, false, 0, 0, false, 0, NumericLimits<Radio::Time64>::kMax, 0xabcdef01U},
+        {true, 42, false, 0, 0, false, 0, 0x0000000100000005ULL, 2},
+        {true, 255, false, 0, 0, false, 0, NumericLimits<Radio::Time64>::kMax, 3},
         // Only Connection Parameters present (min [1, 0], mid [6, 11], max [15, 15]).
-        {false, 0, true, 1, 0, false, 0, 500000ULL, 2},
-        {false, 0, true, 6, 11, false, 0, 600000ULL, 3},
-        {false, 0, true, 15, 15, false, 0, 700000ULL, 4},
+        {false, 0, true, 1, 0, false, 0, 500000ULL, 4},
+        {false, 0, true, 6, 11, false, 0, 600000ULL, 5},
+        {false, 0, true, 15, 15, false, 0, 700000ULL, 6},
         // Only Channel present (kChannelMin, kChannelMax, and same as listen channel).
-        {false, 0, false, 0, 0, true, Radio::kChannelMin, 800000ULL, 5},
-        {false, 0, false, 0, 0, true, Radio::kChannelMax, 900000ULL, 6},
-        {false, 0, false, 0, 0, true, kListenChannel, 950000ULL, 7},
+        {false, 0, false, 0, 0, true, Radio::kChannelMin, 800000ULL, 0x100},
+        {false, 0, false, 0, 0, true, Radio::kChannelMax, 900000ULL, 1000},
+        {false, 0, false, 0, 0, true, kListenChannel, 950000ULL, 2000},
         // Combinations of two and all three valid parameter groups, up to max valid frame counter (`kMax - 1`).
-        {true, 18, true, 3, 9, false, 0, 0xdeadbeefcafebabeULL, 1000},
-        {true, 99, false, 0, 0, true, Radio::kChannelMin + 3, 0x1122334455667788ULL, 2000},
-        {false, 0, true, 12, 4, true, Radio::kChannelMax - 2, 0x8877665544332211ULL, 3000},
+        {true, 18, true, 3, 9, false, 0, 0xdeadbeefcafebabeULL, 3000},
+        {true, 99, false, 0, 0, true, Radio::kChannelMin + 3, 0x1122334455667788ULL, 0x01020304U},
+        {false, 0, true, 12, 4, true, Radio::kChannelMax - 2, 0x8877665544332211ULL, 0xabcdef01U},
         {true, 200, true, 15, 15, true, Radio::kChannelMin + 5, 0xfedcba9876543210ULL,
          NumericLimits<uint32_t>::kMax - 1},
     };
@@ -608,6 +608,8 @@ void TestValidWakeAddressingAndParams(void)
             {Mac::kPanIdBroadcast, AddrPanCase::kDstBroadcast, true, 0xabcd, 0xabcd, false, false, false},
         };
 
+        uint32_t nextFrameCounter = kDefaultFrameCtr;
+
         for (const AddrPanCase &ac : kAddrPanCases)
         {
             FrameSpec          spec;
@@ -620,6 +622,7 @@ void TestValidWakeAddressingAndParams(void)
             subMac->SetPanId(ac.mConfiguredDevicePanId);
 
             spec.InitValid(peerExtAddr2, AsCoreType(&keyMat), AsCoreType(&keyId));
+            spec.mFrameCounter     = nextFrameCounter++;
             spec.mHasDstPanId      = ac.mHasDstPanId;
             spec.mDstPanId         = ac.mDstPanId;
             spec.mFramePending     = ac.mFramePending;
@@ -683,7 +686,8 @@ void TestValidWakeAddressingAndParams(void)
         config.mWakeCallback = nullptr;
         SuccessOrQuit(otThreadDirectListenerStart(instance, &config));
 
-        spec.InitValid(peerExtAddr1, AsCoreType(&keyMat), AsCoreType(&keyId));
+        spec.InitValid(peerExtAddr2, AsCoreType(&keyMat), AsCoreType(&keyId));
+        spec.mFrameCounter     = 100;
         spec.mUseRawPayload    = true;
         spec.mRawPayload       = kUnknownFlagsPayload;
         spec.mRawPayloadLength = sizeof(kUnknownFlagsPayload);
@@ -1347,6 +1351,7 @@ void TestPostAuthPayloadFailures(void)
     CallbackTracker           tracker;
     Listener::WakeInfo        wakeInfo;
     Listener::WakeInfo        seededWakeInfo;
+    uint32_t                  nextFrameCounter = kDefaultFrameCtr + 1;
 
     instance = static_cast<Instance *>(testInitInstance());
     VerifyOrQuit(instance != nullptr);
@@ -1372,7 +1377,8 @@ void TestPostAuthPayloadFailures(void)
     SuccessOrQuit(otThreadDirectListenerStart(instance, &config));
 
     // 1. Before any valid Wake is received (`GetWakeInfo()` == `OT_ERROR_NOT_FOUND`), verify all post-auth bad
-    //    payloads return `true` (consumed) without invoking `mWakeCallback` or populating `WakeInfo`.
+    //    payloads return `true` (consumed) without invoking `mWakeCallback`, populating `WakeInfo`, or adding the
+    //    peer to `PeerList`.
     for (const RawSlice &raw : kBadRawPayloads)
     {
         FrameSpec    spec;
@@ -1389,6 +1395,8 @@ void TestPostAuthPayloadFailures(void)
         VerifyOrQuit(tracker.mCount == 0);
         VerifyOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo) == OT_ERROR_NOT_FOUND);
     }
+
+    VerifyOrQuit(AsCoreTypePtr(regKey)->GetPeers().IsEmpty());
 
     // 2. Seed a valid Wake frame so `mRxWake` is valid, then verify that invalid `WakeCommand::Info` values
     //    (`!cmdInfo.IsValid()`) and `Action Select` (`cmdInfo.mHasActionSelect`) still return `true` (consumed)
@@ -1416,6 +1424,7 @@ void TestPostAuthPayloadFailures(void)
         uint8_t      psduBuf[OT_RADIO_FRAME_MAX_SIZE];
 
         spec.InitValid(peerExtAddr, AsCoreType(&keyMat), AsCoreType(&keyId));
+        spec.mFrameCounter           = nextFrameCounter++;
         spec.mWakeCmd.mHasConnParams = true;
         spec.mWakeCmd.mRetryInterval = 0;
         spec.mWakeCmd.mRetryCount    = 8;
@@ -1443,6 +1452,7 @@ void TestPostAuthPayloadFailures(void)
             uint8_t      psduBuf[OT_RADIO_FRAME_MAX_SIZE];
 
             spec.InitValid(peerExtAddr, AsCoreType(&keyMat), AsCoreType(&keyId));
+            spec.mFrameCounter        = nextFrameCounter++;
             spec.mWakeCmd.mHasChannel = true;
             spec.mWakeCmd.mChannel    = badChannel;
 
@@ -1465,6 +1475,7 @@ void TestPostAuthPayloadFailures(void)
             uint8_t      psduBuf[OT_RADIO_FRAME_MAX_SIZE];
 
             spec.InitValid(peerExtAddr, AsCoreType(&keyMat), AsCoreType(&keyId));
+            spec.mFrameCounter             = nextFrameCounter++;
             spec.mWakeCmd.mHasActionSelect = true;
             spec.mWakeCmd.mActionSelect    = actionVal;
 
@@ -1863,6 +1874,265 @@ void TestWakeInfoInvalidationAndReentrancy(void)
     printf("TestWakeInfoInvalidationAndReentrancy() passed\n");
 }
 
+//------------------------------------------------------------------------------------------------------------------
+// Test 6: Peer List replay protection in `Listener::ProcessRxFrame()`
+
+void TestReplayProtection(void)
+{
+    Instance                 *instance;
+    Listener                 *listener;
+    Mac::ExtAddress           deviceExtAddr;
+    Mac::ExtAddress           peerA;
+    Mac::ExtAddress           peerB;
+    Mac::ExtAddress           peerC;
+    otThreadDirectKeyMaterial keyMat1;
+    otThreadDirectKeyMaterial keyMat2;
+    otThreadDirectKeyId       keyId1;
+    otThreadDirectKeyId       keyId2;
+    otThreadDirectKey        *regKey1;
+    otThreadDirectKey        *regKey2;
+    Listener::Config          config;
+    CallbackTracker           tracker;
+    Listener::WakeInfo        wakeInfo;
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+
+    listener = &instance->Get<Listener>();
+
+    MakeExtAddress(deviceExtAddr, 0x71);
+    MakeExtAddress(peerA, 0x72);
+    MakeExtAddress(peerB, 0x73);
+    MakeExtAddress(peerC, 0x74);
+    SetupSubMac(*instance, deviceExtAddr);
+
+    MakeKeyMaterial(keyMat1, 71);
+    MakeKeyId(keyId1, 71);
+    MakeKeyMaterial(keyMat2, 72);
+    MakeKeyId(keyId2, 72);
+
+    regKey1 = otThreadDirectRegisterKey(instance, &keyMat1, &keyId1);
+    regKey2 = otThreadDirectRegisterKey(instance, &keyMat2, &keyId2);
+    VerifyOrQuit(regKey1 != nullptr);
+    VerifyOrQuit(regKey2 != nullptr);
+
+    tracker.Clear();
+    tracker.mInstance = instance;
+
+    config.Clear();
+    config.mChannel             = kListenChannel;
+    config.mWakeCallback        = HandleWakeCallback;
+    config.mWakeCallbackContext = &tracker;
+    SuccessOrQuit(otThreadDirectListenerStart(instance, &config));
+
+    // 1. Initial counter `0`, progression, and replay rejection for `(peerA, regKey1)`.
+    {
+        static const uint32_t kReplayCounters[] = {0, 1, 99, 100};
+
+        FrameSpec    spec;
+        Mac::RxFrame rxFrame;
+        uint8_t      psduBuf[OT_RADIO_FRAME_MAX_SIZE];
+
+        // Initial valid Wake at `mFrameCounter = 0` succeeds.
+        spec.InitValid(peerA, AsCoreType(&keyMat1), AsCoreType(&keyId1));
+        spec.mFrameCounter        = 0;
+        spec.mWakeCmd.mHasChannel = true;
+        spec.mWakeCmd.mChannel    = 15;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 1);
+        SuccessOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo));
+        VerifyOrQuit(wakeInfo.mLinkChannel == 15);
+
+        // Replaying `mFrameCounter = 0` is consumed (`true`) without invoking callback or overwriting `WakeInfo`.
+        spec.mWakeCmd.mChannel = 24;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 1);
+        SuccessOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo));
+        VerifyOrQuit(wakeInfo.mLinkChannel == 15);
+
+        // Advancing to `1` and jumping to `100` both succeed.
+        spec.mFrameCounter     = 1;
+        spec.mWakeCmd.mChannel = 16;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 2);
+
+        spec.mFrameCounter     = 100;
+        spec.mWakeCmd.mChannel = 17;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 3);
+        SuccessOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo));
+        VerifyOrQuit(wakeInfo.mLinkChannel == 17);
+
+        // Any counter `<= 100` (`0`, `1`, `99`, `100`) is rejected while still returning `true` (consumed).
+        for (uint32_t staleCounter : kReplayCounters)
+        {
+            spec.mFrameCounter     = staleCounter;
+            spec.mWakeCmd.mChannel = 25;
+            spec.BuildWakeRxFrame(rxFrame, psduBuf);
+
+            VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+            VerifyOrQuit(tracker.mCount == 3);
+            SuccessOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo));
+            VerifyOrQuit(wakeInfo.mLinkChannel == 17);
+        }
+    }
+
+    // 2. Per-peer and per-key counter independence:
+    //    - `peerB` using `regKey1` starts independently (`mFrameCounter = 0` succeeds).
+    //    - `peerA` using `regKey2` starts independently (`mFrameCounter = 0` succeeds).
+    {
+        FrameSpec    spec;
+        Mac::RxFrame rxFrame;
+        uint8_t      psduBuf[OT_RADIO_FRAME_MAX_SIZE];
+
+        spec.InitValid(peerB, AsCoreType(&keyMat1), AsCoreType(&keyId1));
+        spec.mFrameCounter        = 0;
+        spec.mWakeCmd.mHasChannel = true;
+        spec.mWakeCmd.mChannel    = 18;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 4);
+        SuccessOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo));
+        VerifyOrQuit(AsCoreType(&wakeInfo.mExtAddress) == peerB);
+        VerifyOrQuit(wakeInfo.mKey == regKey1);
+        VerifyOrQuit(wakeInfo.mLinkChannel == 18);
+
+        spec.InitValid(peerA, AsCoreType(&keyMat2), AsCoreType(&keyId2));
+        spec.mFrameCounter        = 0;
+        spec.mWakeCmd.mHasChannel = true;
+        spec.mWakeCmd.mChannel    = 19;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 5);
+        SuccessOrQuit(otThreadDirectListenerGetWakeInfo(instance, &wakeInfo));
+        VerifyOrQuit(AsCoreType(&wakeInfo.mExtAddress) == peerA);
+        VerifyOrQuit(wakeInfo.mKey == regKey2);
+        VerifyOrQuit(wakeInfo.mLinkChannel == 19);
+
+        // `(peerA, regKey1)` is still tracked at `100`: `100` is rejected, `101` succeeds.
+        spec.InitValid(peerA, AsCoreType(&keyMat1), AsCoreType(&keyId1));
+        spec.mFrameCounter = 100;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 5);
+
+        spec.mFrameCounter        = 101;
+        spec.mWakeCmd.mHasChannel = true;
+        spec.mWakeCmd.mChannel    = 20;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 6);
+    }
+
+    // 3. Interaction with post-auth payload validation:
+    //    - Unknown `peerC` sending invalid payload or `Action Select` at high counters (`50`, `60`) is not added to
+    //      `PeerList`, so a subsequent valid Wake at a lower counter (`10`) still succeeds.
+    //    - Once `peerC` is tracked at `10`, an `Action Select` frame at `20` advances `peerC`'s counter to `20`,
+    //      rejecting replays at `15` and `20` while accepting `21`.
+    {
+        FrameSpec    spec;
+        Mac::RxFrame rxFrame;
+        uint8_t      psduBuf[OT_RADIO_FRAME_MAX_SIZE];
+
+        spec.InitValid(peerC, AsCoreType(&keyMat1), AsCoreType(&keyId1));
+        spec.mFrameCounter           = 50;
+        spec.mWakeCmd.mHasConnParams = true;
+        spec.mWakeCmd.mRetryInterval = 0;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 6);
+        VerifyOrQuit(AsCoreTypePtr(regKey1)->GetPeers().Find(peerC) == nullptr);
+
+        spec.InitValid(peerC, AsCoreType(&keyMat1), AsCoreType(&keyId1));
+        spec.mFrameCounter             = 60;
+        spec.mWakeCmd.mHasActionSelect = true;
+        spec.mWakeCmd.mActionSelect    = 0x01;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 6);
+        VerifyOrQuit(AsCoreTypePtr(regKey1)->GetPeers().Find(peerC) == nullptr);
+
+        // Valid Wake from `peerC` at `mFrameCounter = 10` succeeds and adds `peerC` to `PeerList`.
+        spec.InitValid(peerC, AsCoreType(&keyMat1), AsCoreType(&keyId1));
+        spec.mFrameCounter        = 10;
+        spec.mWakeCmd.mHasChannel = true;
+        spec.mWakeCmd.mChannel    = 21;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 7);
+        VerifyOrQuit(AsCoreTypePtr(regKey1)->GetPeers().Find(peerC) != nullptr);
+
+        // Ignored `Action Select` frame from tracked `peerC` at `mFrameCounter = 20` still advances counter to `20`.
+        spec.InitValid(peerC, AsCoreType(&keyMat1), AsCoreType(&keyId1));
+        spec.mFrameCounter             = 20;
+        spec.mWakeCmd.mHasActionSelect = true;
+        spec.mWakeCmd.mActionSelect    = 0x01;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 7);
+
+        // Valid Wake payloads at `15` and `20` are now rejected as replays; `21` succeeds.
+        spec.InitValid(peerC, AsCoreType(&keyMat1), AsCoreType(&keyId1));
+        spec.mFrameCounter = 15;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 7);
+
+        spec.mFrameCounter = 20;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 7);
+
+        spec.mFrameCounter        = 21;
+        spec.mWakeCmd.mHasChannel = true;
+        spec.mWakeCmd.mChannel    = 22;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 8);
+    }
+
+    // 4. Stopping/restarting Listener preserves `Key`'s `PeerList`, while unregistering/re-registering clears it.
+    {
+        FrameSpec    spec;
+        Mac::RxFrame rxFrame;
+        uint8_t      psduBuf[OT_RADIO_FRAME_MAX_SIZE];
+
+        otThreadDirectListenerStop(instance);
+        SuccessOrQuit(otThreadDirectListenerStart(instance, &config));
+
+        spec.InitValid(peerC, AsCoreType(&keyMat1), AsCoreType(&keyId1));
+        spec.mFrameCounter = 21;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 8);
+
+        spec.mFrameCounter = 22;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 9);
+
+        otThreadDirectUnregisterKey(instance, regKey1);
+        regKey1 = otThreadDirectRegisterKey(instance, &keyMat1, &keyId1);
+        VerifyOrQuit(regKey1 != nullptr);
+
+        spec.mFrameCounter = 0;
+        spec.BuildWakeRxFrame(rxFrame, psduBuf);
+        VerifyOrQuit(UnitTester::CallProcessRxFrame(*listener, rxFrame));
+        VerifyOrQuit(tracker.mCount == 10);
+    }
+
+    testFreeInstance(instance);
+
+    printf("TestReplayProtection() passed\n");
+}
+
 #endif // OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE && !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 } // namespace ThreadDirect
@@ -1876,6 +2146,7 @@ int main(void)
     ot::ThreadDirect::TestKeyMatchingAndSavedPsduRestoration();
     ot::ThreadDirect::TestPostAuthPayloadFailures();
     ot::ThreadDirect::TestWakeInfoInvalidationAndReentrancy();
+    ot::ThreadDirect::TestReplayProtection();
 
     printf("All tests passed\n");
 #else

@@ -64,6 +64,9 @@ exit:
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mStoreTask(aInstance)
+#if OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE
+    , mPeerTimer(aInstance)
+#endif
 {
 }
 
@@ -109,7 +112,7 @@ void KeyManager::FreeKey(Key &aKey)
     // A `KeyRef` can be shared across multiple registered `Key` entries
     // with different Key IDs. If another entry in `mKeys` is still
     // using the same `KeyRef`, reset `aKey`'s `KeyRef` to invalid
-    // before calling `Clear()` so that `Clear()` does not destroy the
+    // before calling `Deinit()` so that `Clear()` does not destroy the
     // shared `KeyRef` in platform crypto storage.
 
     if (mKeys.ContainsMatching(aKey.GetKeyMaterial().GetKeyRef()))
@@ -118,7 +121,14 @@ void KeyManager::FreeKey(Key &aKey)
     }
 #endif
 
-    aKey.mKeyMaterial.Clear();
+    aKey.Deinit();
+
+#if OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE
+    if (mKeys.IsEmpty())
+    {
+        mPeerTimer.Stop();
+    }
+#endif
 
 #if OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE
     aKey.Free();
@@ -255,6 +265,39 @@ void KeyManager::StoreKeys(void)
         }
     }
 }
+
+#if OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE
+
+void KeyManager::StartPeerTimer(void)
+{
+    if (!mPeerTimer.IsRunning())
+    {
+        mPeerTimer.Start(kPeerCheckInterval);
+    }
+}
+
+void KeyManager::HandlePeerTimer(void)
+{
+    UptimeSec uptimeNow = Get<UptimeTracker>().GetUptimeInSeconds();
+    bool      hasPeers  = false;
+
+    for (Key &key : mKeys)
+    {
+        key.GetPeers().RemoveExpired(uptimeNow);
+
+        if (!key.GetPeers().IsEmpty())
+        {
+            hasPeers = true;
+        }
+    }
+
+    if (hasPeers)
+    {
+        mPeerTimer.Start(kPeerCheckInterval);
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 

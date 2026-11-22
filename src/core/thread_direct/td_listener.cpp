@@ -182,6 +182,7 @@ bool Listener::ProcessRxFrame(Mac::RxFrame::ParseInfo &aFrameInfo)
     KeyId             keyId;
     Radio::SavedPsdu  savedPsdu;
     WakeCommand::Info cmdInfo;
+    Peer             *peer;
 
     VerifyOrExit(IsRunning());
 
@@ -254,12 +255,14 @@ bool Listener::ProcessRxFrame(Mac::RxFrame::ParseInfo &aFrameInfo)
     processed = true;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // (For future) Peer Table replay protection:
-    //
-    // Once the Thread Direct Peer Table is added, look up the peer
-    // (using source extended address and `matchedKey`), verify
-    // `aFrameInfo.mFrameCounter` freshness to reject replayed frames, and
-    // update the peer table entry with the new frame counter.
+    // Peer List replay protection
+
+    peer = matchedKey->GetPeers().Find(aFrameInfo.mAddrs.mSource.GetExtended());
+
+    if (peer != nullptr)
+    {
+        SuccessOrExit(peer->VerifyAndUpdateFrameCounter(aFrameInfo.mFrameCounter));
+    }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Parse the Wake Command payload
@@ -274,6 +277,12 @@ bool Listener::ProcessRxFrame(Mac::RxFrame::ParseInfo &aFrameInfo)
     // the Wake frame and continue listening.
 
     VerifyOrExit(!cmdInfo.mHasActionSelect);
+
+    if (peer == nullptr)
+    {
+        peer = matchedKey->GetPeers().AddNew(aFrameInfo.mAddrs.mSource.GetExtended(), aFrameInfo.mFrameCounter);
+        VerifyOrExit(peer != nullptr);
+    }
 
     // The Wake Command is fully validated.
 
