@@ -227,13 +227,13 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
         error = aTls.GetThreadAttributeFromPeerCertificate(
             kCertificateAuthorizationField, reinterpret_cast<uint8_t *>(&mCommissionerAuthorizationField), &len));
     VerifyOrExit(len == sizeof(mCommissionerAuthorizationField), error = kErrorParse);
-    VerifyOrExit((mCommissionerAuthorizationField.mHeader & kCommissionerFlag) == 1, error = kErrorParse);
+    VerifyOrExit(mCommissionerAuthorizationField.IsHeaderValid(/* aIsCommissioner */ true), error = kErrorParse);
 
     len = sizeof(mDeviceAuthorizationField);
     SuccessOrExit(error = aTls.GetThreadAttributeFromOwnCertificate(
                       kCertificateAuthorizationField, reinterpret_cast<uint8_t *>(&mDeviceAuthorizationField), &len));
     VerifyOrExit(len == sizeof(mDeviceAuthorizationField), error = kErrorParse);
-    VerifyOrExit((mDeviceAuthorizationField.mHeader & kCommissionerFlag) == 0, error = kErrorParse);
+    VerifyOrExit(mDeviceAuthorizationField.IsHeaderValid(/* aIsCommissioner */ false), error = kErrorParse);
 
     len = sizeof(mCommissionerDomainName) - 1;
     if (aTls.GetThreadAttributeFromPeerCertificate(

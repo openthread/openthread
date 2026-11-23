@@ -677,6 +677,53 @@ void TestTcatAdvertisementUpdates(void)
     testFreeInstance(instance);
 }
 
+void TestTcatCertificateAuthorizationFieldHeader(void)
+{
+    struct TestCase
+    {
+        uint8_t mHeader;
+        bool    mIsCommissioner;
+        uint8_t mVersion;
+    };
+
+    static const TestCase kTestCases[] = {
+        {0x00, false, 0}, // Device, invalid version 0
+        {0x01, true, 0},  // Commissioner, invalid version 0
+        {0x1E, false, 0}, // Device, invalid version 0 with all reserved bits set
+        {0x1F, true, 0},  // Commissioner, invalid version 0 with all reserved bits set
+        {0x20, false, 1}, // Device, version 1
+        {0x21, true, 1},  // Commissioner, version 1
+        {0x40, false, 2}, // Device, future version 2
+        {0x41, true, 2},  // Commissioner, future version 2
+        {0xE0, false, 7}, // Device, maximum version
+        {0xE1, true, 7},  // Commissioner, maximum version
+        {0xFE, false, 7}, // Device, maximum version with all reserved bits set
+        {0xFF, true, 7},  // Commissioner, maximum version with all reserved bits set
+    };
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        TcatAgent::CertificateAuthorizationField field;
+        bool                                     isVersionValid = (testCase.mVersion >= 1);
+
+        memset(&field, 0, sizeof(field));
+        memcpy(&field, &testCase.mHeader, sizeof(testCase.mHeader));
+
+        VerifyOrQuit(field.IsCommissioner() == testCase.mIsCommissioner);
+        VerifyOrQuit(field.GetVersion() == testCase.mVersion);
+
+        // A header is only valid for the type of certificate it identifies, and with a version of at least 1.
+        VerifyOrQuit(field.IsHeaderValid(/* aIsCommissioner */ true) == (testCase.mIsCommissioner && isVersionValid));
+        VerifyOrQuit(field.IsHeaderValid(/* aIsCommissioner */ false) == (!testCase.mIsCommissioner && isVersionValid));
+    }
+
+    // The authorization fields of the test certificates all have a valid header.
+    memcpy(&sCommAuth, &kCommCert1AuthField, sizeof(sCommAuth));
+    memcpy(&sDeviceAuth, &kDeviceCert1AuthField, sizeof(sDeviceAuth));
+    VerifyOrQuit(sCommAuth.IsHeaderValid(/* aIsCommissioner */ true));
+    VerifyOrQuit(sDeviceAuth.IsHeaderValid(/* aIsCommissioner */ false));
+}
+
 class UnitTester
 {
 private:
@@ -1503,6 +1550,7 @@ int main(void)
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
     ot::MeshCoP::TestTcatConnectionAndCertAttributes();
     ot::MeshCoP::TestTcatAdvertisementUpdates();
+    ot::MeshCoP::TestTcatCertificateAuthorizationFieldHeader();
     ot::MeshCoP::UnitTester::TestTcatCommissioner1Auth();
     ot::MeshCoP::UnitTester::TestTcatCommissioner2Auth();
     ot::MeshCoP::UnitTester::TestTcatCommissioner4Auth();
