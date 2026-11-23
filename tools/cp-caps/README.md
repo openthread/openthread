@@ -246,10 +246,19 @@ Each data frame is timed from the last CSL IE before it, or the first CSL IE aft
 
 When the CSL channel is not the PAN channel and the reference device sent no Enh-ACK on the CSL channel, no CSL IE is captured to time the data frames, so the analysis refers to the result of the same channel sub-test.
 
+Whenever data frames are timed, a `CSL TX timing` line follows, also for passed sub-tests. It shows the offsets of the timed data frames, acknowledged or not, and models them as a fixed bias, a clock drift and a jitter:
+
+- `bias`: the median offset after removing the clock drift.
+- `jitter`: the half range of the offsets after removing the clock drift.
+- `drift vs. sniffer`: the clock drift of the DUT relative to the sniffer (± its standard error), which is not the clock accuracy of the DUT because the clock of the sniffer also drifts. It is estimated from the data frames timed from the same CSL IE (e.g. the retransmissions of an unacknowledged frame), so it is `unknown (insufficient span)` unless they span at least 600 ms.
+
+On the PAN channel, `CSL TX timing warning` lines show if the offsets after removing the clock drift exceed the CSL uncertainty of the DUT (`csl uncertainty`), or if the clock drift exceeds the CSL accuracy of the DUT (`csl accuracy`) plus 40 ppm for the sniffer by more than its standard error. If the clock drift is unknown, the offsets may also exceed the CSL uncertainty by that clock drift since the CSL IEs they are timed from. The DUT advertises these values to the reference device to widen its CSL sample window. The warnings do not change the result of the sub-test. They are not shown for other channels: the sniffer does not capture the CSL IEs that the reference device sends on the PAN channel, from which the DUT may time data frames, and since the CSL Phase is truncated to units of 160 us, a data frame timed from another CSL IE than the DUT used is off by up to 160 us.
+
 ```bash
 tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 SNIFFER_SERIAL=/dev/ttyACM1 python3 -m unittest -q test_csl
 CSL Transmitter (Same Channel) --------------------------- NotSupported
   CSL transmitter issue (TX timing miss): 4/4 data frames out of the CSL sample window (offsets +552, +565, +561, +591 us, tolerance 352 us, clock drift up to 111 us for CSL IEs up to 1381 ms old)
+  CSL TX timing: 4 data frames, offsets min +552 / median +563 / max +591 us, bias +538 us, jitter ±9 us, drift vs. sniffer +35 ± 14 ppm
 CSL Transmitter (Cross Channel) -------------------------- NotSupported
   4/4 data frames on channel 15 were not acknowledged, and no CSL IE from the CSL receiver was captured on channel 15 to time them
   Same channel (20): CSL transmitter issue (TX timing miss): 4/4 data frames out of the CSL sample window (offsets +552, +565, +561, +591 us, tolerance 352 us, clock drift up to 111 us for CSL IEs up to 1381 ms old)

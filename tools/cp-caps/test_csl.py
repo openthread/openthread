@@ -82,6 +82,8 @@ class TestCsl(unittest.TestCase):
         pcapng_path = None
         start_us = None
         report = None
+        csl_accuracy = None
+        csl_uncertainty_us = None
 
         self.__dut.join(dataset)
         self.__dut.wait_for('state', 'leader')
@@ -108,6 +110,13 @@ class TestCsl(unittest.TestCase):
                 ref_mleid = self.__ref.get_ipaddr_mleid()
                 dut_addresses = self.__get_addresses(self.__dut)
                 ref_addresses = self.__get_addresses(self.__ref)
+                # The CSL accuracy and uncertainty that the DUT advertises to the reference device. The CSL Phase is
+                # truncated to units of 160 us, so a frame timed from another CSL IE than the DUT used is off by up to
+                # 160 us. They are only checked on the PAN channel, where the sniffer captures all the CSL IEs that
+                # the DUT may time frames from.
+                if sniffer is not None and csl_channel == DeviceManager.DEFAULT_CHANNEL:
+                    csl_accuracy = self.__dut.get_csl_accuracy()
+                    csl_uncertainty_us = self.__dut.get_csl_uncertainty() * 10
                 start_us = time.time_ns() // 1000
                 result = self.__dut.ping(ref_mleid, count=packets, interval=1)
                 ret = result['transmitted_packets'] == result['received_packets'] == packets
@@ -131,6 +140,11 @@ class TestCsl(unittest.TestCase):
         elif report is not None:
             if not ret or self.__device_manager.debug_enabled:
                 self.__output_report(report, same_channel_report)
+
+            timing = report.timing
+            if timing is not None:
+                for line in timing.describe(csl_accuracy, csl_uncertainty_us):
+                    print(f'  {line}')
         elif sniffer is not None:
             print('  No CSL analysis: the reference device is not a CSL synchronized child of the DUT')
 
