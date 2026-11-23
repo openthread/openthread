@@ -135,6 +135,7 @@ Device configurations:
   OT_EXTCAP=<ot_extcap_path>         Full path to the ot-extcap executable used by the sniffer (default: ot-extcap)
 
 Test cases:
+  test_ack                 test whether the RCP reports the ACK frames of the transmitted frames correctly
   test_csl                 test whether the RCP supports CSL transmitter (on the PAN channel and another channel)
   test_data_poll           test whether the RCP supports data poll
   test_diag_commands       test whether the RCP supports all diag commands
@@ -262,6 +263,23 @@ The test case `test_data_poll` tests whether the RCP supports data poll.
 tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_data_poll
 Data Poll Child ------------------------------------------ OK
 Data Poll Parent ----------------------------------------- OK
+```
+
+### Test ACK
+
+The test case `test_ack` tests whether the RCP reports the ACK frames of the transmitted frames correctly. The DUT attaches to the reference device as a child and pings it:
+
+- `Imm-Ack`: the RCP reports each Imm-Ack in the transmit done response with the 2-byte FCS (`otRadioFrame.mLength` is 5), even if the radio has verified and removed the FCS. The host fails to parse an Imm-Ack reported without the FCS, so this is checked by comparing the number of ACKs the host accepted with the number of ACKs the RCP reported, which are shown with the result: the host accepts every reported ACK unless the RCP reports Imm-Acks without the FCS.
+
+A host with `OPENTHREAD_SPINEL_CONFIG_RCP_IMM_ACK_FCS_COMPATIBILITY_WORKAROUND_ENABLE` (enabled by default) restores the FCS of an Imm-Ack reported without it, which hides the issue from this test case. Run it with a host POSIX `ot-cli` built with the workaround disabled:
+
+```bash
+$ ./script/cmake-build posix -DOT_DIAGNOSTIC=ON -DCMAKE_CXX_FLAGS=-DOPENTHREAD_SPINEL_CONFIG_RCP_IMM_ACK_FCS_COMPATIBILITY_WORKAROUND_ENABLE=0
+```
+
+```bash
+tools/cp-caps$ DUT_ADB_SPINEL_PROXY=TW69UCKFZTGM95OR OT_CLI=../../build/posix/src/posix/ot-cli REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_ack
+Imm-Ack -------------------------------------------------- OK (10/10 ACKs)
 ```
 
 ### Test Link Metrics
