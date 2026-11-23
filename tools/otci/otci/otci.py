@@ -3008,11 +3008,13 @@ class OTCI(object):
                    tx_power: Optional[int] = None,
                    max_frame_retries: Optional[int] = None,
                    is_security_processed: Optional[bool] = None,
-                   is_header_updated: Optional[bool] = None):
+                   is_header_updated: Optional[bool] = None,
+                   tx_delay_base_time: Optional[int] = None):
         """Set the frame (hex encoded) to be used by `diag send` and `diag repeat`."""
         command = 'diag frame '
         command += self.__get_optional_int_argument('-b', max_csma_backoffs)
         command += self.__get_optional_int_argument('-d', tx_delay)
+        command += self.__get_optional_int_argument('-t', tx_delay_base_time)
         command += self.__get_optional_int_argument('-C', rx_channel_after_tx_done)
         command += self.__get_optional_int_argument('-p', tx_power)
         command += self.__get_optional_int_argument('-r', max_frame_retries)
@@ -3119,6 +3121,10 @@ class OTCI(object):
     def diag_get_radio_state(self) -> str:
         """Get the state of the radio."""
         return self.__parse_str(self.execute_command('diag radio state'))
+
+    def diag_get_radio_time(self) -> int:
+        """Get the current radio time in microseconds (the lower 32 bits)."""
+        return self.__parse_int(self.execute_command('diag radio time'))
 
     def diag_get_radio_promiscuous(self) -> bool:
         """Get whether the radio promiscuous mode is enabled."""

@@ -260,6 +260,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     uint8_t  maxFrameRetries      = 0;
     uint8_t  maxCsmaBackoffs      = 0;
     uint8_t  rxChannelAfterTxDone = mChannel;
+    bool     hasTxDelayBaseTime   = false;
     uint32_t txDelayBaseTime      = 0;
     uint32_t txDelay              = 0;
 
@@ -296,7 +297,11 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
 
             VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
             SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[0], txDelay));
-            txDelayBaseTime = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
+
+            if (!hasTxDelayBaseTime)
+            {
+                txDelayBaseTime = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
+            }
         }
         else if (StringMatch(aArgs[0], "-p"))
         {
@@ -318,6 +323,15 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
         {
             securityProcessed = true;
             isHeaderUpdated   = true;
+        }
+        else if (StringMatch(aArgs[0], "-t"))
+        {
+            aArgs++;
+            aArgsLength--;
+
+            VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
+            SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[0], txDelayBaseTime));
+            hasTxDelayBaseTime = true;
         }
         else if (StringMatch(aArgs[0], "-u"))
         {
@@ -871,6 +885,19 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
             Output("invalid\r\n");
             break;
         }
+    }
+    else if (StringMatch(aArgs[0], "time"))
+    {
+        Radio::Time64 now;
+
+        VerifyOrExit(aArgsLength == 1);
+
+        now = otPlatRadioGetNow(&GetInstance());
+
+        // `UINT64_MAX` means the radio time is not supported or not ready (e.g. not synchronized with the RCP yet).
+        VerifyOrExit(now != Radio::kMaxTime64, error = kErrorInvalidState);
+        Output("%lu\r\n", ToUlong(Radio::ConvertTime64To32(now)));
+        error = kErrorNone;
     }
     else if (StringMatch(aArgs[0], "enable"))
     {

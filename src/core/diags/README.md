@@ -79,21 +79,27 @@ Done
 
 ### diag frame
 
-Usage: `diag frame [-b MaxCsmaBackoffs] [-c] [-C RxChannelAfterTxDone] [-d TxDelay] [-p TxPower] [-r MaxFrameRetries] [-s] [-u] <frame>`
+Usage: `diag frame [-b MaxCsmaBackoffs] [-c] [-C RxChannelAfterTxDone] [-d TxDelay] [-p TxPower] [-r MaxFrameRetries] [-s] [-t TxDelayBaseTime] [-u] <frame>`
 
 Set the frame (hex encoded) to be used by `diag send` and `diag repeat`. The frame may be overwritten by `diag send` and `diag repeat`.
 
 - Specify `-b` to specify the `mInfo.mTxInfo.mMaxCsmaBackoffs` field for this frame.
 - Specify `-c` to enable CSMA/CA for this frame in the radio layer.
 - Specify `-C` to specify the `mInfo.mTxInfo.mRxChannelAfterTxDone` field for this frame.
-- Specify `-d` to specify the `mInfo.mTxInfo.mTxDelay` field for this frame and the `mInfo.mTxInfo.mTxDelayBaseTime` field is set to the current radio time.
+- Specify `-d` to specify the `mInfo.mTxInfo.mTxDelay` field for this frame and the `mInfo.mTxInfo.mTxDelayBaseTime` field is set to the current radio time unless `-t` is specified.
 - Specify `-p` to specify the tx power in dBm for this frame.
 - Specify `-r` to specify the `mInfo.mTxInfo.mMaxFrameRetries` field for this frame.
 - Specify `-s` to indicate that tx security is already processed thus it should be skipped in the radio layer.
+- Specify `-t` to specify the `mInfo.mTxInfo.mTxDelayBaseTime` field for this frame (see [diag radio time](#diag-radio-time)), e.g. to schedule several frames relative to the same base time.
 - Specify `-u` to specify the `mInfo.mTxInfo.mIsHeaderUpdated` field for this frame.
 
 ```bash
 > diag frame 0200ffc0ba
+Done
+> diag radio time
+1234567
+Done
+> diag frame -t 1234567 -d 500000 0200ffc0ba
 Done
 ```
 
@@ -283,6 +289,16 @@ Return the state of the radio.
 ```bash
 > diag radio state
 sleep
+Done
+```
+
+### diag radio time
+
+Return the current radio time in microseconds (the lower 32 bits, see `otPlatRadioGetNow()`). Return `InvalidState` if the radio time is not supported or not ready (e.g. a host has not synchronized it with the RCP yet).
+
+```bash
+> diag radio time
+1234567
 Done
 ```
 
