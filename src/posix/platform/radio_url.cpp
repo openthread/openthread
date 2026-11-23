@@ -60,7 +60,8 @@ const char *otSysGetRadioUrlHelpString(void)
     "                                  The offset index of `R̅E̅S̅` pin for the associated GPIO device. This\n"   \
     "                                  is required if `gpio-reset-device` is specified.\n"                     \
     "    spi-mode[=mode]               Specify the SPI mode to use (0-3).\n"                                   \
-    "    spi-speed[=hertz]             Specify the SPI speed in hertz.\n"                                      \
+    "    spi-speed[=hertz]             Specify the SPI speed in hertz. Setting 0 preserves the kernel/DT\n"    \
+    "                                  default speed.\n"                                                       \
     "    spi-cs-delay[=usec]           Specify the delay after C̅S̅ assertion, in µsec.\n"                       \
     "    spi-reset-delay[=ms]          Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.\n"            \
     "    spi-align-allowance[=n]       Specify the maximum number of 0xFF bytes to clip from start of\n"       \
