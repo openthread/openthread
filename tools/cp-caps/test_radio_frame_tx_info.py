@@ -211,6 +211,8 @@ class TestRadioFrameTxInfo(unittest.TestCase):
         dut_tx_delay_sec = 0.5
         dut_tx_delay_us = int(dut_tx_delay_sec * 1000000)
         ref_rx_delay_sec = dut_tx_delay_sec / 2
+        # The margin for the radio time synchronization error and the latencies of the host, the radio and the CLI.
+        ref_rx_margin_sec = 0.25
         ref_address = 'dead00beefcafe01'
         dut_tx_frame = '01ec00dddd01fecaefbe00adde02fecaefbe00adde000102030405060708090000'
 
@@ -220,6 +222,8 @@ class TestRadioFrameTxInfo(unittest.TestCase):
         self.__ref.diag_set_radio_receive_filter_dest_mac_address(ref_address)
         self.__ref.diag_enable_radio_receive_filter()
 
+        # `diag frame -d` sets mTxDelayBaseTime to the current radio time, so the frame is due to be sent
+        # `dut_tx_delay_sec` after the `diag frame` command.
         self.__dut.diag_frame(dut_tx_frame, tx_delay=dut_tx_delay_us)
         self.__dut.diag_send(packets, is_async=True)
 
@@ -228,7 +232,7 @@ class TestRadioFrameTxInfo(unittest.TestCase):
         ret = stats['received_packets'] == 0
 
         if ret is True:
-            self.__ref.wait(ref_rx_delay_sec)
+            self.__ref.wait(ref_rx_delay_sec + ref_rx_margin_sec)
             stats = self.__ref.diag_get_stats()
             ret = stats['received_packets'] == 1
 
