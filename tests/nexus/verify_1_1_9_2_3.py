@@ -116,8 +116,8 @@ def verify(pv):
     #   format:
     #   - CoAP Response Code: 2.04 Changed
     #   - CoAP Payload: (entire Active Operational Dataset): Active Timestamp TLV, Channel TLV, Channel Mask TLV,
-    #     Extended PAN ID TLV, Network Mesh-Local Prefix TLV, Network Master Key TLV, Network Name TLV, PAN ID TLV, PSKc
-    #     TLV, Security Policy TLV.
+    #     Extended PAN ID TLV, Network Mesh-Local Prefix TLV, Network Master Key TLV, Network Name TLV, PAN ID TLV,
+    #     Security Policy TLV. PSKc TLV MUST NOT be included (Thread 1.4.1 section 8.7.4.4).
     print("Step 3: Leader sends MGMT_ACTIVE_GET.rsp with entire Active Operational Dataset.")
     pkts.filter_wpan_src64(LEADER).\
         filter_coap_ack(consts.MGMT_ACTIVE_GET_URI).\
@@ -130,9 +130,9 @@ def verify(pv):
             consts.NM_NETWORK_KEY_TLV,
             consts.NM_NETWORK_NAME_TLV,
             consts.NM_PAN_ID_TLV,
-            consts.NM_PSKC_TLV,
             consts.NM_SECURITY_POLICY_TLV
         } <= set(p.coap.tlv.type)).\
+        filter(lambda p: consts.NM_PSKC_TLV not in p.coap.tlv.type).\
         must_next()
 
     # Step 4: Topology B Commissioner DUT / Topology A Leader DUT

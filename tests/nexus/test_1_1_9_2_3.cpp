@@ -169,7 +169,7 @@ void RunTest9_2_3(Topology aTopology, const char *aJsonFile)
      *   - CoAP Response Code: 2.04 Changed
      *   - CoAP Payload: (entire Active Operational Dataset): Active Timestamp TLV, Channel TLV, Channel Mask TLV,
      *     Extended PAN ID TLV, Network Mesh-Local Prefix TLV, Network Master Key TLV, Network Name TLV, PAN ID TLV,
-     *     PSKc TLV, Security Policy TLV.
+     *     Security Policy TLV. PSKc TLV MUST NOT be included (Thread 1.4.1 section 8.7.4.4).
      */
 
     Log("---------------------------------------------------------------------------------------");
