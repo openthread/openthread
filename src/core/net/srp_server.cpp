@@ -42,8 +42,9 @@ namespace Srp {
 
 RegisterLogModule("SrpServer");
 
-static const char kDefaultDomain[]       = "default.service.arpa.";
-static const char kServiceSubTypeLabel[] = "._sub.";
+static const char kDefaultDomain[]           = "default.service.arpa.";
+static const char kServiceSubTypeFullLabel[] = "._sub.";
+static const char kServiceSubTypeLabel[]     = "_sub";
 
 static Dns::UpdateHeader::Response ErrorToDnsResponseCode(Error aError)
 {
@@ -93,6 +94,7 @@ Server::Server(Instance &aInstance)
     , mFastStartMode(false)
 #endif
 {
+    ClearAllBytes(mResponseCounters);
     IgnoreError(SetDomain(kDefaultDomain));
 }
 
@@ -1151,9 +1153,9 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
         Dns::Name::Buffer               serviceName;
         Dns::Name::LabelBuffer          instanceLabel;
         Dns::Name::Buffer               instanceServiceName;
+        Dns::Name::Buffer               labels;
         String<Dns::Name::kMaxNameSize> instanceName;
         Dns::PtrRecord                  ptrRecord;
-        const char                     *subServiceName;
         Service                        *service;
         bool                            isSubType;
         bool                            isDelete;
@@ -1175,28 +1177,39 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
 
         SuccessOrExit(error = ptrRecord.ReadPtrName(aMessage, offset, instanceLabel, instanceServiceName));
         instanceName.Append("%s.%s", instanceLabel, instanceServiceName);
+        VerifyOrExit(!instanceName.IsTruncated(), error = kErrorNoBufs);
 
         // Class None indicates "Delete an RR from an RRset".
         isDelete = (ptrRecord.GetClass() == Dns::ResourceRecord::kClassNone);
 
         VerifyOrExit(isDelete || ptrRecord.GetClass() == aMetadata.mDnsZone.GetClass(), error = kErrorParse);
 
-        // Check if the `serviceName` is a sub-type with name
-        // format: "<sub-label>._sub.<service-labels>.<domain>."
+        // Verify that `instanceServiceName` is valid and has format
+        // `<service-labels>.<domain>.`
 
-        subServiceName = StringFind(serviceName, kServiceSubTypeLabel, kStringCaseInsensitiveMatch);
-        isSubType      = (subServiceName != nullptr);
+        error = kErrorFailed;
+
+        SuccessOrExit(Dns::Name::ValidateName(instanceServiceName));
+        SuccessOrExit(Dns::Name::ExtractLabels(instanceServiceName, GetDomain(), labels));
+
+        // Ensure `instanceServiceName` does not itself contain a `_sub` label.
+        VerifyOrExit(StringFind(instanceServiceName, kServiceSubTypeFullLabel, kStringCaseInsensitiveMatch) == nullptr);
+        VerifyOrExit(!StringStartsWith(instanceServiceName, kServiceSubTypeFullLabel + 1, kStringCaseInsensitiveMatch));
+
+        isSubType = !Dns::Name::IsSameDomain(serviceName, instanceServiceName);
 
         if (isSubType)
         {
-            // Skip over the "._sub." label to get to the base
-            // service name.
-            subServiceName += sizeof(kServiceSubTypeLabel) - 1;
+            // Verify that `serviceName` has format `<sub-label>._sub.<instanceServiceName>`
+            // where `<sub-label>` is a single valid label.
+
+            SuccessOrExit(Dns::Name::ExtractLabels(serviceName, instanceServiceName, labels));
+            SuccessOrExit(Dns::Name::StripName(labels, kServiceSubTypeLabel));
+            SuccessOrExit(Dns::Name::ValidateLabel(labels));
+            VerifyOrExit(StringFind(labels, Dns::Name::kLabelSeparatorChar) == nullptr);
         }
 
-        // Verify that instance name and service name are related.
-        VerifyOrExit(Dns::Name::IsSubDomainOf(instanceName.AsCString(), isSubType ? subServiceName : serviceName),
-                     error = kErrorFailed);
+        error = kErrorNone;
 
         // Find a matching existing service or allocate a new one.
 
@@ -2045,7 +2058,7 @@ Error Server::Service::ParseSubTypeServiceName(const char *aSubTypeServiceName, 
 
     aLabel[0] = kNullChar;
 
-    subPos = StringFind(aSubTypeServiceName, kServiceSubTypeLabel, kStringCaseInsensitiveMatch);
+    subPos = StringFind(aSubTypeServiceName, kServiceSubTypeFullLabel, kStringCaseInsensitiveMatch);
     VerifyOrExit(subPos != nullptr, error = kErrorInvalidArgs);
 
     if (subPos - aSubTypeServiceName < aLabelSize)
