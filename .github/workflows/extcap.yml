@@ -66,6 +66,9 @@ jobs:
         echo "wireshark-common wireshark-common/install-setuid boolean false" | sudo debconf-set-selections
         sudo apt-get update
         sudo DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y expect ninja-build tshark
+    - name: Test cp-caps CSL analyzer
+      run: |
+        python3 tools/cp-caps/tests/test_csl_analyzer.py
     - name: Run
       run: |
         tests/scripts/check-extcap

@@ -39,7 +39,7 @@ The [nRF52840DK][ot-nrf528xx-nrf52840] is set as the reference device by default
 
 ### Sniffer
 
-The sniffer is an RCP (e.g. an nRF52840 dongle running `ot-rcp`) driven by [ot-extcap](../extcap/README.md). The test cases capture frames by running `ot-extcap` on the channel of interest, and read each frame with its timestamp in microseconds taken by the sniffer radio.
+The sniffer is an RCP (e.g. an nRF52840 dongle running `ot-rcp`) driven by [ot-extcap](../extcap/README.md). The test cases capture frames by running `ot-extcap` on the channel of interest, and read each frame with its timestamp in microseconds taken by the sniffer radio. The timing analysis requires the sniffer radio to timestamp frames at the end of SFD, as `otRadioFrame.mInfo.mRxInfo.mTimestamp` specifies.
 
 Quick guide to building `ot-extcap` (from the root of the OpenThread repository):
 
@@ -135,7 +135,7 @@ Device configurations:
   OT_EXTCAP=<ot_extcap_path>         Full path to the ot-extcap executable used by the sniffer (default: ot-extcap)
 
 Test cases:
-  test_csl                 test whether the RCP supports CSL transmitter
+  test_csl                 test whether the RCP supports CSL transmitter (on the PAN channel and another channel)
   test_data_poll           test whether the RCP supports data poll
   test_diag_commands       test whether the RCP supports all diag commands
   test_frame_formats       test whether the RCP supports 802.15.4 frames of all formats
@@ -212,11 +212,46 @@ diag stream stop ----------------------------------------- NotSupported
 
 ### Test CSL Transmitter
 
-The test case `test_csl` tests whether the RCP supports the CSL transmitter.
+The test case `test_csl` tests whether the RCP supports the CSL transmitter. The reference device attaches to the DUT as an SSED, and the DUT pings it twice:
+
+- `Same Channel`: the CSL channel is the PAN channel, which tests the timing of the CSL transmissions (`mTxDelay`) without channel switching.
+- `Cross Channel`: the CSL channel is another channel, which also tests switching to the CSL channel for the CSL transmissions.
 
 ```bash
 tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_csl
-CSL Transmitter ------------------------------------------ OK
+CSL Transmitter (Same Channel) --------------------------- OK
+CSL Transmitter (Cross Channel) -------------------------- OK
+```
+
+If a [sniffer](#sniffer) is configured, it captures the frames on the CSL channel, and a failed sub-test is followed by an analysis of the CSL frame exchanges, which tells a CSL transmitter issue of the DUT from a CSL receiver issue of the reference device. The CSL sample times of the reference device are derived from the CSL IEs it sends (e.g. in the Enh-ACKs), and each data frame from the DUT to the reference device is checked for its offset from the CSL sample time and for its Enh-ACK:
+
+- `CSL transmitter issue (no TX)`: the DUT sent no data frame to the reference device on the CSL channel.
+- `CSL transmitter issue (TX timing miss)`: the DUT sent data frames out of the CSL sample window, e.g. the RCP sends them without waiting for the target TX time (`mTxDelayBaseTime` + `mTxDelay`).
+- `CSL receiver issue (missing Enh-ACK)`: the DUT sent data frames in the CSL sample window, but the reference device did not acknowledge them.
+- `CSL timing inconclusive (clock drift)`: the DUT sent data frames near the edge of the CSL sample window, and the clock drift since the CSL IE they are timed from makes it unknown whether they were in it.
+- `CSL timing inconclusive (CSL schedule changed)`: the reference device changed its CSL sample time (e.g. it attached again) between the CSL IEs before and after the data frames, and only one of them puts the data frames in the CSL sample window.
+
+Each data frame is timed from the last CSL IE before it, or the first CSL IE after it if there is none, from the same attachment of the reference device. The CSL sample window is ±352 us around the CSL sample time, and a frame is only in or out of it if it is so even with the worst clock drift (±40 ppm of each of the sniffer and the reference device) since that CSL IE.
+
+When the CSL channel is not the PAN channel and the reference device sent no Enh-ACK on the CSL channel, no CSL IE is captured to time the data frames, so the analysis refers to the result of the same channel sub-test.
+
+```bash
+tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 SNIFFER_SERIAL=/dev/ttyACM1 python3 -m unittest -q test_csl
+CSL Transmitter (Same Channel) --------------------------- NotSupported
+  CSL transmitter issue (TX timing miss): 4/4 data frames out of the CSL sample window (offsets +552, +565, +561, +591 us, tolerance 352 us, clock drift up to 111 us for CSL IEs up to 1381 ms old)
+CSL Transmitter (Cross Channel) -------------------------- NotSupported
+  4/4 data frames on channel 15 were not acknowledged, and no CSL IE from the CSL receiver was captured on channel 15 to time them
+  Same channel (20): CSL transmitter issue (TX timing miss): 4/4 data frames out of the CSL sample window (offsets +552, +565, +561, +591 us, tolerance 352 us, clock drift up to 111 us for CSL IEs up to 1381 ms old)
+```
+
+The data frames sent while the reference device polls data or attaches again are not CSL transmissions, so they are not analyzed. CSL IEs whose CSL Period is not the configured one, or whose CSL Phase is not less than the CSL Period, are ignored. When the CSL channel is not the PAN channel, the sniffer cannot see the reference device attaching again, so the data frames after that are timed from its old CSL sample time until it sends a CSL IE on the CSL channel.
+
+With `DEBUG=on`, the analysis is also shown for passed sub-tests, and the captures are kept in PCAPNG files, whose paths are shown.
+
+The unit tests of the analysis do not need any device:
+
+```bash
+tools/cp-caps$ python3 tests/test_csl_analyzer.py
 ```
 
 ### Test Data Poll

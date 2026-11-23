@@ -1,0 +1,452 @@
+#!/usr/bin/env python3
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+"""Unit tests of the CSL analyzer, which do not need any device."""
+
+import os
+import sys
+import unittest
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+
+import csl_analyzer
+
+from csl_analyzer import CSL_TX_TOLERANCE_US, MAX_CLOCK_DRIFT_PPM, CslIe, analyze_csl_tx, parse_mac_frame
+from sniffer import SniffedFrame
+
+CHANNEL = 20
+DUT = {'a2bc7ebbdd2da161', '5c00'}
+SSED = {'3edf345f6c63fa01', '5c01'}
+
+# Frames captured on the simulated testbed, including the FCS.
+#
+# Secured 2015 data frame from 0x5c00 to 0x5c01, sequence 0x7b.
+DATA_2015 = ('69a87b6f95015c005c0d0100000001962758b6d335ec71fc8f719688db129faaf2e16f9b031001d4dcc91afe38915ab965b4'
+             '3b22f9760063')
+# Secured 2015 data frame from 0x5c01 to 0x5c00, sequence 0x3e, with a CSL IE and a header termination IE.
+DATA_2015_CSL_IE = (
+    '69aa3e6f95005c015c0d0300000001040dcf07d007803f2c18588cfdb6c755b347e8d55ef4de09064dc749dab780f2738860'
+    '1e3306b9b60575f8fc227528187f')
+# Secured 2015 data frame between extended addresses, sequence 0x3d, with a CSL IE and a header termination IE.
+DATA_2015_EXT_CSL_IE = (
+    '29ee3d6f9561a12dddbb7ebca201fa636c5f34df3e0d0100000001040d5b05d007803fe87bcf0a7da7432eaf9abd9a1d4394'
+    'c7d01ef31c7fcd2db47592316eb77919fafb4d79690f32030ab795ecc41c1f7bf3df598119aa29dea0b71bdd99e2610b'
+    '195eb26259f22730325fc1796be3977e5a')
+# Secured Enh-ACK to 0x5c00, sequence 0x7b, with a CSL IE.
+ENH_ACK_CSL_IE = '1a2a7b6f95005c0d0200000001040d0000d007d41753cfdc74'
+# Imm-ACK with the frame pending bit, sequence 0x78.
+IMM_ACK = '121078735a'
+# Secured 2006 MAC command frame between extended addresses, sequence 0x3c.
+COMMAND_2006 = '6bdc3c6f9561a12dddbb7ebca201fa636c5f34df3e0d0000000001044ac109dad21e'
+# 2006 broadcast data frame (MLE Parent Request) from 3edf345f6c63fa01, sequence 0x3a.
+PARENT_REQUEST_2006 = (
+    '41d83a6f95ffff01fa636c5f34df3e7f3b02f04d4c4d4cc4c700150000000000000000014369a8ecf57d68cb789b1c31c1b9'
+    'ae32265a2f405d18b5be40d690')
+
+
+class TestParseMacFrame(unittest.TestCase):
+
+    def test_data_frame(self):
+        frame = parse_mac_frame(bytes.fromhex(DATA_2015))
+
+        self.assertEqual(frame.frame_type, 1)
+        self.assertTrue(frame.ack_request)
+        self.assertEqual(frame.seq, 0x7b)
+        self.assertEqual(frame.dst_addr, '5c01')
+        self.assertEqual(frame.src_addr, '5c00')
+        self.assertIsNone(frame.csl_ie)
+
+    def test_data_frame_with_csl_ie(self):
+        frame = parse_mac_frame(bytes.fromhex(DATA_2015_CSL_IE))
+
+        self.assertEqual(frame.seq, 0x3e)
+        self.assertEqual(frame.dst_addr, '5c00')
+        self.assertEqual(frame.src_addr, '5c01')
+        self.assertEqual(frame.csl_ie, CslIe(phase=1999, period=2000))
+
+        frame = parse_mac_frame(bytes.fromhex(DATA_2015_EXT_CSL_IE))
+
+        self.assertEqual(frame.dst_addr, 'a2bc7ebbdd2da161')
+        self.assertEqual(frame.src_addr, '3edf345f6c63fa01')
+        self.assertEqual(frame.csl_ie, CslIe(phase=1371, period=2000))
+
+    def test_enh_ack_with_csl_ie(self):
+        frame = parse_mac_frame(bytes.fromhex(ENH_ACK_CSL_IE))
+
+        self.assertEqual(frame.frame_type, 2)
+        self.assertEqual(frame.seq, 0x7b)
+        self.assertEqual(frame.dst_addr, '5c00')
+        self.assertIsNone(frame.src_addr)
+        self.assertEqual(frame.csl_ie, CslIe(phase=0, period=2000))
+
+    def test_imm_ack(self):
+        frame = parse_mac_frame(bytes.fromhex(IMM_ACK))
+
+        self.assertEqual(frame.frame_type, 2)
+        self.assertEqual(frame.seq, 0x78)
+        self.assertIsNone(frame.dst_addr)
+        self.assertIsNone(frame.src_addr)
+
+    def test_2006_frames(self):
+        frame = parse_mac_frame(bytes.fromhex(COMMAND_2006))
+
+        self.assertEqual(frame.frame_type, 3)
+        self.assertEqual(frame.dst_addr, 'a2bc7ebbdd2da161')
+        self.assertEqual(frame.src_addr, '3edf345f6c63fa01')
+
+        frame = parse_mac_frame(bytes.fromhex(PARENT_REQUEST_2006))
+
+        self.assertFalse(frame.ack_request)
+        self.assertEqual(frame.seq, 0x3a)
+        self.assertEqual(frame.dst_addr, 'ffff')
+        self.assertEqual(frame.src_addr, '3edf345f6c63fa01')
+
+    def test_truncated_frames(self):
+        # Truncated within the addressing fields, the security header and the CSL IE.
+        for psdu, length in ((DATA_2015, 7), (DATA_2015_CSL_IE, 12), (ENH_ACK_CSL_IE, 21)):
+            self.assertIsNone(parse_mac_frame(bytes.fromhex(psdu)[:length] + b'\xff\xff'))
+
+        self.assertIsNone(parse_mac_frame(bytes.fromhex('12')))
+
+    def test_panid_presence(self):
+        # IEEE 802.15.4-2015, table 7-2: (dst addr mode, src addr mode, PAN ID compression) -> (dst PAN ID, src PAN ID)
+        NONE, SHORT, EXT = 0, 2, 3
+        table = {
+            (NONE, NONE, False): (False, False),
+            (NONE, NONE, True): (True, False),
+            (SHORT, NONE, False): (True, False),
+            (EXT, NONE, True): (False, False),
+            (NONE, EXT, False): (False, True),
+            (NONE, SHORT, True): (False, False),
+            (EXT, EXT, False): (True, False),
+            (EXT, EXT, True): (False, False),
+            (SHORT, SHORT, False): (True, True),
+            (SHORT, EXT, False): (True, True),
+            (EXT, SHORT, False): (True, True),
+            (SHORT, EXT, True): (True, False),
+            (EXT, SHORT, True): (True, False),
+            (SHORT, SHORT, True): (True, False),
+        }
+
+        for (dst_mode, src_mode, panid_compression), expected in table.items():
+            self.assertEqual((csl_analyzer._is_dst_panid_present(2, dst_mode, src_mode, panid_compression),
+                              csl_analyzer._is_src_panid_present(2, dst_mode, src_mode, panid_compression)), expected)
+
+    def test_security_header(self):
+        # (security control, security header size, MIC size)
+        for security_control, header_size, mic_size in ((0x0d, 6, 4), (0x05, 5, 4), (0x2d, 2, 4), (0x16, 10, 8),
+                                                        (0x1f, 14, 16), (0x04, 5, 0)):
+            self.assertEqual(csl_analyzer._get_security_header_size(security_control), header_size)
+            self.assertEqual(csl_analyzer._get_mic_size(security_control), mic_size)
+
+
+class TestAnalyzeCslTx(unittest.TestCase):
+
+    PERIOD = 2000  # 320 ms in units of 10 symbols
+    PERIOD_US = PERIOD * 160
+    ANCHOR_US = 1000000
+    PHASE = 100  # The first CSL sample is at ANCHOR_US + 16 ms
+
+    def _anchor(self, timestamp_us=ANCHOR_US, phase=PHASE, period=PERIOD):
+        psdu = bytes.fromhex(DATA_2015_CSL_IE)
+        psdu = psdu[:17] + phase.to_bytes(2, 'little') + period.to_bytes(2, 'little') + psdu[21:]
+        return SniffedFrame(timestamp_us=timestamp_us, channel=CHANNEL, psdu=psdu.hex())
+
+    def _sample_us(self, n):
+        return self.ANCHOR_US + self.PHASE * 160 + n * self.PERIOD_US
+
+    @staticmethod
+    def _data(timestamp_us, seq=0x7b):
+        psdu = bytes.fromhex(DATA_2015)
+        psdu = psdu[:2] + bytes([seq]) + psdu[3:]
+        return SniffedFrame(timestamp_us=timestamp_us, channel=CHANNEL, psdu=psdu.hex())
+
+    @staticmethod
+    def _ack(timestamp_us, seq=0x7b):
+        return SniffedFrame(timestamp_us=timestamp_us, channel=CHANNEL, psdu=f'0200{seq:02x}1234')
+
+    def test_no_tx(self):
+        report = analyze_csl_tx([self._anchor()], CHANNEL, DUT, SSED)
+
+        self.assertEqual(report.attempts, [])
+        self.assertFalse(report.is_untimed)
+        self.assertEqual(report.describe(),
+                         ['CSL transmitter issue (no TX): no CSL data frame to the CSL receiver on channel 20'])
+
+    def test_in_window_and_acked(self):
+        frames = [self._anchor()]
+        for n in range(1, 4):
+            frames += [self._data(self._sample_us(n) + 30, seq=n), self._ack(self._sample_us(n) + 1500, seq=n)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual([attempt.offset_us for attempt in report.attempts], [30, 30, 30])
+        self.assertTrue(all(attempt.acked and attempt.is_in_window for attempt in report.attempts))
+        self.assertEqual(report.describe(), ['No CSL issue found: 3/3 data frames on channel 20 were acknowledged'])
+
+    def test_tx_timing_miss(self):
+        # Sent without waiting for the CSL sample time, e.g. the radio does not support `mTxDelay`.
+        frames = [self._anchor(), self._data(self._sample_us(1) - 150000), self._data(self._sample_us(2) + 1000)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual([attempt.offset_us for attempt in report.attempts], [-150000, 1000])
+        self.assertFalse(any(attempt.is_in_window for attempt in report.attempts))
+        self.assertEqual(len(report.describe()), 1)
+        self.assertTrue(report.describe()[0].startswith('CSL transmitter issue (TX timing miss): 2/2 data frames'))
+
+    def test_rx_missing_ack(self):
+        frames = [self._anchor(), self._data(self._sample_us(3) - 100), self._data(self._sample_us(4) + 100)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertTrue(all(attempt.is_in_window and not attempt.acked for attempt in report.attempts))
+        self.assertEqual(report.describe(), [
+            'CSL receiver issue (missing Enh-ACK): 2/2 data frames in the CSL sample window were not acknowledged'
+            ' (offsets -100, +100 us, tolerance 352 us, clock drift up to 104 us for CSL IEs up to 1296 ms old)'
+        ])
+
+    def test_late_ack_is_missing(self):
+        data = self._data(self._sample_us(1))
+        frames = [self._anchor(), data, self._ack(data.timestamp_us + (1 + len(data.psdu) // 2) * 32 + 2001)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertFalse(report.attempts[0].acked)
+
+    def test_ack_to_other_device(self):
+        # Enh-ACK with the same sequence number, but sent by the DUT to the SSED.
+        enh_ack = bytes.fromhex(ENH_ACK_CSL_IE)
+        enh_ack = enh_ack[:5] + bytes.fromhex('015c') + enh_ack[7:]
+        data = self._data(self._sample_us(1))
+        frames = [self._anchor(), data, SniffedFrame(data.timestamp_us + 100, CHANNEL, enh_ack.hex())]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertFalse(report.attempts[0].acked)
+
+    def test_clock_drift(self):
+        # The window membership of a frame is only certain if it holds with the worst clock drift since the CSL IE.
+        for n in (1, 10):
+            sample_us = self._sample_us(n)
+            drift_us = -(-(sample_us - self.ANCHOR_US) * MAX_CLOCK_DRIFT_PPM // 1000000)
+            frames = [
+                self._anchor(),
+                self._data(sample_us - CSL_TX_TOLERANCE_US + drift_us),
+                self._data(sample_us + CSL_TX_TOLERANCE_US - drift_us),
+                self._data(sample_us - CSL_TX_TOLERANCE_US),
+                self._data(sample_us + CSL_TX_TOLERANCE_US + drift_us),
+                self._data(sample_us - CSL_TX_TOLERANCE_US - drift_us - 10),
+                self._data(sample_us + CSL_TX_TOLERANCE_US + drift_us + 10),
+            ]
+
+            report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+            self.assertEqual([attempt.is_in_window for attempt in report.attempts],
+                             [True, True, False, False, False, False])
+            self.assertEqual([attempt.is_out_of_window for attempt in report.attempts],
+                             [False, False, False, False, True, True])
+
+    def test_old_csl_ie(self):
+        # A frame sent +542 us late is a TX timing miss 1.4 s after the CSL IE, but it is inconclusive whether the
+        # same frame is in the CSL sample window 9 s after the CSL IE, so it must not be blamed on the CSL receiver.
+        frames = [self._anchor(), self._data(self._sample_us(4) + 542), self._data(self._sample_us(28) + 896)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual([(attempt.is_in_window, attempt.is_out_of_window) for attempt in report.attempts],
+                         [(False, True), (False, False)])
+        self.assertEqual(len(report.describe()), 2)
+        self.assertTrue(report.describe()[0].startswith('CSL transmitter issue (TX timing miss): 1/2 data frames'))
+        self.assertEqual(
+            report.describe()[1], 'CSL timing inconclusive (clock drift): 1/2 data frames were not acknowledged,'
+            ' and the clock drift since the CSL IE they are timed from makes it unknown whether they were in the CSL'
+            ' sample window (offsets +896 us, tolerance 352 us, clock drift up to 719 us for CSL IEs up to 8976 ms'
+            ' old)')
+
+    def test_inconclusive_with_recent_csl_ie(self):
+        # A frame near the edge of the CSL sample window is inconclusive even with a recent CSL IE.
+        frames = [self._anchor(), self._data(self._sample_us(4) - 400)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(report.attempts[0].drift_us, 104)
+        self.assertTrue(report.describe()[0].startswith('CSL timing inconclusive (clock drift): 1/1 data frames'))
+
+    def test_schedule_changed(self):
+        # The CSL receiver attached again on the PAN channel, which the sniffer on the CSL channel does not capture,
+        # and changed its CSL sample time. The frames sent before are timed from the CSL IE before them, but are only
+        # conclusive if the CSL IE after them gives the same result.
+        new_phase = self.PHASE + 1000
+        new_anchor_us = self._sample_us(6) + 200000
+        frames = [
+            self._anchor(),
+            self._data(self._sample_us(5) + 120),
+            self._data(self._sample_us(6) - 150000),
+            self._anchor(timestamp_us=new_anchor_us, phase=new_phase),
+            self._data(new_anchor_us + new_phase * 160 + self.PERIOD_US - 50),
+        ]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual([attempt.offset_us for attempt in report.attempts], [120, -150000, -50])
+        self.assertEqual([attempt.schedule_changed for attempt in report.attempts], [True, False, False])
+        self.assertEqual(report.attempts[0].csl_ie_age_us, self._sample_us(5) + 120 - self.ANCHOR_US)
+        self.assertEqual([line.split(':')[0] for line in report.describe()], [
+            'CSL transmitter issue (TX timing miss)',
+            'CSL receiver issue (missing Enh-ACK)',
+            'CSL timing inconclusive (CSL schedule changed)',
+        ])
+
+    def test_csl_ie_before_attaching(self):
+        # The CSL IEs from before the CSL receiver started attaching again are not used. The sniffer missed the CSL IE
+        # at the end of the attaching, so the frames after `start_us` are timed from no CSL IE but still analyzed.
+        parent_request = SniffedFrame(timestamp_us=self._sample_us(1), channel=CHANNEL, psdu=PARENT_REQUEST_2006)
+        frames = [self._anchor(), parent_request, self._data(self._sample_us(3))]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED, start_us=self._sample_us(2))
+
+        self.assertEqual(len(report.attempts), 1)
+        self.assertTrue(report.is_untimed)
+        self.assertFalse(report.receiver_attached)
+        self.assertEqual(report.num_excluded, 0)
+
+    def test_first_csl_ie_after_frame(self):
+        # Without a CSL IE before the frame, the frame is timed from the first CSL IE after it, unless the CSL receiver
+        # attached again in between.
+        parent_request = SniffedFrame(timestamp_us=self._sample_us(1), channel=CHANNEL, psdu=PARENT_REQUEST_2006)
+        frames = [self._data(self.ANCHOR_US - 100000), self._anchor()]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(report.attempts[0].offset_us, -100000 - self.PHASE * 160)
+
+        frames = [self._data(self._sample_us(1) - 100000), parent_request, self._anchor(self._sample_us(2))]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertFalse(report.attempts[0].is_timed)
+
+    def test_invalid_csl_ie(self):
+        # An SSED attaching again sent an Enh-ACK with a corrupted CSL IE, which must not be used to time frames nor
+        # end the attaching.
+        parent_request = SniffedFrame(timestamp_us=self._sample_us(1), channel=CHANNEL, psdu=PARENT_REQUEST_2006)
+        frames = [
+            self._anchor(),
+            parent_request,
+            self._anchor(timestamp_us=self._sample_us(1) + 10000, phase=8195, period=36896),
+            self._data(self._sample_us(2)),
+            self._anchor(timestamp_us=self._sample_us(3) - self.PHASE * 160),
+            self._data(self._sample_us(4)),
+        ]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED, csl_period_us=self.PERIOD_US)
+
+        self.assertEqual(report.num_excluded, 1)
+        self.assertEqual([attempt.offset_us for attempt in report.attempts], [0])
+
+        for phase, period in ((self.PERIOD + 1, self.PERIOD), (0, 0)):
+            report = analyze_csl_tx([self._anchor(phase=phase, period=period),
+                                     self._data(self._sample_us(1))], CHANNEL, DUT, SSED)
+            self.assertTrue(report.is_untimed)
+
+    def test_enh_ack_anchor(self):
+        enh_ack = SniffedFrame(timestamp_us=self.ANCHOR_US, channel=CHANNEL, psdu=ENH_ACK_CSL_IE)
+        frames = [enh_ack, self._data(self.ANCHOR_US + self.PERIOD_US)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(report.attempts[0].offset_us, 0)
+
+    def test_ignores_csl_ie_of_other_devices(self):
+        other_data = bytes.fromhex(DATA_2015_CSL_IE)
+        other_data = other_data[:7] + bytes.fromhex('025c') + other_data[9:]
+        other_ack = bytes.fromhex(ENH_ACK_CSL_IE)
+        other_ack = other_ack[:5] + bytes.fromhex('025c') + other_ack[7:]
+        frames = [
+            SniffedFrame(self.ANCHOR_US, CHANNEL, other_data.hex()),
+            SniffedFrame(self.ANCHOR_US + 100, CHANNEL, other_ack.hex()),
+            self._data(self._sample_us(1)),
+        ]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(len(report.attempts), 1)
+        self.assertTrue(report.is_untimed)
+
+    def test_data_poll_response(self):
+        data_poll = SniffedFrame(timestamp_us=self._sample_us(1) - 50000, channel=CHANNEL, psdu=COMMAND_2006)
+        frames = [self._anchor(), data_poll, self._data(data_poll.timestamp_us + 1000), self._data(self._sample_us(2))]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual([attempt.timestamp_us for attempt in report.attempts], [self._sample_us(2)])
+        self.assertEqual(report.num_excluded, 1)
+
+    def test_receiver_attaching(self):
+        # The SSED sends a broadcast frame (e.g. an MLE Parent Request) to attach again, and the DUT sends frames to it
+        # without CSL until it sends a CSL IE again.
+        parent_request = SniffedFrame(timestamp_us=self._sample_us(1), channel=CHANNEL, psdu=PARENT_REQUEST_2006)
+        frames = [
+            self._anchor(),
+            parent_request,
+            self._data(self._sample_us(1) + 20000),
+            self._anchor(timestamp_us=self._sample_us(2)),
+            self._data(self._sample_us(3)),
+        ]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual([attempt.timestamp_us for attempt in report.attempts], [self._sample_us(3)])
+        self.assertTrue(report.receiver_attached)
+        self.assertEqual(report.describe()[-2:], [
+            'The CSL receiver attached again on channel 20',
+            '1 data frames sent while the CSL receiver polled data or attached are not analyzed',
+        ])
+
+    def test_untimed(self):
+        # The CSL channel is not the PAN channel, and the SSED sent no Enh-ACK on the CSL channel.
+        report = analyze_csl_tx([self._data(1000), self._data(2000)], CHANNEL, DUT, SSED)
+
+        self.assertTrue(report.is_untimed)
+        self.assertEqual(report.describe(), [
+            '2/2 data frames on channel 20 were not acknowledged, and no CSL IE from the CSL receiver was captured on'
+            ' channel 20 to time them'
+        ])
+
+    def test_start_time(self):
+        frames = [self._anchor(), self._data(self._sample_us(1)), self._data(self._sample_us(2))]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED, start_us=self._sample_us(2))
+
+        self.assertEqual(len(report.attempts), 1)
+        self.assertEqual(report.attempts[0].timestamp_us, self._sample_us(2))
+
+
+if __name__ == '__main__':
+    unittest.main()

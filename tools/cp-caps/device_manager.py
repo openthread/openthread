@@ -78,6 +78,7 @@ class DeviceManager(object):
     """Provides the DUT, reference device and common methods for test cases."""
 
     DEFAULT_FORMAT_ALIGN_LENGTH = 58  # The default formatted string alignment length
+    DEFAULT_CHANNEL = 20  # The channel of the default dataset
     RADIO_FILTER_PAN_ID = 0xdddd  # The destination PAN ID of the test frames
     BROADCAST_SHORT_ADDRESS = 0xffff
 
@@ -85,6 +86,7 @@ class DeviceManager(object):
         self.__dut = None
         self.__ref = None
         self.__sniffer = None
+        self.__debug_enabled = self.__get_debug_enabled()
         atexit.register(self.close)
         try:
             self.__dut = self.__connect_dut()
@@ -94,7 +96,7 @@ class DeviceManager(object):
             self.close()
             raise
 
-        if self.__get_debug_enabled():
+        if self.__debug_enabled:
             logger = logging.getLogger()
             logger.setLevel(logging.DEBUG)
 
@@ -134,6 +136,11 @@ class DeviceManager(object):
         return self.__ref
 
     @property
+    def debug_enabled(self) -> bool:
+        """Whether the debug information is enabled (`DEBUG=on`)."""
+        return self.__debug_enabled
+
+    @property
     def sniffer(self) -> Optional[Sniffer]:
         """The sniffer, or None if no sniffer is configured (`SNIFFER_SERIAL` or `SNIFFER_RADIO_URL`)."""
         return self.__sniffer
@@ -146,7 +153,7 @@ class DeviceManager(object):
         self.output_test_result_string(name, 'OK' if value else 'NotSupported', align_length)
 
     def get_default_dataset(self):
-        return self.__dut.create_dataset(channel=20, network_key='00112233445566778899aabbccddcafe')
+        return self.__dut.create_dataset(channel=self.DEFAULT_CHANNEL, network_key='00112233445566778899aabbccddcafe')
 
     def send_formatted_frames_retries(self,
                                       sender: OTCI,
