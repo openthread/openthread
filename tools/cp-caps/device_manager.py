@@ -62,8 +62,13 @@ class Frame:
           radio driver to encrypt the `tx_frame`.
       expect_rx_frame: The frame expected to be received. The expected frame should be the same as the
           `tx_frame` if the `expect_rx_frame` is set to None.
-      active_dataset: The active dataset.
+      active_dataset: The active dataset. If the `active_dataset` and `src_ext_address` are set, both devices are
+          factory reset, which resets the MAC frame counter of the radio driver to 0, and the transmitter is
+          configured with them, which sets the MAC keys of the radio driver, before the `tx_frame` is sent.
+          Otherwise, the `tx_frame` is sent with the current configuration of the transmitter.
       src_ext_address: The source extended MAC address of the transmitter.
+      is_header_updated: The value of the `otRadioFrame.mInfo.mTxInfo.mIsHeaderUpdated` field. It must not be False
+          if `is_security_processed` is True.
     """
     name: str
     tx_frame: str
@@ -72,6 +77,7 @@ class Frame:
     expect_rx_frame: Optional[str] = None
     active_dataset: Optional[str] = None
     src_ext_address: Optional[str] = None
+    is_header_updated: Optional[bool] = None
 
 
 class DeviceManager(object):
@@ -335,14 +341,16 @@ class DeviceManager(object):
             raise InvalidArgumentsError(f'Invalid dst_address: {dst_address!r}')
 
     def __send_formatted_frame(self, sender: OTCI, receiver: OTCI, frame: Frame, enable_radio_address_filter: bool):
-        # When `is_security_processed` is False, the frame may need the radio driver
-        # to encrypt the frame. Here sets the active dataset and the MAC source address for the
-        # radio driver to encrypt the frame.
-        if frame.is_security_processed is False:
-            if frame.active_dataset is None or frame.src_ext_address is None:
-                raise InvalidArgumentsError(
-                    "When the 'is_security_processed' is 'False', the 'active_dataset' and 'src_ext_address' must be set"
-                )
+        if (frame.active_dataset is None) != (frame.src_ext_address is None):
+            raise InvalidArgumentsError("The 'active_dataset' and 'src_ext_address' must be set together")
+
+        # `diag frame -s` also sets `mIsHeaderUpdated`.
+        if frame.is_security_processed and frame.is_header_updated is False:
+            raise InvalidArgumentsError("When 'is_security_processed' is True, 'is_header_updated' cannot be False")
+
+        # The active dataset sets the MAC keys of the radio driver, which it needs to encrypt a frame whose security is
+        # not processed yet, and must not apply to a frame whose security is already processed.
+        if frame.active_dataset is not None:
             # Do the factory reset to set the frame counter to 0.
             sender.factory_reset()
             receiver.factory_reset()
@@ -373,6 +381,7 @@ class DeviceManager(object):
 
         sender.diag_frame(frame.tx_frame,
                           is_security_processed=frame.is_security_processed,
+                          is_header_updated=frame.is_header_updated,
                           max_csma_backoffs=4,
                           max_frame_retries=4,
                           csma_ca_enabled=True)
