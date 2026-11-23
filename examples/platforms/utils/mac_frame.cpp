@@ -495,7 +495,8 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
     {
         Mac::Frame::ParseInfo frameInfo;
 
-        if ((ParseFully(aFrame, frameInfo) == kErrorNone) && frameInfo.Has<Mac::CslIe>())
+        if ((aRadioContext->mCslPeriod > 0) && (ParseFully(aFrame, frameInfo) == kErrorNone) &&
+            frameInfo.Has<Mac::CslIe>())
         {
             otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod,
                                ComputeCslPhase(static_cast<uint32_t>(aRadioTime), aRadioContext));
