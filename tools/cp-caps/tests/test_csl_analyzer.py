@@ -164,6 +164,22 @@ class TestParseMacFrame(unittest.TestCase):
             self.assertEqual(csl_analyzer._get_security_header_size(security_control), header_size)
             self.assertEqual(csl_analyzer._get_mic_size(security_control), mic_size)
 
+    def test_security_header_fields(self):
+        # (Auxiliary Security Header, Frame Counter, Key Index)
+        for header, frame_counter, key_index in (
+            ('0d0801000002', 264, 2),  # Key ID Mode 1
+            ('0508010000', 264, None),  # Key ID Mode 0
+            ('2d02', None, 2),  # Frame Counter suppressed
+            ('1508010000ffffffff03', 264, 3),  # Key ID Mode 2, 4-byte Key Source
+            ('1d08010000111111111111111104', 264, 4),  # Key ID Mode 3, 8-byte Key Source
+        ):
+            self.assertEqual(csl_analyzer._parse_security_header(bytes.fromhex(header), 0), (frame_counter, key_index))
+
+        for psdu, frame_counter, key_index in ((DATA_2015, 1, 1), (ENH_ACK_CSL_IE, 2, 1), (COMMAND_2006, 0, 1),
+                                               (PARENT_REQUEST_2006, None, None), (IMM_ACK, None, None)):
+            frame = parse_mac_frame(bytes.fromhex(psdu))
+            self.assertEqual((frame.frame_counter, frame.key_index), (frame_counter, key_index))
+
 
 class TestAnalyzeCslTx(unittest.TestCase):
 
@@ -181,9 +197,19 @@ class TestAnalyzeCslTx(unittest.TestCase):
         return self.ANCHOR_US + self.PHASE * 160 + n * self.PERIOD_US
 
     @staticmethod
-    def _data(timestamp_us, seq=0x7b):
+    def _data(timestamp_us, seq=0x7b, frame_counter=None, key_index=None):
         psdu = bytes.fromhex(DATA_2015)
         psdu = psdu[:2] + bytes([seq]) + psdu[3:]
+        if frame_counter is not None:
+            psdu = psdu[:10] + frame_counter.to_bytes(4, 'little') + psdu[14:]
+        if key_index is not None:
+            psdu = psdu[:14] + bytes([key_index]) + psdu[15:]
+        return SniffedFrame(timestamp_us=timestamp_us, channel=CHANNEL, psdu=psdu.hex())
+
+    @staticmethod
+    def _unsecured_data(timestamp_us, seq):
+        # Unsecured 2015 data frame from 0x5c00 to 0x5c01 (e.g. an MLE message, which is secured by MLE).
+        psdu = bytes.fromhex(f'61a8{seq:02x}6f95015c005c') + bytes(40) + bytes.fromhex('ffff')
         return SniffedFrame(timestamp_us=timestamp_us, channel=CHANNEL, psdu=psdu.hex())
 
     @staticmethod
@@ -446,6 +472,164 @@ class TestAnalyzeCslTx(unittest.TestCase):
 
         self.assertEqual(len(report.attempts), 1)
         self.assertEqual(report.attempts[0].timestamp_us, self._sample_us(2))
+
+    def _retx(self, frame_counters, key_indexes=None, seq=206, first_sample=1):
+        # The CSL transmitter retransmits an unacknowledged frame in the next CSL sample windows.
+        key_indexes = key_indexes or [1] * len(frame_counters)
+        return [
+            self._data(self._sample_us(first_sample + n), seq, frame_counter, key_index)
+            for n, (frame_counter, key_index) in enumerate(zip(frame_counters, key_indexes))
+        ]
+
+    def test_retx_security_reused(self):
+        frames = [self._anchor(), *self._retx([8, 8, 8, 8]), self._data(self._sample_us(5), 207, 9)]
+        frames.append(self._ack(self._sample_us(5) + 1500, 207))
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(len(report.retransmitted_frames), 1)
+        self.assertEqual(report.retransmitted_frames[0].seq, 206)
+        self.assertEqual(report.retransmitted_frames[0].num_retx, 3)
+        self.assertEqual(report.retransmitted_frames[0].num_changed, 0)
+        self.assertEqual(report.describe(), [
+            'CSL receiver issue (missing Enh-ACK): 4/5 data frames in the CSL sample window were not acknowledged'
+            ' (offsets +0, +0, +0, +0 us, tolerance 352 us, clock drift up to 104 us for CSL IEs up to 1296 ms old)'
+        ])
+
+    def test_retx_frame_counter_changed(self):
+        # The radio secured each retransmission again with a new frame counter. It is reported in addition to the
+        # timing of the frames, which it does not change. The broadcast frame from the CSL transmitter between the
+        # retransmissions has a new sequence number, and does not end the retransmissions.
+        broadcast = bytes.fromhex(PARENT_REQUEST_2006)
+        broadcast = broadcast[:2] + bytes([207]) + broadcast[3:7] + bytes.fromhex('61a12dddbb7ebca2') + broadcast[15:]
+        frames = [self._anchor(), *self._retx([8, 9, 10, 11])]
+        frames.insert(3, SniffedFrame(self._sample_us(2) + 100000, CHANNEL, broadcast.hex()))
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(report.retransmitted_frames[0].frame_counters, [8, 9, 10, 11])
+        self.assertEqual(report.retransmitted_frames[0].num_changed, 3)
+        self.assertFalse(report.receiver_attached)
+        self.assertEqual(report.describe(), [
+            'CSL receiver issue (missing Enh-ACK): 4/4 data frames in the CSL sample window were not acknowledged'
+            ' (offsets +0, +0, +0, +0 us, tolerance 352 us, clock drift up to 104 us for CSL IEs up to 1296 ms old)',
+            'CSL transmitter issue (retransmission with new frame counter): 3/3 retransmitted data frames did not reuse the'
+            ' frame counter and key index of the first transmission (seq 206: expected frame counter 8, observed 8,'
+            ' 9, 10, 11)',
+        ])
+
+    def test_retx_key_index_changed(self):
+        frames = [self._anchor(), *self._retx([8, 8, 9], [1, 1, 2]), *self._retx([20, 21], seq=207, first_sample=4)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual([frame.num_changed for frame in report.retransmitted_frames], [1, 1])
+        self.assertTrue(report.describe()[-1].endswith(
+            ': 2/3 retransmitted data frames did not reuse the frame counter and key index of the first transmission'
+            ' (seq 206: expected frame counter 8, observed 8, 8, 9 and expected key index 1, observed 1, 1, 2; seq 207:'
+            ' expected frame counter 20, observed 20, 21)'))
+
+    def test_retx_frame_counter_changed_only_issue(self):
+        # The sniffer captured the Enh-ACKs, which the CSL transmitter missed.
+        frames = [self._anchor()]
+        for frame in self._retx([8, 9]):
+            frames += [frame, self._ack(frame.timestamp_us + 1500, 206)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(len(report.describe()), 1)
+        self.assertTrue(
+            report.describe()[0].startswith('CSL transmitter issue (retransmission with new frame counter): 1/1'))
+
+    def test_retx_not_detected(self):
+        # The same sequence number is not a retransmission after another data frame to the CSL receiver (e.g. the
+        # sequence number wrapped around), with another PSDU length (another frame after a wrap-around whose other
+        # frames were not captured), or after the CSL receiver attached again.
+        other_length = self._data(self._sample_us(3), 206, 300)
+        other_length.psdu = other_length.psdu[:-4] + '0000' + other_length.psdu[-4:]
+        parent_request = SniffedFrame(timestamp_us=self._sample_us(4) + 50000,
+                                      channel=CHANNEL,
+                                      psdu=PARENT_REQUEST_2006)
+        frames = [
+            self._anchor(),
+            self._data(self._sample_us(1), 206, 8),
+            self._data(self._sample_us(2), 207, 9),
+            self._data(self._sample_us(2) + 50000, 206, 10),
+            other_length,
+            self._data(self._sample_us(4), 207, 11),
+            parent_request,
+            self._anchor(timestamp_us=self._sample_us(5)),
+            self._data(self._sample_us(6), 207, 400),
+        ]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(report.retransmitted_frames, [])
+        self.assertFalse(any('retransmi' in line for line in report.describe()))
+
+    def test_retx_unsecured_and_other_devices_ignored(self):
+        # Retransmissions of unsecured frames (e.g. MLE messages) have no frame counter, and secured frames with a
+        # repeated sequence number from or to other devices are not checked.
+        other_dst = bytes.fromhex(self._data(0, 206, 9).psdu)
+        other_dst = other_dst[:5] + bytes.fromhex('025c') + other_dst[7:]
+        other_src = bytes.fromhex(self._data(0, 206, 10).psdu)
+        other_src = other_src[:7] + bytes.fromhex('025c') + other_src[9:]
+        frames = [
+            self._anchor(),
+            *[self._unsecured_data(self._sample_us(n), 202) for n in range(1, 4)],
+            self._data(self._sample_us(4), 206, 8),
+            SniffedFrame(self._sample_us(4) + 50000, CHANNEL, other_dst.hex()),
+            SniffedFrame(self._sample_us(4) + 60000, CHANNEL, other_src.hex()),
+        ]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(len(report.attempts), 4)
+        self.assertEqual(report.retransmitted_frames, [])
+
+        # An unsecured frame to the CSL receiver ends the retransmissions of a secured frame.
+        frames = [self._anchor(), self._data(self._sample_us(1), 206, 8)]
+        frames += [self._unsecured_data(self._sample_us(2), 206), self._data(self._sample_us(3), 206, 9)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(report.retransmitted_frames, [])
+
+    def test_retx_seq_suppressed_ignored(self):
+        # Secured data frames without a sequence number (Sequence Number Suppression) cannot be matched to a first
+        # transmission.
+        frames = [self._anchor()]
+        for n, frame in enumerate(self._retx([8, 9]), 1):
+            psdu = bytes.fromhex(frame.psdu)
+            psdu = bytes([psdu[0], psdu[1] | 0x01]) + psdu[3:]
+            frames.append(SniffedFrame(self._sample_us(n), CHANNEL, psdu.hex()))
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual([parse_mac_frame(bytes.fromhex(frame.psdu)).seq for frame in frames[1:]], [None, None])
+        self.assertEqual(len(report.attempts), 2)
+        self.assertEqual(report.retransmitted_frames, [])
+
+    def test_retx_interleaved_frame_to_extended_address(self):
+        # While the CSL receiver attaches again, the CSL transmitter sends an MLE message to its extended address
+        # between the retransmissions to its short address.
+        mle = bytes.fromhex('61ecd2' + '01fa636c5f34df3e' + '61a12dddbb7ebca2') + bytes(40) + bytes.fromhex('ffff')
+        frames = [self._anchor(), *self._retx([9, 9, 9, 9])]
+        frames.insert(2, SniffedFrame(self._sample_us(1) + 100000, CHANNEL, mle.hex()))
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual(len(report.attempts), 5)
+        self.assertEqual(report.retransmitted_frames[0].frame_counters, [9, 9, 9, 9])
+        self.assertEqual(report.retransmitted_frames[0].num_changed, 0)
+
+    def test_retx_start_time(self):
+        frames = [self._anchor(), *self._retx([8, 9, 9])]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED, start_us=self._sample_us(2))
+
+        self.assertEqual(report.retransmitted_frames[0].frame_counters, [9, 9])
+        self.assertEqual(report.retransmitted_frames[0].num_changed, 0)
 
 
 if __name__ == '__main__':

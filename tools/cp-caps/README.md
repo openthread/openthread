@@ -230,6 +230,9 @@ If a [sniffer](#sniffer) is configured, it captures the frames on the CSL channe
 - `CSL receiver issue (missing Enh-ACK)`: the DUT sent data frames in the CSL sample window, but the reference device did not acknowledge them.
 - `CSL timing inconclusive (clock drift)`: the DUT sent data frames near the edge of the CSL sample window, and the clock drift since the CSL IE they are timed from makes it unknown whether they were in it.
 - `CSL timing inconclusive (CSL schedule changed)`: the reference device changed its CSL sample time (e.g. it attached again) between the CSL IEs before and after the data frames, and only one of them puts the data frames in the CSL sample window.
+- `CSL transmitter issue (retransmission with new frame counter)`: the DUT retransmitted a secured data frame with another frame counter or key index than its first transmission, e.g. the RCP assigns a new frame counter or key index although `mIsHeaderUpdated` is set. The frame counters are shown as `expected <first>, observed <first>, <retx 1>, ...`. This issue does not change the timing analysis of the data frames.
+
+A data frame is a retransmission if it has the same sequence number and length as the previous data frame to the same address of the reference device, since the reference device last attached.
 
 Each data frame is timed from the last CSL IE before it, or the first CSL IE after it if there is none, from the same attachment of the reference device. The CSL sample window is ±352 us around the CSL sample time, and a frame is only in or out of it if it is so even with the worst clock drift (±40 ppm of each of the sniffer and the reference device) since that CSL IE.
 
