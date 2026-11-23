@@ -222,16 +222,20 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
                  error = kErrorInvalidState);
     ClearCommissionerState();
 
+    // The authorization field is at least as long as `CertificateAuthorizationField`. A future version of the
+    // Thread specification may add bytes to it, which are ignored: only the first bytes are read.
+
     len = sizeof(mCommissionerAuthorizationField);
-    SuccessOrExit(
-        error = aTls.GetThreadAttributeFromPeerCertificate(
-            kCertificateAuthorizationField, reinterpret_cast<uint8_t *>(&mCommissionerAuthorizationField), &len));
+    SuccessOrExit(error = aTls.GetThreadAttributeFromPeerCertificate(
+                      kCertificateAuthorizationField, reinterpret_cast<uint8_t *>(&mCommissionerAuthorizationField),
+                      &len, /* aAllowTruncation */ true));
     VerifyOrExit(len == sizeof(mCommissionerAuthorizationField), error = kErrorParse);
     VerifyOrExit(mCommissionerAuthorizationField.IsHeaderValid(/* aIsCommissioner */ true), error = kErrorParse);
 
     len = sizeof(mDeviceAuthorizationField);
     SuccessOrExit(error = aTls.GetThreadAttributeFromOwnCertificate(
-                      kCertificateAuthorizationField, reinterpret_cast<uint8_t *>(&mDeviceAuthorizationField), &len));
+                      kCertificateAuthorizationField, reinterpret_cast<uint8_t *>(&mDeviceAuthorizationField), &len,
+                      /* aAllowTruncation */ true));
     VerifyOrExit(len == sizeof(mDeviceAuthorizationField), error = kErrorParse);
     VerifyOrExit(mDeviceAuthorizationField.IsHeaderValid(/* aIsCommissioner */ false), error = kErrorParse);
 
