@@ -347,7 +347,11 @@ The test case `test_radio_frame_tx_info` tests whether the RCP supports the mTxI
 tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_radio_frame_tx_info
 mCsmaCaEnabled=0 ----------------------------------------- OK
 mCsmaCaEnabled=1 ----------------------------------------- OK
-mIsSecurityProcessed=True -------------------------------- OK
+mIsHeaderUpdated=True ------------------------------------ OK
+mIsHeaderUpdated=False ----------------------------------- OK
+mIsSecurityProcessed=True,KeyIdMode0 --------------------- OK
+mIsSecurityProcessed=True,KeyIdMode1 --------------------- OK
+mIsSecurityProcessed=True,KeyIdMode2 --------------------- OK
 mIsSecurityProcessed=False ------------------------------- OK
 mMaxCsmaBackoffs=0 --------------------------------------- OK (12 ms)
 mMaxCsmaBackoffs=100 ------------------------------------- OK (541 ms)

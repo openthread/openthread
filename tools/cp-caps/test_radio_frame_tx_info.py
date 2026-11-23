@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import dataclasses
 import unittest
 import time
 
@@ -36,6 +37,10 @@ from device_manager import DeviceManager, Frame
 
 class TestRadioFrameTxInfo(unittest.TestCase):
     """Test whether the DUT supports otRadioFrame.mInfo.mTxInfo field."""
+
+    MAX_SEND_RETRIES = 5
+    SRC_EXT_ADDRESS = '0807060504030201'  # The source extended address of the secured test frames
+    DST_EXT_ADDRESS = '8070605040302010'  # The destination extended address of the secured test frames
 
     @classmethod
     def setUpClass(cls):
@@ -77,27 +82,115 @@ class TestRadioFrameTxInfo(unittest.TestCase):
         self.__ref.diag_cw_stop()
 
     def test_radio_frame_tx_info_is_security_processed(self):
-        """Test whether the DUT supports mInfo.mTxInfo.mIsSecurityProcessed field."""
+        """Test whether the DUT supports mInfo.mTxInfo.mIsSecurityProcessed field.
+
+        The DUT is configured with the default dataset (MAC key index 1, MAC frame counter 0) for every frame. The
+        frames with mIsSecurityProcessed=True are encrypted with a non-zero frame counter, so they are received as is
+        only if the radio driver neither encrypts them again nor overwrites their key ID or frame counter.
+        """
         active_dataset = self.__device_manager.get_default_dataset()
 
         frames = [
-            Frame(name='mIsSecurityProcessed=True',
-                  tx_frame='09ec00dddd102030405060708001020304050607080d0000000001db622c220fde64408db9128c93d50000',
-                  dst_address='8070605040302010',
-                  is_security_processed=True),
+            # Key ID mode 0, frame counter 0x12345678, encrypted with the KEK ffeeddccbbaa99887766554433221100.
+            Frame(name='mIsSecurityProcessed=True,KeyIdMode0',
+                  tx_frame='09ec00dddd10203040506070800102030405060708057856341299c1fefeadda967e8f3606def4010000',
+                  dst_address=self.DST_EXT_ADDRESS,
+                  is_security_processed=True,
+                  active_dataset=active_dataset,
+                  src_ext_address=self.SRC_EXT_ADDRESS),
+            # Key ID mode 1, key index 2, frame counter 0x12345678, encrypted with the MAC key of key sequence 1.
+            Frame(name='mIsSecurityProcessed=True,KeyIdMode1',
+                  tx_frame='09ec00dddd102030405060708001020304050607080d785634120264e3dcbe487e8e8721b56dfb679a0000',
+                  dst_address=self.DST_EXT_ADDRESS,
+                  is_security_processed=True,
+                  active_dataset=active_dataset,
+                  src_ext_address=self.SRC_EXT_ADDRESS),
+            # Key ID mode 2, frame counter 0x12345678, encrypted with the Thread key ID mode 2 key.
+            Frame(name='mIsSecurityProcessed=True,KeyIdMode2',
+                  tx_frame=
+                  '09ec00dddd102030405060708001020304050607081578563412fffffffffff6986efcae49ee0f27add6ebce1c0000',
+                  dst_address=self.DST_EXT_ADDRESS,
+                  is_security_processed=True,
+                  active_dataset=active_dataset,
+                  src_ext_address=self.SRC_EXT_ADDRESS),
+            # The radio driver sets key index 1 and frame counter 0 and encrypts the frame.
             Frame(name='mIsSecurityProcessed=False',
                   tx_frame='09ec00dddd102030405060708001020304050607080d000000000000010203040506070809000000000000',
                   expect_rx_frame=
                   '09ec00dddd102030405060708001020304050607080d0000000001db622c220fde64408db9128c93d50000',
                   is_security_processed=False,
-                  dst_address='8070605040302010',
+                  dst_address=self.DST_EXT_ADDRESS,
                   active_dataset=active_dataset,
-                  src_ext_address='0807060504030201'),
+                  src_ext_address=self.SRC_EXT_ADDRESS),
         ]
 
         for frame in frames:
             ret = self.__device_manager.send_formatted_frames_retries(self.__dut, self.__ref, frame)
             self.__device_manager.output_test_result_bool(frame.name, ret)
+
+        # The method `send_formatted_frames_retries()` calls the `diag stop`.
+        # Here calls the `diag start` to make the `tearDown()` happy.
+        self.__ref.diag_start()
+        self.__dut.diag_start()
+
+    def test_radio_frame_tx_info_is_header_updated(self):
+        """Test whether the DUT supports mInfo.mTxInfo.mIsHeaderUpdated field.
+
+        The key ID and the frame counter of a frame with mIsHeaderUpdated=True (e.g., a retransmission) are already
+        set, so the radio driver must encrypt the frame with them and must not consume its own MAC frame counter.
+        """
+        active_dataset = self.__device_manager.get_default_dataset()
+
+        # Key ID mode 1, key index 1, frame counter 0x12345678, not encrypted yet.
+        tx_frame = '09ec00dddd102030405060708001020304050607080d785634120100010203040506070809000000000000'
+
+        header_not_updated_frame = Frame(
+            name='mIsHeaderUpdated=False',
+            tx_frame=tx_frame,
+            # Encrypted with key index 1 and frame counter 0.
+            expect_rx_frame='09ec00dddd102030405060708001020304050607080d0000000001db622c220fde64408db9128c93d50000',
+            dst_address=self.DST_EXT_ADDRESS,
+            is_security_processed=False,
+            is_header_updated=False,
+            active_dataset=active_dataset,
+            src_ext_address=self.SRC_EXT_ADDRESS)
+
+        header_updated_frame = Frame(
+            name='mIsHeaderUpdated=True',
+            tx_frame=tx_frame,
+            # Encrypted with key index 1 and frame counter 0x12345678.
+            expect_rx_frame='09ec00dddd102030405060708001020304050607080d785634120101024cbc3e4864fd55135e6970de0000',
+            dst_address=self.DST_EXT_ADDRESS,
+            is_security_processed=False,
+            is_header_updated=True,
+            active_dataset=active_dataset,
+            src_ext_address=self.SRC_EXT_ADDRESS)
+
+        # Sent right after the `header_updated_frame` without a factory reset, so the radio driver sets the frame
+        # counter to 0 unless it consumed the MAC frame counter for the `header_updated_frame`.
+        frame_counter_check_frame = dataclasses.replace(header_not_updated_frame,
+                                                        active_dataset=None,
+                                                        src_ext_address=None)
+
+        header_not_updated_ret = self.__device_manager.send_formatted_frames_retries(
+            self.__dut, self.__ref, header_not_updated_frame)
+
+        # A failed send resets both devices, so retry the frame counter check together with the `header_updated_frame`.
+        for _ in range(self.MAX_SEND_RETRIES):
+            header_updated_ret = self.__device_manager.send_formatted_frames_retries(self.__dut,
+                                                                                     self.__ref,
+                                                                                     header_updated_frame,
+                                                                                     max_send_retries=1)
+            if header_updated_ret and header_not_updated_ret:
+                header_updated_ret = self.__device_manager.send_formatted_frames_retries(self.__dut,
+                                                                                         self.__ref,
+                                                                                         frame_counter_check_frame,
+                                                                                         max_send_retries=1)
+            if header_updated_ret:
+                break
+
+        self.__device_manager.output_test_result_bool(header_updated_frame.name, header_updated_ret)
+        self.__device_manager.output_test_result_bool(header_not_updated_frame.name, header_not_updated_ret)
 
         # The method `send_formatted_frames_retries()` calls the `diag stop`.
         # Here calls the `diag start` to make the `tearDown()` happy.
