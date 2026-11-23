@@ -272,6 +272,7 @@ const char *otMdnsGetLocalHostName(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE            The local host name was successfully set.
  * @retval OT_ERROR_INVALID_STATE   mDNS module is already enabled.
+ * @retval OT_ERROR_INVALID_ARGS    The name @p aName is not valid.
  */
 otError otMdnsSetLocalHostName(otInstance *aInstance, const char *aName);
 
