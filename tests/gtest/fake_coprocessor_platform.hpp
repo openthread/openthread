@@ -64,6 +64,8 @@ public:
 
     virtual uint32_t GetBusSpeed(void) const override { return 0; }
 
+    virtual uint32_t GetBusLatency(void) const override { return mBusLatency; }
+
     virtual otError HardwareReset(void) override { return kErrorNone; }
 
     virtual const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const override { return nullptr; }
@@ -99,7 +101,8 @@ public:
      */
     std::function<void(const uint8_t *aFrame, uint16_t aLength)> mFrameObserver;
     std::function<bool(const uint8_t *aFrame, uint16_t aLength)> mFrameFilter;
-    otError                                                      mSendError = OT_ERROR_NONE;
+    otError                                                      mSendError  = OT_ERROR_NONE;
+    uint32_t                                                     mBusLatency = 0;
 
 private:
     ReceiveFrameCallback            mReceiveFrameCallback = nullptr;

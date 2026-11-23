@@ -132,6 +132,13 @@ public:
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
     /**
+     * Returns the bus latency between the host and the radio.
+     *
+     * @returns   Bus latency in microseconds.
+     */
+    uint32_t GetBusLatency(void) const { return OPENTHREAD_POSIX_CONFIG_RCP_BUS_LATENCY_DEFAULT; }
+
+    /**
      * Hardware resets the RCP.
      *
      * @retval OT_ERROR_NONE            Successfully reset the RCP.

@@ -2297,3 +2297,43 @@ TEST(RadioSpinelEnergyScan, failedStartsDoNotArmTimeout)
     platform.Process();
     EXPECT_EQ(platform.mResults, std::vector<int8_t>({-80}));
 }
+
+TEST(RadioSpinelBusLatency, usesInterfaceDefaultUntilExplicitlyOverridden)
+{
+    static uint32_t sCallbackCount = 0;
+
+    FakeCoprocessorPlatform      platform;
+    Spinel::RadioSpinelCallbacks callbacks{};
+
+    sCallbackCount = 0;
+
+    callbacks.mReceiveDone       = [](otInstance *, otRadioFrame *, otError) {};
+    callbacks.mTransmitDone      = [](otInstance *, otRadioFrame *, otRadioFrame *, otError) {};
+    callbacks.mEnergyScanDone    = [](otInstance *, int8_t) {};
+    callbacks.mTxStarted         = [](otInstance *, otRadioFrame *) {};
+    callbacks.mBusLatencyChanged = [](otInstance *) { ++sCallbackCount; };
+    platform.mRadioSpinel.SetCallbacks(callbacks);
+
+    platform.mSpinelInterface.mBusLatency = 3000;
+    EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 3000u);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 3000u);
+
+    // Setting the same value as the interface default does not fire a redundant callback,
+    // while still latching the explicit override if the interface default changes later.
+    platform.mRadioSpinel.SetBusLatency(3000);
+    EXPECT_EQ(sCallbackCount, 0u);
+    platform.mSpinelInterface.mBusLatency = 5000;
+    EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 3000u);
+
+    // Explicitly overriding to 0 overrides the non-zero SpinelInterface default and notifies.
+    platform.mRadioSpinel.SetBusLatency(0);
+    EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 0u);
+    EXPECT_EQ(sCallbackCount, 1u);
+
+    // Explicitly setting a non-zero value updates and notifies again.
+    platform.mRadioSpinel.SetBusLatency(4500);
+    EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 4500u);
+    EXPECT_EQ(sCallbackCount, 2u);
+}

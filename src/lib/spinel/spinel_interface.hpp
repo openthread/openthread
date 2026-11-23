@@ -123,6 +123,13 @@ public:
     virtual uint32_t GetBusSpeed(void) const = 0;
 
     /**
+     * Returns the bus latency between the host and the radio.
+     *
+     * @returns   Bus latency in microseconds.
+     */
+    virtual uint32_t GetBusLatency(void) const { return 0; }
+
+    /**
      * Hardware resets the RCP.
      *
      * @retval OT_ERROR_NONE            Successfully reset the RCP.

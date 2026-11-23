@@ -290,6 +290,20 @@
 #define OPENTHREAD_POSIX_VIRTUAL_TIME 0
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_RCP_BUS_LATENCY_DEFAULT
+ *
+ * Specifies the default communication latency in microseconds between the POSIX host and the RCP when
+ * `bus-latency` is not specified in the Radio URL.
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_RCP_BUS_LATENCY_DEFAULT
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+#define OPENTHREAD_POSIX_CONFIG_RCP_BUS_LATENCY_DEFAULT 0
+#else
+#define OPENTHREAD_POSIX_CONFIG_RCP_BUS_LATENCY_DEFAULT 3000
+#endif
+#endif
+
 #ifdef __APPLE__
 
 /**
