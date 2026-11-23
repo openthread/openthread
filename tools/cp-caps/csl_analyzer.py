@@ -84,7 +84,8 @@ class MacFrame:
     """Represents the MAC header fields of a frame used by the CSL analysis.
 
     Addresses are hex strings as shown by the OpenThread CLI: 16 digits for extended addresses (e.g. `extaddr`),
-    and 4 digits for short addresses (e.g. `rloc16`).
+    and 4 digits for short addresses (e.g. `rloc16`). The Frame Counter and the Key Index are from the Auxiliary
+    Security Header, and are None if the frame is not secured or the field is not present.
     """
     frame_type: int
     ack_request: bool
@@ -92,6 +93,8 @@ class MacFrame:
     dst_addr: Optional[str]
     src_addr: Optional[str]
     csl_ie: Optional[CslIe]
+    frame_counter: Optional[int] = None
+    key_index: Optional[int] = None
 
 
 def parse_mac_frame(psdu: bytes) -> Optional[MacFrame]:
@@ -134,14 +137,18 @@ def parse_mac_frame(psdu: bytes) -> Optional[MacFrame]:
         offset += 2
     src_addr, offset = _parse_addr(psdu, offset, src_mode)
 
+    frame_counter = None
+    key_index = None
     if security_enabled:
         if offset + 1 > end:
             return None
         security_control = psdu[offset]
-        offset += _get_security_header_size(security_control)
+        header_size = _get_security_header_size(security_control)
         end -= _get_mic_size(security_control)
-        if offset > end:
+        if offset + header_size > end:
             return None
+        frame_counter, key_index = _parse_security_header(psdu, offset)
+        offset += header_size
 
     csl_ie = None
     if ie_present and version == FRAME_VERSION_2015:
@@ -169,7 +176,9 @@ def parse_mac_frame(psdu: bytes) -> Optional[MacFrame]:
                     seq=seq,
                     dst_addr=dst_addr,
                     src_addr=src_addr,
-                    csl_ie=csl_ie)
+                    csl_ie=csl_ie,
+                    frame_counter=frame_counter,
+                    key_index=key_index)
 
 
 @dataclass
@@ -209,10 +218,52 @@ class CslTxAttempt:
 
 
 @dataclass
+class RetransmittedFrame:
+    """Represents a secured data frame sent more than once by the CSL transmitter to the CSL receiver.
+
+    A retransmission of a secured frame must use the same Frame Counter and Key Index as the first transmission
+    (`mIsHeaderUpdated` of the retransmitted frame is set), instead of assigning a new Frame Counter or Key Index.
+
+    Attributes:
+      seq: The sequence number of the frame.
+      frame_counters: The Frame Counters of the captured transmissions, in order.
+      key_indexes: The Key Indexes of the captured transmissions, in order.
+    """
+    seq: int
+    frame_counters: List[int]
+    key_indexes: List[Optional[int]]
+
+    @property
+    def num_retx(self) -> int:
+        return len(self.frame_counters) - 1
+
+    @property
+    def num_changed(self) -> int:
+        """The number of retransmissions whose Frame Counter or Key Index differ from the first transmission."""
+        first = (self.frame_counters[0], self.key_indexes[0])
+
+        return sum(1 for retx in zip(self.frame_counters[1:], self.key_indexes[1:]) if retx != first)
+
+    def describe(self) -> str:
+        parts = []
+
+        if any(frame_counter != self.frame_counters[0] for frame_counter in self.frame_counters):
+            parts.append(f'expected frame counter {self.frame_counters[0]}, observed'
+                         f' {", ".join(str(frame_counter) for frame_counter in self.frame_counters)}')
+
+        if any(key_index != self.key_indexes[0] for key_index in self.key_indexes):
+            parts.append(f'expected key index {self.key_indexes[0]}, observed'
+                         f' {", ".join(str(key_index) for key_index in self.key_indexes)}')
+
+        return f'seq {self.seq}: {" and ".join(parts)}'
+
+
+@dataclass
 class CslTxReport:
     """Represents the CSL frame exchanges between a CSL transmitter and a CSL receiver captured on a channel."""
     channel: int
     attempts: List[CslTxAttempt] = field(default_factory=list)
+    retransmitted_frames: List[RetransmittedFrame] = field(default_factory=list)
     receiver_attached: bool = False
     num_excluded: int = 0  # The number of data frames sent while the CSL receiver polled data or attached
 
@@ -261,6 +312,14 @@ class CslTxReport:
         if untimed:
             lines.append(f'{len(untimed)}/{total} data frames on channel {self.channel} were not acknowledged, and no'
                          f' CSL IE from the CSL receiver was captured on channel {self.channel} to time them')
+
+        changed = [frame for frame in self.retransmitted_frames if frame.num_changed]
+        if changed:
+            num_changed = sum(frame.num_changed for frame in changed)
+            num_retx = sum(frame.num_retx for frame in self.retransmitted_frames)
+            lines.append(f'CSL transmitter issue (retransmission with new frame counter): {num_changed}/{num_retx}'
+                         ' retransmitted data frames did not reuse the frame counter and key index of the first'
+                         f' transmission ({"; ".join(frame.describe() for frame in changed)})')
 
         if not lines:
             lines.append(
@@ -343,6 +402,11 @@ def analyze_csl_tx(frames: List[SniffedFrame],
     If the CSL receiver changed its CSL sample time between the CSL IEs before and after a data frame (e.g. it attached
     again on another channel), the data frame is timed from both of them.
 
+    A data frame with the same sequence number and length as the previous data frame to the same address of the CSL
+    receiver, in the same attachment of the CSL receiver, is a retransmission of it. The CSL transmitter may send other
+    frames with new sequence numbers between the retransmissions, e.g. MLE messages to the extended address of the CSL
+    receiver while it attaches again, or frames to other devices.
+
     :param frames: The frames captured by the sniffer on the channel.
     :param channel: The channel of the frames.
     :param transmitter: The addresses (extended address and RLOC16) of the CSL transmitter.
@@ -362,6 +426,7 @@ def analyze_csl_tx(frames: List[SniffedFrame],
     attaching = False
     session = 0
     attempts = []
+    last_txs = {}  # The sequence number, PSDU length, session and retransmissions of the last data frame to an address
 
     for i, (frame, mac_frame) in enumerate(parsed):
         # An SSED is assumed to send broadcast frames only when attaching (e.g. MLE Parent Requests), and MAC command
@@ -383,6 +448,19 @@ def analyze_csl_tx(frames: List[SniffedFrame],
         if frame.timestamp_us < start_us or mac_frame.frame_type != FRAME_TYPE_DATA or \
                 mac_frame.src_addr not in transmitter or mac_frame.dst_addr not in receiver:
             continue
+
+        tx = (mac_frame.seq, len(frame.psdu), session)
+        last_tx, retransmitted = last_txs.get(mac_frame.dst_addr, (None, None))
+        if mac_frame.seq is None or mac_frame.frame_counter is None:
+            retransmitted = None
+        elif tx == last_tx and retransmitted is not None:
+            if not retransmitted.num_retx:
+                report.retransmitted_frames.append(retransmitted)
+            retransmitted.frame_counters.append(mac_frame.frame_counter)
+            retransmitted.key_indexes.append(mac_frame.key_index)
+        else:
+            retransmitted = RetransmittedFrame(mac_frame.seq, [mac_frame.frame_counter], [mac_frame.key_index])
+        last_txs[mac_frame.dst_addr] = (tx, retransmitted)
 
         if attaching or (data_poll_us is not None and frame.timestamp_us - data_poll_us <= DATA_POLL_TIMEOUT_US):
             report.num_excluded += 1
@@ -509,3 +587,26 @@ def _get_security_header_size(security_control: int) -> int:
 
 def _get_mic_size(security_control: int) -> int:
     return (0, 4, 8, 16)[security_control & 0x3]
+
+
+def _parse_security_header(psdu: bytes, offset: int) -> Tuple[Optional[int], Optional[int]]:
+    """Returns the Frame Counter and the Key Index of the Auxiliary Security Header at the offset.
+
+    The Key Identifier field is the Key Source (0, 4 or 8 bytes) followed by the Key Index (IEEE 802.15.4-2015,
+    section 9.4.4).
+    """
+    security_control = psdu[offset]
+    frame_counter_suppressed = bool(security_control & (1 << 5))
+    key_id_mode = (security_control >> 3) & 0x3
+    frame_counter = None
+    key_index = None
+    offset += 1
+
+    if not frame_counter_suppressed:
+        frame_counter = struct.unpack_from('<I', psdu, offset)[0]
+        offset += 4
+
+    if key_id_mode != 0:
+        key_index = psdu[offset + (0, 0, 4, 8)[key_id_mode]]
+
+    return frame_counter, key_index
