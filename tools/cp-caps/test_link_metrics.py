@@ -51,8 +51,11 @@ class TestLinkMetrics(unittest.TestCase):
         self.__dut.join(dataset)
         self.__dut.wait_for('state', 'leader')
 
+        # Keeps the reference device a child, as its RLOC16 changes if it becomes a router during the test, and the
+        # Enhanced-ACK Probing configured for the old RLOC16 can no longer be cleared.
+        self.__ref.disable_router_eligible()
         self.__ref.join(dataset)
-        self.__ref.wait_for('state', ['child', 'router'])
+        self.__ref.wait_for('state', 'child')
 
     def test_link_metrics_initiator(self):
         """Test whether the DUT supports Link Metrics Initiator."""

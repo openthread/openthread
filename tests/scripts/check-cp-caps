@@ -1,0 +1,318 @@
+#!/bin/bash
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+#
+# Runs all test cases of the Co-Processor Capability Test Suite (tools/cp-caps) against the simulation RCP.
+#
+# The DUT and the reference device are POSIX `ot-cli` hosts, each with its own simulation `ot-rcp`, and a third
+# simulation `ot-rcp` is the sniffer. `test_csl` needs a reference device that is a CSL receiver, which the POSIX host
+# doesn't support, so it uses a simulation `ot-cli-ftd` on a pty instead.
+#
+# The cp-caps test cases report `NotSupported` instead of failing, so this script fails if any capability other than
+# the ones in `NOT_SUPPORTED_ALLOWLIST` is reported as `NotSupported`.
+#
+# Usage:
+#   tests/scripts/check-cp-caps [test_module...]
+#
+
+set -euo pipefail
+
+OT_SRCDIR="$(cd "$(dirname "$0")"/../.. && pwd)"
+readonly OT_SRCDIR
+readonly OT_RCP="${OT_SRCDIR}/build/simulation/examples/apps/ncp/ot-rcp"
+readonly OT_CLI_FTD="${OT_SRCDIR}/build/simulation/examples/apps/cli/ot-cli-ftd"
+readonly OT_CLI="${OT_SRCDIR}/build/posix/src/posix/ot-cli"
+readonly OT_EXTCAP="${OT_SRCDIR}/build/extcap/ot-extcap"
+readonly CP_CAPS_DIR="${OT_SRCDIR}/tools/cp-caps"
+
+readonly OT_THREAD_OPTIONS=(
+    "-DOT_COVERAGE=OFF"
+    "-DOT_THREAD_VERSION=1.4"
+    "-DOT_LINK_METRICS_INITIATOR=ON"
+    "-DOT_LINK_METRICS_SUBJECT=ON"
+)
+
+readonly ALL_TEST_MODULES=(
+    test_diag_commands
+    test_data_poll
+    test_radio_frame_tx_info
+    test_frame_formats
+    test_link_metrics
+    test_csl
+    test_throughput
+    test_ack
+)
+
+# The minimum number of `<name> ---- <result>` lines each test module outputs.
+declare -A MIN_RESULT_COUNT=(
+    [test_diag_commands]=31
+    [test_data_poll]=2
+    [test_radio_frame_tx_info]=15
+    [test_frame_formats]=46
+    [test_link_metrics]=2
+    [test_csl]=2
+    [test_throughput]=0
+    [test_ack]=1
+)
+readonly MIN_RESULT_COUNT
+
+# A result line is `<name> ---- <OK|NotSupported>`, optionally followed by details in parentheses.
+readonly RESULT_PATTERN=' (OK|NotSupported)( \(.*\))?$'
+
+# Capabilities the simulation RCP doesn't support (extended regular expressions matching the whole result name):
+# - It has no power settings table.
+# - Its `diag cw` doesn't occupy the channel, so the CCA of other simulated radios never fails, and the
+#   `mMaxCsmaBackoffs` results only measure the `diag send` round trip.
+# - It doesn't support IEEE 802.15.4 multipurpose frames.
+readonly NOT_SUPPORTED_ALLOWLIST=(
+    'diag powersettings( 20)?'
+    'mCsmaCaEnabled=1'
+    'mMaxCsmaBackoffs=(0|100)'
+    '3 (TX|RX) ver:2003,MP,.*'
+)
+
+TEST_TEMP_DIR="$(mktemp -d)"
+readonly TEST_TEMP_DIR
+
+g_spawned_pids=()
+
+die()
+{
+    echo " *** ERROR: $*" >&2
+    exit 1
+}
+
+kill_tree()
+{
+    local pid="$1"
+    local child
+
+    while read -r child; do
+        kill_tree "${child}"
+    done < <(pgrep -P "${pid}" 2>/dev/null || true)
+    kill -9 "${pid}" 2>/dev/null || true
+}
+
+kill_spawned()
+{
+    for pid in "${g_spawned_pids[@]-}"; do
+        if [[ -n ${pid-} ]]; then
+            kill_tree "${pid}"
+        fi
+    done
+    g_spawned_pids=()
+}
+
+cleanup()
+{
+    local exit_code=$?
+
+    kill_spawned
+    rm -rf "${TEST_TEMP_DIR}" 2>/dev/null || true
+
+    if [[ ${exit_code} -ne 0 ]]; then
+        echo "check-cp-caps failed with exit code ${exit_code}." >&2
+    fi
+
+    exit "${exit_code}"
+}
+
+build_binaries()
+{
+    OT_CMAKE_BUILD_DIR="${OT_SRCDIR}/build/simulation" OT_CMAKE_NINJA_TARGET="ot-rcp ot-cli-ftd" \
+        "${OT_SRCDIR}/script/cmake-build" simulation "${OT_THREAD_OPTIONS[@]}" -DOT_CSL_RECEIVER=ON
+    # `test_ack` needs a host that doesn't restore the FCS of Imm-Acks reported without it.
+    OT_CMAKE_BUILD_DIR="${OT_SRCDIR}/build/posix" OT_CMAKE_NINJA_TARGET="ot-cli" \
+        "${OT_SRCDIR}/script/cmake-build" posix "${OT_THREAD_OPTIONS[@]}" \
+        -DCMAKE_CXX_FLAGS=-DOPENTHREAD_SPINEL_CONFIG_RCP_IMM_ACK_FCS_COMPATIBILITY_WORKAROUND_ENABLE=0
+    OT_CMAKE_BUILD_DIR="${OT_SRCDIR}/build/extcap" "${OT_SRCDIR}/script/cmake-build" extcap
+}
+
+#
+# Checks the results in the output of a test module.
+#
+# Arguments: <test_module> <log_file>
+#
+check_results()
+{
+    local module="$1"
+    local log="$2"
+    local count
+    local unexpected
+
+    count="$(grep -cE "${RESULT_PATTERN}" "${log}" || true)"
+
+    if [[ ${count} -lt ${MIN_RESULT_COUNT[${module}]} ]]; then
+        die "${module}: ${count} results, expected at least ${MIN_RESULT_COUNT[${module}]}"
+    fi
+
+    unexpected="$(grep -E ' NotSupported( \(.*\))?$' "${log}" | sed -E 's/ -* NotSupported( \(.*\))?$//' \
+        | grep -Exv "$(
+            IFS='|'
+            echo "${NOT_SUPPORTED_ALLOWLIST[*]}"
+        )" || true)"
+
+    if [[ -n ${unexpected} ]]; then
+        echo "${unexpected}" >&2
+        die "${module}: the capabilities above are unexpectedly NotSupported"
+    fi
+
+    echo "${module}: ${count} results checked"
+}
+
+#
+# Starts a simulation `ot-cli-ftd` on a pty.
+#
+# Arguments: <node_id> <pty_path>
+#
+start_cli_ftd_pty()
+{
+    local node_id="$1"
+    local pty="$2"
+
+    socat "PTY,link=${pty},raw,echo=0" "EXEC:${OT_CLI_FTD} ${node_id},pty,raw,echo=0" &
+    g_spawned_pids+=("$!")
+
+    for _ in {1..50}; do
+        [[ -e ${pty} ]] && return 0
+        sleep 0.1
+    done
+
+    die "the pty of ot-cli-ftd ${node_id} didn't appear"
+}
+
+#
+# Runs a test module in its own working directory and simulated radio network, and checks its results.
+#
+# Arguments: <test_module> <port_offset>
+#
+test_module()
+{
+    local module="$1"
+    local workdir="${TEST_TEMP_DIR}/${module}"
+    local log="${workdir}.log"
+    local radio_url="spinel+hdlc+forkpty://${OT_RCP}?forkpty-arg"
+    local env_vars=(
+        "PYTHONPATH=${CP_CAPS_DIR}"
+        "PYTHONDONTWRITEBYTECODE=1"
+        "OT_CLI=${OT_CLI}"
+        "OT_EXTCAP=${OT_EXTCAP}"
+        "DUT_RADIO_URL=${radio_url}=1"
+        "SNIFFER_RADIO_URL=${radio_url}=3"
+    )
+
+    export PORT_OFFSET="$2"
+    g_spawned_pids=()
+    trap kill_spawned EXIT
+
+    # Creates the settings directory in advance, as the nodes racing to create it may fail.
+    mkdir -p "${workdir}/tmp"
+    cd "${workdir}"
+
+    if [[ ${module} == test_csl ]]; then
+        start_cli_ftd_pty 2 "${workdir}/ref-pty"
+        env_vars+=("REF_CLI_SERIAL=${workdir}/ref-pty")
+    else
+        env_vars+=("REF_RADIO_URL=${radio_url}=2")
+    fi
+
+    env "${env_vars[@]}" timeout 900 python3 -m unittest -v "${module}" >"${log}" 2>&1 || {
+        cat "${log}"
+        die "${module} failed"
+    }
+    cat "${log}"
+
+    case "${module}" in
+        test_csl)
+            if grep -qF 'No CSL analysis' "${log}"; then
+                die "${module}: the sniffed CSL transmissions were not analyzed"
+            fi
+            ;;
+        test_throughput)
+            if ! grep -qE "^Throughput |doesn't support the tool iperf3" "${log}"; then
+                die "${module}: neither a throughput nor an iperf3 skip was reported"
+            fi
+            ;;
+    esac
+
+    check_results "${module}" "${log}"
+}
+
+main()
+{
+    local modules=("$@")
+    local module
+    local port_offset="${PORT_OFFSET:-0}"
+    local failed=()
+
+    if [[ ${#modules[@]} -eq 0 ]]; then
+        modules=("${ALL_TEST_MODULES[@]}")
+    else
+        for module in "${modules[@]}"; do
+            [[ -n ${module} && -n ${MIN_RESULT_COUNT[${module}]+x} ]] || die "Unknown test module: ${module}"
+        done
+    fi
+
+    for cmd in python3 socat timeout; do
+        command -v "${cmd}" >/dev/null || die "Required tool '${cmd}' is not installed."
+    done
+
+    build_binaries
+
+    for test in "${CP_CAPS_DIR}"/tests/test_*.py; do
+        python3 "${test}"
+    done
+
+    # The test modules run in parallel, each in its own simulated radio network (PORT_OFFSET).
+    for module in "${modules[@]}"; do
+        test_module "${module}" "${port_offset}" >"${TEST_TEMP_DIR}/${module}.out" 2>&1 &
+        g_spawned_pids+=("$!")
+        port_offset=$((port_offset + 1))
+    done
+
+    for i in "${!modules[@]}"; do
+        echo "===== ${modules[i]} ====="
+        wait "${g_spawned_pids[i]}" || failed+=("${modules[i]}")
+        cat "${TEST_TEMP_DIR}/${modules[i]}.out"
+    done
+
+    g_spawned_pids=()
+
+    if [[ ${#failed[@]} -ne 0 ]]; then
+        die "Failed test modules: ${failed[*]}"
+    fi
+
+    echo "All cp-caps test modules passed: ${modules[*]}"
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+main "$@"
