@@ -77,18 +77,27 @@ if(OT_FTD)
     gtest_discover_tests(ot-ftd-gtest)
 
     add_executable(ot-posix-gtest
+        hdlc_interface_test.cpp
         multicast_forwarding_test.cpp
+        ${openthread_SOURCE_DIR}/src/posix/platform/hdlc_interface.cpp
         ${openthread_SOURCE_DIR}/src/posix/platform/multicast_forwarding.cpp
+        ${openthread_SOURCE_DIR}/src/posix/platform/utils.cpp
     )
 
     target_include_directories(ot-posix-gtest PRIVATE
         ${openthread_SOURCE_DIR}/src
         ${openthread_SOURCE_DIR}/src/core
         ${openthread_SOURCE_DIR}/src/posix/platform
+        ${openthread_SOURCE_DIR}/src/posix/platform/include
     )
 
     target_link_libraries(ot-posix-gtest
+        openthread-hdlc
+        openthread-platform
+        openthread-url
         ot-fake-ftd
+        ${CMAKE_DL_LIBS}
+        $<$<NOT:$<BOOL:${OT_ANDROID_NDK}>>:util>
         GTest::gtest
         GTest::gtest_main
     )

@@ -139,7 +139,7 @@ HdlcInterface::HdlcInterface(const Url::Url &aRadioUrl)
     , mReceiveFrameContext(nullptr)
     , mReceiveFrameBuffer(nullptr)
     , mSockFd(-1)
-    , mBaudRate(0)
+    , mBusSpeed(0)
     , mHdlcDecoder()
     , mRadioUrl(aRadioUrl)
 {
@@ -460,6 +460,17 @@ exit:
     return error;
 }
 
+uint32_t HdlcInterface::CalculateBusSpeed(uint32_t aBaudRate, bool aHasParity, uint8_t aStopBits)
+{
+    static constexpr uint8_t kStartBits       = 1;
+    static constexpr uint8_t kDataBitsPerByte = 8;
+    static constexpr uint8_t kParityBits      = 1;
+
+    uint32_t bitsPerByte = kStartBits + kDataBitsPerByte + (aHasParity ? kParityBits : 0) + aStopBits;
+
+    return static_cast<uint32_t>((static_cast<uint64_t>(aBaudRate) * kDataBitsPerByte) / bitsPerByte);
+}
+
 int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
 {
     int fd   = -1;
@@ -497,8 +508,9 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
         struct termios tios;
         const char    *value;
         speed_t        speed;
-        uint8_t        stopBit  = 1;
-        uint32_t       baudrate = 460800;
+        uint8_t        stopBit   = 1;
+        bool           hasParity = false;
+        uint32_t       baudrate  = 460800;
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
 
@@ -512,10 +524,12 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
             {
                 tios.c_cflag |= PARENB;
                 tios.c_cflag |= PARODD;
+                hasParity = true;
             }
             else if (strncmp(value, "even", 4) == 0)
             {
                 tios.c_cflag |= PARENB;
+                hasParity = true;
             }
             else
             {
@@ -627,7 +641,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
             break;
         }
 
-        mBaudRate = baudrate;
+        mBusSpeed = CalculateBusSpeed(baudrate, hasParity, stopBit);
 
         if (aRadioUrl.HasParam("uart-flow-control"))
         {
@@ -676,7 +690,8 @@ void HdlcInterface::CloseFile(void)
     VerifyOrExit(0 == close(mSockFd), perror("close RCP"));
     VerifyOrExit(-1 != wait(nullptr) || errno == ECHILD, perror("wait RCP"));
 
-    mSockFd = -1;
+    mSockFd   = -1;
+    mBusSpeed = 0;
 
 exit:
     return;
