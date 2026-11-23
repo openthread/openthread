@@ -1131,6 +1131,51 @@ void TestMacTxFrameCopyAndTimeIe(void)
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 }
 
+void TestMacTxFrameCslIe(void)
+{
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    uint8_t                 buffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame            frame;
+    Mac::TxFrame::BuildInfo buildInfo;
+    Mac::Frame::ParseInfo   parseInfo;
+    const Mac::CslIe       *csl;
+
+    ClearAllBytes(frame);
+    memset(buffer, 0xff, sizeof(buffer));
+    frame.mPsdu = buffer;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    frame.SetRadioType(Radio::kTypeIeee802154);
+#endif
+
+    buildInfo.mType         = Mac::Frame::kTypeData;
+    buildInfo.mVersion      = Mac::Frame::kVersion2015;
+    buildInfo.mAppendCslIe  = true;
+    buildInfo.mEmptyPayload = true;
+    buildInfo.mAddrs.mDestination.SetShort(0x2402);
+    buildInfo.mPanIds.SetDestination(0xface);
+
+    frame.PrepareHeadersWithEmptyPayload(buildInfo);
+    VerifyOrQuit(frame.IsCslIePresent());
+    SuccessOrQuit(parseInfo.ParseFrom(frame, Mac::Frame::kParseFully));
+    csl = parseInfo.Find<Mac::CslIe>();
+    VerifyOrQuit(csl != nullptr);
+    VerifyOrQuit(csl->GetPeriod() == 0);
+    VerifyOrQuit(csl->GetPhase() == 0);
+#endif
+
+    {
+        uint8_t     ieBuffer[sizeof(Mac::CslIe)];
+        Mac::CslIe *cslIe = reinterpret_cast<Mac::CslIe *>(ieBuffer);
+
+        memset(ieBuffer, 0xff, sizeof(ieBuffer));
+        cslIe->Init();
+        VerifyOrQuit(cslIe->GetId() == Mac::CslIe::kId);
+        VerifyOrQuit(cslIe->GetSize() == sizeof(Mac::CslIe));
+        VerifyOrQuit(cslIe->GetPeriod() == 0);
+        VerifyOrQuit(cslIe->GetPhase() == 0);
+    }
+}
+
 } // namespace ot
 
 int main(void)
@@ -1143,6 +1188,7 @@ int main(void)
     ot::TestMacFrameAckGeneration();
     ot::TestMacFrameValidation();
     ot::TestMacTxFrameCopyAndTimeIe();
+    ot::TestMacTxFrameCslIe();
     printf("All tests passed\n");
     return 0;
 }

@@ -191,7 +191,12 @@ public:
     /**
      * Initializes the CSL IE.
      */
-    void Init(void) { HeaderIe::Init(kId, sizeof(CslIe) - sizeof(HeaderIe)); }
+    void Init(void)
+    {
+        HeaderIe::Init(kId, sizeof(CslIe) - sizeof(HeaderIe));
+        mPhase  = 0;
+        mPeriod = 0;
+    }
 
     /**
      * Returns the CSL Period.
