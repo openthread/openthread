@@ -28,11 +28,13 @@
 #
 
 import dataclasses
+import statistics
 import unittest
 import time
 
 from otci import OTCI
 from device_manager import DeviceManager, Frame
+from tx_delay_analyzer import measure_cca_offsets
 
 
 class TestRadioFrameTxInfo(unittest.TestCase):
@@ -41,6 +43,10 @@ class TestRadioFrameTxInfo(unittest.TestCase):
     MAX_SEND_RETRIES = 5
     SRC_EXT_ADDRESS = '0807060504030201'  # The source extended address of the secured test frames
     DST_EXT_ADDRESS = '8070605040302010'  # The destination extended address of the secured test frames
+    TX_DELAY_CCA_FRAMES = 21  # The number of delayed frames sent with CCA disabled and enabled alternately
+    TX_DELAY_CCA_LEAD_US = 300000  # The delay of the first frame from the base time
+    TX_DELAY_CCA_PERIOD_US = 200000  # The interval between two delayed frames
+    TX_DELAY_CCA_TOLERANCE_US = 64  # Half of the CCA duration (8 symbols)
 
     @classmethod
     def setUpClass(cls):
@@ -290,11 +296,7 @@ class TestRadioFrameTxInfo(unittest.TestCase):
 
     def test_radio_frame_tx_info_tx_delay(self):
         """Test whether the DUT supports mInfo.mTxInfo.mTxDelayBaseTime and mInfo.mTxInfo.mTxDelay fields."""
-        # Enable the IPv6 interface to force the host and the RCP to synchronize the radio time.
-        self.__dut.set_dataset_bytes('active', self.__device_manager.get_default_dataset())
-        self.__dut.ifconfig_up()
-        self.__dut.wait(0.5)
-        self.__dut.ifconfig_down()
+        self.__sync_radio_time()
 
         self.__dut.diag_start()
         self.__ref.diag_start()
@@ -330,6 +332,72 @@ class TestRadioFrameTxInfo(unittest.TestCase):
             ret = stats['received_packets'] == 1
 
         self.__device_manager.output_test_result_bool(f'mTxDelayBaseTime=now,mTxDelay={dut_tx_delay_us}', ret)
+
+    def test_radio_frame_tx_info_tx_delay_csma_ca(self):
+        """Test whether the DUT sends delayed frames on time with both values of mInfo.mTxInfo.mCsmaCaEnabled.
+
+        The DUT sends delayed frames scheduled at a fixed interval from a common mTxDelayBaseTime, with CCA disabled
+        and enabled alternately. The sniffer measures how much later the frames with CCA are sent than the frames
+        without CCA (see `measure_cca_offsets()`), which is about 0 if the radio compensates the CCA time.
+        """
+        sniffer = self.__device_manager.sniffer
+        if sniffer is not None:
+            self.__sync_radio_time()
+
+        self.__dut.diag_start()
+        self.__ref.diag_start()
+
+        if sniffer is None:
+            self.skipTest('No sniffer is configured')
+
+        if not self.__dut.is_command_supported('diag radio time'):
+            self.skipTest('The DUT does not support `diag radio time` or radio time is not available')
+
+        channel = 11
+        dut_tx_frame = '01ec00dddd01fecaefbe00adde02fecaefbe00adde000102030405060708090000'
+        timestamps_us = {}
+
+        self.__dut.diag_set_channel(channel)
+        sniffer.start(channel)
+
+        try:
+            base_time = self.__dut.diag_get_radio_time()
+
+            # The sequence number of each frame is its index.
+            for i in range(self.TX_DELAY_CCA_FRAMES):
+                self.__dut.diag_frame(f'{dut_tx_frame[:4]}{i:02x}{dut_tx_frame[6:]}',
+                                      csma_ca_enabled=(i % 2 == 1),
+                                      max_csma_backoffs=0,
+                                      max_frame_retries=0,
+                                      tx_delay_base_time=base_time,
+                                      tx_delay=self.TX_DELAY_CCA_LEAD_US + i * self.TX_DELAY_CCA_PERIOD_US)
+                self.__dut.diag_send(1, is_async=False)
+        finally:
+            frames = sniffer.stop()
+
+        for frame in frames:
+            # Compares the frames without the sequence number and the FCS.
+            if frame.psdu[:4] == dut_tx_frame[:4] and frame.psdu[6:-4] == dut_tx_frame[6:-4]:
+                timestamps_us.setdefault(int(frame.psdu[4:6], 16), frame.timestamp_us)
+
+        offsets_us = measure_cca_offsets(timestamps_us, self.TX_DELAY_CCA_PERIOD_US)
+        name = 'mTxDelay,mCsmaCaEnabled=1 vs 0'
+
+        if offsets_us:
+            median_us = statistics.median(offsets_us)
+            ret = 'OK' if abs(median_us) <= self.TX_DELAY_CCA_TOLERANCE_US else 'NotSupported'
+            self.__device_manager.output_test_result_string(
+                name, f'{ret} (median {round(median_us):+d} us, mean {round(statistics.mean(offsets_us)):+d} us,'
+                f' {len(offsets_us)} frames)')
+        else:
+            self.__device_manager.output_test_result_string(name, 'NotSupported (no frames to compare)')
+
+    def __sync_radio_time(self):
+        # Enable the IPv6 interface to force the host and the RCP to synchronize the radio time.
+        self.__dut.set_dataset_bytes('active', self.__device_manager.get_default_dataset())
+        self.__dut.ifconfig_up()
+        self.__dut.wait(0.5)
+        self.__dut.ifconfig_down()
 
     def tearDown(self):
         self.__ref.diag_stop()

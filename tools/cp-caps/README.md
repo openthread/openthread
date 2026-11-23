@@ -380,8 +380,10 @@ tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 
 
 The test case `test_radio_frame_tx_info` tests whether the RCP supports the mTxInfo field of the radio frame.
 
+If a [sniffer](#sniffer) is configured, the sub-test `mTxDelay,mCsmaCaEnabled=1 vs 0` checks that the DUT sends delayed frames on time whether CCA is enabled or not, as `mTxDelayBaseTime` + `mTxDelay` is the time of the end of the SFD. The DUT sends delayed frames 200 ms apart from the same `mTxDelayBaseTime`, with `mCsmaCaEnabled` alternately 0 and 1. The offset of each frame with CCA is its timestamp minus the average timestamp of the frames without CCA before and after it, which cancels the clock drift between the DUT and the sniffer. The sub-test passes if the median offset is within ±64 us (half of the CCA duration); a radio that does not start CCA early enough sends the frames with CCA late, and a radio that starts every frame early by the CCA time sends the frames without CCA early.
+
 ```bash
-tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_radio_frame_tx_info
+tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 SNIFFER_SERIAL=/dev/ttyACM1 python3 -m unittest -q test_radio_frame_tx_info
 mCsmaCaEnabled=0 ----------------------------------------- OK
 mCsmaCaEnabled=1 ----------------------------------------- OK
 mIsHeaderUpdated=True ------------------------------------ OK
@@ -394,4 +396,5 @@ mMaxCsmaBackoffs=0 --------------------------------------- OK (12 ms)
 mMaxCsmaBackoffs=100 ------------------------------------- OK (541 ms)
 mRxChannelAfterTxDone ------------------------------------ OK
 mTxDelayBaseTime=now,mTxDelay=500000 --------------------- OK
+mTxDelay,mCsmaCaEnabled=1 vs 0 --------------------------- OK (median -3 us, mean -5 us, 10 frames)
 ```
