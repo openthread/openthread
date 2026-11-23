@@ -112,7 +112,7 @@ public:
     enum CertificateAuthorizationFieldHeader : uint8_t
     {
         kCommissionerFlag = 1 << 0, ///< TCAT commissioner ('1') or device ('0')
-        kHeaderVersion    = 0xD0,   ///< Header version (3 bits MSB)
+        kVersionMask      = 0xE0,   ///< Header version (3 bits MSB)
     };
 
     /**
@@ -136,11 +136,46 @@ public:
     OT_TOOL_PACKED_BEGIN
     struct CertificateAuthorizationField
     {
-        CertificateAuthorizationFieldHeader mHeader;               ///< Type and version
-        CommandClassFlags                   mCommissioningFlags;   ///< Command class flags
-        CommandClassFlags                   mExtractionFlags;      ///< Command class flags
-        CommandClassFlags                   mDecommissioningFlags; ///< Command class flags
-        CommandClassFlags                   mApplicationFlags;     ///< Command class flags
+        static constexpr uint8_t kVersionOffset = 5; ///< Bit offset of the version in the header
+        static constexpr uint8_t kMinVersion    = 1; ///< Minimum valid version
+
+        /**
+         * Indicates whether the header identifies a TCAT Commissioner certificate.
+         *
+         * @retval TRUE   The certificate is a TCAT Commissioner certificate.
+         * @retval FALSE  The certificate is a TCAT Device certificate.
+         */
+        bool IsCommissioner(void) const { return (mHeader & kCommissionerFlag) != 0; }
+
+        /**
+         * Gets the version from the header.
+         *
+         * @returns The version number of the TCAT authorization field.
+         */
+        uint8_t GetVersion(void) const { return static_cast<uint8_t>((mHeader & kVersionMask) >> kVersionOffset); }
+
+        /**
+         * Indicates whether the header is valid for a TCAT Commissioner certificate or a TCAT Device certificate.
+         *
+         * The header is valid if it identifies the given type of certificate and its version is at least
+         * `kMinVersion`.
+         *
+         * @param[in] aIsCommissioner  TRUE to validate for a TCAT Commissioner certificate, FALSE to validate for a
+         *                             TCAT Device certificate.
+         *
+         * @retval TRUE   The header is valid.
+         * @retval FALSE  The header is not valid.
+         */
+        bool IsHeaderValid(bool aIsCommissioner) const
+        {
+            return (IsCommissioner() == aIsCommissioner) && (GetVersion() >= kMinVersion);
+        }
+
+        CertificateAuthorizationFieldHeader mHeader;               ///< Type, flags and version header
+        CommandClassFlags                   mCommissioningFlags;   ///< Command class flags Commissioning
+        CommandClassFlags                   mExtractionFlags;      ///< Command class flags Extraction
+        CommandClassFlags                   mDecommissioningFlags; ///< Command class flags Decommissioning
+        CommandClassFlags                   mApplicationFlags;     ///< Command class flags Application
 
     } OT_TOOL_PACKED_END;
 
