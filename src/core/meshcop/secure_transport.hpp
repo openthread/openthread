@@ -511,18 +511,22 @@ public:
          * @param[out]     aAttributeBuffer      A pointer to the attribute buffer.
          * @param[in,out]  aAttributeLength      On input, the size the max size of @p aAttributeBuffer.
          *                                           On output, the length of the attribute written to the buffer.
+         * @param[in]      aAllowTruncation      TRUE to write only the first bytes of an attribute that is longer
+         *                                       than @p aAttributeBuffer, as many as fit. FALSE to fail in this case.
          *
          * @retval kErrorNone             Successfully read attribute.
          * @retval kErrorInvalidArgs      Invalid attribute length.
          * @retval kErrorNotFound         The requested attribute was not found.
-         * @retval kErrorNoBufs           Insufficient memory for storing the attribute value.
+         * @retval kErrorNoBufs           Insufficient memory for storing the attribute value, and
+         *                                @p aAllowTruncation is FALSE.
          * @retval kErrorInvalidState     Not connected yet.
          * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
          * @retval kErrorParse            The certificate extensions could not be parsed.
          */
         Error GetThreadAttributeFromPeerCertificate(int      aThreadOidDescriptor,
                                                     uint8_t *aAttributeBuffer,
-                                                    size_t  *aAttributeLength);
+                                                    size_t  *aAttributeLength,
+                                                    bool     aAllowTruncation = false);
 #endif // defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
         /**
@@ -535,18 +539,22 @@ public:
          * @param[out]     aAttributeBuffer      A pointer to the attribute buffer.
          * @param[in,out]  aAttributeLength      On input, the size the max size of @p aAttributeBuffer.
          *                                       On output, the length of the attribute written to the buffer.
+         * @param[in]      aAllowTruncation      TRUE to write only the first bytes of an attribute that is longer
+         *                                       than @p aAttributeBuffer, as many as fit. FALSE to fail in this case.
          *
          * @retval kErrorNone             Successfully read attribute.
          * @retval kErrorInvalidArgs      Invalid attribute length.
          * @retval kErrorNotFound         The requested attribute was not found.
-         * @retval kErrorNoBufs           Insufficient memory for storing the attribute value.
+         * @retval kErrorNoBufs           Insufficient memory for storing the attribute value, and
+         *                                @p aAllowTruncation is FALSE.
          * @retval kErrorInvalidState     Not connected yet.
          * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
          * @retval kErrorParse            The certificate extensions could not be parsed.
          */
         Error GetThreadAttributeFromOwnCertificate(int      aThreadOidDescriptor,
                                                    uint8_t *aAttributeBuffer,
-                                                   size_t  *aAttributeLength);
+                                                   size_t  *aAttributeLength,
+                                                   bool     aAllowTruncation = false);
 
         /**
          * Set the authentication mode for a connection.
@@ -605,7 +613,8 @@ public:
         Error GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
                                                 int                     aThreadOidDescriptor,
                                                 uint8_t                *aAttributeBuffer,
-                                                size_t                 *aAttributeLength);
+                                                size_t                 *aAttributeLength,
+                                                bool                    aAllowTruncation);
 
         SecureTransport &mSecureTransport;
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)

@@ -59,6 +59,33 @@
     "zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdg==\n"                             \
     "-----END EC PRIVATE KEY-----\n"
 
+// Self-signed certificate (with key `OT_TCAT_PRIV_KEY`) with Thread attributes whose embedded DER length
+// is encoded in short form and in long form:
+// - 1.3.6.1.4.1.44970.2 (Thread Version):       INTEGER 5
+// - 1.3.6.1.4.1.44970.3 (Authorization Field):  OCTET STRING of 128 bytes: 0x20 0x01 0x01 0x01 0x01, 0x05 .. 0x7F
+// - 1.3.6.1.4.1.44970.99 (test-only attribute): OCTET STRING of 300 bytes: byte i has value (i & 0xFF)
+#define OT_TCAT_X509_CERT_LONG_ATTRIBUTES                                \
+    "-----BEGIN CERTIFICATE-----\n"                                      \
+    "MIIDRDCCAuugAwIBAgICNeowCgYIKoZIzj0EAwIwMjEwMC4GA1UEAwwnVENBVCBF\n" \
+    "eGFtcGxlIERldmljZUNlcnQgTG9uZyBBdHRyaWJ1dGVzMCAXDTI2MTEyNDE5NDA1\n" \
+    "M1oYDzMwMDcwMTI2MTk0MDUzWjAyMTAwLgYDVQQDDCdUQ0FUIEV4YW1wbGUgRGV2\n" \
+    "aWNlQ2VydCBMb25nIEF0dHJpYnV0ZXMwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNC\n" \
+    "AATXWH/i8pldVe/7UYNmjTrqyki2WhN2kKLRu7HSO+lBIct1AEhz7jTNULEwNFS9\n" \
+    "tf/+8koaxIko5VSUKiNDbAh2o4IB7TCCAekwEAYJKwYBBAGC3yoCBAMCAQUwgZEG\n" \
+    "CSsGAQQBgt8qAwSBgwSBgCABAQEBBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4f\n" \
+    "ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5P\n" \
+    "UFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/\n" \
+    "MIIBPwYJKwYBBAGC3ypjBIIBMASCASwAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcY\n" \
+    "GRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdI\n" \
+    "SUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n" \
+    "eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6Slpqeo\n" \
+    "qaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY\n" \
+    "2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcI\n" \
+    "CQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKiswCgYIKoZIzj0EAwID\n" \
+    "RwAwRAIgOoU2fOlTFy/g8CID2jenq9sQXmWk/UomgwTL/QI91TsCIDFtcu4Ujnnr\n" \
+    "itCglxlYIY/HaZaIuIFNDTwTkdLoevFV\n"                                 \
+    "-----END CERTIFICATE-----\n"
+
 #define OT_TCAT_TRUSTED_ROOT_CERTIFICATE                                 \
     "-----BEGIN CERTIFICATE-----\n"                                      \
     "MIICOzCCAeGgAwIBAgIJAKOc2hehOGoBMAoGCCqGSM49BAMCMHExJjAkBgNVBAMM\n" \
@@ -536,6 +563,29 @@ void TestTcatConnectionAndCertAttributes(void)
                                                                   &attributeBuffer[0], &attributeLen));
     VerifyOrQuit(attributeLen == 5 && memcmp(&kDeviceCert1AuthField, &attributeBuffer, attributeLen) == 0);
 
+    // Test that an attribute that is longer than the buffer is not read, unless truncation is allowed: then
+    // only the first bytes of the attribute are read, and any bytes after it in the buffer are not changed.
+    attributeLen = 3;
+    VerifyOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateAuthorizationField,
+                                                                 &attributeBuffer[0], &attributeLen) == kErrorNoBufs);
+    attributeLen = 3;
+    VerifyOrQuit(instance->Get<Ble::BleSecure>().GetThreadAttributeFromOwnCertificate(
+                     kCertificateAuthorizationField, &attributeBuffer[0], &attributeLen,
+                     /* aAllowTruncation */ false) == kErrorNoBufs);
+
+    memset(attributeBuffer, 0xEE, sizeof(attributeBuffer));
+    attributeLen = 3;
+    SuccessOrQuit(instance->Get<Ble::BleSecure>().GetThreadAttributeFromOwnCertificate(
+        kCertificateAuthorizationField, &attributeBuffer[0], &attributeLen, /* aAllowTruncation */ true));
+    VerifyOrQuit(attributeLen == 3 && memcmp(&kDeviceCert1AuthField, &attributeBuffer, attributeLen) == 0);
+    VerifyOrQuit(attributeBuffer[3] == 0xEE && attributeBuffer[4] == 0xEE);
+
+    // With truncation allowed, an attribute that fits in the buffer is read completely.
+    attributeLen = sizeof(attributeBuffer);
+    SuccessOrQuit(instance->Get<Ble::BleSecure>().GetThreadAttributeFromOwnCertificate(
+        kCertificateAuthorizationField, &attributeBuffer[0], &attributeLen, /* aAllowTruncation */ true));
+    VerifyOrQuit(attributeLen == 5 && memcmp(&kDeviceCert1AuthField, &attributeBuffer, attributeLen) == 0);
+
     // Validate TLS client connection can be started only when peer is BLE-connected
     otBleSecureDisconnect(instance);
     VerifyOrQuit(otBleSecureConnect(instance) == kErrorInvalidState);
@@ -545,6 +595,75 @@ void TestTcatConnectionAndCertAttributes(void)
     otBleSecureStop(instance);
     VerifyOrQuit(!otBleSecureIsTcatAgentStarted(instance));
 
+    VerifyOrQuit(ble.IsContractHonored());
+
+    testFreeInstance(instance);
+}
+
+void TestTcatCertAttributesWithLongFormLength(void)
+{
+    static constexpr int      kTestAttribute       = 99;
+    static constexpr uint16_t kAuthFieldLength     = 128;
+    static constexpr uint16_t kTestAttributeLength = 300;
+
+    uint8_t         attributeBuffer[kTestAttributeLength];
+    size_t          attributeLen;
+    TestBleSecure   ble;
+    Instance       *instance  = TestInitInstanceTcat();
+    Ble::BleSecure &bleSecure = instance->Get<Ble::BleSecure>();
+
+    otBleSecureSetCertificate(instance, reinterpret_cast<const uint8_t *>(OT_TCAT_X509_CERT_LONG_ATTRIBUTES),
+                              sizeof(OT_TCAT_X509_CERT_LONG_ATTRIBUTES),
+                              reinterpret_cast<const uint8_t *>(OT_TCAT_PRIV_KEY), sizeof(OT_TCAT_PRIV_KEY));
+    SuccessOrQuit(otBleSecureStart(instance, HandleBleSecureConnect, nullptr, true, &ble));
+    otPlatBleGapOnConnected(instance, kConnectionId);
+    SuccessOrQuit(otBleSecureConnect(instance));
+
+    // Attribute with a short-form DER length.
+    attributeLen = sizeof(attributeBuffer);
+    SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateThreadVersion,
+                                                                  &attributeBuffer[0], &attributeLen));
+    VerifyOrQuit(attributeLen == 1 && attributeBuffer[0] == 5);
+
+    // Attribute with a long-form DER length of one byte (0x81 0x80).
+    memset(attributeBuffer, 0, sizeof(attributeBuffer));
+    attributeLen = sizeof(attributeBuffer);
+    SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateAuthorizationField,
+                                                                  &attributeBuffer[0], &attributeLen));
+    VerifyOrQuit(attributeLen == kAuthFieldLength);
+    VerifyOrQuit(memcmp(&attributeBuffer[0], kDeviceCert1AuthField, sizeof(kDeviceCert1AuthField)) == 0);
+
+    for (uint16_t i = sizeof(kDeviceCert1AuthField); i < kAuthFieldLength; i++)
+    {
+        VerifyOrQuit(attributeBuffer[i] == i);
+    }
+
+    // Reading only the first bytes of the authorization field, as `TcatAgent` does.
+    memset(attributeBuffer, 0, sizeof(attributeBuffer));
+    attributeLen = sizeof(kDeviceCert1AuthField);
+    SuccessOrQuit(bleSecure.GetThreadAttributeFromOwnCertificate(kCertificateAuthorizationField, &attributeBuffer[0],
+                                                                 &attributeLen, /* aAllowTruncation */ true));
+    VerifyOrQuit(attributeLen == sizeof(kDeviceCert1AuthField));
+    VerifyOrQuit(memcmp(&attributeBuffer[0], kDeviceCert1AuthField, sizeof(kDeviceCert1AuthField)) == 0);
+
+    // Attribute with a long-form DER length of two bytes (0x82 0x01 0x2C).
+    memset(attributeBuffer, 0, sizeof(attributeBuffer));
+    attributeLen = sizeof(attributeBuffer);
+    SuccessOrQuit(
+        otBleSecureGetThreadAttributeFromOwnCertificate(instance, kTestAttribute, &attributeBuffer[0], &attributeLen));
+    VerifyOrQuit(attributeLen == kTestAttributeLength);
+
+    for (uint16_t i = 0; i < kTestAttributeLength; i++)
+    {
+        VerifyOrQuit(attributeBuffer[i] == (i & 0xFF));
+    }
+
+    attributeLen = kTestAttributeLength - 1;
+    VerifyOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kTestAttribute, &attributeBuffer[0],
+                                                                 &attributeLen) == kErrorNoBufs);
+
+    otBleSecureDisconnect(instance);
+    otBleSecureStop(instance);
     VerifyOrQuit(ble.IsContractHonored());
 
     testFreeInstance(instance);
@@ -1549,6 +1668,7 @@ int main(void)
 {
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
     ot::MeshCoP::TestTcatConnectionAndCertAttributes();
+    ot::MeshCoP::TestTcatCertAttributesWithLongFormLength();
     ot::MeshCoP::TestTcatAdvertisementUpdates();
     ot::MeshCoP::TestTcatCertificateAuthorizationFieldHeader();
     ot::MeshCoP::UnitTester::TestTcatCommissioner1Auth();

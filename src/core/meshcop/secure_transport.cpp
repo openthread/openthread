@@ -1345,7 +1345,8 @@ exit:
 
 Error SecureTransport::Extension::GetThreadAttributeFromPeerCertificate(int      aThreadOidDescriptor,
                                                                         uint8_t *aAttributeBuffer,
-                                                                        size_t  *aAttributeLength)
+                                                                        size_t  *aAttributeLength,
+                                                                        bool     aAllowTruncation)
 {
     Error                   error;
     SecureSession          *session = mSecureTransport.mSessions.GetHead();
@@ -1353,7 +1354,8 @@ Error SecureTransport::Extension::GetThreadAttributeFromPeerCertificate(int     
 
     VerifyOrExit(session != nullptr, error = kErrorInvalidState);
     cert  = mbedtls_ssl_get_peer_cert(&session->mSsl);
-    error = GetThreadAttributeFromCertificate(cert, aThreadOidDescriptor, aAttributeBuffer, aAttributeLength);
+    error = GetThreadAttributeFromCertificate(cert, aThreadOidDescriptor, aAttributeBuffer, aAttributeLength,
+                                              aAllowTruncation);
 
 exit:
     return error;
@@ -1363,17 +1365,20 @@ exit:
 
 Error SecureTransport::Extension::GetThreadAttributeFromOwnCertificate(int      aThreadOidDescriptor,
                                                                        uint8_t *aAttributeBuffer,
-                                                                       size_t  *aAttributeLength)
+                                                                       size_t  *aAttributeLength,
+                                                                       bool     aAllowTruncation)
 {
     const mbedtls_x509_crt *cert = &mEcdheEcdsaInfo.mOwnCert;
 
-    return GetThreadAttributeFromCertificate(cert, aThreadOidDescriptor, aAttributeBuffer, aAttributeLength);
+    return GetThreadAttributeFromCertificate(cert, aThreadOidDescriptor, aAttributeBuffer, aAttributeLength,
+                                             aAllowTruncation);
 }
 
 Error SecureTransport::Extension::GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
                                                                     int                     aThreadOidDescriptor,
                                                                     uint8_t                *aAttributeBuffer,
-                                                                    size_t                 *aAttributeLength)
+                                                                    size_t                 *aAttributeLength,
+                                                                    bool                    aAllowTruncation)
 {
     Error            error  = kErrorNotFound;
     char             oid[9] = {0x2B, 0x06, 0x01, 0x04, 0x01, static_cast<char>(0x82), static_cast<char>(0xDF),
@@ -1425,15 +1430,24 @@ Error SecureTransport::Extension::GetThreadAttributeFromCertificate(const mbedtl
         // TODO: extensions with isCritical == 1 that are unknown should lead to rejection of the entire cert.
         if (extnOid.len == sizeof(oid) && memcmp(extnOid.p, oid, sizeof(oid)) == 0)
         {
-            // per RFC 5280, octet string must contain ASN.1 Type Length Value octets
+            // Per RFC 5280, the octet string contains a DER-encoded ASN.1 value (Type Length Value). Skip the Type
+            // without checking it, then parse the Length (short or long form) and verify the Value fills the rest
+            // of the octet string.
             VerifyOrExit(len >= 2, error = kErrorParse);
-            VerifyOrExit(*(p + 1) == len - 2, error = kErrorParse); // check TLV Length, not Type.
-            *aAttributeLength = len - 2; // strip the ASN.1 Type Length bytes from embedded TLV
+            p++;
+            VerifyOrExit(mbedtls_asn1_get_len(&p, endExtData, &len) == 0, error = kErrorParse);
+            VerifyOrExit(p + len == endExtData, error = kErrorParse);
+            *aAttributeLength = len;
 
             if (aAttributeBuffer != nullptr)
             {
+                if (aAllowTruncation)
+                {
+                    *aAttributeLength = Min(*aAttributeLength, attributeBufferSize);
+                }
+
                 VerifyOrExit(*aAttributeLength <= attributeBufferSize, error = kErrorNoBufs);
-                memcpy(aAttributeBuffer, p + 2, *aAttributeLength);
+                memcpy(aAttributeBuffer, p, *aAttributeLength);
             }
 
             error = kErrorNone;
