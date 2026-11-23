@@ -33,7 +33,9 @@
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
+#include "common/num_utils.hpp"
 #include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 
 using namespace ot;
 
@@ -359,14 +361,41 @@ static uint16_t ComputeCslPhase(uint32_t aRadioTime, otRadioContext *aRadioConte
            OT_US_PER_TEN_SYMBOLS;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+static const otMacKeyMaterial *SelectKey(const otRadioContext *aRadioContext, uint8_t aKeyId)
+{
+    const otMacKeyMaterial *key      = nullptr;
+    uint8_t                 curKeyId = aRadioContext->mKeyId;
+
+    VerifyOrExit(IsValueInRange(curKeyId, Mac::kMinKeyIndex, Mac::kMaxKeyIndex));
+
+    if (aKeyId == curKeyId)
+    {
+        key = &aRadioContext->mCurrKey;
+    }
+    else if (aKeyId == Mac::DeterminePrevKeyIndex(curKeyId))
+    {
+        key = &aRadioContext->mPrevKey;
+    }
+    else if (aKeyId == Mac::DetermineNextKeyIndex(curKeyId))
+    {
+        key = &aRadioContext->mNextKey;
+    }
+
+exit:
+    return key;
+}
+#endif
+
 otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *aRadioContext)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    otMacKeyMaterial *key = nullptr;
-    uint8_t           keyId;
-    uint32_t          frameCounter;
-    bool              processKeyId;
+    const otMacKeyMaterial *key;
+    uint8_t                 keyId;
+    uint32_t                frameCounter;
+    bool                    processKeyId;
 
     processKeyId = otMacFrameIsKeyIdMode1(aFrame);
 
@@ -378,43 +407,49 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
 
         VerifyOrExit(keyId != 0, error = OT_ERROR_FAILED);
 
-        if (keyId == aRadioContext->mKeyId)
+        key = SelectKey(aRadioContext, keyId);
+        VerifyOrExit(key != nullptr, error = OT_ERROR_SECURITY);
+
+        if (key == &aRadioContext->mCurrKey)
         {
-            key          = &aRadioContext->mCurrKey;
             frameCounter = aRadioContext->mMacFrameCounter++;
         }
-        else if (keyId == aRadioContext->mKeyId - 1)
+        else if (key == &aRadioContext->mPrevKey)
         {
-            key          = &aRadioContext->mPrevKey;
             frameCounter = aRadioContext->mPrevMacFrameCounter++;
-        }
-        else if (keyId == aRadioContext->mKeyId + 1)
-        {
-            key          = &aRadioContext->mNextKey;
-            frameCounter = 0;
         }
         else
         {
-            ExitNow(error = OT_ERROR_SECURITY);
+            frameCounter = 0;
         }
+
+        otMacFrameSetFrameCounter(aFrame, frameCounter);
     }
     else if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
     {
-        key          = &aRadioContext->mCurrKey;
-        keyId        = aRadioContext->mKeyId;
-        frameCounter = aRadioContext->mMacFrameCounter++;
-    }
+        key = &aRadioContext->mCurrKey;
 
-    if (key != nullptr)
+        otMacFrameSetKeyId(aFrame, aRadioContext->mKeyId);
+        otMacFrameSetFrameCounter(aFrame, aRadioContext->mMacFrameCounter++);
+    }
+    else
     {
-        aFrame->mInfo.mTxInfo.mAesKey = key;
+        // The key ID and frame counter are already set in the frame
+        // (e.g., on a retransmission). Same as `SubMac`, use the key
+        // matching the key ID, or the current key if none matches.
 
-        otMacFrameSetKeyId(aFrame, keyId);
-        otMacFrameSetFrameCounter(aFrame, frameCounter);
-        aFrame->mInfo.mTxInfo.mIsHeaderUpdated = true;
+        key = SelectKey(aRadioContext, otMacFrameGetKeyId(aFrame));
+
+        if (key == nullptr)
+        {
+            key = &aRadioContext->mCurrKey;
+        }
     }
+
+    aFrame->mInfo.mTxInfo.mAesKey          = key;
+    aFrame->mInfo.mTxInfo.mIsHeaderUpdated = true;
 #else
-    VerifyOrExit(!aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+    VerifyOrExit(!aFrame->mInfo.mTxInfo.mIsSecurityProcessed && (aFrame->mInfo.mTxInfo.mAesKey != nullptr));
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
     otMacFrameProcessTransmitAesCcm(aFrame, &aRadioContext->mExtAddress);

@@ -303,6 +303,12 @@ expect "Done"
 send "diag send 1\n"
 expect "Done"
 
+send_user "send secured frame with header updated\n"
+send "diag frame -u 499801ffffffff00000d785634120100010203000000000000\n"
+expect "Done"
+send "diag send 1\n"
+expect "Done"
+
 send_user "send frame with CSMA/CA enabled\n"
 send "diag frame -c 112233\n"
 expect "Done"
