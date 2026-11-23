@@ -1828,6 +1828,7 @@ Error Core::LocalHost::SetName(const char *aName)
     }
     else
     {
+        SuccessOrExit(error = Name::ValidateName(aName));
         SuccessOrAssert(mName.Set(aName));
     }
 

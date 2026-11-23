@@ -250,6 +250,7 @@ public:
      *
      * @retval kErrorNone           The local host name was successfully set.
      * @retval kErrorInvalidState   mDNS module is already enabled.
+     * @retval kErrorInvalidArgs    The name @p aName is not valid.
      */
     Error SetLocalHostName(const char *aName) { return mLocalHost.SetName(aName); }
 

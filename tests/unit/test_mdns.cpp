@@ -2303,6 +2303,19 @@ void ValidateLocalHostAddresses(Core &aMdns, const LocalHost &aLocalHost)
 
 void TestLocalHost(void)
 {
+    static const char *const kInvalidNames[] = {
+        "",
+        "..",
+        ".invalid",
+        "a..b",
+        "a.b..",
+        "0123456789012345678901234567890123456789012345678901234567890123",
+        "012345678901234567890123456789012345678901234567890123456789012."
+        "012345678901234567890123456789012345678901234567890123456789012."
+        "012345678901234567890123456789012345678901234567890123456789012."
+        "01234567890123456789012345678901234567890123456789012345678901",
+    };
+
     Core             *mdns = InitTest();
     LocalHost         localHost;
     Ip6::Address      ip6Address;
@@ -2719,6 +2732,21 @@ void TestLocalHost(void)
     VerifyOrQuit(mdns->SetLocalHostName("itsme") == kErrorInvalidState);
 
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+
+    for (const char *invalidName : kInvalidNames)
+    {
+        VerifyOrQuit(mdns->SetLocalHostName(invalidName) == kErrorInvalidArgs);
+        VerifyOrQuit(StringMatch(mdns->GetLocalHostName(), localHost.mName));
+    }
+
+    SuccessOrQuit(mdns->SetLocalHostName("itsme"));
+    VerifyOrQuit(StringMatch(mdns->GetLocalHostName(), "itsme"));
+
+    VerifyOrQuit(mdns->SetLocalHostName("..") == kErrorInvalidArgs);
+    VerifyOrQuit(StringMatch(mdns->GetLocalHostName(), "itsme"));
+
+    SuccessOrQuit(mdns->SetLocalHostName(nullptr));
+    VerifyOrQuit(StringMatch(mdns->GetLocalHostName(), localHost.mName));
 
     SuccessOrQuit(mdns->SetLocalHostName("itsme"));
     VerifyOrQuit(StringMatch(mdns->GetLocalHostName(), "itsme"));
