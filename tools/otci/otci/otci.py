@@ -3744,7 +3744,8 @@ def connect_cli_adb_spinel_proxy(device_serial: Optional[str] = None,
                                  extra_args: Optional[List[str]] = None,
                                  nodeid: int = 1,
                                  auto_setup: bool = True,
-                                 adb_key: Optional[str] = None) -> OTCI:
+                                 adb_key: Optional[str] = None,
+                                 radio_url_params: Optional[str] = None) -> OTCI:
     from .adb_spinel_proxy import AdbSpinelProxyManager
 
     proxy_manager = AdbSpinelProxyManager(
@@ -3754,6 +3755,7 @@ def connect_cli_adb_spinel_proxy(device_serial: Optional[str] = None,
         socket_path=socket_path,
         auto_setup=auto_setup,
         adb_key=adb_key,
+        radio_url_params=radio_url_params,
     )
     try:
         proxy_manager.setup()

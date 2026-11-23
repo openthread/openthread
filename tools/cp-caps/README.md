@@ -118,6 +118,8 @@ Device configurations:
   DUT_ADB_SPINEL_PROXY=<serial>      Connect to the DUT Android device via adb Spinel proxy (host ot-cli)
   DUT_SPINEL_PROXY=1                 Enable adb Spinel proxy mode for DUT_ADB_USB/DUT_ADB_TCP (host ot-cli)
   DUT_SPINEL_PROXY_SOCKET=<path>     Socket path for adb Spinel proxy forwarding
+  DUT_SPINEL_PROXY_RADIO_URL_PARAMS=<params>
+                                     Radio URL parameters for adb Spinel proxy (e.g. bus-latency=20000)
   DUT_RADIO_URL=<radio_url>          Connect to the DUT via host POSIX ot-cli over radio URL
   DUT_CLI_SERIAL=<serial_device>     Connect to the DUT via cli serial port
   DUT_SSH=<device_ip>                Connect to the DUT via ssh
@@ -126,6 +128,8 @@ Device configurations:
   REF_ADB_SPINEL_PROXY=<serial>      Connect to the reference Android device via adb Spinel proxy (host ot-cli)
   REF_SPINEL_PROXY=1                 Enable adb Spinel proxy mode for REF_ADB_USB/REF_ADB_TCP (host ot-cli)
   REF_SPINEL_PROXY_SOCKET=<path>     Socket path for reference device adb Spinel proxy forwarding
+  REF_SPINEL_PROXY_RADIO_URL_PARAMS=<params>
+                                     Radio URL parameters for adb Spinel proxy (e.g. bus-latency=20000)
   REF_RADIO_URL=<radio_url>          Connect to the reference device via host POSIX ot-cli over radio URL
   REF_CLI_SERIAL=<serial_device>     Connect to the reference device via cli serial port
   REF_SSH=<device_ip>                Connect to the reference device via ssh
@@ -153,6 +157,9 @@ Run test cases with host POSIX ot-cli over Radio URL (e.g. Unix socket):
 
 Run test cases with automated Android adb Spinel proxy setup:
   DUT_ADB_SPINEL_PROXY=1169UC2F2T0M95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_diag_commands
+
+Run test cases with adb Spinel proxy and a bus latency of 20 ms for the adb forwarding:
+  DUT_ADB_SPINEL_PROXY=1169UC2F2T0M95OR DUT_SPINEL_PROXY_RADIO_URL_PARAMS=bus-latency=20000 REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_csl
 
 Run all test cases:
   DUT_ADB_USB=1169UC2F2T0M95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest discover -q -s ./ -p 'test_*.py'

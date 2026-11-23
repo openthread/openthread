@@ -45,7 +45,9 @@ class AdbSpinelProxyManager:
          so it enters SpinelProxy diagnostic mode.
       3. Forwarding host Unix domain socket to device abstract socket:
          `adb forward localfilesystem:<socket_path> localabstract:ot_daemon_spinel_proxy`.
-      4. Providing `spinel+hdlc+unix://<socket_path>` radio URL for host POSIX `ot-cli`.
+      4. Providing `spinel+hdlc+unix://<socket_path>[?<radio_url_params>]` radio URL for host POSIX `ot-cli`.
+         `radio_url_params` are radio URL query parameters (e.g. `bus-latency=<usec>` for the latency of
+         the adb forwarding).
       5. Clean teardown on `close()` restoring Android system properties and restarting normal ot-daemon.
     """
 
@@ -59,7 +61,11 @@ class AdbSpinelProxyManager:
                  socket_path: Optional[str] = None,
                  adb_path: str = "adb",
                  auto_setup: bool = True,
-                 adb_key: Optional[str] = None):
+                 adb_key: Optional[str] = None,
+                 radio_url_params: Optional[str] = None):
+        if radio_url_params is not None and any(c in radio_url_params for c in '?#'):
+            raise ValueError(f"Invalid radio URL parameters {radio_url_params!r}: must not contain '?' or '#'")
+
         self.__device_serial = device_serial
         self.__host = host
         self.__port = port
@@ -67,6 +73,7 @@ class AdbSpinelProxyManager:
         self.__adb_path = adb_path
         self.__auto_setup = auto_setup
         self.__adb_key = adb_key
+        self.__radio_url_params = radio_url_params
         self.__forward_active = False
         self.__is_closed = False
         self.__radio_url: Optional[str] = None
@@ -163,6 +170,8 @@ class AdbSpinelProxyManager:
             raise RuntimeError(f"Timeout waiting for ADB forward socket to be created at {self.__socket_path}")
 
         self.__radio_url = f"spinel+hdlc+unix://{self.__socket_path}"
+        if self.__radio_url_params:
+            self.__radio_url += f"?{self.__radio_url_params}"
         logging.info("Android Spinel proxy ready at %s", self.__radio_url)
 
     def close(self):

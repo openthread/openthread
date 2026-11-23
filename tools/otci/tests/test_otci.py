@@ -913,6 +913,39 @@ class TestOTCI(unittest.TestCase):
             self.assertTrue(
                 any('setprop' in c and 'debug.thread_network.spinel_proxy' in c and '0' in c for c in close_cmds))
 
+    def testAdbSpinelProxyManagerRadioUrlParams(self):
+        from unittest.mock import patch, MagicMock
+        from otci.adb_spinel_proxy import AdbSpinelProxyManager
+
+        fake_sock = f'/tmp/test_adb_spinel_proxy_params_{os.getpid()}.sock'
+
+        def fake_run(cmd, *args, **kwargs):
+            if 'forward' in cmd and '--remove' not in cmd:
+                with open(fake_sock, 'w') as f:
+                    f.write('')
+            return MagicMock(returncode=0, stdout='', stderr='')
+
+        with patch('subprocess.run', side_effect=fake_run) as mock_run:
+            for params, expected_url in (
+                (None, f'spinel+hdlc+unix://{fake_sock}'),
+                ('', f'spinel+hdlc+unix://{fake_sock}'),
+                ('bus-latency=20000', f'spinel+hdlc+unix://{fake_sock}?bus-latency=20000'),
+                ('bus-latency=20000&region=US', f'spinel+hdlc+unix://{fake_sock}?bus-latency=20000&region=US'),
+            ):
+                with AdbSpinelProxyManager(device_serial='TEST_SERIAL_123',
+                                           socket_path=fake_sock,
+                                           auto_setup=False,
+                                           radio_url_params=params) as proxy:
+                    self.assertEqual(proxy.radio_url, expected_url)
+
+            mock_run.reset_mock()
+            for params in ('?bus-latency=20000', 'bus-latency=20000?region=US', 'bus-latency=20000#frag'):
+                with self.assertRaises(ValueError):
+                    AdbSpinelProxyManager(device_serial='TEST_SERIAL_123',
+                                          socket_path=fake_sock,
+                                          radio_url_params=params)
+            mock_run.assert_not_called()
+
 
 def _setup_default_network(node: OTCI):
     node.dataset_clear_buffer()

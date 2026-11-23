@@ -222,6 +222,7 @@ class DeviceManager(object):
                 socket_path=os.getenv('DUT_SPINEL_PROXY_SOCKET'),
                 executable=self.__get_ot_cli(),
                 adb_key=self.__get_adb_key(),
+                radio_url_params=os.getenv('DUT_SPINEL_PROXY_RADIO_URL_PARAMS'),
             )
         elif os.getenv('DUT_ADB_TCP'):
             if self.__is_spinel_proxy_enabled('DUT'):
@@ -237,6 +238,7 @@ class DeviceManager(object):
                     socket_path=os.getenv('DUT_SPINEL_PROXY_SOCKET'),
                     executable=self.__get_ot_cli(),
                     adb_key=self.__get_adb_key(),
+                    radio_url_params=os.getenv('DUT_SPINEL_PROXY_RADIO_URL_PARAMS'),
                 )
             else:
                 node = otci.connect_otbr_adb_tcp(os.getenv('DUT_ADB_TCP'), adb_key=self.__get_adb_key())
@@ -247,6 +249,7 @@ class DeviceManager(object):
                     socket_path=os.getenv('DUT_SPINEL_PROXY_SOCKET'),
                     executable=self.__get_ot_cli(),
                     adb_key=self.__get_adb_key(),
+                    radio_url_params=os.getenv('DUT_SPINEL_PROXY_RADIO_URL_PARAMS'),
                 )
             else:
                 node = otci.connect_otbr_adb_usb(os.getenv('DUT_ADB_USB'), adb_key=self.__get_adb_key())
@@ -270,6 +273,7 @@ class DeviceManager(object):
                 socket_path=os.getenv('REF_SPINEL_PROXY_SOCKET'),
                 executable=self.__get_ot_cli(),
                 adb_key=self.__get_adb_key(),
+                radio_url_params=os.getenv('REF_SPINEL_PROXY_RADIO_URL_PARAMS'),
             )
         elif os.getenv('REF_ADB_TCP'):
             if self.__is_spinel_proxy_enabled('REF'):
@@ -285,6 +289,7 @@ class DeviceManager(object):
                     socket_path=os.getenv('REF_SPINEL_PROXY_SOCKET'),
                     executable=self.__get_ot_cli(),
                     adb_key=self.__get_adb_key(),
+                    radio_url_params=os.getenv('REF_SPINEL_PROXY_RADIO_URL_PARAMS'),
                 )
             else:
                 node = otci.connect_otbr_adb_tcp(os.getenv('REF_ADB_TCP'), adb_key=self.__get_adb_key())
@@ -295,6 +300,7 @@ class DeviceManager(object):
                     socket_path=os.getenv('REF_SPINEL_PROXY_SOCKET'),
                     executable=self.__get_ot_cli(),
                     adb_key=self.__get_adb_key(),
+                    radio_url_params=os.getenv('REF_SPINEL_PROXY_RADIO_URL_PARAMS'),
                 )
             else:
                 node = otci.connect_otbr_adb_usb(os.getenv('REF_ADB_USB'), adb_key=self.__get_adb_key())
