@@ -151,8 +151,12 @@ jobs:
         sudo apt-get --no-install-recommends install -y ninja-build
     - name: Build & Run
       run: |
-        ./tests/toranj/build.sh all
-        ninja test
+        top_builddir=$(pwd)/build/sim ./tests/toranj/build.sh all
+        ctest --test-dir build/sim --output-on-failure
+    - name: Build & Run (Alt Config)
+      run: |
+        top_builddir=$(pwd)/build/alt ./tests/toranj/build.sh --alt-config tests
+        ctest --test-dir build/alt -L thread_direct --output-on-failure --no-tests=error
 
   toranj-build-log-level:
     name: toranj-build-log-level-${{ matrix.LOG_LEVEL }}
