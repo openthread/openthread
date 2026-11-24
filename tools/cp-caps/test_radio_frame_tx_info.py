@@ -34,7 +34,7 @@ import time
 
 from otci import OTCI
 from device_manager import DeviceManager, Frame
-from tx_delay_analyzer import measure_cca_offsets
+from tx_delay_analyzer import measure_cca_offsets, measure_lateness
 
 
 class TestRadioFrameTxInfo(unittest.TestCase):
@@ -47,6 +47,7 @@ class TestRadioFrameTxInfo(unittest.TestCase):
     TX_DELAY_CCA_LEAD_US = 300000  # The delay of the first frame from the base time
     TX_DELAY_CCA_PERIOD_US = 200000  # The interval between two delayed frames
     TX_DELAY_CCA_TOLERANCE_US = 64  # Half of the CCA duration (8 symbols)
+    TX_DELAY_PAST_DUE_FRAMES = 20  # The number of delayed frames sent with each value of mCsmaCaEnabled
 
     @classmethod
     def setUpClass(cls):
@@ -391,6 +392,90 @@ class TestRadioFrameTxInfo(unittest.TestCase):
                 f' {len(offsets_us)} frames)')
         else:
             self.__device_manager.output_test_result_string(name, 'NotSupported (no frames to compare)')
+
+    def test_radio_frame_tx_info_tx_delay_past_due(self):
+        """Test whether the DUT reports a valid result for delayed frames that reach the radio near or after their
+        scheduled time (mInfo.mTxInfo.mTxDelayBaseTime + mInfo.mTxInfo.mTxDelay).
+
+        The radio may either send such a frame right away or abort it, but must not report OT_ERROR_NO_ACK since the
+        frames don't request an ACK. The scheduled times of the frames range from `L` before to `3 * L` after the
+        radio time read right before setting each frame, where `L` is the measured time to read the radio time, set
+        and send a frame, so that the frames reach the radio both before and after their scheduled times. If a sniffer
+        is configured, the result also shows how late the frames are sent after their scheduled times.
+        """
+        sniffer = self.__device_manager.sniffer
+        self.__sync_radio_time()
+
+        self.__dut.diag_start()
+        self.__ref.diag_start()
+
+        if not self.__dut.is_command_supported('diag radio time'):
+            self.skipTest('The DUT does not support `diag radio time` or radio time is not available')
+
+        channel = 11
+        dut_tx_frame = '01ec00dddd01fecaefbe00adde02fecaefbe00adde000102030405060708090000'
+        frames = self.TX_DELAY_PAST_DUE_FRAMES
+        targets_us = []  # The scheduled time of each frame, by frame index, for each sweep
+        stats = []
+        timestamps_us = {}
+
+        self.__dut.diag_set_channel(channel)
+
+        # Measures the time to read the radio time, set and send a frame without delay.
+        latencies_us = []
+        for _ in range(3):
+            start_time = time.monotonic()
+            self.__dut.diag_get_radio_time()
+            self.__dut.diag_frame(dut_tx_frame, max_frame_retries=0)
+            self.__dut.diag_send(1, is_async=False)
+            latencies_us.append((time.monotonic() - start_time) * 1000000)
+        latency_us = round(max(latencies_us))
+
+        if sniffer is not None:
+            sniffer.start(channel)
+
+        try:
+            first_radio_time = self.__dut.diag_get_radio_time()
+
+            for sweep, csma_ca_enabled in enumerate((False, True)):
+                self.__dut.diag_stats_clear()
+                targets_us.append({})
+
+                for i in range(sweep * frames, (sweep + 1) * frames):
+                    # Schedules the frame from `latency_us` before to `3 * latency_us` after `radio_time`.
+                    radio_time = self.__dut.diag_get_radio_time()
+                    tx_delay = 1 + round(4 * latency_us * (i % frames) / (frames - 1))
+                    targets_us[sweep][i] = ((radio_time - first_radio_time) & 0xffffffff) - latency_us + tx_delay
+
+                    # The sequence number of each frame is its index.
+                    self.__dut.diag_frame(f'{dut_tx_frame[:4]}{i:02x}{dut_tx_frame[6:]}',
+                                          csma_ca_enabled=csma_ca_enabled,
+                                          max_csma_backoffs=0,
+                                          max_frame_retries=0,
+                                          tx_delay_base_time=(radio_time - latency_us) & 0xffffffff,
+                                          tx_delay=tx_delay)
+                    self.__dut.diag_send(1, is_async=False)
+
+                stats.append(self.__dut.diag_get_stats())
+        finally:
+            if sniffer is not None:
+                for frame in sniffer.stop():
+                    if frame.psdu[:4] == dut_tx_frame[:4] and frame.psdu[6:-4] == dut_tx_frame[6:-4]:
+                        timestamps_us.setdefault(int(frame.psdu[4:6], 16), frame.timestamp_us)
+
+        for sweep, csma_ca_enabled in enumerate((False, True)):
+            stat = stats[sweep]
+            others = stat['sent_error_others_packets'] + stat['sent_error_invalid_state_packets']
+            ret = 'OK' if others == 0 else 'NotSupported'
+            details = (f'{stat["sent_success_packets"]} sent, {stat["sent_error_abort_packets"]} aborted,'
+                       f' {stat["sent_error_cca_packets"]} CCA failures, {others} other errors')
+            # Measures each sweep separately so that a CCA timing offset doesn't skew the other sweep.
+            late_us = measure_lateness(timestamps_us, targets_us[sweep]).values()
+            if late_us:
+                details += f', up to {max(late_us)} us late'
+
+            name = f'mTxDelay past due,mCsmaCaEnabled={int(csma_ca_enabled)}'
+            self.__device_manager.output_test_result_string(name, f'{ret} ({details})')
 
     def __sync_radio_time(self):
         # Enable the IPv6 interface to force the host and the RCP to synchronize the radio time.

@@ -382,6 +382,8 @@ The test case `test_radio_frame_tx_info` tests whether the RCP supports the mTxI
 
 If a [sniffer](#sniffer) is configured, the sub-test `mTxDelay,mCsmaCaEnabled=1 vs 0` checks that the DUT sends delayed frames on time whether CCA is enabled or not, as `mTxDelayBaseTime` + `mTxDelay` is the time of the end of the SFD. The DUT sends delayed frames 200 ms apart from the same `mTxDelayBaseTime`, with `mCsmaCaEnabled` alternately 0 and 1. The offset of each frame with CCA is its timestamp minus the average timestamp of the frames without CCA before and after it, which cancels the clock drift between the DUT and the sniffer. The sub-test passes if the median offset is within ±64 us (half of the CCA duration); a radio that does not start CCA early enough sends the frames with CCA late, and a radio that starts every frame early by the CCA time sends the frames without CCA early.
 
+The sub-tests `mTxDelay past due,mCsmaCaEnabled=0` and `mTxDelay past due,mCsmaCaEnabled=1` check delayed frames without ACK request that reach the radio near or after their scheduled time, e.g. due to the latency between the host and the RCP. The DUT measures the time `L` to read the radio time, set and send a frame, and sends 20 delayed frames scheduled from `L` before to `3 * L` after the radio time read right before setting each frame. The radio may send a late frame right away or abort it, so the sub-test only fails if the radio reports an error other than `OT_ERROR_ABORT` or `OT_ERROR_CHANNEL_ACCESS_FAILURE`, such as `OT_ERROR_NO_ACK`. The result shows how many frames were sent, aborted or failed and, if a sniffer is configured, how late the latest frame was sent after its scheduled time (relative to the frame sent the earliest relative to its scheduled time).
+
 ```bash
 tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 SNIFFER_SERIAL=/dev/ttyACM1 python3 -m unittest -q test_radio_frame_tx_info
 mCsmaCaEnabled=0 ----------------------------------------- OK
@@ -397,4 +399,6 @@ mMaxCsmaBackoffs=100 ------------------------------------- OK (541 ms)
 mRxChannelAfterTxDone ------------------------------------ OK
 mTxDelayBaseTime=now,mTxDelay=500000 --------------------- OK
 mTxDelay,mCsmaCaEnabled=1 vs 0 --------------------------- OK (median -3 us, mean -5 us, 10 frames)
+mTxDelay past due,mCsmaCaEnabled=0 ----------------------- OK (20 sent, 0 aborted, 0 CCA failures, 0 other errors, up to 1994 us late)
+mTxDelay past due,mCsmaCaEnabled=1 ----------------------- OK (20 sent, 0 aborted, 0 CCA failures, 0 other errors, up to 1917 us late)
 ```
