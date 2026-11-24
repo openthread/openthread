@@ -386,6 +386,36 @@ expect "Done"
 send "diag send 1\n"
 expect "Done"
 
+send_user "send frame with tx delay base time\n"
+send "diag frame -d 1 112233\n"
+expect "Done"
+send "diag frame -t 1 -d 1 112233\n"
+expect "Done"
+send "diag frame -t 112233\n"
+expect "Error 7: InvalidArgs"
+send "diag radio time 1\n"
+expect "Error 7: InvalidArgs"
+
+# Enable the IPv6 interface to synchronize the radio time of a host with the RCP.
+send "diag stop\n"
+expect_line "Done"
+send "ifconfig up\n"
+expect_line "Done"
+sleep 1
+send "ifconfig down\n"
+expect_line "Done"
+send "diag start\n"
+expect_line "Done"
+
+send "diag radio time\n"
+expect -re {[\r\n](\d+)[\r\n]}
+set radio_time $expect_out(1,string)
+expect_line "Done"
+send "diag frame -t $radio_time -d 1000 112233\n"
+expect_line "Done"
+send "diag send 1\n"
+expect_line "Done"
+
 send "diag channel 11\n"
 expect_line "Done"
 
