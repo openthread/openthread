@@ -448,9 +448,9 @@ void TestFragmentReassemblyHole(void)
     nexus.AdvanceTime(kFormNetworkTime);
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
 
-    child.Join(leader);
+    child.Join(leader, Node::kAsFed);
     nexus.AdvanceTime(20 * 1000);
-    VerifyOrQuit(child.Get<Mle::Mle>().IsAttached());
+    VerifyOrQuit(child.Get<Mle::Mle>().IsChild());
 
     SuccessOrQuit(otIcmp6RegisterHandler(&child.GetInstance(), &handler));
 
