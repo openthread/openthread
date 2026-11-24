@@ -274,7 +274,7 @@ jobs:
       shell: bash ./script/retry {0}
       env:
         GCC_VER: ${{ matrix.gcc_ver }}
-        PR_BODY: "${{ github.event.pull_request.body }}"
+        PR_BODY: ${{ (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR') && github.event.pull_request.body || '' }}
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential bzip2 ca-certificates curl lib32z1 ninja-build xz-utils gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
@@ -283,7 +283,7 @@ jobs:
     - name: Build
       env:
         GCC_VER: ${{ matrix.gcc_ver }}
-        PR_BODY: "${{ github.event.pull_request.body }}"
+        PR_BODY: ${{ (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR') && github.event.pull_request.body || '' }}
       run: |
         export PATH="/tmp/arm-gcc-${GCC_VER}/bin:${PATH}"
         script/check-arm-build

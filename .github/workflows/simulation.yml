@@ -65,7 +65,7 @@ jobs:
       timeout-minutes: 10
       shell: bash ./script/retry {0}
       env:
-        PR_BODY: "${{ github.event.pull_request.body }}"
+        PR_BODY: ${{ (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR') && github.event.pull_request.body || '' }}
       run: |
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends dbus avahi-daemon avahi-utils expect lcov

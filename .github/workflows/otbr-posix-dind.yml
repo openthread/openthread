@@ -52,7 +52,7 @@ jobs:
       matrix:
         mdns: ["", "--mdnsresponder"]
     env:
-      PR_BODY: "${{ github.event.pull_request.body }}"
+      PR_BODY: ${{ (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR') && github.event.pull_request.body || '' }}
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
