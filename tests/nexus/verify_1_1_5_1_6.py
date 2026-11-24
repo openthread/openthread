@@ -116,7 +116,7 @@ def verify(pv):
                           } <= set(p.mle.tlv.type) and\
                p.ipv6.hlim == 255 and\
                p.mle.tlv.scan_mask.r == 1 and\
-               p.mle.tlv.scan_mask.e == 0).\
+               p.mle.tlv.scan_mask.e == 1).\
         must_next()
 
     # MLE Child ID Request
@@ -144,6 +144,7 @@ def verify(pv):
         filter_coap_request(consts.ADDR_SOL_URI).\
         filter(lambda p: {
                           consts.NL_MAC_EXTENDED_ADDRESS_TLV,
+                          consts.NL_RLOC16_TLV,
                           consts.NL_STATUS_TLV
                           } <= set(p.coap.tlv.type)
                ).\

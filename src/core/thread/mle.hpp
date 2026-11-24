@@ -1400,12 +1400,13 @@ private:
 
     enum AttachMode : uint8_t
     {
-        kAnyPartition,    // Attach to any Thread partition.
-        kSamePartition,   // Attach to the same Thread partition (when losing connectivity).
-        kBetterPartition, // Attach to a better (i.e. higher weight/partition id) Thread partition.
-        kDowngradeToReed, // Attach to the same Thread partition during downgrade process.
-        kBetterParent,    // Attach to a better parent.
-        kSelectedParent,  // Attach to a selected parent.
+        kAnyPartition,     // Attach to any Thread partition.
+        kSamePartition,    // Attach to the same Thread partition (when losing connectivity).
+        kBetterIdSequence, // Attach to same partition with same or newer ID sequence, or a better partition.
+        kBetterPartition,  // Attach to a better (i.e. higher weight/partition id) Thread partition.
+        kDowngradeToReed,  // Attach to the same Thread partition during downgrade process.
+        kBetterParent,     // Attach to a better parent.
+        kSelectedParent,   // Attach to a selected parent.
     };
 
     enum AttachState : uint8_t
@@ -2352,6 +2353,7 @@ private:
     void       ScheduleMessageTransmissionTimer(void);
     void       ProcessKeySequence(RxInfo &aRxInfo);
     void       HandleAdvertisement(RxInfo &aRxInfo);
+    Error      BecomeDetached(AttachMode aMode);
     void       HandleChildUpdateRequest(RxInfo &aRxInfo);
     void       HandleChildUpdateRequestOnChild(RxInfo &aRxInfo);
     void       HandleChildUpdateResponse(RxInfo &aRxInfo);
