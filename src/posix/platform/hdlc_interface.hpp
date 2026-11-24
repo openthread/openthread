@@ -129,7 +129,18 @@ public:
      *
      * @returns   Bus speed in bits/second.
      */
-    uint32_t GetBusSpeed(void) const { return mBaudRate; }
+    uint32_t GetBusSpeed(void) const { return mBusSpeed; }
+
+    /**
+     * Calculates the effective UART data bit rate (in bits/second) given framing parameters.
+     *
+     * @param[in] aBaudRate   The UART symbol rate in baud.
+     * @param[in] aHasParity  TRUE if a parity bit is enabled, FALSE otherwise.
+     * @param[in] aStopBits   The number of stop bits (1 or 2).
+     *
+     * @returns The effective data transfer speed in bits/second.
+     */
+    static uint32_t CalculateBusSpeed(uint32_t aBaudRate, bool aHasParity, uint8_t aStopBits);
 
     /**
      * Returns the bus latency between the host and the radio.
@@ -248,7 +259,7 @@ private:
     RxFrameBuffer       *mReceiveFrameBuffer;
 
     int             mSockFd;
-    uint32_t        mBaudRate;
+    uint32_t        mBusSpeed;
     Hdlc::Decoder   mHdlcDecoder;
     const Url::Url &mRadioUrl;
 
