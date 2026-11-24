@@ -34,7 +34,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
-from tx_delay_analyzer import MAX_INTERVAL_ERROR_US, measure_cca_offsets
+from tx_delay_analyzer import MAX_INTERVAL_ERROR_US, measure_cca_offsets, measure_lateness
 
 PERIOD_US = 200000
 FRAMES = 21
@@ -96,6 +96,27 @@ class TestMeasureCcaOffsets(unittest.TestCase):
     def test_no_frames(self):
         self.assertEqual(measure_cca_offsets({}, PERIOD_US), [])
         self.assertEqual(measure_cca_offsets({1: START_US}, PERIOD_US), [])
+
+
+class TestMeasureLateness(unittest.TestCase):
+
+    def test_on_time(self):
+        targets = {i: i * 1000 for i in range(5)}
+        timestamps = {i: START_US + target for i, target in targets.items()}
+        self.assertEqual(measure_lateness(timestamps, targets), {i: 0 for i in range(5)})
+
+    def test_late_frames(self):
+        targets = {0: -2000, 1: -1000, 2: 0, 3: 1000, 4: 2000}
+        # Frames 0 and 1 are past due when the radio gets them at 500 us, so it sends them right away.
+        timestamps = {0: START_US + 500, 1: START_US + 500, 2: START_US, 3: START_US + 1000, 4: START_US + 2000}
+        self.assertEqual(measure_lateness(timestamps, targets), {0: 2500, 1: 1500, 2: 0, 3: 0, 4: 0})
+
+    def test_missing_frames(self):
+        targets = {0: -1000, 1: 0, 2: 1000}
+        # Frame 0 is aborted, and the frame with index 9 is not sent by the DUT.
+        timestamps = {1: START_US, 2: START_US + 1000, 9: START_US + 5000}
+        self.assertEqual(measure_lateness(timestamps, targets), {1: 0, 2: 0})
+        self.assertEqual(measure_lateness({}, targets), {})
 
 
 if __name__ == '__main__':

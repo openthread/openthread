@@ -68,3 +68,25 @@ def measure_cca_offsets(timestamps_us: Dict[int, int], period_us: int) -> List[f
         offsets.append(timestamp - (prev_timestamp + next_timestamp) / 2)
 
     return offsets
+
+
+def measure_lateness(timestamps_us: Dict[int, int], targets_us: Dict[int, int]) -> Dict[int, int]:
+    """Measures how late the delayed frames are sent after their scheduled times.
+
+    The sniffer and the DUT have different clocks, so the lateness of each frame is relative to the frame sent the
+    earliest relative to its scheduled time, which is assumed to be sent on time. The clock drift between the DUT and
+    the sniffer (e.g. ±80 ppm over a few seconds) is not compensated.
+
+    :param timestamps_us: The receive timestamps (in microseconds) of the captured frames, by frame index.
+    :param targets_us: The scheduled times (in microseconds of the DUT radio clock) of the frames, by frame index.
+
+    :returns: The lateness (in microseconds) of each captured frame with a scheduled time, by frame index.
+    """
+    offsets = {i: timestamp - targets_us[i] for i, timestamp in timestamps_us.items() if i in targets_us}
+
+    if not offsets:
+        return {}
+
+    earliest = min(offsets.values())
+
+    return {i: offset - earliest for i, offset in offsets.items()}
