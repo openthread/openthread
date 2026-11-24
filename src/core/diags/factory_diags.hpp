@@ -249,6 +249,8 @@ private:
     static const struct Command sCommands[];
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD || (OPENTHREAD_RADIO && OPENTHREAD_RADIO_CLI)
+    static constexpr uint32_t kTxDoneTimeout = OPENTHREAD_CONFIG_DIAG_TX_DONE_TIMEOUT; // In msec.
+
     enum TxCmd : uint8_t
     {
         kTxCmdNone,
@@ -260,6 +262,9 @@ private:
     };
 
     void Stop(void);
+    void StartTxDoneTimeout(void);
+    void HandleTxDoneTimeout(void);
+    void CompletePendingStop(void);
 
     Stats mStats;
 
