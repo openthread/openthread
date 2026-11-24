@@ -1827,17 +1827,18 @@ Error Client::ReplaceWithSeparateSrvTxtQueries(Query &aQuery)
     secondQuery = mSocket.CloneMessage(aQuery);
     VerifyOrExit(secondQuery != nullptr);
 
-    info.mQueryType         = kServiceQueryTxt;
-    info.mMessageId         = 0;
-    info.mTransmissionCount = 0;
-    info.mMainQuery         = &aQuery;
-    IgnoreError(SendQuery(*secondQuery, info, /* aUpdateTimer */ true));
-
     info.mQueryType         = kServiceQuerySrv;
     info.mMessageId         = 0;
     info.mTransmissionCount = 0;
     info.mNextQuery         = secondQuery;
     IgnoreError(SendQuery(aQuery, info, /* aUpdateTimer */ true));
+
+    info.mQueryType         = kServiceQueryTxt;
+    info.mMessageId         = 0;
+    info.mTransmissionCount = 0;
+    info.mMainQuery         = &aQuery;
+    info.mNextQuery         = nullptr;
+    IgnoreError(SendQuery(*secondQuery, info, /* aUpdateTimer */ true));
     error = kErrorNone;
 
 exit:
