@@ -131,8 +131,12 @@ jobs:
         retention-days: 1
 
   toranj-unittest:
-    name: toranj-unittest
+    name: toranj-unittest-${{ matrix.TARGET }}
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        TARGET: ['all', 'posix']
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -151,8 +155,8 @@ jobs:
         sudo apt-get --no-install-recommends install -y ninja-build
     - name: Build & Run
       run: |
-        ./tests/toranj/build.sh all
-        ninja test
+        ./tests/toranj/build.sh ${{ matrix.TARGET }}
+        ctest --output-on-failure
 
   toranj-build-log-level:
     name: toranj-build-log-level-${{ matrix.LOG_LEVEL }}
