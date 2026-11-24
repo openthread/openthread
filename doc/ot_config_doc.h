@@ -67,6 +67,7 @@
  * @defgroup config-mac                      MAC
  * @defgroup config-mesh-diag                Mesh Diagnostic
  * @defgroup config-mesh-forwarder           Mesh Forwarder
+ * @defgroup config-mesh-monitor             Mesh Monitor
  * @defgroup config-misc                     Miscellaneous Constants
  * @defgroup config-mle                      MLE Service
  * @defgroup config-mdns                     Multicast DNS

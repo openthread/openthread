@@ -60,22 +60,22 @@ class BitSetUtils
 protected:
     // Common helpers used by `BitSet<>` templates
 
-    static uint8_t  BitMaskFor(uint16_t aIndex) { return (0x80 >> (aIndex & 7)); }
-    static bool     IsAllZero(const uint8_t *aMask, uint16_t aSize);
-    static uint16_t CountBits(const uint8_t *aMask, uint16_t aSize);
-    static void     FlipBits(uint8_t *aTargetMask, uint16_t aSize, uint16_t aNumBits);
-    static bool     IsSubset(const uint8_t *aMask, const uint8_t *aSuperMask, uint16_t aSize);
-    static void     Union(uint8_t *aTargetMask, const uint8_t *aMask, uint16_t aSize);
-    static void     Subtract(uint8_t *aTargetMask, const uint8_t *aMask, uint16_t aSize);
-    static void     Intersect(uint8_t *aTargetMask, const uint8_t *aMask, uint16_t aSize);
-    static void     Copy(uint8_t *aTargetMask, const uint8_t *aMask, uint16_t aSize, uint16_t aNumBits);
-    static void     Tidy(uint8_t *aTargetMask, uint16_t aSize, uint16_t aNumBits);
-    static Error    AppendMask(Message &aMessage, const uint8_t *aMask, uint16_t aSize);
-    static Error    ReadMask(const Message     &aMessage,
-                             const OffsetRange &aOffsetRange,
-                             uint8_t           *aTargetMask,
-                             uint16_t           aSize,
-                             uint16_t           aNumBits);
+    static constexpr uint8_t BitMaskFor(uint16_t aIndex) { return (0x80 >> (aIndex & 7)); }
+    static bool              IsAllZero(const uint8_t *aMask, uint16_t aSize);
+    static uint16_t          CountBits(const uint8_t *aMask, uint16_t aSize);
+    static void              FlipBits(uint8_t *aTargetMask, uint16_t aSize, uint16_t aNumBits);
+    static bool              IsSubset(const uint8_t *aMask, const uint8_t *aSuperMask, uint16_t aSize);
+    static void              Union(uint8_t *aTargetMask, const uint8_t *aMask, uint16_t aSize);
+    static void              Subtract(uint8_t *aTargetMask, const uint8_t *aMask, uint16_t aSize);
+    static void              Intersect(uint8_t *aTargetMask, const uint8_t *aMask, uint16_t aSize);
+    static void              Copy(uint8_t *aTargetMask, const uint8_t *aMask, uint16_t aSize, uint16_t aNumBits);
+    static void              Tidy(uint8_t *aTargetMask, uint16_t aSize, uint16_t aNumBits);
+    static Error             AppendMask(Message &aMessage, const uint8_t *aMask, uint16_t aSize);
+    static Error             ReadMask(const Message     &aMessage,
+                                      const OffsetRange &aOffsetRange,
+                                      uint8_t           *aTargetMask,
+                                      uint16_t           aSize,
+                                      uint16_t           aNumBits);
 };
 
 /**
