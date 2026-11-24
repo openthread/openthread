@@ -74,6 +74,12 @@ SpiInterface::SpiInterface(const Url::Url &aRadioUrl)
     , mSpiDevFd(-1)
     , mResetGpioValueFd(-1)
     , mIntGpioValueFd(-1)
+    , mSpiMode(0)
+    , mSpiAlignAllowance(0)
+    , mSpiResetDelay(0)
+    , mSpiCsDelayUs(0)
+    , mSpiSmallPacketSize(0)
+    , mSpiSpeedHz(0)
     , mSlaveResetCount(0)
     , mSpiDuplexFrameCount(0)
     , mSpiUnresponsiveFrameCount(0)
@@ -177,7 +183,8 @@ void SpiInterface::Deinit(void)
     if (mSpiDevFd >= 0)
     {
         close(mSpiDevFd);
-        mSpiDevFd = -1;
+        mSpiDevFd   = -1;
+        mSpiSpeedHz = 0;
     }
 
     if (mResetGpioValueFd >= 0)
@@ -284,7 +291,8 @@ void SpiInterface::InitIntPin(const char *aCharDev, uint8_t aLine)
 
 void SpiInterface::InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed)
 {
-    const uint8_t wordBits = kSpiBitsPerWord;
+    const uint8_t wordBits    = kSpiBitsPerWord;
+    uint32_t      actualSpeed = aSpeed;
     int           fd;
 
     LogDebg("InitSpiDev: path=%s, mode=%" PRIu8 ", speed=%" PRIu32, aPath, aMode, aSpeed);
@@ -292,13 +300,22 @@ void SpiInterface::InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed)
     VerifyOrDie((aPath != nullptr) && (aMode <= kSpiModeMax), OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aPath, O_RDWR | O_CLOEXEC)) != -1, OT_EXIT_ERROR_ERRNO);
     VerifyOrExit(ioctl(fd, SPI_IOC_WR_MODE, &aMode) != -1, LogError("ioctl(SPI_IOC_WR_MODE)"));
-    VerifyOrExit(ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &aSpeed) != -1, LogError("ioctl(SPI_IOC_WR_MAX_SPEED_HZ)"));
+    if (aSpeed > 0)
+    {
+        VerifyOrExit(ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &aSpeed) != -1, LogError("ioctl(SPI_IOC_WR_MAX_SPEED_HZ)"));
+    }
+
+    if (ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &actualSpeed) == -1)
+    {
+        LogError("ioctl(SPI_IOC_RD_MAX_SPEED_HZ)");
+        actualSpeed = aSpeed;
+    }
     VerifyOrExit(ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &wordBits) != -1, LogError("ioctl(SPI_IOC_WR_BITS_PER_WORD)"));
     VerifyOrExit(flock(fd, LOCK_EX | LOCK_NB) != -1, LogError("flock"));
 
     mSpiDevFd   = fd;
     mSpiMode    = aMode;
-    mSpiSpeedHz = aSpeed;
+    mSpiSpeedHz = (actualSpeed != 0) ? actualSpeed : aSpeed;
     fd          = -1;
 
 exit:
