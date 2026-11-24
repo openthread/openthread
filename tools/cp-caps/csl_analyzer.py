@@ -28,10 +28,12 @@
 #
 """Analyzes sniffed IEEE 802.15.4 frames to tell CSL transmitter issues from CSL receiver issues."""
 
+import math
+import statistics
 import struct
 
 from dataclasses import dataclass, field
-from typing import Collection, List, Optional, Tuple
+from typing import Collection, Dict, List, Optional, Tuple
 
 from sniffer import SniffedFrame
 
@@ -70,6 +72,13 @@ CSL_TX_TOLERANCE_US = TEN_SYMBOLS_US + 192
 # The CSL sample times are derived on the sniffer clock from a frame of the CSL receiver, so they drift by up to 40 ppm
 # (IEEE 802.15.4 O-QPSK PHY) of each of the sniffer and the CSL receiver since that frame.
 MAX_CLOCK_DRIFT_PPM = 80
+
+# The clock accuracy of the sniffer (IEEE 802.15.4 O-QPSK PHY).
+SNIFFER_ACCURACY_PPM = 40
+
+# The clock drift of the CSL transmitter relative to the sniffer is only estimated if the data frames timed from the
+# same CSL IE (e.g. the retransmissions of an unacknowledged frame in the next CSL sample windows) span this time.
+MIN_DRIFT_SPAN_US = 600000
 
 
 @dataclass
@@ -192,15 +201,20 @@ class CslTxAttempt:
           or None if the sniffer captured no CSL IE from the CSL receiver to time the frame.
       drift_us: The uncertainty of `offset_us` for the clock drift since the CSL IE that the frame is timed from.
       csl_ie_age_us: The time between the frame and the CSL IE that the frame is timed from.
+      csl_ie_timestamp_us: The sniffer timestamp of the CSL IE that the frame is timed from.
       schedule_changed: Whether the CSL receiver changed its CSL sample time between the CSL IEs before and after the
           frame, and the frame is in the CSL sample window of only one of them.
+      around_schedule_change: Whether the CSL receiver changed its CSL sample time between the CSL IEs before and after
+          the frame, so the CSL sample time of the frame is uncertain even if both put it in or out of the window.
     """
     timestamp_us: int
     acked: bool
     offset_us: Optional[int] = None
     drift_us: int = 0
     csl_ie_age_us: int = 0
+    csl_ie_timestamp_us: int = 0
     schedule_changed: bool = False
+    around_schedule_change: bool = False
 
     @property
     def is_timed(self) -> bool:
@@ -259,6 +273,73 @@ class RetransmittedFrame:
 
 
 @dataclass
+class CslTxTiming:
+    """Represents the timing of the data frames sent by the CSL transmitter, whether acknowledged or not.
+
+    The offset of a frame is modeled as `bias + drift * CSL IE age + jitter`. The drift is only estimated from the
+    frames timed from the same CSL IE, so that how the CSL transmitter timestamped each CSL IE is not taken as drift.
+
+    Attributes:
+      offsets_us: The offsets of the frames from the CSL sample time.
+      ages_us: The times of the frames since the CSL IEs that they are timed from (negative if timed from a later one).
+      bias_us: The median offset after removing the drift.
+      jitter_us: The half range of the offsets after removing the drift.
+      max_offset_us: The largest absolute offset after removing the drift.
+      drift_ppm: The clock drift of the CSL transmitter relative to the sniffer (positive if the offsets grow with the
+          CSL IE age), or None if the frames timed from the same CSL IE span too little time to estimate it.
+      drift_se_ppm: The standard error of `drift_ppm`.
+    """
+    offsets_us: List[int]
+    ages_us: List[int]
+    bias_us: float
+    jitter_us: float
+    max_offset_us: float
+    drift_ppm: Optional[float] = None
+    drift_se_ppm: Optional[float] = None
+
+    def describe(self, accuracy_ppm: Optional[int] = None, uncertainty_us: Optional[int] = None) -> List[str]:
+        """Describes the timing, and warns if it exceeds the CSL accuracy and uncertainty advertised by the CSL
+        transmitter, which the CSL receiver uses to widen its CSL sample window."""
+        max_drift_ppm = (accuracy_ppm or 0) + SNIFFER_ACCURACY_PPM
+
+        if self.drift_ppm is None:
+            drift = 'drift vs. sniffer unknown (insufficient span)'
+        else:
+            drift = f'drift vs. sniffer {self.drift_ppm:+.0f} ± {self.drift_se_ppm:.0f} ppm'
+
+        lines = [
+            f'CSL TX timing: {len(self.offsets_us)} data frames, offsets min {min(self.offsets_us):+d} / median'
+            f' {statistics.median(self.offsets_us):+.0f} / max {max(self.offsets_us):+d} us, bias {self.bias_us:+.0f}'
+            f' us, jitter ±{self.jitter_us:.0f} us, {drift}'
+        ]
+
+        if uncertainty_us is not None and self.drift_ppm is not None and self.max_offset_us > uncertainty_us:
+            lines.append(f'CSL TX timing warning: offsets up to {self.max_offset_us:.0f} us after removing the drift'
+                         f' exceed the CSL uncertainty of the CSL transmitter ({uncertainty_us} us)')
+
+        if uncertainty_us is not None and self.drift_ppm is None:
+            # Without a drift estimate, allows the worst clock drift of the CSL transmitter and the sniffer since the
+            # CSL IE.
+            exceeding = [
+                abs(offset_us)
+                for offset_us, age_us in zip(self.offsets_us, self.ages_us)
+                if abs(offset_us) > uncertainty_us + max_drift_ppm * abs(age_us) / 1000000
+            ]
+            if exceeding:
+                lines.append(f'CSL TX timing warning: offsets up to {max(exceeding)} us exceed the CSL uncertainty of'
+                             f' the CSL transmitter ({uncertainty_us} us) plus a clock drift of {max_drift_ppm} ppm'
+                             ' since the CSL IEs')
+
+        # Only warns if the drift exceeds the limit by more than its standard error.
+        if accuracy_ppm is not None and self.drift_ppm is not None and \
+                abs(self.drift_ppm) - self.drift_se_ppm > max_drift_ppm:
+            lines.append(f'CSL TX timing warning: {drift} exceeds the CSL accuracy of the CSL transmitter'
+                         f' ({accuracy_ppm} ppm) plus the sniffer accuracy ({SNIFFER_ACCURACY_PPM} ppm)')
+
+        return lines
+
+
+@dataclass
 class CslTxReport:
     """Represents the CSL frame exchanges between a CSL transmitter and a CSL receiver captured on a channel."""
     channel: int
@@ -271,6 +352,27 @@ class CslTxReport:
     def is_untimed(self) -> bool:
         """Whether no frame can be timed because the sniffer captured no CSL IE from the CSL receiver."""
         return bool(self.attempts) and not any(attempt.is_timed for attempt in self.attempts)
+
+    @property
+    def timing(self) -> Optional[CslTxTiming]:
+        """The timing of the timed data frames whose CSL sample time is certain, or None if there is none."""
+        samples = [(attempt.csl_ie_timestamp_us, attempt.timestamp_us - attempt.csl_ie_timestamp_us, attempt.offset_us)
+                   for attempt in self.attempts
+                   if attempt.is_timed and not attempt.around_schedule_change]
+
+        if not samples:
+            return None
+
+        drift_ppm, drift_se_ppm = _estimate_drift(samples)
+        adjusted = [offset_us - (drift_ppm or 0) * age_us / 1000000 for _, age_us, offset_us in samples]
+
+        return CslTxTiming(offsets_us=[offset_us for _, _, offset_us in samples],
+                           ages_us=[age_us for _, age_us, _ in samples],
+                           bias_us=statistics.median(adjusted),
+                           jitter_us=(max(adjusted) - min(adjusted)) / 2,
+                           max_offset_us=max(abs(offset_us) for offset_us in adjusted),
+                           drift_ppm=drift_ppm,
+                           drift_se_ppm=drift_se_ppm)
 
     def describe(self) -> List[str]:
         """Describes the CSL issues found from the frames on the channel."""
@@ -384,6 +486,37 @@ def _describe_timing(attempts: List[CslTxAttempt]) -> str:
         f' up to {age_ms} ms old'
 
 
+def _estimate_drift(samples: List[Tuple[int, int, int]]) -> Tuple[Optional[float], Optional[float]]:
+    """Estimates the clock drift and its standard error from (CSL IE timestamp, CSL IE age, offset) samples.
+
+    Fits `offset = intercept of the CSL IE + drift * CSL IE age` with ordinary least squares, so that only the
+    frames timed from the same CSL IE contribute to the drift. The frames before the first CSL IE, which the CSL
+    transmitter timed from an uncaptured CSL IE, are grouped separately from the frames after it.
+    """
+    groups: Dict[Tuple[int, bool], List[Tuple[float, float]]] = {}
+    for csl_ie_timestamp_us, age_us, offset_us in samples:
+        groups.setdefault((csl_ie_timestamp_us, age_us < 0), []).append((age_us / 1000000, offset_us))
+
+    deviations = []
+    span_us = 0
+    for group in groups.values():
+        mean_age_s = statistics.fmean(age_s for age_s, _ in group)
+        mean_offset_us = statistics.fmean(offset_us for _, offset_us in group)
+        deviations += [(age_s - mean_age_s, offset_us - mean_offset_us) for age_s, offset_us in group]
+        span_us = max(span_us, (max(age_s for age_s, _ in group) - min(age_s for age_s, _ in group)) * 1000000)
+
+    # Needs at least 2 degrees of freedom left for the standard error.
+    dof = len(samples) - len(groups) - 1
+    if span_us < MIN_DRIFT_SPAN_US or dof < 2:
+        return None, None
+
+    sxx = sum(dx * dx for dx, _ in deviations)
+    drift_ppm = sum(dx * dy for dx, dy in deviations) / sxx
+    rss = sum((dy - drift_ppm * dx)**2 for dx, dy in deviations)
+
+    return drift_ppm, math.sqrt(rss / dof / sxx)
+
+
 def analyze_csl_tx(frames: List[SniffedFrame],
                    channel: int,
                    transmitter: Collection[str],
@@ -485,9 +618,11 @@ def analyze_csl_tx(frames: List[SniffedFrame],
             continue
 
         attempt.offset_us, attempt.drift_us, attempt.csl_ie_age_us = (before or after).time(attempt.timestamp_us)
+        attempt.csl_ie_timestamp_us = (before or after).timestamp_us
 
         if before is not None and after is not None and _is_schedule_changed(before, after):
             offset_us, drift_us, _ = after.time(attempt.timestamp_us)
+            attempt.around_schedule_change = True
             attempt.schedule_changed = _classify(offset_us, drift_us) != _classify(attempt.offset_us, attempt.drift_us)
 
     return report

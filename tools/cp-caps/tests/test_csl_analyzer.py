@@ -631,6 +631,181 @@ class TestAnalyzeCslTx(unittest.TestCase):
         self.assertEqual(report.retransmitted_frames[0].frame_counters, [9, 9])
         self.assertEqual(report.retransmitted_frames[0].num_changed, 0)
 
+    def _timed_data(self, n, offset_us, drift_ppm=0, anchor_us=ANCHOR_US, phase=PHASE, seq=0x7b):
+        # A data frame in the n-th CSL sample window after a CSL IE, with a bias and a clock drift since the CSL IE.
+        sample_us = anchor_us + phase * 160 + n * self.PERIOD_US
+        return self._data(sample_us + round(offset_us + drift_ppm * (sample_us - anchor_us) / 1000000), seq)
+
+    def test_timing_perfect(self):
+        frames = [self._anchor()]
+        for n in range(1, 5):
+            frames += [self._timed_data(n, 0, seq=n), self._ack(self._sample_us(n) + 1500, seq=n)]
+
+        timing = analyze_csl_tx(frames, CHANNEL, DUT, SSED).timing
+
+        self.assertEqual(timing.offsets_us, [0, 0, 0, 0])
+        self.assertEqual((timing.bias_us, timing.jitter_us, timing.max_offset_us), (0, 0, 0))
+        self.assertEqual((timing.drift_ppm, timing.drift_se_ppm), (0, 0))
+        self.assertEqual(timing.describe(20, 100), [
+            'CSL TX timing: 4 data frames, offsets min +0 / median +0 / max +0 us, bias +0 us, jitter ±0 us, drift vs.'
+            ' sniffer +0 ± 0 ppm'
+        ])
+
+    def test_timing_late_but_acked(self):
+        # The frames are acknowledged, so there is no CSL issue, but they are later than the CSL uncertainty of the
+        # CSL transmitter, e.g. the radio does not compensate the SHR duration.
+        frames = [self._anchor()]
+        for n in range(1, 6):
+            frames += [self._timed_data(n, 220, seq=n), self._ack(self._sample_us(n) + 1500, seq=n)]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+        timing = report.timing
+
+        self.assertEqual(report.describe(), ['No CSL issue found: 5/5 data frames on channel 20 were acknowledged'])
+        self.assertEqual((timing.bias_us, timing.drift_ppm), (220, 0))
+        self.assertEqual(
+            timing.describe(20, 100)[1:], [
+                'CSL TX timing warning: offsets up to 220 us after removing the drift exceed the CSL uncertainty of the'
+                ' CSL transmitter (100 us)'
+            ])
+        self.assertEqual(len(timing.describe(20, 250)), 1)
+        self.assertEqual(len(timing.describe()), 1)
+
+    def test_timing_bias_and_drift(self):
+        # The CSL transmitter is late by a fixed 520 us, and its clock drifts by 41 ppm relative to the sniffer, which
+        # shows in the retransmissions timed from the same CSL IE.
+        frames = [self._anchor(), *[self._timed_data(n, 520, 41) for n in range(1, 5)]]
+        anchor_us = self._sample_us(6) - self.PHASE * 160
+        frames += [self._anchor(anchor_us), *[self._timed_data(n, 520, 41, anchor_us, seq=0x7c) for n in range(1, 5)]]
+
+        timing = analyze_csl_tx(frames, CHANNEL, DUT, SSED).timing
+
+        self.assertEqual(timing.offsets_us, [534, 547, 560, 573] * 2)
+        self.assertAlmostEqual(timing.drift_ppm, 41, delta=0.5)
+        self.assertLess(timing.drift_se_ppm, 1)
+        self.assertAlmostEqual(timing.bias_us, 520, delta=1)
+        self.assertLess(timing.jitter_us, 1)
+        self.assertTrue(
+            timing.describe(20, 200)[0].endswith(', bias +520 us, jitter ±0 us, drift vs. sniffer +41 ± 0 ppm'))
+        self.assertEqual(timing.describe(0, 1000), [
+            timing.describe()[0],
+            'CSL TX timing warning: drift vs. sniffer +41 ± 0 ppm exceeds the CSL accuracy of the CSL transmitter'
+            ' (0 ppm) plus the sniffer accuracy (40 ppm)',
+        ])
+
+    def test_timing_short_span(self):
+        # The retransmissions timed from the same CSL IE span less than MIN_DRIFT_SPAN_US, so the noise of the offsets
+        # must not be shown as clock drift.
+        frames = []
+        for i, offsets_us in enumerate(((100, 160), (150, 90), (120, 180))):
+            anchor_us = self.ANCHOR_US + i * 7 * self.PERIOD_US
+            frames.append(self._anchor(anchor_us))
+            frames += [
+                self._timed_data(n, offset_us, 0, anchor_us, seq=i) for n, offset_us in enumerate(offsets_us, 1)
+            ]
+
+        timing = analyze_csl_tx(frames, CHANNEL, DUT, SSED).timing
+
+        self.assertIsNone(timing.drift_ppm)
+        self.assertEqual((timing.bias_us, timing.jitter_us, timing.max_offset_us), (135, 45, 180))
+        self.assertTrue(timing.describe()[0].endswith(', drift vs. sniffer unknown (insufficient span)'))
+
+    def test_timing_each_frame_timed_from_new_csl_ie(self):
+        # Each frame is timed from a new CSL IE (e.g. in the Enh-ACK of the previous frame), so no frames are timed from
+        # the same CSL IE and the clock drift is unknown. The offsets are within the CSL uncertainty of the CSL
+        # transmitter.
+        frames = []
+        for i, offset_us in enumerate((158, 136, 170, 176, 149, 168, 136, 180, 170, 187)):
+            anchor_us = self.ANCHOR_US + i * 4 * self.PERIOD_US
+            frames += [self._anchor(anchor_us), self._timed_data(1 + i % 3, offset_us, 0, anchor_us, seq=i)]
+
+        timing = analyze_csl_tx(frames, CHANNEL, DUT, SSED).timing
+
+        self.assertIsNone(timing.drift_ppm)
+        self.assertEqual((timing.bias_us, timing.jitter_us, timing.max_offset_us), (169, 25.5, 187))
+        self.assertEqual(timing.describe(20, 200), [
+            'CSL TX timing: 10 data frames, offsets min +136 / median +169 / max +187 us, bias +169 us, jitter ±26 us,'
+            ' drift vs. sniffer unknown (insufficient span)'
+        ])
+
+    def test_timing_attached_again(self):
+        # The CSL transmitter timestamped the CSL IEs before and after the CSL receiver attached again differently, which
+        # changes the offsets of the frames timed from each of them but not the clock drift.
+        parent_request = SniffedFrame(timestamp_us=self._sample_us(5), channel=CHANNEL, psdu=PARENT_REQUEST_2006)
+        anchor_us = self._sample_us(6)
+        frames = [self._anchor(), *[self._timed_data(n, 100, 30) for n in range(1, 5)], parent_request]
+        frames += [self._data(self._sample_us(5) + 20000, 0x7c)]
+        frames += [self._anchor(anchor_us), *[self._timed_data(n, 300, 30, anchor_us, seq=0x7d) for n in range(1, 5)]]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+        timing = report.timing
+
+        self.assertEqual(report.num_excluded, 1)
+        self.assertEqual(len(timing.offsets_us), 8)
+        self.assertAlmostEqual(timing.drift_ppm, 30, delta=0.5)
+        self.assertAlmostEqual(timing.jitter_us, 100, delta=1)
+        self.assertAlmostEqual(timing.max_offset_us, 300, delta=1)
+
+    def test_timing_excluded_frames(self):
+        self.assertIsNone(analyze_csl_tx([self._data(1000)], CHANNEL, DUT, SSED).timing)
+
+        # The frames between CSL IEs with different CSL sample times are not used, even if both CSL IEs put them out of
+        # the CSL sample window.
+        new_anchor_us = self._sample_us(6) + 200000
+        frames = [
+            self._anchor(),
+            self._data(self._sample_us(5) + 120),
+            self._data(self._sample_us(6) - 150000),
+            self._anchor(timestamp_us=new_anchor_us, phase=self.PHASE + 1000),
+            self._timed_data(1, -50, 0, new_anchor_us, self.PHASE + 1000),
+        ]
+
+        report = analyze_csl_tx(frames, CHANNEL, DUT, SSED)
+
+        self.assertEqual([attempt.schedule_changed for attempt in report.attempts], [True, False, False])
+        self.assertEqual([attempt.around_schedule_change for attempt in report.attempts], [True, True, False])
+        self.assertEqual(report.timing.offsets_us, [-50])
+
+    def test_timing_frame_before_first_csl_ie(self):
+        # A frame before the first captured CSL IE was timed by the CSL transmitter from an uncaptured CSL IE, so its
+        # offset from the CSL IE after it is not taken as drift.
+        frames = [self._timed_data(-2, 300), self._anchor(), *[self._timed_data(n, 520, 41) for n in range(1, 5)]]
+
+        timing = analyze_csl_tx(frames, CHANNEL, DUT, SSED).timing
+
+        self.assertEqual(timing.offsets_us, [300, 534, 547, 560, 573])
+        self.assertEqual(timing.ages_us[0], -2 * self.PERIOD_US + self.PHASE * 160 + 300)
+        self.assertAlmostEqual(timing.drift_ppm, 41, delta=0.5)
+        self.assertLess(timing.drift_se_ppm, 1)
+
+    def test_timing_warnings_without_drift(self):
+        # Without a drift estimate, the worst clock drift of the CSL transmitter and the sniffer since the CSL IE is
+        # allowed on top of the CSL uncertainty: (20 + 40) ppm * 976 ms = 58 us.
+        frames = [self._anchor(), self._timed_data(3, 250)]
+
+        timing = analyze_csl_tx(frames, CHANNEL, DUT, SSED).timing
+
+        self.assertIsNone(timing.drift_ppm)
+        self.assertEqual(len(timing.describe(20, 200)), 1)
+        self.assertEqual(
+            timing.describe(20, 180)[1:], [
+                'CSL TX timing warning: offsets up to 250 us exceed the CSL uncertainty of the CSL transmitter (180 us)'
+                ' plus a clock drift of 60 ppm since the CSL IEs'
+            ])
+
+    def test_timing_drift_warning_significance(self):
+        # The drift only warns if it exceeds the CSL accuracy plus the sniffer accuracy by more than its standard
+        # error.
+        frames = [self._anchor()]
+        for n, offset_us in enumerate((0, 60, 0, 60, 60, 120), 1):
+            frames.append(self._timed_data(n, offset_us, seq=n))
+
+        timing = analyze_csl_tx(frames, CHANNEL, DUT, SSED).timing
+
+        self.assertGreater(abs(timing.drift_ppm), 40)
+        self.assertLess(abs(timing.drift_ppm) - timing.drift_se_ppm, 40)
+        self.assertEqual(len(timing.describe(0, 1000)), 1)
+
 
 if __name__ == '__main__':
     unittest.main()
