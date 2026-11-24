@@ -75,6 +75,11 @@ public:
 
     void OnReceived(otError aError)
     {
+        if (mDropResponses)
+        {
+            return;
+        }
+
         mReceived = true;
         if (aError == kErrorNone)
         {
@@ -100,6 +105,9 @@ public:
     std::function<void(const uint8_t *aFrame, uint16_t aLength)> mFrameObserver;
     std::function<bool(const uint8_t *aFrame, uint16_t aLength)> mFrameFilter;
     otError                                                      mSendError = OT_ERROR_NONE;
+
+    // Fault injection: simulate an unresponsive RCP after successful initialization.
+    bool mDropResponses = false;
 
 private:
     ReceiveFrameCallback            mReceiveFrameCallback = nullptr;
