@@ -1306,6 +1306,7 @@ private:
     bool  mIsPromiscuous : 1; ///< Promiscuous mode.
     bool  mRxOnWhenIdle : 1;  ///< RxOnWhenIdle mode.
     bool  mIsTimeSynced : 1;  ///< Host has calculated the time difference between host and RCP.
+    bool  mIsBusLatencySet : 1;
 
     static bool sSupportsLogStream; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
     static bool sSupportsResetToBootloader; ///< RCP supports resetting into bootloader mode.

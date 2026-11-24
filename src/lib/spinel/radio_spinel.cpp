@@ -87,6 +87,7 @@ RadioSpinel::RadioSpinel(void)
     , mIsPromiscuous(false)
     , mRxOnWhenIdle(true)
     , mIsTimeSynced(false)
+    , mIsBusLatencySet(false)
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     , mRcpFailureCount(0)
     , mRcpFailure(kRcpFailureNone)
@@ -2159,13 +2160,26 @@ uint64_t RadioSpinel::GetNow(void) const { return (mIsTimeSynced) ? (otPlatTimeG
 
 uint32_t RadioSpinel::GetBusSpeed(void) const { return GetSpinelDriver().GetSpinelInterface()->GetBusSpeed(); }
 
-uint32_t RadioSpinel::GetBusLatency(void) const { return mBusLatency; }
+uint32_t RadioSpinel::GetBusLatency(void) const
+{
+    uint32_t latency = mBusLatency;
+
+    if (!mIsBusLatencySet && (mSpinelDriver != nullptr) && (mSpinelDriver->GetSpinelInterface() != nullptr))
+    {
+        latency = mSpinelDriver->GetSpinelInterface()->GetBusLatency();
+    }
+
+    return latency;
+}
 
 void RadioSpinel::SetBusLatency(uint32_t aBusLatency)
 {
-    mBusLatency = aBusLatency;
+    uint32_t prevLatency = GetBusLatency();
 
-    if (IsEnabled() && mCallbacks.mBusLatencyChanged != nullptr)
+    mBusLatency      = aBusLatency;
+    mIsBusLatencySet = true;
+
+    if (IsEnabled() && (mCallbacks.mBusLatencyChanged != nullptr) && (prevLatency != aBusLatency))
     {
         mCallbacks.mBusLatencyChanged(mInstance);
     }

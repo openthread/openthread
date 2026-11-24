@@ -192,6 +192,13 @@ void SpinelManager::VirtualTimeInit(void)
 }
 #endif
 
+#if OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE
+OT_TOOL_WEAK uint32_t VendorInterface::GetBusLatency(void) const
+{
+    return OPENTHREAD_POSIX_CONFIG_RCP_BUS_LATENCY_DEFAULT;
+}
+#endif
+
 } // namespace Posix
 } // namespace ot
 

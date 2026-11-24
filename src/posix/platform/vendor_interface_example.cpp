@@ -92,6 +92,8 @@ void VendorInterface::Deinit(void)
 
 uint32_t VendorInterface::GetBusSpeed(void) const { return 1000000; }
 
+uint32_t VendorInterface::GetBusLatency(void) const { return OPENTHREAD_POSIX_CONFIG_RCP_BUS_LATENCY_DEFAULT; }
+
 otError VendorInterface::HardwareReset(void)
 {
     // TODO: Implement vendor code here.
