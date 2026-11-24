@@ -27,10 +27,10 @@
  */
 
 /*
- * Verifies that the protocol checks in `Ip6::HandleDatagram()` (the forwarded-ICMPv6 type
- * allowlist and the untrusted-origin TMF port filter) are applied to the final upper-layer
- * protocol after resolving any IPv6 extension headers, rather than to the first Next
- * Header value of the IPv6 header.
+ * Verifies that the protocol checks in `Ip6::HandleDatagram()` (the ICMPv6 type allowlist,
+ * the mDNS filter, and the untrusted-origin TMF port filter) are applied to the final
+ * upper-layer protocol after resolving any IPv6 extension headers, rather than to the first
+ * Next Header value of the IPv6 header.
  *
  * Each case constructs a raw IPv6 datagram with a host-untrusted origin and a link-local
  * destination that is not on this node, so that `Ip6::SendRaw()` routes it through the
@@ -66,7 +66,20 @@
  *  case 22: Thread netif multicast mDNS with Hop-by-Hop MPL option -> dropped without MPL buffering;
  *  case 23: Fragmented mDNS and first fragments without full UdpHeader -> dropped or parse error;
  *  case 24: Thread netif doubly-encapsulated IP-in-IP mDNS -> dropped without host delivery or MPL buffering;
- *  case 25 (control): Thread netif non-mDNS multicast with Hop-by-Hop MPL option -> allowed and buffered by MPL.
+ *  case 25 (control): Thread netif non-mDNS multicast with Hop-by-Hop MPL option -> allowed and buffered by MPL;
+ *  case 26: Host -> Thread ND/MLD (link-local unicast, link-scope multicast with Router Alert, DAD NS from the
+ *           unspecified address, MLDv2 report to `ff02::16`) -> dropped without looping back to the host;
+ *  case 27: Host -> Thread disallowed ICMPv6 to realm-local and larger-scope (IP-in-IP) multicast -> dropped
+ *           without MPL buffering;
+ *  case 28: Thread netif -> Host ND/MLD from a neighbor (link-local unicast, `ff02::1` with Router Alert,
+ *           MLDv2 report to `ff02::16`) -> dropped without host delivery;
+ *  case 29: Thread netif disallowed ICMPv6 with Hop-by-Hop MPL option and in IP-in-IP -> dropped without host
+ *           delivery or MPL buffering;
+ *  case 30: First fragments carrying disallowed ICMPv6 (Host -> Thread and Thread netif -> Host) -> dropped;
+ *  case 31 (control): ICMPv6 errors and Echo Request/Reply are forwarded to Thread (including larger-scope
+ *           multicast with MPL buffering) and passed to the host;
+ *  case 32: Truncated ICMPv6 header (< sizeof(Icmp6Header)) and headerless first fragment -> parse error without
+ *           host delivery or MPL buffering.
  */
 
 #include <stdio.h>
@@ -85,6 +98,22 @@ static constexpr uint8_t  kHopLimit        = 64;
 static constexpr uint8_t  kLongChainLen    = 9; // Longer than the resolution limit (8).
 static constexpr uint16_t kMplSeedId       = 0x1234;
 static constexpr uint16_t kHopByHopMplSize = sizeof(Ip6::HopByHopHeader) + sizeof(Ip6::MplOption);
+
+// Router Alert option (RFC 2711: type 5, length 2, MLD value 0) followed by a PadN option (type 1, length 0),
+// filling an 8-byte Hop-by-Hop header.
+static const uint8_t      kRouterAlertOptions[]    = {0x05, 0x02, 0x00, 0x00, 0x01, 0x00};
+static constexpr uint16_t kHopByHopRouterAlertSize = sizeof(Ip6::HopByHopHeader) + sizeof(kRouterAlertOptions);
+
+static const uint8_t kAllowedIcmpTypes[] = {
+    Ip6::Icmp6Header::kTypeDstUnreach,       Ip6::Icmp6Header::kTypePacketToBig, Ip6::Icmp6Header::kTypeTimeExceeded,
+    Ip6::Icmp6Header::kTypeParameterProblem, Ip6::Icmp6Header::kTypeEchoRequest, Ip6::Icmp6Header::kTypeEchoReply,
+};
+
+// MLDv1 Query/Report/Done (130-132), RS/RA/NS/NA/Redirect (133-137), Router Renumbering (138), and MLDv2 Report (143).
+static const uint8_t kDisallowedIcmpTypes[] = {130, 131, 132, 133, 134, 135, 136, 137, 138, 143};
+
+static constexpr uint8_t kIcmpTypeRouterRenumbering = 138;
+static constexpr uint8_t kIcmpTypeMldv2Report       = 143;
 
 static Node        *sNode;
 static Ip6::Address sSource;
@@ -217,6 +246,48 @@ static void AppendIcmp6Header(Message &aMessage, Ip6::Icmp6Header::Type aType)
     icmp6Header.SetType(aType);
 
     SuccessOrQuit(aMessage.Append(icmp6Header));
+}
+
+static Message &NewIcmp6Message(const Ip6::Address &aSource,
+                                const Ip6::Address &aDestination,
+                                uint8_t             aIcmpType,
+                                bool                aWithRouterAlert = false)
+{
+    // Allocates an IPv6 message carrying an ICMPv6 header of type
+    // `aIcmpType` with a valid checksum, optionally preceded by a
+    // Hop-by-Hop header with a Router Alert option (as used by MLD).
+
+    uint16_t extSize = aWithRouterAlert ? kHopByHopRouterAlertSize : 0;
+    Message *message = sNode->Get<MessagePool>().Allocate(Message::kTypeIp6);
+
+    VerifyOrQuit(message != nullptr);
+    AppendIp6Header(*message, aSource, aDestination, aWithRouterAlert ? Ip6::kProtoHopOpts : Ip6::kProtoIcmp6,
+                    extSize + sizeof(Ip6::Icmp6Header));
+
+    if (aWithRouterAlert)
+    {
+        Ip6::HopByHopHeader hbhHeader;
+
+        hbhHeader.SetNextHeader(Ip6::kProtoIcmp6);
+        hbhHeader.SetLength(0);
+        SuccessOrQuit(message->Append(hbhHeader));
+        SuccessOrQuit(message->AppendBytes(kRouterAlertOptions, sizeof(kRouterAlertOptions)));
+    }
+
+    AppendIcmp6Header(*message, static_cast<Ip6::Icmp6Header::Type>(aIcmpType));
+
+    message->SetOffset(sizeof(Ip6::Header) + extSize);
+    Checksum::UpdateMessageChecksum(*message, aSource, aDestination, Ip6::kProtoIcmp6);
+    message->SetOffset(0);
+
+    return *message;
+}
+
+static Error HandleFromThreadNetif(Message &aMessage)
+{
+    aMessage.SetOrigin(Message::kOriginThreadNetif);
+
+    return sNode->Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(&aMessage));
 }
 
 static Error SendFromHost(Message &aMessage)
@@ -808,6 +879,220 @@ void TestIp6ForwardExtHeaders(void)
         VerifyOrQuit(error == kErrorNone);
         VerifyOrQuit(sNumHostRx == 1);
         VerifyOrQuit(GetMplBufferedMessageCount() == 1);
+    }
+
+    Log("--- Case 26: Host -> Thread ND/MLD -> dropped without loopback to host");
+    {
+        Ip6::Address allNodes;
+        Ip6::Address allRouters;
+        Ip6::Address allMldv2Routers;
+        Ip6::Address solicitedNode;
+        Ip6::Address unspecified;
+
+        SuccessOrQuit(allNodes.FromString("ff02::1"));
+        SuccessOrQuit(allRouters.FromString("ff02::2"));
+        SuccessOrQuit(allMldv2Routers.FromString("ff02::16"));
+        SuccessOrQuit(solicitedNode.FromString("ff02::1:ff00:1234"));
+        unspecified.Clear();
+        sNumHostRx = 0;
+
+        for (uint8_t icmpType : kDisallowedIcmpTypes)
+        {
+            error = SendFromHost(NewIcmp6Message(sSource, sDestination, icmpType));
+            VerifyOrQuit(error == kErrorDrop);
+
+            error = SendFromHost(NewIcmp6Message(sSource, allNodes, icmpType, /* aWithRouterAlert */ true));
+            VerifyOrQuit(error == kErrorDrop);
+        }
+
+        error =
+            SendFromHost(NewIcmp6Message(sSource, allMldv2Routers, kIcmpTypeMldv2Report, /* aWithRouterAlert */ true));
+        VerifyOrQuit(error == kErrorDrop);
+
+        error = SendFromHost(NewIcmp6Message(sSource, allRouters, Ip6::Icmp6Header::kTypeRouterSolicit));
+        VerifyOrQuit(error == kErrorDrop);
+
+        error = SendFromHost(NewIcmp6Message(unspecified, solicitedNode, Ip6::Icmp6Header::kTypeNeighborSolicit));
+        VerifyOrQuit(error == kErrorDrop);
+
+        VerifyOrQuit(sNumHostRx == 0);
+    }
+
+    Log("--- Case 27: Host -> Thread disallowed ICMPv6 to realm-local and larger-scope multicast -> dropped");
+    {
+        Ip6::Address realmMcast;
+        Ip6::Address siteMcast;
+        uint16_t     numMplBuffered = GetMplBufferedMessageCount();
+
+        SuccessOrQuit(realmMcast.FromString("ff03::2"));
+        SuccessOrQuit(siteMcast.FromString("ff05::2"));
+        sNumHostRx = 0;
+
+        for (uint8_t icmpType : kDisallowedIcmpTypes)
+        {
+            error = SendFromHost(NewIcmp6Message(sSource, realmMcast, icmpType));
+            VerifyOrQuit(error == kErrorDrop);
+
+            // Encapsulated in IP-in-IP to `ff03::fc` by `SendRaw()`.
+            error = SendFromHost(NewIcmp6Message(sSource, siteMcast, icmpType));
+            VerifyOrQuit(error == kErrorDrop);
+        }
+
+        VerifyOrQuit(GetMplBufferedMessageCount() == numMplBuffered);
+        VerifyOrQuit(sNumHostRx == 0);
+    }
+
+    Log("--- Case 28: Thread Netif -> Host ND/MLD from a neighbor -> dropped without host delivery");
+    {
+        Ip6::Address allNodes;
+        Ip6::Address allMldv2Routers;
+
+        SuccessOrQuit(allNodes.FromString("ff02::1"));
+        SuccessOrQuit(allMldv2Routers.FromString("ff02::16"));
+        sNumHostRx = 0;
+
+        for (uint8_t icmpType : kDisallowedIcmpTypes)
+        {
+            error = HandleFromThreadNetif(NewIcmp6Message(sDestination, sSource, icmpType));
+            VerifyOrQuit(error == kErrorDrop);
+
+            error =
+                HandleFromThreadNetif(NewIcmp6Message(sDestination, allNodes, icmpType, /* aWithRouterAlert */ true));
+            VerifyOrQuit(error == kErrorDrop);
+        }
+
+        error = HandleFromThreadNetif(
+            NewIcmp6Message(sDestination, allMldv2Routers, kIcmpTypeMldv2Report, /* aWithRouterAlert */ true));
+        VerifyOrQuit(error == kErrorDrop);
+
+        VerifyOrQuit(sNumHostRx == 0);
+    }
+
+    Log("--- Case 29: Thread Netif disallowed ICMPv6 with Hop-by-Hop MPL option or in IP-in-IP -> dropped");
+    {
+        Ip6::Address realmMcast;
+        Ip6::Address siteMcast;
+        Ip6::Address mplOuterDest;
+        Message     *message;
+        uint16_t     numMplBuffered = GetMplBufferedMessageCount();
+
+        SuccessOrQuit(realmMcast.FromString("ff03::2"));
+        SuccessOrQuit(siteMcast.FromString("ff05::2"));
+        SuccessOrQuit(mplOuterDest.FromString("ff03::fc"));
+        sNumHostRx = 0;
+
+        message = &NewForwardedMessage(realmMcast, Ip6::kProtoHopOpts, kHopByHopMplSize + sizeof(Ip6::Icmp6Header));
+        AppendHopByHopMplHeader(*message, Ip6::kProtoIcmp6, kMplSeedId, /* aSequence */ 6);
+        AppendIcmp6Header(*message, static_cast<Ip6::Icmp6Header::Type>(kIcmpTypeRouterRenumbering));
+        error = HandleFromThreadNetif(*message);
+        VerifyOrQuit(error == kErrorDrop);
+
+        message = &NewForwardedMessage(mplOuterDest, Ip6::kProtoHopOpts,
+                                       kHopByHopMplSize + sizeof(Ip6::Header) + sizeof(Ip6::Icmp6Header));
+        AppendHopByHopMplHeader(*message, Ip6::kProtoIp6, kMplSeedId, /* aSequence */ 7);
+        AppendIp6Header(*message, sSource, siteMcast, Ip6::kProtoIcmp6, sizeof(Ip6::Icmp6Header));
+        AppendIcmp6Header(*message, static_cast<Ip6::Icmp6Header::Type>(kIcmpTypeRouterRenumbering));
+        error = HandleFromThreadNetif(*message);
+        VerifyOrQuit(error == kErrorDrop);
+
+        VerifyOrQuit(sNumHostRx == 0);
+        VerifyOrQuit(GetMplBufferedMessageCount() == numMplBuffered);
+    }
+
+    Log("--- Case 30: First fragments carrying disallowed ICMPv6 -> dropped");
+    {
+        static const uint8_t kTrailingPayload[8] = {0};
+
+        uint16_t payloadLength = sizeof(Ip6::FragmentHeader) + sizeof(Ip6::Icmp6Header) + sizeof(kTrailingPayload);
+        Message *message;
+
+        sNumHostRx = 0;
+
+        // Host -> Thread first fragment (M = 1, offset = 0) carrying a Neighbor Solicitation.
+        message = &NewForwardedMessage(Ip6::kProtoFragment, payloadLength);
+        AppendFragmentHeader(*message, Ip6::kProtoIcmp6, /* aOffset */ 0, /* aMoreFragments */ true);
+        AppendIcmp6Header(*message, Ip6::Icmp6Header::kTypeNeighborSolicit);
+        SuccessOrQuit(message->AppendBytes(kTrailingPayload, sizeof(kTrailingPayload)));
+        error = SendFromHost(*message);
+        VerifyOrQuit(error == kErrorDrop);
+
+        // Thread Netif first fragment (M = 1, offset = 0) to this node carrying a Router Advertisement.
+        message = &NewForwardedMessage(sSource, Ip6::kProtoFragment, payloadLength);
+        AppendFragmentHeader(*message, Ip6::kProtoIcmp6, /* aOffset */ 0, /* aMoreFragments */ true);
+        AppendIcmp6Header(*message, Ip6::Icmp6Header::kTypeRouterAdvert);
+        SuccessOrQuit(message->AppendBytes(kTrailingPayload, sizeof(kTrailingPayload)));
+        error = HandleFromThreadNetif(*message);
+        VerifyOrQuit(error == kErrorDrop);
+
+        VerifyOrQuit(sNumHostRx == 0);
+    }
+
+    Log("--- Case 31 (control): ICMPv6 errors and Echo Request/Reply -> forwarded and passed to host");
+    {
+        Ip6::Address unsubscribedMcast;
+        Ip6::Address siteMcast;
+        uint16_t     numMplBuffered = GetMplBufferedMessageCount();
+
+        SuccessOrQuit(unsubscribedMcast.FromString("ff02::1234"));
+        SuccessOrQuit(siteMcast.FromString("ff05::1234"));
+        sNumHostRx = 0;
+
+        for (uint8_t icmpType : kAllowedIcmpTypes)
+        {
+            error = SendFromHost(NewIcmp6Message(sSource, sDestination, icmpType));
+            VerifyOrQuit(error == kErrorNone);
+
+            error = HandleFromThreadNetif(NewIcmp6Message(sDestination, unsubscribedMcast, icmpType));
+            VerifyOrQuit(error == kErrorNone);
+        }
+
+        VerifyOrQuit(sNumHostRx == GetArrayLength(kAllowedIcmpTypes));
+
+        // Encapsulated in IP-in-IP to `ff03::fc` by `SendRaw()` and buffered by MPL.
+        error = SendFromHost(NewIcmp6Message(sSource, siteMcast, Ip6::Icmp6Header::kTypeEchoRequest));
+        VerifyOrQuit(error == kErrorNone);
+        VerifyOrQuit(GetMplBufferedMessageCount() == numMplBuffered + 1);
+    }
+
+    Log("--- Case 32: Truncated ICMPv6 header -> kErrorParse without host delivery or MPL buffering");
+    {
+        // An allowed type (Echo Request) followed by only code and checksum.
+        static const uint8_t kTruncatedIcmp6[4] = {Ip6::Icmp6Header::kTypeEchoRequest, 0, 0, 0};
+
+        Ip6::Address realmMcast;
+        Message     *message;
+        uint16_t     numMplBuffered = GetMplBufferedMessageCount();
+
+        SuccessOrQuit(realmMcast.FromString("ff03::1234"));
+        sNumHostRx = 0;
+
+        // Host -> Thread.
+        message = &NewForwardedMessage(Ip6::kProtoIcmp6, sizeof(kTruncatedIcmp6));
+        SuccessOrQuit(message->AppendBytes(kTruncatedIcmp6, sizeof(kTruncatedIcmp6)));
+        error = SendFromHost(*message);
+        VerifyOrQuit(error == kErrorParse);
+
+        // Thread Netif to this node.
+        message = &NewForwardedMessage(sSource, Ip6::kProtoIcmp6, sizeof(kTruncatedIcmp6));
+        SuccessOrQuit(message->AppendBytes(kTruncatedIcmp6, sizeof(kTruncatedIcmp6)));
+        error = HandleFromThreadNetif(*message);
+        VerifyOrQuit(error == kErrorParse);
+
+        // Thread Netif first fragment (M = 1, offset = 0) resolving to ICMPv6 with no ICMPv6 header.
+        message = &NewForwardedMessage(sSource, Ip6::kProtoFragment, sizeof(Ip6::FragmentHeader));
+        AppendFragmentHeader(*message, Ip6::kProtoIcmp6, /* aOffset */ 0, /* aMoreFragments */ true);
+        error = HandleFromThreadNetif(*message);
+        VerifyOrQuit(error == kErrorParse);
+
+        // Thread Netif realm-local multicast with Hop-by-Hop MPL option.
+        message = &NewForwardedMessage(realmMcast, Ip6::kProtoHopOpts, kHopByHopMplSize + sizeof(kTruncatedIcmp6));
+        AppendHopByHopMplHeader(*message, Ip6::kProtoIcmp6, kMplSeedId, /* aSequence */ 8);
+        SuccessOrQuit(message->AppendBytes(kTruncatedIcmp6, sizeof(kTruncatedIcmp6)));
+        error = HandleFromThreadNetif(*message);
+        VerifyOrQuit(error == kErrorParse);
+
+        VerifyOrQuit(sNumHostRx == 0);
+        VerifyOrQuit(GetMplBufferedMessageCount() == numMplBuffered);
     }
 
     node.Get<Ip6::Ip6>().SetReceiveCallback(Node::HandleIp6Receive, &node);
