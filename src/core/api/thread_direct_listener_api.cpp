@@ -56,7 +56,9 @@ bool otThreadDirectListenerIsRunning(otInstance *aInstance)
 
 otError otThreadDirectListenerGetWakeInfo(otInstance *aInstance, otThreadDirectListenerWakeInfo *aWakeInfo)
 {
-    return AsCoreType(aInstance).Get<ThreadDirect::Listener>().GetWakeInfo(AsCoreType(aWakeInfo));
+    AssertPointerIsNotNull(aWakeInfo);
+
+    return AsCoreType(aInstance).Get<ThreadDirect::Listener>().GetWakeInfo(*aWakeInfo);
 }
 
 otThreadDirectLink *otThreadDirectListenerEstablishLink(otInstance                     *aInstance,

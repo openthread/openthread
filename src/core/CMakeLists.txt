@@ -288,6 +288,7 @@ set(COMMON_SOURCES
     thread_direct/td_commands.cpp
     thread_direct/td_key_manager.cpp
     thread_direct/td_listener.cpp
+    thread_direct/td_peer.cpp
     thread_direct/td_types.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp

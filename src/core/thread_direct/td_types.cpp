@@ -79,6 +79,13 @@ void Key::Init(Instance &aInstance, const KeyId &aId, uint32_t aFrameCounter)
 
     mId = aId;
     SetFrameCounters(aFrameCounter);
+    mPeers.Init(aInstance);
+}
+
+void Key::Deinit(void)
+{
+    mKeyMaterial.Clear();
+    mPeers.Clear();
 }
 
 void Key::SetFrameCounters(uint32_t aFrameCounter)

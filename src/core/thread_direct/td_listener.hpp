@@ -57,18 +57,28 @@
 namespace ot {
 namespace ThreadDirect {
 
+class KeyManager;
+class UnitTester;
+
 /**
  * Implements the Thread Direct Wake Listener.
  */
 class Listener : public InstanceLocator, private NonCopyable
 {
     friend class ot::Mac::SubMac;
+    friend class KeyManager;
+    friend class UnitTester;
 
 public:
     /**
      * Pointer to a callback function invoked when a valid Thread Direct Wake frame is received.
      */
     typedef otThreadDirectListenerWakeCallback WakeCallback;
+
+    /**
+     * Represents information about a received Thread Direct Wake Command frame.
+     */
+    typedef otThreadDirectListenerWakeInfo WakeInfo;
 
     /**
      * Represents the configuration parameters for starting the `Listener`.
@@ -132,35 +142,6 @@ public:
     };
 
     /**
-     * Represents information about a received Thread Direct Wake frame.
-     */
-    class WakeInfo : public otThreadDirectListenerWakeInfo, public Clearable<WakeInfo>
-    {
-    public:
-        /**
-         * Indicates whether the `WakeInfo` contains valid Wake frame information.
-         *
-         * @retval TRUE   The `WakeInfo` is valid.
-         * @retval FALSE  The `WakeInfo` is not valid (empty/cleared).
-         */
-        bool IsValid(void) const { return mKey != nullptr; }
-
-        /**
-         * Gets the Extended MAC Address of the Wake Initiator peer.
-         *
-         * @returns The Extended MAC Address of the peer.
-         */
-        const Mac::ExtAddress &GetPeerAddr(void) const { return AsCoreType(&mPeerAddress); }
-
-        /**
-         * Gets the registered Thread Direct `Key` that authenticated the Wake frame.
-         *
-         * @returns A pointer to the `Key` that authenticated the Wake frame, or `nullptr` if not valid.
-         */
-        Key *GetKey(void) { return AsCoreTypePtr(mKey); }
-    };
-
-    /**
      * Initializes the `Listener` object.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
@@ -211,19 +192,35 @@ private:
         kRunning,
     };
 
+    struct ReceivedWake : public Clearable<ReceivedWake>
+    {
+        Radio::Time64   mRxTimestamp;
+        Key            *mKey;
+        Mac::ExtAddress mExtAddress;
+        uint32_t        mFrameCounter;
+        Mac::PanId      mPanId;
+        uint8_t         mRendezvousTime;
+        uint8_t         mRetryInterval;
+        uint8_t         mRetryCount;
+        uint8_t         mLinkChannel;
+        bool            mIsValid : 1;
+        bool            mIsUnicast : 1;
+    };
+
     const TimedRx &DetermineCurWindow(const Radio::SyncedTime &aNow);
     bool           ProcessRxFrame(Mac::RxFrame::ParseInfo &aFrameInfo);
+    void           HandleKeyUnregistered(Key &aKey);
 
     uint32_t               mInterval;
     TimedRx                mTimedRx;
     Callback<WakeCallback> mWakeCallback;
+    ReceivedWake           mRxWake;
     State                  mState;
 };
 
 } // namespace ThreadDirect
 
 DefineCoreType(otThreadDirectListenerConfig, ThreadDirect::Listener::Config);
-DefineCoreType(otThreadDirectListenerWakeInfo, ThreadDirect::Listener::WakeInfo);
 
 } // namespace ot
 

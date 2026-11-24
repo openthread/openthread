@@ -791,6 +791,8 @@ openthread_core_files = [
   "thread_direct/td_key_manager.hpp",
   "thread_direct/td_listener.cpp",
   "thread_direct/td_listener.hpp",
+  "thread_direct/td_peer.cpp",
+  "thread_direct/td_peer.hpp",
   "thread_direct/td_types.cpp",
   "thread_direct/td_types.hpp",
   "utils/channel_manager.cpp",

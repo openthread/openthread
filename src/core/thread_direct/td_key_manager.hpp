@@ -44,12 +44,16 @@
 #include "common/pool.hpp"
 #include "common/settings.hpp"
 #include "common/tasklet.hpp"
+#include "common/time.hpp"
+#include "common/timer.hpp"
 #include "thread_direct/td_types.hpp"
 
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
 
 namespace ot {
 namespace ThreadDirect {
+
+class UnitTester;
 
 /**
  * Represents an iterator for iterating through registered Thread Direct keys.
@@ -79,6 +83,8 @@ class KeyManager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
     friend class Key;
+    friend class PeerList;
+    friend class UnitTester;
 
 public:
     /**
@@ -151,7 +157,8 @@ public:
     KeyList &GetKeyList(void) { return mKeys; }
 
 private:
-    static constexpr uint16_t kMaxKeys = OPENTHREAD_CONFIG_TD_MAX_REGISTERED_KEYS;
+    static constexpr uint16_t kMaxKeys           = OPENTHREAD_CONFIG_TD_MAX_REGISTERED_KEYS;
+    static constexpr uint32_t kPeerCheckInterval = Time::kOneDayInMsec;
 
     enum Action : uint8_t // Used in `Log()`.
     {
@@ -167,6 +174,10 @@ private:
     void RestoreKeys(void);
     void StoreKeys(void);
     void PostStoreTask(void) { mStoreTask.Post(); }
+#if OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE
+    void StartPeerTimer(void);
+    void HandlePeerTimer(void);
+#endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *ActionToString(Action aAction);
@@ -176,9 +187,15 @@ private:
 #endif
 
     using StoreTask = TaskletIn<KeyManager, &KeyManager::StoreKeys>;
+#if OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE
+    using PeerTimer = TimerMilliIn<KeyManager, &KeyManager::HandlePeerTimer>;
+#endif
 
     LinkedList<Key> mKeys;
     StoreTask       mStoreTask;
+#if OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE
+    PeerTimer mPeerTimer;
+#endif
 #if !OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE
     Pool<Key, kMaxKeys> mPool;
 #endif

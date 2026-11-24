@@ -110,6 +110,37 @@
 #define OPENTHREAD_CONFIG_TD_FRAME_COUNTER_AHEAD 1000
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE
+ *
+ * Define to 1 to allow Thread Direct `PeerList` (per registered key) to allocate peer entries from the heap.
+ *
+ * When disabled (set to 0), a fixed-size `Array` with `OPENTHREAD_CONFIG_TD_PEER_LIST_SIZE_PER_KEY` entries is used
+ * per registered key.
+ *
+ * By default, this is enabled (set to 1) when both `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` and
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE` are enabled, and disabled (set to 0) otherwise.
+ */
+#ifndef OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+#define OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE 1
+#else
+#define OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE 0
+#endif
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TD_PEER_LIST_SIZE_PER_KEY
+ *
+ * Specifies the maximum number of tracked peers per registered Thread Direct key when heap allocation is disabled
+ * (`OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE` is set to 0).
+ *
+ * Applicable only when `OPENTHREAD_CONFIG_TD_PEER_LIST_USE_HEAP_ENABLE` is disabled (set to 0).
+ */
+#ifndef OPENTHREAD_CONFIG_TD_PEER_LIST_SIZE_PER_KEY
+#define OPENTHREAD_CONFIG_TD_PEER_LIST_SIZE_PER_KEY 6
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // Derived configs
 

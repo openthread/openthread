@@ -51,6 +51,7 @@
 #include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
+#include "thread_direct/td_peer.hpp"
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -185,10 +186,18 @@ public:
      */
     void IncrementFrameCounter(void);
 
+    /**
+     * Gets the list of tracked peers associated with the Thread Direct key.
+     *
+     * @returns A reference to the `PeerList`.
+     */
+    PeerList &GetPeers(void) { return mPeers; }
+
 private:
     static constexpr uint32_t kStoredCounterAhead = OPENTHREAD_CONFIG_TD_FRAME_COUNTER_AHEAD;
 
     void Init(Instance &aInstance, const KeyId &aId, uint32_t aFrameCounter);
+    void Deinit(void);
     void SetKeyMaterial(const KeyMaterial &aKeyMaterial) { mKeyMaterial = aKeyMaterial; }
 #if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     void SetKeyMaterial(const LiteralKey &aLiteralKey) { mKeyMaterial.SetKey(aLiteralKey); }
@@ -212,6 +221,7 @@ private:
     KeyId       mId;
     uint32_t    mFrameCounter;
     uint32_t    mSavedFrameCounter;
+    PeerList    mPeers;
 };
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
