@@ -101,6 +101,10 @@ Key *KeyManager::AllocateKey(void)
 
 void KeyManager::FreeKey(Key &aKey)
 {
+#if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
+    Get<Listener>().HandleKeyUnregistered(aKey);
+#endif
+
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     // A `KeyRef` can be shared across multiple registered `Key` entries
     // with different Key IDs. If another entry in `mKeys` is still
