@@ -62,6 +62,14 @@ $ nrfutil device program --firmware ot-cli-ftd.hex --options chip_erase_mode=ERA
 $ nrfutil device reset --reset-kind=RESET_PIN
 ```
 
+### Simulation Testbed
+
+[check-cp-caps](../../tests/scripts/check-cp-caps) runs all test cases on a testbed of simulated devices, and fails if any capability that the simulation RCP supports is reported as `NotSupported`. The CI runs it on every pull request:
+
+```bash
+$ ./tests/scripts/check-cp-caps
+```
+
 ## Python Virtual Environment Setup
 
 It is recommended to use a Python virtual environment to manage project dependencies and avoid conflicts with system-wide packages.

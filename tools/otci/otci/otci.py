@@ -3458,7 +3458,13 @@ class OTCI(object):
         # /usr/bin/iperf3
         #
         ret = False
-        output = self.execute_platform_command('command -v iperf3')
+
+        try:
+            output = self.execute_platform_command('command -v iperf3')
+        except NotImplementedError:
+            # The platform (e.g. a host POSIX ot-cli) has no shell to run iperf3.
+            output = []
+
         if len(output) > 0 and 'iperf3' in output[0]:
             ret = True
 
