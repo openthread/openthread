@@ -337,6 +337,14 @@ public:
     NetworkData::Type GetNetworkDataType(void) const { return mDeviceMode.GetNetworkDataType(); }
 
     /**
+     * Indicates whether or not MLE is waiting to retrieve new Network Data.
+     *
+     * @retval TRUE   MLE is waiting to retrieve new Network Data.
+     * @retval FALSE  MLE is not waiting to retrieve new Network Data.
+     */
+    bool IsRetrievingNewNetworkData(void) const { return mRetrieveNewNetworkData; }
+
+    /**
      * Returns a pointer to the Mesh Local Prefix.
      *
      * @returns A reference to the Mesh Local Prefix.
