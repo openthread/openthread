@@ -502,6 +502,138 @@ void TestRadioAvailabilityFindNextAvailableWindow(void)
     printf("TestRadioAvailabilityFindNextAvailableWindow() passed\n");
 }
 
+void TestRadioAvailabilityCompare(void)
+{
+    static const uint8_t  kBitmapA[]       = {0xa6}; // 1010_0110
+    static const uint8_t  kBitmapAShift3[] = {0x35}; // 0011_0101 (kBitmapA rotated left by 3)
+    static const uint8_t  kBitmapB[]       = {0xa7}; // 1010_0111
+    static const uint8_t  kBitmap16[]      = {0xa6, 0xa6};
+    static const uint64_t kBaseStartTime   = 100000;
+
+    RadioAvailability availA;
+    RadioAvailability availB;
+
+    // Both unspecified.
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMatch);
+
+    // One unspecified, one specified.
+    SuccessOrQuit(availA.Init(kBaseStartTime, kSlotDuration625Usec, 8, kBitmapA));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMismatchUnspecified);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMismatchUnspecified);
+
+    // Different slot durations.
+    SuccessOrQuit(availB.Init(kBaseStartTime, kSlotDuration1250Usec, 8, kBitmapA));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMismatchSlotDuration);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMismatchSlotDuration);
+
+    // Different bit lengths (period), checked before alignment.
+    SuccessOrQuit(availB.Init(kBaseStartTime + 1, kSlotDuration625Usec, 16, kBitmap16));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMismatchPeriod);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMismatchPeriod);
+
+    // Unaligned start times.
+    SuccessOrQuit(availB.Init(kBaseStartTime + 1, kSlotDuration625Usec, 8, kBitmapA));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMismatchAlignment);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMismatchAlignment);
+
+    SuccessOrQuit(availB.Init(kBaseStartTime - 624, kSlotDuration625Usec, 8, kBitmapA));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMismatchAlignment);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMismatchAlignment);
+
+    // Exact match.
+    SuccessOrQuit(availB.Init(kBaseStartTime, kSlotDuration625Usec, 8, kBitmapA));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMatch);
+
+    // Aligned start times, shifted by 3 slots (and 3 + 8 = 11 slots) forward and backward.
+    SuccessOrQuit(availB.Init(kBaseStartTime + 3 * 625, kSlotDuration625Usec, 8, kBitmapAShift3));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMatch);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMatch);
+
+    SuccessOrQuit(availB.Init(kBaseStartTime + 11 * 625, kSlotDuration625Usec, 8, kBitmapAShift3));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMatch);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMatch);
+
+    SuccessOrQuit(availB.Init(kBaseStartTime - 5 * 625, kSlotDuration625Usec, 8, kBitmapAShift3));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMatch);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMatch);
+
+    // Aligned by full period (8 slots) backward.
+    SuccessOrQuit(availB.Init(kBaseStartTime - 8 * 625, kSlotDuration625Usec, 8, kBitmapA));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMatch);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMatch);
+
+    // Aligned start times, non-matching pattern.
+    SuccessOrQuit(availB.Init(kBaseStartTime + 3 * 625, kSlotDuration625Usec, 8, kBitmapB));
+    VerifyOrQuit(availA.Compare(availB) == RadioAvailability::kMismatchPattern);
+    VerifyOrQuit(availB.Compare(availA) == RadioAvailability::kMismatchPattern);
+
+    printf("TestRadioAvailabilityCompare() passed\n");
+}
+
+void TestRadioAvailabilityRebaseStartTime(void)
+{
+    static const uint8_t      kBitLengths[]  = {1, 5, 8, 13, 16, RadioAvailability::kMaxBitmapLength};
+    static const SlotDuration kSlotDurs[]    = {kSlotDuration625Usec, kSlotDuration1250Usec};
+    static const uint64_t     kBaseStartTime = 500000;
+
+    uint8_t bitmap[RadioAvailability::kMaxBitmapSize];
+
+    for (uint8_t i = 0; i < sizeof(bitmap); i++)
+    {
+        bitmap[i] = static_cast<uint8_t>(0xa5 + i * 17);
+    }
+
+    // Rebase on unspecified schedule is a no-op.
+    {
+        RadioAvailability avail;
+
+        avail.RebaseStartTime(kBaseStartTime);
+        VerifyOrQuit(!avail.IsSpecified());
+        avail.RebaseStartTime(0);
+        VerifyOrQuit(!avail.IsSpecified());
+    }
+
+    for (SlotDuration slotDuration : kSlotDurs)
+    {
+        uint64_t slotDur = SlotDurationToUsec(slotDuration);
+
+        for (uint8_t bitLength : kBitLengths)
+        {
+            const uint64_t queryTimes[] = {
+                0,
+                kBaseStartTime,
+                kBaseStartTime + 1,
+                kBaseStartTime + slotDur - 1,
+                kBaseStartTime + slotDur,
+                kBaseStartTime + 3 * slotDur + 200,
+                kBaseStartTime + (bitLength + 5) * slotDur,
+                kBaseStartTime + (2 * bitLength + 7) * slotDur + slotDur / 2,
+                kBaseStartTime - 1,
+                kBaseStartTime - slotDur,
+                kBaseStartTime - (bitLength + 3) * slotDur + 100,
+            };
+
+            RadioAvailability orig;
+
+            SuccessOrQuit(orig.Init(kBaseStartTime, slotDuration, bitLength, bitmap));
+
+            for (Radio::Time64 queryTime : queryTimes)
+            {
+                RadioAvailability rebased = orig;
+
+                rebased.RebaseStartTime(queryTime);
+
+                VerifyOrQuit(rebased.GetStartTime() >= queryTime);
+                VerifyOrQuit((rebased.GetStartTime() - queryTime) < slotDur);
+                VerifyOrQuit(rebased.Compare(orig) == RadioAvailability::kMatch);
+                VerifyOrQuit(orig.Compare(rebased) == RadioAvailability::kMatch);
+            }
+        }
+    }
+
+    printf("TestRadioAvailabilityRebaseStartTime() passed\n");
+}
+
 #endif // OT_CONFIG_THREAD_DIRECT_ENABLE
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1537,6 +1669,8 @@ int main(void)
     ot::ThreadDirect::TestRadioAvailabilityIsAvailableAt();
     ot::ThreadDirect::TestRadioAvailabilityIsAvailableIn();
     ot::ThreadDirect::TestRadioAvailabilityFindNextAvailableWindow();
+    ot::ThreadDirect::TestRadioAvailabilityCompare();
+    ot::ThreadDirect::TestRadioAvailabilityRebaseStartTime();
 
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     ot::ThreadDirect::TestListenerConfigAndApi();

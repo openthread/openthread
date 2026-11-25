@@ -33,6 +33,7 @@
 
 #include "td_types.hpp"
 
+#include "common/bit_utils.hpp"
 #include "instance/instance.hpp"
 
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
@@ -288,6 +289,57 @@ Error RadioAvailability::FindNextAvailableWindow(Radio::Time64 aTime, Window &aW
 
 exit:
     return error;
+}
+
+RadioAvailability::CompareResult RadioAvailability::Compare(const RadioAvailability &aOther) const
+{
+    CompareResult result = kMatch;
+    SlotInfo      slotInfo;
+
+    if (!IsSpecified() || !aOther.IsSpecified())
+    {
+        VerifyOrExit(IsSpecified() == aOther.IsSpecified(), result = kMismatchUnspecified);
+        ExitNow();
+    }
+
+    VerifyOrExit(mSlotDuration == aOther.mSlotDuration, result = kMismatchSlotDuration);
+    VerifyOrExit(mBitLength == aOther.mBitLength, result = kMismatchPeriod);
+
+    DetermineSlotInfo(aOther.mStartTime, slotInfo);
+    VerifyOrExit(slotInfo.mWindow.mDuration == SlotDurationToUsec(mSlotDuration), result = kMismatchAlignment);
+
+    for (uint8_t i = 0; i < mBitLength; i++)
+    {
+        VerifyOrExit(IsAvailable(slotInfo.mIndex) == aOther.IsAvailable(i), result = kMismatchPattern);
+        slotInfo.mIndex = (slotInfo.mIndex + 1) % mBitLength;
+    }
+
+exit:
+    return result;
+}
+
+void RadioAvailability::RebaseStartTime(Radio::Time64 aTime)
+{
+    SlotInfo slotInfo;
+
+    VerifyOrExit(IsSpecified());
+
+    DetermineSlotInfo(aTime, slotInfo);
+
+    if (slotInfo.mWindow.mDuration < SlotDurationToUsec(mSlotDuration))
+    {
+        AdvanceToNextSlot(slotInfo);
+    }
+
+    mStartTime = slotInfo.mWindow.mStartTime;
+
+    if (slotInfo.mIndex != 0)
+    {
+        RotateBitmask(mBitmap, mBitLength, mBitLength - slotInfo.mIndex);
+    }
+
+exit:
+    return;
 }
 
 } // namespace ThreadDirect
