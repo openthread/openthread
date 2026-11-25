@@ -133,4 +133,43 @@ if(BUILD_TESTING)
         PRIVATE -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE
     )
     add_test(NAME ot-test-spinel COMMAND ot-test-spinel)
+
+    # Compile and link the standalone driver and codec without any OpenThread core target.
+    add_executable(ot-test-spinel-standalone
+        ${PROJECT_SOURCE_DIR}/tests/unit/test_spinel_standalone.cpp
+        logger.cpp
+        spinel_driver.cpp
+        spinel.c
+        spinel_buffer.cpp
+        spinel_decoder.cpp
+        spinel_encoder.cpp
+        spinel_helper.cpp
+        spinel_prop_codec.cpp
+    )
+    target_include_directories(ot-test-spinel-standalone PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${COMMON_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src/include
+        ${PROJECT_SOURCE_DIR}/tests/unit
+    )
+    target_compile_definitions(ot-test-spinel-standalone PRIVATE
+        OPENTHREAD_SPINEL_CONFIG_STANDALONE_ENABLE=1
+        OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE=0
+        OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0
+    )
+    add_test(NAME ot-test-spinel-standalone COMMAND ot-test-spinel-standalone)
+
+    # Check default logging delegation and formatting against host-provided hooks.
+    add_executable(ot-test-spinel-logger
+        ${PROJECT_SOURCE_DIR}/tests/unit/test_spinel_logger.cpp
+        logger.cpp
+        spinel.c
+    )
+    target_include_directories(ot-test-spinel-logger PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${COMMON_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src/include
+        ${PROJECT_SOURCE_DIR}/tests/unit
+    )
+    add_test(NAME ot-test-spinel-logger COMMAND ot-test-spinel-logger)
 endif()
