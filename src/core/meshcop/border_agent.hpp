@@ -323,7 +323,7 @@ private:
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
         void        HandleConnected(ConnectEvent aEvent);
-        static void HandleLeaderResponseToFwdTmf(void *aContext, Coap::Msg *aMsg, otError aResult);
+        static void HandleLeaderResponseToFwdTmf(void *aContext, Coap::Msg *aMsg, Error aResult);
         void        HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
                                                  const Coap::Msg      *aResponse,
                                                  Error                 aResult);
