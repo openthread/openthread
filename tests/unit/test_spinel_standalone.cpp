@@ -36,6 +36,13 @@
 
 #include "test_util.h"
 
+// The consumer must inherit the configuration from the library target.
+#include "lib/spinel/openthread-spinel-config.h"
+#if !OPENTHREAD_SPINEL_CONFIG_STANDALONE_ENABLE || OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE || \
+    OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
+#error "Standalone Spinel target must propagate its configuration"
+#endif
+
 // The standalone host supplies its own platform clock.
 extern "C" uint64_t otPlatTimeGet(void) { return 0; }
 
@@ -134,16 +141,23 @@ int main(void)
 
     VerifyOrQuit(driver.GetIid() == SPINEL_HEADER_INVALID_IID);
 
-    TestInterface      transport;
-    const spinel_iid_t iid = 0;
-    VerifyOrQuit(driver.Init(transport, true, &iid, 1) == OT_COPROCESSOR_RCP);
-    VerifyOrQuit(driver.GetIid() == iid);
+    TestInterface transport;
+#if defined(OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE) && OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    const spinel_iid_t iids[] = {0, 1, 2, 3};
+    static_assert(ot::Spinel::kSpinelHeaderMaxNumIid == 4, "Multi-PAN requires four interfaces");
+#else
+    const spinel_iid_t iids[] = {0};
+    static_assert(ot::Spinel::kSpinelHeaderMaxNumIid == 1, "Single-PAN requires one interface");
+#endif
+    VerifyOrQuit(driver.Init(transport, true, iids, sizeof(iids) / sizeof(iids[0])) == OT_COPROCESSOR_RCP);
+    VerifyOrQuit(driver.GetIid() == iids[0]);
     VerifyOrQuit(driver.GetSpinelInterface() == &transport);
     VerifyOrQuit(driver.CoprocessorHasCap(SPINEL_CAP_CONFIG_RADIO));
     VerifyOrQuit(transport.GetRequests() == 4);
     driver.Deinit();
     transport.Deinit();
     VerifyOrQuit(driver.GetIid() == SPINEL_HEADER_INVALID_IID);
+    VerifyOrQuit(driver.GetSpinelInterface() == nullptr);
 
     decoder.Init(frame, sizeof(frame));
     SuccessOrQuit(decoder.ReadUtf8(value));
@@ -174,6 +188,12 @@ int main(void)
     VerifyOrQuit(length <= sizeof(encoded));
     VerifyOrQuit(spinelBuffer.OutFrameRead(length, encoded) == length);
     SuccessOrQuit(spinelBuffer.OutFrameRemove());
+
+    // Compare against the expected wire encoding, not only our own decoder.
+    const uint8_t expected[] = {0x80, 0x01, 'S', 'p', 'i', 'n', 'e', 'l', 0};
+    VerifyOrQuit(length == sizeof(expected));
+    VerifyOrQuit(memcmp(encoded, expected, sizeof(expected)) == 0);
+
     decoder.Init(encoded, length);
     SuccessOrQuit(decoder.ReadUintPacked(packed));
     VerifyOrQuit(packed == 128);
