@@ -1648,6 +1648,367 @@ void TestSrpClientSingleServiceMode(void)
 
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
+void HandleRawClientUdpReceive(void *, otMessage *, const otMessageInfo *) {}
+
+void SendRawSrpUpdate(Ip6::Udp::Socket                   &aSocket,
+                      uint16_t                            aServerPort,
+                      const Crypto::Ecdsa::P256::KeyPair &aKeyPair,
+                      const char                         *aPtrServiceName,
+                      const char                         *aInstanceName,
+                      const char                         *aSubPtrServiceName   = nullptr,
+                      const char                         *aSubPtrRdataName     = nullptr,
+                      const char                         *aSubPtrFirstLabel    = nullptr,
+                      const char                         *aInstanceSecondLabel = nullptr)
+{
+    static constexpr uint32_t kTtl            = 300;
+    static constexpr uint16_t kUdpPayloadSize = 1280;
+    static const char         kHostFullName[] = "testhost.default.service.arpa.";
+
+    static uint16_t sMessageId = 1;
+
+    Message                       *msg;
+    Ip6::MessageInfo               serverMsgInfo;
+    Dns::UpdateHeader              header;
+    Dns::ResourceRecord            rr;
+    Dns::SrvRecord                 srv;
+    Dns::KeyRecord                 keyRecord;
+    Crypto::Ecdsa::P256::PublicKey publicKey;
+    Dns::OptRecord                 optRecord;
+    Dns::LeaseOption               leaseOption;
+    Dns::SigRecord                 sig;
+    Crypto::Sha256                 sha256;
+    Crypto::Sha256::Hash           hash;
+    Crypto::Ecdsa::P256::Signature signature;
+    uint16_t                       recordCount = 0;
+    uint16_t                       serviceNameOffset;
+    uint16_t                       instanceNameOffset;
+    uint16_t                       offset;
+    uint16_t                       optionSize;
+    uint16_t                       sigOffset;
+    uint16_t                       sigRecordOffset;
+
+    msg = aSocket.NewMessage();
+    VerifyOrQuit(msg != nullptr);
+
+    header.SetMessageId(sMessageId++);
+    header.SetZoneRecordCount(1);
+    header.SetAdditionalRecordCount(1);
+    SuccessOrQuit(msg->Append(header));
+
+    // Zone section
+    SuccessOrQuit(Dns::Name::AppendName("default.service.arpa.", *msg));
+    SuccessOrQuit(msg->Append(Dns::Zone()));
+
+    // Base PTR record
+    serviceNameOffset = msg->GetLength();
+    SuccessOrQuit(Dns::Name::AppendName(aPtrServiceName, *msg));
+    ClearAllBytes(rr);
+    rr.Init(Dns::ResourceRecord::kTypePtr);
+    rr.SetTtl(kTtl);
+    offset = msg->GetLength();
+    SuccessOrQuit(msg->Append(rr));
+    instanceNameOffset = msg->GetLength();
+
+    if (aInstanceSecondLabel != nullptr)
+    {
+        SuccessOrQuit(Dns::Name::AppendLabel(aInstanceName, *msg));
+        SuccessOrQuit(Dns::Name::AppendLabel(aInstanceSecondLabel, *msg));
+        SuccessOrQuit(Dns::Name::AppendName("service.arpa.", *msg));
+    }
+    else if (StringFind(aInstanceName, Dns::Name::kLabelSeparatorChar) == nullptr)
+    {
+        SuccessOrQuit(Dns::Name::AppendLabel(aInstanceName, *msg));
+        SuccessOrQuit(Dns::Name::AppendPointerLabel(serviceNameOffset, *msg));
+    }
+    else
+    {
+        SuccessOrQuit(Dns::Name::AppendName(aInstanceName, *msg));
+    }
+
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*msg, offset);
+    recordCount++;
+
+    // Optional sub-type PTR record
+    if (aSubPtrServiceName != nullptr)
+    {
+        if (aSubPtrFirstLabel != nullptr)
+        {
+            SuccessOrQuit(Dns::Name::AppendLabel(aSubPtrFirstLabel, *msg));
+        }
+
+        SuccessOrQuit(Dns::Name::AppendName(aSubPtrServiceName, *msg));
+        rr.Init(Dns::ResourceRecord::kTypePtr);
+        rr.SetTtl(kTtl);
+        offset = msg->GetLength();
+        SuccessOrQuit(msg->Append(rr));
+        SuccessOrQuit(Dns::Name::AppendName(aSubPtrRdataName, *msg));
+        Dns::ResourceRecord::UpdateRecordLengthInMessage(*msg, offset);
+        recordCount++;
+    }
+
+    // Service Description: Delete-All, SRV, and TXT records
+    SuccessOrQuit(Dns::Name::AppendPointerLabel(instanceNameOffset, *msg));
+    rr.Init(Dns::ResourceRecord::kTypeAny, Dns::ResourceRecord::kClassAny);
+    rr.SetTtl(0);
+    rr.SetLength(0);
+    SuccessOrQuit(msg->Append(rr));
+    recordCount++;
+
+    SuccessOrQuit(Dns::Name::AppendPointerLabel(instanceNameOffset, *msg));
+    ClearAllBytes(srv);
+    srv.Init();
+    srv.SetTtl(kTtl);
+    srv.SetPort(888);
+    offset = msg->GetLength();
+    SuccessOrQuit(msg->Append(srv));
+    SuccessOrQuit(Dns::Name::AppendName(kHostFullName, *msg));
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*msg, offset);
+    recordCount++;
+
+    SuccessOrQuit(Dns::Name::AppendPointerLabel(instanceNameOffset, *msg));
+    rr.Init(Dns::ResourceRecord::kTypeTxt);
+    rr.SetTtl(kTtl);
+    offset = msg->GetLength();
+    SuccessOrQuit(msg->Append(rr));
+    SuccessOrQuit(msg->Append<uint8_t>(0));
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*msg, offset);
+    recordCount++;
+
+    // Host Description: Delete-All, AAAA, and KEY records
+    SuccessOrQuit(Dns::Name::AppendName(kHostFullName, *msg));
+    rr.Init(Dns::ResourceRecord::kTypeAny, Dns::ResourceRecord::kClassAny);
+    rr.SetTtl(0);
+    rr.SetLength(0);
+    SuccessOrQuit(msg->Append(rr));
+    recordCount++;
+
+    SuccessOrQuit(Dns::Name::AppendName(kHostFullName, *msg));
+    rr.Init(Dns::ResourceRecord::kTypeAaaa);
+    rr.SetTtl(kTtl);
+    rr.SetLength(sizeof(Ip6::Address));
+    SuccessOrQuit(msg->Append(rr));
+    SuccessOrQuit(msg->Append(sInstance->Get<Mle::Mle>().GetMeshLocalEid()));
+    recordCount++;
+
+    SuccessOrQuit(Dns::Name::AppendName(kHostFullName, *msg));
+    keyRecord.Init();
+    keyRecord.SetTtl(kTtl);
+    keyRecord.SetFlags(Dns::KeyRecord::kAuthConfidPermitted, Dns::KeyRecord::kOwnerNonZone,
+                       Dns::KeyRecord::kSignatoryFlagGeneral);
+    keyRecord.SetProtocol(Dns::KeyRecord::kProtocolDnsSec);
+    keyRecord.SetAlgorithm(Dns::KeyRecord::kAlgorithmEcdsaP256Sha256);
+    keyRecord.SetLength(sizeof(Dns::KeyRecord) - sizeof(Dns::ResourceRecord) + sizeof(Crypto::Ecdsa::P256::PublicKey));
+    SuccessOrQuit(msg->Append(keyRecord));
+    SuccessOrQuit(aKeyPair.GetPublicKey(publicKey));
+    SuccessOrQuit(msg->Append(publicKey));
+    recordCount++;
+
+    header.SetUpdateRecordCount(recordCount);
+    msg->Write(0, header);
+
+    // Additional section: EDNS(0) Update Lease OPT and SIG(0) records
+    SuccessOrQuit(Dns::Name::AppendTerminator(*msg));
+    optRecord.Init();
+    optRecord.SetUdpPayloadSize(kUdpPayloadSize);
+    optRecord.SetDnsSecurityFlag();
+    leaseOption.InitAsLongVariant(kTtl, kTtl * 2);
+    optionSize = static_cast<uint16_t>(leaseOption.GetSize());
+    optRecord.SetLength(optionSize);
+    SuccessOrQuit(msg->Append(optRecord));
+    SuccessOrQuit(msg->AppendBytes(&leaseOption, optionSize));
+
+    sigOffset = msg->GetLength();
+    SuccessOrQuit(Dns::Name::AppendTerminator(*msg));
+    sigRecordOffset = msg->GetLength();
+    sig.Clear();
+    sig.Init(Dns::ResourceRecord::kClassAny);
+    sig.SetAlgorithm(Dns::KeyRecord::kAlgorithmEcdsaP256Sha256);
+    SuccessOrQuit(msg->Append(sig));
+    SuccessOrQuit(Dns::Name::AppendName(kHostFullName, *msg));
+
+    sha256.Start();
+    sha256.Update(*msg, sigRecordOffset + sizeof(Dns::ResourceRecord),
+                  msg->GetLength() - sigRecordOffset - sizeof(Dns::ResourceRecord));
+    sha256.Update(*msg, 0, sigOffset);
+    sha256.Finish(hash);
+    SuccessOrQuit(aKeyPair.Sign(hash, signature));
+
+    SuccessOrQuit(msg->Append(signature));
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*msg, sigRecordOffset);
+
+    header.SetAdditionalRecordCount(2);
+    msg->Write(0, header);
+
+    serverMsgInfo.SetPeerAddr(sInstance->Get<Mle::Mle>().GetMeshLocalEid());
+    serverMsgInfo.SetPeerPort(aServerPort);
+    SuccessOrQuit(aSocket.SendTo(*msg, serverMsgInfo));
+}
+
+void TestSrpServerServiceNameValidation(void)
+{
+    Srp::Server *srpServer;
+    uint16_t     heapAllocations;
+    uint16_t     serverPort;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestSrpServerServiceNameValidation");
+
+    InitTest();
+
+    srpServer       = &sInstance->Get<Srp::Server>();
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    srpServer->SetServiceHandler(HandleSrpServerUpdate, sInstance);
+    sUpdateHandlerMode = kAccept;
+    srpServer->SetEnabled(true);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+    VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 0);
+    VerifyOrQuit(srpServer->GetResponseCounters()->mServerFailure == 0);
+    VerifyOrQuit(srpServer->GetResponseCounters()->mSuccess == 0);
+    serverPort = srpServer->GetPort();
+
+    {
+        Ip6::Udp::Socket             clientSocket(*sInstance, HandleRawClientUdpReceive, nullptr);
+        Crypto::Ecdsa::P256::KeyPair keyPair;
+
+        SuccessOrQuit(clientSocket.Open(Ip6::kNetifThreadInternal));
+        SuccessOrQuit(clientSocket.Bind());
+        SuccessOrQuit(keyPair.Generate());
+
+        // Extra label between instance label and service name in base PTR RDATA.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.",
+                         "inst.extra._srv._udp.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 1);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Extra label in sub-type PTR RDATA.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.", "_sub1._sub._srv._udp.default.service.arpa.",
+                         "inst.extra._srv._udp.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 2);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // PTR RDATA missing instance label (equal to service name).
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.",
+                         "_srv._udp.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 3);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // PTR owner equal to domain with no service labels.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "default.service.arpa.", "inst.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 4);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Sub-type PTR owner missing base service labels before domain.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.", "_sub1._sub.default.service.arpa.",
+                         "inst.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 5);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Sub-type PTR owner missing `<sub-label>` before `_sub`.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.", "_sub._srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 6);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Sub-type PTR owner with multiple labels before `_sub`.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.", "a.b._sub._srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 7);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Sub-type PTR owner with first wire label starting with `"._sub"` (empty `<sub-label>`).
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.", "_srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.", "._sub");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 8);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Sub-type PTR owner with dot inside `<sub-label>` wire label.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.", "_sub._srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.", "a.b");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 9);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Base PTR whose `instanceServiceName` contains `._sub.`.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_sub1._sub._srv._udp.default.service.arpa.",
+                         "inst._sub1._sub._srv._udp.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 10);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Base PTR whose `instanceServiceName` starts with `_sub.`.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_sub._srv._udp.default.service.arpa.",
+                         "inst._sub._srv._udp.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 11);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Base PTR whose `instanceServiceName` contains `._SUB.` (case-insensitive).
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_sub1._SUB._srv._udp.default.service.arpa.",
+                         "inst._sub1._SUB._srv._udp.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 12);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // PTR RDATA whose `instanceServiceName` has a leading-dot wire label (`".default"`).
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.", "inst", nullptr, nullptr,
+                         nullptr, ".default");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 13);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // PTR RDATA whose combined `instanceLabel` and `instanceServiceName` exceed `Dns::Name::kMaxNameSize`.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair,
+                         "a12345678901234567890123456789012345678901234567890123456789."
+                         "b12345678901234567890123456789012345678901234567890123456789."
+                         "c12345678901234567890123456789012345678901234567890123456789."
+                         "_srv._udp.default.service.arpa.",
+                         "inst56789012345678901234567890123456789012345678901234567890");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mServerFailure == 1);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 13);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+
+        // Well-formed base and sub-type PTR records succeed.
+        SendRawSrpUpdate(clientSocket, serverPort, keyPair, "_srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.", "_sub1._sub._srv._udp.default.service.arpa.",
+                         "inst._srv._udp.default.service.arpa.");
+        AdvanceTime(100);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mSuccess == 1);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mServerFailure == 1);
+        VerifyOrQuit(srpServer->GetResponseCounters()->mRefused == 13);
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) != nullptr);
+
+        SuccessOrQuit(clientSocket.Close());
+    }
+
+    srpServer->SetEnabled(false);
+    AdvanceTime(100);
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    FinalizeTest();
+    VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
+
+    Log("End of TestSrpServerServiceNameValidation");
+}
+
 void TestSrpServerAddressModeForceAdd(void)
 {
     Srp::Server *srpServer;
@@ -1845,6 +2206,7 @@ int main(void)
     ot::TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ true);
     ot::TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ false);
     ot::TestSrpServerRetainedServiceKeyLease();
+    ot::TestSrpServerServiceNameValidation();
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     ot::TestUpdateLeaseShortVariant();
     ot::TestSrpClientDelayedResponse();
