@@ -101,6 +101,14 @@ group("libopenthread-spinel-rcp") {
   deps = [ "src/lib/spinel:libopenthread-spinel-rcp" ]
 }
 
+group("libopenthread-spinel") {
+  public_deps = [ "src/lib/spinel:libopenthread-spinel" ]
+}
+
+group("libopenthread-spinel-standalone") {
+  public_deps = [ "src/lib/spinel:libopenthread-spinel-standalone" ]
+}
+
 group("libopenthread-radio-spinel") {
   public_deps = [ "src/lib/spinel:spinel-api" ]
   deps = [ "src/lib/spinel:libopenthread-radio-spinel" ]

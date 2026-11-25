@@ -32,8 +32,9 @@
 
 #include "spinel_decoder.hpp"
 
+#include <string.h>
+
 #include "common/code_utils.hpp"
-#include "common/string.hpp"
 
 namespace ot {
 namespace Spinel {
@@ -296,19 +297,19 @@ exit:
 
 otError Decoder::ReadUtf8(const char *&aUtf8)
 {
-    otError error = OT_ERROR_NONE;
-    size_t  len;
+    otError        error = OT_ERROR_NONE;
+    const uint8_t *end;
 
     // Ensure there is at least one byte (for null character).
     VerifyOrExit(mIndex + sizeof(uint8_t) <= mEnd, error = OT_ERROR_PARSE);
 
-    len = StringLength(reinterpret_cast<const char *>(&mFrame[mIndex]), mEnd - mIndex);
-    VerifyOrExit(len < static_cast<uint16_t>(mEnd - mIndex), error = OT_ERROR_PARSE);
+    end = static_cast<const uint8_t *>(memchr(&mFrame[mIndex], 0, mEnd - mIndex));
+    VerifyOrExit(end != nullptr, error = OT_ERROR_PARSE);
 
     aUtf8 = reinterpret_cast<const char *>(&mFrame[mIndex]);
 
     // `sizeof(uint8_t)` is added for the terminating null character.
-    mIndex += static_cast<uint16_t>(len + sizeof(uint8_t));
+    mIndex = static_cast<uint16_t>(end - mFrame + sizeof(uint8_t));
 
 exit:
     return error;

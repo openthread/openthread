@@ -52,6 +52,27 @@
 #endif
 
 /**
+ * @def OPENTHREAD_SPINEL_CONFIG_STANDALONE_ENABLE
+ *
+ * Enables standalone driver termination using the C library instead of the
+ * OpenThread platform exit utilities. Use with Spinel logging disabled for
+ * a host that does not link OpenThread core or platform libraries.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_STANDALONE_ENABLE
+#define OPENTHREAD_SPINEL_CONFIG_STANDALONE_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
+ *
+ * Enables Spinel logging through OpenThread. Standalone users can disable
+ * logging to avoid linking against the OpenThread logging and error APIs.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
+#define OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE
  *
  * The maximum log string size (number of chars).

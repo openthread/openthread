@@ -27,17 +27,19 @@
 
 visibility = [ "../../../*" ]
 
-platform_sources = [
-  "exit_code.c",
-  "exit_code.h",
-]
+platform_sources = [ "exit_code.c" ]
 
 config("platform_config") {
   include_dirs = [ ".." ]
 }
 
-static_library("libopenthread-platform") {
-  sources = platform_sources
+source_set("platform-api") {
+  public = [ "exit_code.h" ]
   public_deps = [ "../../core:libopenthread_core_headers" ]
   public_configs = [ ":platform_config" ]
+}
+
+static_library("libopenthread-platform") {
+  sources = platform_sources
+  public_deps = [ ":platform-api" ]
 }

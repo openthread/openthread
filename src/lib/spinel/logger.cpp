@@ -55,57 +55,80 @@ Logger::Logger(const char *aModuleName)
 
 void Logger::LogIfFail(const char *aText, otError aError)
 {
-    OT_UNUSED_VARIABLE(aText);
-
+#if OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
     if (aError != OT_ERROR_NONE && aError != OT_ERROR_NO_ACK)
     {
         LogWarn("%s: %s", aText, otThreadErrorToString(aError));
     }
+#else
+    OT_UNUSED_VARIABLE(aText);
+    OT_UNUSED_VARIABLE(aError);
+#endif
 }
 
 void Logger::LogCrit(const char *aFormat, ...)
 {
+#if OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
     va_list args;
 
     va_start(args, aFormat);
     otLogPlatArgs(OT_LOG_LEVEL_CRIT, mModuleName, aFormat, args);
     va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
 }
 
 void Logger::LogWarn(const char *aFormat, ...)
 {
+#if OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
     va_list args;
 
     va_start(args, aFormat);
     otLogPlatArgs(OT_LOG_LEVEL_WARN, mModuleName, aFormat, args);
     va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
 }
 
 void Logger::LogNote(const char *aFormat, ...)
 {
+#if OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
     va_list args;
 
     va_start(args, aFormat);
     otLogPlatArgs(OT_LOG_LEVEL_NOTE, mModuleName, aFormat, args);
     va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
 }
 
 void Logger::LogInfo(const char *aFormat, ...)
 {
+#if OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
     va_list args;
 
     va_start(args, aFormat);
     otLogPlatArgs(OT_LOG_LEVEL_INFO, mModuleName, aFormat, args);
     va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
 }
 
 void Logger::LogDebg(const char *aFormat, ...)
 {
+#if OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
     va_list args;
 
     va_start(args, aFormat);
     otLogPlatArgs(OT_LOG_LEVEL_DEBG, mModuleName, aFormat, args);
     va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
 }
 
 uint32_t Logger::Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...)
@@ -122,6 +145,7 @@ uint32_t Logger::Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...)
 
 void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
 {
+#if OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
     otError           error                                   = OT_ERROR_NONE;
     char              buf[OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE] = {0};
     spinel_ssize_t    unpacked;
@@ -763,6 +787,11 @@ exit:
     {
         LogDebg("%s, failed to parse spinel frame !", prefix);
     }
+#else
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aLength);
+    OT_UNUSED_VARIABLE(aTx);
+#endif
 }
 
 } // namespace Spinel

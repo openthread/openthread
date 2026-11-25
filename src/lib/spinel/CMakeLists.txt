@@ -125,6 +125,40 @@ target_link_libraries(openthread-spinel-rcp
         ot-config
 )
 
+# A host-side Spinel library with no OpenThread core or platform link dependency.
+# Keep the existing NCP/RCP and RadioSpinel targets and their configurations intact.
+add_library(openthread-spinel-standalone STATIC
+    logger.cpp
+    spinel_driver.cpp
+    spinel.c
+    spinel_buffer.cpp
+    spinel_decoder.cpp
+    spinel_encoder.cpp
+    spinel_helper.cpp
+    spinel_prop_codec.cpp
+)
+# Build-tree aliases; all names refer to the same archive and usage requirements.
+add_library(openthread-spinel ALIAS openthread-spinel-standalone)
+add_library(OpenThread::Spinel ALIAS openthread-spinel-standalone)
+
+target_include_directories(openthread-spinel-standalone PUBLIC
+    ${OT_PUBLIC_INCLUDES}
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/src/include
+)
+target_compile_definitions(openthread-spinel-standalone PUBLIC
+    OPENTHREAD_SPINEL_CONFIG_STANDALONE_ENABLE=1
+    OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE=0
+    OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0
+)
+# Keep the standalone library and its consumers on the same driver layout.
+if(OT_MULTIPAN_RCP)
+    target_compile_definitions(openthread-spinel-standalone PUBLIC
+        OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1
+    )
+endif()
+
 if(BUILD_TESTING)
     add_executable(ot-test-spinel
         spinel.c
@@ -133,4 +167,38 @@ if(BUILD_TESTING)
         PRIVATE -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE
     )
     add_test(NAME ot-test-spinel COMMAND ot-test-spinel)
+
+    # Exercise the same library target available to downstream hosts.
+    add_executable(ot-test-spinel-standalone
+        ${PROJECT_SOURCE_DIR}/tests/unit/test_spinel_standalone.cpp
+    )
+    target_include_directories(ot-test-spinel-standalone PRIVATE
+        ${PROJECT_SOURCE_DIR}/tests/unit
+    )
+    target_link_libraries(ot-test-spinel-standalone PRIVATE OpenThread::Spinel)
+    add_test(NAME ot-test-spinel-standalone COMMAND ot-test-spinel-standalone)
+
+    # Check the short alias from a separate consumer, using the same library.
+    add_executable(ot-test-spinel-alias
+        ${PROJECT_SOURCE_DIR}/tests/unit/test_spinel_standalone.cpp
+    )
+    target_include_directories(ot-test-spinel-alias PRIVATE
+        ${PROJECT_SOURCE_DIR}/tests/unit
+    )
+    target_link_libraries(ot-test-spinel-alias PRIVATE openthread-spinel)
+    add_test(NAME ot-test-spinel-alias COMMAND ot-test-spinel-alias)
+
+    # Check default logging delegation and formatting against host-provided hooks.
+    add_executable(ot-test-spinel-logger
+        ${PROJECT_SOURCE_DIR}/tests/unit/test_spinel_logger.cpp
+        logger.cpp
+        spinel.c
+    )
+    target_include_directories(ot-test-spinel-logger PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${COMMON_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src/include
+        ${PROJECT_SOURCE_DIR}/tests/unit
+    )
+    add_test(NAME ot-test-spinel-logger COMMAND ot-test-spinel-logger)
 endif()

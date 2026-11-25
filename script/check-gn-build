@@ -37,18 +37,19 @@ set -x
 check_build()
 {
     rm gn-out -r || true
-    gn gen --check gn-out "$@"
+    gn gen --check gn-out --args="$1 spinel_standalone_tests=true"
     gn args gn-out --list
     ninja -C gn-out
     test -f gn-out/obj/src/core/libopenthread-ftd.a
+    gn-out/ot-test-spinel-standalone
 }
 
 main()
 {
-    check_build --args="use_clang=true openthread_project_core_config_file=\"../examples/platforms/simulation/openthread-core-simulation-config.h\""
+    check_build "use_clang=true spinel_standalone_multipan=true openthread_project_core_config_file=\"../examples/platforms/simulation/openthread-core-simulation-config.h\""
     for thread_version in 1.4 1.1; do
         for use_clang in true false; do
-            check_build --args="use_clang=$use_clang openthread_config_thread_version=\"$thread_version\""
+            check_build "use_clang=$use_clang openthread_config_thread_version=\"$thread_version\""
         done
     done
 

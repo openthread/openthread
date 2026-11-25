@@ -30,28 +30,45 @@ visibility = [ "../../../*" ]
 declare_args() {
   # Platform portability header for spinel.
   spinel_platform_header = "\"spinel_platform.h\""
+
+  # Build the standalone host test when explicitly requested.
+  spinel_standalone_tests = false
+
+  # Enable multiple interface IDs in the standalone host library.
+  spinel_standalone_multipan = false
 }
 
-spinel_sources = [
-  "logger.cpp",
-  "logger.hpp",
-  "multi_frame_buffer.hpp",
+spinel_codec_sources = [
   "openthread-spinel-config.h",
-  "radio_spinel.cpp",
-  "radio_spinel.hpp",
-  "spi_frame.hpp",
   "spinel.c",
   "spinel_buffer.cpp",
   "spinel_buffer.hpp",
   "spinel_decoder.cpp",
   "spinel_decoder.hpp",
-  "spinel_driver.cpp",
-  "spinel_driver.hpp",
   "spinel_encoder.cpp",
   "spinel_encoder.hpp",
   "spinel_helper.cpp",
   "spinel_helper.hpp",
   "spinel_platform.h",
+  "spinel_prop_codec.cpp",
+  "spinel_prop_codec.hpp",
+]
+
+spinel_driver_sources = [
+  "coprocessor_type.h",
+  "logger.cpp",
+  "logger.hpp",
+  "multi_frame_buffer.hpp",
+  "radio_spinel_metrics.h",
+  "spi_frame.hpp",
+  "spinel_driver.cpp",
+  "spinel_driver.hpp",
+  "spinel_interface.hpp",
+]
+
+radio_spinel_sources = [
+  "radio_spinel.cpp",
+  "radio_spinel.hpp",
 ]
 
 config("spinel_config") {
@@ -73,7 +90,8 @@ source_set("spinel-api") {
 }
 
 static_library("libopenthread-spinel-ncp") {
-  sources = spinel_sources
+  # Preserve the legacy archive contents for existing GN consumers.
+  sources = spinel_codec_sources + spinel_driver_sources + radio_spinel_sources
   public_deps = [
     ":spinel-api",
     "../../core:libopenthread_core_headers",
@@ -86,7 +104,7 @@ static_library("libopenthread-spinel-ncp") {
 }
 
 static_library("libopenthread-radio-spinel") {
-  sources = spinel_sources
+  sources = spinel_codec_sources + spinel_driver_sources + radio_spinel_sources
   public_deps = [
     ":spinel-api",
     "../../core:libopenthread_core_headers",
@@ -99,13 +117,12 @@ static_library("libopenthread-radio-spinel") {
     "OPENTHREAD_RADIO=0",
   ]
 
-  public_configs = [
-    ":spinel_config_openthread_message_disable",
-  ]
+  public_configs = [ ":spinel_config_openthread_message_disable" ]
 }
 
 static_library("libopenthread-spinel-rcp") {
-  sources = spinel_sources
+  # Preserve the legacy archive contents for existing GN consumers.
+  sources = spinel_codec_sources + spinel_driver_sources + radio_spinel_sources
   public_deps = [
     ":spinel-api",
     "../../core:libopenthread_core_headers",
@@ -115,4 +132,40 @@ static_library("libopenthread-spinel-rcp") {
     ":spinel_config_openthread_message_disable",
     "../../..:openthread_radio_config",
   ]
+}
+
+config("spinel_config_standalone") {
+  defines = [
+    "OPENTHREAD_SPINEL_CONFIG_STANDALONE_ENABLE=1",
+    "OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE=0",
+    "OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0",
+  ]
+  if (spinel_standalone_multipan) {
+    defines += [ "OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1" ]
+  }
+}
+
+static_library("libopenthread-spinel-standalone") {
+  sources = spinel_codec_sources + spinel_driver_sources
+  public_deps = [
+    ":spinel-api",
+    "../../core:libopenthread_core_headers",
+    "../platform:platform-api",
+  ]
+  public_configs = [ ":spinel_config_standalone" ]
+}
+
+group("libopenthread-spinel") {
+  public_deps = [ ":libopenthread-spinel-standalone" ]
+}
+
+if (spinel_standalone_tests) {
+  executable("ot-test-spinel-standalone") {
+    sources = [
+      "../../../tests/unit/test_spinel_standalone.cpp",
+      "../../../tests/unit/test_util.h",
+    ]
+    include_dirs = [ "../../../tests/unit" ]
+    deps = [ "../../..:libopenthread-spinel" ]
+  }
 }
