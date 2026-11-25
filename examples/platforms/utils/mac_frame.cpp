@@ -492,15 +492,10 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
     VerifyOrExit(!otMacFrameIsSecurityEnabled(aFrame) || !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (aRadioContext->mCslPeriod > 0)
     {
-        Mac::Frame::ParseInfo frameInfo;
-
-        if ((aRadioContext->mCslPeriod > 0) && (ParseFully(aFrame, frameInfo) == kErrorNone) &&
-            frameInfo.Has<Mac::CslIe>())
-        {
-            otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod,
-                               ComputeCslPhase(static_cast<uint32_t>(aRadioTime), aRadioContext));
-        }
+        otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod,
+                           ComputeCslPhase(static_cast<uint32_t>(aRadioTime), aRadioContext));
     }
 #endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
