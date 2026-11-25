@@ -149,6 +149,7 @@
 #include "thread/vendor_info.hpp"
 #include "thread_direct/td_key_manager.hpp"
 #include "thread_direct/td_listener.hpp"
+#include "thread_direct/td_local_radio_avail.hpp"
 #include "utils/channel_manager.hpp"
 #include "utils/channel_monitor.hpp"
 #include "utils/heap.hpp"
@@ -731,7 +732,8 @@ private:
 #endif
 
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
-    ThreadDirect::KeyManager mThreadDirectKeyManager;
+    ThreadDirect::KeyManager             mThreadDirectKeyManager;
+    ThreadDirect::LocalRadioAvailability mThreadDirectLocalRadioAvailability;
 #endif
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     ThreadDirect::Listener mThreadDirectListener;
@@ -1147,6 +1149,11 @@ template <> inline NetDiag::Client &Instance::Get(void) { return mNetDiagClient;
 
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
 template <> inline ThreadDirect::KeyManager &Instance::Get(void) { return mThreadDirectKeyManager; }
+
+template <> inline ThreadDirect::LocalRadioAvailability &Instance::Get(void)
+{
+    return mThreadDirectLocalRadioAvailability;
+}
 #endif
 
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE

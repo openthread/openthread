@@ -41,6 +41,7 @@
 #include "instance/instance.hpp"
 #include "mac/sub_mac.hpp"
 #include "thread_direct/td_listener.hpp"
+#include "thread_direct/td_local_radio_avail.hpp"
 #include "thread_direct/td_types.hpp"
 
 namespace ot {
@@ -632,6 +633,81 @@ void TestRadioAvailabilityRebaseStartTime(void)
     }
 
     printf("TestRadioAvailabilityRebaseStartTime() passed\n");
+}
+
+static Error               sRadioAvailabilityError = kErrorNotImplemented;
+static Radio::Availability sRadioAvailability;
+
+extern "C" otError otPlatRadioGetAvailability(otInstance *aInstance, otRadioAvailability *aAvailability)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    if (sRadioAvailabilityError == kErrorNone)
+    {
+        *aAvailability = sRadioAvailability;
+    }
+
+    return sRadioAvailabilityError;
+}
+
+void TestLocalRadioAvailability(void)
+{
+    Instance               *instance;
+    LocalRadioAvailability *localAvail;
+
+    sRadioAvailabilityError = kErrorNotImplemented;
+    ClearAllBytes(sRadioAvailability);
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
+
+    localAvail = &instance->Get<LocalRadioAvailability>();
+    VerifyOrQuit(!localAvail->GetAvailability().IsSpecified());
+
+    // Update with a valid schedule; `mPreferredSlots` must be masked with `mAvailableSlots`.
+    // Available: 0xf0 = 1111_0000 (slots 0..3 available, 4..7 unavailable)
+    // Preferred: 0xaa = 1010_1010 -> masked: 0xa0 = 1010_0000 (slots 0 and 2 preferred)
+    sRadioAvailabilityError               = kErrorNone;
+    sRadioAvailability.mStartTime         = 10000;
+    sRadioAvailability.mSlotDuration      = OT_RADIO_AVAILABILITY_SLOT_DURATION_625_US;
+    sRadioAvailability.mNumSlots          = 8;
+    sRadioAvailability.mAvailableSlots[0] = 0xf0;
+    sRadioAvailability.mPreferredSlots[0] = 0xaa;
+
+    otPlatRadioAvailabilityUpdated(instance);
+
+    VerifyOrQuit(localAvail->GetAvailability().IsSpecified());
+    VerifyOrQuit(localAvail->GetAvailability().GetStartTime() == 10000);
+    VerifyOrQuit(localAvail->GetAvailability().GetSlotDuration() == kSlotDuration625Usec);
+    VerifyOrQuit(localAvail->GetAvailability().GetBitLength() == 8);
+    VerifyOrQuit(localAvail->GetAvailability().GetBitmap()[0] == 0xf0);
+    VerifyOrQuit(localAvail->GetPreferredBitmap()[0] == 0xaa);
+
+    VerifyOrQuit(localAvail->IsPreferredAt(10000));
+    VerifyOrQuit(!localAvail->IsPreferredAt(10000 + 625));
+    VerifyOrQuit(localAvail->IsPreferredAt(10000 + 2 * 625));
+    VerifyOrQuit(!localAvail->IsPreferredAt(10000 + 4 * 625));
+    VerifyOrQuit(!localAvail->IsPreferredAt(10000 + 5 * 625));
+
+    // Invalid schedule (bit length too large) should keep previous cached values.
+    sRadioAvailability.mNumSlots = RadioAvailability::kMaxBitmapLength + 1;
+    otPlatRadioAvailabilityUpdated(instance);
+
+    VerifyOrQuit(localAvail->GetAvailability().IsSpecified());
+    VerifyOrQuit(localAvail->GetAvailability().GetBitLength() == 8);
+    VerifyOrQuit(localAvail->GetAvailability().GetBitmap()[0] == 0xf0);
+    VerifyOrQuit(localAvail->GetPreferredBitmap()[0] == 0xaa);
+
+    // `mNumSlots == 0` resets schedule to unspecified (always available / preferred).
+    sRadioAvailability.mNumSlots = 0;
+    otPlatRadioAvailabilityUpdated(instance);
+
+    VerifyOrQuit(!localAvail->GetAvailability().IsSpecified());
+    VerifyOrQuit(localAvail->IsPreferredAt(10000));
+
+    testFreeInstance(instance);
+
+    printf("TestLocalRadioAvailability() passed\n");
 }
 
 #endif // OT_CONFIG_THREAD_DIRECT_ENABLE
@@ -1671,6 +1747,7 @@ int main(void)
     ot::ThreadDirect::TestRadioAvailabilityFindNextAvailableWindow();
     ot::ThreadDirect::TestRadioAvailabilityCompare();
     ot::ThreadDirect::TestRadioAvailabilityRebaseStartTime();
+    ot::ThreadDirect::TestLocalRadioAvailability();
 
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     ot::ThreadDirect::TestListenerConfigAndApi();

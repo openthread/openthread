@@ -144,6 +144,11 @@ enum Capability : uint16_t
 typedef otRadioCaps Capabilities;
 
 /**
+ * Represents the radio availability schedule.
+ */
+typedef otRadioAvailability Availability;
+
+/**
  * Indicates whether a given channel page is supported based on the current configurations.
  *
  * @param[in] aChannelPage The channel page to check.
@@ -337,7 +342,7 @@ public:
      * @retval kErrorNone            Successfully retrieved the radio availability schedule.
      * @retval kErrorNotImplemented  The radio platform does not support reporting radio availability.
      */
-    Error GetAvailability(otRadioAvailability &aAvailability);
+    Error GetAvailability(Availability &aAvailability);
 
     /**
      * Gets the radio receive sensitivity value.
@@ -916,7 +921,7 @@ inline uint32_t Radio::GetPreferredChannelMask(void) { return otPlatRadioGetPref
 
 inline Capabilities Radio::GetCaps(void) { return otPlatRadioGetCaps(GetInstancePtr()); }
 
-inline Error Radio::GetAvailability(otRadioAvailability &aAvailability)
+inline Error Radio::GetAvailability(Availability &aAvailability)
 {
     return otPlatRadioGetAvailability(GetInstancePtr(), &aAvailability);
 }
@@ -1084,7 +1089,7 @@ inline bool Radio::GetDiagMode(void) { return otPlatDiagModeGet(); }
 
 inline Capabilities Radio::GetCaps(void) { return kCapAckTimeout | kCapCsmaBackoff | kCapTransmitRetries; }
 
-inline Error Radio::GetAvailability(otRadioAvailability &) { return kErrorNotImplemented; }
+inline Error Radio::GetAvailability(Availability &) { return kErrorNotImplemented; }
 
 inline int8_t Radio::GetReceiveSensitivity(void) const { return kDefaultReceiveSensitivity; }
 

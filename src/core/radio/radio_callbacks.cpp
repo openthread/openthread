@@ -78,6 +78,9 @@ void Callbacks::HandleRadioAvailabilityUpdated(void)
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     Get<Mac::LinkRaw>().HandleRadioAvailabilityUpdated();
 #endif
+#if OT_CONFIG_THREAD_DIRECT_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+    Get<ThreadDirect::LocalRadioAvailability>().HandleRadioAvailabilityUpdated();
+#endif
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE

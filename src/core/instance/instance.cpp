@@ -180,6 +180,7 @@ Instance::Instance(void)
 #endif
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
     , mThreadDirectKeyManager(*this)
+    , mThreadDirectLocalRadioAvailability(*this)
 #endif
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     , mThreadDirectListener(*this)
@@ -472,6 +473,7 @@ void Instance::AfterInit(void)
 
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
     Get<ThreadDirect::KeyManager>().RestoreKeys();
+    Get<ThreadDirect::LocalRadioAvailability>().AfterInit();
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
