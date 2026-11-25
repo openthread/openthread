@@ -38,6 +38,31 @@
 #include "lib/spinel/spinel.h"
 #include "lib/utils/math.hpp"
 
+// Standalone hosts have no OpenThread platform exit service. Keep the
+// existing platform termination path for all normal OpenThread builds.
+#if OPENTHREAD_SPINEL_CONFIG_STANDALONE_ENABLE
+#define SpinelDieNow(aExitCode) exit(aExitCode)
+#define SpinelVerifyOrDie(aCondition, aExitCode) \
+    do                                           \
+    {                                            \
+        if (!(aCondition))                       \
+        {                                        \
+            SpinelDieNow(aExitCode);             \
+        }                                        \
+    } while (false)
+#define SpinelSuccessOrDie(aError)                                                                              \
+    do                                                                                                          \
+    {                                                                                                           \
+        otError _spinelError = (aError);                                                                        \
+        SpinelVerifyOrDie(_spinelError == OT_ERROR_NONE,                                                        \
+                          _spinelError == OT_ERROR_INVALID_ARGS ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE); \
+    } while (false)
+#else
+#define SpinelDieNow(aExitCode) DieNow(aExitCode)
+#define SpinelVerifyOrDie(aCondition, aExitCode) VerifyOrDie(aCondition, aExitCode)
+#define SpinelSuccessOrDie(aError) SuccessOrDie(aError)
+#endif
+
 namespace ot {
 namespace Spinel {
 
@@ -72,27 +97,27 @@ CoprocessorType SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
 
     mSpinelInterface = &aSpinelInterface;
     mRxFrameBuffer.Clear();
-    SuccessOrDie(mSpinelInterface->Init(HandleReceivedFrame, this, mRxFrameBuffer));
+    SpinelSuccessOrDie(mSpinelInterface->Init(HandleReceivedFrame, this, mRxFrameBuffer));
 
-    VerifyOrDie(aIidList != nullptr, OT_EXIT_INVALID_ARGUMENTS);
-    VerifyOrDie(aIidListLength != 0 && aIidListLength <= mIidList.GetMaxSize(), OT_EXIT_INVALID_ARGUMENTS);
+    SpinelVerifyOrDie(aIidList != nullptr, OT_EXIT_INVALID_ARGUMENTS);
+    SpinelVerifyOrDie(aIidListLength != 0 && aIidListLength <= mIidList.GetMaxSize(), OT_EXIT_INVALID_ARGUMENTS);
 
     for (uint8_t i = 0; i < aIidListLength; i++)
     {
-        SuccessOrDie(mIidList.PushBack(aIidList[i]));
+        SpinelSuccessOrDie(mIidList.PushBack(aIidList[i]));
     }
     mIid = aIidList[0];
 
     ResetCoprocessor(aSoftwareReset);
-    SuccessOrDie(CheckSpinelVersion());
-    SuccessOrDie(GetCoprocessorVersion());
-    SuccessOrDie(GetCoprocessorCaps());
+    SpinelSuccessOrDie(CheckSpinelVersion());
+    SpinelSuccessOrDie(GetCoprocessorVersion());
+    SpinelSuccessOrDie(GetCoprocessorCaps());
 
     coprocessorType = GetCoprocessorType();
     if (coprocessorType == OT_COPROCESSOR_UNKNOWN)
     {
         LogCrit("The coprocessor mode is unknown!");
-        DieNow(OT_EXIT_FAILURE);
+        SpinelDieNow(OT_EXIT_FAILURE);
     }
 
     return coprocessorType;
@@ -184,7 +209,7 @@ exit:
             mCoprocessorResetFailureCallback(mCoprocessorResetFailureContext);
         }
 #endif
-        DieNow(OT_EXIT_FAILURE);
+        SpinelDieNow(OT_EXIT_FAILURE);
     }
 }
 
@@ -336,7 +361,9 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         mRxFrameBuffer.DiscardFrame();
+#if OPENTHREAD_SPINEL_CONFIG_LOG_ENABLE
         LogWarn("Error handling spinel frame: %s", otThreadErrorToString(error));
+#endif
     }
 }
 
@@ -454,7 +481,7 @@ otError SpinelDriver::CheckSpinelVersion(void)
     {
         LogCrit("Spinel version mismatch - Posix:%d.%d, co-processor:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
                 SPINEL_PROTOCOL_VERSION_THREAD_MINOR, mSpinelVersionMajor, mSpinelVersionMinor);
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        SpinelDieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
 
 exit:
