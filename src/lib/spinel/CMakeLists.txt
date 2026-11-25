@@ -133,4 +133,5 @@ if(BUILD_TESTING)
         PRIVATE -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE
     )
     add_test(NAME ot-test-spinel COMMAND ot-test-spinel)
+    set_tests_properties(ot-test-spinel PROPERTIES LABELS "spinel;unit")
 endif()

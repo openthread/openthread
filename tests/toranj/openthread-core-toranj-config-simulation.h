@@ -108,8 +108,6 @@
 
 #define OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE 1
 
-#define OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE 1
-
 #define OPENTHREAD_CONFIG_TD_MAX_REGISTERED_KEYS 8
 
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE 1
@@ -129,5 +127,30 @@
 #define OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE 0
 
 #define OPENTHREAD_CONFIG_OTNS_ENABLE 0
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// `OPENTHREAD_TORANJ_ALT_CONFIG` selects an alternate set of core
+// configurations (such as disabling `USE_HEAP` options that are
+// enabled by default) so unit tests can be built and run under both
+// configurations using `tests/toranj/build.sh --alt-config`.
+
+#ifndef OPENTHREAD_TORANJ_ALT_CONFIG
+#define OPENTHREAD_TORANJ_ALT_CONFIG 0
+#endif
+
+#if !OPENTHREAD_TORANJ_ALT_CONFIG
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Normal config
+
+#define OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE 1
+
+#else
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Alternate config
+
+#define OPENTHREAD_CONFIG_TD_KEY_LIST_USE_HEAP_ENABLE 0
+
+#endif
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #endif // OT_TORANJ_OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
