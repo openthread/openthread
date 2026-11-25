@@ -263,6 +263,19 @@ public:
     };
 
     /**
+     * Represents the outcome of comparing two `RadioAvailability` schedules (see `Compare()`).
+     */
+    enum CompareResult : uint8_t
+    {
+        kMismatchUnspecified,  ///< One schedule is unspecified (always available) and the other is specified.
+        kMismatchSlotDuration, ///< Schedules use different slot durations.
+        kMismatchPeriod,       ///< Schedules have different periods (bitmap lengths).
+        kMismatchAlignment,    ///< Slot times are not aligned (start time diff is not a multiple of slot duration).
+        kMismatchPattern,      ///< Schedules are aligned with the same period, but their shifted bit patterns differ.
+        kMatch,                ///< Schedules fully match (same effective availability over time).
+    };
+
+    /**
      * Initializes the `RadioAvailability` as cleared (not specified / always available).
      */
     RadioAvailability(void) { Clear(); }
@@ -353,6 +366,27 @@ public:
      * @retval kErrorNotFound  No available slot exists in the schedule.
      */
     Error FindNextAvailableWindow(Radio::Time64 aTime, Window &aWindow) const;
+
+    /**
+     * Compares this `RadioAvailability` schedule with another schedule.
+     *
+     * If both schedules are unspecified (`!IsSpecified()`), they are considered a match and `kMatch` is returned.
+     *
+     * @param[in] aOther  The other `RadioAvailability` schedule to compare against.
+     *
+     * @returns A `CompareResult` indicating the comparison outcome.
+     */
+    CompareResult Compare(const RadioAvailability &aOther) const;
+
+    /**
+     * Rebases the schedule's start time and rotates its bitmap so the new start time is the closest slot boundary
+     * at or after @p aTime.
+     *
+     * Does nothing if the schedule is unspecified (`!IsSpecified()`).
+     *
+     * @param[in] aTime  The reference radio time in microseconds.
+     */
+    void RebaseStartTime(Radio::Time64 aTime);
 
 private:
     struct SlotInfo
