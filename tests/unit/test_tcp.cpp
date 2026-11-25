@@ -40,8 +40,12 @@
 
 #include "common/array.hpp"
 #include "common/clearable.hpp"
+#include "common/num_utils.hpp"
 #include "common/time.hpp"
 #include "instance/instance.hpp"
+#include "net/checksum.hpp"
+
+#include "../../third_party/tcplp/tcplp.h"
 
 namespace ot {
 
@@ -186,7 +190,10 @@ static void InitializeEndpointArgs(EndpointContext &aContext, otTcpEndpointIniti
     aArgs.mReceiveBufferSize        = sizeof(aContext.mRecvBuffer);
 }
 
-static void InitHeapEndpoint(Instance *aInstance, EndpointContext &aContext)
+static void InitHeapEndpoint(Instance        *aInstance,
+                             EndpointContext &aContext,
+                             uint8_t         *aRecvBuffer     = nullptr,
+                             size_t           aRecvBufferSize = 0)
 {
     otTcpEndpointInitializeArgs args;
     otTcpEndpoint              *endpoint;
@@ -199,6 +206,13 @@ static void InitHeapEndpoint(Instance *aInstance, EndpointContext &aContext)
     aContext.mEndpoint = endpoint;
 
     InitializeEndpointArgs(aContext, args);
+
+    if (aRecvBuffer != nullptr)
+    {
+        args.mReceiveBuffer     = aRecvBuffer;
+        args.mReceiveBufferSize = aRecvBufferSize;
+    }
+
     SuccessOrQuit(otTcpEndpointInitialize(aInstance, endpoint, &args));
 }
 
@@ -476,6 +490,70 @@ static void InitLinkedBuffer(otLinkedBuffer &aBuffer, const uint8_t *aData, size
     ClearAllBytes(aBuffer);
     aBuffer.mData   = aData;
     aBuffer.mLength = aLength;
+}
+
+static struct tcpcb &GetTcb(EndpointContext &aContext) { return AsCoreType(aContext.mEndpoint).GetTcb(); }
+
+// Delivers a segment from the client (port `kClientPort1`) to the server endpoint, carrying the stream bytes
+// [aOffset, aOffset + aLength), so that tests can drop or reorder segments.
+static void InjectSegment(Instance        *aInstance,
+                          EndpointContext &aServerCtx,
+                          uint32_t         aOffset,
+                          uint16_t         aLength,
+                          bool             aFin)
+{
+    static const uint8_t kPayload[1000] = {};
+
+    const struct tcpcb &tcb     = GetTcb(aServerCtx);
+    Message            *message = aInstance->Get<MessagePool>().Allocate(Message::kTypeIp6);
+    struct tcphdr       tcpHeader;
+    Ip6::Header         ip6Header;
+    Ip6::MessageInfo    messageInfo;
+
+    VerifyOrQuit(message != nullptr);
+    VerifyOrQuit(aLength <= sizeof(kPayload));
+
+    ClearAllBytes(tcpHeader);
+    tcpHeader.th_sport  = BigEndian::HostSwap16(kClientPort1);
+    tcpHeader.th_dport  = BigEndian::HostSwap16(kServerPort);
+    tcpHeader.th_seq    = BigEndian::HostSwap32(tcb.irs + 1 + aOffset);
+    tcpHeader.th_ack    = BigEndian::HostSwap32(tcb.snd_nxt);
+    tcpHeader.th_off_x2 = (sizeof(tcpHeader) / 4) << TH_OFF_SHIFT;
+    tcpHeader.th_flags  = TH_ACK | (aFin ? TH_FIN : 0);
+    tcpHeader.th_win    = BigEndian::HostSwap16(1024);
+    SuccessOrQuit(message->Append(tcpHeader));
+    SuccessOrQuit(message->AppendBytes(kPayload, aLength));
+
+    ip6Header.Clear();
+    ip6Header.InitVersionTrafficClassFlow();
+    ip6Header.SetPayloadLength(message->GetLength());
+    ip6Header.SetNextHeader(Ip6::kProtoTcp);
+    SuccessOrQuit(ip6Header.GetSource().FromString(kClientAddrString));
+    SuccessOrQuit(ip6Header.GetDestination().FromString(kServerAddrString));
+    Checksum::UpdateMessageChecksum(*message, ip6Header.GetSource(), ip6Header.GetDestination(), Ip6::kProtoTcp);
+
+    messageInfo.Clear();
+    messageInfo.SetPeerAddr(ip6Header.GetSource());
+    messageInfo.SetSockAddr(ip6Header.GetDestination());
+
+    SuccessOrQuit(aInstance->Get<Ip6::Tcp>().HandleMessage(ip6Header, *message, messageInfo));
+    message->Free();
+    ProcessAllTasklets(aInstance);
+}
+
+// Delivers and consumes `aLength` bytes of in-order data, advancing the server's receive buffer read index.
+static void AdvanceReceiveStream(Instance *aInstance, EndpointContext &aServerCtx, uint32_t &aOffset, size_t aLength)
+{
+    while (aLength > 0)
+    {
+        uint16_t length = static_cast<uint16_t>(Min<size_t>(aLength, 1000));
+
+        InjectSegment(aInstance, aServerCtx, aOffset, length, false);
+        SuccessOrQuit(otTcpCommitReceive(aServerCtx.mEndpoint, length, 0));
+        aServerCtx.mEvents.Clear();
+        aOffset += length;
+        aLength -= length;
+    }
 }
 
 static void TestDeinitInForwardProgressTasklet(void)
@@ -830,6 +908,123 @@ static void TestDeinitInDisconnectedOnRst(void)
     testFreeInstance(instance);
 }
 
+static void TestOutOfOrderFin(void)
+{
+    Instance       *instance = InitTestInstance();
+    EndpointContext serverCtx;
+    EndpointContext clientCtx;
+    ListenerContext listenerCtx;
+
+    printf("TestOutOfOrderFin\n");
+
+    InitHeapEndpoint(instance, serverCtx);
+    InitHeapEndpoint(instance, clientCtx);
+    InitListener(instance, listenerCtx, &serverCtx, nullptr);
+
+    ConnectClient(instance, clientCtx, kClientPort1);
+
+    // Stop delivering the server's segments to the client, then inject the client's segments directly.
+    RemoveUnicastAddress(instance, kClientAddrString);
+
+    // [100, 200) and [300, 400) are missing.
+    InjectSegment(instance, serverCtx, 0, 100, false);
+    InjectSegment(instance, serverCtx, 200, 100, false);
+    InjectSegment(instance, serverCtx, 400, 100, true);
+
+    // Filling only the first gap must not report the end of stream.
+    InjectSegment(instance, serverCtx, 100, 100, false);
+    VerifyOrQuit(serverCtx.mLastBytesAvailable == 300);
+    VerifyOrQuit(!serverCtx.mLastEndOfStream);
+
+    // Filling the last gap must process the FIN without waiting for its retransmission.
+    InjectSegment(instance, serverCtx, 300, 100, false);
+    VerifyOrQuit(serverCtx.mLastBytesAvailable == 500);
+    VerifyOrQuit(serverCtx.mLastEndOfStream);
+    VerifyOrQuit(GetTcb(serverCtx).t_state == TCPS_CLOSE_WAIT);
+
+    SuccessOrQuit(otTcpListenerDeinitialize(&listenerCtx.mListener));
+    CleanupHeapEndpoint(clientCtx);
+    CleanupHeapEndpoint(serverCtx);
+    testFreeInstance(instance);
+}
+
+static void TestOutOfOrderFinWrapsAroundLargeReceiveBuffer(void)
+{
+    static uint8_t sRecvBuffer[40000];
+
+    Instance       *instance = InitTestInstance();
+    EndpointContext serverCtx;
+    EndpointContext clientCtx;
+    ListenerContext listenerCtx;
+    uint32_t        offset = 0;
+
+    printf("TestOutOfOrderFinWrapsAroundLargeReceiveBuffer\n");
+
+    InitHeapEndpoint(instance, serverCtx, sRecvBuffer, sizeof(sRecvBuffer));
+    InitHeapEndpoint(instance, clientCtx);
+    InitListener(instance, listenerCtx, &serverCtx, nullptr);
+
+    ConnectClient(instance, clientCtx, kClientPort1);
+    RemoveUnicastAddress(instance, kClientAddrString);
+
+    // Move the read index 50 bytes before the end of the buffer, so that the FIN segment [20, 120) wraps around
+    // and the index following it exceeds `INT16_MAX`.
+    AdvanceReceiveStream(instance, serverCtx, offset, GetTcb(serverCtx).recvbuf.size - 50);
+
+    InjectSegment(instance, serverCtx, offset + 20, 100, true);
+    InjectSegment(instance, serverCtx, offset, 20, false);
+    VerifyOrQuit(serverCtx.mLastBytesAvailable == 120);
+    VerifyOrQuit(serverCtx.mLastEndOfStream);
+    VerifyOrQuit(GetTcb(serverCtx).t_state == TCPS_CLOSE_WAIT);
+
+    SuccessOrQuit(otTcpListenerDeinitialize(&listenerCtx.mListener));
+    CleanupHeapEndpoint(clientCtx);
+    CleanupHeapEndpoint(serverCtx);
+    testFreeInstance(instance);
+}
+
+static void TestOutOfOrderFinAfterContiguify(void)
+{
+    Instance       *instance = InitTestInstance();
+    EndpointContext serverCtx;
+    EndpointContext clientCtx;
+    ListenerContext listenerCtx;
+    uint32_t        offset = 0;
+
+    printf("TestOutOfOrderFinAfterContiguify\n");
+
+    InitHeapEndpoint(instance, serverCtx);
+    InitHeapEndpoint(instance, clientCtx);
+    InitListener(instance, listenerCtx, &serverCtx, nullptr);
+
+    ConnectClient(instance, clientCtx, kClientPort1);
+    RemoveUnicastAddress(instance, kClientAddrString);
+
+    // Leave 50 unread bytes near the end of the buffer, then receive the FIN segment [200, 250), which wraps to
+    // buffer index 100.
+    AdvanceReceiveStream(instance, serverCtx, offset, GetTcb(serverCtx).recvbuf.size - 100);
+    InjectSegment(instance, serverCtx, offset, 50, false);
+    InjectSegment(instance, serverCtx, offset + 200, 50, true);
+
+    // Contiguify moves the FIN segment to buffer index 200.
+    SuccessOrQuit(otTcpReceiveContiguify(serverCtx.mEndpoint));
+
+    // [50, 160) covers the FIN segment's former location in the buffer, but [160, 200) is still missing.
+    InjectSegment(instance, serverCtx, offset + 50, 110, false);
+    VerifyOrQuit(!serverCtx.mLastEndOfStream);
+    VerifyOrQuit(GetTcb(serverCtx).t_state == TCPS_ESTABLISHED);
+
+    InjectSegment(instance, serverCtx, offset + 160, 40, false);
+    VerifyOrQuit(serverCtx.mLastBytesAvailable == 250);
+    VerifyOrQuit(serverCtx.mLastEndOfStream);
+    VerifyOrQuit(GetTcb(serverCtx).t_state == TCPS_CLOSE_WAIT);
+
+    SuccessOrQuit(otTcpListenerDeinitialize(&listenerCtx.mListener));
+    CleanupHeapEndpoint(clientCtx);
+    CleanupHeapEndpoint(serverCtx);
+    testFreeInstance(instance);
+}
+
 #endif // OPENTHREAD_CONFIG_TCP_ENABLE
 
 } // namespace ot
@@ -843,6 +1038,9 @@ int main(void)
     ot::TestDeinitInForwardProgressOnPiggybackedAckDataFin();
     ot::TestForwardProgressOrderingAndReinit();
     ot::TestDeinitInDisconnectedOnRst();
+    ot::TestOutOfOrderFin();
+    ot::TestOutOfOrderFinWrapsAroundLargeReceiveBuffer();
+    ot::TestOutOfOrderFinAfterContiguify();
 #endif
 
     printf("All tests passed\n");

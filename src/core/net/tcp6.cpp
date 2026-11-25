@@ -253,9 +253,17 @@ Error Tcp::Endpoint::ReceiveByReference(const otLinkedBuffer *&aBuffer)
 
 Error Tcp::Endpoint::ReceiveContiguify(void)
 {
-    struct tcpcb &tp = GetTcb();
+    struct tcpcb &tp           = GetTcb();
+    size_t        oldReadIndex = tp.recvbuf.r_index;
 
     cbuf_contiguify(&tp.recvbuf, tp.reassbmp);
+
+    // Since the buffer changed, we also need to reassign tp.reass_fin_index.
+    if ((tp.reass_fin_index >= 0) && (tp.recvbuf.size > 0))
+    {
+        tp.reass_fin_index = static_cast<int32_t>(
+            (static_cast<size_t>(tp.reass_fin_index) - 1 + tp.recvbuf.size - oldReadIndex) % tp.recvbuf.size + 1);
+    }
 
     return kErrorNone;
 }
@@ -800,7 +808,7 @@ void Tcp::ProcessSignals(Endpoint             *aEndpoint,
     if ((aSignals.recvbuf_added || aSignals.rcvd_fin) && aEndpoint->mReceiveAvailableCallback != nullptr)
     {
         aEndpoint->mReceiveAvailableCallback(aEndpoint, cbuf_used_space(&aEndpoint->GetTcb().recvbuf),
-                                             aEndpoint->GetTcb().reass_fin_index != -1,
+                                             aEndpoint->GetTcb().reass_fin_index == -2,
                                              cbuf_free_space(&aEndpoint->GetTcb().recvbuf));
         VerifyOrExit(CanProcessSignals(aEndpoint));
     }
