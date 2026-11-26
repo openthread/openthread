@@ -94,7 +94,7 @@ readonly NOT_SUPPORTED_ALLOWLIST=(
     'diag powersettings( 20)?'
     'mCsmaCaEnabled=1'
     'mMaxCsmaBackoffs=(0|100)'
-    '3 (TX|RX) ver:2003,MP,.*'
+    '3 (TX|RX) ver:2015,MP,.*'
 )
 
 TEST_TEMP_DIR="$(mktemp -d)"
