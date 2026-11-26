@@ -72,7 +72,7 @@ class TestFrameFormats(unittest.TestCase):
 
     def test_frame_format_03(self):
         frame = Frame(
-            name='ver:2003,MP,noseq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,ie[ren con],plen:0',
+            name='ver:2015,MP,noseq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,ie[ren con],plen:0',
             tx_frame='fd87dddd1020304050607080010203040506070815000000007265616401820ee80305009bb8ea011c807aa1120000',
             dst_address='8070605040302010')
         self.__test_frame_format(3, frame)
@@ -90,7 +90,7 @@ class TestFrameFormats(unittest.TestCase):
         self.__test_frame_format(5, frame)
 
     def test_frame_format_06(self):
-        frame = Frame(name='ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+        frame = Frame(name='ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
                       tx_frame='41dc00dddd102030405060708001020304050607080000',
                       dst_address='8070605040302010')
         self.__test_frame_format(6, frame)
