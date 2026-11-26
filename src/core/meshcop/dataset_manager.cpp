@@ -566,6 +566,16 @@ Coap::Message *DatasetManager::ProcessGetRequest(const Coap::Message    &aReques
             shouldAppend = false;
         }
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_4
+        // PSKc is write-only and MUST NOT be included in MGMT_ACTIVE_GET.rsp or MGMT_PENDING_GET.rsp
+        // (Thread 1.4.1 section 8.7.4.4 and 8.7.5.4).
+
+        if (tlv->GetType() == Tlv::kPskc)
+        {
+            shouldAppend = false;
+        }
+#endif
+
         if (shouldAppend)
         {
             SuccessOrExit(error = tlv->AppendTo(*response));
