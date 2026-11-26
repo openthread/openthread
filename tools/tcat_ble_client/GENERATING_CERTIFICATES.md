@@ -10,7 +10,7 @@ Extensions were introduced in version 3 of the X.509 standard for certificates. 
 
 ## Certificate Validity
 
-The TCAT Device certificates built into devices apply a validity policy of "forever valid", in this case encoded by using a year 2999. This mimics the validity policy for IDevID certificates that use the year 9999. The Commissioner certificates however are usually expected to be of a short lifetime, e.g. project-specific, and then would require interaction with the device vendor to renew. In this repo, 2 weeks validity is used as an example.
+The TCAT Device certificates built into devices apply a validity policy of "forever valid", in this case encoded by using a year 2999. This mimics the validity policy for IDevID certificates that use the year 9999. The Commissioner certificates however are usually expected to be of a short lifetime, e.g. project-specific, and then would require interaction with the device vendor to renew. In this repo, a validity of 31 days is used as an example. To select another validity, use e.g. `make commValidDays=365` in the generation by script below.
 
 ## Certificates generation (by script)
 
@@ -26,6 +26,8 @@ make
 ```
 
 This will create an `output` directory with subdirectories for each of the created identities. Each subdirectory can be used as a value for the BBTC Commissioner `--cert_path` argument, if needed.
+
+The identity `CommCert3` is signed by the other CA, which is not the CA of the TCAT Device. Its `ca_cert.pem` file contains the certificates of both CAs, so that this TCAT Commissioner does trust the TCAT Device. It is then up to the TCAT Device to reject the TCAT Commissioner, which is used for testing.
 
 ## Certificates generation (manually - not recommended)
 

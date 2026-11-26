@@ -28,25 +28,35 @@
 #
 
 # Script to generate a TCAT Commissioner X509v3 certificate.
+#
+# <NameOfCA> is the CA that signs the certificate. The optional
+# <NameOfTrustedCA> is the CA that the TCAT Commissioner trusts to verify the
+# certificate of a TCAT Device, if this is another CA than <NameOfCA>. The
+# certificate of this CA is then added to the 'ca_cert.pem' output file.
+#
+# The number of days that the certificate is valid can be set with the
+# environment variable VALIDITY_DAYS.
 
-if [ $# -ne 2 ]; then
-    echo "Usage: ./create-cert-tcat-commissioner.sh <NameOfCommissioner> <NameOfCA>"
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+    echo "Usage: ./create-cert-tcat-commissioner.sh <NameOfCommissioner> <NameOfCA> [<NameOfTrustedCA>]"
     exit 1
 fi
 set -eu
 
 # number of days certificate is valid
-((VALIDITY = "14"))
+((VALIDITY = "${VALIDITY_DAYS:-31}"))
 echo "create-cert-tcat-commissioner.sh - Using validity param -days ${VALIDITY}"
 
 NAME=${1}
 CANAME=${2}
+TRUSTEDCANAME=${3:-${CANAME}}
 ((ID = ${NAME:0-1}))
 CACERTFILE="ca/${CANAME}_cert.pem"
 
-echo "  TCAT commissioner name   : ${NAME}"
-echo "  TCAT commissioner CA name: ${CANAME}"
-echo "  Numeric serial ID        : ${ID}"
+echo "  TCAT commissioner name    : ${NAME}"
+echo "  TCAT commissioner CA name : ${CANAME}"
+echo "  Additional trusted CA name: ${TRUSTEDCANAME}"
+echo "  Numeric serial ID         : ${ID}"
 
 # create csr for TCAT Commissioner
 openssl req -new -key "keys/${NAME}_key.pem" -out "${NAME}.csr" -subj \
@@ -64,4 +74,7 @@ rm -f "${NAME}.csr"
 
 # copy supporting files, for immediate use by TCAT Commissioner as 'cert_path'
 cp "${CACERTFILE}" "output/${NAME}/ca_cert.pem"
+if [ "${TRUSTEDCANAME}" != "${CANAME}" ]; then
+    cat "ca/${TRUSTEDCANAME}_cert.pem" >>"output/${NAME}/ca_cert.pem"
+fi
 cp "keys/${NAME}_key.pem" "output/${NAME}/commissioner_key.pem"

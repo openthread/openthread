@@ -33,6 +33,10 @@
 ca := TcatCertCa
 otherCa := ca
 
+# Number of days that a TCAT Commissioner certificate is valid. To select
+# another validity, use e.g. 'make commValidDays=365'.
+commValidDays := 31
+
 .PHONY: all check-ca-key check-other-ca-key test clean
 
 all: DeviceCert1 DeviceCert2 CommCert1 CommCert2 CommCert3 CommCert4 test
@@ -61,10 +65,12 @@ DeviceCert1 DeviceCert2: check-ca-key ext/DeviceCert1.ext ext/DeviceCert2.ext
 	./create-cert-tcat-device.sh $@ $(ca)
 
 CommCert1 CommCert2 CommCert4: check-ca-key ext/CommCert1.ext ext/CommCert2.ext ext/CommCert4.ext
-	./create-cert-tcat-commissioner.sh $@ $(ca)
+	VALIDITY_DAYS=$(commValidDays) ./create-cert-tcat-commissioner.sh $@ $(ca)
 
+# CommCert3 is signed by another CA than the CA of the TCAT Device, which it
+# trusts nevertheless: it is then up to the TCAT Device to reject CommCert3.
 CommCert3: check-other-ca-key ext/CommCert3.ext
-	./create-cert-tcat-commissioner.sh $@ $(otherCa)
+	VALIDITY_DAYS=$(commValidDays) ./create-cert-tcat-commissioner.sh $@ $(otherCa) $(ca)
 
 test:
 	@echo "Testing certificate chains..."
