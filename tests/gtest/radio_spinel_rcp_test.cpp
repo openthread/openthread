@@ -2319,21 +2319,77 @@ TEST(RadioSpinelBusLatency, usesInterfaceDefaultUntilExplicitlyOverridden)
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
     EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 3000u);
+    EXPECT_EQ(sCallbackCount, 1u);
 
     // Setting the same value as the interface default does not fire a redundant callback,
     // while still latching the explicit override if the interface default changes later.
     platform.mRadioSpinel.SetBusLatency(3000);
-    EXPECT_EQ(sCallbackCount, 0u);
+    EXPECT_EQ(sCallbackCount, 1u);
     platform.mSpinelInterface.mBusLatency = 5000;
     EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 3000u);
 
     // Explicitly overriding to 0 overrides the non-zero SpinelInterface default and notifies.
     platform.mRadioSpinel.SetBusLatency(0);
     EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 0u);
-    EXPECT_EQ(sCallbackCount, 1u);
+    EXPECT_EQ(sCallbackCount, 2u);
 
     // Explicitly setting a non-zero value updates and notifies again.
     platform.mRadioSpinel.SetBusLatency(4500);
     EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 4500u);
-    EXPECT_EQ(sCallbackCount, 2u);
+    EXPECT_EQ(sCallbackCount, 3u);
+}
+
+TEST(RadioSpinelBusLatency, notifiesOnEnableAndWhenUpdatedWhileEnabled)
+{
+    static std::vector<uint32_t> sObservedLatencies;
+    static otInstance           *sObservedInstance = nullptr;
+
+    FakeCoprocessorPlatform      platform;
+    Spinel::RadioSpinelCallbacks callbacks{};
+
+    sObservedLatencies.clear();
+    sObservedInstance = nullptr;
+
+    callbacks.mReceiveDone       = [](otInstance *, otRadioFrame *, otError) {};
+    callbacks.mTransmitDone      = [](otInstance *, otRadioFrame *, otRadioFrame *, otError) {};
+    callbacks.mEnergyScanDone    = [](otInstance *, int8_t) {};
+    callbacks.mTxStarted         = [](otInstance *, otRadioFrame *) {};
+    callbacks.mBusLatencyChanged = [](otInstance *aInstance) {
+        auto &plat        = static_cast<FakeCoprocessorPlatform &>(FakePlatform::CurrentPlatform());
+        sObservedInstance = aInstance;
+        sObservedLatencies.push_back(plat.mRadioSpinel.GetBusLatency());
+    };
+    platform.mRadioSpinel.SetCallbacks(callbacks);
+
+    // Updating bus latency while disabled must not fire immediately, and must notify upon Enable().
+    platform.mRadioSpinel.SetBusLatency(1500);
+    EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 1500u);
+    EXPECT_TRUE(sObservedLatencies.empty());
+
+    // A failed Enable() must not fire mBusLatencyChanged or leave mInstance set.
+    platform.mSpinelInterface.mSendError = kErrorNoBufs;
+    EXPECT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorFailed);
+    EXPECT_FALSE(platform.mRadioSpinel.IsEnabled());
+    EXPECT_TRUE(sObservedLatencies.empty());
+    platform.mSpinelInterface.mSendError = kErrorNone;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    EXPECT_EQ(sObservedInstance, FakePlatform::CurrentInstance());
+    EXPECT_EQ(sObservedLatencies, std::vector<uint32_t>({1500u}));
+
+    // Setting the same value while enabled does not fire a redundant notification.
+    platform.mRadioSpinel.SetBusLatency(1500);
+    EXPECT_EQ(sObservedLatencies, std::vector<uint32_t>({1500u}));
+
+    // Setting a new value while enabled fires immediately.
+    platform.mRadioSpinel.SetBusLatency(3200);
+    EXPECT_EQ(sObservedLatencies, std::vector<uint32_t>({1500u, 3200u}));
+
+    // Updating while disabled after Disable() notifies again on the next Enable().
+    ASSERT_EQ(platform.mRadioSpinel.Disable(), kErrorNone);
+    platform.mRadioSpinel.SetBusLatency(800);
+    EXPECT_EQ(sObservedLatencies, std::vector<uint32_t>({1500u, 3200u}));
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    EXPECT_EQ(sObservedLatencies, std::vector<uint32_t>({1500u, 3200u, 800u}));
 }

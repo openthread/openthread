@@ -1953,9 +1953,15 @@ otError RadioSpinel::Enable(otInstance *aInstance)
 
     mState = kStateSleep;
 
+    if (mCallbacks.mBusLatencyChanged != nullptr)
+    {
+        mCallbacks.mBusLatencyChanged(mInstance);
+    }
+
 exit:
     if (error != OT_ERROR_NONE)
     {
+        mInstance = nullptr;
         LogWarn("RadioSpinel enable: %s", otThreadErrorToString(error));
         error = OT_ERROR_FAILED;
     }
