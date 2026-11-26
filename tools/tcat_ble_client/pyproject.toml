@@ -14,3 +14,11 @@ python = "^3.10"
 bleak = "^1.0"
 cryptography = "^50.0"
 pyreadline3 = { version = "^3.5", platform = "win32" }
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.2.0,<10.0.0)"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

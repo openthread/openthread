@@ -252,6 +252,13 @@ jobs:
           exit 1
         fi
         echo "${venv_path}/bin" >> "${GITHUB_PATH}"
+    - name: Run TCAT Commissioner Unit Tests
+      if: matrix.category == 'cli'
+      timeout-minutes: 5
+      working-directory: tools/tcat_ble_client
+      env:
+        POETRY_KEYRING_ENABLED: 'false'
+      run: poetry run pytest
     - name: Run RCP Mode
       run: |
         ulimit -c unlimited

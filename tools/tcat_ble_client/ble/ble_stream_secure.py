@@ -54,6 +54,9 @@ class BleStreamSecure:
     def __init__(self, stream):
         self.stream = stream
         self.ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        # TCAT over BLE has no server hostname (wrap_bio passes server_hostname=None);
+        # certificate chain verification remains enforced via CERT_REQUIRED.
+        self.ssl_context.check_hostname = False
         self.incoming = ssl.MemoryBIO()
         self.outgoing = ssl.MemoryBIO()
         self.ssl_object = None
@@ -190,28 +193,40 @@ class BleStreamSecure:
     # Precondition: caller must acquire _recv_lock before calling this method
     # Precondition: caller must handle all exceptions raised
     async def _recv(self, buffersize: int = TLS_BUFFER_SIZE, timeout: float = 0.0) -> bytes:
-        if self._close_notify_received and self._close_notify_sent:
+        if self.ssl_object is None or (self._close_notify_received and self._close_notify_sent):
             return b''
 
-        end_time = asyncio.get_running_loop().time() + timeout
-        data = await self.stream.recv(buffersize)
-        while not data and asyncio.get_running_loop().time() < end_time:
-            await asyncio.sleep(POLL_INTERVAL_SEC)
+        loop = asyncio.get_running_loop()
+        end_time = loop.time() + timeout
+
+        if self.ssl_object.pending() == 0 and self.incoming.pending == 0:
+            if not self.stream.is_connected:
+                return b''
             data = await self.stream.recv(buffersize)
-        if not data:
-            return b''
+            while not data and self.stream.is_connected and loop.time() < end_time:
+                await asyncio.sleep(POLL_INTERVAL_SEC)
+                if self.stream.is_connected:
+                    data = await self.stream.recv(buffersize)
+            if not data:
+                return b''
+            self.incoming.write(data)
 
-        self.incoming.write(data)
+        record_end_time = max(end_time, loop.time() + TCAT_RESPONSE_TIMEOUT_SEC)
         while True:
             try:
                 decode = self.ssl_object.read(buffersize)
                 break
             # if _recv called before entire message was received from the link
             except ssl.SSLWantReadError:
-                more = await self.stream.recv(buffersize)
-                while not more:
-                    await asyncio.sleep(POLL_INTERVAL_SEC)
+                more = b''
+                while not more and self.stream.is_connected and loop.time() < record_end_time:
                     more = await self.stream.recv(buffersize)
+                    if not more and self.stream.is_connected and loop.time() < record_end_time:
+                        await asyncio.sleep(POLL_INTERVAL_SEC)
+                if not more:
+                    if self.stream.is_connected:
+                        logger.warning('Timed out waiting for complete TLS record.')
+                    return b''
                 self.incoming.write(more)
 
         hexdump_str = utils.hexdump_ot("Rx", decode) if len(decode) > 0 else ''
@@ -246,7 +261,7 @@ class BleStreamSecure:
             # then send the data (command) and wait for the response (1 TLV or line)
             await self._send(data)
             res = await self._recv(timeout=timeout)
-            if len(res) == 0:
+            if len(res) == 0 and self.stream.is_connected:
                 logger.error(f'No response when response TLV/line expected (timeout={timeout}s).')
             return res
 
