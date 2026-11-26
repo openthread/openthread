@@ -308,8 +308,10 @@ public:
 
         const Mac::ExtAddress    savedExtAddr  = ExtAddressFromSeed(0x61);
         const Mac::ExtAddress    parentExtAddr = ExtAddressFromSeed(0x71);
+        Ip6::Address             expectedLinkLocal;
         Ip6::InterfaceIdentifier savedMeshIid;
 
+        expectedLinkLocal.InitAsLinkLocalAddress(savedExtAddr);
         savedMeshIid.InitFromExtAddress(ExtAddressFromSeed(0x81));
 
         for (const InvalidCase &testCase : kInvalidCases)
@@ -342,6 +344,7 @@ public:
             VerifyOrQuit(mle.GetRloc16() == Mle::kInvalidRloc16);
             VerifyOrQuit(instance->Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid);
             VerifyOrQuit(instance->Get<Mac::Mac>().GetExtAddress() == savedExtAddr);
+            VerifyOrQuit(mle.GetLinkLocalAddress() == expectedLinkLocal);
             VerifyOrQuit(mle.GetMeshLocalEid().GetIid() == savedMeshIid);
             VerifyOrQuit(!mle.GetParent().IsStateValidOrRestoring());
 #if OPENTHREAD_FTD
@@ -379,6 +382,7 @@ public:
             VerifyOrQuit(mle.HasRestored());
             VerifyOrQuit(mle.GetRloc16() == kNewChildRloc16);
             VerifyOrQuit(instance->Get<Mac::Mac>().GetShortAddress() == kNewChildRloc16);
+            VerifyOrQuit(mle.GetLinkLocalAddress() == expectedLinkLocal);
             VerifyOrQuit(mle.GetParent().IsStateRestored());
             VerifyOrQuit(mle.GetParent().GetRloc16() == kNewParentRloc16);
 
@@ -409,6 +413,7 @@ public:
             VerifyOrQuit(mle.HasRestored());
             VerifyOrQuit(mle.GetRloc16() == kNewParentRloc16);
             VerifyOrQuit(instance->Get<Mac::Mac>().GetShortAddress() == kNewParentRloc16);
+            VerifyOrQuit(mle.GetLinkLocalAddress() == expectedLinkLocal);
             VerifyOrQuit(mle.mRouterId == Mle::RouterIdFromRloc16(kNewParentRloc16));
 
             testFreeInstance(instance);
@@ -1301,6 +1306,78 @@ void TestRouterTableRouterIdBounds(void)
 }
 #endif
 
+static void HandleLinkLocalStateChanged(otChangedFlags aFlags, void *aContext)
+{
+    if (aFlags & OT_CHANGED_THREAD_LL_ADDR)
+    {
+        (*static_cast<uint32_t *>(aContext))++;
+    }
+}
+
+void TestLinkLocalAddressUpdateOnExtAddressChange(void)
+{
+    Instance             *instance              = static_cast<Instance *>(testInitInstance());
+    Mac::Mac             &mac                   = instance->Get<Mac::Mac>();
+    Mle::Mle             &mle                   = instance->Get<Mle::Mle>();
+    ThreadNetif          &netif                 = instance->Get<ThreadNetif>();
+    const Mac::ExtAddress extAddr1              = ExtAddressFromSeed(0x11);
+    const Mac::ExtAddress extAddr2              = ExtAddressFromSeed(0x22);
+    uint32_t              linkLocalChangedCount = 0;
+    Ip6::Address          expected1;
+    Ip6::Address          expected2;
+    Ip6::Address          initialExpected;
+
+    VerifyOrQuit(instance != nullptr);
+
+    initialExpected.InitAsLinkLocalAddress(mac.GetExtAddress());
+    expected1.InitAsLinkLocalAddress(extAddr1);
+    expected2.InitAsLinkLocalAddress(extAddr2);
+
+    // Flush initial boot Notifier events before registering test callback.
+    instance->Get<Tasklet::Scheduler>().ProcessQueuedTasklets();
+    SuccessOrQuit(instance->Get<Notifier>().RegisterCallback(HandleLinkLocalStateChanged, &linkLocalChangedCount));
+
+    // After init while ThreadNetif is down: link-local matches initial random ExtAddress and is not on ThreadNetif.
+    VerifyOrQuit(!netif.IsUp());
+    VerifyOrQuit(mle.GetLinkLocalAddress() == initialExpected);
+    VerifyOrQuit(!netif.HasUnicastAddress(mle.GetLinkLocalAddress()));
+
+    // Updating ExtAddress while ThreadNetif is down updates link-local IID without adding to ThreadNetif.
+    mac.SetExtAddress(extAddr1);
+    instance->Get<Tasklet::Scheduler>().ProcessQueuedTasklets();
+    VerifyOrQuit(mle.GetLinkLocalAddress() == expected1);
+    VerifyOrQuit(!netif.HasUnicastAddress(expected1));
+    VerifyOrQuit(linkLocalChangedCount == 1);
+
+    // Setting the same ExtAddress is a no-op.
+    mac.SetExtAddress(extAddr1);
+    instance->Get<Tasklet::Scheduler>().ProcessQueuedTasklets();
+    VerifyOrQuit(linkLocalChangedCount == 1);
+
+    // Bringing ThreadNetif up adds the link-local address.
+    netif.Up();
+    instance->Get<Tasklet::Scheduler>().ProcessQueuedTasklets();
+    VerifyOrQuit(netif.HasUnicastAddress(expected1));
+    VerifyOrQuit(linkLocalChangedCount == 2);
+
+    // Updating ExtAddress while ThreadNetif is up replaces the unicast address on ThreadNetif.
+    mac.SetExtAddress(extAddr2);
+    instance->Get<Tasklet::Scheduler>().ProcessQueuedTasklets();
+    VerifyOrQuit(mle.GetLinkLocalAddress() == expected2);
+    VerifyOrQuit(!netif.HasUnicastAddress(expected1));
+    VerifyOrQuit(netif.HasUnicastAddress(expected2));
+    VerifyOrQuit(linkLocalChangedCount == 3);
+
+    // Bringing ThreadNetif down removes the link-local address while keeping GetLinkLocalAddress() intact.
+    netif.Down();
+    instance->Get<Tasklet::Scheduler>().ProcessQueuedTasklets();
+    VerifyOrQuit(!netif.HasUnicastAddress(expected2));
+    VerifyOrQuit(mle.GetLinkLocalAddress() == expected2);
+
+    testFreeInstance(instance);
+    printf("TestLinkLocalAddressUpdateOnExtAddressChange passed\n");
+}
+
 } // namespace ot
 
 int main(void)
@@ -1310,6 +1387,7 @@ int main(void)
     ot::TestRouterIdMask();
     ot::UnitTester::TestChildIdResponseNetworkDataHandling();
     ot::UnitTester::TestRestoreRloc16Validation();
+    ot::TestLinkLocalAddressUpdateOnExtAddressChange();
 
 #if OPENTHREAD_FTD
     ot::UnitTester::TestTxChallengeTable();

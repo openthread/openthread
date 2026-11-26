@@ -111,8 +111,6 @@ otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
 
     instance.Get<Mac::Mac>().SetExtAddress(AsCoreType(aExtAddress));
 
-    instance.Get<Mle::Mle>().UpdateLinkLocalAddress();
-
 exit:
     return error;
 }

@@ -78,6 +78,13 @@ public:
     explicit SourceMatchController(Instance &aInstance);
 
     /**
+     * Initializes the `SourceMatchController`.
+     *
+     * Must be called after the OpenThread `Instance` and `Mac` are initialized (from `Instance::AfterInit()`).
+     */
+    void Init(void) { ClearTable(); }
+
+    /**
      * Returns the current state of source address matching.
      *
      * @returns `true` if source address matching is enabled, `false` otherwise.
