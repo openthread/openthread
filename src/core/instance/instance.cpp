@@ -464,6 +464,9 @@ void Instance::AfterInit(void)
 
     Get<KeyManager>().Init();
     Get<Mac::Mac>().Init();
+#if OPENTHREAD_FTD
+    Get<SourceMatchController>().Init();
+#endif
 
     // Restore datasets and network information
 
