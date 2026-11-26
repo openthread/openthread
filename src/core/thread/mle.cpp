@@ -778,7 +778,11 @@ void Mle::UpdateLinkLocalAddress(void)
 {
     Get<ThreadNetif>().RemoveUnicastAddress(mLinkLocalAddress);
     mLinkLocalAddress.GetAddress().GetIid().InitFromExtAddress(Get<Mac::Mac>().GetExtAddress());
-    Get<ThreadNetif>().AddUnicastAddress(mLinkLocalAddress);
+
+    if (Get<ThreadNetif>().IsUp())
+    {
+        Get<ThreadNetif>().AddUnicastAddress(mLinkLocalAddress);
+    }
 
     Get<Notifier>().Signal(kEventThreadLinkLocalAddrChanged);
 }

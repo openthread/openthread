@@ -112,7 +112,7 @@ Mac::Mac(Instance &aInstance)
     mLinks.Enable();
 
     mLinks.SetPanId(GetPanId());
-    SetExtAddress(randomExtAddress);
+    mLinks.SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
 #if OPENTHREAD_FTD
     SetAlternateShortAddress(kShortAddrInvalid);
@@ -377,6 +377,17 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
     mLinks.SetRxOnWhenIdle(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
+
+exit:
+    return;
+}
+
+void Mac::SetExtAddress(const ExtAddress &aExtAddress)
+{
+    VerifyOrExit(GetExtAddress() != aExtAddress);
+
+    mLinks.SetExtAddress(aExtAddress);
+    Get<Mle::Mle>().UpdateLinkLocalAddress();
 
 exit:
     return;
