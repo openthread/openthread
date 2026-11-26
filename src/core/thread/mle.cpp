@@ -5376,7 +5376,7 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
 
     VerifyOrExit(IsValidRloc16(sourceAddress), error = kErrorParse);
 
-    VerifyOrExit(mState != kStateChildIdRequest, error = kErrorInvalidState);
+    VerifyOrExit(mState != kStateChildIdRequest);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadVersionTlv(version));
 
@@ -5544,6 +5544,18 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     if (ShouldUseFastAttach() && mState == kStateParentRequest &&
         mParentCandidate.GetTwoWayLinkQuality() == kLinkQuality3 && HasAcceptableParentCandidate())
     {
+        // A sleepy device keeps its radio on until the Parent Request
+        // wait time would have expired, as in a legacy attach, so that
+        // late Parent Responses from other routers are ACKed while it
+        // polls for the Child ID Response.
+
+        TimeMilli now = TimerMilli::GetNow();
+
+        if (!Get<Mle>().IsRxOnWhenIdle() && mTimer.IsRunning() && (now < mTimer.GetFireTime()))
+        {
+            Get<MeshForwarder>().HoldRxOnWhenIdle(mTimer.GetFireTime() - now);
+        }
+
         mTimer.Start(0);
     }
 #endif

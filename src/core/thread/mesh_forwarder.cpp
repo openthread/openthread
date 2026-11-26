@@ -80,6 +80,9 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mDelayNextTx(false)
     , mTxDelayTimer(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    , mRxOnHoldTimer(aInstance)
+#endif
     , mScheduleTransmissionTask(aInstance)
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mIndirectSender(aInstance)
@@ -117,6 +120,10 @@ void MeshForwarder::Stop(void)
     Get<SupervisionListener>().Stop();
     mSleepMode = kNonSleepy;
     ClearAllSleepSuspendRequesters();
+
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    mRxOnHoldTimer.Stop();
+#endif
 
     Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMeshForwarder);
     Get<Mle::DiscoverScanner>().Stop();
@@ -857,6 +864,17 @@ void MeshForwarder::SetSleepMode(SleepMode aMode)
     VerifyOrExit(mSleepMode != aMode);
 
     mSleepMode = aMode;
+
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    // The rx-on hold applies only to a sleepy device. It survives the
+    // brief `kDetachedSleepy` while attach completes, but ends when
+    // the device is no longer sleepy (e.g., Thread is stopped).
+    if (aMode == kNonSleepy)
+    {
+        mRxOnHoldTimer.Stop();
+    }
+#endif
+
     UpdateSleepState();
 
 exit:
@@ -885,6 +903,16 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+void MeshForwarder::HoldRxOnWhenIdle(uint32_t aDuration)
+{
+    mRxOnHoldTimer.Start(aDuration);
+    UpdateSleepState();
+}
+
+void MeshForwarder::HandleRxOnHoldTimer(void) { UpdateSleepState(); }
+#endif
+
 void MeshForwarder::UpdateSleepState(void)
 {
     VerifyOrExit(mEnabled);
@@ -898,13 +926,21 @@ void MeshForwarder::UpdateSleepState(void)
         break;
 
     case kDetachedSleepy:
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+        Get<Mac::Mac>().SetRxOnWhenIdle(IsSleepModeSuspended() || IsRxOnWhenIdleHeld());
+#else
         Get<Mac::Mac>().SetRxOnWhenIdle(IsSleepModeSuspended());
+#endif
         mDataPollSender.StopPolling();
         Get<SupervisionListener>().Stop();
         break;
 
     case kSleepy:
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+        Get<Mac::Mac>().SetRxOnWhenIdle(IsSleepModeSuspended() || IsRxOnWhenIdleHeld());
+#else
         Get<Mac::Mac>().SetRxOnWhenIdle(IsSleepModeSuspended());
+#endif
         Get<SupervisionListener>().Start();
 
         if (IsSleepModeSuspended())

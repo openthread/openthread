@@ -165,6 +165,33 @@ static uint32_t MeasureAttachTime(Core &aNexus, FirstTxObserver &aObserver, Node
     return attachTime;
 }
 
+// Returns the time in ms that the DUT keeps its radio on while idle during the
+// `aDurationMs` that follow its first Parent Request.
+static uint32_t MeasureIdleRxOnTime(Core &aNexus, FirstTxObserver &aObserver, Node &aDut, uint32_t aDurationMs)
+{
+    uint32_t rxOnMs = 0;
+
+    aObserver.Arm(aDut);
+
+    for (uint32_t waited = 0; !aObserver.HasSeenTx(); waited++)
+    {
+        VerifyOrQuit(waited < kMaxFirstTxWaitMs);
+        aNexus.AdvanceTime(1);
+    }
+
+    for (uint32_t ms = 0; ms < aDurationMs; ms++)
+    {
+        aNexus.AdvanceTime(1);
+
+        if (aDut.Get<MeshForwarder>().GetRxOnWhenIdle())
+        {
+            rxOnMs++;
+        }
+    }
+
+    return rxOnMs;
+}
+
 void TestFastAttachChild(void)
 {
     Core            nexus;
@@ -207,6 +234,7 @@ void TestFastAttachChild(void)
     uint32_t fastAttachMs     = MeasureAttachTime(nexus, observer, fastDut, fastStartDelayMs);
     VerifyOrQuit(fastStartDelayMs <= kMaxFastStartDelayMs);
     VerifyOrQuit(fastDut.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(!fastDut.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
 
     // Flag must be auto-cleared after successful attach.
     VerifyOrQuit(!fastDut.Get<Mle::Mle>().IsFastAttachEnabled());
@@ -528,6 +556,410 @@ void TestFastAttachBelowLinkQuality3(void)
     VerifyOrQuit(!dut.Get<Mle::Mle>().IsFastAttachEnabled());
 }
 
+void TestFastAttachSedRxOnHold(void)
+{
+    static constexpr uint8_t  kNumRouters       = 3;
+    static constexpr uint32_t kRequestWaitMs    = 750; // First Parent Request is to Routers only.
+    static constexpr uint32_t kAfterWaitMs      = kRequestWaitMs + 150;
+    static constexpr uint32_t kMaxFastSedAttach = kRequestWaitMs - 50;
+
+    Core            nexus;
+    Node           &leader   = nexus.CreateNode();
+    Node           &fastDut  = nexus.CreateNode();
+    Node           &slowDut  = nexus.CreateNode();
+    Node           &slowRxOn = nexus.CreateNode();
+    Node           &fastRxOn = nexus.CreateNode();
+    Node           *routers[kNumRouters];
+    Node           *responders[kNumRouters + 1];
+    FirstTxObserver observer(nexus);
+
+    leader.SetName("LEADER");
+    fastDut.SetName("FAST_SED");
+    slowDut.SetName("SLOW_SED");
+
+    for (uint8_t i = 0; i < kNumRouters; i++)
+    {
+        routers[i] = &nexus.CreateNode();
+    }
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
+
+    leader.Form();
+    nexus.AdvanceTime(13 * Time::kOneSecondInMsec);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    responders[0] = &leader;
+
+    for (uint8_t i = 0; i < kNumRouters; i++)
+    {
+        routers[i]->Join(leader, Node::kAsFtd);
+        nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+        responders[i + 1] = routers[i];
+    }
+
+    nexus.AdvanceTime(200 * Time::kOneSecondInMsec);
+
+    for (Node *router : routers)
+    {
+        VerifyOrQuit(router->Get<Mle::Mle>().IsRouter());
+    }
+
+    nexus.AddObserver(observer);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("SLOW_SED (legacy): radio goes to sleep right after the Child ID Request");
+
+    {
+        uint32_t startDelayMs = 0;
+        uint32_t attachMs;
+
+        slowDut.Join(leader, Node::kAsSed);
+        attachMs = MeasureAttachTime(nexus, observer, slowDut, startDelayMs);
+
+        VerifyOrQuit(attachMs >= kMinLegacyAttachMs);
+        VerifyOrQuit(!slowDut.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+        VerifyOrQuit(!slowDut.Get<MeshForwarder>().GetRxOnWhenIdle());
+    }
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("FAST_SED: radio stays on until the Parent Request wait expires while it polls, so that the late Parent");
+    Log("Responses from the other routers are ACKed and not retransmitted");
+
+    {
+        uint32_t startDelayMs  = 0;
+        uint32_t retriesBefore = 0;
+        uint32_t retriesAfter  = 0;
+        uint32_t attachMs;
+
+        for (Node *node : responders)
+        {
+            retriesBefore += node->Get<Mac::Mac>().GetCounters().mTxRetry;
+        }
+
+        SuccessOrQuit(fastDut.Get<Mle::Mle>().SetFastAttachEnabled(true));
+        fastDut.Join(leader, Node::kAsSed);
+        attachMs = MeasureAttachTime(nexus, observer, fastDut, startDelayMs);
+
+        Log("FAST_SED attached %u ms after its first Parent Request", attachMs);
+
+        // The Child ID Response was retrieved by polling, well before the wait expired.
+        VerifyOrQuit(attachMs <= kMaxFastSedAttach);
+        VerifyOrQuit(fastDut.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+        VerifyOrQuit(fastDut.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+        nexus.AdvanceTime(kAfterWaitMs - attachMs);
+
+        VerifyOrQuit(fastDut.Get<Mle::Mle>().IsChild());
+        VerifyOrQuit(!fastDut.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+        VerifyOrQuit(!fastDut.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+        for (Node *node : responders)
+        {
+            retriesAfter += node->Get<Mac::Mac>().GetCounters().mTxRetry;
+        }
+
+        Log("Router MAC tx retries during the attach: %u", retriesAfter - retriesBefore);
+        VerifyOrQuit(retriesAfter == retriesBefore);
+    }
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Idle rx-on time from the first Parent Request: Fast Attach must not exceed a legacy attach");
+
+    {
+        static constexpr uint32_t kMeasureMs = 2000;
+        // The two times are equal up to CSMA backoff and timer granularity.
+        static constexpr uint32_t kToleranceMs = 20;
+
+        uint32_t legacyRxOnMs;
+        uint32_t fastRxOnMs;
+
+        slowRxOn.Join(leader, Node::kAsSed);
+        legacyRxOnMs = MeasureIdleRxOnTime(nexus, observer, slowRxOn, kMeasureMs);
+
+        SuccessOrQuit(fastRxOn.Get<Mle::Mle>().SetFastAttachEnabled(true));
+        fastRxOn.Join(leader, Node::kAsSed);
+        fastRxOnMs = MeasureIdleRxOnTime(nexus, observer, fastRxOn, kMeasureMs);
+
+        Log("Idle rx-on time: legacy SED %u ms, FAST_SED %u ms", legacyRxOnMs, fastRxOnMs);
+
+        VerifyOrQuit(slowRxOn.Get<Mle::Mle>().IsChild());
+        VerifyOrQuit(fastRxOn.Get<Mle::Mle>().IsChild());
+        VerifyOrQuit(fastRxOnMs <= legacyRxOnMs + kToleranceMs);
+    }
+
+    nexus.RemoveObserver(observer);
+}
+
+void TestFastAttachSedRepeatedAttach(void)
+{
+    static constexpr uint8_t  kNumRouters    = 3;
+    static constexpr uint8_t  kNumTrials     = 40;
+    static constexpr uint32_t kRequestWaitMs = 750;
+    static constexpr uint32_t kAfterWaitMs   = kRequestWaitMs + 150;
+    static constexpr uint32_t kStopDuringMs  = 300;
+
+    Core            nexus;
+    Node           &leader = nexus.CreateNode();
+    Node           &dut    = nexus.CreateNode();
+    Node           *routers[kNumRouters];
+    Node           *responders[kNumRouters + 1];
+    FirstTxObserver observer(nexus);
+    uint32_t        heldTrials    = 0;
+    uint32_t        stoppedTrials = 0;
+
+    leader.SetName("LEADER");
+    dut.SetName("SED");
+
+    for (uint8_t i = 0; i < kNumRouters; i++)
+    {
+        routers[i] = &nexus.CreateNode();
+    }
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
+
+    leader.Form();
+    nexus.AdvanceTime(13 * Time::kOneSecondInMsec);
+
+    responders[0] = &leader;
+
+    for (uint8_t i = 0; i < kNumRouters; i++)
+    {
+        routers[i]->Join(leader, Node::kAsFtd);
+        nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+        responders[i + 1] = routers[i];
+    }
+
+    nexus.AdvanceTime(200 * Time::kOneSecondInMsec);
+
+    nexus.AddObserver(observer);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Repeated SED Fast Attach: hold is armed and released on every attach, and Stop() clears it");
+
+    for (uint8_t trial = 0; trial < kNumTrials; trial++)
+    {
+        uint32_t retriesBefore = 0;
+        uint32_t retriesAfter  = 0;
+        bool     stopDuring    = (trial % 4 == 3);
+
+        for (Node *node : responders)
+        {
+            retriesBefore += node->Get<Mac::Mac>().GetCounters().mTxRetry;
+        }
+
+        SuccessOrQuit(dut.Get<Mle::Mle>().SetFastAttachEnabled(true));
+        observer.Arm(dut);
+
+        if (trial == 0)
+        {
+            dut.Join(leader, Node::kAsSed);
+        }
+        else
+        {
+            SuccessOrQuit(dut.Get<Mle::Mle>().Start());
+        }
+
+        for (uint32_t waited = 0; !observer.HasSeenTx(); waited++)
+        {
+            VerifyOrQuit(waited < kMaxFirstTxWaitMs);
+            nexus.AdvanceTime(1);
+        }
+
+        for (uint32_t waited = 0; !dut.Get<Mle::Mle>().IsChild(); waited++)
+        {
+            VerifyOrQuit(waited < kMaxAttachTimeMs);
+            nexus.AdvanceTime(1);
+        }
+
+        {
+            uint32_t attachMs = static_cast<uint32_t>((nexus.GetNowMicro64() - observer.GetFirstTxTime()) / 1000);
+
+            VerifyOrQuit(attachMs < kRequestWaitMs);
+        }
+
+        // The hold is armed after an early select by a sleepy device.
+        VerifyOrQuit(dut.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+        VerifyOrQuit(dut.Get<MeshForwarder>().GetRxOnWhenIdle());
+        heldTrials++;
+
+        if (stopDuring)
+        {
+            uint32_t elapsed = static_cast<uint32_t>((nexus.GetNowMicro64() - observer.GetFirstTxTime()) / 1000);
+
+            if (elapsed < kStopDuringMs)
+            {
+                nexus.AdvanceTime(kStopDuringMs - elapsed);
+            }
+
+            // Stopping Thread while the hold is active must clear it.
+            dut.Get<Mle::Mle>().Stop();
+            VerifyOrQuit(!dut.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+            stoppedTrials++;
+
+            // The hold timer must not fire or affect a disabled device.
+            nexus.AdvanceTime(kAfterWaitMs);
+            VerifyOrQuit(dut.Get<Mle::Mle>().IsDisabled());
+            VerifyOrQuit(!dut.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+        }
+        else
+        {
+            uint32_t elapsed = static_cast<uint32_t>((nexus.GetNowMicro64() - observer.GetFirstTxTime()) / 1000);
+
+            nexus.AdvanceTime(kAfterWaitMs - elapsed);
+
+            VerifyOrQuit(dut.Get<Mle::Mle>().IsChild());
+            VerifyOrQuit(!dut.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+            VerifyOrQuit(!dut.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+            dut.Get<Mle::Mle>().Stop();
+            nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+        }
+
+        for (Node *node : responders)
+        {
+            retriesAfter += node->Get<Mac::Mac>().GetCounters().mTxRetry;
+        }
+
+        // Every late Parent Response was ACKed on the first attempt.
+        VerifyOrQuit(retriesAfter == retriesBefore);
+    }
+
+    Log("%u attaches: hold armed in %u, Stop() during the hold in %u", kNumTrials, heldTrials, stoppedTrials);
+
+    nexus.RemoveObserver(observer);
+}
+
+struct UdpCounter
+{
+    Node       *mNode;
+    otUdpSocket mSocket;
+    uint32_t    mRxCount;
+
+    void Init(Node &aNode, uint16_t aPort)
+    {
+        otSockAddr bindAddr;
+
+        ClearAllBytes(*this);
+        ClearAllBytes(bindAddr);
+
+        mNode          = &aNode;
+        bindAddr.mPort = aPort;
+
+        SuccessOrQuit(otUdpOpen(mNode, &mSocket, HandleReceive, this));
+        SuccessOrQuit(otUdpBind(mNode, &mSocket, &bindAddr, OT_NETIF_THREAD_INTERNAL));
+    }
+
+    void Close(void) { SuccessOrQuit(otUdpClose(mNode, &mSocket)); }
+
+    static void HandleReceive(void *aContext, otMessage *, const otMessageInfo *)
+    {
+        static_cast<UdpCounter *>(aContext)->mRxCount++;
+    }
+};
+
+// Sends a link-local multicast UDP datagram, which is a broadcast frame at the MAC layer.
+static void SendLinkLocalMulticast(Node &aSender, uint16_t aPort)
+{
+    Ip6::Udp::Socket socket(aSender, nullptr, nullptr);
+    Ip6::MessageInfo messageInfo;
+    Message         *message;
+
+    SuccessOrQuit(socket.Open(Ip6::kNetifThreadInternal));
+    message = socket.NewMessage();
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(message->Append<uint8_t>(0xa5));
+
+    messageInfo.SetPeerAddr(Ip6::Address::GetLinkLocalAllNodesMulticast());
+    messageInfo.SetPeerPort(aPort);
+
+    SuccessOrQuit(socket.SendTo(*message, messageInfo));
+    SuccessOrQuit(socket.Close());
+}
+
+void TestFastAttachBroadcastFilteredWhileHeld(void)
+{
+    static constexpr uint16_t kUdpPort = 5000;
+
+    Core       nexus;
+    Node      &leader = nexus.CreateNode();
+    Node      &med    = nexus.CreateNode();
+    Node      &sed    = nexus.CreateNode();
+    UdpCounter medRx;
+    UdpCounter sedRx;
+    uint32_t   filteredBefore;
+
+    leader.SetName("LEADER");
+    med.SetName("MED");
+    sed.SetName("SED");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
+
+    leader.Form();
+    nexus.AdvanceTime(13 * Time::kOneSecondInMsec);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    med.Join(leader, Node::kAsMed);
+    nexus.AdvanceTime(10 * Time::kOneSecondInMsec);
+    VerifyOrQuit(med.Get<Mle::Mle>().IsChild());
+
+    medRx.Init(med, kUdpPort);
+    sedRx.Init(sed, kUdpPort);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Control: an rx-on device receives the link-local multicast datagram");
+
+    SendLinkLocalMulticast(leader, kUdpPort);
+    nexus.AdvanceTime(100);
+    VerifyOrQuit(medRx.mRxCount == 1);
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("SED after a Fast Attach early select: broadcast frames are filtered while the radio is only held on");
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SetFastAttachEnabled(true));
+    sed.Join(leader, Node::kAsSed);
+
+    for (uint32_t waited = 0; !sed.Get<Mle::Mle>().IsChild(); waited++)
+    {
+        VerifyOrQuit(waited < kMaxAttachTimeMs);
+        nexus.AdvanceTime(1);
+    }
+
+    VerifyOrQuit(sed.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+    filteredBefore = sed.Get<Mac::Mac>().GetCounters().mRxDestAddrFiltered;
+
+    SendLinkLocalMulticast(leader, kUdpPort);
+    nexus.AdvanceTime(50);
+
+    VerifyOrQuit(sedRx.mRxCount == 0);
+    VerifyOrQuit(sed.Get<Mac::Mac>().GetCounters().mRxDestAddrFiltered > filteredBefore);
+    VerifyOrQuit(sed.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Suspending sleepy operation takes precedence over the hold: the radio is then simply rx-on");
+
+    sed.Get<MeshForwarder>().SuspendSleepyOperation(MeshForwarder::kRequesterDiscoverScanner);
+    VerifyOrQuit(!sed.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+    VerifyOrQuit(sed.Get<MeshForwarder>().GetRxOnWhenIdle());
+
+    SendLinkLocalMulticast(leader, kUdpPort);
+    nexus.AdvanceTime(50);
+    VerifyOrQuit(sedRx.mRxCount == 1);
+
+    sed.Get<MeshForwarder>().ResumeSleepyOperation(MeshForwarder::kRequesterDiscoverScanner);
+    VerifyOrQuit(sed.Get<MeshForwarder>().IsRxOnWhenIdleHeld());
+
+    medRx.Close();
+    sedRx.Close();
+}
+
 /**
  * Fast Attach: verify router-side jitter scaling with multiple Routers when the
  * Parent Request has both the E and F flags set.
@@ -659,6 +1091,9 @@ int main(void)
     ot::Nexus::TestFastAttachAnnounceAttach();
     ot::Nexus::TestFastAttachBelowLinkQuality3();
     ot::Nexus::TestFastAttachRoutersAndReeds();
+    ot::Nexus::TestFastAttachSedRxOnHold();
+    ot::Nexus::TestFastAttachSedRepeatedAttach();
+    ot::Nexus::TestFastAttachBroadcastFilteredWhileHeld();
     printf("All tests passed\n");
     return 0;
 }
