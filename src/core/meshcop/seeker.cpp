@@ -62,7 +62,6 @@ Error Seeker::Start(ScanEvaluator aScanEvaluator, void *aContext)
 
     randomAddress.GenerateRandom();
     Get<Mac::Mac>().SetExtAddress(randomAddress);
-    Get<Mle::Mle>().UpdateLinkLocalAddress();
 
     mScanEvaluator.Set(aScanEvaluator, aContext);
 

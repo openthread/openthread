@@ -217,7 +217,7 @@ public:
      *
      * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
      */
-    void SetExtAddress(const ExtAddress &aExtAddress) { mLinks.SetExtAddress(aExtAddress); }
+    void SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
      * Returns the IEEE 802.15.4 Short Address.

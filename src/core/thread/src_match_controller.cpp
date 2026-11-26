@@ -45,7 +45,6 @@ SourceMatchController::SourceMatchController(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
 {
-    ClearTable();
 }
 
 void SourceMatchController::IncrementMessageCount(Child &aChild)

@@ -56,7 +56,7 @@ const otMacKey Mac::kMode2Key = {
 
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mEnabled(true)
+    , mEnabled(false)
     , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
     , mPromiscuous(false)
@@ -96,20 +96,18 @@ Mac::Mac(Instance &aInstance)
     , mTxError(kErrorNone)
 #endif
 {
+    mCcaSuccessRateTracker.Clear();
+    ResetCounters();
+    mMode2KeyMaterial.SetFrom(AsCoreType(&kMode2Key));
+}
+
+void Mac::Init(void)
+{
     ExtAddress randomExtAddress;
 
     randomExtAddress.GenerateRandom();
 
-    mCcaSuccessRateTracker.Clear();
-    ResetCounters();
-
-    // MAC starts in the enabled state (`mEnabled` is set to `true`).
-    // Enable `mLinks` directly instead of calling `SetEnabled()` to
-    // avoid invoking callbacks on other modules (e.g., `CslTxScheduler`)
-    // before they are fully initialized during `Instance` initialization
-    // and constructor calls.
-
-    mLinks.Enable();
+    SetEnabled(true);
 
     mLinks.SetPanId(GetPanId());
     SetExtAddress(randomExtAddress);
@@ -118,10 +116,8 @@ Mac::Mac(Instance &aInstance)
     SetAlternateShortAddress(kShortAddrInvalid);
 #endif
 
-    mMode2KeyMaterial.SetFrom(AsCoreType(&kMode2Key));
+    Get<KeyManager>().UpdateKeyMaterial();
 }
-
-void Mac::Init(void) { Get<KeyManager>().UpdateKeyMaterial(); }
 
 void Mac::SetEnabled(bool aEnable)
 {
@@ -377,6 +373,17 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
     mLinks.SetRxOnWhenIdle(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
+
+exit:
+    return;
+}
+
+void Mac::SetExtAddress(const ExtAddress &aExtAddress)
+{
+    VerifyOrExit(GetExtAddress() != aExtAddress);
+
+    mLinks.SetExtAddress(aExtAddress);
+    Get<Mle::Mle>().UpdateLinkLocalAddress();
 
 exit:
     return;

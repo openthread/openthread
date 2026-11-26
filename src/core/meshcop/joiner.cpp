@@ -249,7 +249,6 @@ void Joiner::HandleScanCompleted(void)
     VerifyOrExit(mState == kStateDiscover);
 
     Get<Mac::Mac>().SetExtAddress(mId);
-    Get<Mle::Mle>().UpdateLinkLocalAddress();
 
     TryNextCandidate(kErrorNone);
 
@@ -526,7 +525,6 @@ void Joiner::HandleTimer(void)
 
         extAddress.GenerateRandom();
         Get<Mac::Mac>().SetExtAddress(extAddress);
-        Get<Mle::Mle>().UpdateLinkLocalAddress();
 
         error = kErrorNone;
         break;
