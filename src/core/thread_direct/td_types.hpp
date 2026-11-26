@@ -49,6 +49,8 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 
@@ -217,7 +219,7 @@ private:
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 /**
- * Defines the slot durations of a radio availability schedule (`otRadioAvailabilitySlotDuration`).
+ * Defines the slot durations for a time-slot grid (`otRadioAvailabilitySlotDuration`).
  */
 enum SlotDuration : uint8_t
 {
@@ -234,33 +236,141 @@ enum SlotDuration : uint8_t
  */
 uint32_t SlotDurationToUsec(SlotDuration aSlotDuration);
 
+class RadioAvailability;
+
+/**
+ * Represents a time window (start time and duration).
+ */
+class TimeWindow : public Clearable<TimeWindow>
+{
+    friend class RadioAvailability;
+
+public:
+    static constexpr uint32_t kMaxDuration = NumericLimits<uint32_t>::kMax; ///< Maximum (unbounded) duration.
+
+    /**
+     * Initializes the `TimeWindow` as cleared (`GetStartTime() == 0`, `GetDuration() == 0`).
+     */
+    TimeWindow(void) { Clear(); }
+
+    /**
+     * Initializes the `TimeWindow` with a given start time and duration.
+     *
+     * @param[in] aStartTime  The start time in microseconds.
+     * @param[in] aDuration   The duration in microseconds (`kMaxDuration` indicates unbounded).
+     */
+    void Init(Radio::Time64 aStartTime, uint32_t aDuration)
+    {
+        mStartTime = aStartTime;
+        mDuration  = aDuration;
+    }
+
+    /**
+     * Gets the start time of the window.
+     *
+     * @returns The start time of the window in microseconds.
+     */
+    Radio::Time64 GetStartTime(void) const { return mStartTime; }
+
+    /**
+     * Gets the duration of the window.
+     *
+     * @returns The duration of the window in microseconds (`kMaxDuration` if unbounded).
+     */
+    uint32_t GetDuration(void) const { return mDuration; }
+
+    /**
+     * Indicates whether the window is unbounded (`GetDuration() == kMaxDuration`).
+     *
+     * @retval TRUE   If the window is unbounded.
+     * @retval FALSE  If the window has a bounded duration.
+     */
+    bool IsUnbounded(void) const { return mDuration == kMaxDuration; }
+
+    /**
+     * Gets the end time of the window (`GetStartTime() + GetDuration()`).
+     *
+     * @returns The end time of the window in microseconds.
+     */
+    Radio::Time64 GetEndTime(void) const { return AddSafely<uint64_t>(mStartTime, mDuration); }
+
+private:
+    void ExtendDuration(uint32_t aDuration) { mDuration = AddSafely<uint32_t>(mDuration, aDuration); }
+    void SetUnbounded(void) { mDuration = kMaxDuration; }
+
+    Radio::Time64 mStartTime;
+    uint32_t      mDuration;
+};
+
+/**
+ * Represents a time-slot grid defined by a start (anchor) time and a `SlotDuration`.
+ */
+class SlotGrid
+{
+public:
+    /**
+     * Gets the start (anchor) time of the slot grid.
+     *
+     * @returns The start time in microseconds.
+     */
+    Radio::Time64 GetStartTime(void) const { return mStartTime; }
+
+    /**
+     * Gets the slot duration of the slot grid.
+     *
+     * @returns The slot duration enumerator.
+     */
+    SlotDuration GetSlotDuration(void) const { return mSlotDuration; }
+
+    /**
+     * Gets the slot duration in microseconds.
+     *
+     * @returns The slot duration in microseconds.
+     */
+    uint32_t GetSlotDurationInUsec(void) const { return SlotDurationToUsec(mSlotDuration); }
+
+    /**
+     * Converts a number of slots to duration in microseconds using this grid's slot duration.
+     *
+     * @param[in] aNumSlots  The number of slots.
+     *
+     * @returns The duration in microseconds.
+     */
+    uint32_t SlotsToUsec(uint16_t aNumSlots) const;
+
+protected:
+    struct SlotInfo
+    {
+        uint8_t GetIndexAsUint8(void) const { return static_cast<uint8_t>(mIndex); }
+
+        uint16_t   mIndex;
+        TimeWindow mWindow;
+    };
+
+    SlotGrid(void) = default;
+
+    void Init(Radio::Time64 aStartTime, SlotDuration aSlotDuration)
+    {
+        mStartTime    = aStartTime;
+        mSlotDuration = aSlotDuration;
+    }
+
+    void DetermineSlotInfo(Radio::Time64 aTime, uint16_t aPeriod, SlotInfo &aSlotInfo) const;
+    void AdvanceToNextSlot(uint16_t aPeriod, SlotInfo &aSlotInfo) const;
+
+    Radio::Time64 mStartTime;
+    SlotDuration  mSlotDuration;
+};
+
 /**
  * Represents a periodic radio availability schedule bitmap.
  */
-class RadioAvailability : public Clearable<RadioAvailability>
+class RadioAvailability : public SlotGrid, public Clearable<RadioAvailability>
 {
 public:
     static constexpr uint8_t kMaxBitmapSize = OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE; ///< Max bitmap size in bytes.
 
     static constexpr uint8_t kMaxBitmapLength = kMaxBitmapSize * kBitsPerByte; ///< Max bitmap length in bits.
-
-    /**
-     * Represents a time window (start time and duration).
-     */
-    struct Window
-    {
-        static constexpr uint32_t kMaxDuration = NumericLimits<uint32_t>::kMax; ///< Maximum (unbounded) duration.
-
-        /**
-         * Gets the end time of the window (`mStartTime + mDuration`).
-         *
-         * @returns The end time of the window in microseconds.
-         */
-        Radio::Time64 GetEndTime(void) const { return AddSafely<uint64_t>(mStartTime, mDuration); }
-
-        Radio::Time64 mStartTime; ///< Start time as `Radio::Time64`.
-        uint32_t      mDuration;  ///< Duration in microseconds.
-    };
 
     /**
      * Represents the outcome of comparing two `RadioAvailability` schedules (see `Compare()`).
@@ -304,20 +414,6 @@ public:
     bool IsSpecified(void) const { return mBitLength != 0; }
 
     /**
-     * Gets the start time of the schedule.
-     *
-     * @returns The start time of the schedule in microseconds.
-     */
-    Radio::Time64 GetStartTime(void) const { return mStartTime; }
-
-    /**
-     * Gets the slot duration of the schedule.
-     *
-     * @returns The slot duration enumerator.
-     */
-    SlotDuration GetSlotDuration(void) const { return mSlotDuration; }
-
-    /**
      * Gets the length of the bitmap in bits (number of slots in the periodic schedule).
      *
      * @returns The bitmap length in bits (`0` if not specified).
@@ -349,7 +445,7 @@ public:
      * @retval TRUE   If the radio is available throughout @p aWindow.
      * @retval FALSE  If the radio is unavailable during any part of @p aWindow.
      */
-    bool IsAvailableIn(const Window &aWindow) const;
+    bool IsAvailableIn(const TimeWindow &aWindow) const;
 
     /**
      * Finds the next contiguous available time window starting on or after a given time.
@@ -357,15 +453,15 @@ public:
      * If @p aTime falls within an available slot, @p aWindow starts at @p aTime and extends through the end of that
      * contiguous run of available slots. Otherwise, @p aWindow starts at the beginning of the next available slot.
      * If the radio is always available (either `!IsSpecified()` or all slots in the bitmap are available),
-     * `aWindow.mDuration` is set to `Window::kMaxDuration`.
+     * @p aWindow is marked unbounded (`aWindow.IsUnbounded()` is `true`).
      *
      * @param[in]  aTime    The radio time from which to start searching.
-     * @param[out] aWindow  A reference to a `Window` to output the found available window.
+     * @param[out] aWindow  A reference to a `TimeWindow` to output the found available window.
      *
      * @retval kErrorNone      Successfully found an available window and populated @p aWindow.
      * @retval kErrorNotFound  No available slot exists in the schedule.
      */
-    Error FindNextAvailableWindow(Radio::Time64 aTime, Window &aWindow) const;
+    Error FindNextAvailableWindow(Radio::Time64 aTime, TimeWindow &aWindow) const;
 
     /**
      * Compares this `RadioAvailability` schedule with another schedule.
@@ -389,20 +485,118 @@ public:
     void RebaseStartTime(Radio::Time64 aTime);
 
 private:
-    struct SlotInfo
-    {
-        uint8_t mIndex;
-        Window  mWindow;
-    };
-
     bool IsAvailable(uint8_t aBitIndex) const;
-    void DetermineSlotInfo(Radio::Time64 aTime, SlotInfo &aSlotInfo) const;
-    void AdvanceToNextSlot(SlotInfo &aSlotInfo) const;
 
-    Radio::Time64 mStartTime;
-    SlotDuration  mSlotDuration;
-    uint8_t       mBitLength;
-    uint8_t       mBitmap[kMaxBitmapSize];
+    uint8_t mBitLength;
+    uint8_t mBitmap[kMaxBitmapSize];
+};
+
+/**
+ * Represents a Scheduled Listen Window (SLW) schedule.
+ */
+class ListenSchedule : public SlotGrid, public Clearable<ListenSchedule>
+{
+public:
+    static constexpr uint8_t kMaxMinDuration      = 16; ///< Max minimum duration in units of slot duration (`1..16`).
+    static constexpr uint8_t kMaxExtendedDuration = 15; ///< Max extended duration in units of slot duration (`0..15`).
+
+    /**
+     * Initializes the `ListenSchedule` as cleared (not specified / continuous rx-on-when-idle).
+     */
+    ListenSchedule(void) { Clear(); }
+
+    /**
+     * Initializes the `ListenSchedule`.
+     *
+     * If @p aPeriod is `0`, all other parameters are ignored and the schedule is cleared (indicating continuous
+     * rx-on-when-idle mode). If an error is returned, the existing `ListenSchedule` remains unchanged.
+     *
+     * @param[in] aStartTime         The start (anchor) time of the schedule.
+     * @param[in] aSlotDuration      The duration of each slot.
+     * @param[in] aPeriod            The schedule period in units of @p aSlotDuration (`0` for rx-on-when-idle).
+     * @param[in] aPhase             The phase in units of @p aSlotDuration (reduced modulo @p aPeriod).
+     * @param[in] aMinDuration       The minimum listen duration in units of @p aSlotDuration (`1..kMaxMinDuration`).
+     * @param[in] aExtendedDuration  The extended listen duration in units of @p aSlotDuration
+     *                               (`0..kMaxExtendedDuration`).
+     *
+     * @retval kErrorNone         Successfully initialized the schedule.
+     * @retval kErrorInvalidArgs  One or more parameters are out of valid range.
+     */
+    Error Init(Radio::Time64 aStartTime,
+               SlotDuration  aSlotDuration,
+               uint16_t      aPeriod,
+               uint16_t      aPhase,
+               uint8_t       aMinDuration,
+               uint8_t       aExtendedDuration);
+
+    /**
+     * Indicates whether a discrete listen schedule is specified (`GetPeriod() != 0`).
+     *
+     * When not specified (`GetPeriod() == 0`), the device is in continuous rx-on-when-idle mode.
+     *
+     * @retval TRUE   If a listen schedule is specified.
+     * @retval FALSE  If no listen schedule is specified (continuous rx-on-when-idle).
+     */
+    bool IsSpecified(void) const { return mPeriod != 0; }
+
+    /**
+     * Gets the schedule period in units of the slot duration (`GetSlotDuration()`).
+     *
+     * @returns The period in units of the slot duration (`0` if not specified).
+     */
+    uint16_t GetPeriod(void) const { return mPeriod; }
+
+    /**
+     * Gets the schedule phase in units of the slot duration (`GetSlotDuration()`), specifying the offset from
+     * `GetStartTime()` to the start of the active RX window.
+     *
+     * @returns The phase in units of the slot duration.
+     */
+    uint16_t GetPhase(void) const { return mPhase; }
+
+    /**
+     * Gets the minimum listen window duration in units of the slot duration (`GetSlotDuration()`).
+     *
+     * @returns The minimum listen window duration in units of the slot duration (`1..16`, or `0` if not specified).
+     */
+    uint8_t GetMinDuration(void) const { return mMinDuration; }
+
+    /**
+     * Gets the extended listen window duration in units of the slot duration (`GetSlotDuration()`).
+     *
+     * @returns The extended listen window duration in units of the slot duration (`0..15`, where `0` indicates
+     *          unconstrained).
+     */
+    uint8_t GetExtendedDuration(void) const { return mExtendedDuration; }
+
+    /**
+     * Determines the listen window duration in microseconds.
+     *
+     * If `GetExtendedDuration()` is `0` (including when `!IsSpecified()`), the listen window duration is
+     * unconstrained and `TimeWindow::kMaxDuration` is returned. Otherwise, returns the combined minimum and extended
+     * duration in microseconds.
+     *
+     * @returns The listen window duration in microseconds (`TimeWindow::kMaxDuration` if unconstrained).
+     */
+    uint32_t DetermineListenDuration(void) const;
+
+    /**
+     * Finds the next Scheduled Listen Window starting on or after a given time.
+     *
+     * If `!IsSpecified()`, @p aWindow starts at @p aTime and is marked unbounded (`aWindow.IsUnbounded()` is `true`).
+     * Otherwise, @p aWindow starts at the next listen window boundary on or after @p aTime, with duration equal to
+     * `DetermineListenDuration()`.
+     *
+     * @param[in]  aTime    The radio time from which to start searching.
+     * @param[out] aWindow  A reference to a `TimeWindow` to output the found listen window.
+     */
+    void FindNextListenWindow(Radio::Time64 aTime, TimeWindow &aWindow) const;
+
+private:
+    uint16_t mPeriod;
+    uint16_t mPhase;
+    uint8_t  mMinDuration;
+    uint8_t  mExtendedDuration;
 };
 
 } // namespace ThreadDirect
