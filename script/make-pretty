@@ -28,7 +28,7 @@
 #
 
 #
-# The script to check or format source code of OpenThread.
+# The script to check or format source code of OpenThread and sibling repositories.
 #
 # Format c/c++, markdown, python, and shell:
 #
@@ -61,22 +61,43 @@
 #     script/make-pretty check python
 #     script/make-pretty check shell
 #
+# Options:
+#
+#     --exclude <regex>    Exclude path prefixes matching ^(<regex>)(/|$) (repeatable)
+#     -h, --help           Display this help text
+#
 
 set -euo pipefail
+unset CDPATH
 
-repo_dir=$(cd "$(dirname "$0")/.." && pwd)
-readonly repo_dir
+resolve_script_dir()
+{
+    local source="$1"
+    local dir
 
-if [[ -z ${VIRTUAL_ENV:-} ]] && [[ -x "${repo_dir}/.venv/bin/python3" ]]; then
-    export VIRTUAL_ENV="${repo_dir}/.venv"
-    export PATH="${VIRTUAL_ENV}/bin:$PATH"
-fi
+    while [[ -L ${source} ]]; do
+        dir="$(cd -P "$(dirname "${source}")" && pwd)"
+        source="$(readlink "${source}")"
+        if [[ ${source} != /* ]]; then
+            source="${dir}/${source}"
+        fi
+    done
+
+    cd -P "$(dirname "${source}")" && pwd
+}
+
+script_dir="$(resolve_script_dir "${BASH_SOURCE[0]}")"
+readonly script_dir
+
+ot_root="$(cd -P "${script_dir}/.." && pwd)"
+readonly ot_root
+
+target_dir=""
 
 OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
 readonly OT_BUILD_JOBS
 
-OT_EXCLUDE_DIRS=(third_party doc/site)
-readonly OT_EXCLUDE_DIRS
+OT_EXCLUDE_DIRS=(openthread third_party doc/site)
 
 OT_CLANG_SOURCES=('*.c' '*.cc' '*.cpp' '*.h' '*.hpp')
 readonly OT_CLANG_SOURCES
@@ -154,14 +175,131 @@ OT_CLANG_TIDY_BUILD_OPTS=(
 )
 readonly OT_CLANG_TIDY_BUILD_OPTS
 
+OT_MATCHED_FILES=()
+
+usage()
+{
+    cat <<'EOF'
+Usage:
+  make-pretty [options] [check] [clang|clang-format|clang-tidy|markdown|python|shell]
+
+Options:
+  --exclude <regex>    Exclude path prefixes matching ^(<regex>)(/|$) (repeatable)
+  -h, --help           Display this help text
+
+Notes:
+  clang-tidy runs only when targeting the openthread repository itself.
+  Checks with no matching tracked files are skipped automatically.
+EOF
+}
+
+init_target_dir()
+{
+    if ! target_dir="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+        echo >&2 'Must be run inside a git repository'
+        exit 128
+    fi
+    target_dir="$(cd -P "${target_dir}" && pwd)"
+    readonly target_dir
+
+    if [[ -z ${VIRTUAL_ENV:-} ]] && [[ -x "${target_dir}/.venv/bin/python3" ]]; then
+        export VIRTUAL_ENV="${target_dir}/.venv"
+        export PATH="${VIRTUAL_ENV}/bin:${PATH}"
+    fi
+}
+
+is_openthread_repo()
+{
+    [[ ${target_dir} == "${ot_root}" ]]
+}
+
+add_exclude_pattern()
+{
+    local pattern="$1"
+    local rc=0
+
+    while [[ ${pattern} == */ ]]; do
+        pattern="${pattern%/}"
+    done
+
+    if [[ -z ${pattern} ]]; then
+        echo >&2 '--exclude requires a non-empty regex argument'
+        exit 128
+    fi
+
+    set +e
+    [[ "" =~ ${pattern} ]]
+    rc=$?
+    set -e
+    if [[ ${rc} -eq 2 ]]; then
+        echo >&2 "Invalid --exclude regex: ${pattern}"
+        exit 128
+    fi
+
+    OT_EXCLUDE_DIRS+=("${pattern}")
+}
+
+build_exclude_regex()
+{
+    local IFS='|'
+    printf '^(%s)(/|$)' "${OT_EXCLUDE_DIRS[*]}"
+}
+
+collect_files()
+{
+    local exclude_regex
+    local file
+
+    exclude_regex="$(build_exclude_regex)"
+    OT_MATCHED_FILES=()
+
+    while IFS= read -r -d '' file; do
+        if [[ -f ${file} && ! -L ${file} ]] && ! [[ ${file} =~ ${exclude_regex} ]]; then
+            OT_MATCHED_FILES+=("${file}")
+        fi
+    done < <(git ls-files -z -- "$@")
+}
+
+collect_shell_files()
+{
+    local -a candidates=()
+    local shfmt_output
+    local file
+
+    collect_files
+    if [[ ${#OT_MATCHED_FILES[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    candidates=("${OT_MATCHED_FILES[@]}")
+    OT_MATCHED_FILES=()
+
+    shfmt_output="$(printf '%s\0' "${candidates[@]}" | xargs -0 shfmt -f --)"
+    if [[ -z ${shfmt_output} ]]; then
+        return 0
+    fi
+
+    while IFS= read -r file; do
+        if [[ -n ${file} ]]; then
+            OT_MATCHED_FILES+=("${file}")
+        fi
+    done <<<"${shfmt_output}"
+}
+
 do_clang_format()
 {
     echo -e '========================================'
     echo -e '     format c/c++ (clang-format)'
     echo -e '========================================'
 
-    git ls-files "${OT_CLANG_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n3 -P"$OT_BUILD_JOBS" script/clang-format -style=file -i -verbose
+    collect_files "${OT_CLANG_SOURCES[@]}"
+    if [[ ${#OT_MATCHED_FILES[@]} -eq 0 ]]; then
+        echo 'No C/C++ files found; skipping.'
+        return 0
+    fi
+
+    printf '%s\0' "${OT_MATCHED_FILES[@]}" \
+        | xargs -0 -n3 -P"${OT_BUILD_JOBS}" "${script_dir}/clang-format" -style=file -i -verbose
 }
 
 do_clang_format_check()
@@ -170,12 +308,23 @@ do_clang_format_check()
     echo -e '     check c/c++ (clang-format)'
     echo -e '========================================'
 
-    git ls-files "${OT_CLANG_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n3 -P"$OT_BUILD_JOBS" script/clang-format-check
+    collect_files "${OT_CLANG_SOURCES[@]}"
+    if [[ ${#OT_MATCHED_FILES[@]} -eq 0 ]]; then
+        echo 'No C/C++ files found; skipping.'
+        return 0
+    fi
+
+    printf '%s\0' "${OT_MATCHED_FILES[@]}" \
+        | xargs -0 -n3 -P"${OT_BUILD_JOBS}" "${script_dir}/clang-format-check"
 }
 
 do_clang_tidy_fix()
 {
+    if ! is_openthread_repo; then
+        echo >&2 'clang-tidy is only supported in the openthread repository'
+        exit 128
+    fi
+
     echo -e '========================================'
     echo -e '     format c/c++ (clang-tidy)'
     echo -e '========================================'
@@ -183,11 +332,16 @@ do_clang_tidy_fix()
     (mkdir -p ./build/cmake-tidy \
         && cd ./build/cmake-tidy \
         && THREAD_VERSION=1.4 cmake "${OT_CLANG_TIDY_BUILD_OPTS[@]}" ../.. \
-        && ../../script/clang-tidy -j"$OT_BUILD_JOBS" "${OT_CLANG_TIDY_FIX_DIRS[@]}" -fix)
+        && "${script_dir}/clang-tidy" -j"${OT_BUILD_JOBS}" "${OT_CLANG_TIDY_FIX_DIRS[@]}" -fix)
 }
 
 do_clang_tidy_check()
 {
+    if ! is_openthread_repo; then
+        echo >&2 'clang-tidy is only supported in the openthread repository'
+        exit 128
+    fi
+
     echo -e '========================================'
     echo -e '     check c/c++ (clang-tidy)'
     echo -e '========================================'
@@ -195,7 +349,7 @@ do_clang_tidy_check()
     (mkdir -p ./build/cmake-tidy \
         && cd ./build/cmake-tidy \
         && THREAD_VERSION=1.4 cmake "${OT_CLANG_TIDY_BUILD_OPTS[@]}" ../.. \
-        && ../../script/clang-tidy -j"$OT_BUILD_JOBS" "${OT_CLANG_TIDY_FIX_DIRS[@]}")
+        && "${script_dir}/clang-tidy" -j"${OT_BUILD_JOBS}" "${OT_CLANG_TIDY_FIX_DIRS[@]}")
 }
 
 do_markdown_format()
@@ -204,8 +358,14 @@ do_markdown_format()
     echo -e '     format markdown'
     echo -e '========================================'
 
-    git ls-files "${OT_MARKDOWN_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" npx prettier@2.0.4 --write
+    collect_files "${OT_MARKDOWN_SOURCES[@]}"
+    if [[ ${#OT_MATCHED_FILES[@]} -eq 0 ]]; then
+        echo 'No markdown files found; skipping.'
+        return 0
+    fi
+
+    printf '%s\0' "${OT_MATCHED_FILES[@]}" \
+        | xargs -0 -n10 -P"${OT_BUILD_JOBS}" npx prettier@2.0.4 --write
 }
 
 do_markdown_check()
@@ -214,8 +374,14 @@ do_markdown_check()
     echo -e '     check markdown'
     echo -e '========================================'
 
-    git ls-files "${OT_MARKDOWN_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" npx prettier@2.0.4 --check
+    collect_files "${OT_MARKDOWN_SOURCES[@]}"
+    if [[ ${#OT_MATCHED_FILES[@]} -eq 0 ]]; then
+        echo 'No markdown files found; skipping.'
+        return 0
+    fi
+
+    printf '%s\0' "${OT_MATCHED_FILES[@]}" \
+        | xargs -0 -n10 -P"${OT_BUILD_JOBS}" npx prettier@2.0.4 --check
 }
 
 do_python_format()
@@ -224,8 +390,14 @@ do_python_format()
     echo -e '     format python'
     echo -e '========================================'
 
-    git ls-files "${OT_PYTHON_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style '{based_on_style: google, column_limit: 119}' -ipr
+    collect_files "${OT_PYTHON_SOURCES[@]}"
+    if [[ ${#OT_MATCHED_FILES[@]} -eq 0 ]]; then
+        echo 'No python files found; skipping.'
+        return 0
+    fi
+
+    printf '%s\0' "${OT_MATCHED_FILES[@]}" \
+        | xargs -0 -n10 -P"${OT_BUILD_JOBS}" python3 -m yapf --verbose --style '{based_on_style: google, column_limit: 119}' -ipr
 }
 
 do_python_check()
@@ -234,8 +406,14 @@ do_python_check()
     echo -e '     check python'
     echo -e '========================================'
 
-    git ls-files "${OT_PYTHON_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style '{based_on_style: google, column_limit: 119}' -dpr
+    collect_files "${OT_PYTHON_SOURCES[@]}"
+    if [[ ${#OT_MATCHED_FILES[@]} -eq 0 ]]; then
+        echo 'No python files found; skipping.'
+        return 0
+    fi
+
+    printf '%s\0' "${OT_MATCHED_FILES[@]}" \
+        | xargs -0 -n10 -P"${OT_BUILD_JOBS}" python3 -m yapf --verbose --style '{based_on_style: google, column_limit: 119}' -dpr
 }
 
 do_shell_format()
@@ -244,8 +422,14 @@ do_shell_format()
     echo -e '     format shell'
     echo -e '========================================'
 
-    git ls-files | xargs shfmt -f | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" shfmt -i 4 -bn -ci -fn -s -w
+    collect_shell_files
+    if [[ ${#OT_MATCHED_FILES[@]} -eq 0 ]]; then
+        echo 'No shell files found; skipping.'
+        return 0
+    fi
+
+    printf '%s\0' "${OT_MATCHED_FILES[@]}" \
+        | xargs -0 -n10 -P"${OT_BUILD_JOBS}" shfmt -i 4 -bn -ci -fn -s -w --
 }
 
 do_shell_check()
@@ -254,36 +438,49 @@ do_shell_check()
     echo -e '     check shell'
     echo -e '========================================'
 
-    git ls-files | xargs shfmt -f | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" shfmt -i 4 -bn -ci -fn -s -d
+    collect_shell_files
+    if [[ ${#OT_MATCHED_FILES[@]} -eq 0 ]]; then
+        echo 'No shell files found; skipping.'
+        return 0
+    fi
 
-    git ls-files | xargs shfmt -f | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" shellcheck -x
+    printf '%s\0' "${OT_MATCHED_FILES[@]}" \
+        | xargs -0 -n10 -P"${OT_BUILD_JOBS}" shfmt -i 4 -bn -ci -fn -s -d --
+
+    printf '%s\0' "${OT_MATCHED_FILES[@]}" \
+        | xargs -0 -n10 -P"${OT_BUILD_JOBS}" shellcheck -x --source-path="${target_dir}" --
 }
 
 do_check()
 {
-    if [ $# == 0 ]; then
+    if [[ $# -eq 0 ]]; then
         do_clang_format_check
-        do_clang_tidy_check
+        if is_openthread_repo; then
+            do_clang_tidy_check
+        fi
         do_markdown_check
         do_python_check
         do_shell_check
-    elif [ "$1" == 'clang' ]; then
+    elif [[ $# -gt 1 ]]; then
+        echo >&2 "Unexpected argument: $2"
+        exit 128
+    elif [[ $1 == 'clang' ]]; then
         do_clang_format_check
-        do_clang_tidy_check
-    elif [ "$1" == 'clang-format' ]; then
+        if is_openthread_repo; then
+            do_clang_tidy_check
+        fi
+    elif [[ $1 == 'clang-format' ]]; then
         do_clang_format_check
-    elif [ "$1" == 'clang-tidy' ]; then
+    elif [[ $1 == 'clang-tidy' ]]; then
         do_clang_tidy_check
-    elif [ "$1" == 'markdown' ]; then
+    elif [[ $1 == 'markdown' ]]; then
         do_markdown_check
-    elif [ "$1" == 'python' ]; then
+    elif [[ $1 == 'python' ]]; then
         do_python_check
-    elif [ "$1" == 'shell' ]; then
+    elif [[ $1 == 'shell' ]]; then
         do_shell_check
     else
-        echo >&2 "Unsupported check: $1. Supported: clang, markdown, python, shell"
+        echo >&2 "Unsupported check: $1. Supported: clang, clang-format, clang-tidy, markdown, python, shell"
         # 128 for Invalid arguments
         exit 128
     fi
@@ -291,34 +488,85 @@ do_check()
 
 main()
 {
-    if [ $# == 0 ]; then
-        do_clang_tidy_fix
+    local -a args=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --exclude)
+                if [[ $# -lt 2 || -z $2 || $2 == -* ]]; then
+                    echo >&2 '--exclude requires a non-empty regex argument'
+                    exit 128
+                fi
+                add_exclude_pattern "$2"
+                shift 2
+                ;;
+            --exclude=*)
+                add_exclude_pattern "${1#*=}"
+                shift
+                ;;
+            -h | --help)
+                usage
+                return 0
+                ;;
+            --)
+                shift
+                if [[ $# -gt 0 ]]; then
+                    args+=("$@")
+                fi
+                break
+                ;;
+            -*)
+                echo >&2 "Unknown option: $1"
+                exit 128
+                ;;
+            *)
+                args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    init_target_dir
+
+    cd "${target_dir}"
+
+    if [[ ${#args[@]} -eq 0 ]]; then
+        if is_openthread_repo; then
+            do_clang_tidy_fix
+        fi
         do_clang_format
         do_markdown_format
         do_python_format
         do_shell_format
-    elif [ "$1" == 'clang' ]; then
-        do_clang_tidy_fix
+    elif [[ ${args[0]} == 'check' ]]; then
+        if [[ ${#args[@]} -gt 1 ]]; then
+            do_check "${args[@]:1}"
+        else
+            do_check
+        fi
+    elif [[ ${#args[@]} -gt 1 ]]; then
+        echo >&2 "Unexpected argument: ${args[1]}"
+        exit 128
+    elif [[ ${args[0]} == 'clang' ]]; then
+        if is_openthread_repo; then
+            do_clang_tidy_fix
+        fi
         do_clang_format
-    elif [ "$1" == 'clang-format' ]; then
+    elif [[ ${args[0]} == 'clang-format' ]]; then
         do_clang_format
-    elif [ "$1" == 'clang-tidy' ]; then
+    elif [[ ${args[0]} == 'clang-tidy' ]]; then
         do_clang_tidy_fix
-    elif [ "$1" == 'markdown' ]; then
+    elif [[ ${args[0]} == 'markdown' ]]; then
         do_markdown_format
-    elif [ "$1" == 'python' ]; then
+    elif [[ ${args[0]} == 'python' ]]; then
         do_python_format
-    elif [ "$1" == 'shell' ]; then
+    elif [[ ${args[0]} == 'shell' ]]; then
         do_shell_format
-    elif [ "$1" == 'check' ]; then
-        shift
-        do_check "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: clang, markdown, python, shell"
+        echo >&2 "Unsupported action: ${args[0]}. Supported: clang, clang-format, clang-tidy, markdown, python, shell"
         # 128 for Invalid arguments
         exit 128
     fi
-
 }
 
 main "$@"
