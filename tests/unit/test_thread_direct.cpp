@@ -48,36 +48,92 @@ namespace ThreadDirect {
 
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
 
-using Window = RadioAvailability::Window;
+static TimeWindow MakeTimeWindow(Radio::Time64 aStartTime, uint32_t aDuration)
+{
+    TimeWindow window;
+
+    window.Init(aStartTime, aDuration);
+
+    return window;
+}
 
 static bool GetMaskBit(const uint8_t *aMask, uint16_t aBitIndex)
 {
     return (aMask[aBitIndex / kBitsPerByte] & (0x80 >> (aBitIndex % kBitsPerByte))) != 0;
 }
 
-static void VerifyWindowProperties(const RadioAvailability &aAvail, Radio::Time64 aQueryTime, const Window &aWindow)
+static void VerifyWindowProperties(const RadioAvailability &aAvail, Radio::Time64 aQueryTime, const TimeWindow &aWindow)
 {
-    VerifyOrQuit(aWindow.mStartTime >= aQueryTime);
-    VerifyOrQuit(aWindow.mDuration > 0);
+    VerifyOrQuit(aWindow.GetStartTime() >= aQueryTime);
+    VerifyOrQuit(aWindow.GetDuration() > 0);
     VerifyOrQuit(aAvail.IsAvailableIn(aWindow));
-    VerifyOrQuit(aAvail.IsAvailableAt(aWindow.mStartTime));
+    VerifyOrQuit(aAvail.IsAvailableAt(aWindow.GetStartTime()));
 
-    if (aWindow.mStartTime > aQueryTime)
+    if (aWindow.GetStartTime() > aQueryTime)
     {
         VerifyOrQuit(!aAvail.IsAvailableAt(aQueryTime));
-        VerifyOrQuit(!aAvail.IsAvailableAt(aWindow.mStartTime - 1));
+        VerifyOrQuit(!aAvail.IsAvailableAt(aWindow.GetStartTime() - 1));
     }
 
-    if (aWindow.mDuration != Window::kMaxDuration)
+    if (!aWindow.IsUnbounded())
     {
-        Window extendedWindow = aWindow;
+        TimeWindow extendedWindow;
 
         VerifyOrQuit(aAvail.IsAvailableAt(aWindow.GetEndTime() - 1));
         VerifyOrQuit(!aAvail.IsAvailableAt(aWindow.GetEndTime()));
 
-        extendedWindow.mDuration += 1;
+        extendedWindow.Init(aWindow.GetStartTime(), aWindow.GetDuration() + 1);
         VerifyOrQuit(!aAvail.IsAvailableIn(extendedWindow));
     }
+}
+
+void TestTimeWindow(void)
+{
+    TimeWindow window;
+
+    // Default-constructed (cleared) window.
+    VerifyOrQuit(window.GetStartTime() == 0);
+    VerifyOrQuit(window.GetDuration() == 0);
+    VerifyOrQuit(!window.IsUnbounded());
+    VerifyOrQuit(window.GetEndTime() == 0);
+
+    // Normal initialization and end time.
+    window.Init(1000, 2500);
+    VerifyOrQuit(window.GetStartTime() == 1000);
+    VerifyOrQuit(window.GetDuration() == 2500);
+    VerifyOrQuit(!window.IsUnbounded());
+    VerifyOrQuit(window.GetEndTime() == 3500);
+
+    // `IsUnbounded()` boundary (`kMaxDuration - 1` vs `kMaxDuration`).
+    window.Init(1000, TimeWindow::kMaxDuration - 1);
+    VerifyOrQuit(window.GetStartTime() == 1000);
+    VerifyOrQuit(window.GetDuration() == TimeWindow::kMaxDuration - 1);
+    VerifyOrQuit(!window.IsUnbounded());
+    VerifyOrQuit(window.GetEndTime() == 1000ULL + (TimeWindow::kMaxDuration - 1));
+
+    window.Init(1000, TimeWindow::kMaxDuration);
+    VerifyOrQuit(window.GetStartTime() == 1000);
+    VerifyOrQuit(window.GetDuration() == TimeWindow::kMaxDuration);
+    VerifyOrQuit(window.IsUnbounded());
+    VerifyOrQuit(window.GetEndTime() == 1000ULL + TimeWindow::kMaxDuration);
+
+    // `GetEndTime()` saturation at `Radio::kMaxTime64`.
+    window.Init(Radio::kMaxTime64 - 10, 50);
+    VerifyOrQuit(!window.IsUnbounded());
+    VerifyOrQuit(window.GetEndTime() == Radio::kMaxTime64);
+
+    window.Init(Radio::kMaxTime64, TimeWindow::kMaxDuration);
+    VerifyOrQuit(window.IsUnbounded());
+    VerifyOrQuit(window.GetEndTime() == Radio::kMaxTime64);
+
+    // `Clear()` resets all fields.
+    window.Clear();
+    VerifyOrQuit(window.GetStartTime() == 0);
+    VerifyOrQuit(window.GetDuration() == 0);
+    VerifyOrQuit(!window.IsUnbounded());
+    VerifyOrQuit(window.GetEndTime() == 0);
+
+    printf("TestTimeWindow() passed\n");
 }
 
 void TestRadioAvailabilityInitAndUnspecified(void)
@@ -87,8 +143,7 @@ void TestRadioAvailabilityInitAndUnspecified(void)
     };
 
     RadioAvailability avail;
-    Window            window;
-    Window            saturatingWindow;
+    TimeWindow        window;
 
     VerifyOrQuit(SlotDurationToUsec(kSlotDuration625Usec) == 625);
     VerifyOrQuit(SlotDurationToUsec(kSlotDuration1250Usec) == 1250);
@@ -103,29 +158,22 @@ void TestRadioAvailabilityInitAndUnspecified(void)
     VerifyOrQuit(avail.IsAvailableAt(123456789ULL));
     VerifyOrQuit(avail.IsAvailableAt(Radio::kMaxTime64));
 
-    VerifyOrQuit(avail.IsAvailableIn(Window{0, 0}));
-    VerifyOrQuit(avail.IsAvailableIn(Window{0, 100000}));
-    VerifyOrQuit(avail.IsAvailableIn(Window{500000, Window::kMaxDuration}));
-    VerifyOrQuit(avail.IsAvailableIn(Window{Radio::kMaxTime64 - 10, 100}));
+    VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(0, 0)));
+    VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(0, 100000)));
+    VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(500000, TimeWindow::kMaxDuration)));
+    VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(Radio::kMaxTime64 - 10, 100)));
 
     SuccessOrQuit(avail.FindNextAvailableWindow(0, window));
-    VerifyOrQuit(window.mStartTime == 0);
-    VerifyOrQuit(window.mDuration == Window::kMaxDuration);
+    VerifyOrQuit(window.GetStartTime() == 0);
+    VerifyOrQuit(window.IsUnbounded());
 
     SuccessOrQuit(avail.FindNextAvailableWindow(987654321ULL, window));
-    VerifyOrQuit(window.mStartTime == 987654321ULL);
-    VerifyOrQuit(window.mDuration == Window::kMaxDuration);
+    VerifyOrQuit(window.GetStartTime() == 987654321ULL);
+    VerifyOrQuit(window.IsUnbounded());
 
     SuccessOrQuit(avail.FindNextAvailableWindow(Radio::kMaxTime64, window));
-    VerifyOrQuit(window.mStartTime == Radio::kMaxTime64);
-    VerifyOrQuit(window.mDuration == Window::kMaxDuration);
-
-    // `Window::GetEndTime()` normal addition and saturation.
-    window = Window{1000, 2500};
-    VerifyOrQuit(window.GetEndTime() == 3500);
-
-    saturatingWindow = Window{Radio::kMaxTime64 - 10, 50};
-    VerifyOrQuit(saturatingWindow.GetEndTime() == Radio::kMaxTime64);
+    VerifyOrQuit(window.GetStartTime() == Radio::kMaxTime64);
+    VerifyOrQuit(window.IsUnbounded());
 
     // Invalid bit lengths (> kMaxBitmapLength).
     VerifyOrQuit(avail.Init(1000, kSlotDuration625Usec, RadioAvailability::kMaxBitmapLength + 1, kFullBitmap) ==
@@ -256,55 +304,55 @@ void TestRadioAvailabilityIsAvailableIn(void)
 
         SuccessOrQuit(avail.Init(startTime, slotDuration, 6, kBitmap6));
 
-        // 1. Zero-duration windows (`mDuration == 0`).
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime, 0}));
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime + 2 * slotDur - 1, 0}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 2 * slotDur, 0}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 2 * slotDur + 100, 0}));
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime - 1, 0}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime - slotDur - 1, 0}));
+        // 1. Zero-duration windows (`GetDuration() == 0`).
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime, 0)));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime + 2 * slotDur - 1, 0)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 2 * slotDur, 0)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 2 * slotDur + 100, 0)));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime - 1, 0)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime - slotDur - 1, 0)));
 
         // 2. 1-microsecond windows at exact slot boundaries.
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime, 1}));
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime + 2 * slotDur - 1, 1}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 2 * slotDur - 1, 2}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 2 * slotDur, 1}));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime, 1)));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime + 2 * slotDur - 1, 1)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 2 * slotDur - 1, 2)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 2 * slotDur, 1)));
 
         // 3. Single-slot window aligned with isolated available Slot 3 `[startTime + 3 * slotDur, startTime + 4 *
         // slotDur)`.
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime + 3 * slotDur, slotDur}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 3 * slotDur, slotDur + 1}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 3 * slotDur - 1, slotDur}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 3 * slotDur - 1, 2}));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime + 3 * slotDur, slotDur)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 3 * slotDur, slotDur + 1)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 3 * slotDur - 1, slotDur)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 3 * slotDur - 1, 2)));
 
         // 4. Short windows (< slotDur) straddling a boundary between two slots.
         // Between Slot 0 (1) and Slot 1 (1): available.
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime + slotDur - 10, 20}));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime + slotDur - 10, 20)));
         // Between Slot 1 (1) and Slot 2 (0): unavailable.
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 2 * slotDur - 10, 20}));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 2 * slotDur - 10, 20)));
         // Between Slot 2 (0) and Slot 3 (1): unavailable.
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 3 * slotDur - 10, 20}));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 3 * slotDur - 10, 20)));
         // Between Slot 5 (1) and Slot 0 (1) across `startTime`: available.
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime - 10, 20}));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime - 10, 20)));
         // Between Slot 4 (0) and Slot 5 (1) before `startTime`: unavailable.
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime - slotDur - 10, 20}));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime - slotDur - 10, 20)));
 
         // 5. Multi-slot window spanning the 3-slot contiguous run `[Slot 5, Slot 0, Slot 1]` across `startTime`.
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime - slotDur, 3 * slotDur}));
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime - slotDur + 50, 3 * slotDur - 100}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime - slotDur - 1, 3 * slotDur + 1}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime - slotDur, 3 * slotDur + 1}));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime - slotDur, 3 * slotDur)));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime - slotDur + 50, 3 * slotDur - 100)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime - slotDur - 1, 3 * slotDur + 1)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime - slotDur, 3 * slotDur + 1)));
 
         // 6. Same 3-slot wrap-around run in a later cycle `[startTime + 5 * slotDur, startTime + 8 * slotDur)`.
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime + 5 * slotDur, 3 * slotDur}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 5 * slotDur - 1, 3 * slotDur + 1}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime + 5 * slotDur, 3 * slotDur + 1}));
-        VerifyOrQuit(!avail.IsAvailableIn(Window{startTime, Window::kMaxDuration}));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime + 5 * slotDur, 3 * slotDur)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 5 * slotDur - 1, 3 * slotDur + 1)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime + 5 * slotDur, 3 * slotDur + 1)));
+        VerifyOrQuit(!avail.IsAvailableIn(MakeTimeWindow(startTime, TimeWindow::kMaxDuration)));
 
-        // 7. All-ones bitmap with `Window::kMaxDuration`.
+        // 7. All-ones bitmap with `TimeWindow::kMaxDuration`.
         SuccessOrQuit(avail.Init(startTime, slotDuration, 11, kAllOnes));
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime, Window::kMaxDuration}));
-        VerifyOrQuit(avail.IsAvailableIn(Window{startTime - 12345, Window::kMaxDuration}));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime, TimeWindow::kMaxDuration)));
+        VerifyOrQuit(avail.IsAvailableIn(MakeTimeWindow(startTime - 12345, TimeWindow::kMaxDuration)));
     }
 
     printf("TestRadioAvailabilityIsAvailableIn() passed\n");
@@ -319,7 +367,7 @@ void TestRadioAvailabilityFindNextAvailableWindow(void)
         uint32_t          slotDur   = SlotDurationToUsec(slotDuration);
         Radio::Time64     startTime = 2000000ULL;
         RadioAvailability avail;
-        Window            window;
+        TimeWindow        window;
 
         // 1. All-zeros schedules (including non-byte-aligned with trailing 1s in unused bits) -> `kErrorNotFound`.
         {
@@ -346,7 +394,7 @@ void TestRadioAvailabilityFindNextAvailableWindow(void)
             VerifyOrQuit(avail.FindNextAvailableWindow(startTime, window) == kErrorNotFound);
         }
 
-        // 2. All-ones schedules (1 bit, 5 bits with trailing 0s, and 96 bits) -> `Window::kMaxDuration`.
+        // 2. All-ones schedules (1 bit, 5 bits with trailing 0s, and 96 bits) -> `TimeWindow::kMaxDuration`.
         {
             static const uint8_t kOneBitOne[]                                = {0x80};
             static const uint8_t kFiveBitsOneWithTrailingZeros[]             = {0xf8};
@@ -356,20 +404,20 @@ void TestRadioAvailabilityFindNextAvailableWindow(void)
 
             SuccessOrQuit(avail.Init(startTime, slotDuration, 1, kOneBitOne));
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime - 1234, window));
-            VerifyOrQuit(window.mStartTime == startTime - 1234);
-            VerifyOrQuit(window.mDuration == Window::kMaxDuration);
+            VerifyOrQuit(window.GetStartTime() == startTime - 1234);
+            VerifyOrQuit(window.IsUnbounded());
             VerifyWindowProperties(avail, startTime - 1234, window);
 
             SuccessOrQuit(avail.Init(startTime, slotDuration, 5, kFiveBitsOneWithTrailingZeros));
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime + 333, window));
-            VerifyOrQuit(window.mStartTime == startTime + 333);
-            VerifyOrQuit(window.mDuration == Window::kMaxDuration);
+            VerifyOrQuit(window.GetStartTime() == startTime + 333);
+            VerifyOrQuit(window.IsUnbounded());
             VerifyWindowProperties(avail, startTime + 333, window);
 
             SuccessOrQuit(avail.Init(startTime, slotDuration, RadioAvailability::kMaxBitmapLength, kAllOnes));
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime, window));
-            VerifyOrQuit(window.mStartTime == startTime);
-            VerifyOrQuit(window.mDuration == Window::kMaxDuration);
+            VerifyOrQuit(window.GetStartTime() == startTime);
+            VerifyOrQuit(window.IsUnbounded());
         }
 
         // 3. 1-Available / 1-Unavailable alternating (`mBitLength = 2`, `0b10` = `0x80`).
@@ -380,26 +428,26 @@ void TestRadioAvailabilityFindNextAvailableWindow(void)
 
             // At start of available Slot 0.
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime, window));
-            VerifyOrQuit(window.mStartTime == startTime);
-            VerifyOrQuit(window.mDuration == slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime);
+            VerifyOrQuit(window.GetDuration() == slotDur);
             VerifyWindowProperties(avail, startTime, window);
 
             // Partway through Slot 0.
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime + 100, window));
-            VerifyOrQuit(window.mStartTime == startTime + 100);
-            VerifyOrQuit(window.mDuration == slotDur - 100);
+            VerifyOrQuit(window.GetStartTime() == startTime + 100);
+            VerifyOrQuit(window.GetDuration() == slotDur - 100);
             VerifyWindowProperties(avail, startTime + 100, window);
 
             // At start of unavailable Slot 1 -> jumps to next Slot 0 (`startTime + 2 * slotDur`).
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime + slotDur, window));
-            VerifyOrQuit(window.mStartTime == startTime + 2 * slotDur);
-            VerifyOrQuit(window.mDuration == slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime + 2 * slotDur);
+            VerifyOrQuit(window.GetDuration() == slotDur);
             VerifyWindowProperties(avail, startTime + slotDur, window);
 
             // 1 us before `startTime` (which is the end of unavailable Slot 1 in previous cycle).
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime - 1, window));
-            VerifyOrQuit(window.mStartTime == startTime);
-            VerifyOrQuit(window.mDuration == slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime);
+            VerifyOrQuit(window.GetDuration() == slotDur);
             VerifyWindowProperties(avail, startTime - 1, window);
         }
 
@@ -412,51 +460,51 @@ void TestRadioAvailabilityFindNextAvailableWindow(void)
 
             // At `startTime` (Slot 0): covers Slots 0 and 1 (`2 * slotDur`).
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime, window));
-            VerifyOrQuit(window.mStartTime == startTime);
-            VerifyOrQuit(window.mDuration == 2 * slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime);
+            VerifyOrQuit(window.GetDuration() == 2 * slotDur);
             VerifyWindowProperties(avail, startTime, window);
 
             // Mid-Slot 0 (`startTime + 50`): covers remainder of Slot 0 + Slot 1.
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime + 50, window));
-            VerifyOrQuit(window.mStartTime == startTime + 50);
-            VerifyOrQuit(window.mDuration == 2 * slotDur - 50);
+            VerifyOrQuit(window.GetStartTime() == startTime + 50);
+            VerifyOrQuit(window.GetDuration() == 2 * slotDur - 50);
             VerifyWindowProperties(avail, startTime + 50, window);
 
             // Last microsecond of Slot 1 (`startTime + 2 * slotDur - 1`): duration is 1 us.
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime + 2 * slotDur - 1, window));
-            VerifyOrQuit(window.mStartTime == startTime + 2 * slotDur - 1);
-            VerifyOrQuit(window.mDuration == 1);
+            VerifyOrQuit(window.GetStartTime() == startTime + 2 * slotDur - 1);
+            VerifyOrQuit(window.GetDuration() == 1);
             VerifyWindowProperties(avail, startTime + 2 * slotDur - 1, window);
 
             // Start of unavailable Slot 2 (`startTime + 2 * slotDur`): next available is Slot 3 (`1 * slotDur`).
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime + 2 * slotDur, window));
-            VerifyOrQuit(window.mStartTime == startTime + 3 * slotDur);
-            VerifyOrQuit(window.mDuration == slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime + 3 * slotDur);
+            VerifyOrQuit(window.GetDuration() == slotDur);
             VerifyWindowProperties(avail, startTime + 2 * slotDur, window);
 
             // Start of Slot 5 (`startTime + 5 * slotDur`): wraps around through Slots 5, 0, 1 (`3 * slotDur`).
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime + 5 * slotDur, window));
-            VerifyOrQuit(window.mStartTime == startTime + 5 * slotDur);
-            VerifyOrQuit(window.mDuration == 3 * slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime + 5 * slotDur);
+            VerifyOrQuit(window.GetDuration() == 3 * slotDur);
             VerifyWindowProperties(avail, startTime + 5 * slotDur, window);
 
             // Before `startTime` at start of Slot 5 (`startTime - slotDur`): crosses `startTime` (`3 * slotDur`).
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime - slotDur, window));
-            VerifyOrQuit(window.mStartTime == startTime - slotDur);
-            VerifyOrQuit(window.mDuration == 3 * slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime - slotDur);
+            VerifyOrQuit(window.GetDuration() == 3 * slotDur);
             VerifyWindowProperties(avail, startTime - slotDur, window);
 
             // Before `startTime` at `startTime - 1` (last us of Slot 5): `1 + 2 * slotDur`.
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime - 1, window));
-            VerifyOrQuit(window.mStartTime == startTime - 1);
-            VerifyOrQuit(window.mDuration == 2 * slotDur + 1);
+            VerifyOrQuit(window.GetStartTime() == startTime - 1);
+            VerifyOrQuit(window.GetDuration() == 2 * slotDur + 1);
             VerifyWindowProperties(avail, startTime - 1, window);
 
             // Before `startTime` in unavailable Slot 4 (`startTime - 2 * slotDur + 10`):
             // next window starts at `startTime - slotDur` with duration `3 * slotDur`.
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime - 2 * slotDur + 10, window));
-            VerifyOrQuit(window.mStartTime == startTime - slotDur);
-            VerifyOrQuit(window.mDuration == 3 * slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime - slotDur);
+            VerifyOrQuit(window.GetDuration() == 3 * slotDur);
             VerifyWindowProperties(avail, startTime - 2 * slotDur + 10, window);
         }
 
@@ -471,16 +519,16 @@ void TestRadioAvailabilityFindNextAvailableWindow(void)
             // Query in Slot 4 (`startTime + 4 * slotDur + 123`):
             // Must skip Slots 4, 5, 6, 0, 1 and land at Slot 2 of the next cycle (`startTime + 9 * slotDur`).
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime + 4 * slotDur + 123, window));
-            VerifyOrQuit(window.mStartTime == startTime + 9 * slotDur);
-            VerifyOrQuit(window.mDuration == 2 * slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime + 9 * slotDur);
+            VerifyOrQuit(window.GetDuration() == 2 * slotDur);
             VerifyWindowProperties(avail, startTime + 4 * slotDur + 123, window);
 
             // Query before `startTime` in Slot 4 of previous cycle (`startTime - 3 * slotDur + 50`):
             // Must skip Slots 4, 5, 6 (before `startTime`) and Slots 0, 1 (after `startTime`),
             // landing at `startTime + 2 * slotDur` with duration `2 * slotDur`.
             SuccessOrQuit(avail.FindNextAvailableWindow(startTime - 3 * slotDur + 50, window));
-            VerifyOrQuit(window.mStartTime == startTime + 2 * slotDur);
-            VerifyOrQuit(window.mDuration == 2 * slotDur);
+            VerifyOrQuit(window.GetStartTime() == startTime + 2 * slotDur);
+            VerifyOrQuit(window.GetDuration() == 2 * slotDur);
             VerifyWindowProperties(avail, startTime - 3 * slotDur + 50, window);
 
             // Step through 10 consecutive windows starting from `startTime - 10 * slotDur` by advancing
@@ -492,7 +540,7 @@ void TestRadioAvailabilityFindNextAvailableWindow(void)
                 {
                     SuccessOrQuit(avail.FindNextAvailableWindow(queryTime, window));
                     VerifyWindowProperties(avail, queryTime, window);
-                    VerifyOrQuit(window.mDuration == 2 * slotDur);
+                    VerifyOrQuit(window.GetDuration() == 2 * slotDur);
                     queryTime = window.GetEndTime();
                 }
             }
@@ -632,6 +680,354 @@ void TestRadioAvailabilityRebaseStartTime(void)
     }
 
     printf("TestRadioAvailabilityRebaseStartTime() passed\n");
+}
+
+void TestListenScheduleInit(void)
+{
+    ListenSchedule schedule;
+
+    VerifyOrQuit(!schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetStartTime() == 0);
+    VerifyOrQuit(schedule.GetSlotDuration() == kSlotDuration625Usec);
+    VerifyOrQuit(schedule.GetPeriod() == 0);
+    VerifyOrQuit(schedule.GetPhase() == 0);
+    VerifyOrQuit(schedule.GetMinDuration() == 0);
+    VerifyOrQuit(schedule.GetExtendedDuration() == 0);
+    VerifyOrQuit(schedule.DetermineListenDuration() == TimeWindow::kMaxDuration);
+
+    // Valid initialization.
+    SuccessOrQuit(schedule.Init(100000, kSlotDuration625Usec, 320, 45, 2, 8));
+    VerifyOrQuit(schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetStartTime() == 100000);
+    VerifyOrQuit(schedule.GetSlotDuration() == kSlotDuration625Usec);
+    VerifyOrQuit(schedule.GetSlotDurationInUsec() == 625);
+    VerifyOrQuit(schedule.SlotsToUsec(0) == 0);
+    VerifyOrQuit(schedule.SlotsToUsec(10) == 6250);
+    VerifyOrQuit(schedule.SlotsToUsec(65535) == 65535U * 625U);
+    VerifyOrQuit(schedule.GetPeriod() == 320);
+    VerifyOrQuit(schedule.GetPhase() == 45);
+    VerifyOrQuit(schedule.GetMinDuration() == 2);
+    VerifyOrQuit(schedule.GetExtendedDuration() == 8);
+    VerifyOrQuit(schedule.DetermineListenDuration() == (2 + 8) * 625);
+
+    // Phase larger than or equal to period is reduced modulo period; extended duration 0 means unconstrained.
+    SuccessOrQuit(schedule.Init(250000, kSlotDuration625Usec, 100, 245, 1, 0));
+    VerifyOrQuit(schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetPeriod() == 100);
+    VerifyOrQuit(schedule.GetPhase() == 45);
+    VerifyOrQuit(schedule.DetermineListenDuration() == TimeWindow::kMaxDuration);
+
+    SuccessOrQuit(schedule.Init(250000, kSlotDuration625Usec, 100, 100, 1, 0));
+    VerifyOrQuit(schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetPeriod() == 100);
+    VerifyOrQuit(schedule.GetPhase() == 0);
+    VerifyOrQuit(schedule.DetermineListenDuration() == TimeWindow::kMaxDuration);
+
+    // Minimum (`1`) and maximum (`65535`) non-zero period boundaries.
+    SuccessOrQuit(schedule.Init(1000, kSlotDuration625Usec, 1, 50, 1, 1));
+    VerifyOrQuit(schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetPeriod() == 1);
+    VerifyOrQuit(schedule.GetPhase() == 0);
+    VerifyOrQuit(schedule.DetermineListenDuration() == 2 * 625);
+
+    SuccessOrQuit(
+        schedule.Init(1000, kSlotDuration1250Usec, NumericLimits<uint16_t>::kMax, NumericLimits<uint16_t>::kMax, 1, 1));
+    VerifyOrQuit(schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetPeriod() == NumericLimits<uint16_t>::kMax);
+    VerifyOrQuit(schedule.GetPhase() == 0);
+
+    SuccessOrQuit(schedule.Init(1000, kSlotDuration1250Usec, NumericLimits<uint16_t>::kMax,
+                                NumericLimits<uint16_t>::kMax - 1, 1, 1));
+    VerifyOrQuit(schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetPeriod() == NumericLimits<uint16_t>::kMax);
+    VerifyOrQuit(schedule.GetPhase() == NumericLimits<uint16_t>::kMax - 1);
+
+    // Boundary valid values.
+    SuccessOrQuit(schedule.Init(200000, kSlotDuration1250Usec, 100, 99, ListenSchedule::kMaxMinDuration,
+                                ListenSchedule::kMaxExtendedDuration));
+    VerifyOrQuit(schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetStartTime() == 200000);
+    VerifyOrQuit(schedule.GetSlotDuration() == kSlotDuration1250Usec);
+    VerifyOrQuit(schedule.GetSlotDurationInUsec() == 1250);
+    VerifyOrQuit(schedule.SlotsToUsec(65535) == 65535U * 1250U);
+    VerifyOrQuit(schedule.GetPeriod() == 100);
+    VerifyOrQuit(schedule.GetPhase() == 99);
+    VerifyOrQuit(schedule.GetMinDuration() == ListenSchedule::kMaxMinDuration);
+    VerifyOrQuit(schedule.GetExtendedDuration() == ListenSchedule::kMaxExtendedDuration);
+    VerifyOrQuit(schedule.DetermineListenDuration() ==
+                 (ListenSchedule::kMaxMinDuration + ListenSchedule::kMaxExtendedDuration) * 1250);
+
+    // Invalid parameters must return kErrorInvalidArgs and leave `schedule` unchanged.
+    VerifyOrQuit(schedule.Init(300000, kSlotDuration625Usec, 100, 0, 0, 0) == kErrorInvalidArgs);
+    VerifyOrQuit(schedule.Init(300000, kSlotDuration625Usec, 100, 0, 0, 5) == kErrorInvalidArgs);
+    VerifyOrQuit(schedule.Init(300000, kSlotDuration625Usec, 100, 0, ListenSchedule::kMaxMinDuration + 1, 0) ==
+                 kErrorInvalidArgs);
+    VerifyOrQuit(schedule.Init(300000, kSlotDuration625Usec, 100, 0, NumericLimits<uint8_t>::kMax, 0) ==
+                 kErrorInvalidArgs);
+    VerifyOrQuit(schedule.Init(300000, kSlotDuration625Usec, 100, 0, 1, ListenSchedule::kMaxExtendedDuration + 1) ==
+                 kErrorInvalidArgs);
+    VerifyOrQuit(schedule.Init(300000, kSlotDuration625Usec, 100, 0, 1, NumericLimits<uint8_t>::kMax) ==
+                 kErrorInvalidArgs);
+
+    VerifyOrQuit(schedule.GetStartTime() == 200000);
+    VerifyOrQuit(schedule.GetSlotDuration() == kSlotDuration1250Usec);
+    VerifyOrQuit(schedule.GetPeriod() == 100);
+    VerifyOrQuit(schedule.GetPhase() == 99);
+    VerifyOrQuit(schedule.GetMinDuration() == ListenSchedule::kMaxMinDuration);
+    VerifyOrQuit(schedule.GetExtendedDuration() == ListenSchedule::kMaxExtendedDuration);
+
+    // Zero period clears the schedule and ignores all other parameters.
+    SuccessOrQuit(schedule.Init(300000, kSlotDuration1250Usec, 0, 500, 0, 200));
+    VerifyOrQuit(!schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetStartTime() == 0);
+    VerifyOrQuit(schedule.GetSlotDuration() == kSlotDuration625Usec);
+    VerifyOrQuit(schedule.GetPeriod() == 0);
+    VerifyOrQuit(schedule.GetPhase() == 0);
+    VerifyOrQuit(schedule.GetMinDuration() == 0);
+    VerifyOrQuit(schedule.GetExtendedDuration() == 0);
+    VerifyOrQuit(schedule.DetermineListenDuration() == TimeWindow::kMaxDuration);
+
+    // Re-initialize and then `Clear()`.
+    SuccessOrQuit(schedule.Init(200000, kSlotDuration1250Usec, 100, 45, 4, 6));
+    VerifyOrQuit(schedule.IsSpecified());
+    schedule.Clear();
+    VerifyOrQuit(!schedule.IsSpecified());
+    VerifyOrQuit(schedule.GetStartTime() == 0);
+    VerifyOrQuit(schedule.GetSlotDuration() == kSlotDuration625Usec);
+    VerifyOrQuit(schedule.GetPeriod() == 0);
+    VerifyOrQuit(schedule.GetPhase() == 0);
+    VerifyOrQuit(schedule.GetMinDuration() == 0);
+    VerifyOrQuit(schedule.GetExtendedDuration() == 0);
+    VerifyOrQuit(schedule.DetermineListenDuration() == TimeWindow::kMaxDuration);
+
+    printf("TestListenScheduleInit() passed\n");
+}
+
+void TestListenScheduleFindNextListenWindow(void)
+{
+    static constexpr uint64_t kStartTime = 500000ULL;
+    static constexpr uint16_t kPeriod    = 10;
+    static constexpr uint16_t kPhase     = 3;
+
+    static const SlotDuration kSlotDurations[] = {kSlotDuration625Usec, kSlotDuration1250Usec};
+
+    // Unspecified schedule -> unbounded window starting at query time.
+    {
+        ListenSchedule schedule;
+        TimeWindow     window;
+
+        schedule.FindNextListenWindow(0, window);
+        VerifyOrQuit(window.GetStartTime() == 0);
+        VerifyOrQuit(window.IsUnbounded());
+
+        schedule.FindNextListenWindow(123456ULL, window);
+        VerifyOrQuit(window.GetStartTime() == 123456ULL);
+        VerifyOrQuit(window.IsUnbounded());
+
+        schedule.FindNextListenWindow(Radio::kMaxTime64, window);
+        VerifyOrQuit(window.GetStartTime() == Radio::kMaxTime64);
+        VerifyOrQuit(window.IsUnbounded());
+    }
+
+    for (SlotDuration slotDuration : kSlotDurations)
+    {
+        uint64_t       slotDur = SlotDurationToUsec(slotDuration);
+        ListenSchedule bounded;
+        ListenSchedule unbounded;
+        TimeWindow     window;
+
+        SuccessOrQuit(bounded.Init(kStartTime, slotDuration, kPeriod, kPhase, 2, 4));
+        SuccessOrQuit(unbounded.Init(kStartTime, slotDuration, kPeriod, kPhase, 2, 0));
+
+        // 1. Query on exact phase slot boundary (cycle 0, cycle +2, cycle -1).
+        bounded.FindNextListenWindow(kStartTime + kPhase * slotDur, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + kPhase * slotDur);
+        VerifyOrQuit(window.GetDuration() == 6 * slotDur);
+        VerifyOrQuit(!window.IsUnbounded());
+
+        unbounded.FindNextListenWindow(kStartTime + kPhase * slotDur, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + kPhase * slotDur);
+        VerifyOrQuit(window.IsUnbounded());
+
+        bounded.FindNextListenWindow(kStartTime + (2 * kPeriod + kPhase) * slotDur, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + (2 * kPeriod + kPhase) * slotDur);
+        VerifyOrQuit(window.GetDuration() == 6 * slotDur);
+
+        bounded.FindNextListenWindow(kStartTime - (kPeriod - kPhase) * slotDur, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime - (kPeriod - kPhase) * slotDur);
+        VerifyOrQuit(window.GetDuration() == 6 * slotDur);
+
+        // 2. Query mid-slot inside the phase slot -> advances to next cycle's phase slot.
+        bounded.FindNextListenWindow(kStartTime + kPhase * slotDur + 1, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + (kPeriod + kPhase) * slotDur);
+        VerifyOrQuit(window.GetDuration() == 6 * slotDur);
+
+        bounded.FindNextListenWindow(kStartTime + (kPhase + 1) * slotDur - 1, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + (kPeriod + kPhase) * slotDur);
+
+        // 3. Query before phase within cycle (on boundary and mid-slot).
+        bounded.FindNextListenWindow(kStartTime, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + kPhase * slotDur);
+
+        bounded.FindNextListenWindow(kStartTime + (kPhase - 1) * slotDur + 100, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + kPhase * slotDur);
+
+        // 4. Query after phase within cycle (on boundary and mid-slot) -> wraps to next cycle.
+        bounded.FindNextListenWindow(kStartTime + (kPhase + 1) * slotDur, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + (kPeriod + kPhase) * slotDur);
+
+        bounded.FindNextListenWindow(kStartTime + (kPeriod - 1) * slotDur + 50, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + (kPeriod + kPhase) * slotDur);
+
+        // 5. Query before `kStartTime` (aligned, mid-slot, at 0, and with non-slot-aligned start time).
+        bounded.FindNextListenWindow(kStartTime - 1, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + kPhase * slotDur);
+
+        bounded.FindNextListenWindow(kStartTime - (kPeriod - kPhase + 1) * slotDur + 100, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime - (kPeriod - kPhase) * slotDur);
+
+        bounded.FindNextListenWindow(kStartTime - (kPeriod - kPhase) * slotDur + 1, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + kPhase * slotDur);
+
+        bounded.FindNextListenWindow(kStartTime - (kPeriod - kPhase - 1) * slotDur + 100, window);
+        VerifyOrQuit(window.GetStartTime() == kStartTime + kPhase * slotDur);
+
+        bounded.FindNextListenWindow(0, window);
+        VerifyOrQuit(window.GetStartTime() < kPeriod * slotDur);
+        VerifyOrQuit(((kStartTime - window.GetStartTime()) % (kPeriod * slotDur)) == (kPeriod - kPhase) * slotDur);
+        VerifyOrQuit(window.GetDuration() == 6 * slotDur);
+
+        {
+            static constexpr uint64_t kUnalignedStartTime = 500123ULL;
+
+            ListenSchedule unaligned;
+
+            SuccessOrQuit(unaligned.Init(kUnalignedStartTime, slotDuration, kPeriod, kPhase, 2, 4));
+            unaligned.FindNextListenWindow(0, window);
+            VerifyOrQuit(window.GetStartTime() == 123 + kPhase * slotDur);
+            VerifyOrQuit(window.GetDuration() == 6 * slotDur);
+        }
+
+        // 6. Phase 0 and last-slot (`kPeriod - 1`) edge cases.
+        {
+            ListenSchedule phaseZero;
+            ListenSchedule phaseLast;
+
+            SuccessOrQuit(phaseZero.Init(kStartTime, slotDuration, kPeriod, 0, 1, 1));
+
+            phaseZero.FindNextListenWindow(kStartTime, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime);
+            VerifyOrQuit(window.GetDuration() == 2 * slotDur);
+
+            phaseZero.FindNextListenWindow(kStartTime + 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + kPeriod * slotDur);
+
+            phaseZero.FindNextListenWindow(kStartTime - 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime);
+
+            SuccessOrQuit(phaseLast.Init(kStartTime, slotDuration, kPeriod, kPeriod - 1, 1, 1));
+
+            phaseLast.FindNextListenWindow(kStartTime + (kPeriod - 1) * slotDur, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + (kPeriod - 1) * slotDur);
+            VerifyOrQuit(window.GetDuration() == 2 * slotDur);
+
+            phaseLast.FindNextListenWindow(kStartTime + (kPeriod - 1) * slotDur + 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + (2 * kPeriod - 1) * slotDur);
+
+            phaseLast.FindNextListenWindow(kStartTime - 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + (kPeriod - 1) * slotDur);
+
+            phaseLast.FindNextListenWindow(kStartTime - slotDur, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime - slotDur);
+        }
+
+        // 7. Start time 0 edge cases.
+        {
+            ListenSchedule zeroStart;
+
+            SuccessOrQuit(zeroStart.Init(0, slotDuration, kPeriod, 0, 1, 2));
+
+            zeroStart.FindNextListenWindow(0, window);
+            VerifyOrQuit(window.GetStartTime() == 0);
+            VerifyOrQuit(window.GetDuration() == 3 * slotDur);
+
+            zeroStart.FindNextListenWindow(1, window);
+            VerifyOrQuit(window.GetStartTime() == kPeriod * slotDur);
+
+            SuccessOrQuit(zeroStart.Init(0, slotDuration, kPeriod, kPhase, 1, 2));
+
+            zeroStart.FindNextListenWindow(0, window);
+            VerifyOrQuit(window.GetStartTime() == kPhase * slotDur);
+
+            zeroStart.FindNextListenWindow(1, window);
+            VerifyOrQuit(window.GetStartTime() == kPhase * slotDur);
+        }
+
+        // 8. Extreme period edge cases (`1` and `NumericLimits<uint16_t>::kMax`).
+        {
+            static constexpr uint16_t kMaxPeriod = NumericLimits<uint16_t>::kMax;
+
+            ListenSchedule unitPeriod;
+            ListenSchedule maxPeriod;
+
+            SuccessOrQuit(unitPeriod.Init(kStartTime, slotDuration, 1, 0, 1, 1));
+
+            unitPeriod.FindNextListenWindow(kStartTime, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime);
+            VerifyOrQuit(window.GetDuration() == 2 * slotDur);
+
+            unitPeriod.FindNextListenWindow(kStartTime + 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + slotDur);
+
+            unitPeriod.FindNextListenWindow(kStartTime + slotDur - 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + slotDur);
+
+            unitPeriod.FindNextListenWindow(kStartTime - 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime);
+
+            unitPeriod.FindNextListenWindow(kStartTime - slotDur, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime - slotDur);
+
+            // Max period with phase 0 (index wrap `65534 -> 0` and max wrapped `slotsUntilPhase`).
+            SuccessOrQuit(maxPeriod.Init(kStartTime, slotDuration, kMaxPeriod, 0, 1, 2));
+
+            maxPeriod.FindNextListenWindow(kStartTime - 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime);
+            VerifyOrQuit(window.GetDuration() == 3 * slotDur);
+
+            maxPeriod.FindNextListenWindow(kStartTime + 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + kMaxPeriod * slotDur);
+
+            maxPeriod.FindNextListenWindow(kStartTime + (kMaxPeriod - 1) * slotDur + 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + kMaxPeriod * slotDur);
+
+            // Max period with phase `kMaxPeriod - 1` (max forward `slotsUntilPhase` and wrap from last slot).
+            SuccessOrQuit(maxPeriod.Init(kStartTime, slotDuration, kMaxPeriod, kMaxPeriod - 1, 1, 2));
+
+            maxPeriod.FindNextListenWindow(kStartTime, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + (kMaxPeriod - 1) * slotDur);
+
+            maxPeriod.FindNextListenWindow(kStartTime + (kMaxPeriod - 1) * slotDur + 1, window);
+            VerifyOrQuit(window.GetStartTime() == kStartTime + (2ULL * kMaxPeriod - 1) * slotDur);
+        }
+
+        // 9. Step through 5 consecutive listen windows.
+        {
+            Radio::Time64 queryTime     = kStartTime - 2 * kPeriod * slotDur;
+            Radio::Time64 expectedStart = kStartTime - (2 * kPeriod - kPhase) * slotDur;
+
+            for (uint8_t iter = 0; iter < 5; iter++)
+            {
+                bounded.FindNextListenWindow(queryTime, window);
+                VerifyOrQuit(window.GetStartTime() == expectedStart);
+                VerifyOrQuit(window.GetDuration() == 6 * slotDur);
+                queryTime = window.GetStartTime() + 1;
+                expectedStart += kPeriod * slotDur;
+            }
+        }
+    }
+
+    printf("TestListenScheduleFindNextListenWindow() passed\n");
 }
 
 #endif // OT_CONFIG_THREAD_DIRECT_ENABLE
@@ -1665,12 +2061,15 @@ void TestListenerAndCslScheduling(void)
 int main(void)
 {
 #if OT_CONFIG_THREAD_DIRECT_ENABLE
+    ot::ThreadDirect::TestTimeWindow();
     ot::ThreadDirect::TestRadioAvailabilityInitAndUnspecified();
     ot::ThreadDirect::TestRadioAvailabilityIsAvailableAt();
     ot::ThreadDirect::TestRadioAvailabilityIsAvailableIn();
     ot::ThreadDirect::TestRadioAvailabilityFindNextAvailableWindow();
     ot::ThreadDirect::TestRadioAvailabilityCompare();
     ot::ThreadDirect::TestRadioAvailabilityRebaseStartTime();
+    ot::ThreadDirect::TestListenScheduleInit();
+    ot::ThreadDirect::TestListenScheduleFindNextListenWindow();
 
 #if OPENTHREAD_CONFIG_TD_WAKE_LISTENER_ENABLE
     ot::ThreadDirect::TestListenerConfigAndApi();
