@@ -381,10 +381,14 @@ otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
         case ENODEV:
         case ENETDOWN:
         case ENXIO:
-            LogWarn("failed to send ICMPv6 message: %s, suggests infra link might be down, checking status.",
-                    strerror(errno));
-            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
-            break;
+            if (!otExitIsExiting())
+            {
+                LogWarn("failed to send ICMPv6 message: %s, suggests infra link might be down, checking status.",
+                        strerror(errno));
+                SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
+                break;
+            }
+            OT_FALL_THROUGH;
         default:
             LogWarn("failed to send ICMPv6 message: %s", strerror(errno));
             break;

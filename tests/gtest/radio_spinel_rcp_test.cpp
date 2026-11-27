@@ -29,6 +29,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <csignal>
+#include <cstdio>
 #include <map>
 #include <vector>
 
@@ -2336,4 +2338,158 @@ TEST(RadioSpinelBusLatency, usesInterfaceDefaultUntilExplicitlyOverridden)
     platform.mRadioSpinel.SetBusLatency(4500);
     EXPECT_EQ(platform.mRadioSpinel.GetBusLatency(), 4500u);
     EXPECT_EQ(sCallbackCount, 2u);
+}
+
+static void RecordSpinelExitHandler(uint8_t aExitCode, void *aContext)
+{
+    int tag = *static_cast<const int *>(aContext);
+
+    std::fprintf(stderr, "SPINEL_EXIT_HANDLER:code=%u:tag=%d\n", static_cast<unsigned int>(aExitCode), tag);
+    std::fflush(stderr);
+}
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT == 0
+static void ReentrantDieSpinelExitHandler(uint8_t aExitCode, void *aContext)
+{
+    int &callCount = *static_cast<int *>(aContext);
+
+    callCount++;
+    std::fprintf(stderr, "SPINEL_REENTRANT_DIE:code=%u:count=%d\n", static_cast<unsigned int>(aExitCode), callCount);
+    std::fflush(stderr);
+
+    DieNow(OT_EXIT_INVALID_STATE);
+}
+
+TEST(RadioSpinelExitHandler, invokesExitHandlerOnRcpTimeout)
+{
+    EnergyScanPlatform platform;
+    int                tag = 42;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnergyScan(18, 3000), kErrorNone);
+    platform.GoInMs(3000 + OPENTHREAD_SPINEL_CONFIG_RCP_ENERGY_SCAN_WAIT_TIME_SECS * 1000 - 1);
+    platform.Process();
+
+    EXPECT_EXIT(
+        {
+            otExitSetHandler(RecordSpinelExitHandler, &tag);
+            platform.GoInMs(1);
+            platform.Process();
+        },
+        ::testing::ExitedWithCode(OT_EXIT_RADIO_SPINEL_NO_RESPONSE),
+        ::testing::HasSubstr("SPINEL_EXIT_HANDLER:code=6:tag=42"));
+}
+
+TEST(RadioSpinelExitHandler, invokesExitHandlerOnUnexpectedRcpReset)
+{
+    EnergyScanPlatform platform;
+    uint8_t            frame[16];
+    spinel_ssize_t     length;
+    int                tag = 42;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    length = spinel_datatype_pack(frame, sizeof(frame), "Ciii", SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_IS,
+                                  SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_RESET_POWER_ON);
+    ASSERT_GT(length, 0);
+
+    EXPECT_EXIT(
+        {
+            otExitSetHandler(RecordSpinelExitHandler, &tag);
+            platform.ReceiveFrame(frame, static_cast<uint16_t>(length));
+        },
+#if OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE
+        ::testing::KilledBySignal(SIGABRT),
+#else
+        ::testing::ExitedWithCode(OT_EXIT_RADIO_SPINEL_RESET),
+#endif
+        ::testing::HasSubstr("SPINEL_EXIT_HANDLER:code=4:tag=42"));
+}
+
+TEST(RadioSpinelExitHandler, preservesTerminationModeWhenHandlerCallsDieNowOnUnexpectedRcpReset)
+{
+    EnergyScanPlatform platform;
+    uint8_t            frame[16];
+    spinel_ssize_t     length;
+    int                callCount = 0;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    length = spinel_datatype_pack(frame, sizeof(frame), "Ciii", SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_IS,
+                                  SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_RESET_POWER_ON);
+    ASSERT_GT(length, 0);
+
+    EXPECT_EXIT(
+        {
+            otExitSetHandler(ReentrantDieSpinelExitHandler, &callCount);
+            platform.ReceiveFrame(frame, static_cast<uint16_t>(length));
+        },
+#if OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE
+        ::testing::KilledBySignal(SIGABRT),
+#else
+        ::testing::ExitedWithCode(OT_EXIT_RADIO_SPINEL_RESET),
+#endif
+        ::testing::AllOf(::testing::HasSubstr("SPINEL_REENTRANT_DIE:code=4:count=1"),
+                         ::testing::Not(::testing::HasSubstr("count=2"))));
+}
+#endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT == 0
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+TEST(RadioSpinelExitHandler, invokesExitHandlerWhenRcpRestorationExhausted)
+{
+    EnergyScanPlatform platform;
+    uint8_t            frame[16];
+    spinel_ssize_t     length;
+    int                tag = 42;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    length = spinel_datatype_pack(frame, sizeof(frame), "Ciii", SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_IS,
+                                  SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_RESET_POWER_ON);
+    ASSERT_GT(length, 0);
+
+    platform.mSpinelInterface.mFrameFilter = [](const uint8_t *aFrame, uint16_t aLength) {
+        uint8_t      header;
+        unsigned int command;
+        unsigned int key;
+
+        if (spinel_datatype_unpack(aFrame, aLength, "Cii", &header, &command, &key) <= 0 ||
+            command != SPINEL_CMD_PROP_VALUE_IS)
+        {
+            return true;
+        }
+
+        if (key == SPINEL_PROP_STREAM_LOG || key == SPINEL_PROP_STREAM_DEBUG)
+        {
+            return false;
+        }
+
+        if (SPINEL_HEADER_GET_TID(header) != 0 && key == SPINEL_PROP_PHY_ENABLED)
+        {
+            return false;
+        }
+
+        return true;
+    };
+
+    EXPECT_EXIT(
+        {
+            otExitSetHandler(RecordSpinelExitHandler, &tag);
+            platform.ReceiveFrame(frame, static_cast<uint16_t>(length));
+        },
+        ::testing::ExitedWithCode(OT_EXIT_FAILURE), ::testing::HasSubstr("SPINEL_EXIT_HANDLER:code=1:tag=42"));
+}
+#endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+TEST(RadioSpinelExitHandler, invokesExitHandlerOnResetCoprocessorFailure)
+{
+    FakeCoprocessorPlatform platform;
+    spinel_iid_t            iids[]{0};
+    int                     tag = 42;
+
+    EXPECT_EXIT(
+        {
+            otExitSetHandler(RecordSpinelExitHandler, &tag);
+            platform.mSpinelInterface.mSendError = kErrorFailed;
+            platform.mSpinelDriver.Deinit();
+            platform.mSpinelDriver.Init(platform.mSpinelInterface, true, iids, OT_ARRAY_LENGTH(iids));
+        },
+        ::testing::ExitedWithCode(OT_EXIT_FAILURE), ::testing::HasSubstr("SPINEL_EXIT_HANDLER:code=1:tag=42"));
 }

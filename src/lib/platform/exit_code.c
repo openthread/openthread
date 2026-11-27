@@ -35,7 +35,48 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
+
+static otExitHandler sExitHandler = NULL;
+static void         *sExitContext = NULL;
+static bool          sIsExiting   = false;
+static bool          sIsAborting  = false;
+static uint8_t       sExitCode    = OT_EXIT_SUCCESS;
+
+void otExitSetHandler(otExitHandler aHandler, void *aContext)
+{
+    sExitHandler = aHandler;
+    sExitContext = aContext;
+}
+
+bool otExitIsExiting(void) { return sIsExiting; }
+
+OT_EXIT_NORETURN static void TerminateNow(uint8_t aExitCode, bool aAbort)
+{
+    if (!sIsExiting)
+    {
+        sIsExiting  = true;
+        sIsAborting = aAbort;
+        sExitCode   = aExitCode;
+
+        if (sExitHandler != NULL)
+        {
+            sExitHandler(aExitCode, sExitContext);
+        }
+    }
+
+    if (sIsAborting)
+    {
+        abort();
+    }
+
+    exit(sExitCode);
+}
+
+void otExitNow(uint8_t aExitCode) { TerminateNow(aExitCode, false); }
+
+void otAbortNow(uint8_t aExitCode) { TerminateNow(aExitCode, true); }
 
 const char *otExitCodeToString(uint8_t aExitCode)
 {
