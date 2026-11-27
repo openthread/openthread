@@ -32,6 +32,21 @@
 #include "platform/nexus_node.hpp"
 
 namespace ot {
+
+class UnitTester
+{
+public:
+    static void RemoveScheduledChildUpdateRequestToParent(Nexus::Node &aChildNode)
+    {
+        aChildNode.Get<Mle::Mle>().mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
+    }
+
+    static Error SendChildUpdateRequestToChild(Nexus::Node &aParentNode, Child &aChild)
+    {
+        return aParentNode.Get<Mle::Mle>().SendChildUpdateRequestToChild(aChild);
+    }
+};
+
 namespace Nexus {
 
 /**
@@ -59,7 +74,7 @@ static constexpr uint32_t kMultipleTicksWaitTime = 2500;
  */
 static constexpr uint32_t kMidFragmentTickWaitTime = 1100;
 
-static void AddStableOnMeshPrefix(Node &aNode, uint16_t aIndex)
+static void AddOnMeshPrefix(Node &aNode, uint16_t aIndex, bool aStable)
 {
     NetworkData::OnMeshPrefixConfig config;
     char                            prefixString[24];
@@ -68,8 +83,20 @@ static void AddStableOnMeshPrefix(Node &aNode, uint16_t aIndex)
     snprintf(prefixString, sizeof(prefixString), "fd00:%x::/64", aIndex);
     SuccessOrQuit(config.GetPrefix().FromString(prefixString));
     config.mOnMesh = true;
-    config.mStable = true;
+    config.mStable = aStable;
     SuccessOrQuit(aNode.Get<NetworkData::Local>().AddOnMeshPrefix(config));
+}
+
+static void AddStableOnMeshPrefix(Node &aNode, uint16_t aIndex) { AddOnMeshPrefix(aNode, aIndex, true); }
+
+static void RemoveStableOnMeshPrefix(Node &aNode, uint16_t aIndex)
+{
+    Ip6::Prefix prefix;
+    char        prefixString[24];
+
+    snprintf(prefixString, sizeof(prefixString), "fd00:%x::/64", aIndex);
+    SuccessOrQuit(prefix.FromString(prefixString));
+    SuccessOrQuit(aNode.Get<NetworkData::Local>().RemoveOnMeshPrefix(prefix));
 }
 
 static uint16_t CountOnMeshPrefixes(Node &aNode)
@@ -192,7 +219,7 @@ void TestMultiFragmentChildUpdateAcrossTimeTick(void)
     txUnicast = leader.Get<Mac::Mac>().GetCounters().mTxUnicast;
     sed.Get<DataPollSender>().StartPolling();
     SuccessOrQuit(sed.Get<DataPollSender>().SendDataPoll());
-    nexus.AdvanceTime(100);
+    nexus.AdvanceTime(50);
 
     VerifyOrQuit(leader.Get<Mac::Mac>().GetCounters().mTxUnicast == txUnicast + 3);
     VerifyOrQuit(sed.Get<MeshForwarder>().GetCounters().mRxSuccess == rxIpPackets + 1);
@@ -323,6 +350,246 @@ void TestBackToBackNetworkDataUpdatesWhileSedAsleep(void)
     VerifyOrQuit(CountOnMeshPrefixes(sed) == 3);
 }
 
+static void DeliverChildUpdateRequestWithResponseInFlight(Core     &aNexus,
+                                                          Node     &aLeader,
+                                                          Node     &aSed,
+                                                          Child    &aChild,
+                                                          uint16_t &aPrefixIndex,
+                                                          uint8_t  &aExpectedVersion)
+{
+    static constexpr uint16_t kMaxAttempts     = 32;
+    static constexpr uint16_t kMaxTickWaitMsec = 1100;
+    static constexpr uint16_t kMaxPollWaitMsec = 50;
+
+    for (uint16_t attempt = 0;; attempt++)
+    {
+        uint16_t waitMsec;
+
+        VerifyOrQuit(attempt < kMaxAttempts);
+
+        if (attempt > 0)
+        {
+            RemoveStableOnMeshPrefix(aLeader, aPrefixIndex);
+        }
+
+        aSed.Get<DataPollSender>().StopPolling();
+
+        AddStableOnMeshPrefix(aLeader, ++aPrefixIndex);
+        aLeader.Get<NetworkData::Notifier>().HandleServerDataUpdated();
+        aNexus.AdvanceTime(10);
+
+        aExpectedVersion = aLeader.Get<NetworkData::Leader>().GetVersion(aChild.GetNetworkDataType());
+        VerifyOrQuit(aChild.GetNetworkDataVersion() != aExpectedVersion);
+        VerifyOrQuit(FindQueuedChildUpdateRequest(aLeader, aChild) != nullptr);
+
+        // Align right after a Leader `Mle::HandleTimeTick()` by purging the queued request and stepping 1 ms at a
+        // time until `SynchronizeChildNetworkData()` re-queues it, ensuring nearly a full 1 s remains before Tick 1.
+        aLeader.Get<MeshForwarder>().RemoveMessagesForChild(aChild,
+                                                            Message::AcceptMle<Mle::kCommandChildUpdateRequest>);
+        VerifyOrQuit(FindQueuedChildUpdateRequest(aLeader, aChild) == nullptr);
+
+        waitMsec = 0;
+
+        while (FindQueuedChildUpdateRequest(aLeader, aChild) == nullptr)
+        {
+            VerifyOrQuit(waitMsec++ < kMaxTickWaitMsec);
+            aNexus.AdvanceTime(1);
+        }
+
+        // Trigger a Data Poll and step 1 ms at a time until indirect TX of `Child Update Request` completes.
+        aSed.Get<DataPollSender>().StartPolling();
+        SuccessOrQuit(aSed.Get<DataPollSender>().SendDataPoll());
+
+        waitMsec = 0;
+
+        while (FindQueuedChildUpdateRequest(aLeader, aChild) != nullptr)
+        {
+            VerifyOrQuit(waitMsec++ < kMaxPollWaitMsec);
+            aNexus.AdvanceTime(1);
+        }
+
+        aSed.Get<DataPollSender>().StopPolling();
+
+        if (aChild.GetNetworkDataVersion() != aExpectedVersion)
+        {
+            break;
+        }
+
+        // If SED drew a short CSMA-CA backoff and delivered `Child Update Response` within the same 1 ms step, let
+        // SED's follow-up exchange finish and retry with a replacement prefix.
+        aSed.Get<DataPollSender>().StartPolling();
+        aNexus.AdvanceTime(200);
+    }
+}
+
+void TestTimeTickWhileChildUpdateResponseInFlight(void)
+{
+    /**
+     * Scenario 3: `Mle::HandleTimeTick()` firing while sleepy child's `Child Update Response` is in flight.
+     *
+     * Verifies that:
+     * 1. Completing indirect TX of `Child Update Request` sets `Child::IsWaitingForChildUpdateResponse()` while SED's
+     *    `Child Update Response` is still in CSMA-CA backoff.
+     * 2. If SED's in-flight `Child Update Response` is dropped, the first subsequent `Mle::HandleTimeTick()` decrements
+     *    the response timeout without queuing a premature duplicate `Child Update Request`.
+     * 3. Once the link is restored, the next `Mle::HandleTimeTick()` expires the timeout, re-queues `Child Update
+     *    Request`, and SED converges on its next Data Poll.
+     * 4. If a redundant `Child Update Request` is already queued when `HandleChildUpdateResponseOnParent()` receives
+     *    `Child Update Response` with the matching `LeaderData` version, the redundant queued request is removed.
+     * 5. An unrelated child-initiated `Child Update Request` (such as a timeout update) does not clear
+     *    `IsWaitingForChildUpdateResponse()` or remove a queued parent-initiated `Child Update Request`.
+     * 6. When a sleepy child with a queued `kStableSubset` `Child Update Request` switches `DeviceMode` to request
+     *    `kFullSet`, the stale `kStableSubset` request is purged and the child converges on full Network Data.
+     * 7. Switching a sleepy child to rx-on-when-idle clears `IsWaitingForChildUpdateResponse()`.
+     */
+
+    Core     nexus;
+    Node    &leader      = nexus.CreateNode();
+    Node    &sed         = nexus.CreateNode();
+    uint16_t prefixIndex = 0;
+    uint8_t  expectedVersion;
+    Child   *child;
+
+    leader.SetName("LEADER");
+    sed.SetName("SED");
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Scenario 3: Mle::HandleTimeTick() while Child Update Response is in flight");
+
+    AllowLinkBetween(leader, sed);
+
+    leader.Form();
+    nexus.AdvanceTime(kFormNetworkTime);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    sed.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(kAttachAsChildTime);
+    VerifyOrQuit(sed.Get<Mle::Mle>().IsChild());
+
+    child = leader.Get<ChildTable>().FindChild(sed.Get<Mac::Mac>().GetExtAddress(), Child::kInStateValid);
+    VerifyOrQuit(child != nullptr);
+    VerifyOrQuit(!child->IsWaitingForChildUpdateResponse());
+
+    Log("Deliver Child Update Request and pause while SED's Child Update Response is in CSMA-CA backoff");
+    DeliverChildUpdateRequestWithResponseInFlight(nexus, leader, sed, *child, prefixIndex, expectedVersion);
+
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) == nullptr);
+    VerifyOrQuit(child->GetNetworkDataVersion() != expectedVersion);
+    VerifyOrQuit(child->IsWaitingForChildUpdateResponse());
+
+    Log("Drop in-flight Child Update Response and verify Tick 1 decrements timeout without queuing duplicate");
+    UnallowLinkBetween(leader, sed);
+    UnitTester::RemoveScheduledChildUpdateRequestToParent(sed);
+    nexus.AdvanceTime(kMidFragmentTickWaitTime);
+
+    VerifyOrQuit(child->IsWaitingForChildUpdateResponse());
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) == nullptr);
+    VerifyOrQuit(child->GetIndirectMessageCount() == 0);
+    VerifyOrQuit(child->GetNetworkDataVersion() != expectedVersion);
+
+    Log("Restore link and verify Tick 2 expires timeout, re-queues Child Update Request, and SED converges");
+    AllowLinkBetween(leader, sed);
+    nexus.AdvanceTime(kMidFragmentTickWaitTime);
+
+    VerifyOrQuit(!child->IsWaitingForChildUpdateResponse());
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) != nullptr);
+    VerifyOrQuit(child->GetIndirectMessageCount() == 1);
+
+    sed.Get<DataPollSender>().StartPolling();
+    SuccessOrQuit(sed.Get<DataPollSender>().SendDataPoll());
+    nexus.AdvanceTime(200);
+
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) == nullptr);
+    VerifyOrQuit(child->GetIndirectMessageCount() == 0);
+    VerifyOrQuit(!child->IsWaitingForChildUpdateResponse());
+    VerifyOrQuit(child->GetNetworkDataVersion() == expectedVersion);
+    VerifyOrQuit(CountOnMeshPrefixes(sed) == 1);
+
+    Log("Verify HandleChildUpdateResponseOnParent() purges any redundant queued Child Update Request");
+    DeliverChildUpdateRequestWithResponseInFlight(nexus, leader, sed, *child, prefixIndex, expectedVersion);
+
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) == nullptr);
+    VerifyOrQuit(child->GetNetworkDataVersion() != expectedVersion);
+    VerifyOrQuit(child->IsWaitingForChildUpdateResponse());
+
+    SuccessOrQuit(UnitTester::SendChildUpdateRequestToChild(leader, *child));
+    otTaskletsProcess(&leader.GetInstance());
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) != nullptr);
+    VerifyOrQuit(child->GetIndirectMessageCount() == 1);
+
+    nexus.AdvanceTime(20);
+
+    VerifyOrQuit(child->GetNetworkDataVersion() == expectedVersion);
+    VerifyOrQuit(!child->IsWaitingForChildUpdateResponse());
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) == nullptr);
+    VerifyOrQuit(child->GetIndirectMessageCount() == 0);
+
+    sed.Get<DataPollSender>().StartPolling();
+    nexus.AdvanceTime(200);
+    VerifyOrQuit(CountOnMeshPrefixes(sed) == 2);
+
+    Log("Verify child-initiated Child Update Request does not disturb parent-initiated exchange");
+    sed.Get<DataPollSender>().StopPolling();
+
+    SuccessOrQuit(UnitTester::SendChildUpdateRequestToChild(leader, *child));
+    otTaskletsProcess(&leader.GetInstance());
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) != nullptr);
+    child->RestartChildUpdateResponseTimeout();
+
+    sed.Get<Mle::Mle>().SetTimeout(sed.Get<Mle::Mle>().GetTimeout() + 10);
+    sed.Get<DataPollSender>().StopPolling();
+    nexus.AdvanceTime(20);
+
+    VerifyOrQuit(child->GetTimeout() == sed.Get<Mle::Mle>().GetTimeout());
+    VerifyOrQuit(child->IsWaitingForChildUpdateResponse());
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) != nullptr);
+
+    sed.Get<DataPollSender>().StartPolling();
+    SuccessOrQuit(sed.Get<DataPollSender>().SendDataPoll());
+    nexus.AdvanceTime(200);
+    VerifyOrQuit(!child->IsWaitingForChildUpdateResponse());
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) == nullptr);
+
+    Log("Verify switching sleepy child from kStableSubset to kFullSet purges stale kStableSubset request");
+    sed.Get<DataPollSender>().StopPolling();
+
+    AddOnMeshPrefix(leader, ++prefixIndex, false);
+    AddStableOnMeshPrefix(leader, ++prefixIndex);
+    leader.Get<NetworkData::Notifier>().HandleServerDataUpdated();
+    nexus.AdvanceTime(10);
+
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) != nullptr);
+    child->RestartChildUpdateResponseTimeout();
+
+    SuccessOrQuit(sed.Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(Mle::DeviceMode::kModeFullNetworkData)));
+    sed.Get<DataPollSender>().StopPolling();
+    nexus.AdvanceTime(20);
+
+    VerifyOrQuit(child->GetNetworkDataType() == NetworkData::kFullSet);
+    VerifyOrQuit(!child->IsWaitingForChildUpdateResponse());
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) == nullptr);
+
+    sed.Get<DataPollSender>().StartPolling();
+    SuccessOrQuit(sed.Get<DataPollSender>().SendDataPoll());
+    nexus.AdvanceTime(500);
+
+    expectedVersion = leader.Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet);
+    VerifyOrQuit(child->GetNetworkDataVersion() == expectedVersion);
+    VerifyOrQuit(FindQueuedChildUpdateRequest(leader, *child) == nullptr);
+    VerifyOrQuit(CountOnMeshPrefixes(sed) == 4);
+
+    Log("Verify switching sleepy child to rx-on-when-idle clears IsWaitingForChildUpdateResponse()");
+    child->RestartChildUpdateResponseTimeout();
+    SuccessOrQuit(sed.Get<Mle::Mle>().SetDeviceMode(
+        Mle::DeviceMode(Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullNetworkData)));
+    nexus.AdvanceTime(200);
+
+    VerifyOrQuit(child->IsRxOnWhenIdle());
+    VerifyOrQuit(!child->IsWaitingForChildUpdateResponse());
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -330,6 +597,7 @@ int main(void)
 {
     ot::Nexus::TestMultiFragmentChildUpdateAcrossTimeTick();
     ot::Nexus::TestBackToBackNetworkDataUpdatesWhileSedAsleep();
+    ot::Nexus::TestTimeTickWhileChildUpdateResponseInFlight();
 
     printf("All tests passed\n");
     return 0;

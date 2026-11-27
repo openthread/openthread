@@ -100,12 +100,13 @@ void Child::SetDeviceMode(Mle::DeviceMode aMode)
 
     Neighbor::SetDeviceMode(aMode);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (IsRxOnWhenIdle())
     {
+        ClearChildUpdateResponseTimeout();
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         ClearCsl();
-    }
 #endif
+    }
 
     if (IsFullThreadDevice())
     {
