@@ -81,7 +81,7 @@ tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_
 	written = cbuf_reass_write(&tp->recvbuf, (size_t) offset, data, data_offset, tlen, tp->reassbmp, &start_index, cbuf_copy_from_message);
 
 	if ((th->th_flags & TH_FIN) && (tp->reass_fin_index == -1)) {
-		tp->reass_fin_index = (int32_t) (start_index + tlen);
+		tp->reass_fin_index = (int32_t) ((start_index + tlen - 1) % tp->recvbuf.size);
 	}
 	KASSERT(written == tlen, ("Reassembly write out of bounds: tried to write %d, but wrote %d", tlen, (int) written));
 
@@ -95,8 +95,7 @@ present:
 	if (!tpiscantrcv(tp) || usedbefore == 0) {
 		/* If usedbefore == 0, but we can't receive more, then we still need to move the buffer
 		   along by merging and then popping, in case we receive a FIN later on. */
-		if (tp->reass_fin_index >= 0 && tp->recvbuf.size > 0 &&
-		    cbuf_reass_within_offset(&tp->recvbuf, mergeable, ((size_t) tp->reass_fin_index - 1) % tp->recvbuf.size)) {
+		if (tp->reass_fin_index >= 0 && cbuf_reass_within_offset(&tp->recvbuf, mergeable, (size_t) tp->reass_fin_index)) {
 			tp->reass_fin_index = -2; // So we won't consider any more FINs
 			flags = TH_FIN;
 		}

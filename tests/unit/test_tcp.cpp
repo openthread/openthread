@@ -948,7 +948,7 @@ static void TestOutOfOrderFin(void)
     testFreeInstance(instance);
 }
 
-static void TestOutOfOrderFinWrapsAroundLargeReceiveBuffer(void)
+static void TestOutOfOrderFinInLargeReceiveBuffer(bool aWrapAround)
 {
     static uint8_t sRecvBuffer[40000];
 
@@ -958,7 +958,7 @@ static void TestOutOfOrderFinWrapsAroundLargeReceiveBuffer(void)
     ListenerContext listenerCtx;
     uint32_t        offset = 0;
 
-    printf("TestOutOfOrderFinWrapsAroundLargeReceiveBuffer\n");
+    printf("TestOutOfOrderFinInLargeReceiveBuffer(%s)\n", aWrapAround ? "wraps around" : "above INT16_MAX");
 
     InitHeapEndpoint(instance, serverCtx, sRecvBuffer, sizeof(sRecvBuffer));
     InitHeapEndpoint(instance, clientCtx);
@@ -967,9 +967,9 @@ static void TestOutOfOrderFinWrapsAroundLargeReceiveBuffer(void)
     ConnectClient(instance, clientCtx, kClientPort1);
     RemoveUnicastAddress(instance, kClientAddrString);
 
-    // Move the read index 50 bytes before the end of the buffer, so that the FIN segment [20, 120) wraps around
-    // and the index following it exceeds `INT16_MAX`.
-    AdvanceReceiveStream(instance, serverCtx, offset, GetTcb(serverCtx).recvbuf.size - 50);
+    // Move the read index so that the FIN segment [20, 120) either wraps around the end of the buffer, or does not
+    // and lies entirely above `INT16_MAX`.
+    AdvanceReceiveStream(instance, serverCtx, offset, aWrapAround ? (GetTcb(serverCtx).recvbuf.size - 50) : INT16_MAX + 10);
 
     InjectSegment(instance, serverCtx, offset + 20, 100, true);
     InjectSegment(instance, serverCtx, offset, 20, false);
@@ -1039,7 +1039,8 @@ int main(void)
     ot::TestForwardProgressOrderingAndReinit();
     ot::TestDeinitInDisconnectedOnRst();
     ot::TestOutOfOrderFin();
-    ot::TestOutOfOrderFinWrapsAroundLargeReceiveBuffer();
+    ot::TestOutOfOrderFinInLargeReceiveBuffer(true);
+    ot::TestOutOfOrderFinInLargeReceiveBuffer(false);
     ot::TestOutOfOrderFinAfterContiguify();
 #endif
 

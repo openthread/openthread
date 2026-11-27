@@ -262,7 +262,7 @@ Error Tcp::Endpoint::ReceiveContiguify(void)
     if ((tp.reass_fin_index >= 0) && (tp.recvbuf.size > 0))
     {
         tp.reass_fin_index = static_cast<int32_t>(
-            (static_cast<size_t>(tp.reass_fin_index) - 1 + tp.recvbuf.size - oldReadIndex) % tp.recvbuf.size + 1);
+            (static_cast<size_t>(tp.reass_fin_index) + tp.recvbuf.size - oldReadIndex) % tp.recvbuf.size);
     }
 
     return kErrorNone;
