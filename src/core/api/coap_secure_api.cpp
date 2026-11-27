@@ -154,7 +154,19 @@ otError otCoapSecureSendRequestBlockWise(otInstance                 *aInstance,
                                          otCoapBlockwiseReceiveHook  aReceiveHook)
 {
     return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessageWithResponseHandlerSeparateParams(
-        AsCoapMessage(aMessage), aHandler, aTransmitHook, aReceiveHook, aContext);
+        AsCoapMessage(aMessage), /* aTxParameters */ nullptr, aHandler, aTransmitHook, aReceiveHook, aContext);
+}
+
+otError otCoapSecureSendRequestBlockWiseWithParameters(otInstance                 *aInstance,
+                                                       otMessage                  *aMessage,
+                                                       otCoapResponseHandler       aHandler,
+                                                       void                       *aContext,
+                                                       const otCoapTxParameters   *aTxParameters,
+                                                       otCoapBlockwiseTransmitHook aTransmitHook,
+                                                       otCoapBlockwiseReceiveHook  aReceiveHook)
+{
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessageWithResponseHandlerSeparateParams(
+        AsCoapMessage(aMessage), AsCoreTypePtr(aTxParameters), aHandler, aTransmitHook, aReceiveHook, aContext);
 }
 #endif
 
@@ -164,7 +176,21 @@ otError otCoapSecureSendRequest(otInstance           *aInstance,
                                 void                 *aContext)
 {
     return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessageWithResponseHandlerSeparateParams(
-        AsCoapMessage(aMessage), aHandler,
+        AsCoapMessage(aMessage), /* aTxParameters */ nullptr, aHandler,
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        /* aTransmitHook */ nullptr, /* aReceiveHook */ nullptr,
+#endif
+        aContext);
+}
+
+otError otCoapSecureSendRequestWithParameters(otInstance               *aInstance,
+                                              otMessage                *aMessage,
+                                              otCoapResponseHandler     aHandler,
+                                              void                     *aContext,
+                                              const otCoapTxParameters *aTxParameters)
+{
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessageWithResponseHandlerSeparateParams(
+        AsCoapMessage(aMessage), AsCoreTypePtr(aTxParameters), aHandler,
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         /* aTransmitHook */ nullptr, /* aReceiveHook */ nullptr,
 #endif
@@ -215,7 +241,22 @@ otError otCoapSecureSendResponseBlockWise(otInstance                 *aInstance,
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessageWithResponseHandlerSeparateParams(
-        AsCoapMessage(aMessage), /* aResponseHandler */ nullptr, aTransmitHook, /* aReceiveHook */ nullptr, aContext);
+        AsCoapMessage(aMessage), /* aTxParameters */ nullptr, /* aResponseHandler */ nullptr, aTransmitHook,
+        /* aReceiveHook */ nullptr, aContext);
+}
+
+otError otCoapSecureSendResponseBlockWiseWithParameters(otInstance                 *aInstance,
+                                                        otMessage                  *aMessage,
+                                                        const otMessageInfo        *aMessageInfo,
+                                                        const otCoapTxParameters   *aTxParameters,
+                                                        void                       *aContext,
+                                                        otCoapBlockwiseTransmitHook aTransmitHook)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessageWithResponseHandlerSeparateParams(
+        AsCoapMessage(aMessage), AsCoreTypePtr(aTxParameters), /* aResponseHandler */ nullptr, aTransmitHook,
+        /* aReceiveHook */ nullptr, aContext);
 }
 #endif
 
@@ -224,6 +265,17 @@ otError otCoapSecureSendResponse(otInstance *aInstance, otMessage *aMessage, con
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessage(AsCoapMessage(aMessage));
+}
+
+otError otCoapSecureSendResponseWithParameters(otInstance               *aInstance,
+                                               otMessage                *aMessage,
+                                               const otMessageInfo      *aMessageInfo,
+                                               const otCoapTxParameters *aTxParameters)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessage(AsCoapMessage(aMessage),
+                                                                                AsCoreTypePtr(aTxParameters));
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
