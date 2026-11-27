@@ -81,23 +81,28 @@ public:
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aTxParameters A pointer to transmission parameters for this message.
      *
      * @retval kErrorNone          Successfully sent CoAP message.
      * @retval kErrorNoBufs        Failed to allocate retransmission data.
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      */
-    Error SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext);
+    Error SendMessage(Message            &aMessage,
+                      ResponseHandler     aHandler,
+                      void               *aContext,
+                      const TxParameters *aTxParameters = nullptr);
 
     /**
      * Sends a CoAP message over secure DTLS session.
      *
      * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aTxParameters A pointer to transmission parameters for this message.
      *
      * @retval kErrorNone          Successfully sent CoAP message.
      * @retval kErrorNoBufs        Failed to allocate retransmission data.
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      */
-    Error SendMessage(Message &aMessage);
+    Error SendMessage(Message &aMessage, const TxParameters *aTxParameters);
 
     /**
      * Sends a CoAP message over secure DTLS session using `ResponseHandlerSeparateParams` handle type.
@@ -110,6 +115,7 @@ public:
      * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
      *
      * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aTxParameters A pointer to transmission parameters for this message.
      * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
@@ -120,6 +126,7 @@ public:
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      */
     Error SendMessageWithResponseHandlerSeparateParams(Message                      &aMessage,
+                                                       const TxParameters           *aTxParameters,
                                                        ResponseHandlerSeparateParams aHandler,
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
                                                        BlockwiseTransmitHook aTransmitHook,

@@ -58,17 +58,25 @@ void SecureSession::Cleanup(void)
     mTransmitTask.Unpost();
 }
 
-Error SecureSession::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
+Error SecureSession::SendMessage(Message            &aMessage,
+                                 ResponseHandler     aHandler,
+                                 void               *aContext,
+                                 const TxParameters *aTxParameters)
 {
-    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), aHandler, aContext) : kErrorInvalidState;
+    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), aTxParameters, aHandler, aContext)
+                         : kErrorInvalidState;
 }
 
-Error SecureSession::SendMessage(Message &aMessage)
+Error SecureSession::SendMessage(Message &aMessage, const TxParameters *aTxParameters)
 {
-    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo()) : kErrorInvalidState;
+    return IsConnected()
+               ? CoapBase::SendMessage(aMessage, GetMessageInfo(),
+                                       (aTxParameters != nullptr) ? *aTxParameters : TxParameters::GetDefault())
+               : kErrorInvalidState;
 }
 
 Error SecureSession::SendMessageWithResponseHandlerSeparateParams(Message                      &aMessage,
+                                                                  const TxParameters           *aTxParameters,
                                                                   ResponseHandlerSeparateParams aHandler,
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
                                                                   BlockwiseTransmitHook aTransmitHook,
@@ -77,7 +85,7 @@ Error SecureSession::SendMessageWithResponseHandlerSeparateParams(Message       
                                                                   void *aContext)
 {
     return IsConnected() ? CoapBase::SendMessageWithResponseHandlerSeparateParams(aMessage, GetMessageInfo(),
-                                                                                  /* aTxParameters */ nullptr, aHandler,
+                                                                                  aTxParameters, aHandler,
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
                                                                                   aTransmitHook, aReceiveHook,
 #endif
