@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2026, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -42,10 +42,10 @@ class TLV():
     @staticmethod
     def parse_tlvs(data: bytes) -> List[TLV]:
         res: List[TLV] = []
-        while data:
-            next_tlv = TLV.from_bytes(data)
-            next_tlv_size = len(next_tlv.to_bytes())
-            data = data[next_tlv_size:]
+        offset = 0
+        while offset < len(data):
+            next_tlv = TLV()
+            offset += next_tlv.set_from_bytes(data[offset:])
             res.append(next_tlv)
         return res
 
@@ -55,15 +55,23 @@ class TLV():
         res.set_from_bytes(data)
         return res
 
-    def set_from_bytes(self, data: bytes):
-        self.type = data[0]
+    def set_from_bytes(self, data: bytes) -> int:
+        if len(data) < 2:
+            raise ValueError('Buffer too short for TLV header.')
         header_len = 2
         size_offset = 1
         if data[1] == 0xFF:
+            if len(data) < 4:
+                raise ValueError('Buffer too short for extended TLV header.')
             header_len = 4
             size_offset = 2
         length = int.from_bytes(data[size_offset:header_len], byteorder='big')
-        self.value = data[header_len:header_len + length]
+        end_offset = header_len + length
+        if len(data) < end_offset:
+            raise ValueError('Buffer too short for TLV value.')
+        self.type = data[0]
+        self.value = bytes(data[header_len:end_offset])
+        return end_offset
 
     def to_bytes(self) -> bytes:
         has_long_header = len(self.value) >= 254
