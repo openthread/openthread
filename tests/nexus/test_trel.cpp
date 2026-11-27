@@ -1309,6 +1309,135 @@ void TestMultiRadioMleReplyRadio(void)
         VerifyOrQuit(GetTxErrAbort(leader) == txErrAbort);
     }
 }
+
+void TestMultiRadioReedChildRadio(void)
+{
+    // Validates that a REED (an FTD in child role) learns the radio
+    // links of a device attaching to it, so Parent Response and Child
+    // ID Response are only sent on those links. `child` has TREL
+    // disabled, so a TREL unicast to it is aborted locally and counted
+    // in `mTxErrAbort`.
+
+    Core                     nexus;
+    Node                    &leader = nexus.CreateNode();
+    Node                    &reed   = nexus.CreateNode();
+    Node                    &child  = nexus.CreateNode();
+    Neighbor::MultiRadioInfo info;
+    uint32_t                 txErrAbort;
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("TestMultiRadioReedChildRadio()");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
+    for (Node &node : nexus.GetNodes())
+    {
+        SuccessOrQuit(node.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    }
+
+    child.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
+
+    // `child` only hears `reed`, so it must attach through it.
+    child.AllowList(reed);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Form network and attach a REED");
+
+    leader.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    reed.Get<Mle::Mle>().SetRouterUpgradeThreshold(1);
+    reed.Join(leader);
+    nexus.AdvanceTime(20 * 1000);
+    VerifyOrQuit(reed.Get<Mle::Mle>().IsChild());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Attach a 15.4-only child to the REED and verify Parent and Child ID Responses are not sent over TREL");
+
+    txErrAbort = GetTxErrAbort(reed);
+
+    child.Join(reed, Node::kAsMed);
+    nexus.AdvanceTime(20 * 1000);
+    VerifyOrQuit(child.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(child.Get<Mle::Mle>().GetParent().GetExtAddress() == reed.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(reed.Get<Mle::Mle>().IsRouter());
+
+    VerifyOrQuit(GetTxErrAbort(reed) == txErrAbort);
+
+    GetChildMultiRadioInfo(reed, child, info);
+    VerifyOrQuit(info.mSupportsIeee802154);
+    VerifyOrQuit(!info.mSupportsTrelUdp6);
+}
+
+void TestMultiRadioFtdChildLinkRequestRadio(void)
+{
+    // Validates that an FTD child learns the radio links of a
+    // neighboring router from its Advertisement, so the Link Request
+    // to it is only sent on those links. `router` has TREL disabled,
+    // so a TREL unicast to it is aborted locally and counted in
+    // `mTxErrAbort`.
+
+    Core                     nexus;
+    Node                    &leader = nexus.CreateNode();
+    Node                    &router = nexus.CreateNode();
+    Node                    &fed    = nexus.CreateNode();
+    Router                  *routerEntry;
+    Neighbor::MultiRadioInfo info;
+    uint32_t                 txErrAbort;
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("TestMultiRadioFtdChildLinkRequestRadio()");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
+    for (Node &node : nexus.GetNodes())
+    {
+        SuccessOrQuit(node.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    }
+
+    router.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
+
+    // `fed` initially only hears `leader`, so it attaches to it.
+    fed.AllowList(leader);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Form network, attach a 15.4-only router and a FED");
+
+    leader.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    router.Join(leader);
+    nexus.AdvanceTime(200 * 1000);
+    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+
+    fed.Join(leader, Node::kAsFed);
+    nexus.AdvanceTime(20 * 1000);
+    VerifyOrQuit(fed.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(fed.Get<RouterTable>().GetNeighborCount(kLinkQuality1) == 0);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Let the FED hear the 15.4-only router and verify its Link Request is not sent over TREL");
+
+    txErrAbort = GetTxErrAbort(fed);
+
+    fed.AllowList(router);
+    nexus.AdvanceTime(100 * 1000);
+
+    routerEntry = fed.Get<RouterTable>().FindRouter(router.Get<Mac::Mac>().GetExtAddress(), Router::kInStateValid);
+    VerifyOrQuit(routerEntry != nullptr);
+
+    VerifyOrQuit(GetTxErrAbort(fed) == txErrAbort);
+
+    routerEntry->PopulateMultiRadioInfo(info);
+    VerifyOrQuit(info.mSupportsIeee802154);
+    VerifyOrQuit(!info.mSupportsTrelUdp6);
+}
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -1332,6 +1461,8 @@ int main(void)
 #endif
     ot::Nexus::TestTrelFilterBroadcastPendingAck();
     ot::Nexus::TestMultiRadioMleReplyRadio();
+    ot::Nexus::TestMultiRadioReedChildRadio();
+    ot::Nexus::TestMultiRadioFtdChildLinkRequestRadio();
 #endif
     printf("All tests passed\n");
 #else

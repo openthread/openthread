@@ -143,7 +143,7 @@ void RadioSelector::UpdateOnSendDone(Mac::TxFrame::ParseInfo &aFrameInfo, Error 
 
     VerifyOrExit(aFrameInfo.mIsAckRequest);
 
-    neighbor = Get<NeighborTable>().FindNeighbor(aFrameInfo.mAddrs.mDestination, Neighbor::kInStateAnyExceptInvalid);
+    neighbor = Get<NeighborTable>().FindMultiRadioNeighbor(aFrameInfo.mAddrs.mDestination);
     VerifyOrExit(neighbor != nullptr);
 
     if (neighbor->GetSupportedRadioTypes().Contains(radioType))
@@ -284,7 +284,7 @@ Mac::TxFrame &RadioSelector::SelectRadio(Message &aMessage, const Mac::Address &
         ExitNow(selections.Add(aMessage.GetRadioType()));
     }
 
-    neighbor = Get<NeighborTable>().FindNeighbor(aMacDest, Neighbor::kInStateAnyExceptInvalid);
+    neighbor = Get<NeighborTable>().FindMultiRadioNeighbor(aMacDest);
 
     if ((neighbor == nullptr) || neighbor->GetSupportedRadioTypes().IsEmpty())
     {

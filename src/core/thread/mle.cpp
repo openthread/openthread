@@ -1665,6 +1665,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #if OPENTHREAD_FTD
     bool isNeighborRxOnly = false;
 #endif
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    Neighbor *radioUpdatedNeighbor = nullptr;
+#endif
 
     LogDebg("Receive MLE message");
 
@@ -1784,6 +1787,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         OT_ASSERT(aMessage.IsRadioTypeSet());
         Get<RadioSelector>().UpdateOnReceive(*neighbor, aMessage.GetRadioType(), /* IsDuplicate */ false);
+        radioUpdatedNeighbor = neighbor;
     }
 #endif
 
@@ -1913,9 +1917,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     if ((neighbor == nullptr) || neighbor->IsStateInvalid())
     {
-        neighbor = Get<NeighborTable>().FindNeighbor(extAddr, Neighbor::kInStateAnyExceptInvalid);
+        neighbor = Get<NeighborTable>().FindMultiRadioNeighbor(extAddr);
 
-        if (neighbor != nullptr)
+        if ((neighbor != nullptr) && (neighbor != radioUpdatedNeighbor))
         {
             Get<RadioSelector>().UpdateOnReceive(*neighbor, aMessage.GetRadioType(), /* aIsDuplicate */ false);
         }

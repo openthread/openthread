@@ -141,8 +141,12 @@ void Link::BeginTransmit(void)
     }
     else
     {
-        type     = Header::kTypeUnicast;
+        type = Header::kTypeUnicast;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        neighbor = Get<NeighborTable>().FindMultiRadioNeighbor(destAddr);
+#else
         neighbor = Get<NeighborTable>().FindNeighbor(destAddr, Neighbor::kInStateAnyExceptInvalid);
+#endif
 
         if (destAddr.IsShort())
         {
@@ -445,7 +449,11 @@ void Link::HandleAck(Packet &aAckPacket)
     LogDebg("HandleAck() [%s]", aAckPacket.GetHeader().ToString().AsCString());
 
     srcAddress.SetExtended(aAckPacket.GetHeader().GetSource());
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    neighbor = Get<NeighborTable>().FindMultiRadioNeighbor(srcAddress);
+#else
     neighbor = Get<NeighborTable>().FindNeighbor(srcAddress, Neighbor::kInStateAnyExceptInvalid);
+#endif
     VerifyOrExit(neighbor != nullptr);
 
     ackNumber = aAckPacket.GetHeader().GetPacketNumber();
