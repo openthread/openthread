@@ -70,6 +70,8 @@ class Settings;
 
 namespace ThreadDirect {
 
+class LocalRadioAvailability;
+
 /**
  * Type alias for a cryptographic key reference (`otCryptoKeyRef`).
  */
@@ -235,10 +237,22 @@ enum SlotDuration : uint8_t
 uint32_t SlotDurationToUsec(SlotDuration aSlotDuration);
 
 /**
+ * Indicates whether a raw slot duration value corresponds to a valid `SlotDuration` enumerator.
+ *
+ * @param[in] aRawSlotDuration  The raw slot duration value to check.
+ *
+ * @retval TRUE   If @p aRawSlotDuration is a valid `SlotDuration`.
+ * @retval FALSE  If @p aRawSlotDuration is not a valid `SlotDuration`.
+ */
+bool IsSlotDurationValid(uint8_t aRawSlotDuration);
+
+/**
  * Represents a periodic radio availability schedule bitmap.
  */
 class RadioAvailability : public Clearable<RadioAvailability>
 {
+    friend class LocalRadioAvailability;
+
 public:
     static constexpr uint8_t kMaxBitmapSize = OT_RADIO_AVAILABILITY_MAX_BITMAP_SIZE; ///< Max bitmap size in bytes.
 
@@ -282,6 +296,8 @@ public:
 
     /**
      * Initializes the `RadioAvailability` schedule.
+     *
+     * If an error is returned, the existing `RadioAvailability` remains unchanged.
      *
      * @param[in] aStartTime     The start time of the schedule.
      * @param[in] aSlotDuration  The duration of each slot.
@@ -395,9 +411,11 @@ private:
         Window  mWindow;
     };
 
-    bool IsAvailable(uint8_t aBitIndex) const;
+    bool IsAvailable(uint8_t aBitIndex) const { return GetBit(aBitIndex, mBitmap); }
     void DetermineSlotInfo(Radio::Time64 aTime, SlotInfo &aSlotInfo) const;
     void AdvanceToNextSlot(SlotInfo &aSlotInfo) const;
+
+    static bool GetBit(uint8_t aBitIndex, const uint8_t (&aBitmap)[kMaxBitmapSize]);
 
     Radio::Time64 mStartTime;
     SlotDuration  mSlotDuration;

@@ -131,6 +131,22 @@ uint32_t SlotDurationToUsec(SlotDuration aSlotDuration)
     return dur;
 }
 
+bool IsSlotDurationValid(uint8_t aRawSlotDuration)
+{
+    bool valid = true;
+
+    switch (aRawSlotDuration)
+    {
+    case kSlotDuration625Usec:
+    case kSlotDuration1250Usec:
+        break;
+    default:
+        valid = false;
+    }
+
+    return valid;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // RadioAvailability
 
@@ -200,11 +216,11 @@ void RadioAvailability::AdvanceToNextSlot(SlotInfo &aSlotInfo) const
     aSlotInfo.mWindow.mDuration  = SlotDurationToUsec(mSlotDuration);
 }
 
-bool RadioAvailability::IsAvailable(uint8_t aBitIndex) const
+bool RadioAvailability::GetBit(uint8_t aBitIndex, const uint8_t (&aBitmap)[kMaxBitmapSize])
 {
     uint8_t bitFlag = (0x80 >> (aBitIndex % kBitsPerByte));
 
-    return (mBitmap[aBitIndex / kBitsPerByte] & bitFlag);
+    return (aBitmap[aBitIndex / kBitsPerByte] & bitFlag);
 }
 
 bool RadioAvailability::IsAvailableAt(Radio::Time64 aTime) const
