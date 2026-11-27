@@ -790,6 +790,10 @@ void Mle::HandleLinkRequest(RxInfo &aRxInfo)
 
     info.mLinkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    info.mRadioType = aRxInfo.mMessage.GetRadioType();
+#endif
+
     switch (Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, info.mRloc16))
     {
     case kErrorNone:
@@ -946,6 +950,16 @@ Error Mle::SendLinkAccept(const LinkAcceptInfo &aInfo)
     if (router != nullptr && router->IsTimeSyncEnabled())
     {
         message->SetTimeSync(true);
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (router == nullptr)
+    {
+        // A non-router requester (an FTD child establishing a router
+        // link) has no neighbor entry, so its radio links are unknown.
+        // Reply on the radio link the request was received on.
+        message->SetRadioType(aInfo.mRadioType);
     }
 #endif
 
@@ -1171,6 +1185,9 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         info.mExtAddress = router->GetExtAddress();
         info.mRloc16     = router->GetRloc16();
         info.mLinkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        info.mRadioType = aRxInfo.mMessage.GetRadioType();
+#endif
 
         SuccessOrExit(error = SendLinkAccept(info));
     }
@@ -2255,7 +2272,7 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         // Status TLV (error).
         if (mode.IsRxOnWhenIdle())
         {
-            IgnoreError(SendChildUpdateRejectResponse(info));
+            IgnoreError(SendChildUpdateRejectResponse(aRxInfo, info.mChallenge));
         }
 
         ExitNow();

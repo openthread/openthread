@@ -1373,23 +1373,38 @@ exit:
     return error;
 }
 
-Error Mle::SendChildUpdateRejectResponse(ChildUpdateResponseInfo &aInfo)
+Error Mle::SendChildUpdateRejectResponse(const RxInfo &aRxInfo, const RxChallenge &aChallenge)
 {
     // Send a reject response which only includes a Source Address TLV,
     // a Status TLV, and a Response TLV when request contained a
     // Challenge TLV.
 
-    aInfo.mTlvList.Clear();
+    Error      error = kErrorNone;
+    TxMessage *message;
 
-    aInfo.mTlvList.Add(Tlv::kSourceAddress);
-    aInfo.mTlvList.Add(Tlv::kStatus);
+    VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
 
-    if (!aInfo.mChallenge.IsEmpty())
+    SuccessOrExit(error = message->AppendSourceAddressTlv());
+    SuccessOrExit(error = message->AppendStatusTlv(kStatusError));
+
+    if (!aChallenge.IsEmpty())
     {
-        aInfo.mTlvList.Add(Tlv::kResponse);
+        SuccessOrExit(error = message->AppendResponseTlv(aChallenge));
     }
 
-    return SendChildUpdateResponse(aInfo);
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    // The requester has no neighbor entry, so its radio links are
+    // unknown. Reply on the radio link the request was received on.
+    message->SetRadioType(aRxInfo.mMessage.GetRadioType());
+#endif
+
+    SuccessOrExit(error = message->SendTo(aRxInfo.mMessageInfo.GetPeerAddr()));
+
+    Log(kMessageSend, kTypeChildUpdateResponseAsChild, aRxInfo.mMessageInfo.GetPeerAddr());
+
+exit:
+    FreeMessageOnError(message, error);
+    return error;
 }
 
 Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
@@ -1413,10 +1428,6 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
 
         case Tlv::kTimeout:
             SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
-            break;
-
-        case Tlv::kStatus:
-            SuccessOrExit(error = message->AppendStatusTlv(kStatusError));
             break;
 
         case Tlv::kAddressRegistration:
@@ -1486,16 +1497,14 @@ exit:
     return error;
 }
 
-void Mle::SendAnnounce(uint8_t aChannel, AnnounceMode aMode)
-{
-    SendAnnounce(aChannel, Ip6::Address::GetLinkLocalAllNodesMulticast(), aMode);
-}
+void Mle::SendAnnounce(uint8_t aChannel, AnnounceMode aMode) { SendAnnounce(aChannel, aMode, nullptr); }
 
-void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode)
+void Mle::SendAnnounce(uint8_t aChannel, AnnounceMode aMode, const RxInfo *aRxInfo)
 {
     Error              error = kErrorNone;
     MeshCoP::Timestamp activeTimestamp;
     TxMessage         *message = nullptr;
+    Ip6::Address       destination;
 
     VerifyOrExit(Get<Mac::Mac>().GetSupportedChannelMask().ContainsChannel(aChannel), error = kErrorInvalidArgs);
     VerifyOrExit((message = NewMleMessage(kCommandAnnounce)) != nullptr, error = kErrorNoBufs);
@@ -1518,7 +1527,23 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
 
     SuccessOrExit(error = Tlv::Append<PanIdTlv>(*message, Get<Mac::Mac>().GetPanId()));
 
-    SuccessOrExit(error = message->SendTo(aDestination));
+    if (aRxInfo == nullptr)
+    {
+        destination = Ip6::Address::GetLinkLocalAllNodesMulticast();
+    }
+    else
+    {
+        destination = aRxInfo->mMessageInfo.GetPeerAddr();
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        // The Announce sender has no neighbor entry, so its radio
+        // links are unknown. Reply on the radio link the Announce
+        // was received on.
+        message->SetRadioType(aRxInfo->mMessage.GetRadioType());
+#endif
+    }
+
+    SuccessOrExit(error = message->SendTo(destination));
 
     LogInfo("Send Announce on channel %d", aChannel);
 
@@ -2389,7 +2414,7 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
     else
     {
         // This device is not a child of the Child Update Request source.
-        error = SendChildUpdateRejectResponse(info);
+        error = SendChildUpdateRejectResponse(aRxInfo, info.mChallenge);
         ExitNow();
     }
 
@@ -6115,7 +6140,7 @@ void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
     case kSendAnnouceBack:
         Get<Mle>().SendAnnounce(channel);
 #if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
-        Get<Mle>().SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
+        Get<Mle>().SendAnnounce(channel, kNormalAnnounce, &aRxInfo);
 #endif
         break;
 
