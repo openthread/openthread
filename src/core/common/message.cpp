@@ -157,7 +157,26 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     }
 }
 
-Error MessagePool::ReclaimBuffers(Message::Priority aPriority) { return Get<MeshForwarder>().EvictMessage(aPriority); }
+Error MessagePool::ReclaimBuffers(Message::Priority aPriority)
+{
+    Error error = kErrorNotFound;
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+    error = Get<MeshMonitor::Server>().EvictCache(true);
+
+    if (error != kErrorNone)
+    {
+        error = Get<MeshMonitor::Server>().EvictCache(false);
+    }
+#endif
+
+    if (error != kErrorNone)
+    {
+        error = Get<MeshForwarder>().EvictMessage(aPriority);
+    }
+
+    return error;
+}
 
 uint16_t MessagePool::GetFreeBufferCount(void) const
 {

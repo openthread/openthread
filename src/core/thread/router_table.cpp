@@ -125,6 +125,10 @@ void RouterTable::RemoveRouter(Router &aRouter)
     if (aRouter.IsStateValid())
     {
         Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, aRouter);
+
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+        Get<MeshMonitor::Server>().HandleRouterRemoved(aRouter);
+#endif
     }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -265,6 +269,10 @@ void RouterTable::RemoveRouterLink(Router &aRouter)
         aRouter.SetLinkQualityOut(kLinkQuality0);
         aRouter.SetLastHeard(TimerMilli::GetNow());
         SignalTableChanged(kEventLinkQualityOutChanged);
+
+#if OPENTHREAD_CONFIG_MESH_MONITOR_SERVER_ENABLE
+        Get<MeshMonitor::Server>().HandleRouterRemoved(aRouter);
+#endif
     }
 
     for (Router &router : mRouters)
