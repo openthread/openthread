@@ -34,11 +34,53 @@
 namespace ot {
 namespace Nexus {
 
-static constexpr uint32_t kFormNetworkTime    = 13 * 1000;
-static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
-static constexpr uint32_t kStabilizationTime  = 15 * 1000;
-static constexpr uint32_t kDelayedEnableTime  = 60 * 1000;
-static constexpr uint8_t  kLeaderWeight       = 72;
+static constexpr uint32_t kFormNetworkTime        = 13 * 1000;
+static constexpr uint32_t kAttachToRouterTime     = 200 * 1000;
+static constexpr uint32_t kStabilizationTime      = 15 * 1000;
+static constexpr uint32_t kDelayedNetDataSyncTime = 5 * 1000;
+static constexpr uint32_t kNetDataResyncTime      = 35 * 1000;
+static constexpr uint32_t kDelayedEnableTime      = 60 * 1000;
+static constexpr uint8_t  kLeaderWeight           = 72;
+
+struct BbrRoleChangeContext
+{
+    Node           *mNode        = nullptr;
+    Node           *mPeer        = nullptr;
+    Mle::DeviceRole mTargetRole  = Mle::kRoleDisabled;
+    bool            mUnallowLink = false;
+    bool            mEnableBbr   = false;
+    bool            mTriggered   = false;
+};
+
+static void HandleRoleChangedBeforeNetDataSync(otChangedFlags aFlags, void *aContext)
+{
+    BbrRoleChangeContext *context = static_cast<BbrRoleChangeContext *>(aContext);
+
+    VerifyOrExit(context != nullptr);
+    VerifyOrExit(!context->mTriggered);
+    VerifyOrExit((aFlags & OT_CHANGED_THREAD_ROLE) != 0);
+    VerifyOrQuit(context->mNode != nullptr);
+    VerifyOrExit(context->mNode->Get<Mle::Mle>().GetRole() == context->mTargetRole);
+
+    VerifyOrQuit(context->mNode->Get<Mle::Mle>().IsRetrievingNewNetworkData());
+    VerifyOrQuit(!context->mNode->Get<BackboneRouter::Leader>().HasPrimary());
+
+    context->mTriggered = true;
+
+    if (context->mUnallowLink)
+    {
+        VerifyOrQuit(context->mPeer != nullptr);
+        UnallowLinkBetween(*context->mNode, *context->mPeer);
+    }
+
+    if (context->mEnableBbr)
+    {
+        context->mNode->Get<BackboneRouter::Local>().SetEnabled(true);
+    }
+
+exit:
+    return;
+}
 
 struct BbrLocalChangeContext
 {
@@ -439,6 +481,239 @@ void TestBbrLeaderRebootAndExplicitSetConfig(void)
     VerifyOrQuit(router.Get<BackboneRouter::Leader>().GetConfig().mMlrTimeout == 900);
 }
 
+void TestBbrNetDataSyncBeforeRegistration(void)
+{
+    /**
+     * Verifies that BackboneRouter::Local does not register a new BBR service
+     * before MLE finishes retrieving Network Data after role restoration:
+     * - Subtest A: Reboot Router PBBR with SetEnabled(true) before attach,
+     *   jitter=1s, and delayed MLE Data Response -> waits for Network Data
+     *   sync and restores (old + 1), delay, and timeout.
+     * - Subtest B: Reboot Router PBBR with BBR disabled, then call
+     *   SetEnabled(true) immediately upon role change before Network Data
+     *   arrives -> defers registration until Network Data sync and restores
+     *   (old + 1), delay, and timeout.
+     * - Subtest C: Reboot Router with SetEnabled(true) before attach when no
+     *   PBBR exists in Network Data -> registers and becomes Primary after
+     *   Network Data sync.
+     * - Subtest D: Reboot Leader+PBBR with SetEnabled(true) before attach,
+     *   jitter=1s, and delayed MLE Data Response -> waits for Network Data
+     *   sync and restores (old + 1), delay, and timeout.
+     * - Subtest E: Reboot Leader with SetEnabled(true) before attach when no
+     *   PBBR exists in Network Data -> registers and becomes Primary after
+     *   Network Data sync.
+     */
+
+    {
+        Core                   nexus;
+        Node                  &leader = nexus.CreateNode();
+        Node                  &br     = nexus.CreateNode();
+        BackboneRouter::Config config;
+        BbrRoleChangeContext   roleContext;
+
+        leader.SetName("LEADER");
+        br.SetName("BR");
+
+        nexus.AdvanceTime(0);
+        SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
+
+        Log("---------------------------------------------------------------------------------------");
+        Log("TestBbrNetDataSyncBeforeRegistration (Router)");
+
+        AllowLinkBetween(leader, br);
+
+        leader.Get<Mle::Mle>().SetLeaderWeight(kLeaderWeight);
+        leader.Form();
+        nexus.AdvanceTime(kFormNetworkTime);
+        VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+        br.Join(leader);
+        nexus.AdvanceTime(kAttachToRouterTime);
+        VerifyOrQuit(br.Get<Mle::Mle>().IsRouter());
+
+        config.mSequenceNumber      = 55;
+        config.mReregistrationDelay = 12;
+        config.mMlrTimeout          = 600;
+        SuccessOrQuit(br.Get<BackboneRouter::Local>().SetConfig(config));
+        br.Get<BackboneRouter::Local>().SetEnabled(true);
+        nexus.AdvanceTime(kStabilizationTime);
+
+        VerifyOrQuit(br.Get<BackboneRouter::Local>().IsPrimary());
+        VerifyOrQuit(leader.Get<BackboneRouter::Leader>().GetConfig().mSequenceNumber == 55);
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Subtest A: Router PBBR reboot with delayed MLE Data Response and registration jitter 1s");
+
+        br.Reset();
+        AllowLinkBetween(leader, br);
+        br.Get<BackboneRouter::Local>().SetRegistrationJitter(1);
+        br.Get<BackboneRouter::Local>().SetEnabled(true);
+
+        roleContext              = BbrRoleChangeContext();
+        roleContext.mNode        = &br;
+        roleContext.mPeer        = &leader;
+        roleContext.mTargetRole  = Mle::kRoleRouter;
+        roleContext.mUnallowLink = true;
+        SuccessOrQuit(br.Get<Notifier>().RegisterCallback(HandleRoleChangedBeforeNetDataSync, &roleContext));
+
+        br.Get<ThreadNetif>().Up();
+        SuccessOrQuit(br.Get<Mle::Mle>().Start());
+
+        nexus.AdvanceTime(kDelayedNetDataSyncTime);
+        br.Get<Notifier>().RemoveCallback(HandleRoleChangedBeforeNetDataSync, &roleContext);
+
+        VerifyOrQuit(roleContext.mTriggered);
+        VerifyOrQuit(br.Get<Mle::Mle>().IsRouter());
+        VerifyOrQuit(!br.Get<BackboneRouter::Leader>().HasPrimary());
+        VerifyOrQuit(!br.Get<BackboneRouter::Local>().IsPrimary());
+        VerifyOrQuit(leader.Get<BackboneRouter::Leader>().GetConfig().mSequenceNumber == 55);
+
+        AllowLinkBetween(leader, br);
+        nexus.AdvanceTime(kNetDataResyncTime);
+
+        VerifyOrQuit(br.Get<Mle::Mle>().IsRouter());
+        VerifyOrQuit(br.Get<BackboneRouter::Local>().IsPrimary());
+        VerifyOrQuit(leader.Get<BackboneRouter::Leader>().GetConfig().mSequenceNumber == 56);
+        VerifyOrQuit(leader.Get<BackboneRouter::Leader>().GetConfig().mReregistrationDelay == 12);
+        VerifyOrQuit(leader.Get<BackboneRouter::Leader>().GetConfig().mMlrTimeout == 600);
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Subtest B: Router PBBR reboot with SetEnabled(true) called on role change before netdata sync");
+
+        br.Reset();
+        AllowLinkBetween(leader, br);
+        VerifyOrQuit(!br.Get<BackboneRouter::Local>().IsEnabled());
+
+        roleContext             = BbrRoleChangeContext();
+        roleContext.mNode       = &br;
+        roleContext.mTargetRole = Mle::kRoleRouter;
+        roleContext.mEnableBbr  = true;
+        SuccessOrQuit(br.Get<Notifier>().RegisterCallback(HandleRoleChangedBeforeNetDataSync, &roleContext));
+
+        br.Get<ThreadNetif>().Up();
+        SuccessOrQuit(br.Get<Mle::Mle>().Start());
+
+        nexus.AdvanceTime(kStabilizationTime);
+        br.Get<Notifier>().RemoveCallback(HandleRoleChangedBeforeNetDataSync, &roleContext);
+
+        VerifyOrQuit(roleContext.mTriggered);
+        VerifyOrQuit(br.Get<Mle::Mle>().IsRouter());
+        VerifyOrQuit(br.Get<BackboneRouter::Local>().IsPrimary());
+        VerifyOrQuit(leader.Get<BackboneRouter::Leader>().GetConfig().mSequenceNumber == 57);
+        VerifyOrQuit(leader.Get<BackboneRouter::Leader>().GetConfig().mReregistrationDelay == 12);
+        VerifyOrQuit(leader.Get<BackboneRouter::Leader>().GetConfig().mMlrTimeout == 600);
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Subtest C: Router reboot with SetEnabled(true) when no PBBR exists in Network Data");
+
+        br.Get<BackboneRouter::Local>().SetEnabled(false);
+        nexus.AdvanceTime(kStabilizationTime);
+        VerifyOrQuit(!leader.Get<BackboneRouter::Leader>().HasPrimary());
+
+        br.Reset();
+        AllowLinkBetween(leader, br);
+        br.Get<BackboneRouter::Local>().SetEnabled(true);
+        br.Get<ThreadNetif>().Up();
+        SuccessOrQuit(br.Get<Mle::Mle>().Start());
+
+        nexus.AdvanceTime(kStabilizationTime);
+        VerifyOrQuit(br.Get<Mle::Mle>().IsRouter());
+        VerifyOrQuit(br.Get<BackboneRouter::Local>().IsPrimary());
+        VerifyOrQuit(leader.Get<BackboneRouter::Leader>().HasPrimary());
+    }
+
+    {
+        Core                   nexus;
+        Node                  &br     = nexus.CreateNode();
+        Node                  &router = nexus.CreateNode();
+        BackboneRouter::Config config;
+        BbrRoleChangeContext   roleContext;
+
+        br.SetName("BR_LEADER");
+        router.SetName("ROUTER");
+
+        nexus.AdvanceTime(0);
+        SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
+
+        Log("---------------------------------------------------------------------------------------");
+        Log("TestBbrNetDataSyncBeforeRegistration (Leader)");
+
+        AllowLinkBetween(br, router);
+
+        br.Form();
+        nexus.AdvanceTime(kFormNetworkTime);
+        VerifyOrQuit(br.Get<Mle::Mle>().IsLeader());
+
+        router.Join(br);
+        nexus.AdvanceTime(kAttachToRouterTime);
+        VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
+
+        config.mSequenceNumber      = 75;
+        config.mReregistrationDelay = 12;
+        config.mMlrTimeout          = 600;
+        SuccessOrQuit(br.Get<BackboneRouter::Local>().SetConfig(config));
+        br.Get<BackboneRouter::Local>().SetEnabled(true);
+        nexus.AdvanceTime(kStabilizationTime);
+
+        VerifyOrQuit(br.Get<BackboneRouter::Local>().IsPrimary());
+        VerifyOrQuit(router.Get<BackboneRouter::Leader>().GetConfig().mSequenceNumber == 75);
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Subtest D: Leader+PBBR reboot with delayed MLE Data Response and registration jitter 1s");
+
+        br.Reset();
+        AllowLinkBetween(br, router);
+        br.Get<BackboneRouter::Local>().SetRegistrationJitter(1);
+        br.Get<BackboneRouter::Local>().SetEnabled(true);
+
+        roleContext              = BbrRoleChangeContext();
+        roleContext.mNode        = &br;
+        roleContext.mPeer        = &router;
+        roleContext.mTargetRole  = Mle::kRoleLeader;
+        roleContext.mUnallowLink = true;
+        SuccessOrQuit(br.Get<Notifier>().RegisterCallback(HandleRoleChangedBeforeNetDataSync, &roleContext));
+
+        br.Get<ThreadNetif>().Up();
+        SuccessOrQuit(br.Get<Mle::Mle>().Start());
+
+        nexus.AdvanceTime(kDelayedNetDataSyncTime);
+        br.Get<Notifier>().RemoveCallback(HandleRoleChangedBeforeNetDataSync, &roleContext);
+
+        VerifyOrQuit(roleContext.mTriggered);
+        VerifyOrQuit(br.Get<Mle::Mle>().IsLeader());
+        VerifyOrQuit(!br.Get<BackboneRouter::Leader>().HasPrimary());
+        VerifyOrQuit(!br.Get<BackboneRouter::Local>().IsPrimary());
+        VerifyOrQuit(router.Get<BackboneRouter::Leader>().GetConfig().mSequenceNumber == 75);
+
+        AllowLinkBetween(br, router);
+        nexus.AdvanceTime(kNetDataResyncTime);
+
+        VerifyOrQuit(br.Get<Mle::Mle>().IsLeader());
+        VerifyOrQuit(br.Get<BackboneRouter::Local>().IsPrimary());
+        VerifyOrQuit(router.Get<BackboneRouter::Leader>().GetConfig().mSequenceNumber == 76);
+        VerifyOrQuit(router.Get<BackboneRouter::Leader>().GetConfig().mReregistrationDelay == 12);
+        VerifyOrQuit(router.Get<BackboneRouter::Leader>().GetConfig().mMlrTimeout == 600);
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Subtest E: Leader reboot with SetEnabled(true) when no PBBR exists in Network Data");
+
+        br.Get<BackboneRouter::Local>().SetEnabled(false);
+        nexus.AdvanceTime(kStabilizationTime);
+        VerifyOrQuit(!router.Get<BackboneRouter::Leader>().HasPrimary());
+
+        br.Reset();
+        AllowLinkBetween(br, router);
+        br.Get<BackboneRouter::Local>().SetEnabled(true);
+        br.Get<ThreadNetif>().Up();
+        SuccessOrQuit(br.Get<Mle::Mle>().Start());
+
+        nexus.AdvanceTime(kStabilizationTime);
+        VerifyOrQuit(br.Get<Mle::Mle>().IsLeader());
+        VerifyOrQuit(br.Get<BackboneRouter::Local>().IsPrimary());
+        VerifyOrQuit(router.Get<BackboneRouter::Leader>().HasPrimary());
+    }
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -447,6 +722,7 @@ int main(void)
     ot::Nexus::TestBbrRestoreSeqNumWhileDisabled();
     ot::Nexus::TestBbrDeactivateReactivateWithoutReboot();
     ot::Nexus::TestBbrLeaderRebootAndExplicitSetConfig();
+    ot::Nexus::TestBbrNetDataSyncBeforeRegistration();
     printf("All tests passed\n");
     return 0;
 }

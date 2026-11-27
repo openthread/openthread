@@ -176,6 +176,7 @@ Error Local::AddService(RegisterMode aMode)
     switch (aMode)
     {
     case kDecideBasedOnState:
+        VerifyOrExit(!Get<Mle::Mle>().IsRetrievingNewNetworkData());
         VerifyOrExit(!Get<BackboneRouter::Leader>().HasPrimary() ||
                      Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::Mle>().GetRloc16());
         break;
@@ -260,6 +261,11 @@ void Local::HandleNotifierEvents(Events aEvents)
     {
         UpdateState();
     }
+    else if (aEvents.Contains(kEventThreadNetdataChanged) && !Get<Leader>().HasPrimary() && !mIsServiceAdded &&
+             (mRegistrationTimeout == 0))
+    {
+        UpdateState();
+    }
 }
 
 void Local::UpdateState(void)
@@ -267,6 +273,7 @@ void Local::UpdateState(void)
     bool hasPrimaryWithThisRloc;
 
     VerifyOrExit(Get<Mle::Mle>().IsAttached());
+    VerifyOrExit(!Get<Mle::Mle>().IsRetrievingNewNetworkData());
 
     hasPrimaryWithThisRloc =
         Get<Leader>().HasPrimary() && Get<Mle::Mle>().HasRloc16(Get<Leader>().GetConfig().GetServer16());
@@ -289,12 +296,12 @@ void Local::UpdateState(void)
     // Wait some jitter before trying to Register.
     if (!Get<Leader>().HasPrimary())
     {
-        if (Get<Mle::Mle>().IsLeader() && !Get<NetworkData::Leader>().IsWaitingForNetDataSync())
+        if (Get<Mle::Mle>().IsLeader())
         {
             StopRegistrationTimer();
             IgnoreError(AddService(kDecideBasedOnState));
         }
-        else
+        else if (mRegistrationTimeout == 0)
         {
             mRegistrationTimeout = Random::NonCrypto::GenerateInClosedRange<uint16_t>(1, mRegistrationJitter);
             Get<TimeTicker>().RegisterReceiver(TimeTicker::kBbrLocal);
@@ -321,9 +328,11 @@ exit:
 void Local::HandleTimeTick(void)
 {
     // Delay registration while router role transition is pending
-    // (i.e., device may soon switch from REED to router role).
+    // (i.e., device may soon switch from REED to router role) or
+    // while waiting to retrieve new Network Data.
 
     VerifyOrExit(!Get<Mle::Mle>().IsRouterRoleTransitionPending());
+    VerifyOrExit(!Get<Mle::Mle>().IsRetrievingNewNetworkData());
 
     if (mRegistrationTimeout > 0)
     {
