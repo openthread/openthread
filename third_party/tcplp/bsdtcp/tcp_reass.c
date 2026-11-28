@@ -113,6 +113,7 @@ present:
 		   along by merging and then popping, in case we receive a FIN later on. */
 		if (tp->reass_fin_index >= 0 && cbuf_reass_within_offset(&tp->recvbuf, mergeable, (size_t) tp->reass_fin_index)) {
 			tp->reass_fin_index = -2; // So we won't consider any more FINs
+			sig->rcvd_fin = true;
 			flags = TH_FIN;
 		}
 		merged = cbuf_reass_merge(&tp->recvbuf, mergeable, tp->reassbmp);
