@@ -372,3 +372,10 @@ int cbuf_reass_within_offset(struct cbufhead* chdr, size_t offset, size_t index)
         return index < range_end || (index >= range_start && index < chdr->size);
     }
 }
+
+size_t cbuf_reass_index(const struct cbufhead* chdr, size_t offset) {
+    if (chdr->size == 0) {
+        return 0;
+    }
+    return (cbuf_get_w_index(chdr) + offset) % chdr->size;
+}

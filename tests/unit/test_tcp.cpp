@@ -1025,6 +1025,92 @@ static void TestOutOfOrderFinAfterContiguify(void)
     testFreeInstance(instance);
 }
 
+enum EmptyFinCase
+{
+    kEmptyFinDataBufferedAfterGap, // Gap filled while data after the gap is buffered.
+    kEmptyFinNothingBuffered,      // Gap filled while nothing is buffered (only the FIN was received out of order).
+    kEmptyFinWrapsAround,          // Like the first, but the FIN's preceding byte wraps around the receive buffer.
+};
+
+static void TestOutOfOrderEmptyFin(EmptyFinCase aCase)
+{
+    Instance       *instance = InitTestInstance();
+    EndpointContext serverCtx;
+    EndpointContext clientCtx;
+    ListenerContext listenerCtx;
+    uint32_t        offset = 0;
+
+    printf("TestOutOfOrderEmptyFin(%d)\n", aCase);
+
+    InitHeapEndpoint(instance, serverCtx);
+    InitHeapEndpoint(instance, clientCtx);
+    InitListener(instance, listenerCtx, &serverCtx, nullptr);
+
+    ConnectClient(instance, clientCtx, kClientPort1);
+    RemoveUnicastAddress(instance, kClientAddrString);
+
+    if (aCase == kEmptyFinWrapsAround)
+    {
+        AdvanceReceiveStream(instance, serverCtx, offset, GetTcb(serverCtx).recvbuf.size - 50);
+    }
+
+    if (aCase == kEmptyFinNothingBuffered)
+    {
+        // [0, 100) is missing and nothing is buffered. The FIN is a separate 0-byte segment at 100.
+        InjectSegment(instance, serverCtx, offset + 100, 0, true);
+        VerifyOrQuit(!serverCtx.mLastEndOfStream);
+        InjectSegment(instance, serverCtx, offset, 100, false);
+        VerifyOrQuit(serverCtx.mLastBytesAvailable == 100);
+    }
+    else
+    {
+        // [0, 100) is missing, [100, 200) is buffered. The FIN is a separate 0-byte segment at 200.
+        InjectSegment(instance, serverCtx, offset + 100, 100, false);
+        InjectSegment(instance, serverCtx, offset + 200, 0, true);
+        VerifyOrQuit(!serverCtx.mLastEndOfStream);
+        InjectSegment(instance, serverCtx, offset, 100, false);
+        VerifyOrQuit(serverCtx.mLastBytesAvailable == 200);
+    }
+
+    VerifyOrQuit(serverCtx.mLastEndOfStream);
+    VerifyOrQuit(GetTcb(serverCtx).t_state == TCPS_CLOSE_WAIT);
+
+    SuccessOrQuit(otTcpListenerDeinitialize(&listenerCtx.mListener));
+    CleanupHeapEndpoint(clientCtx);
+    CleanupHeapEndpoint(serverCtx);
+    testFreeInstance(instance);
+}
+
+static void TestOutOfOrderFinOnFullyBufferedData(void)
+{
+    Instance       *instance = InitTestInstance();
+    EndpointContext serverCtx;
+    EndpointContext clientCtx;
+    ListenerContext listenerCtx;
+
+    printf("TestOutOfOrderFinOnFullyBufferedData\n");
+
+    InitHeapEndpoint(instance, serverCtx);
+    InitHeapEndpoint(instance, clientCtx);
+    InitListener(instance, listenerCtx, &serverCtx, nullptr);
+
+    ConnectClient(instance, clientCtx, kClientPort1);
+    RemoveUnicastAddress(instance, kClientAddrString);
+
+    // [0, 100) is missing. [100, 200) is buffered without FIN, then retransmitted identically but now carrying FIN.
+    InjectSegment(instance, serverCtx, 100, 100, false);
+    InjectSegment(instance, serverCtx, 100, 100, true);
+    InjectSegment(instance, serverCtx, 0, 100, false);
+    VerifyOrQuit(serverCtx.mLastBytesAvailable == 200);
+    VerifyOrQuit(serverCtx.mLastEndOfStream);
+    VerifyOrQuit(GetTcb(serverCtx).t_state == TCPS_CLOSE_WAIT);
+
+    SuccessOrQuit(otTcpListenerDeinitialize(&listenerCtx.mListener));
+    CleanupHeapEndpoint(clientCtx);
+    CleanupHeapEndpoint(serverCtx);
+    testFreeInstance(instance);
+}
+
 #endif // OPENTHREAD_CONFIG_TCP_ENABLE
 
 } // namespace ot
@@ -1042,6 +1128,10 @@ int main(void)
     ot::TestOutOfOrderFinInLargeReceiveBuffer(true);
     ot::TestOutOfOrderFinInLargeReceiveBuffer(false);
     ot::TestOutOfOrderFinAfterContiguify();
+    ot::TestOutOfOrderEmptyFin(ot::kEmptyFinDataBufferedAfterGap);
+    ot::TestOutOfOrderEmptyFin(ot::kEmptyFinNothingBuffered);
+    ot::TestOutOfOrderEmptyFin(ot::kEmptyFinWrapsAround);
+    ot::TestOutOfOrderFinOnFullyBufferedData();
 #endif
 
     printf("All tests passed\n");

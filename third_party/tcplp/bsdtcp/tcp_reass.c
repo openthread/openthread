@@ -55,6 +55,7 @@ tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_
 {
 	size_t mergeable, written;
 	size_t offset;
+	size_t fin_offset;
 	size_t start_index;
 	size_t usedbefore;
 	int tlen;
@@ -75,6 +76,21 @@ tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_
 	offset = (size_t) (th->th_seq - tp->rcv_nxt);
 
 	if (cbuf_reass_count_set(&tp->recvbuf, (size_t) offset, tp->reassbmp, tlen) >= (size_t) tlen) {
+		/*
+		 * There is nothing to write, because either the data is already buffered or this is a FIN without data (e.g.,
+		 * otTcpSendEndOfStream() after sending all data). We still need to record the FIN.
+	     * We store the index of the last byte before the FIN.
+		 *
+		 * fin_offset is the number of bytes between rcv_nxt and the FIN.
+		 * If fin_offset is 0, the fin is exactly at tp->rcv_nxt. So we're already
+		 * all in-order. We're in an odd case where we're receiving a FIN at
+		 * tp->rcv_nxt although we already received non-FIN data with larger
+		 * sequence number. So we don't record the FIN here.
+		 */
+		fin_offset = offset + tlen;
+		if ((th->th_flags & TH_FIN) && (tp->reass_fin_index == -1) && (fin_offset > 0)) {
+			tp->reass_fin_index = (int32_t) cbuf_reass_index(&tp->recvbuf, fin_offset - 1);
+		}
 		*tlenp = 0;
 		goto present;
 	}

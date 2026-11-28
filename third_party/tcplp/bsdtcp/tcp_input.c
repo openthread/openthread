@@ -1203,6 +1203,9 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 	 * Make sure that the hidden state-flags are also off.
 	 * Since we check for TCPS_ESTABLISHED first, it can only
 	 * be TH_NEEDSYN.
+	 * Note that if a FIN has been previously received out
+	 * of order (reass_fin_index >= 0) the segment must go
+	 * through tcp_reass() in order to complete the stream.
 	 */
 	/*
 	 * samkumar: Replaced LIST_EMPTY(&tp->tsegq with the call to bmp_isempty).
@@ -1214,6 +1217,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 	    tiwin && tiwin == tp->snd_wnd &&
 	    ((tp->t_flags & (TF_NEEDSYN|TF_NEEDFIN)) == 0) &&
 	    bmp_isempty(tp->reassbmp, REASSBMP_SIZE(tp)) &&
+	    tp->reass_fin_index < 0 &&
 	    ((to.to_flags & TOF_TS) == 0 ||
 	     TSTMP_GEQ(to.to_tsval, tp->ts_recent)) ) {
 
@@ -2564,9 +2568,11 @@ step6:
 		/*
 		 * samkumar: I replaced LIST_EMPTY(&tp->t_segq) with the calls to
 		 * tpiscantrcv and bmp_isempty on the second line below.
+		 * A FIN that was received out of order (reass_fin_index >= 0) is still
+		 * pending, so the segment must go through tcp_reass().
 		 */
 		if (th->th_seq == tp->rcv_nxt &&
-		    (tpiscantrcv(tp) || bmp_isempty(tp->reassbmp, REASSBMP_SIZE(tp))) &&
+		    (tpiscantrcv(tp) || (bmp_isempty(tp->reassbmp, REASSBMP_SIZE(tp)) && tp->reass_fin_index < 0)) &&
 		    (TCPS_HAVEESTABLISHED(tp->t_state) ||
 			 tfo_syn)) {
 			if (DELAY_ACK(tp, tlen) || tfo_syn)
