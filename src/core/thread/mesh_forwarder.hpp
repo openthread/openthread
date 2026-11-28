@@ -215,6 +215,30 @@ public:
      */
     void ResumeSleepyOperation(SuspendRequester aRequester);
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    /**
+     * Keeps the radio on while idle for a given duration, without suspending data polling.
+     *
+     * Unlike `SuspendSleepyOperation()`, data polling continues. This is used while in `kSleepy` mode so that the
+     * device can still ACK frames from other devices (e.g., late Parent Responses) while polling for a pending
+     * frame. The radio returns to sleepy operation when the duration expires.
+     *
+     * @param[in]  aDuration  The duration in milliseconds.
+     */
+    void HoldRxOnWhenIdle(uint32_t aDuration);
+
+    /**
+     * Indicates whether or not the radio is kept on while idle only by `HoldRxOnWhenIdle()`.
+     *
+     * While held, the MAC filters broadcast frames as a sleepy device does, so the radio is only used to ACK unicast
+     * frames. This is `FALSE` while sleepy operation is suspended (the radio is then on due to the suspension).
+     *
+     * @retval TRUE   The rx-on-when-idle is only held by `HoldRxOnWhenIdle()`.
+     * @retval FALSE  The rx-on-when-idle is not held.
+     */
+    bool IsRxOnWhenIdleHeld(void) const { return mRxOnHoldTimer.IsRunning() && !IsSleepModeSuspended(); }
+#endif
+
 #if OPENTHREAD_FTD
     /**
      * Removes and frees messages queued for a child, based on a given predicate.
@@ -485,6 +509,9 @@ private:
 #endif
 
     void UpdateSleepState(void);
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    void HandleRxOnHoldTimer(void);
+#endif
     void ClearAllSleepSuspendRequesters(void) { mSleepSuspendRequesters = 0; }
     void AddSleepSuspendRequester(SuspendRequester aRequester) { mSleepSuspendRequesters |= aRequester; }
     void RemoveSleepSuspendRequester(SuspendRequester aRequester) { mSleepSuspendRequesters &= ~aRequester; }
@@ -626,6 +653,10 @@ private:
     using TxDelayTimer = TimerMilliIn<MeshForwarder, &MeshForwarder::HandleTxDelayTimer>;
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    using RxOnHoldTimer = TimerMilliIn<MeshForwarder, &MeshForwarder::HandleRxOnHoldTimer>;
+#endif
+
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;
     uint16_t      mMessageNextOffset;
@@ -644,6 +675,9 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
     bool         mDelayNextTx : 1;
     TxDelayTimer mTxDelayTimer;
+#endif
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    RxOnHoldTimer mRxOnHoldTimer;
 #endif
 
     TxTask mScheduleTransmissionTask;

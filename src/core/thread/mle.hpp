@@ -336,6 +336,29 @@ public:
      */
     NetworkData::Type GetNetworkDataType(void) const { return mDeviceMode.GetNetworkDataType(); }
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    /**
+     * Indicates whether MLE Fast Attach is enabled at runtime.
+     *
+     * @returns TRUE if Fast Attach is enabled, FALSE otherwise.
+     */
+    bool IsFastAttachEnabled(void) const { return mFastAttachEnabled; }
+
+    /**
+     * Enables or disables MLE Fast Attach at runtime.
+     *
+     * Fast Attach stays in effect for all attach attempts until the device attaches (by any path), at which point it
+     * is auto-cleared. Enabling is allowed only while the device is not attached (i.e., role is Disabled or
+     * Detached). Disabling is always allowed.
+     *
+     * @param[in] aEnabled  TRUE to enable, FALSE to disable.
+     *
+     * @retval kErrorNone          Setting applied.
+     * @retval kErrorInvalidState  Tried to enable while attached (Child/Router/Leader).
+     */
+    Error SetFastAttachEnabled(bool aEnabled);
+#endif
+
     /**
      * Returns a pointer to the Mesh Local Prefix.
      *
@@ -1283,6 +1306,10 @@ private:
     static constexpr uint32_t kMulticastRetxDelayMax         = kMulticastRetxDelay * 11 / 10; // 1.1 * base delay
     static constexpr uint32_t kAnnounceBackoffForPendingDataset = 60000; // Max delay left to block Announce processing.
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    static constexpr uint32_t kFastAttachJitterPerRouter = 32; // MLE_FAST_ATTACH_JITTER_PER_ROUTER, ms
+#endif
+
     static constexpr uint8_t kMaxTxCount                = 3; // Max tx count for MLE message
     static constexpr uint8_t kMaxCriticalTxCount        = 6; // Max tx count for critical MLE message
     static constexpr uint8_t kMaxChildKeepAliveAttempts = 4; // Max keep alive attempts before reattach
@@ -1979,6 +2006,9 @@ private:
         uint32_t GetStartDelay(void) const;
         bool     HasAcceptableParentCandidate(void) const;
         uint32_t Reattach(void);
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+        bool ShouldUseFastAttach(void) const;
+#endif
 
         Error DetermineParentRequestType(ParentRequestType &aType) const;
         Error GetNextAnnounceChannel(uint8_t &aChannel) const;
@@ -2511,6 +2541,9 @@ private:
 
     static const otMeshLocalPrefix kMeshLocalPrefixInit;
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    bool mFastAttachEnabled : 1;
+#endif
     bool       mRetrieveNewNetworkData : 1;
     bool       mRequestRouteTlv : 1;
     bool       mHasRestored : 1;

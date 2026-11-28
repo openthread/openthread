@@ -56,6 +56,7 @@ Done
 - [extpanid](#extpanid)
 - [factoryreset](#factoryreset)
 - [fake](#fake)
+- [fastattach](#fastattach-enabledisable)
 - [fem](#fem)
 - [history](README_HISTORY.md)
 - [ifconfig](#ifconfig)
@@ -2022,6 +2023,32 @@ Note: Only for certification test.
 
 ```bash
 > fake /a/an fdde:ad00:beef:0:0:ff:fe00:a800 fd00:7d03:7d03:7d03:55f2:bb6a:7a43:a03b 1111222233334444
+Done
+```
+
+### fastattach [enable|disable]
+
+Gets, enables, or disables MLE Fast Attach. Defaults to disabled.
+
+When enabled, the device sets the F flag in its Parent Request and selects a parent as soon as the first acceptable Link Quality 3 Parent Response is received. It stays in effect for all attach attempts and is automatically cleared when the device attaches.
+
+Enabling is allowed only while the device is not attached (role is disabled or detached), otherwise `InvalidState` is returned.
+
+Available only when `OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE` is enabled (`OT_MLE_FAST_ATTACH` CMake option).
+
+```bash
+> fastattach
+Disabled
+Done
+
+> fastattach enable
+Done
+
+> fastattach
+Enabled
+Done
+
+> fastattach disable
 Done
 ```
 

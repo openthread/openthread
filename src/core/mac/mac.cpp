@@ -1867,6 +1867,11 @@ Error Mac::FilterDestShortAddress(ShortAddress aDestAddress) const
 
     if (mRxOnWhenIdle && (aDestAddress == kShortAddrBroadcast))
     {
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+        // While the radio is only held on for a sleepy device, broadcast
+        // frames are filtered as they would be if the device were asleep.
+        VerifyOrExit(!Get<MeshForwarder>().IsRxOnWhenIdleHeld(), error = kErrorDestinationAddressFiltered);
+#endif
         ExitNow();
     }
 

@@ -90,7 +90,13 @@ Error DataPollSender::SendDataPoll(void)
     Error error;
 
     VerifyOrExit(mEnabled, error = kErrorInvalidState);
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    // Polling continues while rx-on-when-idle is temporarily held.
+    VerifyOrExit(!Get<Mac::Mac>().GetRxOnWhenIdle() || Get<MeshForwarder>().IsRxOnWhenIdleHeld(),
+                 error = kErrorInvalidState);
+#else
     VerifyOrExit(!Get<Mac::Mac>().GetRxOnWhenIdle(), error = kErrorInvalidState);
+#endif
 
     VerifyOrExit(GetParent().IsStateValidOrRestoring(), error = kErrorInvalidState);
 
