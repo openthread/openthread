@@ -104,6 +104,34 @@ Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor:
     return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+
+Neighbor *NeighborTable::FindMultiRadioNeighbor(const Mac::ExtAddress &aExtAddress)
+{
+    return FindMultiRadioNeighbor(Neighbor::AddressMatcher(aExtAddress, Neighbor::kInStateAnyExceptInvalid));
+}
+
+Neighbor *NeighborTable::FindMultiRadioNeighbor(const Mac::Address &aMacAddress)
+{
+    return FindMultiRadioNeighbor(Neighbor::AddressMatcher(aMacAddress, Neighbor::kInStateAnyExceptInvalid));
+}
+
+Neighbor *NeighborTable::FindMultiRadioNeighbor(const Neighbor::AddressMatcher &aMatcher)
+{
+    Neighbor *neighbor = FindNeighbor(aMatcher);
+
+#if OPENTHREAD_FTD
+    if ((neighbor == nullptr) && Get<Mle::Mle>().IsChild() && Get<Mle::Mle>().IsFullThreadDevice())
+    {
+        neighbor = FindChildOrRouter(aMatcher);
+    }
+#endif
+
+    return neighbor;
+}
+
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
 #if OPENTHREAD_FTD
 
 Neighbor *NeighborTable::FindChildOrRouter(const Neighbor::AddressMatcher &aMatcher)

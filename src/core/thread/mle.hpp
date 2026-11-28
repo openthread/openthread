@@ -1701,6 +1701,9 @@ private:
         RxChallenge     mRxChallenge;      // The challenge in Link Request.
         uint16_t        mRloc16;           // The neighbor/router RLOC16.
         uint8_t         mLinkMargin;       // Link margin of the received Link Request.
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        Radio::Type mRadioType; // The radio link on which the Link Request was received.
+#endif
     };
 #endif
 
@@ -2340,7 +2343,7 @@ private:
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     Error      SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode);
-    Error      SendChildUpdateRejectResponse(ChildUpdateResponseInfo &aInfo);
+    Error      SendChildUpdateRejectResponse(const RxInfo &aRxInfo, const RxChallenge &aChallenge);
     Error      SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo);
     void       SetRloc16(uint16_t aRloc16);
     void       SetStateDetached(void);
@@ -2362,7 +2365,7 @@ private:
     Error      HandleLeaderData(RxInfo &aRxInfo);
     uint32_t   GetAttachStartDelay(void) const;
     void       SendAnnounce(uint8_t aChannel, AnnounceMode aMode);
-    void       SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode = kNormalAnnounce);
+    void       SendAnnounce(uint8_t aChannel, AnnounceMode aMode, const RxInfo *aRxInfo);
     bool       IsNetworkDataNewer(const LeaderData &aLeaderData);
     bool       HasUnregisteredAddress(void) const;
     bool       ShouldRegisterUnicastAddrWithParent(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;

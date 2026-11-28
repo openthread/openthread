@@ -136,6 +136,36 @@ public:
     Neighbor *FindNeighbor(const Mac::Address   &aMacAddress,
                            Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    /**
+     * Searches in the neighbor table to find a `Neighbor` corresponding to a given MAC Extended Address, for tracking
+     * and selecting its radio links.
+     *
+     * Matches neighbors in any state except `kStateInvalid`. Unlike `FindNeighbor()`, the child and router tables are
+     * also searched when the device is an FTD child (e.g., a REED handling attach requests, or an FTD child
+     * establishing links with neighboring routers).
+     *
+     * @param[in]  aExtAddress   A MAC Extended Address.
+     *
+     * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, `nullptr` otherwise.
+     */
+    Neighbor *FindMultiRadioNeighbor(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * Searches in the neighbor table to find a `Neighbor` corresponding to a given MAC address, for tracking and
+     * selecting its radio links.
+     *
+     * Matches neighbors in any state except `kStateInvalid`. Unlike `FindNeighbor()`, the child and router tables are
+     * also searched when the device is an FTD child (e.g., a REED handling attach requests, or an FTD child
+     * establishing links with neighboring routers).
+     *
+     * @param[in]  aMacAddress  A MAC address.
+     *
+     * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, `nullptr` otherwise.
+     */
+    Neighbor *FindMultiRadioNeighbor(const Mac::Address &aMacAddress);
+#endif
+
 #if OPENTHREAD_FTD
 
     /**
@@ -218,6 +248,9 @@ public:
 private:
     Neighbor *FindParent(const Neighbor::AddressMatcher &aMatcher);
     Neighbor *FindNeighbor(const Neighbor::AddressMatcher &aMatcher);
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    Neighbor *FindMultiRadioNeighbor(const Neighbor::AddressMatcher &aMatcher);
+#endif
 #if OPENTHREAD_FTD
     Neighbor *FindChildOrRouter(const Neighbor::AddressMatcher &aMatcher);
 #endif

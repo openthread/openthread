@@ -1528,6 +1528,17 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
         {
             VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
             header.SetHopLimit(header.GetHopLimit() - 1);
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+            // The radio type of a received message is the radio
+            // link it was received on. Since the message will be
+            // forwarded, we clear it to allow the radio type for tx
+            // to be selected later (based on the radios supported by
+            // the next hop). A locally originated message keeps its
+            // radio type, which may be intentionally set (e.g., an
+            // MLE reply sent on the radio link of the request).
+            aMessagePtr->ClearRadioType();
+#endif
         }
 
         VerifyOrExit(header.GetHopLimit() > 0, error = kErrorDrop);
@@ -1537,14 +1548,6 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
         // The message is forwarded, so the result of passing it to
         // the host or receiving it locally is not reported.
         error = kErrorNone;
-
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-        // Since the message will be forwarded, we clear the radio
-        // type on the message to allow the radio type for tx to be
-        // selected later (based on the radios supported by the next
-        // hop).
-        aMessagePtr->ClearRadioType();
-#endif
 
         Get<MeshForwarder>().SendMessage(aMessagePtr.PassOwnership());
     }
