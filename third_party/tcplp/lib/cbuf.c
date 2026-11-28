@@ -353,7 +353,9 @@ size_t cbuf_reass_count_set(struct cbufhead* chdr, size_t offset, uint8_t* bitma
     }
     limit -= until_end; // effectively, this is our limit when continuing
     // Continue until either the new limit or until we have scanned OFFSET bits (if we scan more than OFFSET bits, we'll wrap and scan some parts twice)
-    return until_end + bmp_countset(bitmap, bitmap_size, 0, limit < offset ? limit : offset);
+    until_end += bmp_countset(bitmap, bitmap_size, 0, limit < offset ? limit : offset);
+    /* bmp_countset() may overcount (a whole bitmap byte, i.e. 8 seqnums at once), but a streak can never be longer than the buffer. */
+    return until_end > chdr->size ? chdr->size : until_end;
 }
 
 int cbuf_reass_within_offset(struct cbufhead* chdr, size_t offset, size_t index) {
@@ -363,6 +365,10 @@ int cbuf_reass_within_offset(struct cbufhead* chdr, size_t offset, size_t index)
     if (chdr->size == 0) {
         return 0;
     }
+    if (offset >= chdr->size) {
+        /* The range covers the whole buffer (offset may even exceed the size if the caller overcounted). */
+        return index < chdr->size;
+    }
 
     range_start = cbuf_get_w_index(chdr);
     range_end = (range_start + offset) % chdr->size;
@@ -371,4 +377,11 @@ int cbuf_reass_within_offset(struct cbufhead* chdr, size_t offset, size_t index)
     } else {
         return index < range_end || (index >= range_start && index < chdr->size);
     }
+}
+
+size_t cbuf_reass_index(const struct cbufhead* chdr, size_t offset) {
+    if (chdr->size == 0) {
+        return 0;
+    }
+    return (cbuf_get_w_index(chdr) + offset) % chdr->size;
 }

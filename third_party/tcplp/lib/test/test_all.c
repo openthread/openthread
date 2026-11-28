@@ -232,11 +232,53 @@ void test_cbuf_reass_boundary() {
     bmp_test("test_cbuf_reass_boundary (bitmap)", bitmap, 4, "00000000");
 }
 
+void index_test(const char* test_name, size_t actual, size_t expected) {
+    if (actual == expected) {
+        printf("%s: PASS\n", test_name);
+        num_tests_passed++;
+    } else {
+        printf("%s: FAIL: expected %zu, got %zu\n", test_name, expected, actual);
+        num_tests_failed++;
+    }
+}
+
+void test_cbuf_reass_index() {
+    uint8_t buffer[32];
+    struct cbufhead chdr;
+
+    cbuf_init(&chdr, buffer, 32);
+    index_test("cbuf_reass_index (empty buffer)", cbuf_reass_index(&chdr, 5), 5);
+
+    // r_index = 10, used = 0, so w_index = 10.
+    cbuf_write(&chdr, "0123456789", 0, 10, cbuf_copy_into_buffer);
+    cbuf_pop(&chdr, 10);
+    index_test("cbuf_reass_index (offset 0)", cbuf_reass_index(&chdr, 0), 10);
+    index_test("cbuf_reass_index (offset 5)", cbuf_reass_index(&chdr, 5), 15);
+    index_test("cbuf_reass_index (wraps to start)", cbuf_reass_index(&chdr, 22), 0);
+    index_test("cbuf_reass_index (wraps past start)", cbuf_reass_index(&chdr, 25), 3);
+
+    // r_index = 10, used = 4, so w_index = 14.
+    cbuf_write(&chdr, "abcd", 0, 4, cbuf_copy_into_buffer);
+    index_test("cbuf_reass_index (data in buffer)", cbuf_reass_index(&chdr, 0), 14);
+
+    // r_index = 30, used = 5, so the used region wraps and w_index = 3.
+    cbuf_init(&chdr, buffer, 32);
+    cbuf_write(&chdr, "012345678901234567890123456789", 0, 30, cbuf_copy_into_buffer);
+    cbuf_pop(&chdr, 30);
+    cbuf_write(&chdr, "abcde", 0, 5, cbuf_copy_into_buffer);
+    index_test("cbuf_reass_index (used region wraps)", cbuf_reass_index(&chdr, 0), 3);
+    index_test("cbuf_reass_index (used region wraps, offset)", cbuf_reass_index(&chdr, 30), 1);
+
+    cbuf_init(&chdr, buffer, 0);
+    index_test("cbuf_reass_index (zero-size buffer)", cbuf_reass_index(&chdr, 7), 0);
+}
+
 int main(int argc, char** argv) {
     test_bmp();
     test_cbuf();
     test_cbuf_2();
     test_cbuf_reass_boundary();
+    test_cbuf_reass_index();
 
     printf("%" PRIu32 " tests passed (out of %" PRIu32 ")\n", num_tests_passed, num_tests_passed + num_tests_failed);
     if (num_tests_failed != 0) {

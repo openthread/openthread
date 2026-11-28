@@ -123,4 +123,9 @@ size_t cbuf_reass_count_set(struct cbufhead* chdr, size_t offset, uint8_t* bitma
    past the end of the buffer. */
 int cbuf_reass_within_offset(struct cbufhead* chdr, size_t offset, size_t index);
 
+/* Returns the index of the byte at position OFFSET, relative to the position
+   where cbuf_write would write bytes. This is the index that cbuf_reass_write
+   stores into FIRSTINDEX when it writes at OFFSET. */
+size_t cbuf_reass_index(const struct cbufhead* chdr, size_t offset);
+
 #endif

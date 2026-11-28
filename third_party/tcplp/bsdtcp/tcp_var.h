@@ -190,7 +190,7 @@ struct tcpcb {
 	struct lbufhead sendbuf;
 	struct cbufhead recvbuf;
 	uint8_t* reassbmp;
-	int32_t reass_fin_index;
+	int32_t reass_fin_index; // -1: no FIN, -2: FIN processed, >= 0: recvbuf index of the FIN segment's last byte
 
 	struct in6_addr laddr; // local IP address
 	struct in6_addr faddr; // foreign IP address
